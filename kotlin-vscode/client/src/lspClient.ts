@@ -177,16 +177,10 @@ async function getRunningJavaServerLspOptions(): Promise<ServerOptions | null> {
 
     const extractPath = getContext().asAbsolutePath(path.join('server', 'extracted', 'lib'));
 
-    const extractedFiles = await fs.promises.readdir(extractPath)
-    const jars = extractedFiles
-            .filter(file => file.endsWith('.jar'))
-            .map(file => path.join(extractPath, file));
-    const classpath = jars.join(':');
-
     const args: string[] = []
     args.push(...jvmOptions)
     args.push(
-        '-classpath', classpath,
+        '-classpath', extractPath + path.sep + '*',
         'com.jetbrains.ls.kotlinLsp.KotlinLspServerKt', '--client',
     );
     if (runWithJavaSupport()) {
