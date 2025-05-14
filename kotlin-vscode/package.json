@@ -1,0 +1,105 @@
+{
+  "name": "kotlin",
+  "displayName": "Kotlin by JetBrains",
+  "description": "Language Support for Kotlin by JetBrains",
+  "author": "JetBrains",
+  "publisher": "JetBrains",
+  "bugs": "https://github.com/Kotlin/kotlin-lsp",
+  "icon": "icons/kotlin.png",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.97.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "main": "./client/out/extension",
+  "activationEvents": [
+    "onLanguage:kotlin",
+    "onCommand:jetbrains.activateLsp"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "kotlin",
+        "aliases": [
+          "Kotlin",
+          "kotlin"
+        ],
+        "extensions": [
+          ".kt"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "kotlin",
+        "scopeName": "source.kotlin",
+        "path": "./syntaxes/kotlin.tmLanguage.json"
+      }
+    ],
+    "configuration":{
+      "title": "Kotlin",
+      "properties": {
+        "kotlinLSP.dev.serverPort": {
+          "type": "number",
+          "default": -1,
+          "description": "Port for the locally started Kotlin Language Server to listen on. -1 to start the bundled LSP"
+        },
+        "kotlinLSP.jrePathToRunLsp": {
+          "type": "string",
+          "default": null,
+          "description": "A path to the JRE that will be used to run the LSP. It should be at least version 17. If not specified, a JRE from JAVA_HOME will be used"
+        },
+        "kotlinLSP.javaSupport": {
+          "type": "boolean",
+          "default": false,
+          "description": "Run the Java LSP server provided by JetBrains. All other LSP servers supporting Java should be disabled for this to work properly."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "jetbrains.exportWorkspaceToJson",
+        "category": "Workspaces",
+        "title": "Export workspace structure to JSON"
+      },
+      {
+        "command": "jetbrains.activateJavaLsp",
+        "category": "LSP",
+        "title": "Activate JetBrains LSP for Java"
+      },
+      {
+        "command": "jetbrains.kotlin.restartLsp",
+        "category": "Kotlin",
+        "title": "Restart LSP server"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "jetbrains.activateJavaLsp",
+          "when": "editorLangId == java"
+        }
+      ]
+    }
+  },
+  "repository": {
+    "directory": "."
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "compile": "^0.0.2",
+    "run": "^1.5.0"
+  },
+  "scripts": {
+    "vscode:prepublish": "npm install && npm run compile && npm run unpack-server",
+    "compile": "tsc -b",
+    "watch": "tsc -b -w",
+    "unpack-server": "rm -rf server/extracted && mkdir -p server/extracted && unzip -o $LSP_ZIP_PATH -d server/extracted",
+    "postinstall": "cd client && npm install"
+  }
+}

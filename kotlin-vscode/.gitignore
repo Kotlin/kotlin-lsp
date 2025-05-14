@@ -1,0 +1,5 @@
+out/
+server/extracted
+node_modules
+client/node_modules
+*.vsix

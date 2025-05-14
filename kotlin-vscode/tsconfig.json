@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "strict": true,
+    "target": "es2020",
+    "lib": [
+      "es2020"
+    ],
+    "outDir": "out",
+    "rootDir": "src",
+    "sourceMap": true,
+    "tsBuildInfoFile": "out/tsconfig.tsbuildinfo"
+  },
+  "exclude": [
+    "node_modules",
+    ".vscode-test"
+  ],
+  "references": [
+    {
+      "path": "./client"
+    }
+  ]
+}

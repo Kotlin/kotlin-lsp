@@ -1,0 +1,663 @@
+>// SYNTAX TEST "source.kotlin" "sample testcase"
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.kotlin comment.line.double-slash.kotlin
+>
+>package example.kotlin.highlighting
+#^^^^^^^ source.kotlin storage.type.kotlin
+#       ^^^^^^^^ source.kotlin
+#               ^ source.kotlin keyword.operator.kotlin
+#                ^^^^^^ source.kotlin
+#                      ^ source.kotlin keyword.operator.kotlin
+#                       ^^^^^^^^^^^^^ source.kotlin
+>
+>import kotlin.math.PI
+#^^^^^^ source.kotlin storage.type.kotlin
+#      ^^^^^^^ source.kotlin
+#             ^ source.kotlin keyword.operator.kotlin
+#              ^^^^ source.kotlin
+#                  ^ source.kotlin keyword.operator.kotlin
+#                   ^^^ source.kotlin
+>
+>inline fun getIntValue(): Int = 42
+#^^^^^^ source.kotlin storage.modifier.kotlin
+#      ^ source.kotlin
+#       ^^^ source.kotlin storage.type.kotlin
+#          ^^^^^^^^^^^^^^ source.kotlin
+#                        ^ source.kotlin keyword.operator.kotlin
+#                         ^ source.kotlin
+#                          ^^^ source.kotlin support.type.kotlin
+#                             ^ source.kotlin
+#                              ^ source.kotlin keyword.operator.kotlin
+#                               ^ source.kotlin
+#                                ^^ source.kotlin constant.numeric.decimal.kotlin
+>
+>abstract class Shape(val name: String) {
+#^^^^^^^^ source.kotlin storage.modifier.kotlin
+#        ^ source.kotlin
+#         ^^^^^ source.kotlin storage.type.kotlin
+#              ^^^^^^^ source.kotlin
+#                     ^^^ source.kotlin storage.type.kotlin
+#                        ^^^^^ source.kotlin
+#                             ^ source.kotlin keyword.operator.kotlin
+#                              ^ source.kotlin
+#                               ^^^^^^ source.kotlin support.type.kotlin
+#                                     ^^^^ source.kotlin
+>    abstract val area: Double
+#^^^^ source.kotlin
+#    ^^^^^^^^ source.kotlin storage.modifier.kotlin
+#            ^ source.kotlin
+#             ^^^ source.kotlin storage.type.kotlin
+#                ^^^^^ source.kotlin
+#                     ^ source.kotlin keyword.operator.kotlin
+#                      ^ source.kotlin
+#                       ^^^^^^ source.kotlin support.type.kotlin
+>
+>    open fun displayInfo() {
+#^^^^ source.kotlin
+#    ^^^^ source.kotlin storage.modifier.kotlin
+#        ^ source.kotlin
+#         ^^^ source.kotlin storage.type.kotlin
+#            ^^^^^^^^^^^^^^^^^ source.kotlin
+>        println("Shape: $name")
+#^^^^^^^^^^^^^^^^ source.kotlin
+#                ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.begin.kotlin
+#                 ^^^^^^^ source.kotlin string.quoted.double.kotlin
+#                        ^^^^^ source.kotlin string.quoted.double.kotlin variable.other.interpolated.kotlin
+#                             ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.end.kotlin
+#                              ^^ source.kotlin
+>    }
+#^^^^^^ source.kotlin
+>
+>    protected open val protectedProperty: String = "Protected"
+#^^^^ source.kotlin
+#    ^^^^^^^^^ source.kotlin storage.modifier.kotlin
+#             ^ source.kotlin
+#              ^^^^ source.kotlin storage.modifier.kotlin
+#                  ^ source.kotlin
+#                   ^^^ source.kotlin storage.type.kotlin
+#                      ^^^^^^^^^^^^^^^^^^ source.kotlin
+#                                        ^ source.kotlin keyword.operator.kotlin
+#                                         ^ source.kotlin
+#                                          ^^^^^^ source.kotlin support.type.kotlin
+#                                                ^ source.kotlin
+#                                                 ^ source.kotlin keyword.operator.kotlin
+#                                                  ^ source.kotlin
+#                                                   ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.begin.kotlin
+#                                                    ^^^^^^^^^ source.kotlin string.quoted.double.kotlin
+#                                                             ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.end.kotlin
+>}
+#^^ source.kotlin
+>
+>data class Circle(val radius: Double) : Shape("Circle") {
+#^^^^ source.kotlin storage.modifier.kotlin
+#    ^ source.kotlin
+#     ^^^^^ source.kotlin storage.type.kotlin
+#          ^^^^^^^^ source.kotlin
+#                  ^^^ source.kotlin storage.type.kotlin
+#                     ^^^^^^^ source.kotlin
+#                            ^ source.kotlin keyword.operator.kotlin
+#                             ^ source.kotlin
+#                              ^^^^^^ source.kotlin support.type.kotlin
+#                                    ^^ source.kotlin
+#                                      ^ source.kotlin keyword.operator.kotlin
+#                                       ^^^^^^^ source.kotlin
+#                                              ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.begin.kotlin
+#                                               ^^^^^^ source.kotlin string.quoted.double.kotlin
+#                                                     ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.end.kotlin
+#                                                      ^^^^ source.kotlin
+>    override val area: Double
+#^^^^ source.kotlin
+#    ^^^^^^^^ source.kotlin storage.modifier.kotlin
+#            ^ source.kotlin
+#             ^^^ source.kotlin storage.type.kotlin
+#                ^^^^^ source.kotlin
+#                     ^ source.kotlin keyword.operator.kotlin
+#                      ^ source.kotlin
+#                       ^^^^^^ source.kotlin support.type.kotlin
+>        get() = PI * radius * radius
+#^^^^^^^^ source.kotlin
+#        ^^^ source.kotlin keyword.control.kotlin
+#           ^^^ source.kotlin
+#              ^ source.kotlin keyword.operator.kotlin
+#               ^^^^ source.kotlin
+#                   ^ source.kotlin keyword.operator.kotlin
+#                    ^^^^^^^^ source.kotlin
+#                            ^ source.kotlin keyword.operator.kotlin
+#                             ^^^^^^^^ source.kotlin
+>
+>    override fun displayInfo() {
+#^^^^ source.kotlin
+#    ^^^^^^^^ source.kotlin storage.modifier.kotlin
+#            ^ source.kotlin
+#             ^^^ source.kotlin storage.type.kotlin
+#                ^^^^^^^^^^^^^^^^^ source.kotlin
+>        super.displayInfo()
+#^^^^^^^^ source.kotlin
+#        ^^^^^ source.kotlin storage.type.kotlin
+#             ^ source.kotlin keyword.operator.kotlin
+#              ^^^^^^^^^^^^^^ source.kotlin
+>        println("Radius: $radius, Area: $area")
+#^^^^^^^^^^^^^^^^ source.kotlin
+#                ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.begin.kotlin
+#                 ^^^^^^^^ source.kotlin string.quoted.double.kotlin
+#                         ^^^^^^^ source.kotlin string.quoted.double.kotlin variable.other.interpolated.kotlin
+#                                ^^^^^^^^ source.kotlin string.quoted.double.kotlin
+#                                        ^^^^^ source.kotlin string.quoted.double.kotlin variable.other.interpolated.kotlin
+#                                             ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.end.kotlin
+#                                              ^^ source.kotlin
+>    }
+#^^^^^^ source.kotlin
+>}
+#^^ source.kotlin
+>
+>interface Printable {
+#^^^^^^^^^ source.kotlin storage.type.kotlin
+#         ^^^^^^^^^^^^^ source.kotlin
+>    fun printDetails() {
+#^^^^ source.kotlin
+#    ^^^ source.kotlin storage.type.kotlin
+#       ^^^^^^^^^^^^^^^^^^ source.kotlin
+>        println("Printing details...")
+#^^^^^^^^^^^^^^^^ source.kotlin
+#                ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.begin.kotlin
+#                 ^^^^^^^^^^^^^^^^^^^ source.kotlin string.quoted.double.kotlin
+#                                    ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.end.kotlin
+#                                     ^^ source.kotlin
+>    }
+#^^^^^^ source.kotlin
+>}
+#^^ source.kotlin
+>
+>object Singleton : Printable {
+#^^^^^^ source.kotlin storage.type.kotlin
+#      ^^^^^^^^^^^ source.kotlin
+#                 ^ source.kotlin keyword.operator.kotlin
+#                  ^^^^^^^^^^^^^ source.kotlin
+>    override fun printDetails() {
+#^^^^ source.kotlin
+#    ^^^^^^^^ source.kotlin storage.modifier.kotlin
+#            ^ source.kotlin
+#             ^^^ source.kotlin storage.type.kotlin
+#                ^^^^^^^^^^^^^^^^^^ source.kotlin
+>        println("This is a Singleton object.")
+#^^^^^^^^^^^^^^^^ source.kotlin
+#                ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.begin.kotlin
+#                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.kotlin string.quoted.double.kotlin
+#                                            ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.end.kotlin
+#                                             ^^ source.kotlin
+>    }
+#^^^^^^ source.kotlin
+>
+>    private val privateProperty: String = "Private"
+#^^^^ source.kotlin
+#    ^^^^^^^ source.kotlin storage.modifier.kotlin
+#           ^ source.kotlin
+#            ^^^ source.kotlin storage.type.kotlin
+#               ^^^^^^^^^^^^^^^^ source.kotlin
+#                               ^ source.kotlin keyword.operator.kotlin
+#                                ^ source.kotlin
+#                                 ^^^^^^ source.kotlin support.type.kotlin
+#                                       ^ source.kotlin
+#                                        ^ source.kotlin keyword.operator.kotlin
+#                                         ^ source.kotlin
+#                                          ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.begin.kotlin
+#                                           ^^^^^^^ source.kotlin string.quoted.double.kotlin
+#                                                  ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.end.kotlin
+>    internal val internalProperty: String = "Internal"
+#^^^^ source.kotlin
+#    ^^^^^^^^ source.kotlin storage.modifier.kotlin
+#            ^ source.kotlin
+#             ^^^ source.kotlin storage.type.kotlin
+#                ^^^^^^^^^^^^^^^^^ source.kotlin
+#                                 ^ source.kotlin keyword.operator.kotlin
+#                                  ^ source.kotlin
+#                                   ^^^^^^ source.kotlin support.type.kotlin
+#                                         ^ source.kotlin
+#                                          ^ source.kotlin keyword.operator.kotlin
+#                                           ^ source.kotlin
+#                                            ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.begin.kotlin
+#                                             ^^^^^^^^ source.kotlin string.quoted.double.kotlin
+#                                                     ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.end.kotlin
+>}
+#^^ source.kotlin
+>
+>enum class Direction {
+#^^^^ source.kotlin storage.modifier.kotlin
+#    ^ source.kotlin
+#     ^^^^^ source.kotlin storage.type.kotlin
+#          ^^^^^^^^^^^^^ source.kotlin
+>    NORTH, SOUTH, EAST, WEST
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.kotlin
+>}
+#^^ source.kotlin
+>
+>sealed class Result {
+#^^^^^^ source.kotlin storage.modifier.kotlin
+#      ^ source.kotlin
+#       ^^^^^ source.kotlin storage.type.kotlin
+#            ^^^^^^^^^^ source.kotlin
+>    data class Success(val message: String) : Result()
+#^^^^ source.kotlin
+#    ^^^^ source.kotlin storage.modifier.kotlin
+#        ^ source.kotlin
+#         ^^^^^ source.kotlin storage.type.kotlin
+#              ^^^^^^^^^ source.kotlin
+#                       ^^^ source.kotlin storage.type.kotlin
+#                          ^^^^^^^^ source.kotlin
+#                                  ^ source.kotlin keyword.operator.kotlin
+#                                   ^ source.kotlin
+#                                    ^^^^^^ source.kotlin support.type.kotlin
+#                                          ^^ source.kotlin
+#                                            ^ source.kotlin keyword.operator.kotlin
+#                                             ^^^^^^^^^^ source.kotlin
+>    data class Error(val errorMessage: String) : Result()
+#^^^^ source.kotlin
+#    ^^^^ source.kotlin storage.modifier.kotlin
+#        ^ source.kotlin
+#         ^^^^^ source.kotlin storage.type.kotlin
+#              ^^^^^^^ source.kotlin
+#                     ^^^ source.kotlin storage.type.kotlin
+#                        ^^^^^^^^^^^^^ source.kotlin
+#                                     ^ source.kotlin keyword.operator.kotlin
+#                                      ^ source.kotlin
+#                                       ^^^^^^ source.kotlin support.type.kotlin
+#                                             ^^ source.kotlin
+#                                               ^ source.kotlin keyword.operator.kotlin
+#                                                ^^^^^^^^^^ source.kotlin
+>    object Loading : Result()
+#^^^^ source.kotlin
+#    ^^^^^^ source.kotlin storage.type.kotlin
+#          ^^^^^^^^^ source.kotlin
+#                   ^ source.kotlin keyword.operator.kotlin
+#                    ^^^^^^^^^^ source.kotlin
+>}
+#^^ source.kotlin
+>
+>fun main() {
+#^^^ source.kotlin storage.type.kotlin
+#   ^^^^^^^^^^ source.kotlin
+>    val number: Int = 10
+#^^^^ source.kotlin
+#    ^^^ source.kotlin storage.type.kotlin
+#       ^^^^^^^ source.kotlin
+#              ^ source.kotlin keyword.operator.kotlin
+#               ^ source.kotlin
+#                ^^^ source.kotlin support.type.kotlin
+#                   ^ source.kotlin
+#                    ^ source.kotlin keyword.operator.kotlin
+#                     ^ source.kotlin
+#                      ^^ source.kotlin constant.numeric.decimal.kotlin
+>    var name: String = "Kotlin"
+#^^^^ source.kotlin
+#    ^^^ source.kotlin storage.type.kotlin
+#       ^^^^^ source.kotlin
+#            ^ source.kotlin keyword.operator.kotlin
+#             ^ source.kotlin
+#              ^^^^^^ source.kotlin support.type.kotlin
+#                    ^ source.kotlin
+#                     ^ source.kotlin keyword.operator.kotlin
+#                      ^ source.kotlin
+#                       ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.begin.kotlin
+#                        ^^^^^^ source.kotlin string.quoted.double.kotlin
+#                              ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.end.kotlin
+>    val doubleValue: Double = 3.14
+#^^^^ source.kotlin
+#    ^^^ source.kotlin storage.type.kotlin
+#       ^^^^^^^^^^^^ source.kotlin
+#                   ^ source.kotlin keyword.operator.kotlin
+#                    ^ source.kotlin
+#                     ^^^^^^ source.kotlin support.type.kotlin
+#                           ^ source.kotlin
+#                            ^ source.kotlin keyword.operator.kotlin
+#                             ^ source.kotlin
+#                              ^^^^ source.kotlin constant.numeric.decimal.kotlin
+>    val binaryNumber = 0b1010
+#^^^^ source.kotlin
+#    ^^^ source.kotlin storage.type.kotlin
+#       ^^^^^^^^^^^^^^ source.kotlin
+#                     ^ source.kotlin keyword.operator.kotlin
+#                      ^ source.kotlin
+#                       ^^^^^^ source.kotlin constant.numeric.binary.kotlin
+>    val hexNumber = 0x1A3F
+#^^^^ source.kotlin
+#    ^^^ source.kotlin storage.type.kotlin
+#       ^^^^^^^^^^^ source.kotlin
+#                  ^ source.kotlin keyword.operator.kotlin
+#                   ^ source.kotlin
+#                    ^^^^^^ source.kotlin constant.numeric.hex.kotlin
+>    val floatNumber = 3.14e-2
+#^^^^ source.kotlin
+#    ^^^ source.kotlin storage.type.kotlin
+#       ^^^^^^^^^^^^^ source.kotlin
+#                    ^ source.kotlin keyword.operator.kotlin
+#                     ^ source.kotlin
+#                      ^^^^^^^ source.kotlin constant.numeric.decimal.kotlin
+>
+>    val nullableString: String? = null
+#^^^^ source.kotlin
+#    ^^^ source.kotlin storage.type.kotlin
+#       ^^^^^^^^^^^^^^^ source.kotlin
+#                      ^ source.kotlin keyword.operator.kotlin
+#                       ^ source.kotlin
+#                        ^^^^^^ source.kotlin support.type.kotlin
+#                              ^ source.kotlin keyword.operator.kotlin
+#                               ^ source.kotlin
+#                                ^ source.kotlin keyword.operator.kotlin
+#                                 ^ source.kotlin
+#                                  ^^^^ source.kotlin constant.language.kotlin
+>    val nonNullableString: String = "Hello"
+#^^^^ source.kotlin
+#    ^^^ source.kotlin storage.type.kotlin
+#       ^^^^^^^^^^^^^^^^^^ source.kotlin
+#                         ^ source.kotlin keyword.operator.kotlin
+#                          ^ source.kotlin
+#                           ^^^^^^ source.kotlin support.type.kotlin
+#                                 ^ source.kotlin
+#                                  ^ source.kotlin keyword.operator.kotlin
+#                                   ^ source.kotlin
+#                                    ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.begin.kotlin
+#                                     ^^^^^ source.kotlin string.quoted.double.kotlin
+#                                          ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.end.kotlin
+>
+>    val publicProperty: String = "Public"
+#^^^^ source.kotlin
+#    ^^^ source.kotlin storage.type.kotlin
+#       ^^^^^^^^^^^^^^^ source.kotlin
+#                      ^ source.kotlin keyword.operator.kotlin
+#                       ^ source.kotlin
+#                        ^^^^^^ source.kotlin support.type.kotlin
+#                              ^ source.kotlin
+#                               ^ source.kotlin keyword.operator.kotlin
+#                                ^ source.kotlin
+#                                 ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.begin.kotlin
+#                                  ^^^^^^ source.kotlin string.quoted.double.kotlin
+#                                        ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.end.kotlin
+>
+>    println("The number is $number")
+#^^^^^^^^^^^^ source.kotlin
+#            ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.begin.kotlin
+#             ^^^^^^^^^^^^^^ source.kotlin string.quoted.double.kotlin
+#                           ^^^^^^^ source.kotlin string.quoted.double.kotlin variable.other.interpolated.kotlin
+#                                  ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.end.kotlin
+#                                   ^^ source.kotlin
+>
+>    val circle = Circle(5.0)
+#^^^^ source.kotlin
+#    ^^^ source.kotlin storage.type.kotlin
+#       ^^^^^^^^ source.kotlin
+#               ^ source.kotlin keyword.operator.kotlin
+#                ^^^^^^^^ source.kotlin
+#                        ^^^ source.kotlin constant.numeric.decimal.kotlin
+#                           ^^ source.kotlin
+>    circle.displayInfo()
+#^^^^^^^^^^ source.kotlin
+#          ^ source.kotlin keyword.operator.kotlin
+#           ^^^^^^^^^^^^^^ source.kotlin
+>
+>    Singleton.printDetails()
+#^^^^^^^^^^^^^ source.kotlin
+#             ^ source.kotlin keyword.operator.kotlin
+#              ^^^^^^^^^^^^^^^ source.kotlin
+>
+>    val direction = Direction.NORTH
+#^^^^ source.kotlin
+#    ^^^ source.kotlin storage.type.kotlin
+#       ^^^^^^^^^^^ source.kotlin
+#                  ^ source.kotlin keyword.operator.kotlin
+#                   ^^^^^^^^^^ source.kotlin
+#                             ^ source.kotlin keyword.operator.kotlin
+#                              ^^^^^^ source.kotlin
+>    println("Direction is $direction")
+#^^^^^^^^^^^^ source.kotlin
+#            ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.begin.kotlin
+#             ^^^^^^^^^^^^^ source.kotlin string.quoted.double.kotlin
+#                          ^^^^^^^^^^ source.kotlin string.quoted.double.kotlin variable.other.interpolated.kotlin
+#                                    ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.end.kotlin
+#                                     ^^ source.kotlin
+>    val result: Result = Result.Success("Operation successful")
+#^^^^ source.kotlin
+#    ^^^ source.kotlin storage.type.kotlin
+#       ^^^^^^^ source.kotlin
+#              ^ source.kotlin keyword.operator.kotlin
+#               ^^^^^^^^ source.kotlin
+#                       ^ source.kotlin keyword.operator.kotlin
+#                        ^^^^^^^ source.kotlin
+#                               ^ source.kotlin keyword.operator.kotlin
+#                                ^^^^^^^^ source.kotlin
+#                                        ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.begin.kotlin
+#                                         ^^^^^^^^^^^^^^^^^^^^ source.kotlin string.quoted.double.kotlin
+#                                                             ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.end.kotlin
+#                                                              ^^ source.kotlin
+>    when (result) {
+#^^^^ source.kotlin
+#    ^^^^ source.kotlin keyword.control.kotlin
+#        ^^^^^^^^^^^^ source.kotlin
+>        is Result.Success -> println(result.message)
+#^^^^^^^^ source.kotlin
+#        ^^ source.kotlin keyword.control.kotlin
+#          ^^^^^^^ source.kotlin
+#                 ^ source.kotlin keyword.operator.kotlin
+#                  ^^^^^^^^ source.kotlin
+#                          ^^ source.kotlin keyword.operator.kotlin
+#                            ^^^^^^^^^^^^^^^ source.kotlin
+#                                           ^ source.kotlin keyword.operator.kotlin
+#                                            ^^^^^^^^^ source.kotlin
+>        is Result.Error -> println(result.errorMessage)
+#^^^^^^^^ source.kotlin
+#        ^^ source.kotlin keyword.control.kotlin
+#          ^^^^^^^ source.kotlin
+#                 ^ source.kotlin keyword.operator.kotlin
+#                  ^^^^^^ source.kotlin
+#                        ^^ source.kotlin keyword.operator.kotlin
+#                          ^^^^^^^^^^^^^^^ source.kotlin
+#                                         ^ source.kotlin keyword.operator.kotlin
+#                                          ^^^^^^^^^^^^^^ source.kotlin
+>        Result.Loading -> println("Loading...")
+#^^^^^^^^^^^^^^ source.kotlin
+#              ^ source.kotlin keyword.operator.kotlin
+#               ^^^^^^^^ source.kotlin
+#                       ^^ source.kotlin keyword.operator.kotlin
+#                         ^^^^^^^^^ source.kotlin
+#                                  ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.begin.kotlin
+#                                   ^^^^^^^^^^ source.kotlin string.quoted.double.kotlin
+#                                             ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.end.kotlin
+#                                              ^^ source.kotlin
+>    }
+#^^^^^^ source.kotlin
+>}
+#^^ source.kotlin
+>
+>/**
+#^^^ source.kotlin comment.block.documentation.kotlin
+> * This is a test function
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.kotlin comment.block.documentation.kotlin
+> */
+#^ source.kotlin comment.block.documentation.kotlin
+# ^^ source.kotlin comment.block.documentation.kotlin
+>fun testFunction(): Int {
+#^^^ source.kotlin storage.type.kotlin
+#   ^^^^^^^^^^^^^^^ source.kotlin
+#                  ^ source.kotlin keyword.operator.kotlin
+#                   ^ source.kotlin
+#                    ^^^ source.kotlin support.type.kotlin
+#                       ^^^ source.kotlin
+>    return 42
+#^^^^ source.kotlin
+#    ^^^^^^ source.kotlin keyword.control.kotlin
+#          ^ source.kotlin
+#           ^^ source.kotlin constant.numeric.decimal.kotlin
+>}
+#^^ source.kotlin
+>
+>fun controlFlowTests() {
+#^^^ source.kotlin storage.type.kotlin
+#   ^^^^^^^^^^^^^^^^^^^^^^ source.kotlin
+>    if (immutableValue.isNotEmpty()) {
+#^^^^ source.kotlin
+#    ^^ source.kotlin keyword.control.kotlin
+#      ^^^^^^^^^^^^^^^^ source.kotlin
+#                      ^ source.kotlin keyword.operator.kotlin
+#                       ^^^^^^^^^^^^^^^^ source.kotlin
+>        println("Not empty")
+#^^^^^^^^^^^^^^^^ source.kotlin
+#                ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.begin.kotlin
+#                 ^^^^^^^^^ source.kotlin string.quoted.double.kotlin
+#                          ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.end.kotlin
+#                           ^^ source.kotlin
+>    } else {
+#^^^^^^ source.kotlin
+#      ^^^^ source.kotlin keyword.control.kotlin
+#          ^^^ source.kotlin
+>        println("Empty")
+#^^^^^^^^^^^^^^^^ source.kotlin
+#                ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.begin.kotlin
+#                 ^^^^^ source.kotlin string.quoted.double.kotlin
+#                      ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.end.kotlin
+#                       ^^ source.kotlin
+>    }
+#^^^^^^ source.kotlin
+>
+>    for (i in 1..10) {
+#^^^^ source.kotlin
+#    ^^^ source.kotlin keyword.control.kotlin
+#       ^^^^ source.kotlin
+#           ^^ source.kotlin keyword.control.kotlin
+#             ^ source.kotlin
+#              ^ source.kotlin constant.numeric.decimal.kotlin
+#               ^^ source.kotlin keyword.operator.kotlin
+#                 ^^ source.kotlin constant.numeric.decimal.kotlin
+#                   ^^^^ source.kotlin
+>        println(i)
+#^^^^^^^^^^^^^^^^^^^ source.kotlin
+>    }
+#^^^^^^ source.kotlin
+>}
+#^^ source.kotlin
+>
+>annotation class CustomAnnotation
+#^^^^^^^^^^ source.kotlin storage.type.kotlin
+#          ^ source.kotlin
+#           ^^^^^ source.kotlin storage.type.kotlin
+#                ^^^^^^^^^^^^^^^^^^ source.kotlin
+>
+>@CustomAnnotation
+#^ source.kotlin meta.annotation.kotlin punctuation.definition.annotation.kotlin
+# ^^^^^^^^^^^^^^^^^ source.kotlin
+>class AnnotatedClass
+#^^^^^ source.kotlin storage.type.kotlin
+#     ^^^^^^^^^^^^^^^^ source.kotlin
+>val escapedString = "Line break: \n Tab: \t Unicode: \u1234"
+#^^^ source.kotlin storage.type.kotlin
+#   ^^^^^^^^^^^^^^^ source.kotlin
+#                  ^ source.kotlin keyword.operator.kotlin
+#                   ^ source.kotlin
+#                    ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.begin.kotlin
+#                     ^^^^^^^^^^^^ source.kotlin string.quoted.double.kotlin
+#                                 ^^ source.kotlin string.quoted.double.kotlin constant.character.escape.kotlin
+#                                   ^^^^^^ source.kotlin string.quoted.double.kotlin
+#                                         ^^ source.kotlin string.quoted.double.kotlin constant.character.escape.kotlin
+#                                           ^^^^^^^^^^ source.kotlin string.quoted.double.kotlin
+#                                                     ^^^^^^ source.kotlin string.quoted.double.kotlin constant.character.escape.kotlin
+#                                                           ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.end.kotlin
+>val tripleQuotedString = """This is a 
+#^^^ source.kotlin storage.type.kotlin
+#   ^^^^^^^^^^^^^^^^^^^^ source.kotlin
+#                       ^ source.kotlin keyword.operator.kotlin
+#                        ^ source.kotlin
+#                         ^^^ source.kotlin string.quoted.triple.kotlin punctuation.definition.string.begin.kotlin
+#                            ^^^^^^^^^^^ source.kotlin string.quoted.triple.kotlin
+>multi-line string"""
+#^^^^^^^^^^^^^^^^^ source.kotlin string.quoted.triple.kotlin
+#                 ^^^ source.kotlin string.quoted.triple.kotlin punctuation.definition.string.end.kotlin
+>
+>fun operatorsTest(a: Int, b: Int): Int {
+#^^^ source.kotlin storage.type.kotlin
+#   ^^^^^^^^^^^^^^^^ source.kotlin
+#                   ^ source.kotlin keyword.operator.kotlin
+#                    ^ source.kotlin
+#                     ^^^ source.kotlin support.type.kotlin
+#                        ^^^ source.kotlin
+#                           ^ source.kotlin keyword.operator.kotlin
+#                            ^ source.kotlin
+#                             ^^^ source.kotlin support.type.kotlin
+#                                ^ source.kotlin
+#                                 ^ source.kotlin keyword.operator.kotlin
+#                                  ^ source.kotlin
+#                                   ^^^ source.kotlin support.type.kotlin
+#                                      ^^^ source.kotlin
+>    return a + b * (a - b) / a % b
+#^^^^ source.kotlin
+#    ^^^^^^ source.kotlin keyword.control.kotlin
+#          ^^^ source.kotlin
+#             ^ source.kotlin keyword.operator.kotlin
+#              ^^^ source.kotlin
+#                 ^ source.kotlin keyword.operator.kotlin
+#                  ^^^^ source.kotlin
+#                      ^ source.kotlin keyword.operator.kotlin
+#                       ^^^^ source.kotlin
+#                           ^ source.kotlin keyword.operator.kotlin
+#                            ^^^ source.kotlin
+#                               ^ source.kotlin keyword.operator.kotlin
+#                                ^^^ source.kotlin
+>}
+#^^ source.kotlin
+>
+>fun functionWithVarargs(vararg numbers: Int) {
+#^^^ source.kotlin storage.type.kotlin
+#   ^^^^^^^^^^^^^^^^^^^^^ source.kotlin
+#                        ^^^^^^ source.kotlin storage.modifier.kotlin
+#                              ^^^^^^^^ source.kotlin
+#                                      ^ source.kotlin keyword.operator.kotlin
+#                                       ^ source.kotlin
+#                                        ^^^ source.kotlin support.type.kotlin
+#                                           ^^^^ source.kotlin
+>    for (num in numbers) {
+#^^^^ source.kotlin
+#    ^^^ source.kotlin keyword.control.kotlin
+#       ^^^^^^ source.kotlin
+#             ^^ source.kotlin keyword.control.kotlin
+#               ^^^^^^^^^^^^ source.kotlin
+>        println(num)
+#^^^^^^^^^^^^^^^^^^^^^ source.kotlin
+>    }
+#^^^^^^ source.kotlin
+>}
+#^^ source.kotlin
+>
+>suspend fun fetchData(): String {
+#^^^^^^^ source.kotlin storage.modifier.kotlin
+#       ^ source.kotlin
+#        ^^^ source.kotlin storage.type.kotlin
+#           ^^^^^^^^^^^^ source.kotlin
+#                       ^ source.kotlin keyword.operator.kotlin
+#                        ^ source.kotlin
+#                         ^^^^^^ source.kotlin support.type.kotlin
+#                               ^^^ source.kotlin
+>    return "Data fetched"
+#^^^^ source.kotlin
+#    ^^^^^^ source.kotlin keyword.control.kotlin
+#          ^ source.kotlin
+#           ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.begin.kotlin
+#            ^^^^^^^^^^^^ source.kotlin string.quoted.double.kotlin
+#                        ^ source.kotlin string.quoted.double.kotlin punctuation.definition.string.end.kotlin
+>}
+#^^ source.kotlin
+>
+>val generic: List<Int> = listOf(1, 2, 3)
+#^^^ source.kotlin storage.type.kotlin
+#   ^^^^^^^^ source.kotlin
+#           ^ source.kotlin keyword.operator.kotlin
+#            ^ source.kotlin
+#             ^^^^ source.kotlin support.type.kotlin
+#                 ^ source.kotlin keyword.operator.kotlin
+#                  ^^^ source.kotlin support.type.kotlin
+#                     ^ source.kotlin keyword.operator.kotlin
+#                      ^ source.kotlin
+#                       ^ source.kotlin keyword.operator.kotlin
+#                        ^^^^^^^^ source.kotlin
+#                                ^ source.kotlin constant.numeric.decimal.kotlin
+#                                 ^^ source.kotlin
+#                                   ^ source.kotlin constant.numeric.decimal.kotlin
+#                                    ^^ source.kotlin
+#                                      ^ source.kotlin constant.numeric.decimal.kotlin
+#                                       ^^ source.kotlin
+>
