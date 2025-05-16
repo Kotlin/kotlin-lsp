@@ -1,6 +1,12 @@
 ### auto-generated section `build language-server.project-import.test` start
+load("@community//build:compiler-options.bzl", "create_kotlinc_options")
 load("@rules_java//java:defs.bzl", "java_library")
 load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_test")
+
+create_kotlinc_options(
+  name = "custom",
+  context_receivers = True
+)
 
 java_library(
   name = "test",
@@ -11,6 +17,7 @@ jvm_library(
   name = "test_test_lib",
   visibility = ["//visibility:public"],
   srcs = glob(["test/**/*.kt", "test/**/*.java"], allow_empty = True),
+  kotlinc_opts = ":custom",
   deps = [
     "@lib//:kotlin-stdlib",
     "@lib//:junit5",
