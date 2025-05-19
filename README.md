@@ -18,6 +18,8 @@ implementation, as well as parts of [Fleet](https://www.jetbrains.com/fleet/).
 3. Ensure that your Java version is 17 or above
 4. Open a folder with JVM-only Kotlin Gradle project and the project will be immediately recognized and LSP activated.
 
+![quickstart_sample.gif](images/quickstart_sample.gif)
+
 ### Supported features and Roadmap
 
 The best way to track current capabilities and what is going to be supported in the next builds is this table:
