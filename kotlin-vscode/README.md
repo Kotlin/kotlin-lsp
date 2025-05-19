@@ -1,15 +1,29 @@
 # Kotlin VSC extension
 
-This is a VS Code extension for the Kotlin language support
+
+Provides Kotlin language support for Visual Studio Code
 
 ## Features
 
-* Kotlin files highlighting
+* Out-of-the box integration with Kotlin LSP
+* Kotlin files semantic highlighting
+* Kotlin diagnostics reporting
+* Basic Kotlin intentions and quickfixes 
+* Auto-detection of Gradle projects
 
 ## Requirements
 
-## Extension Settings
+* Java 17 and above
+* Visual Studio Code version 1.100 and above
 
-## Known Issues
+## Getting started
 
-## Release Notes
+* Download the latest release bundle of VSC extension from [RELEASES.md](RELEASES.md)
+* Install the extension into Visual Studio Code via `Extensions | More Action | Install from VSIX`
+    * Alternatively, it is possible to drag-and-drop VSIX extension directly into `Extensions` tool window
+* Open folder with a Gradle JVM (**not** Kotlin Multiplatform) project
+* Enjoy!
+
+## License
+
+Apache 2.0, see [LICENSE](LICENSE)
