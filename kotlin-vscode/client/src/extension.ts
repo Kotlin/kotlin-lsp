@@ -35,20 +35,7 @@ export async function activate(context: ExtensionContext) {
     _context = context
     registerDecompiler(context)
     registerExportWorkspaceToJsonCommand(context)
-    restartOnConfigurationChange(context)
     registerStatusBarItem()
     initLspClient()
     await startLspClient()
-}
-
-
-function restartOnConfigurationChange(context: ExtensionContext) {
-    context.subscriptions.push(
-        workspace.onDidChangeConfiguration(async (event) => {
-            if (event.affectsConfiguration('kotlinLSP')) {
-                console.log('Configuration changed, attempting to restart language server.');
-                await startLspClient();
-            }
-        })
-    );
 }
