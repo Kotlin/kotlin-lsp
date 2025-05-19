@@ -8,6 +8,10 @@
   "icon": "icons/kotlin.png",
   "version": "0.0.1",
   "license": "Apache-2.0",
+  "repository": {
+    "url": "https://github.com/Kotlin/kotlin-lsp",
+    "directory": "kotlin-vscode"
+  },
   "engines": {
     "vscode": "^1.97.0"
   },
@@ -67,9 +71,6 @@
         "title": "Restart LSP server"
       }
     ]
-  },
-  "repository": {
-    "directory": "."
   },
   "devDependencies": {
     "typescript": "^5.7.2"
