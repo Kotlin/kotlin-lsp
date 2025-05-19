@@ -52,11 +52,6 @@
           "type": "string",
           "default": null,
           "description": "A path to the JRE that will be used to run the LSP. It should be at least version 17. If not specified, a JRE from JAVA_HOME will be used"
-        },
-        "kotlinLSP.javaSupport": {
-          "type": "boolean",
-          "default": false,
-          "description": "Run the Java LSP server provided by JetBrains. All other LSP servers supporting Java should be disabled for this to work properly."
         }
       }
     },
@@ -67,24 +62,11 @@
         "title": "Export workspace structure to JSON"
       },
       {
-        "command": "jetbrains.activateJavaLsp",
-        "category": "LSP",
-        "title": "Activate JetBrains LSP for Java"
-      },
-      {
         "command": "jetbrains.kotlin.restartLsp",
         "category": "Kotlin",
         "title": "Restart LSP server"
       }
-    ],
-    "menus": {
-      "commandPalette": [
-        {
-          "command": "jetbrains.activateJavaLsp",
-          "when": "editorLangId == java"
-        }
-      ]
-    }
+    ]
   },
   "repository": {
     "directory": "."

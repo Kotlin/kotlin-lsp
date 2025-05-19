@@ -35,7 +35,6 @@ export async function activate(context: ExtensionContext) {
     _context = context
     registerDecompiler(context)
     registerExportWorkspaceToJsonCommand(context)
-    registerActivateLspForJavaCommand(context)
     restartOnConfigurationChange(context)
     registerStatusBarItem()
     initLspClient()
@@ -53,10 +52,3 @@ function restartOnConfigurationChange(context: ExtensionContext) {
         })
     );
 }
-
-function registerActivateLspForJavaCommand(context: ExtensionContext) {
-    context.subscriptions.push(commands.registerCommand('jetbrains.activateJavaLsp', async () => {
-        // do nothing, lsp is already started here
-    }));
-}
-
