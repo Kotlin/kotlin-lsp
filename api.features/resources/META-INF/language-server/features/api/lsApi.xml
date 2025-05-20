@@ -1,0 +1,10 @@
+<idea-plugin>
+  <id>language-server/features/api</id>
+  <vendor>JetBrains</vendor>
+
+  <extensionPoints>
+    <extensionPoint qualifiedName="ls.fileForModificationFactory" beanClass="com.intellij.lang.LanguageExtensionPoint" dynamic="true">
+      <with attribute="implementationClass" implements="com.jetbrains.ls.api.features.textEdits.PsiFileTextEditsCollector$FileForModificationFactory"/>
+    </extensionPoint>
+  </extensionPoints>
+</idea-plugin>

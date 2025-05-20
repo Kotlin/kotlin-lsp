@@ -1,0 +1,21 @@
+package com.jetbrains.ls.api.features.definition
+
+import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.features.LSConfiguration
+import com.jetbrains.ls.api.features.partialResults.LSConcurrentResponseHandler
+import com.jetbrains.lsp.implementation.LspHandlerContext
+import com.jetbrains.lsp.protocol.DefinitionParams
+import com.jetbrains.lsp.protocol.Location
+
+object LSDefinition {
+    context(LSServer, LSConfiguration, LspHandlerContext)
+    suspend fun getDefinition(params: DefinitionParams): List<Location> {
+        return LSConcurrentResponseHandler.streamResultsIfPossibleOrRespondDirectly(
+            params.partialResultToken,
+            Location.serializer(),
+            entriesFor<LSDefinitionProvider>(params.textDocument),
+        ) {
+            it.provideDefinitions(params)
+        }
+    }
+}
