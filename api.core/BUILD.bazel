@@ -1,0 +1,25 @@
+### auto-generated section `build language-server.api.core` start
+load("@community//build:compiler-options.bzl", "create_kotlinc_options")
+load("@rules_jvm//:jvm.bzl", "jvm_library")
+
+create_kotlinc_options(
+  name = "custom",
+  context_receivers = True
+)
+
+jvm_library(
+  name = "api.core",
+  module_name = "language-server.api.core",
+  visibility = ["//visibility:public"],
+  srcs = glob(["src/**/*.kt", "src/**/*.java"], allow_empty = True),
+  kotlinc_opts = ":custom",
+  deps = [
+    "@lib//:kotlin-stdlib",
+    "@community//platform/core-api:core",
+    "@community//platform/util",
+    "@community//platform/workspace/storage",
+    "@community//platform/workspace/jps",
+    "//language-server/protocol",
+  ]
+)
+### auto-generated section `build language-server.api.core` end
