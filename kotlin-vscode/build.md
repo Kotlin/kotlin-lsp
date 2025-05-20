@@ -2,8 +2,8 @@
 
 ## Building release vsix
 
-1. Run [LSP build](../building/src/org/jetbrains/ls/building/BuildLSP.kt)
-2. Set `export LSP_ZIP_PATH=../../out/jps-artifacts/language_server_lsp_zip/language-server.kotlin-lsp.zip`
+1. Run [LSP build](../../building/src/org/jetbrains/ls/building/BuildLSP.kt)
+2. Set `export LSP_ZIP_PATH=../../../out/jps-artifacts/language_server_kotlin_lsp_zip/language-server.kotlin-lsp.zip`
 3. `npx vsce package --baseContentUrl=https://github.com/Kotlin/kotlin-lsp/tree/main/kotlin-vscode`
 4. The resulting `.vsix` file will be located in the current directory
 
