@@ -1,0 +1,55 @@
+### auto-generated section `build language-server.kotlin-lsp` start
+load("@community//build:compiler-options.bzl", "create_kotlinc_options")
+load("@rules_jvm//:jvm.bzl", "jvm_library")
+
+create_kotlinc_options(
+  name = "custom",
+  context_receivers = True,
+  opt_in = ["org.jetbrains.kotlin.analysis.api.KaExperimentalApi"],
+  when_guards = True
+)
+
+jvm_library(
+  name = "kotlin-lsp",
+  module_name = "language-server.kotlin-lsp",
+  visibility = ["//visibility:public"],
+  srcs = glob(["src/**/*.kt", "src/**/*.java"], allow_empty = True),
+  kotlinc_opts = ":custom",
+  deps = [
+    "@lib//:kotlin-stdlib",
+    "//language-server/protocol",
+    "@community//fleet/util/core",
+    "@community//platform/core-api:core",
+    "@community//platform/core-impl",
+    "@community//java/java-psi-api:psi",
+    "@community//platform/util",
+    "@lib//:kotlinx-coroutines-core",
+    "@lib//:kotlinx-serialization-json",
+    "@lib//:kotlinx-serialization-core",
+    "@lib//:kotlinc-kotlin-compiler-common",
+    "@community//platform/workspace/storage",
+    "//language-server/api.core",
+    "//language-server/api.impl.analyzer",
+    "@lib//:kotlinc-analysis-api",
+    "@lib//:kotlinc-analysis-api-k2",
+    "@community//java/java-impl:impl",
+    "@community//java/openapi:java",
+    "@community//plugins/kotlin/base/plugin",
+    "//language-server/api.features",
+    "@community//platform/editor-ui-ex:editor-ex",
+    "@community//plugins/kotlin/fir",
+    "@community//plugins/kotlin/base/project-structure",
+    "//language-server/features-impl/common",
+    "//language-server/features-impl/kotlin",
+    "//language-server/analyzer",
+    "@community//plugins/kotlin/base/code-insight",
+    "@community//plugins/kotlin/kotlin.searching/base",
+    "//language-server/workspace-import:project-import",
+    "@community//platform/workspace/jps",
+    "@lib//:clikt",
+    "@community//fleet/rhizomedb",
+    "@community//fleet/kernel",
+    "@community//platform/service-container",
+  ]
+)
+### auto-generated section `build language-server.kotlin-lsp` end
