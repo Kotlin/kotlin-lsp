@@ -35,8 +35,11 @@ fun main(args: Array<String>) {
 }
 
 private class RunKotlinLspCommand : CliktCommand(name = "kotlin-lsp") {
-    val socket: Int by option().int().default(9999).help("A port which will be used for a Kotlin LSP connection in a server mode. Default is 9999")
-    val client: Boolean by option().flag().help("Whether the Kotlin LSP server is used in client mode. If not set, server mode will be used with a port specified by `${::socket.name}`")
+    val socket: Int by option().int().default(9999).help("A port which will be used for a Kotlin LSP connection. Default is 9999")
+    val stdio: Boolean by option().flag().help("Whether the Kotlin LSP server is used in stdio mode. If not set, server mode will be used with a port specified by `${::socket.name}`")
+    val client: Boolean by option().flag()
+        .help("Whether the Kotlin LSP server is used in client mode. If not set, server mode will be used with a port specified by `${::socket.name}`")
+        .validate { if (it && stdio) fail("Can't use stdio mode with client mode") }
 
     override fun run() {
         initKotlinLspLogger()
