@@ -18,4 +18,13 @@ classpath="$DIR/lib/*"
 
 main_class="com.jetbrains.ls.kotlinLsp.KotlinLspServerKt"
 
-java "--add-opens" "java.base/java.lang=ALL-UNNAMED" -cp "$classpath" "$main_class" "$@"
+JAVA_BIN="java"
+if [ -n "$JAVA_HOME" ]; then
+  JAVA_BIN="$JAVA_HOME/bin/java"
+  if [ ! -x "$JAVA_BIN" ]; then
+    echo "'java' should be on the PATH or JAVA_HOME must point to a valid JDK installation"
+    exit 1
+  fi
+fi
+
+"$JAVA_BIN" "--add-opens" "java.base/java.lang=ALL-UNNAMED" -cp "$classpath" "$main_class" "$@"
