@@ -40,11 +40,13 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
         if (!params.shouldProvideKind(CodeActionKind.QuickFix)) return@flow
         val diagnosticData = params.diagnosticData<KotlinCompilerDiagnosticData>().ifEmpty { return@flow }
 
-        withAnalysisContext(params.textDocument.uri.uri) {
+        val uri = params.textDocument.uri.uri
+        withAnalysisContext(uri) {
             val file = params.textDocument.findVirtualFile() ?: return@withAnalysisContext emptyList()
             val quickFixService = KotlinQuickFixService.getInstance()
             val ktFile = file.findPsiFile(project) as? KtFile ?: return@withAnalysisContext emptyList()
             val document = file.findDocument() ?: return@withAnalysisContext emptyList()
+            withWritableFile(uri) {
             analyze(ktFile) {
                 val kaDiagnostics = ktFile.collectDiagnostics(filter = KaDiagnosticCheckerFilter.ONLY_COMMON_CHECKERS)
                 if (kaDiagnostics.isEmpty()) return@analyze emptyList()
@@ -65,6 +67,7 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
                 }
                 result
             }
+                }
         }.forEach { emit(it) }
     }
 
@@ -116,29 +119,31 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
             val fix = LSP.json.decodeFromJsonElement<KotlinCompilerDiagnosticQuickfixData>(otherArgs[1])
             withAnalysisContext(documentUri.uri) {
                 val file = documentUri.findVirtualFile() ?: return@withAnalysisContext emptyList()
-                PsiFileTextEditsCollector.collectTextEdits(file) { ktFile ->
-                    check(ktFile is KtFile) { "PsiFile is not KtFile but ${ktFile}" }
-                    val candidates = analyze(ktFile) {
-                        val kaDiagnostics = ktFile.collectDiagnostics(filter = KaDiagnosticCheckerFilter.ONLY_COMMON_CHECKERS)
-                        if (kaDiagnostics.isEmpty()) return@analyze emptySequence()
+                withWritableFile(documentUri.uri) {
+                    PsiFileTextEditsCollector.collectTextEdits(file) { ktFile ->
+                        check(ktFile is KtFile) { "PsiFile is not KtFile but ${ktFile}" }
+                        val candidates = analyze(ktFile) {
+                            val kaDiagnostics = ktFile.collectDiagnostics(filter = KaDiagnosticCheckerFilter.ONLY_COMMON_CHECKERS)
+                            if (kaDiagnostics.isEmpty()) return@analyze emptySequence()
 
-                        val kaDiagnostic = kaDiagnostics.firstOrNull { diagnosticData.matches(it) } ?: return@analyze emptySequence()
+                            val kaDiagnostic = kaDiagnostics.firstOrNull { diagnosticData.matches(it) } ?: return@analyze emptySequence()
 
-                        with(KotlinQuickFixService.getInstance()) {
-                            getQuickFixesWithCatchingFor(kaDiagnostic) + getLazyQuickFixesWithCatchingFor(kaDiagnostic)
-                        }
-                            .mapNotNull { fix ->
-                                /* do not log exception here, they are already logged in getQuickFixesAsCodeActions */
-                                fix.getOrNull()
+                            with(KotlinQuickFixService.getInstance()) {
+                                getQuickFixesWithCatchingFor(kaDiagnostic) + getLazyQuickFixesWithCatchingFor(kaDiagnostic)
                             }
+                                .mapNotNull { fix ->
+                                    /* do not log exception here, they are already logged in getQuickFixesAsCodeActions */
+                                    fix.getOrNull()
+                                }
 
+                        }
+                        if (candidates.none()) return@collectTextEdits
+                        val document = file.findDocument()!!
+                        val editor = createEditorWithCaret(document, document.offsetByPosition(lspDiagnostic.range.start))
+
+                        val fix = candidates.findCandidate(fix, editor, ktFile) ?: return@collectTextEdits
+                        fix.invoke(project, editor, ktFile)
                     }
-                    if (candidates.none()) return@collectTextEdits
-                    val document = file.findDocument()!!
-                    val editor = createEditorWithCaret(document, document.offsetByPosition(lspDiagnostic.range.start))
-
-                    val fix = candidates.findCandidate(fix, editor, ktFile) ?: return@collectTextEdits
-                    fix.invoke(project, editor, ktFile)
                 }
             }
         }

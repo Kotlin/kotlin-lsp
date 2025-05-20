@@ -13,6 +13,12 @@ interface LSServer { // workspace?
         action: suspend context(LSAnalysisContext, CoroutineScope) () -> R,
     ): R
 
+    suspend fun <R> withWritableFile(
+        useSiteFileUri: URI,
+        action: suspend context(CoroutineScope) () -> R,
+    ): R
+
+
     /**
      * Should be used only when there is no use site file uri, e.g. for workspace-wide actions.
      *
