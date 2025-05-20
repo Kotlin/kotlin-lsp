@@ -23,7 +23,7 @@ import kotlin.io.path.div
 import kotlin.io.path.exists
 
 class ProjectImportTest {
-    private val testdataDir = Paths.get(PathManager.getHomePath(), "language-server", "workspace-import", "test", "testData", "gradle")
+    private val testdataDir = Paths.get(PathManager.getHomePath(), "language-server", "community", "workspace-import", "test", "testData", "gradle")
     private val importer = GradleWorkspaceImporter
 
     @Test
