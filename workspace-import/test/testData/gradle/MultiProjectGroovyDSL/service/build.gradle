@@ -1,0 +1,4 @@
+dependencies {
+    implementation project(':api')
+    implementation "org.jetbrains.kotlin:kotlin-reflect"
+}

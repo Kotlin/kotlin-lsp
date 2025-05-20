@@ -1,0 +1,3754 @@
+{
+    "modules": [
+        {
+            "name": "PetClinic.main",
+            "dependencies": [
+                {
+                    "type": "library",
+                    "name": "Gradle: io.projectreactor:reactor-core:3.7.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter-cache:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter-data-jpa:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter-thymeleaf:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter-web:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter-validation:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: javax.cache:cache-api:1.1.1",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: jakarta.xml.bind:jakarta.xml.bind-api:4.0.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.reactivestreams:reactive-streams:1.0.4",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter-jdbc:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter-json:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-context-support:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.hibernate.orm:hibernate-core:6.6.5.Final",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.data:spring-data-jpa:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-aspects:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.thymeleaf:thymeleaf-spring6:3.1.3.RELEASE",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-webmvc:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-web:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:10.1.34",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.hibernate.validator:hibernate-validator:8.0.2.Final",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: jakarta.activation:jakarta.activation-api:2.1.3",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: jakarta.annotation:jakarta.annotation-api:2.1.1",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-context:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-orm:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-jdbc:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.data:spring-data-commons:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-aop:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-tx:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-beans:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-expression:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-core:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.yaml:snakeyaml:2.3",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.zaxxer:HikariCP:5.1.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: jakarta.persistence:jakarta.persistence-api:3.1.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: jakarta.transaction:jakarta.transaction-api:2.0.1",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.antlr:antlr4-runtime:4.13.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.thymeleaf:thymeleaf:3.1.3.RELEASE",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: ch.qos.logback:logback-classic:1.5.16",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.apache.logging.log4j:log4j-to-slf4j:2.24.3",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.slf4j:jul-to-slf4j:2.0.16",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.slf4j:slf4j-api:2.0.16",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.aspectj:aspectjweaver:1.9.22.1",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.fasterxml.jackson.module:jackson-module-parameter-names:2.18.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.fasterxml.jackson.core:jackson-annotations:2.18.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.fasterxml.jackson.core:jackson-core:2.18.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.18.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.18.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:10.1.34",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:10.1.34",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: io.micrometer:micrometer-observation:1.14.3",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: jakarta.validation:jakarta.validation-api:3.0.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jboss.logging:jboss-logging:3.6.1.Final",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.fasterxml:classmate:1.7.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-jcl:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.attoparser:attoparser:2.0.7.RELEASE",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.unbescape:unbescape:1.1.6.RELEASE",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: io.micrometer:micrometer-commons:1.14.3",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: ch.qos.logback:logback-core:1.5.16",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.apache.logging.log4j:log4j-api:2.24.3",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-devtools:3.4.2",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.glassfish.jaxb:jaxb-runtime:4.0.5",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.glassfish.jaxb:jaxb-core:4.0.5",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter-actuator:3.4.2",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.webjars:webjars-locator-lite:1.0.1",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.webjars.npm:bootstrap:5.3.3",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.webjars.npm:font-awesome:4.7.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.github.ben-manes.caffeine:caffeine:3.1.8",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.h2database:h2:2.3.232",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.mysql:mysql-connector-j:9.1.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.postgresql:postgresql:42.7.5",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-actuator-autoconfigure:3.4.2",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-actuator:3.4.2",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.eclipse.angus:angus-activation:2.0.2",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: io.micrometer:micrometer-jakarta9:1.14.3",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: io.micrometer:micrometer-core:1.14.3",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jspecify:jspecify:1.0.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.checkerframework:checker-qual:3.48.3",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.google.errorprone:error_prone_annotations:2.21.1",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.hibernate.common:hibernate-commons-annotations:7.0.3.Final",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: io.smallrye:jandex:3.2.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: net.bytebuddy:byte-buddy:1.15.11",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: jakarta.inject:jakarta.inject-api:2.0.1",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.hdrhistogram:HdrHistogram:2.2.2",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.latencyutils:LatencyUtils:2.0.3",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.glassfish.jaxb:txw2:4.0.5",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.sun.istack:istack-commons-runtime:4.1.2",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "inheritedSdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/",
+                    "excludedPatterns": [],
+                    "excludedUrls": [],
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/src/main/java",
+                            "type": "java-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/main/resources",
+                            "type": "java-resource"
+                        }
+                    ]
+                }
+            ],
+            "facets": []
+        },
+        {
+            "name": "PetClinic.test",
+            "dependencies": [
+                {
+                    "type": "library",
+                    "name": "Gradle: io.projectreactor:reactor-core:3.7.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter-cache:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter-data-jpa:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter-thymeleaf:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter-web:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter-validation:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: javax.cache:cache-api:1.1.1",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: jakarta.xml.bind:jakarta.xml.bind-api:4.0.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.reactivestreams:reactive-streams:1.0.4",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter-jdbc:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter-json:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-context-support:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.hibernate.orm:hibernate-core:6.6.5.Final",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.data:spring-data-jpa:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-aspects:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.thymeleaf:thymeleaf-spring6:3.1.3.RELEASE",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-webmvc:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-web:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:10.1.34",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.hibernate.validator:hibernate-validator:8.0.2.Final",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: jakarta.activation:jakarta.activation-api:2.1.3",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: jakarta.annotation:jakarta.annotation-api:2.1.1",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-context:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-orm:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-jdbc:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.data:spring-data-commons:3.4.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-aop:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-tx:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-beans:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-expression:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-core:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.yaml:snakeyaml:2.3",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.zaxxer:HikariCP:5.1.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: jakarta.persistence:jakarta.persistence-api:3.1.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: jakarta.transaction:jakarta.transaction-api:2.0.1",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.antlr:antlr4-runtime:4.13.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.thymeleaf:thymeleaf:3.1.3.RELEASE",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: ch.qos.logback:logback-classic:1.5.16",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.apache.logging.log4j:log4j-to-slf4j:2.24.3",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.slf4j:jul-to-slf4j:2.0.16",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.slf4j:slf4j-api:2.0.16",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.aspectj:aspectjweaver:1.9.22.1",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.fasterxml.jackson.module:jackson-module-parameter-names:2.18.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.fasterxml.jackson.core:jackson-annotations:2.18.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.fasterxml.jackson.core:jackson-core:2.18.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.18.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.18.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:10.1.34",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:10.1.34",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: io.micrometer:micrometer-observation:1.14.3",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: jakarta.validation:jakarta.validation-api:3.0.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jboss.logging:jboss-logging:3.6.1.Final",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.fasterxml:classmate:1.7.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-jcl:6.2.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.attoparser:attoparser:2.0.7.RELEASE",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.unbescape:unbescape:1.1.6.RELEASE",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: io.micrometer:micrometer-commons:1.14.3",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: ch.qos.logback:logback-core:1.5.16",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.apache.logging.log4j:log4j-api:2.24.3",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-devtools:3.4.2",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.glassfish.jaxb:jaxb-runtime:4.0.5",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.glassfish.jaxb:jaxb-core:4.0.5",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter-actuator:3.4.2",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.webjars:webjars-locator-lite:1.0.1",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.webjars.npm:bootstrap:5.3.3",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.webjars.npm:font-awesome:4.7.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.github.ben-manes.caffeine:caffeine:3.1.8",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.h2database:h2:2.3.232",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.mysql:mysql-connector-j:9.1.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.postgresql:postgresql:42.7.5",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-actuator-autoconfigure:3.4.2",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-actuator:3.4.2",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.eclipse.angus:angus-activation:2.0.2",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: io.micrometer:micrometer-jakarta9:1.14.3",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: io.micrometer:micrometer-core:1.14.3",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jspecify:jspecify:1.0.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.checkerframework:checker-qual:3.48.3",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.google.errorprone:error_prone_annotations:2.21.1",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.hibernate.common:hibernate-commons-annotations:7.0.3.Final",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: io.smallrye:jandex:3.2.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: net.bytebuddy:byte-buddy:1.15.11",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: jakarta.inject:jakarta.inject-api:2.0.1",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.hdrhistogram:HdrHistogram:2.2.2",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.latencyutils:LatencyUtils:2.0.3",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.glassfish.jaxb:txw2:4.0.5",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.sun.istack:istack-commons-runtime:4.1.2",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter-test:3.4.2",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-testcontainers:3.4.2",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-docker-compose:3.4.2",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.testcontainers:junit-jupiter:1.20.4",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.testcontainers:mysql:1.20.4",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.graalvm.buildtools:junit-platform-native:0.10.3",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:3.4.2",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-test:3.4.2",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.jayway.jsonpath:json-path:2.9.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: net.minidev:json-smart:2.5.1",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.assertj:assertj-core:3.26.3",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.awaitility:awaitility:4.2.2",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.testcontainers:jdbc:1.20.4",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.testcontainers:database-commons:1.20.4",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.testcontainers:testcontainers:1.20.4",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: junit:junit:4.13.2",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.hamcrest:hamcrest-core:2.2",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.hamcrest:hamcrest:2.2",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.jupiter:junit-jupiter-params:5.11.4",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.jupiter:junit-jupiter-api:5.11.4",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.platform:junit-platform-commons:1.11.4",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.jupiter:junit-jupiter:5.11.4",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.mockito:mockito-junit-jupiter:5.14.2",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.mockito:mockito-core:5.14.2",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.skyscreamer:jsonassert:1.5.3",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework:spring-test:6.2.2",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.xmlunit:xmlunit-core:2.10.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.github.docker-java:docker-java-api:3.4.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.github.docker-java:docker-java-transport-zerodep:3.4.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: net.minidev:accessors-smart:2.5.1",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: net.bytebuddy:byte-buddy:1.15.11",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: net.bytebuddy:byte-buddy-agent:1.15.11",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.vaadin.external.google:android-json:0.0.20131108.vaadin1",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.apache.commons:commons-compress:1.24.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.rnorth.duct-tape:duct-tape:1.0.8",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.ow2.asm:asm:9.6",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.opentest4j:opentest4j:1.3.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.apiguardian:apiguardian-api:1.1.2",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains:annotations:17.0.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.github.docker-java:docker-java-transport:3.4.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: net.java.dev.jna:jna:5.13.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.glassfish.jaxb:jaxb-runtime:4.0.5",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.glassfish.jaxb:jaxb-core:4.0.5",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-starter-actuator:3.4.2",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.webjars:webjars-locator-lite:1.0.1",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.webjars.npm:bootstrap:5.3.3",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.webjars.npm:font-awesome:4.7.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.github.ben-manes.caffeine:caffeine:3.1.8",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.h2database:h2:2.3.232",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.mysql:mysql-connector-j:9.1.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.postgresql:postgresql:42.7.5",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.eclipse.angus:angus-activation:2.0.2",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-actuator-autoconfigure:3.4.2",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: io.micrometer:micrometer-jakarta9:1.14.3",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.springframework.boot:spring-boot-actuator:3.4.2",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: io.micrometer:micrometer-core:1.14.3",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jspecify:jspecify:1.0.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.checkerframework:checker-qual:3.48.3",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.google.errorprone:error_prone_annotations:2.21.1",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.platform:junit-platform-console:1.11.4",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.platform:junit-platform-reporting:1.11.4",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.platform:junit-platform-launcher:1.11.4",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.11.4",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.platform:junit-platform-engine:1.11.4",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.hibernate.common:hibernate-commons-annotations:7.0.3.Final",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: io.smallrye:jandex:3.2.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: jakarta.inject:jakarta.inject-api:2.0.1",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.objenesis:objenesis:3.3",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.hdrhistogram:HdrHistogram:2.2.2",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.latencyutils:LatencyUtils:2.0.3",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.glassfish.jaxb:txw2:4.0.5",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.sun.istack:istack-commons-runtime:4.1.2",
+                    "scope": "test"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "inheritedSdk"
+                },
+                {
+                    "type": "module",
+                    "name": "PetClinic.main",
+                    "scope": "compile"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/",
+                    "excludedPatterns": [],
+                    "excludedUrls": [],
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/src/test/java",
+                            "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/test/resources",
+                            "type": "java-test-resource"
+                        }
+                    ]
+                }
+            ],
+            "facets": []
+        }
+    ],
+    "libraries": [
+        {
+            "name": "Gradle: ch.qos.logback:logback-classic:1.5.16",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "logback-classic-1.5.16.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "ch.qos.logback",
+                    "artifactId": "logback-classic",
+                    "version": "1.5.16",
+                    "baseVersion": "1.5.16"
+                }
+            }
+        },
+        {
+            "name": "Gradle: ch.qos.logback:logback-core:1.5.16",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "logback-core-1.5.16.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "ch.qos.logback",
+                    "artifactId": "logback-core",
+                    "version": "1.5.16",
+                    "baseVersion": "1.5.16"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.fasterxml.jackson.core:jackson-annotations:2.18.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jackson-annotations-2.18.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.fasterxml.jackson.core",
+                    "artifactId": "jackson-annotations",
+                    "version": "2.18.2",
+                    "baseVersion": "2.18.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.fasterxml.jackson.core:jackson-core:2.18.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jackson-core-2.18.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.fasterxml.jackson.core",
+                    "artifactId": "jackson-core",
+                    "version": "2.18.2",
+                    "baseVersion": "2.18.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.18.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jackson-databind-2.18.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.fasterxml.jackson.core",
+                    "artifactId": "jackson-databind",
+                    "version": "2.18.2",
+                    "baseVersion": "2.18.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.18.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jackson-datatype-jdk8-2.18.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.fasterxml.jackson.datatype",
+                    "artifactId": "jackson-datatype-jdk8",
+                    "version": "2.18.2",
+                    "baseVersion": "2.18.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jackson-datatype-jsr310-2.18.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.fasterxml.jackson.datatype",
+                    "artifactId": "jackson-datatype-jsr310",
+                    "version": "2.18.2",
+                    "baseVersion": "2.18.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.fasterxml.jackson.module:jackson-module-parameter-names:2.18.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jackson-module-parameter-names-2.18.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.fasterxml.jackson.module",
+                    "artifactId": "jackson-module-parameter-names",
+                    "version": "2.18.2",
+                    "baseVersion": "2.18.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.fasterxml:classmate:1.7.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "classmate-1.7.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.fasterxml",
+                    "artifactId": "classmate",
+                    "version": "1.7.0",
+                    "baseVersion": "1.7.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.github.ben-manes.caffeine:caffeine:3.1.8",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "caffeine-3.1.8.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.github.ben-manes.caffeine",
+                    "artifactId": "caffeine",
+                    "version": "3.1.8",
+                    "baseVersion": "3.1.8"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.github.docker-java:docker-java-api:3.4.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "docker-java-api-3.4.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.github.docker-java",
+                    "artifactId": "docker-java-api",
+                    "version": "3.4.0",
+                    "baseVersion": "3.4.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.github.docker-java:docker-java-transport-zerodep:3.4.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "docker-java-transport-zerodep-3.4.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.github.docker-java",
+                    "artifactId": "docker-java-transport-zerodep",
+                    "version": "3.4.0",
+                    "baseVersion": "3.4.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.github.docker-java:docker-java-transport:3.4.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "docker-java-transport-3.4.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.github.docker-java",
+                    "artifactId": "docker-java-transport",
+                    "version": "3.4.0",
+                    "baseVersion": "3.4.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.google.errorprone:error_prone_annotations:2.21.1",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "error_prone_annotations-2.21.1.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.google.errorprone",
+                    "artifactId": "error_prone_annotations",
+                    "version": "2.21.1",
+                    "baseVersion": "2.21.1"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.h2database:h2:2.3.232",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "h2-2.3.232.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.h2database",
+                    "artifactId": "h2",
+                    "version": "2.3.232",
+                    "baseVersion": "2.3.232"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.jayway.jsonpath:json-path:2.9.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "json-path-2.9.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.jayway.jsonpath",
+                    "artifactId": "json-path",
+                    "version": "2.9.0",
+                    "baseVersion": "2.9.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.mysql:mysql-connector-j:9.1.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "mysql-connector-j-9.1.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.mysql",
+                    "artifactId": "mysql-connector-j",
+                    "version": "9.1.0",
+                    "baseVersion": "9.1.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.sun.istack:istack-commons-runtime:4.1.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "istack-commons-runtime-4.1.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.sun.istack",
+                    "artifactId": "istack-commons-runtime",
+                    "version": "4.1.2",
+                    "baseVersion": "4.1.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.vaadin.external.google:android-json:0.0.20131108.vaadin1",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "android-json-0.0.20131108.vaadin1.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.vaadin.external.google",
+                    "artifactId": "android-json",
+                    "version": "0.0.20131108.vaadin1",
+                    "baseVersion": "0.0.20131108.vaadin1"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.zaxxer:HikariCP:5.1.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "HikariCP-5.1.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.zaxxer",
+                    "artifactId": "HikariCP",
+                    "version": "5.1.0",
+                    "baseVersion": "5.1.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: io.micrometer:micrometer-commons:1.14.3",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "micrometer-commons-1.14.3.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "io.micrometer",
+                    "artifactId": "micrometer-commons",
+                    "version": "1.14.3",
+                    "baseVersion": "1.14.3"
+                }
+            }
+        },
+        {
+            "name": "Gradle: io.micrometer:micrometer-core:1.14.3",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "micrometer-core-1.14.3.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "io.micrometer",
+                    "artifactId": "micrometer-core",
+                    "version": "1.14.3",
+                    "baseVersion": "1.14.3"
+                }
+            }
+        },
+        {
+            "name": "Gradle: io.micrometer:micrometer-jakarta9:1.14.3",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "micrometer-jakarta9-1.14.3.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "io.micrometer",
+                    "artifactId": "micrometer-jakarta9",
+                    "version": "1.14.3",
+                    "baseVersion": "1.14.3"
+                }
+            }
+        },
+        {
+            "name": "Gradle: io.micrometer:micrometer-observation:1.14.3",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "micrometer-observation-1.14.3.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "io.micrometer",
+                    "artifactId": "micrometer-observation",
+                    "version": "1.14.3",
+                    "baseVersion": "1.14.3"
+                }
+            }
+        },
+        {
+            "name": "Gradle: io.projectreactor:reactor-core:3.7.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "reactor-core-3.7.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "io.projectreactor",
+                    "artifactId": "reactor-core",
+                    "version": "3.7.2",
+                    "baseVersion": "3.7.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: io.smallrye:jandex:3.2.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jandex-3.2.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "io.smallrye",
+                    "artifactId": "jandex",
+                    "version": "3.2.0",
+                    "baseVersion": "3.2.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: jakarta.activation:jakarta.activation-api:2.1.3",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jakarta.activation-api-2.1.3.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "jakarta.activation",
+                    "artifactId": "jakarta.activation-api",
+                    "version": "2.1.3",
+                    "baseVersion": "2.1.3"
+                }
+            }
+        },
+        {
+            "name": "Gradle: jakarta.annotation:jakarta.annotation-api:2.1.1",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jakarta.annotation-api-2.1.1.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "jakarta.annotation",
+                    "artifactId": "jakarta.annotation-api",
+                    "version": "2.1.1",
+                    "baseVersion": "2.1.1"
+                }
+            }
+        },
+        {
+            "name": "Gradle: jakarta.inject:jakarta.inject-api:2.0.1",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jakarta.inject-api-2.0.1.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "jakarta.inject",
+                    "artifactId": "jakarta.inject-api",
+                    "version": "2.0.1",
+                    "baseVersion": "2.0.1"
+                }
+            }
+        },
+        {
+            "name": "Gradle: jakarta.persistence:jakarta.persistence-api:3.1.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jakarta.persistence-api-3.1.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "jakarta.persistence",
+                    "artifactId": "jakarta.persistence-api",
+                    "version": "3.1.0",
+                    "baseVersion": "3.1.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: jakarta.transaction:jakarta.transaction-api:2.0.1",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jakarta.transaction-api-2.0.1.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "jakarta.transaction",
+                    "artifactId": "jakarta.transaction-api",
+                    "version": "2.0.1",
+                    "baseVersion": "2.0.1"
+                }
+            }
+        },
+        {
+            "name": "Gradle: jakarta.validation:jakarta.validation-api:3.0.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jakarta.validation-api-3.0.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "jakarta.validation",
+                    "artifactId": "jakarta.validation-api",
+                    "version": "3.0.2",
+                    "baseVersion": "3.0.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: jakarta.xml.bind:jakarta.xml.bind-api:4.0.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jakarta.xml.bind-api-4.0.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "jakarta.xml.bind",
+                    "artifactId": "jakarta.xml.bind-api",
+                    "version": "4.0.2",
+                    "baseVersion": "4.0.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: javax.cache:cache-api:1.1.1",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "cache-api-1.1.1.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "javax.cache",
+                    "artifactId": "cache-api",
+                    "version": "1.1.1",
+                    "baseVersion": "1.1.1"
+                }
+            }
+        },
+        {
+            "name": "Gradle: junit:junit:4.13.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "junit-4.13.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "junit",
+                    "artifactId": "junit",
+                    "version": "4.13.2",
+                    "baseVersion": "4.13.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: net.bytebuddy:byte-buddy-agent:1.15.11",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "byte-buddy-agent-1.15.11.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "net.bytebuddy",
+                    "artifactId": "byte-buddy-agent",
+                    "version": "1.15.11",
+                    "baseVersion": "1.15.11"
+                }
+            }
+        },
+        {
+            "name": "Gradle: net.bytebuddy:byte-buddy:1.15.11",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "byte-buddy-1.15.11.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "net.bytebuddy",
+                    "artifactId": "byte-buddy",
+                    "version": "1.15.11",
+                    "baseVersion": "1.15.11"
+                }
+            }
+        },
+        {
+            "name": "Gradle: net.java.dev.jna:jna:5.13.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jna-5.13.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "net.java.dev.jna",
+                    "artifactId": "jna",
+                    "version": "5.13.0",
+                    "baseVersion": "5.13.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: net.minidev:accessors-smart:2.5.1",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "accessors-smart-2.5.1.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "net.minidev",
+                    "artifactId": "accessors-smart",
+                    "version": "2.5.1",
+                    "baseVersion": "2.5.1"
+                }
+            }
+        },
+        {
+            "name": "Gradle: net.minidev:json-smart:2.5.1",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "json-smart-2.5.1.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "net.minidev",
+                    "artifactId": "json-smart",
+                    "version": "2.5.1",
+                    "baseVersion": "2.5.1"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.antlr:antlr4-runtime:4.13.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "antlr4-runtime-4.13.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.antlr",
+                    "artifactId": "antlr4-runtime",
+                    "version": "4.13.0",
+                    "baseVersion": "4.13.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.apache.commons:commons-compress:1.24.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "commons-compress-1.24.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.apache.commons",
+                    "artifactId": "commons-compress",
+                    "version": "1.24.0",
+                    "baseVersion": "1.24.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.apache.logging.log4j:log4j-api:2.24.3",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "log4j-api-2.24.3.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.apache.logging.log4j",
+                    "artifactId": "log4j-api",
+                    "version": "2.24.3",
+                    "baseVersion": "2.24.3"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.apache.logging.log4j:log4j-to-slf4j:2.24.3",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "log4j-to-slf4j-2.24.3.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.apache.logging.log4j",
+                    "artifactId": "log4j-to-slf4j",
+                    "version": "2.24.3",
+                    "baseVersion": "2.24.3"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:10.1.34",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "tomcat-embed-core-10.1.34.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.apache.tomcat.embed",
+                    "artifactId": "tomcat-embed-core",
+                    "version": "10.1.34",
+                    "baseVersion": "10.1.34"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:10.1.34",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "tomcat-embed-el-10.1.34.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.apache.tomcat.embed",
+                    "artifactId": "tomcat-embed-el",
+                    "version": "10.1.34",
+                    "baseVersion": "10.1.34"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:10.1.34",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "tomcat-embed-websocket-10.1.34.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.apache.tomcat.embed",
+                    "artifactId": "tomcat-embed-websocket",
+                    "version": "10.1.34",
+                    "baseVersion": "10.1.34"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.apiguardian:apiguardian-api:1.1.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "apiguardian-api-1.1.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.apiguardian",
+                    "artifactId": "apiguardian-api",
+                    "version": "1.1.2",
+                    "baseVersion": "1.1.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.aspectj:aspectjweaver:1.9.22.1",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "aspectjweaver-1.9.22.1.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.aspectj",
+                    "artifactId": "aspectjweaver",
+                    "version": "1.9.22.1",
+                    "baseVersion": "1.9.22.1"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.assertj:assertj-core:3.26.3",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "assertj-core-3.26.3.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.assertj",
+                    "artifactId": "assertj-core",
+                    "version": "3.26.3",
+                    "baseVersion": "3.26.3"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.attoparser:attoparser:2.0.7.RELEASE",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "attoparser-2.0.7.RELEASE.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.attoparser",
+                    "artifactId": "attoparser",
+                    "version": "2.0.7.RELEASE",
+                    "baseVersion": "2.0.7.RELEASE"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.awaitility:awaitility:4.2.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "awaitility-4.2.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.awaitility",
+                    "artifactId": "awaitility",
+                    "version": "4.2.2",
+                    "baseVersion": "4.2.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.checkerframework:checker-qual:3.48.3",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "checker-qual-3.48.3.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.checkerframework",
+                    "artifactId": "checker-qual",
+                    "version": "3.48.3",
+                    "baseVersion": "3.48.3"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.eclipse.angus:angus-activation:2.0.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "angus-activation-2.0.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.eclipse.angus",
+                    "artifactId": "angus-activation",
+                    "version": "2.0.2",
+                    "baseVersion": "2.0.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.glassfish.jaxb:jaxb-core:4.0.5",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jaxb-core-4.0.5.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.glassfish.jaxb",
+                    "artifactId": "jaxb-core",
+                    "version": "4.0.5",
+                    "baseVersion": "4.0.5"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.glassfish.jaxb:jaxb-runtime:4.0.5",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jaxb-runtime-4.0.5.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.glassfish.jaxb",
+                    "artifactId": "jaxb-runtime",
+                    "version": "4.0.5",
+                    "baseVersion": "4.0.5"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.glassfish.jaxb:txw2:4.0.5",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "txw2-4.0.5.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.glassfish.jaxb",
+                    "artifactId": "txw2",
+                    "version": "4.0.5",
+                    "baseVersion": "4.0.5"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.graalvm.buildtools:junit-platform-native:0.10.3",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "junit-platform-native-0.10.3.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.graalvm.buildtools",
+                    "artifactId": "junit-platform-native",
+                    "version": "0.10.3",
+                    "baseVersion": "0.10.3"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.hamcrest:hamcrest-core:2.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "hamcrest-core-2.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.hamcrest",
+                    "artifactId": "hamcrest-core",
+                    "version": "2.2",
+                    "baseVersion": "2.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.hamcrest:hamcrest:2.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "hamcrest-2.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.hamcrest",
+                    "artifactId": "hamcrest",
+                    "version": "2.2",
+                    "baseVersion": "2.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.hdrhistogram:HdrHistogram:2.2.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "HdrHistogram-2.2.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.hdrhistogram",
+                    "artifactId": "HdrHistogram",
+                    "version": "2.2.2",
+                    "baseVersion": "2.2.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.hibernate.common:hibernate-commons-annotations:7.0.3.Final",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "hibernate-commons-annotations-7.0.3.Final.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.hibernate.common",
+                    "artifactId": "hibernate-commons-annotations",
+                    "version": "7.0.3.Final",
+                    "baseVersion": "7.0.3.Final"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.hibernate.orm:hibernate-core:6.6.5.Final",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "hibernate-core-6.6.5.Final.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.hibernate.orm",
+                    "artifactId": "hibernate-core",
+                    "version": "6.6.5.Final",
+                    "baseVersion": "6.6.5.Final"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.hibernate.validator:hibernate-validator:8.0.2.Final",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "hibernate-validator-8.0.2.Final.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.hibernate.validator",
+                    "artifactId": "hibernate-validator",
+                    "version": "8.0.2.Final",
+                    "baseVersion": "8.0.2.Final"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.jboss.logging:jboss-logging:3.6.1.Final",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jboss-logging-3.6.1.Final.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.jboss.logging",
+                    "artifactId": "jboss-logging",
+                    "version": "3.6.1.Final",
+                    "baseVersion": "3.6.1.Final"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.jetbrains:annotations:17.0.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "annotations-17.0.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.jetbrains",
+                    "artifactId": "annotations",
+                    "version": "17.0.0",
+                    "baseVersion": "17.0.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.jspecify:jspecify:1.0.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jspecify-1.0.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.jspecify",
+                    "artifactId": "jspecify",
+                    "version": "1.0.0",
+                    "baseVersion": "1.0.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.jupiter:junit-jupiter-api:5.11.4",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "junit-jupiter-api-5.11.4.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.jupiter",
+                    "artifactId": "junit-jupiter-api",
+                    "version": "5.11.4",
+                    "baseVersion": "5.11.4"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.11.4",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "junit-jupiter-engine-5.11.4.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.jupiter",
+                    "artifactId": "junit-jupiter-engine",
+                    "version": "5.11.4",
+                    "baseVersion": "5.11.4"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.jupiter:junit-jupiter-params:5.11.4",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "junit-jupiter-params-5.11.4.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.jupiter",
+                    "artifactId": "junit-jupiter-params",
+                    "version": "5.11.4",
+                    "baseVersion": "5.11.4"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.jupiter:junit-jupiter:5.11.4",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "junit-jupiter-5.11.4.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.jupiter",
+                    "artifactId": "junit-jupiter",
+                    "version": "5.11.4",
+                    "baseVersion": "5.11.4"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.platform:junit-platform-commons:1.11.4",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "junit-platform-commons-1.11.4.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.platform",
+                    "artifactId": "junit-platform-commons",
+                    "version": "1.11.4",
+                    "baseVersion": "1.11.4"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.platform:junit-platform-console:1.11.4",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "junit-platform-console-1.11.4.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.platform",
+                    "artifactId": "junit-platform-console",
+                    "version": "1.11.4",
+                    "baseVersion": "1.11.4"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.platform:junit-platform-engine:1.11.4",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "junit-platform-engine-1.11.4.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.platform",
+                    "artifactId": "junit-platform-engine",
+                    "version": "1.11.4",
+                    "baseVersion": "1.11.4"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.platform:junit-platform-launcher:1.11.4",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "junit-platform-launcher-1.11.4.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.platform",
+                    "artifactId": "junit-platform-launcher",
+                    "version": "1.11.4",
+                    "baseVersion": "1.11.4"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.platform:junit-platform-reporting:1.11.4",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "junit-platform-reporting-1.11.4.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.platform",
+                    "artifactId": "junit-platform-reporting",
+                    "version": "1.11.4",
+                    "baseVersion": "1.11.4"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.latencyutils:LatencyUtils:2.0.3",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "LatencyUtils-2.0.3.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.latencyutils",
+                    "artifactId": "LatencyUtils",
+                    "version": "2.0.3",
+                    "baseVersion": "2.0.3"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.mockito:mockito-core:5.14.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "mockito-core-5.14.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.mockito",
+                    "artifactId": "mockito-core",
+                    "version": "5.14.2",
+                    "baseVersion": "5.14.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.mockito:mockito-junit-jupiter:5.14.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "mockito-junit-jupiter-5.14.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.mockito",
+                    "artifactId": "mockito-junit-jupiter",
+                    "version": "5.14.2",
+                    "baseVersion": "5.14.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.objenesis:objenesis:3.3",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "objenesis-3.3.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.objenesis",
+                    "artifactId": "objenesis",
+                    "version": "3.3",
+                    "baseVersion": "3.3"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.opentest4j:opentest4j:1.3.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "opentest4j-1.3.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.opentest4j",
+                    "artifactId": "opentest4j",
+                    "version": "1.3.0",
+                    "baseVersion": "1.3.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.ow2.asm:asm:9.6",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "asm-9.6.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.ow2.asm",
+                    "artifactId": "asm",
+                    "version": "9.6",
+                    "baseVersion": "9.6"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.postgresql:postgresql:42.7.5",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "postgresql-42.7.5.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.postgresql",
+                    "artifactId": "postgresql",
+                    "version": "42.7.5",
+                    "baseVersion": "42.7.5"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.reactivestreams:reactive-streams:1.0.4",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "reactive-streams-1.0.4.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.reactivestreams",
+                    "artifactId": "reactive-streams",
+                    "version": "1.0.4",
+                    "baseVersion": "1.0.4"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.rnorth.duct-tape:duct-tape:1.0.8",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "duct-tape-1.0.8.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.rnorth.duct-tape",
+                    "artifactId": "duct-tape",
+                    "version": "1.0.8",
+                    "baseVersion": "1.0.8"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.skyscreamer:jsonassert:1.5.3",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jsonassert-1.5.3.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.skyscreamer",
+                    "artifactId": "jsonassert",
+                    "version": "1.5.3",
+                    "baseVersion": "1.5.3"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.slf4j:jul-to-slf4j:2.0.16",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jul-to-slf4j-2.0.16.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.slf4j",
+                    "artifactId": "jul-to-slf4j",
+                    "version": "2.0.16",
+                    "baseVersion": "2.0.16"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.slf4j:slf4j-api:2.0.16",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "slf4j-api-2.0.16.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.slf4j",
+                    "artifactId": "slf4j-api",
+                    "version": "2.0.16",
+                    "baseVersion": "2.0.16"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.boot:spring-boot-actuator-autoconfigure:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-boot-actuator-autoconfigure-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.boot",
+                    "artifactId": "spring-boot-actuator-autoconfigure",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.boot:spring-boot-actuator:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-boot-actuator-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.boot",
+                    "artifactId": "spring-boot-actuator",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-boot-autoconfigure-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.boot",
+                    "artifactId": "spring-boot-autoconfigure",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.boot:spring-boot-devtools:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-boot-devtools-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.boot",
+                    "artifactId": "spring-boot-devtools",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.boot:spring-boot-docker-compose:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-boot-docker-compose-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.boot",
+                    "artifactId": "spring-boot-docker-compose",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.boot:spring-boot-starter-actuator:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-boot-starter-actuator-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.boot",
+                    "artifactId": "spring-boot-starter-actuator",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.boot:spring-boot-starter-cache:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-boot-starter-cache-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.boot",
+                    "artifactId": "spring-boot-starter-cache",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.boot:spring-boot-starter-data-jpa:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-boot-starter-data-jpa-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.boot",
+                    "artifactId": "spring-boot-starter-data-jpa",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.boot:spring-boot-starter-jdbc:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-boot-starter-jdbc-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.boot",
+                    "artifactId": "spring-boot-starter-jdbc",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.boot:spring-boot-starter-json:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-boot-starter-json-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.boot",
+                    "artifactId": "spring-boot-starter-json",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-boot-starter-logging-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.boot",
+                    "artifactId": "spring-boot-starter-logging",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.boot:spring-boot-starter-test:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-boot-starter-test-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.boot",
+                    "artifactId": "spring-boot-starter-test",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.boot:spring-boot-starter-thymeleaf:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-boot-starter-thymeleaf-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.boot",
+                    "artifactId": "spring-boot-starter-thymeleaf",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-boot-starter-tomcat-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.boot",
+                    "artifactId": "spring-boot-starter-tomcat",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.boot:spring-boot-starter-validation:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-boot-starter-validation-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.boot",
+                    "artifactId": "spring-boot-starter-validation",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.boot:spring-boot-starter-web:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-boot-starter-web-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.boot",
+                    "artifactId": "spring-boot-starter-web",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.boot:spring-boot-starter:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-boot-starter-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.boot",
+                    "artifactId": "spring-boot-starter",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-boot-test-autoconfigure-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.boot",
+                    "artifactId": "spring-boot-test-autoconfigure",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.boot:spring-boot-test:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-boot-test-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.boot",
+                    "artifactId": "spring-boot-test",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.boot:spring-boot-testcontainers:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-boot-testcontainers-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.boot",
+                    "artifactId": "spring-boot-testcontainers",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.boot:spring-boot:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-boot-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.boot",
+                    "artifactId": "spring-boot",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.data:spring-data-commons:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-data-commons-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.data",
+                    "artifactId": "spring-data-commons",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework.data:spring-data-jpa:3.4.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-data-jpa-3.4.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework.data",
+                    "artifactId": "spring-data-jpa",
+                    "version": "3.4.2",
+                    "baseVersion": "3.4.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework:spring-aop:6.2.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-aop-6.2.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework",
+                    "artifactId": "spring-aop",
+                    "version": "6.2.2",
+                    "baseVersion": "6.2.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework:spring-aspects:6.2.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-aspects-6.2.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework",
+                    "artifactId": "spring-aspects",
+                    "version": "6.2.2",
+                    "baseVersion": "6.2.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework:spring-beans:6.2.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-beans-6.2.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework",
+                    "artifactId": "spring-beans",
+                    "version": "6.2.2",
+                    "baseVersion": "6.2.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework:spring-context-support:6.2.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-context-support-6.2.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework",
+                    "artifactId": "spring-context-support",
+                    "version": "6.2.2",
+                    "baseVersion": "6.2.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework:spring-context:6.2.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-context-6.2.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework",
+                    "artifactId": "spring-context",
+                    "version": "6.2.2",
+                    "baseVersion": "6.2.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework:spring-core:6.2.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-core-6.2.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework",
+                    "artifactId": "spring-core",
+                    "version": "6.2.2",
+                    "baseVersion": "6.2.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework:spring-expression:6.2.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-expression-6.2.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework",
+                    "artifactId": "spring-expression",
+                    "version": "6.2.2",
+                    "baseVersion": "6.2.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework:spring-jcl:6.2.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-jcl-6.2.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework",
+                    "artifactId": "spring-jcl",
+                    "version": "6.2.2",
+                    "baseVersion": "6.2.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework:spring-jdbc:6.2.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-jdbc-6.2.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework",
+                    "artifactId": "spring-jdbc",
+                    "version": "6.2.2",
+                    "baseVersion": "6.2.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework:spring-orm:6.2.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-orm-6.2.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework",
+                    "artifactId": "spring-orm",
+                    "version": "6.2.2",
+                    "baseVersion": "6.2.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework:spring-test:6.2.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-test-6.2.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework",
+                    "artifactId": "spring-test",
+                    "version": "6.2.2",
+                    "baseVersion": "6.2.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework:spring-tx:6.2.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-tx-6.2.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework",
+                    "artifactId": "spring-tx",
+                    "version": "6.2.2",
+                    "baseVersion": "6.2.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework:spring-web:6.2.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-web-6.2.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework",
+                    "artifactId": "spring-web",
+                    "version": "6.2.2",
+                    "baseVersion": "6.2.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.springframework:spring-webmvc:6.2.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "spring-webmvc-6.2.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.springframework",
+                    "artifactId": "spring-webmvc",
+                    "version": "6.2.2",
+                    "baseVersion": "6.2.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.testcontainers:database-commons:1.20.4",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "database-commons-1.20.4.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.testcontainers",
+                    "artifactId": "database-commons",
+                    "version": "1.20.4",
+                    "baseVersion": "1.20.4"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.testcontainers:jdbc:1.20.4",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jdbc-1.20.4.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.testcontainers",
+                    "artifactId": "jdbc",
+                    "version": "1.20.4",
+                    "baseVersion": "1.20.4"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.testcontainers:junit-jupiter:1.20.4",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "junit-jupiter-1.20.4.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.testcontainers",
+                    "artifactId": "junit-jupiter",
+                    "version": "1.20.4",
+                    "baseVersion": "1.20.4"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.testcontainers:mysql:1.20.4",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "mysql-1.20.4.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.testcontainers",
+                    "artifactId": "mysql",
+                    "version": "1.20.4",
+                    "baseVersion": "1.20.4"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.testcontainers:testcontainers:1.20.4",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "testcontainers-1.20.4.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.testcontainers",
+                    "artifactId": "testcontainers",
+                    "version": "1.20.4",
+                    "baseVersion": "1.20.4"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.thymeleaf:thymeleaf-spring6:3.1.3.RELEASE",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "thymeleaf-spring6-3.1.3.RELEASE.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.thymeleaf",
+                    "artifactId": "thymeleaf-spring6",
+                    "version": "3.1.3.RELEASE",
+                    "baseVersion": "3.1.3.RELEASE"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.thymeleaf:thymeleaf:3.1.3.RELEASE",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "thymeleaf-3.1.3.RELEASE.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.thymeleaf",
+                    "artifactId": "thymeleaf",
+                    "version": "3.1.3.RELEASE",
+                    "baseVersion": "3.1.3.RELEASE"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.unbescape:unbescape:1.1.6.RELEASE",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "unbescape-1.1.6.RELEASE.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.unbescape",
+                    "artifactId": "unbescape",
+                    "version": "1.1.6.RELEASE",
+                    "baseVersion": "1.1.6.RELEASE"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.webjars.npm:bootstrap:5.3.3",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "bootstrap-5.3.3.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.webjars.npm",
+                    "artifactId": "bootstrap",
+                    "version": "5.3.3",
+                    "baseVersion": "5.3.3"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.webjars.npm:font-awesome:4.7.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "font-awesome-4.7.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.webjars.npm",
+                    "artifactId": "font-awesome",
+                    "version": "4.7.0",
+                    "baseVersion": "4.7.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.webjars:webjars-locator-lite:1.0.1",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "webjars-locator-lite-1.0.1.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.webjars",
+                    "artifactId": "webjars-locator-lite",
+                    "version": "1.0.1",
+                    "baseVersion": "1.0.1"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.xmlunit:xmlunit-core:2.10.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "xmlunit-core-2.10.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.xmlunit",
+                    "artifactId": "xmlunit-core",
+                    "version": "2.10.0",
+                    "baseVersion": "2.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.yaml:snakeyaml:2.3",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "snakeyaml-2.3.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.yaml",
+                    "artifactId": "snakeyaml",
+                    "version": "2.3",
+                    "baseVersion": "2.3"
+                }
+            }
+        }
+    ],
+    "sdks": [],
+    "kotlinSettings": [
+        {
+            "name": "Kotlin",
+            "sourceRoots": [],
+            "configFileItems": [],
+            "module": "PetClinic.main",
+            "useProjectSettings": true,
+            "implementedModuleNames": [],
+            "dependsOnModuleNames": [],
+            "additionalVisibleModuleNames": [],
+            "productionOutputPath": null,
+            "testOutputPath": null,
+            "sourceSetNames": [],
+            "isTestModule": true,
+            "externalProjectId": "",
+            "isHmppEnabled": true,
+            "pureKotlinSourceFolders": [],
+            "kind": "default",
+            "compilerArguments": null,
+            "additionalArguments": null,
+            "scriptTemplates": null,
+            "scriptTemplatesClasspath": null,
+            "outputDirectoryForJsLibraryFiles": null,
+            "targetPlatform": null,
+            "externalSystemRunTasks": [],
+            "version": 5,
+            "flushNeeded": false
+        },
+        {
+            "name": "Kotlin",
+            "sourceRoots": [],
+            "configFileItems": [],
+            "module": "PetClinic.test",
+            "useProjectSettings": true,
+            "implementedModuleNames": [],
+            "dependsOnModuleNames": [],
+            "additionalVisibleModuleNames": [
+                "PetClinic.main"
+            ],
+            "productionOutputPath": null,
+            "testOutputPath": null,
+            "sourceSetNames": [],
+            "isTestModule": true,
+            "externalProjectId": "",
+            "isHmppEnabled": true,
+            "pureKotlinSourceFolders": [],
+            "kind": "default",
+            "compilerArguments": null,
+            "additionalArguments": null,
+            "scriptTemplates": null,
+            "scriptTemplatesClasspath": null,
+            "outputDirectoryForJsLibraryFiles": null,
+            "targetPlatform": null,
+            "externalSystemRunTasks": [],
+            "version": 5,
+            "flushNeeded": false
+        }
+    ]
+}

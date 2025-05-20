@@ -1,0 +1,1133 @@
+{
+    "modules": [
+        {
+            "name": "kotlin-dependency-example.main",
+            "dependencies": [
+                {
+                    "type": "library",
+                    "name": "Gradle: org.projectlombok:lombok:1.18.28",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.squareup.moshi:moshi:1.15.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.squareup.okio:okio:2.10.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.1",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.10",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.9.10",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.apache.commons:commons-lang3:3.12.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.google.guava:guava:32.1.1-jre",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: ch.qos.logback:logback-classic:1.4.11",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-common:1.9.10",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains:annotations:23.0.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.google.guava:failureaccess:1.0.1",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.google.code.findbugs:jsr305:3.0.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.checkerframework:checker-qual:3.33.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.google.errorprone:error_prone_annotations:2.18.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.google.j2objc:j2objc-annotations:2.8",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: ch.qos.logback:logback-core:1.4.11",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.slf4j:slf4j-api:2.0.7",
+                    "scope": "compile"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "inheritedSdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/",
+                    "excludedPatterns": [],
+                    "excludedUrls": [],
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/src/main/java",
+                            "type": "java-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/main/kotlin",
+                            "type": "java-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/main/resources",
+                            "type": "java-resource"
+                        }
+                    ]
+                }
+            ],
+            "facets": []
+        },
+        {
+            "name": "kotlin-dependency-example.test",
+            "dependencies": [
+                {
+                    "type": "library",
+                    "name": "Gradle: org.projectlombok:lombok:1.18.28",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.squareup.moshi:moshi:1.15.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.squareup.okio:okio:2.10.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.1",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.10",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.9.10",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.apache.commons:commons-lang3:3.12.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.google.guava:guava:32.1.1-jre",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: ch.qos.logback:logback-classic:1.4.11",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-common:1.9.10",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains:annotations:23.0.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.google.guava:failureaccess:1.0.1",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.google.code.findbugs:jsr305:3.0.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.checkerframework:checker-qual:3.33.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.google.errorprone:error_prone_annotations:2.18.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.google.j2objc:j2objc-annotations:2.8",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: ch.qos.logback:logback-core:1.4.11",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.slf4j:slf4j-api:2.0.7",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-test-junit5:1.9.10",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-test:1.9.10",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: io.mockk:mockk-jvm:1.13.7",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: io.mockk:mockk-dsl-jvm:1.13.7",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: io.mockk:mockk-agent-jvm:1.13.7",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: io.mockk:mockk-agent-api-jvm:1.13.7",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: io.mockk:mockk-core-jvm:1.13.7",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.jupiter:junit-jupiter-params:5.10.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.jupiter:junit-jupiter-api:5.10.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.platform:junit-platform-commons:1.10.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.jupiter:junit-jupiter:5.10.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.opentest4j:opentest4j:1.3.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.apiguardian:apiguardian-api:1.1.2",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.objenesis:objenesis:3.3",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: net.bytebuddy:byte-buddy:1.12.20",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: net.bytebuddy:byte-buddy-agent:1.12.20",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-reflect:1.8.20",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.platform:junit-platform-launcher:1.10.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.10.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.platform:junit-platform-engine:1.10.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: junit:junit:4.13.2",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.hamcrest:hamcrest-core:1.3",
+                    "scope": "test"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "inheritedSdk"
+                },
+                {
+                    "type": "module",
+                    "name": "kotlin-dependency-example.main",
+                    "scope": "compile"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/",
+                    "excludedPatterns": [],
+                    "excludedUrls": [],
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/src/test/java",
+                            "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/test/kotlin",
+                            "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/test/resources",
+                            "type": "java-test-resource"
+                        }
+                    ]
+                }
+            ],
+            "facets": []
+        }
+    ],
+    "libraries": [
+        {
+            "name": "Gradle: ch.qos.logback:logback-classic:1.4.11",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "logback-classic-1.4.11.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "ch.qos.logback",
+                    "artifactId": "logback-classic",
+                    "version": "1.4.11",
+                    "baseVersion": "1.4.11"
+                }
+            }
+        },
+        {
+            "name": "Gradle: ch.qos.logback:logback-core:1.4.11",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "logback-core-1.4.11.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "ch.qos.logback",
+                    "artifactId": "logback-core",
+                    "version": "1.4.11",
+                    "baseVersion": "1.4.11"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.google.code.findbugs:jsr305:3.0.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "jsr305-3.0.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.google.code.findbugs",
+                    "artifactId": "jsr305",
+                    "version": "3.0.2",
+                    "baseVersion": "3.0.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.google.errorprone:error_prone_annotations:2.18.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "error_prone_annotations-2.18.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.google.errorprone",
+                    "artifactId": "error_prone_annotations",
+                    "version": "2.18.0",
+                    "baseVersion": "2.18.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.google.guava:failureaccess:1.0.1",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "failureaccess-1.0.1.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.google.guava",
+                    "artifactId": "failureaccess",
+                    "version": "1.0.1",
+                    "baseVersion": "1.0.1"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.google.guava:guava:32.1.1-jre",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "guava-32.1.1-jre.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.google.guava",
+                    "artifactId": "guava",
+                    "version": "32.1.1-jre",
+                    "baseVersion": "32.1.1-jre"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.google.j2objc:j2objc-annotations:2.8",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "j2objc-annotations-2.8.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.google.j2objc",
+                    "artifactId": "j2objc-annotations",
+                    "version": "2.8",
+                    "baseVersion": "2.8"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.squareup.moshi:moshi:1.15.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "moshi-1.15.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.squareup.moshi",
+                    "artifactId": "moshi",
+                    "version": "1.15.0",
+                    "baseVersion": "1.15.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: com.squareup.okio:okio:2.10.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "okio-jvm-2.10.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "com.squareup.okio",
+                    "artifactId": "okio",
+                    "version": "2.10.0",
+                    "baseVersion": "2.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: io.mockk:mockk-agent-api-jvm:1.13.7",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "mockk-agent-api-jvm-1.13.7.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "io.mockk",
+                    "artifactId": "mockk-agent-api-jvm",
+                    "version": "1.13.7",
+                    "baseVersion": "1.13.7"
+                }
+            }
+        },
+        {
+            "name": "Gradle: io.mockk:mockk-agent-jvm:1.13.7",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "mockk-agent-jvm-1.13.7.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "io.mockk",
+                    "artifactId": "mockk-agent-jvm",
+                    "version": "1.13.7",
+                    "baseVersion": "1.13.7"
+                }
+            }
+        },
+        {
+            "name": "Gradle: io.mockk:mockk-core-jvm:1.13.7",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "mockk-core-jvm-1.13.7.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "io.mockk",
+                    "artifactId": "mockk-core-jvm",
+                    "version": "1.13.7",
+                    "baseVersion": "1.13.7"
+                }
+            }
+        },
+        {
+            "name": "Gradle: io.mockk:mockk-dsl-jvm:1.13.7",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "mockk-dsl-jvm-1.13.7.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "io.mockk",
+                    "artifactId": "mockk-dsl-jvm",
+                    "version": "1.13.7",
+                    "baseVersion": "1.13.7"
+                }
+            }
+        },
+        {
+            "name": "Gradle: io.mockk:mockk-jvm:1.13.7",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "mockk-jvm-1.13.7.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "io.mockk",
+                    "artifactId": "mockk-jvm",
+                    "version": "1.13.7",
+                    "baseVersion": "1.13.7"
+                }
+            }
+        },
+        {
+            "name": "Gradle: junit:junit:4.13.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "junit-4.13.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "junit",
+                    "artifactId": "junit",
+                    "version": "4.13.2",
+                    "baseVersion": "4.13.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: net.bytebuddy:byte-buddy-agent:1.12.20",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "byte-buddy-agent-1.12.20.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "net.bytebuddy",
+                    "artifactId": "byte-buddy-agent",
+                    "version": "1.12.20",
+                    "baseVersion": "1.12.20"
+                }
+            }
+        },
+        {
+            "name": "Gradle: net.bytebuddy:byte-buddy:1.12.20",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "byte-buddy-1.12.20.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "net.bytebuddy",
+                    "artifactId": "byte-buddy",
+                    "version": "1.12.20",
+                    "baseVersion": "1.12.20"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.apache.commons:commons-lang3:3.12.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "commons-lang3-3.12.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.apache.commons",
+                    "artifactId": "commons-lang3",
+                    "version": "3.12.0",
+                    "baseVersion": "3.12.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.apiguardian:apiguardian-api:1.1.2",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "apiguardian-api-1.1.2.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.apiguardian",
+                    "artifactId": "apiguardian-api",
+                    "version": "1.1.2",
+                    "baseVersion": "1.1.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.checkerframework:checker-qual:3.33.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "checker-qual-3.33.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.checkerframework",
+                    "artifactId": "checker-qual",
+                    "version": "3.33.0",
+                    "baseVersion": "3.33.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.hamcrest:hamcrest-core:1.3",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "hamcrest-core-1.3.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.hamcrest",
+                    "artifactId": "hamcrest-core",
+                    "version": "1.3",
+                    "baseVersion": "1.3"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-reflect:1.8.20",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "kotlin-reflect-1.8.20.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.jetbrains.kotlin",
+                    "artifactId": "kotlin-reflect",
+                    "version": "1.8.20",
+                    "baseVersion": "1.8.20"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-common:1.9.10",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "kotlin-stdlib-common-1.9.10.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.jetbrains.kotlin",
+                    "artifactId": "kotlin-stdlib-common",
+                    "version": "1.9.10",
+                    "baseVersion": "1.9.10"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.10",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "kotlin-stdlib-jdk7-1.9.10.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.jetbrains.kotlin",
+                    "artifactId": "kotlin-stdlib-jdk7",
+                    "version": "1.9.10",
+                    "baseVersion": "1.9.10"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "kotlin-stdlib-jdk8-1.9.10.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.jetbrains.kotlin",
+                    "artifactId": "kotlin-stdlib-jdk8",
+                    "version": "1.9.10",
+                    "baseVersion": "1.9.10"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.9.10",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "kotlin-stdlib-1.9.10.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.jetbrains.kotlin",
+                    "artifactId": "kotlin-stdlib",
+                    "version": "1.9.10",
+                    "baseVersion": "1.9.10"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-test-junit5:1.9.10",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "kotlin-test-junit5-1.9.10.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.jetbrains.kotlin",
+                    "artifactId": "kotlin-test-junit5",
+                    "version": "1.9.10",
+                    "baseVersion": "1.9.10"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-test:1.9.10",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "kotlin-test-1.9.10.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.jetbrains.kotlin",
+                    "artifactId": "kotlin-test",
+                    "version": "1.9.10",
+                    "baseVersion": "1.9.10"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.1",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "kotlinx-coroutines-core-jvm-1.7.1.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.jetbrains.kotlinx",
+                    "artifactId": "kotlinx-coroutines-core-jvm",
+                    "version": "1.7.1",
+                    "baseVersion": "1.7.1"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.jetbrains:annotations:23.0.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "annotations-23.0.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.jetbrains",
+                    "artifactId": "annotations",
+                    "version": "23.0.0",
+                    "baseVersion": "23.0.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.jupiter:junit-jupiter-api:5.10.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "junit-jupiter-api-5.10.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.jupiter",
+                    "artifactId": "junit-jupiter-api",
+                    "version": "5.10.0",
+                    "baseVersion": "5.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.10.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "junit-jupiter-engine-5.10.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.jupiter",
+                    "artifactId": "junit-jupiter-engine",
+                    "version": "5.10.0",
+                    "baseVersion": "5.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.jupiter:junit-jupiter-params:5.10.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "junit-jupiter-params-5.10.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.jupiter",
+                    "artifactId": "junit-jupiter-params",
+                    "version": "5.10.0",
+                    "baseVersion": "5.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.jupiter:junit-jupiter:5.10.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "junit-jupiter-5.10.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.jupiter",
+                    "artifactId": "junit-jupiter",
+                    "version": "5.10.0",
+                    "baseVersion": "5.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.platform:junit-platform-commons:1.10.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "junit-platform-commons-1.10.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.platform",
+                    "artifactId": "junit-platform-commons",
+                    "version": "1.10.0",
+                    "baseVersion": "1.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.platform:junit-platform-engine:1.10.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "junit-platform-engine-1.10.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.platform",
+                    "artifactId": "junit-platform-engine",
+                    "version": "1.10.0",
+                    "baseVersion": "1.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.platform:junit-platform-launcher:1.10.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "junit-platform-launcher-1.10.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.platform",
+                    "artifactId": "junit-platform-launcher",
+                    "version": "1.10.0",
+                    "baseVersion": "1.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.objenesis:objenesis:3.3",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "objenesis-3.3.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.objenesis",
+                    "artifactId": "objenesis",
+                    "version": "3.3",
+                    "baseVersion": "3.3"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.opentest4j:opentest4j:1.3.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "opentest4j-1.3.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.opentest4j",
+                    "artifactId": "opentest4j",
+                    "version": "1.3.0",
+                    "baseVersion": "1.3.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.projectlombok:lombok:1.18.28",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "lombok-1.18.28.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.projectlombok",
+                    "artifactId": "lombok",
+                    "version": "1.18.28",
+                    "baseVersion": "1.18.28"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.slf4j:slf4j-api:2.0.7",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "slf4j-api-2.0.7.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.slf4j",
+                    "artifactId": "slf4j-api",
+                    "version": "2.0.7",
+                    "baseVersion": "2.0.7"
+                }
+            }
+        }
+    ],
+    "sdks": [],
+    "kotlinSettings": [
+        {
+            "name": "Kotlin",
+            "sourceRoots": [],
+            "configFileItems": [],
+            "module": "kotlin-dependency-example.main",
+            "useProjectSettings": true,
+            "implementedModuleNames": [],
+            "dependsOnModuleNames": [],
+            "additionalVisibleModuleNames": [],
+            "productionOutputPath": null,
+            "testOutputPath": null,
+            "sourceSetNames": [],
+            "isTestModule": true,
+            "externalProjectId": "",
+            "isHmppEnabled": true,
+            "pureKotlinSourceFolders": [],
+            "kind": "default",
+            "compilerArguments": null,
+            "additionalArguments": null,
+            "scriptTemplates": null,
+            "scriptTemplatesClasspath": null,
+            "outputDirectoryForJsLibraryFiles": null,
+            "targetPlatform": null,
+            "externalSystemRunTasks": [],
+            "version": 5,
+            "flushNeeded": false
+        },
+        {
+            "name": "Kotlin",
+            "sourceRoots": [],
+            "configFileItems": [],
+            "module": "kotlin-dependency-example.test",
+            "useProjectSettings": true,
+            "implementedModuleNames": [],
+            "dependsOnModuleNames": [],
+            "additionalVisibleModuleNames": [
+                "kotlin-dependency-example.main"
+            ],
+            "productionOutputPath": null,
+            "testOutputPath": null,
+            "sourceSetNames": [],
+            "isTestModule": true,
+            "externalProjectId": "",
+            "isHmppEnabled": true,
+            "pureKotlinSourceFolders": [],
+            "kind": "default",
+            "compilerArguments": null,
+            "additionalArguments": null,
+            "scriptTemplates": null,
+            "scriptTemplatesClasspath": null,
+            "outputDirectoryForJsLibraryFiles": null,
+            "targetPlatform": null,
+            "externalSystemRunTasks": [],
+            "version": 5,
+            "flushNeeded": false
+        }
+    ]
+}

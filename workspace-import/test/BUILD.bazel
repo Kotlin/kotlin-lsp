@@ -1,0 +1,36 @@
+### auto-generated section `build language-server.project-import.test` start
+load("@rules_java//java:defs.bzl", "java_library")
+load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_test")
+
+java_library(
+  name = "test",
+  visibility = ["//visibility:public"]
+)
+
+jvm_library(
+  name = "test_test_lib",
+  visibility = ["//visibility:public"],
+  srcs = glob(["test/**/*.kt", "test/**/*.java"], allow_empty = True),
+  deps = [
+    "@lib//:kotlin-stdlib",
+    "@lib//:junit5",
+    "@lib//:gson",
+    "@community//platform/workspace/storage",
+    "//language-server/test-api:test-api_test_lib",
+    "@community//platform/projectModel-impl",
+    "@community//platform/util",
+    "//language-server/workspace-import:project-import",
+    "@community//platform/workspace/jps",
+    "//language-server/api.impl.analyzer",
+    "//language-server/api.core",
+    "@community//plugins/kotlin/base/facet",
+    "@lib//:kotlinx-serialization-json",
+    "@lib//:kotlinx-serialization-core",
+  ]
+)
+
+jvm_test(
+  name = "test_test",
+  runtime_deps = [":test_test_lib"]
+)
+### auto-generated section `build language-server.project-import.test` end

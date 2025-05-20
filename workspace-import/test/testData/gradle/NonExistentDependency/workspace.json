@@ -1,0 +1,244 @@
+{
+    "modules": [
+        {
+            "name": "NonExistentDependency.main",
+            "dependencies": [
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.9.10",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.apache.commons:commons-lang3:3.12.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-common:1.9.10",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains:annotations:13.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "inheritedSdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/",
+                    "excludedPatterns": [],
+                    "excludedUrls": [],
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/src/main/java",
+                            "type": "java-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/main/kotlin",
+                            "type": "java-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/main/resources",
+                            "type": "java-resource"
+                        }
+                    ]
+                }
+            ],
+            "facets": []
+        },
+        {
+            "name": "NonExistentDependency.test",
+            "dependencies": [
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.9.10",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.apache.commons:commons-lang3:3.12.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-common:1.9.10",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains:annotations:13.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "inheritedSdk"
+                },
+                {
+                    "type": "module",
+                    "name": "NonExistentDependency.main",
+                    "scope": "compile"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/",
+                    "excludedPatterns": [],
+                    "excludedUrls": [],
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/src/test/java",
+                            "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/test/kotlin",
+                            "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/test/resources",
+                            "type": "java-test-resource"
+                        }
+                    ]
+                }
+            ],
+            "facets": []
+        }
+    ],
+    "libraries": [
+        {
+            "name": "Gradle: org.apache.commons:commons-lang3:3.12.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "commons-lang3-3.12.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.apache.commons",
+                    "artifactId": "commons-lang3",
+                    "version": "3.12.0",
+                    "baseVersion": "3.12.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-common:1.9.10",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "kotlin-stdlib-common-1.9.10.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.jetbrains.kotlin",
+                    "artifactId": "kotlin-stdlib-common",
+                    "version": "1.9.10",
+                    "baseVersion": "1.9.10"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.9.10",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "kotlin-stdlib-1.9.10.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.jetbrains.kotlin",
+                    "artifactId": "kotlin-stdlib",
+                    "version": "1.9.10",
+                    "baseVersion": "1.9.10"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.jetbrains:annotations:13.0",
+            "type": "java-imported",
+            "roots": [
+                {
+                    "path": "annotations-13.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.jetbrains",
+                    "artifactId": "annotations",
+                    "version": "13.0",
+                    "baseVersion": "13.0"
+                }
+            }
+        }
+    ],
+    "sdks": [],
+    "kotlinSettings": [
+        {
+            "name": "Kotlin",
+            "sourceRoots": [],
+            "configFileItems": [],
+            "module": "NonExistentDependency.main",
+            "useProjectSettings": true,
+            "implementedModuleNames": [],
+            "dependsOnModuleNames": [],
+            "additionalVisibleModuleNames": [],
+            "productionOutputPath": null,
+            "testOutputPath": null,
+            "sourceSetNames": [],
+            "isTestModule": true,
+            "externalProjectId": "",
+            "isHmppEnabled": true,
+            "pureKotlinSourceFolders": [],
+            "kind": "default",
+            "compilerArguments": null,
+            "additionalArguments": null,
+            "scriptTemplates": null,
+            "scriptTemplatesClasspath": null,
+            "outputDirectoryForJsLibraryFiles": null,
+            "targetPlatform": null,
+            "externalSystemRunTasks": [],
+            "version": 5,
+            "flushNeeded": false
+        },
+        {
+            "name": "Kotlin",
+            "sourceRoots": [],
+            "configFileItems": [],
+            "module": "NonExistentDependency.test",
+            "useProjectSettings": true,
+            "implementedModuleNames": [],
+            "dependsOnModuleNames": [],
+            "additionalVisibleModuleNames": [
+                "NonExistentDependency.main"
+            ],
+            "productionOutputPath": null,
+            "testOutputPath": null,
+            "sourceSetNames": [],
+            "isTestModule": true,
+            "externalProjectId": "",
+            "isHmppEnabled": true,
+            "pureKotlinSourceFolders": [],
+            "kind": "default",
+            "compilerArguments": null,
+            "additionalArguments": null,
+            "scriptTemplates": null,
+            "scriptTemplatesClasspath": null,
+            "outputDirectoryForJsLibraryFiles": null,
+            "targetPlatform": null,
+            "externalSystemRunTasks": [],
+            "version": 5,
+            "flushNeeded": false
+        }
+    ]
+}

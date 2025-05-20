@@ -1,0 +1,3 @@
+rootProject.name = 'multi-project-example'
+
+include 'core', 'api', 'service'

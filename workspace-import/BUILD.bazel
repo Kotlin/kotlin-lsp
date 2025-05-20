@@ -1,0 +1,32 @@
+### auto-generated section `build language-server.project-import` start
+load("@community//build:compiler-options.bzl", "create_kotlinc_options")
+load("@rules_jvm//:jvm.bzl", "jvm_library")
+
+create_kotlinc_options(
+  name = "custom",
+  context_receivers = True
+)
+
+jvm_library(
+  name = "project-import",
+  module_name = "language-server.project-import",
+  visibility = ["//visibility:public"],
+  srcs = glob(["gen/**/*.kt", "gen/**/*.java", "src/**/*.kt", "src/**/*.java"], allow_empty = True),
+  kotlinc_opts = ":custom",
+  deps = [
+    "@lib//:gradle",
+    "@lib//:kotlin-stdlib",
+    "@community//platform/workspace/jps",
+    "@community//platform/workspace/storage",
+    "//language-server/api.core",
+    "@community//plugins/gradle",
+    "@community//platform/util",
+    "@lib//:kotlinx-serialization-core",
+    "@lib//:kotlinx-serialization-json",
+    "@community//java/java-impl:impl",
+    "@community//java/openapi:java",
+    "@community//plugins/kotlin/base/facet",
+    "@lib//:kotlinc-kotlin-jps-common",
+  ]
+)
+### auto-generated section `build language-server.project-import` end
