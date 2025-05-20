@@ -1,6 +1,6 @@
 package com.jetbrains.ls.api.features.utils
 
-import com.intellij.ide.plugins.IdeaPluginDescriptorImpl
+import com.intellij.ide.plugins.PluginMainDescriptor
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.ide.plugins.loadAndInitForCoreEnv
 import com.intellij.openapi.application.PathManager
@@ -13,7 +13,7 @@ fun ijPluginByXml(
     xmlResourcePath: String,
     classForClasspath: Class<*>,
     useFakePluginId: Boolean = false,
-): IdeaPluginDescriptorImpl {
+): PluginMainDescriptor {
     val xmlResourcePath = xmlResourcePath.removePrefix("/")
     val pluginRoot = getPluginRoot(classForClasspath)
     fun createFakePluginId(): PluginId = PluginId.getId(xmlResourcePath)
@@ -49,6 +49,6 @@ private fun getPluginRoot(classForClasspath: Class<*>): Path {
  * The function is inline to have a correct classloader of the call-side
  */
 @Suppress("NOTHING_TO_INLINE")
-inline fun ijPluginByXml(xmlResourcePath: String): IdeaPluginDescriptorImpl {
+inline fun ijPluginByXml(xmlResourcePath: String): PluginMainDescriptor {
     return ijPluginByXml(xmlResourcePath, object : Any() {}::class.java)
 }

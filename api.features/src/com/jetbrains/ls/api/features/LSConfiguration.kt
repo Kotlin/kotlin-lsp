@@ -1,6 +1,6 @@
 package com.jetbrains.ls.api.features
 
-import com.intellij.ide.plugins.IdeaPluginDescriptorImpl
+import com.intellij.ide.plugins.PluginMainDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
@@ -12,7 +12,7 @@ import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 
 class LSConfiguration(
     val entries: List<LSConfigurationEntry>,
-    val plugins: List<IdeaPluginDescriptorImpl>,
+    val plugins: List<PluginMainDescriptor>,
     val languages: List<LSLanguage>,
 ) {
     val allCommandDescriptors: List<LSCommandDescriptor> = entries<LSCommandDescriptorProvider>().flatMap { it.commandDescriptors }
