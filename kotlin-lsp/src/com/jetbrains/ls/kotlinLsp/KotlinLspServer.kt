@@ -5,18 +5,19 @@ import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.*
 import com.intellij.openapi.application.PathManager
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.LSServerContext
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.impl.common.configuration.LSCommonConfiguration
 import com.jetbrains.ls.api.features.impl.common.kotlin.configuration.LSKotlinLanguageConfiguration
 import com.jetbrains.ls.api.features.language.LSLanguageConfiguration
 import com.jetbrains.ls.kotlinLsp.connection.Client
+import com.jetbrains.ls.kotlinLsp.logging.initKotlinLspLogger
 import com.jetbrains.ls.kotlinLsp.requests.core.fileUpdateRequests
 import com.jetbrains.ls.kotlinLsp.requests.core.initializeRequest
+import com.jetbrains.ls.kotlinLsp.requests.core.setTraceNotification
 import com.jetbrains.ls.kotlinLsp.requests.core.shutdownRequest
 import com.jetbrains.ls.kotlinLsp.requests.features
 import com.jetbrains.ls.kotlinLsp.util.addKotlinStdlib
-import com.jetbrains.ls.kotlinLsp.logging.initKotlinLspLogger
-import com.jetbrains.ls.kotlinLsp.requests.core.setTraceNotification
 import com.jetbrains.ls.snapshot.api.impl.core.createServerStarterAnalyzerImpl
 import com.jetbrains.lsp.implementation.*
 import kotlinx.coroutines.*
@@ -42,7 +43,7 @@ private class RunKotlinLspCommand : CliktCommand(name = "kotlin-lsp") {
         .validate { if (it && stdio) fail("Can't use stdio mode with client mode") }
 
     override fun run() {
-        initKotlinLspLogger()
+        initKotlinLspLogger(writeToStdOut = !stdio)
         initIdeaHomePath()
         setLspKotlinPluginModeIfRunningFromProductionLsp()
 
@@ -53,25 +54,36 @@ private class RunKotlinLspCommand : CliktCommand(name = "kotlin-lsp") {
         runBlocking(Dispatchers.Default) {
             starter.start {
                 preloadKotlinStdlibWhenRunningFromSources()
-                tcpConnection(socket, client) { input, output ->
-                    withBaseProtocolFraming(input, output) { incoming, outgoing ->
-                        withServer {
-                            val exitSignal = CompletableDeferred<Unit>()
-                            val handler = createLspHandlers(config, exitSignal, client)
-
-                            withLsp(
-                                incoming,
-                                outgoing,
-                                handler,
-                                createCoroutineContext = { lspClient ->
-                                    Client.contextElement(lspClient)
-                                },
-                            ) { lsp ->
-                                exitSignal.await()
-                            }
-                        }
+                if (stdio) {
+                    val stdout = System.out
+                    System.setOut(System.err)
+                    handleRequests(System.`in`, stdout, config, true)
+                } else {
+                    tcpConnection(socket, client) { input, output ->
+                        handleRequests(input, output, config, client)
                     }
                 }
+            }
+        }
+    }
+}
+
+context(LSServerContext)
+private suspend fun handleRequests(input: InputStream, output: OutputStream, config: LSConfiguration, client: Boolean) {
+    withBaseProtocolFraming(input, output) { incoming, outgoing ->
+        withServer {
+            val exitSignal = CompletableDeferred<Unit>()
+            val handler = createLspHandlers(config, exitSignal, client)
+
+            withLsp(
+                incoming,
+                outgoing,
+                handler,
+                createCoroutineContext = { lspClient ->
+                    Client.contextElement(lspClient)
+                },
+            ) { lsp ->
+                exitSignal.await()
             }
         }
     }

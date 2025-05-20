@@ -7,14 +7,14 @@ import com.jetbrains.ls.kotlinLsp.connection.Client
 import com.jetbrains.lsp.protocol.*
 
 
-fun initKotlinLspLogger() {
-    Logger.setFactory(KotlinLspLoggerFactory)
+fun initKotlinLspLogger(writeToStdOut: Boolean) {
+    Logger.setFactory(KotlinLspLoggerFactory(writeToStdOut))
     com.intellij.serviceContainer.checkServiceFromWriteAccess = false
 }
 
-private object KotlinLspLoggerFactory : Logger.Factory {
+private class KotlinLspLoggerFactory(private val writeToStdOut: Boolean) : Logger.Factory {
     override fun getLoggerInstance(category: String): Logger =
-        LSPLogger(category)
+        LSPLogger(category, writeToStdOut)
 }
 
 /**
@@ -23,7 +23,7 @@ private object KotlinLspLoggerFactory : Logger.Factory {
  * - Trace/Debug level: (usually, not enabled by the end user), needed only for debugging. It is sent by `$/setTrace`
  * - Common level: logs to the console, affected by [LogLevel]
  */
-private class LSPLogger(private val category: String) : Logger() {
+private class LSPLogger(private val category: String, private val writeToStdOut: Boolean) : Logger() {
     /**
      * [level] does not affect `$/logTrace` notifications,
      */
@@ -79,7 +79,7 @@ private class LSPLogger(private val category: String) : Logger() {
             }
         }
 
-        if (shouldLog(level)) {
+        if (writeToStdOut && shouldLog(level)) {
             println(messageRendered)
         }
 
