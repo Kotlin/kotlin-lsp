@@ -23,6 +23,7 @@ import com.jetbrains.ls.api.core.util.LSLibrary
 import com.jetbrains.ls.api.core.util.WorkspaceModelBuilder
 import com.jetbrains.ls.api.core.util.intellijUriToLspUri
 import com.jetbrains.ls.api.core.util.lspUriToIntellijUri
+import com.jetbrains.ls.api.core.util.toLspUri
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.lsp.implementation.LspHandlerContext
@@ -45,7 +46,7 @@ fun addKotlinStdlib() {
     addLibrary(
         LSLibrary(
             listOf(
-                URI.fromPath(getKotlinStdlibPath(), scheme = "jar"),
+               getKotlinStdlibPath().toLspUri(),
             ), name = "stdlib"
         )
     )

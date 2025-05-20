@@ -6,7 +6,6 @@ import com.intellij.platform.workspace.storage.entities
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.lsp.protocol.URI
 import com.jetbrains.lsp.protocol.WorkspaceFolder
-import com.jetbrains.lsp.protocol.asURI
 import java.nio.file.Path
 import kotlin.io.path.extension
 import kotlin.io.path.listDirectoryEntries
@@ -113,7 +112,7 @@ fun jarLibraries(directory: Path): List<LSLibrary> =
         .filter { it.extension == "jar" }
         .map { library ->
             LSLibrary(
-                roots = listOf(library.asURI(URI.Schemas.JAR)),
+                roots = listOf(library.toLspUri()),
                 name = library.nameWithoutExtension,
             )
         }

@@ -163,7 +163,7 @@ class UriConverterTest {
             val windowsPath = Path.of("c:\\test\\path.txt")
             testLspToIntellij(
                 "file://c:/test/path.txt",
-                URI.fromPath(windowsPath, "file").uri
+                windowsPath.toLspUri().uri
             )
         }
 
@@ -171,7 +171,7 @@ class UriConverterTest {
             val unixPath = Path.of("/test/path.txt")
             testLspToIntellij(
                 "file:///test/path.txt",
-                URI.fromPath(unixPath, "file").uri
+                unixPath.toLspUri().uri,
             )
         }
     }

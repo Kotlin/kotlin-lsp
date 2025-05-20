@@ -2,6 +2,7 @@ package com.jetbrains.ls.kotlinLsp.requests.core
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.jarLibraries
+import com.jetbrains.ls.api.core.util.toLspUri
 import com.jetbrains.ls.api.core.util.updateWorkspaceModel
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.completion.LSCompletionProvider
@@ -32,7 +33,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
             rootUri != null -> listOf(WorkspaceFolder(rootUri.uri, rootUri.uri.uri))
             rootPath != null -> {
                 val path = Path(rootPath)
-                listOf(WorkspaceFolder(path.asURI(URI.Schemas.FILE), path.name))
+                listOf(WorkspaceFolder(path.toLspUri(), path.name))
             }
 
             else -> emptyList()

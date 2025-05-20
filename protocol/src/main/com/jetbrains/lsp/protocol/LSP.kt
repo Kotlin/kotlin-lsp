@@ -50,10 +50,6 @@ value class URI(val uri: String) {
     }
 
     companion object {
-        fun fromPath(path: Path, scheme: String): URI = URI(path.toUri().toString()).withScheme(scheme)
-
-        fun fromPathString(path: String, scheme: String): URI = fromPath(Paths.get(path), scheme)
-
         /**
          * We need to have consistent URIs as they are used as keys in the analyzer
          */
@@ -64,16 +60,6 @@ value class URI(val uri: String) {
     }
 }
 
-
-fun URI.withScheme(newScheme: String): URI {
-    val newSchemeWithoutDelimiter = newScheme.removeSuffix("://")
-    val currentScheme = scheme
-    if (newSchemeWithoutDelimiter == currentScheme) return this
-    val newUriString = newSchemeWithoutDelimiter + uri.removePrefix(currentScheme)
-    return URI(newUriString)
-}
-
-fun Path.asURI(scheme: String): URI = URI.fromPath(this, scheme)
 
 @Serializable
 data class RegularExpressionsClientCapabilities(
