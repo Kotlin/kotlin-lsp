@@ -1,0 +1,21 @@
+<idea-plugin>
+  <id>language-server/common/usages</id>
+  <vendor>JetBrains</vendor>
+
+  <extensionPoints>
+    <extensionPoint qualifiedName="com.intellij.customPropertyScopeProvider" interface="com.intellij.psi.impl.search.CustomPropertyScopeProvider" dynamic="true"/>
+
+    <extensionPoint qualifiedName="com.intellij.findUsagesHandlerFactory" area="IDEA_PROJECT" interface="com.intellij.find.findUsages.FindUsagesHandlerFactory" dynamic="true"/>
+    <extensionPoint qualifiedName="com.intellij.customUsageSearcher" interface="com.intellij.find.findUsages.CustomUsageSearcher" dynamic="true"/>
+  </extensionPoints>
+
+  <extensions defaultExtensionNs="com.intellij">
+
+    <applicationService serviceInterface="com.intellij.find.FindUsagesSettings" serviceImplementation="com.intellij.find.impl.FindUsagesSettingsImpl" />
+    <applicationService serviceInterface="com.intellij.psi.search.PredefinedSearchScopeProvider"
+                        serviceImplementation="com.jetbrains.ls.api.features.impl.common.core.PredefinedSearchScopeProviderLSImpl"/>
+
+    <findUsagesHandlerFactory implementation="com.intellij.find.findUsages.JavaFindUsagesHandlerFactory" id="java"
+                              order="last, before default"/>
+  </extensions>
+</idea-plugin>

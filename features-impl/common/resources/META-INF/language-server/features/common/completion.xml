@@ -1,0 +1,17 @@
+<idea-plugin>
+  <id>language-server/common/completion</id>
+  <vendor>JetBrains</vendor>
+  <extensionPoints>
+    <extensionPoint qualifiedName="com.intellij.completion.skip" interface="com.intellij.codeInsight.completion.CompletionPreselectSkipper"
+                    dynamic="true"/>
+    <extensionPoint qualifiedName="com.intellij.completion.contributor"
+                    beanClass="com.intellij.codeInsight.completion.CompletionContributorEP" dynamic="true">
+      <with attribute="implementationClass" implements="com.intellij.codeInsight.completion.CompletionContributor"/>
+    </extensionPoint>
+  </extensionPoints>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <applicationService serviceInterface="com.intellij.codeInsight.completion.CompletionService"
+                        serviceImplementation="com.intellij.codeInsight.completion.BaseCompletionService"/>
+  </extensions>
+</idea-plugin>

@@ -1,0 +1,50 @@
+package com.jetbrains.ls.api.features.impl.common.workspaceSymbols
+
+import com.intellij.navigation.ChooseByNameContributor
+import com.intellij.navigation.NavigationItem
+import com.jetbrains.ls.api.core.LSAnalysisContext
+import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.features.workspaceSymbols.LSWorkspaceSymbolProvider
+import com.jetbrains.lsp.protocol.WorkspaceSymbol
+import com.jetbrains.lsp.protocol.WorkspaceSymbolParams
+import kotlinx.coroutines.channels.SendChannel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.launch
+
+abstract class AbstractLSWorkspaceSymbolProvider : LSWorkspaceSymbolProvider {
+    abstract fun getContributors(): List<ChooseByNameContributor>
+
+    context(LSServer, LSAnalysisContext)
+    abstract fun createWorkspaceSymbol(item: NavigationItem, contributor: ChooseByNameContributor): WorkspaceSymbol?
+
+    context(LSServer)
+    final override fun getWorkspaceSymbols(params: WorkspaceSymbolParams): Flow<WorkspaceSymbol> = channelFlow {
+        withAnalysisContextWorkspacesWide {
+            coroutineScope {
+                for (contributor in getContributors()) {
+                    launch { handleContributor(contributor, params.query, channel) }
+                }
+            }
+        }
+    }
+
+    context(LSServer, LSAnalysisContext)
+    private suspend fun handleContributor(
+        contributor: ChooseByNameContributor,
+        query: String,
+        channel: SendChannel<WorkspaceSymbol>
+    ) {
+        val names = contributor.getNames(project, /* includeNonProjectItems = */ false)
+        if (names.isEmpty()) return
+        for (name in names) {
+            if (query.isEmpty() || name.contains(query, ignoreCase = true)/*TODO some fancy fuzzy search should probably be here*/) {
+                val items = contributor.getItemsByName(name, query, project, /* includeNonProjectItems = */ false)
+                for (item in items) {
+                    createWorkspaceSymbol(item, contributor)?.let { channel.send(it) }
+                }
+            }
+        }
+    }
+}

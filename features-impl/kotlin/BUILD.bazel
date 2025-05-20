@@ -1,0 +1,73 @@
+### auto-generated section `build language-server.api.features.impl.kotlin` start
+load("@community//build:compiler-options.bzl", "create_kotlinc_options")
+load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_resources")
+
+create_kotlinc_options(
+  name = "custom",
+  context_receivers = True,
+  opt_in = [
+    "org.jetbrains.kotlin.analysis.api.KaExperimentalApi",
+    "org.jetbrains.kotlin.analysis.api.KaIdeApi",
+    "kotlin.contracts.ExperimentalContracts",
+  ],
+  when_guards = True
+)
+
+jvm_resources(
+  name = "kotlin_resources",
+  files = glob(["resources/**/*"]),
+  strip_prefix = "resources"
+)
+
+jvm_library(
+  name = "kotlin",
+  module_name = "language-server.api.features.impl.kotlin",
+  visibility = ["//visibility:public"],
+  srcs = glob(["src/**/*.kt", "src/**/*.java"], allow_empty = True),
+  kotlinc_opts = ":custom",
+  deps = [
+    "@lib//:kotlin-stdlib",
+    "@lib//:kotlinx-coroutines-core",
+    "@lib//:kotlinx-serialization-json",
+    "@lib//:kotlinx-serialization-core",
+    "//language-server/api.core",
+    "//language-server/features-impl/common",
+    "@community//platform/core-api:core",
+    "@community//platform/core-impl",
+    "@community//platform/analysis-api:analysis",
+    "@community//platform/util",
+    "@community//plugins/kotlin/completion/impl-k2:kotlin-completion-impl-k2",
+    "@community//plugins/kotlin/code-insight/kotlin.code-insight.k2:kotlin-code-insight-k2",
+    "@lib//:kotlinc-kotlin-compiler-common",
+    "@lib//:kotlinc-analysis-api",
+    "@lib//:kotlinc-analysis-api-k2",
+    "@community//java/java-psi-api:psi",
+    "//language-server/analyzer",
+    "//language-server/protocol",
+    "//language-server/api.features",
+    "@community//plugins/kotlin/base/code-insight",
+    "@community//plugins/kotlin/code-insight/api",
+    "@community//plugins/kotlin/code-insight/fixes-k2:kotlin-code-insight-fixes-k2",
+    "@community//platform/indexing-api:indexing",
+    "@community//plugins/kotlin/base/indices",
+    "@community//plugins/kotlin/base/project-structure",
+    "@community//plugins/kotlin/code-insight/inspections-k2:kotlin-code-insight-inspections-k2",
+    "@community//plugins/kotlin/code-insight/inspections-shared:kotlin-code-insight-inspections-shared",
+    "@community//plugins/kotlin/code-insight/intentions-k2:kotlin-code-insight-intentions-k2",
+    "@community//plugins/kotlin/formatter/minimal",
+    "@community//plugins/kotlin/plugin/common",
+    "@community//platform/editor-ui-ex:editor-ex",
+    "@community//platform/editor-ui-api:editor-ui",
+    "@community//plugins/kotlin/kotlin.searching:searching-k2",
+    "@community//plugins/kotlin/plugin/k2",
+    "@community//platform/lang-api:lang",
+    "@community//plugins/kotlin/base/analysis",
+    "@community//plugins/kotlin/base/analysis-api/analysis-api-utils:kotlin-base-analysis-api-utils",
+    "@community//java/java-psi-impl:psi-impl",
+    "@community//java/java-impl:impl",
+    "@community//plugins/kotlin/base/util",
+    "@community//plugins/kotlin/completion/impl-shared:kotlin-completion-impl-shared",
+  ],
+  runtime_deps = [":kotlin_resources"]
+)
+### auto-generated section `build language-server.api.features.impl.kotlin` end

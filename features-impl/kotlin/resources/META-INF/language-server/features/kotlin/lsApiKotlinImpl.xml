@@ -1,0 +1,16 @@
+<idea-plugin>
+  <id>features/kotlin/core</id>
+  <vendor>JetBrains</vendor>
+
+  <extensions defaultExtensionNs="ls">
+    <fileForModificationFactory language="kotlin"
+                                implementationClass="com.jetbrains.ls.api.features.impl.common.kotlin.apiImpl.textEdits.KotlinFileForModificationFactory" />
+
+    <markdownDocProvider language="kotlin"
+                         implementationClass="com.jetbrains.ls.api.features.impl.common.kotlin.hover.LSMarkdownDocProviderKotlinImpl"/>
+
+    <completionItemKindProvider language="kotlin"
+                                implementationClass="com.jetbrains.ls.api.features.impl.common.kotlin.completion.LSCompletionItemKindProviderKotlinImpl"/>
+
+  </extensions>
+</idea-plugin>

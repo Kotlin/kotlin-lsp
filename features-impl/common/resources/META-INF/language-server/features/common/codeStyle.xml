@@ -1,0 +1,47 @@
+<idea-plugin>
+  <id>language-server/common/codeStyle</id>
+  <vendor>JetBrains</vendor>
+
+  <extensionPoints>
+    <extensionPoint qualifiedName="com.intellij.codeStyleSettingsProvider" interface="com.intellij.psi.codeStyle.CodeStyleSettingsProvider"
+                    dynamic="true"/>
+    <extensionPoint qualifiedName="com.intellij.langCodeStyleSettingsProvider"
+                    interface="com.intellij.psi.codeStyle.LanguageCodeStyleSettingsProvider" dynamic="true"/>
+    <extensionPoint qualifiedName="com.intellij.langCodeStyleSettingsContributor"
+                    interface="com.intellij.psi.codeStyle.LanguageCodeStyleSettingsContributor" dynamic="true"/>
+    <extensionPoint qualifiedName="com.intellij.fileIndentOptionsProvider" interface="com.intellij.psi.codeStyle.FileIndentOptionsProvider"
+                    dynamic="true"/>
+    <extensionPoint qualifiedName="com.intellij.fileTypeIndentOptionsProvider"
+                    interface="com.intellij.psi.codeStyle.FileTypeIndentOptionsProvider" dynamic="true"/>
+
+    <extensionPoint qualifiedName="com.intellij.formattingService" interface="com.intellij.formatting.service.FormattingService" dynamic="true"/>
+    <extensionPoint qualifiedName="com.intellij.lang.formatter.restriction" interface="com.intellij.lang.LanguageFormattingRestriction" dynamic="true"/>
+    <extensionPoint qualifiedName="com.intellij.externalFormatProcessor" interface="com.intellij.psi.codeStyle.ExternalFormatProcessor" dynamic="true"/>
+    <extensionPoint qualifiedName="com.intellij.postFormatProcessor" interface="com.intellij.psi.impl.source.codeStyle.PostFormatProcessor" dynamic="true"/>
+  </extensionPoints>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <applicationService serviceInterface="com.intellij.formatting.Formatter" serviceImplementation="com.intellij.formatting.FormatterImpl"/>
+    <formattingService implementation="com.intellij.formatting.service.CoreFormattingService" order="last"/>
+
+    <applicationService serviceImplementation="com.intellij.codeInsight.CodeInsightSettings"/>
+    <applicationSettings service="com.intellij.codeInsight.CodeInsightSettings"/>
+
+    <projectService serviceImplementation="com.jetbrains.ls.api.features.impl.common.codeStyle.NoOpCodeStyleManager"
+                    serviceInterface="com.intellij.psi.codeStyle.CodeStyleManager"/>
+
+    <applicationService serviceImplementation="com.intellij.psi.codeStyle.AppCodeStyleSettingsManager"/>
+    <projectService serviceImplementation="com.intellij.psi.codeStyle.ProjectCodeStyleSettingsManager" preload="true"/>
+    <applicationService serviceInterface="com.intellij.psi.codeStyle.CodeStyleSettingsService"
+                        serviceImplementation="com.intellij.psi.codeStyle.CodeStyleSettingsServiceImpl"/>
+    <applicationService serviceInterface="com.intellij.psi.impl.source.codeStyle.IndentHelper"
+                        serviceImplementation="com.intellij.psi.impl.source.codeStyle.IndentHelperImpl"/>
+
+    <applicationService serviceInterface="com.intellij.psi.codeStyle.CodeStyleSchemes"
+                        serviceImplementation="com.jetbrains.ls.api.features.impl.common.codeStyle.MockCodeStyleSchemes"/>
+    <projectService serviceInterface="com.intellij.pom.PomModel"
+                    serviceImplementation="com.intellij.psi.impl.source.PostprocessReformattingAspectImpl$LangPomModel" overrides="true"
+                    preload="await"/>
+    <langCodeStyleSettingsProvider implementation="com.intellij.ide.JavaLanguageCodeStyleSettingsProvider"/>
+  </extensions>
+</idea-plugin>

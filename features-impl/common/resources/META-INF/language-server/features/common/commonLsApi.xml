@@ -1,0 +1,13 @@
+<idea-plugin>
+  <id>language-server/common/api/</id>
+  <vendor>JetBrains</vendor>
+
+  <extensionPoints>
+    <extensionPoint qualifiedName="ls.markdownDocProvider" beanClass="com.intellij.lang.LanguageExtensionPoint" dynamic="true">
+      <with attribute="implementationClass" implements="com.jetbrains.ls.api.features.impl.common.hover.AbstractLSHoverProvider$LSMarkdownDocProvider"/>
+    </extensionPoint>
+    <extensionPoint qualifiedName="ls.completionItemKindProvider" beanClass="com.intellij.lang.LanguageExtensionPoint" dynamic="true">
+      <with attribute="implementationClass" implements="com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider"/>
+    </extensionPoint>
+  </extensionPoints>
+</idea-plugin>

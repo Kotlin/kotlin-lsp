@@ -1,0 +1,33 @@
+package com.jetbrains.ls.api.features.impl.common.utils
+
+import com.intellij.openapi.editor.Document
+import com.intellij.openapi.util.TextRange
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.findDocument
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiNameIdentifierOwner
+import com.jetbrains.ls.api.core.util.toLspRange
+import com.jetbrains.ls.api.core.util.uri
+import com.jetbrains.ls.api.core.LSAnalysisContext
+import com.jetbrains.lsp.protocol.DocumentUri
+import com.jetbrains.lsp.protocol.Location
+
+internal fun TextRange.toLspLocation(file: VirtualFile, document: Document): Location {
+    return Location(DocumentUri(file.uri), toLspRange(document))
+}
+
+context(LSAnalysisContext)
+internal fun PsiElement.getLspLocation(): Location? {
+    val textRange = textRange ?: return null
+    val virtualFile = containingFile.virtualFile
+    val document = requireNotNull(virtualFile.findDocument()) { 
+        "Got PSI which for which we can't get document: ${virtualFile}" 
+    }
+    return textRange.toLspLocation(virtualFile, document)
+}
+
+context(LSAnalysisContext)
+fun PsiElement.getLspLocationForDefinition(): Location? {
+    (this as? PsiNameIdentifierOwner)?.nameIdentifier?.getLspLocation()?.let { return it }
+    return getLspLocation()
+}

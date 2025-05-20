@@ -1,0 +1,12 @@
+<idea-plugin>
+  <id>features/kotlin/usages</id>
+  <vendor>JetBrains</vendor>
+
+
+  <extensions defaultExtensionNs="com.intellij">
+    <targetElementEvaluator language="kotlin"
+                            implementationClass="org.jetbrains.kotlin.idea.search.ideaExtensions.FirKotlinTargetElementEvaluator"/>
+    <targetElementUtilExtender implementation="org.jetbrains.kotlin.idea.search.ideaExtensions.FirKotlinTargetElementEvaluator"/>
+    <usageTargetProvider implementation="org.jetbrains.kotlin.idea.search.ideaExtensions.FirKotlinUsageTargetProvider"/>
+  </extensions>
+</idea-plugin>
