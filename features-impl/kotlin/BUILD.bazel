@@ -67,6 +67,8 @@ jvm_library(
     "@community//java/java-impl:impl",
     "@community//plugins/kotlin/base/util",
     "@community//plugins/kotlin/completion/impl-shared:kotlin-completion-impl-shared",
+    "@community//plugins/kotlin/idea",
+    "@community//plugins/kotlin/base/fir/code-insight",
   ],
   runtime_deps = [":kotlin_resources"]
 )
