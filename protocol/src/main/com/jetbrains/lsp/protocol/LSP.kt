@@ -176,6 +176,9 @@ data class Range(
     }
 }
 
+fun Range.intersects(other: Range): Boolean =
+    start <= other.end && end >= other.start
+
 @Serializable
 @JvmInline
 value class DocumentUri(val uri: URI)

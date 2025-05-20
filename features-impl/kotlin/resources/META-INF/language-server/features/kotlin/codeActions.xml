@@ -20,5 +20,8 @@
               serviceImplementation="org.jetbrains.kotlin.idea.k2.codeinsight.K2OptimizeImportsFacility"/>
 
       <applicationService serviceImplementation="org.jetbrains.kotlin.idea.codeinsight.api.applicators.fixes.KotlinQuickFixService"/>
-    </extensions>
+
+    <applicationService serviceInterface="org.jetbrains.kotlin.idea.base.codeInsight.ShortenReferencesFacility"
+                        serviceImplementation="com.jetbrains.ls.api.features.impl.common.kotlin.codeActions.NoOpReferenceShortener" overrides="true"/>
+  </extensions>
 </idea-plugin>
