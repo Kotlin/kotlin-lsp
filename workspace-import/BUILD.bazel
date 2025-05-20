@@ -8,7 +8,7 @@ create_kotlinc_options(
 )
 
 jvm_library(
-  name = "project-import",
+  name = "language-server-project-import",
   module_name = "language-server.project-import",
   visibility = ["//visibility:public"],
   srcs = glob(["gen/**/*.kt", "gen/**/*.java", "src/**/*.kt", "src/**/*.java"], allow_empty = True),
@@ -18,7 +18,7 @@ jvm_library(
     "@lib//:kotlin-stdlib",
     "@community//platform/workspace/jps",
     "@community//platform/workspace/storage",
-    "//language-server/api.core",
+    "//language-server/community/api.core",
     "@community//plugins/gradle",
     "@community//platform/util",
     "@lib//:kotlinx-serialization-core",

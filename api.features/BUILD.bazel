@@ -22,9 +22,9 @@ jvm_library(
   kotlinc_opts = ":custom",
   deps = [
     "@lib//:kotlin-stdlib",
-    "//language-server/protocol",
+    "//language-server/community/protocol",
     "@lib//:kotlinx-coroutines-core",
-    "//language-server/api.core",
+    "//language-server/community/api.core",
     "@community//platform/analysis-impl",
     "@community//platform/util",
     "@lib//:kotlinx-serialization-json",
