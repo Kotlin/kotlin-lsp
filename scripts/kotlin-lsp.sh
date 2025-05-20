@@ -14,10 +14,7 @@ if [ ! -d "$DIR/lib" ]; then
   exit 1
 fi
 
-jars=$(find "$DIR/lib" -name "*.jar" -type f | tr '\n' ':')
-
-# Remove the trailing colon from the classpath
-classpath=${jars%:}
+classpath="$DIR/lib/*"
 
 main_class="com.jetbrains.ls.kotlinLsp.KotlinLspServerKt"
 
