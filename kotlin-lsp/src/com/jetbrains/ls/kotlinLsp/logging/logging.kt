@@ -112,6 +112,9 @@ private class LSPLogger(private val category: String, private val writeToStdOut:
                 LogLevel.ALL -> {}
             }
         }
+        if (t != null && shouldRethrow(t)) {
+            throw t
+        }
     }
 
     private fun currentTraceValue(): TraceValue = Client.current?.trace ?: TraceValue.Off
