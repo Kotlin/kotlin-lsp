@@ -306,6 +306,33 @@ class UriConverterTest {
         }
     }
 
+    @Test
+    fun `Path toLspUri should add jar separator to the end of jar files`() {
+        onlyOnUnix {
+            run {
+                val path = Path.of("/path/to/jar.jar")
+                assertEquals("jar:///path/to/jar.jar!/", path.toLspUri().uri)
+            }
+
+            run {
+                val path = Path.of("/path/to/nonJar.txt")
+                assertEquals("file:///path/to/nonJar.txt", path.toLspUri().uri)
+            }
+        }
+
+        onlyOnWindows {
+            run {
+                val path = Path.of("c:\\path\\to\\jar.jar")
+                assertEquals("jar:///c%3A/path/to/jar.jar!/", path.toLspUri().uri)
+            }
+
+            run {
+                val path = Path.of("d:\\path\\to\\nonJar.txt")
+                assertEquals("file:///d%3A/path/to/nonJar.txt", path.toLspUri().uri)
+            }
+        }
+    }
+
     private fun testLspToIntellij(
        expectedIntellijUri: String,
        lspUri: String

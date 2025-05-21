@@ -60,9 +60,13 @@ object UriConverter {
     }
 
     fun localAbsolutePathStringToLspUri(path: String): String {
+        val isJar = path.endsWith(".jar")
         var path = path
         path = FileUtilRt.toSystemIndependentName(path)
-        val scheme = if (path.endsWith(".jar")) "jar" else "file"
+        if (isJar) {
+            path = "$path!/"
+        }
+        val scheme = if (isJar) "jar" else "file"
         return intellijUriToLspUri(path, defaultScheme = scheme)
     }
 
