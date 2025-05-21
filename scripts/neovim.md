@@ -4,13 +4,19 @@
 
 1. Ensure socat and netcat are installed
 
-2. Create a symlink inside your PATH to run.sh script, e.g.:
+2. Ensure `kotlin-lsp.sh` is executable
+   
+    ```sh
+    chmod +x $KOTLIN_LSP_DIR/kotlin-lsp.sh
+    ```
+
+3. Create a symlink inside your `PATH` to `kotlin-lsp.sh` script, e.g.:
 
     ```sh
     ln -s $KOTLIN_LSP_DIR/kotlin-lsp.sh $HOME/.local/bin/kotlin-ls
     ```
 
-3. Configure [nvim.lsp](https://neovim.io/doc/user/lsp.html) e.g:
+4. Configure [nvim.lsp](https://neovim.io/doc/user/lsp.html) e.g:
     ```lua
     {
       cmd = { "kotlin-ls", "--stdio" },
@@ -24,7 +30,7 @@
 
 Requires manual launch of language server
 
-1. launch language server with kotlin-lsp.sh script
+1. launch language server with `kotlin-lsp.sh` script
 
 2. Configure [nvim.lsp](https://neovim.io/doc/user/lsp.html) e.g:
     ```lua
