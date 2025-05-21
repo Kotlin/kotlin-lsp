@@ -44,7 +44,7 @@ object UriConverter {
             }
 
             "jar", "jrt" -> {
-                val parts = uri.schemeSpecificPart.split("!", limit = 2)
+                val parts = uri.rawSchemeSpecificPart.split("!", limit = 2)
                 val nestedUri = JavaUri(parts[0])
                 val path = Paths.get(nestedUri.path.removePrefix("/")).toSystemIndependentString()
                 val inJarPath = if (parts.size > 1) parts[1].removePrefix("/") else ""

@@ -23,6 +23,23 @@ class UriConverterTest {
     }
 
     @Test
+    fun `should convert LSP URI to IntelliJ URI when path to jar has spaces`() {
+        onlyOnUnix {
+            testLspToIntellij(
+                "file:///Program Files/aaa.jar!/aa bb",
+                "file:///Program%20Files/aaa.jar!/aa%20bb"
+            )
+        }
+
+        onlyOnWindows {
+            testLspToIntellij(
+                "file://d:/Program Files/aaa.jar!/aa bb",
+                "file:///D:/Program%20Files/aaa.jar!/aa%20bb"
+            )
+        }
+    }
+
+    @Test
     fun `should convert LSP URI to IntelliJ URI for Windows paths`() {
         onlyOnWindows {
             testLspToIntellij(
