@@ -28,6 +28,9 @@ import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.reportProgressMessage
+import com.jetbrains.lsp.protocol.MessageType
+import com.jetbrains.lsp.protocol.ShowMessageNotification
+import com.jetbrains.lsp.protocol.ShowMessageParams
 import com.jetbrains.lsp.protocol.URI
 import com.jetbrains.lsp.protocol.WorkDoneProgressParams
 import org.jetbrains.kotlin.idea.base.plugin.artifacts.KotlinArtifacts
@@ -104,8 +107,15 @@ suspend fun importProject(
     importer: WorkspaceImporter,
     params: WorkDoneProgressParams,
 ) {
+    val unresolved = mutableSetOf<String>()
     workspaceStructure.updateWorkspaceModelDirectly { virtualFileUrlManager, storage ->
-        val imported = importer.importWorkspace(folderPath, virtualFileUrlManager)
+        val imported = importer.importWorkspace(folderPath, virtualFileUrlManager, unresolved::add)
+        if (unresolved.isNotEmpty()) {
+            lspClient.notify(
+                ShowMessageNotification,
+                ShowMessageParams(MessageType.Warning, unresolved.joinToString(", ", "Couldn't resolve some dependencies: ")),
+            )
+        }
         addFakeJdKLibrary(folderPath, virtualFileUrlManager, imported)
         storage.applyChangesFrom(imported)
         lspClient.reportProgressMessage(params, "Indexing project")

@@ -11,15 +11,29 @@ import kotlinx.serialization.json.Json
 import java.nio.file.Path
 import kotlin.io.path.div
 import kotlin.io.path.exists
+import kotlin.io.path.notExists
 
 object JsonWorkspaceImporter : WorkspaceImporter {
     override suspend fun importWorkspace(
         projectDirectory: Path,
-        virtualFileUrlManager: VirtualFileUrlManager
+        virtualFileUrlManager: VirtualFileUrlManager,
+        onUnresolvedDependency: (String) -> Unit
     ): MutableEntityStorage {
         try {
             val content = (projectDirectory / "workspace.json").toFile().readText()
             val workspaceData = Json.decodeFromString<WorkspaceData>(content)
+            workspaceData.modules.forEach { module ->
+                module.dependencies
+                    .filterIsInstance<DependencyData.Library>()
+                    .filter { it.name != "JDK" }
+                    .filter { dependency -> workspaceData.libraries.none { it.name == dependency.name } }
+                    .forEach { onUnresolvedDependency(it.name.removePrefix("Gradle: ")) }
+            }
+            workspaceData.libraries.forEach { library ->
+                if (library.roots.any { toAbsolutePath(it.path, projectDirectory).notExists()}) {
+                    onUnresolvedDependency(library.name.removePrefix("Gradle: "))
+                }
+            }
             return workspaceModel(
                 workspaceData,
                 projectDirectory,

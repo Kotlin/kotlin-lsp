@@ -5,12 +5,12 @@ import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import java.nio.file.Path
 
 interface WorkspaceImporter {
-    suspend fun tryImportWorkspace(projectDirectory: Path, virtualFileUrlManager: VirtualFileUrlManager): MutableEntityStorage? {
+    suspend fun tryImportWorkspace(projectDirectory: Path, virtualFileUrlManager: VirtualFileUrlManager, onUnresolvedDependency: (String) -> Unit): MutableEntityStorage? {
         if (!isApplicableDirectory(projectDirectory)) return null
-        return importWorkspace(projectDirectory, virtualFileUrlManager)
+        return importWorkspace(projectDirectory, virtualFileUrlManager, onUnresolvedDependency)
     }
 
-    suspend fun importWorkspace(projectDirectory: Path, virtualFileUrlManager: VirtualFileUrlManager): MutableEntityStorage
+    suspend fun importWorkspace(projectDirectory: Path, virtualFileUrlManager: VirtualFileUrlManager, onUnresolvedDependency: (String) -> Unit): MutableEntityStorage
     fun isApplicableDirectory(projectDirectory: Path): Boolean
 }
 

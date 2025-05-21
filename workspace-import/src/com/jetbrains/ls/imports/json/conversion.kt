@@ -214,18 +214,7 @@ fun workspaceModel(
     entitySource: EntitySource,
     virtualFileUrlManager: VirtualFileUrlManager
 ): MutableEntityStorage {
-    fun toAbsolutePath(path: String): Path =
-        when {
-            path.startsWith(WORKSPACE_PREFIX) -> {
-                val relativePath = path.removePrefix(WORKSPACE_PREFIX)
-                if (relativePath.isEmpty()) workspacePath else workspacePath.resolve(relativePath)
-            }
-            path.startsWith(USER_HOME_PREFIX) -> {
-                val relativePath = path.removePrefix(USER_HOME_PREFIX)
-                if (relativePath.isEmpty()) userHome else userHome.resolve(relativePath)
-            }
-            else -> Path.of(path)
-        }
+
 
 
     val storage = MutableEntityStorage.create()
@@ -234,7 +223,7 @@ fun workspaceModel(
         val roots =
             sdkData.roots?.map { SdkRoot(virtualFileUrlManager.getOrCreateFromUrl(it.url), SdkRootTypeId(it.type)) }
                 ?: sdkData.homePath?.let { homePath ->
-                    val uris = JavaSdkImpl.findClasses(toAbsolutePath(homePath), false)
+                    val uris = JavaSdkImpl.findClasses(toAbsolutePath(homePath, workspacePath), false)
                         .map { it.replace("!/", "!/modules/") }
                     uris.map { SdkRoot(it.toIntellijUri(virtualFileUrlManager), SdkRootTypeId("classPath")) }
                 }
@@ -259,7 +248,7 @@ fun workspaceModel(
             else -> LibraryTableId.ProjectLibraryTableId
         }
         val roots = libraryData.roots.map {
-            LibraryRoot(toAbsolutePath(it.path).toIntellijUri(virtualFileUrlManager), LibraryRootTypeId(it.type), LibraryRoot.InclusionOptions.valueOf(it.inclusionOptions.name))
+            LibraryRoot(toAbsolutePath(it.path, workspacePath).toIntellijUri(virtualFileUrlManager), LibraryRootTypeId(it.type), LibraryRoot.InclusionOptions.valueOf(it.inclusionOptions.name))
         }
         val libraryEntity = storage addEntity LibraryEntity(
             name = libraryData.name,
@@ -268,7 +257,7 @@ fun workspaceModel(
             entitySource = entitySource
         ) {
             typeId = libraryData.type?.let { LibraryTypeId(it) }
-            excludedRoots = libraryData.excludedRoots.map { ExcludeUrlEntity(toAbsolutePath(it).toIntellijUri(virtualFileUrlManager), entitySource) }
+            excludedRoots = libraryData.excludedRoots.map { ExcludeUrlEntity(toAbsolutePath(it, workspacePath).toIntellijUri(virtualFileUrlManager), entitySource) }
             libraryProperties = libraryData.properties?.let {
                 LibraryPropertiesEntity(
                     entitySource = entitySource,
@@ -288,12 +277,12 @@ fun workspaceModel(
         type = moduleData.type?.let { ModuleTypeId(it) }
         contentRoots = moduleData.contentRoots.map { contentRootData ->
             ContentRootEntity(
-                url = toAbsolutePath(contentRootData.path).toIntellijUri(virtualFileUrlManager),
+                url = toAbsolutePath(contentRootData.path, workspacePath).toIntellijUri(virtualFileUrlManager),
                 excludedPatterns = contentRootData.excludedPatterns,
                 entitySource = entitySource,
             ) {
                 sourceRoots =
-                    contentRootData.sourceRoots.map { SourceRootEntity(toAbsolutePath(it.path).toIntellijUri(virtualFileUrlManager), SourceRootTypeId(it.type), entitySource) }
+                    contentRootData.sourceRoots.map { SourceRootEntity(toAbsolutePath(it.path, workspacePath).toIntellijUri(virtualFileUrlManager), SourceRootTypeId(it.type), entitySource) }
             }
         }
 
@@ -395,4 +384,17 @@ private fun addFacetRecursive(
             addFacetRecursive(it, moduleEntity)
         }
         this.module = moduleEntity
+    }
+
+internal fun toAbsolutePath(path: String, workspacePath: Path,): Path =
+    when {
+        path.startsWith(WORKSPACE_PREFIX) -> {
+            val relativePath = path.removePrefix(WORKSPACE_PREFIX)
+            if (relativePath.isEmpty()) workspacePath else workspacePath.resolve(relativePath)
+        }
+        path.startsWith(USER_HOME_PREFIX) -> {
+            val relativePath = path.removePrefix(USER_HOME_PREFIX)
+            if (relativePath.isEmpty()) userHome else userHome.resolve(relativePath)
+        }
+        else -> Path.of(path)
     }

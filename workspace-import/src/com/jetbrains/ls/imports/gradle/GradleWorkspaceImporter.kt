@@ -21,13 +21,15 @@ import java.nio.file.Path
 import kotlin.io.path.div
 import kotlin.io.path.exists
 import com.jetbrains.ls.imports.utils.toIntellijUri
+import java.io.ByteArrayOutputStream
 
 object GradleWorkspaceImporter : WorkspaceImporter {
     override suspend fun importWorkspace(
         projectDirectory: Path,
-        virtualFileUrlManager: VirtualFileUrlManager
+        virtualFileUrlManager: VirtualFileUrlManager,
+        onUnresolvedDependency: (String) -> Unit,
     ): MutableEntityStorage {
-        return try {
+        val storage = try {
             withContext(Dispatchers.IO) {
                 val connector = GradleConnector.newConnector().forProjectDirectory(projectDirectory.toFile())
 
@@ -155,12 +157,24 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                             storage addEntity entity
                         }
                     }
+                    val out = ByteArrayOutputStream()
+                    connection.newBuild().forTasks("dependencies")
+                        .setStandardOutput(out)
+                        .run()
+                    val output = out.toString()
+                    output.lines()
+                        .filter { it.endsWith(" FAILED") }
+                        .distinct()
+                        .map { it.removeSuffix(" FAILED").substringAfterLast(' ') }
+                        .forEach { onUnresolvedDependency(it) }
                     storage
                 }
             }
+
         } catch (e: Throwable) {
             handleError(e)
         }
+        return storage
     }
 
     private fun ModuleEntity.Builder.createFacet(module: IdeaModule, isMain: Boolean): KotlinSettingsEntity.Builder? {
