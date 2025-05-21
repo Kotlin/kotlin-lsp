@@ -191,6 +191,7 @@ suspend fun withLsp(
                                                             result
                                                         )
                                                     }.onFailure { error ->
+                                                        if (error is CancellationException) throw error
                                                         LOG.error(error)
                                                     }.getOrNull()
                                                 }
@@ -210,6 +211,7 @@ suspend fun withLsp(
                                                                     data
                                                                 )
                                                             }.onFailure { decodingError ->
+                                                                if (decodingError is CancellationException) throw decodingError
                                                                 LOG.error(decodingError)
                                                             }.getOrNull()
                                                         }
@@ -245,6 +247,7 @@ suspend fun withLsp(
                                             }
                                         }
                                     }.onFailure { error ->
+                                        if (error is CancellationException) throw error
                                         LOG.error(error)
                                     }
                             }
