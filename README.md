@@ -84,7 +84,10 @@ In the current state, the golden path has been tested for Visual Studio Code wit
 
 You can use Kotlin LSP with other LSP-compliant editors, but configuration must be done manually.
 Please note that Kotlin LSP uses pull-based diagnostics, so the editor must support that.
-You can find a standalone LSP launch script in [kotlin-lsp.sh](scripts/kotlin-lsp.sh).
+
+You can find a standalone LSP launch script in [kotlin-lsp.sh](scripts/kotlin-lsp.sh) along
+with _very experimental_ (aka "works on someone's machine") instructions that setup LSP for other editors in [scripts](scripts) folder.
+See `./kotlin-lsp.sh --help` for available options.
 
 ### Source code
 
@@ -92,7 +95,7 @@ Currently, the LSP implementation is partially closed-source, primarily for the 
 it heavily depends on parts of IntelliJ, Fleet, and our distributed Bazel build that allows us to 
 iterate quickly and experiment much faster, cutting corners and re-using internal infrastructure where it helps.
 After the initial stabilization phase and defining the final set of capabilities, we will de-couple the LSP implementation from the internal repository 
-and build pipelines and open source it (with an explicit dependency on IntelliJ), this is a temporary constraint.
+and build pipelines and open source it completely (with an explicit dependency on IntelliJ), this is a temporary constraint.
 VSC extension is mirrored into [kotlin-vscode](kotlin-vscode) as it does not depend on anything internal.
 
 ### Feedback and issues

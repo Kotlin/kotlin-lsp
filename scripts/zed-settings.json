@@ -1,0 +1,24 @@
+{
+  // Note: you'll need to install "Kotlin" extension via Zed extensions: https://github.com/zed-extensions/kotlin/blob/main/src/kotlin.rs
+  // This configuration basically overrides its executable
+  // Also note: diagnostics do not work because they are pull-based in our implementation, but the editor expects them to be push-based
+  // Things like navigation, completion, find references and code actions like organize imports do.
+  "languages": {
+    "Kotlin": {
+      "language_servers": [
+        "kotlin-language-server"
+      ]
+    }
+  },
+  "lsp": {
+    "kotlin-language-server": {
+      "binary": {
+        // NB!!: change this executable path to yours
+        "path": "/Users/qwwdfsad/Downloads/kotlin-lsp/kotlin-0.252.16764/kotlin-lsp.sh",
+        "arguments": [
+          "--stdio"
+        ]
+      }
+    }
+  }
+}
