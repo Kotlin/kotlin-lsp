@@ -41,5 +41,6 @@
     <orderEntry type="module" module-name="kotlin.base.facet" scope="TEST" />
     <orderEntry type="library" scope="TEST" name="kotlinx-serialization-json" level="project" />
     <orderEntry type="library" scope="TEST" name="kotlinx-serialization-core" level="project" />
+    <orderEntry type="module" module-name="intellij.platform.core.impl" scope="TEST" />
   </component>
 </module>

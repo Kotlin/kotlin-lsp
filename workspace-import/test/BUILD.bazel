@@ -34,6 +34,7 @@ jvm_library(
     "@community//plugins/kotlin/base/facet",
     "@lib//:kotlinx-serialization-json",
     "@lib//:kotlinx-serialization-core",
+    "@community//platform/core-impl",
   ]
 )
 
