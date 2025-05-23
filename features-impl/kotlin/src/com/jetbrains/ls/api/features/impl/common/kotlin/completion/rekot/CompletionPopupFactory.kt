@@ -217,7 +217,9 @@ internal object CompletionItemsProvider {
         val symbolProvider = KtSymbolFromIndexProvider(ktFile)
 
         return symbolProvider.getJavaClassesByNameFilter(filter, psiFilter = psiFilter@{ psiClass ->
-            if (psiClass.qualifiedName == null) return@psiFilter false
+            val qualifiedName = psiClass.qualifiedName
+            if (qualifiedName == null) return@psiFilter false
+            if (javaInternalPackages.any { qualifiedName.startsWith(it) }) return@psiFilter false
             if (PsiReferenceExpressionImpl.seemsScrambled(psiClass) || JavaCompletionProcessor.seemsInternal(psiClass)) {
                 return@psiFilter false
             }
@@ -330,6 +332,13 @@ internal object CompletionItemsProvider {
 
         class NestedType(override val prefix: String?, val receiver: KtUserType) : CompletionPosition
     }
+
+    private val javaInternalPackages = listOf(
+        "sun.", "com.sun.",
+        "apple.", "com.apple.", "com.microsoft.",
+        "org.jcp.xml.dsig.internal.",
+        "jdk.internal.", "jdk.javadoc.internal.", "jdk.jfr.internal.", "jdk.tools.jlink.internal.", "jdk.xml.internal.", "jdk.jpackage.internal.",
+    )
 
 }
 
