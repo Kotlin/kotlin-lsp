@@ -18,6 +18,7 @@ import com.jetbrains.ls.kotlinLsp.requests.core.setTraceNotification
 import com.jetbrains.ls.kotlinLsp.requests.core.shutdownRequest
 import com.jetbrains.ls.kotlinLsp.requests.features
 import com.jetbrains.ls.kotlinLsp.util.addKotlinStdlib
+import com.jetbrains.ls.kotlinLsp.util.logSystemInfo
 import com.jetbrains.ls.snapshot.api.impl.core.createServerStarterAnalyzerImpl
 import com.jetbrains.lsp.implementation.*
 import kotlinx.coroutines.*
@@ -59,6 +60,7 @@ private class RunKotlinLspCommand : CliktCommand(name = "kotlin-lsp") {
                     System.setOut(System.err)
                     handleRequests(System.`in`, stdout, config, true)
                 } else {
+                    logSystemInfo()
                     tcpConnection(socket, client) { input, output ->
                         handleRequests(input, output, config, client)
                     }

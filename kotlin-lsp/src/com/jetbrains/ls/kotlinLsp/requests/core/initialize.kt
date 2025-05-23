@@ -13,6 +13,7 @@ import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
 import com.jetbrains.ls.kotlinLsp.connection.Client
 import com.jetbrains.ls.kotlinLsp.util.importProject
 import com.jetbrains.ls.kotlinLsp.util.registerStdlibAndJdk
+import com.jetbrains.ls.kotlinLsp.util.sendSystemInfoToClient
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.LspHandlersBuilder
 import com.jetbrains.lsp.implementation.reportProgress
@@ -25,6 +26,7 @@ import kotlin.io.path.*
 context(LSServer, LSConfiguration)
 internal fun LspHandlersBuilder.initializeRequest() {
     request(Initialize) { initParams ->
+        lspClient.sendSystemInfoToClient()
         val rootUri = initParams.rootUri
         val rootPath = initParams.rootPath
         val workspaceFolders = initParams.workspaceFolders
