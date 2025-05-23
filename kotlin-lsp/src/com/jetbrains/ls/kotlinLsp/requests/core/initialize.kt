@@ -1,5 +1,6 @@
 package com.jetbrains.ls.kotlinLsp.requests.core
 
+import com.intellij.openapi.diagnostic.Logger
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.jarLibraries
 import com.jetbrains.ls.api.core.util.toLspUri
@@ -27,6 +28,9 @@ context(LSServer, LSConfiguration)
 internal fun LspHandlersBuilder.initializeRequest() {
     request(Initialize) { initParams ->
         lspClient.sendSystemInfoToClient()
+
+        LOG.info("Got `initialize` request from ${initParams.clientInfo ?: "unknown"}\nparams:\n${LSP.json.encodeToString(InitializeParams.serializer(), initParams)}")
+
         val rootUri = initParams.rootUri
         val rootPath = initParams.rootPath
         val workspaceFolders = initParams.workspaceFolders
@@ -44,7 +48,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
         Client.update { it.copy(trace = initParams.trace) }
         indexFolders(folders, initParams)
 
-        InitializeResult(
+        val result = InitializeResult(
             capabilities = ServerCapabilities(
                 textDocumentSync = TextDocumentSync(TextDocumentSyncKind.Incremental),
                 definitionProvider = OrBoolean(true),
@@ -96,6 +100,8 @@ internal fun LspHandlersBuilder.initializeRequest() {
                 version = "0.1" // todo proper version here from the build number
             ),
         )
+        LOG.info("InitializeResult:\n${LSP.json.encodeToString(InitializeResult.serializer(), result)}")
+        result
     }
 }
 
@@ -129,6 +135,7 @@ private suspend fun initFolder(
     params: InitializeParams,
 ) {
     val folderPath = folder.path()
+    var exceptionDuringImport = false
     try {
         when {
             JsonWorkspaceImporter.isApplicableDirectory(folderPath) -> {
@@ -144,6 +151,7 @@ private suspend fun initFolder(
             }
         }
     } catch (e: Exception) {
+        exceptionDuringImport = true
         val message = (e as? WorkspaceImportException)?.message ?: "Error importing project"
         val logMessage = (e as? WorkspaceImportException)?.logMessage ?: "Error importing project:\n${e.stackTraceToString()}"
 
@@ -158,8 +166,14 @@ private suspend fun initFolder(
         )
     }
 
+    if (exceptionDuringImport) {
+        LOG.warn("Failed to import project $folderPath, switching to light edit")
+    } else {
+        LOG.info("No build system found for $folderPath, switching to light edit")
+    }
     initFolderForLightEdit(folder, params)
 }
+
 
 context(LSServer, LSConfiguration, LspHandlerContext)
 private suspend fun initFolderForLightEdit(
@@ -188,3 +202,5 @@ private suspend fun initFolderForLightEdit(
 }
 
 private fun WorkspaceFolder.path(): Path = uri.asJavaUri().toPath()
+
+private val LOG = Logger.getInstance("initialize")
