@@ -200,11 +200,13 @@ private val userHome = Path.of(System.getProperty("user.home"))
 
 private fun toPath(url: VirtualFileUrl, workspacePath: Path): String {
     val path = url.toPath()
-    return when {
+    var pathString = when {
         path.startsWith(workspacePath) -> WORKSPACE_PREFIX + workspacePath.relativize(path)
         path.startsWith(userHome) -> USER_HOME_PREFIX + userHome.relativize(path)
         else -> path.absolutePathString()
     }
+    pathString = FileUtilRt.toSystemIndependentName(pathString)
+    return pathString
 }
 
 
