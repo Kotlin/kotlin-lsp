@@ -13,7 +13,7 @@ Provides Kotlin language support for Visual Studio Code
 ## Requirements
 
 * Java 17 and above
-* Visual Studio Code version 1.100 and above
+* Visual Studio Code version 1.96.0 and above
 
 ## Getting started
 
