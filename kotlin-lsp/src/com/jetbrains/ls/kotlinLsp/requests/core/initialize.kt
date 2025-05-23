@@ -27,6 +27,7 @@ import kotlin.io.path.*
 context(LSServer, LSConfiguration)
 internal fun LspHandlersBuilder.initializeRequest() {
     request(Initialize) { initParams ->
+        Client.update { it.copy(trace = initParams.trace) }
         lspClient.sendSystemInfoToClient()
 
         LOG.info("Got `initialize` request from ${initParams.clientInfo ?: "unknown"}\nparams:\n${LSP.json.encodeToString(InitializeParams.serializer(), initParams)}")
@@ -45,7 +46,6 @@ internal fun LspHandlersBuilder.initializeRequest() {
             else -> emptyList()
         }
 
-        Client.update { it.copy(trace = initParams.trace) }
         indexFolders(folders, initParams)
 
         val result = InitializeResult(
