@@ -156,7 +156,12 @@ data class CancelParams(
 
 @Serializable
 @JvmInline
-value class ProgressToken(val value: StringOrInt)
+value class ProgressToken(val value: StringOrInt) {
+    companion object {
+        fun string(value: String): ProgressToken = ProgressToken(StringOrInt.string(value))
+        fun int(value: Int): ProgressToken = ProgressToken(StringOrInt.int(value))
+    }
+}
 
 @Serializable
 data class ProgressParams(

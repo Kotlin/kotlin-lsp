@@ -5,7 +5,7 @@ import com.jetbrains.lsp.protocol.TraceValue
 import kotlinx.coroutines.ThreadContextElement
 import kotlinx.coroutines.asContextElement
 
-internal data class Client(
+data class Client(
     val lspClient: LspClient,
     val trace: TraceValue? = null,
 ) {
