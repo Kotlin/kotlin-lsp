@@ -5,6 +5,7 @@ import com.jetbrains.ls.api.features.impl.common.codeStyle.commonCodeStylePlugin
 import com.jetbrains.ls.api.features.impl.common.completion.commonCompletionPlugin
 import com.jetbrains.ls.api.features.impl.common.coreIjPlugin
 import com.jetbrains.ls.api.features.impl.common.decompiler.LSDecompileCommandDescriptorProvider
+import com.jetbrains.ls.api.features.impl.common.psi.javaPsiPlugin
 import com.jetbrains.ls.api.features.impl.common.search.commonUsagesPlugin
 import com.jetbrains.ls.api.features.impl.common.workspace.LSExportWorkspaceCommandDescriptorProvider
 import com.jetbrains.ls.api.features.language.LSLanguageConfiguration
@@ -22,6 +23,7 @@ val LSCommonConfiguration: LSLanguageConfiguration = LSLanguageConfiguration(
         commonUsagesPlugin,
         lsApiPlugin,
         commonLsApiPlugin,
+        javaPsiPlugin
     ),
     languages = emptyList(),
 )
