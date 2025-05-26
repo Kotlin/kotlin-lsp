@@ -39,31 +39,50 @@ fun main(args: Array<String>) {
 
 private class RunKotlinLspCommand : CliktCommand(name = "kotlin-lsp") {
     val socket: Int by option().int().default(9999).help("A port which will be used for a Kotlin LSP connection. Default is 9999")
-    val stdio: Boolean by option().flag().help("Whether the Kotlin LSP server is used in stdio mode. If not set, server mode will be used with a port specified by `${::socket.name}`")
+    val stdio: Boolean by option().flag()
+        .help("Whether the Kotlin LSP server is used in stdio mode. If not set, server mode will be used with a port specified by `${::socket.name}`")
     val client: Boolean by option().flag()
         .help("Whether the Kotlin LSP server is used in client mode. If not set, server mode will be used with a port specified by `${::socket.name}`")
         .validate { if (it && stdio) fail("Can't use stdio mode with client mode") }
 
+    private fun createRunConfig(): KotlinLspServerRunConfig {
+        val mode = when {
+            stdio -> KotlinLspServerMode.Stdio
+            client -> KotlinLspServerMode.Socket.Client(socket)
+            else -> KotlinLspServerMode.Socket.Server(socket)
+        }
+        return KotlinLspServerRunConfig(mode)
+    }
+
     override fun run() {
-        initKotlinLspLogger(writeToStdOut = !stdio)
-        initIdeaPaths()
-        setLspKotlinPluginModeIfRunningFromProductionLsp()
+        val runConfig = createRunConfig()
+        run(runConfig)
+    }
+}
 
-        val config = createConfiguration()
+private fun run(runConfig: KotlinLspServerRunConfig) {
+    val mode = runConfig.mode
+    initKotlinLspLogger(writeToStdOut = mode != KotlinLspServerMode.Stdio)
+    initIdeaPaths()
+    setLspKotlinPluginModeIfRunningFromProductionLsp()
+    val config = createConfiguration()
 
-        val starter = createServerStarterAnalyzerImpl(config.plugins, isUnitTestMode = false)
-        @Suppress("RAW_RUN_BLOCKING")
-        runBlocking(Dispatchers.Default) {
-            starter.start {
-                preloadKotlinStdlibWhenRunningFromSources()
-                if (stdio) {
+    val starter = createServerStarterAnalyzerImpl(config.plugins, isUnitTestMode = false)
+    @Suppress("RAW_RUN_BLOCKING")
+    runBlocking(Dispatchers.Default) {
+        starter.start {
+            preloadKotlinStdlibWhenRunningFromSources()
+            when (mode) {
+                KotlinLspServerMode.Stdio -> {
                     val stdout = System.out
                     System.setOut(System.err)
-                    handleRequests(System.`in`, stdout, config, true)
-                } else {
+                    handleRequests(System.`in`, stdout, config, mode)
+                }
+
+                is KotlinLspServerMode.Socket -> {
                     logSystemInfo()
-                    tcpConnection(socket, client) { input, output ->
-                        handleRequests(input, output, config, client)
+                    tcpConnection(mode) { input, output ->
+                        handleRequests(input, output, config, mode)
                     }
                 }
             }
@@ -72,11 +91,11 @@ private class RunKotlinLspCommand : CliktCommand(name = "kotlin-lsp") {
 }
 
 context(LSServerContext)
-private suspend fun handleRequests(input: InputStream, output: OutputStream, config: LSConfiguration, client: Boolean) {
+private suspend fun handleRequests(input: InputStream, output: OutputStream, config: LSConfiguration, mode: KotlinLspServerMode) {
     withBaseProtocolFraming(input, output) { incoming, outgoing ->
         withServer {
             val exitSignal = CompletableDeferred<Unit>()
-            val handler = createLspHandlers(config, exitSignal, client)
+            val handler = createLspHandlers(config, exitSignal, clientMode = mode is KotlinLspServerMode.Socket.Client)
 
             withLsp(
                 incoming,
@@ -163,12 +182,17 @@ private fun preloadKotlinStdlibWhenRunningFromSources() {
     }
 }
 
-private suspend fun tcpConnection(port: Int, isClientMode: Boolean, body: suspend CoroutineScope.(InputStream, OutputStream) -> Unit) =
-    if (isClientMode) {
-        tcpClient(port, body)
-    } else {
-        tcpServer(port, body)
+private suspend fun tcpConnection(mode: KotlinLspServerMode.Socket, body: suspend CoroutineScope.(InputStream, OutputStream) -> Unit) {
+    when (mode) {
+        is KotlinLspServerMode.Socket.Client -> {
+            tcpClient(mode.port, body)
+        }
+
+        is KotlinLspServerMode.Socket.Server -> {
+            tcpServer(mode.port, body)
+        }
     }
+}
 
 /**
  * VSC opens a **server** socket for LSP to connect to it.
