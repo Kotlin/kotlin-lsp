@@ -28,7 +28,7 @@ internal object LSKotlinPackageDefinitionProvider : LSDefinitionProvider {
     context(LSServer@LSServer)
     override fun provideDefinitions(params: DefinitionParams): Flow<Location> = flow {
         val uri = params.textDocument.uri.uri
-        withAnalysisContext(uri) {
+        withAnalysisContext {
             val file = uri.findVirtualFile() ?: return@withAnalysisContext emptyList()
             val psiFile = file.findPsiFile(project) ?: return@withAnalysisContext emptyList()
             val document = file.findDocument() ?: return@withAnalysisContext emptyList()

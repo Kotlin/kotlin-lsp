@@ -13,7 +13,6 @@ import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.core.util.withAnalysisContext
 import com.jetbrains.ls.api.features.hover.LSHoverProvider
 import com.jetbrains.lsp.protocol.Hover
 import com.jetbrains.lsp.protocol.HoverParams
@@ -23,7 +22,7 @@ import com.jetbrains.lsp.protocol.MarkupKindType
 abstract class AbstractLSHoverProvider : LSHoverProvider {
     context(LSServer)
     override suspend fun getHover(params: HoverParams): Hover? {
-        return withAnalysisContext(params) a@{
+        return withAnalysisContext a@{
             val file = params.findVirtualFile() ?: return@a null
             val psiFile = file.findPsiFile(project) ?: return@a null
             val document = file.findDocument() ?: return@a null

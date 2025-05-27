@@ -38,7 +38,7 @@ class LSCompletionProviderCommonImpl(
 
     context(LSServer)
     override suspend fun provideCompletion(params: CompletionParams): CompletionList {
-        return withAnalysisContext(params.textDocument.uri.uri) {
+        return withAnalysisContext {
             val file = params.textDocument.findVirtualFile() ?: return@withAnalysisContext EMPTY_COMPLETION_LIST
             val psiFile = file.findPsiFile(project) ?: return@withAnalysisContext EMPTY_COMPLETION_LIST
             val document = file.findDocument() ?: return@withAnalysisContext EMPTY_COMPLETION_LIST
@@ -78,7 +78,7 @@ class LSCompletionProviderCommonImpl(
             return null
         }
 
-        return withAnalysisContext(params.textDocument.uri.uri) {
+        return withAnalysisContext {
             val file = params.textDocument.findVirtualFile() ?: return@withAnalysisContext null
             val originalPsiFile = file.findPsiFile(project) ?: return@withAnalysisContext null
             val psiFile = FileForModificationFactory.forLanguage(originalPsiFile.language)

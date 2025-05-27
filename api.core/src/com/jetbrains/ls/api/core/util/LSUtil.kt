@@ -11,28 +11,6 @@ import com.jetbrains.lsp.protocol.Range
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 import com.jetbrains.lsp.protocol.TextDocumentPositionParams
 import com.jetbrains.lsp.protocol.URI
-import com.jetbrains.ls.api.core.LSAnalysisContext
-import com.jetbrains.ls.api.core.LSServer
-import kotlinx.coroutines.CoroutineScope
-
-context(LSServer)
-suspend fun <R> withAnalysisContext(
-    params: TextDocumentPositionParams,
-    action: suspend context(LSAnalysisContext, CoroutineScope) () -> R,
-): R = withAnalysisContext(params.textDocument, action)
-
-context(LSServer)
-suspend fun <R> withAnalysisContext(
-    document: TextDocumentIdentifier,
-    action: suspend context(LSAnalysisContext, CoroutineScope) () -> R,
-): R = withAnalysisContext(document.uri, action)
-
-context(LSServer)
-suspend fun <R> withAnalysisContext(
-    uri: DocumentUri,
-    action: suspend context(LSAnalysisContext, CoroutineScope) () -> R,
-): R = withAnalysisContext(uri.uri, action)
-
 
 val VirtualFile.uri: URI
     get() = url.intellijUriToLspUri()

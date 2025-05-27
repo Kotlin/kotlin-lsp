@@ -22,7 +22,7 @@ abstract class AbstractLSWorkspaceSymbolProvider : LSWorkspaceSymbolProvider {
 
     context(LSServer)
     final override fun getWorkspaceSymbols(params: WorkspaceSymbolParams): Flow<WorkspaceSymbol> = channelFlow {
-        withAnalysisContextWorkspacesWide {
+        withAnalysisContext {
             coroutineScope {
                 for (contributor in getContributors()) {
                     launch { handleContributor(contributor, params.query, channel) }

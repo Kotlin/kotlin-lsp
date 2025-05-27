@@ -10,7 +10,6 @@ import com.intellij.psi.util.descendantsOfType
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
-import com.jetbrains.ls.api.core.util.withAnalysisContext
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnosticProvider
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.lsp.protocol.Diagnostic
@@ -25,7 +24,7 @@ class LSSyntaxErrorDiagnosticProviderImpl(
 ) : LSDiagnosticProvider {
     context(LSServer)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
-        withAnalysisContext(params.textDocument) a@{
+        withAnalysisContext a@{
             val file = params.textDocument.findVirtualFile() ?: return@a emptyList()
             val document = file.findDocument() ?: return@a emptyList()
             val psiFile = file.findPsiFile(project) ?: return@a emptyList()

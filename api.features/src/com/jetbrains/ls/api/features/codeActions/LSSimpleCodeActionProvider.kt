@@ -34,7 +34,7 @@ abstract class LSSimpleCodeActionProvider<P : Any> : LSCodeActionProvider, LSCom
     context(LSServer)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val documentUri = params.textDocument.uri
-        val params = withAnalysisContext(documentUri.uri) {
+        val params = withAnalysisContext {
             val file = documentUri.findVirtualFile() ?: return@withAnalysisContext null
             getData(file, params)
         } ?: return@flow
@@ -69,7 +69,7 @@ abstract class LSSimpleCodeActionProvider<P : Any> : LSCodeActionProvider, LSCom
             documentUri: DocumentUri,
             otherArgs: List<JsonElement>,
         ): List<TextEdit> {
-            return withAnalysisContext(documentUri.uri) {
+            return withAnalysisContext {
                 val file = documentUri.findVirtualFile() ?: return@withAnalysisContext emptyList()
                 val argument = otherArgs.firstOrNull()?.let { LSP.json.decodeFromJsonElement(dataSerializer, it) } ?: (NoData as P)
                 execute(file, argument)

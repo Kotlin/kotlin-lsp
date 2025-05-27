@@ -25,7 +25,6 @@ import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
-import com.jetbrains.ls.api.core.util.withAnalysisContext
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
@@ -61,7 +60,7 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         if (!params.shouldProvideKind(CodeActionKind.QuickFix)) return@flow
         val uri = params.textDocument.uri.uri
-        withAnalysisContext(uri) {
+        withAnalysisContext {
             val file = uri.findVirtualFile() ?: return@withAnalysisContext emptyList()
             val ktFile = file.findPsiFile(project) as? KtFile ?: return@withAnalysisContext emptyList()
             val document = file.findDocument() ?: return@withAnalysisContext emptyList()
@@ -138,7 +137,7 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
                 LSP.json.decodeFromJsonElement(PsiSerializablePointer.serializer(), psiElementJson)
             } ?: return@e emptyList()
             action as KotlinApplicableModCommandAction<KtElement, Any>
-            withAnalysisContext(documentUri) {
+            withAnalysisContext {
                 val file = documentUri.findVirtualFile() ?: return@withAnalysisContext emptyList()
                 withWritableFile(documentUri.uri) {
                     PsiFileTextEditsCollector.collectTextEdits(file) { ktFile ->

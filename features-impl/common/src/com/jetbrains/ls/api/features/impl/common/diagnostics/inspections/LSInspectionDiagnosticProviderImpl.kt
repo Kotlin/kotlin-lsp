@@ -31,7 +31,7 @@ class LSInspectionDiagnosticProviderImpl(
     context(LSServer)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
         val onTheFly = false
-        withAnalysisContext(params.textDocument.uri.uri) c@{
+        withAnalysisContext c@{
             val file = params.textDocument.findVirtualFile() ?: return@c emptyList()
             val psiFile = file.findPsiFile(project) ?: return@c emptyList()
             val inspections = getInspections(psiFile.language).ifEmpty { return@c emptyList() }

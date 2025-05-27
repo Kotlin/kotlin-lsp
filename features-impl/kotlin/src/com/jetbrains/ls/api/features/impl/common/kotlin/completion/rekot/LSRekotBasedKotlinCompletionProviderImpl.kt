@@ -36,7 +36,7 @@ internal object LSRekotBasedKotlinCompletionProviderImpl : LSCompletionProvider 
 
     context(LSServer)
     override suspend fun provideCompletion(params: CompletionParams): CompletionList {
-        return withAnalysisContext(params.textDocument.uri.uri) {
+        return withAnalysisContext {
             val file = params.textDocument.findVirtualFile() ?: return@withAnalysisContext EMPTY_COMPLETION_LIST
             val psiFile = file.findPsiFile(project) as? KtFile ?: return@withAnalysisContext EMPTY_COMPLETION_LIST
             val document = file.findDocument() ?: return@withAnalysisContext EMPTY_COMPLETION_LIST

@@ -42,7 +42,7 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
         val diagnosticData = params.diagnosticData<KotlinCompilerDiagnosticData>().ifEmpty { return@flow }
 
         val uri = params.textDocument.uri.uri
-        withAnalysisContext(uri) {
+        withAnalysisContext {
             val file = params.textDocument.findVirtualFile() ?: return@withAnalysisContext emptyList()
             val quickFixService = KotlinQuickFixService.getInstance()
             val ktFile = file.findPsiFile(project) as? KtFile ?: return@withAnalysisContext emptyList()
@@ -118,7 +118,7 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
             val lspDiagnostic = LSP.json.decodeFromJsonElement<Diagnostic>(otherArgs[0])
             val diagnosticData = lspDiagnostic.diagnosticData<KotlinCompilerDiagnosticData>() ?: return@e emptyList()
             val fix = LSP.json.decodeFromJsonElement<KotlinCompilerDiagnosticQuickfixData>(otherArgs[1])
-            withAnalysisContext(documentUri.uri) {
+            withAnalysisContext {
                 val file = documentUri.findVirtualFile() ?: return@withAnalysisContext emptyList()
                 withWritableFile(documentUri.uri) {
                     PsiFileTextEditsCollector.collectTextEdits(file) { ktFile ->

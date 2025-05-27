@@ -31,7 +31,7 @@ internal object LSKotlinCompilerDiagnosticsProvider : LSDiagnosticProvider {
     context(LSServer)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
         val uri = params.textDocument.uri.uri
-        withAnalysisContext(uri) {
+        withAnalysisContext {
             val file = uri.findVirtualFile() ?: return@withAnalysisContext emptyList()
             val ktFile = file.findPsiFile(project) as? KtFile ?: return@withAnalysisContext emptyList()
             val document = file.findDocument() ?: return@withAnalysisContext emptyList()

@@ -30,7 +30,7 @@ class LSInspectionFixesCodeActionProvider(
         if (!params.shouldProvideKind(CodeActionKind.QuickFix)) return@flow
         val diagnosticData = params.diagnosticData<InspectionDiagnosticData>().ifEmpty { return@flow }
 
-        withAnalysisContext(params.textDocument.uri.uri) {
+        withAnalysisContext {
             val file = params.textDocument.findVirtualFile() ?: return@withAnalysisContext emptyList()
             diagnosticData.flatMap { data ->
                 data.data.fixes.map { quickFix ->
@@ -57,7 +57,7 @@ class LSInspectionFixesCodeActionProvider(
         "inspection.applyFix",
         LSDocumentCommandExecutor { documentUri, otherArgs ->
             val fix = LSP.json.decodeFromJsonElement<InspectionQuickfixData>(otherArgs[0])
-            withAnalysisContext(documentUri.uri) {
+            withAnalysisContext {
                 val file = documentUri.findVirtualFile() ?: return@withAnalysisContext emptyList()
 
                 PsiFileTextEditsCollector.collectTextEdits(file) { psiFile ->

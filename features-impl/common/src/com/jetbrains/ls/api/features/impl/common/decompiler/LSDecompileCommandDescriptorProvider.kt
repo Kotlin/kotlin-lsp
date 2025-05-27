@@ -28,7 +28,7 @@ object LSDecompileCommandDescriptorProvider : LSCommandDescriptorProvider {
                 if (scheme !in ALLOWED_SCHEMES) {
                     throwLspError(ExecuteCommand, "Unexpected URI scheme to decompile: $scheme", Unit, ErrorCodes.InvalidParams, null)
                 }
-                val response: DecompilerResponse? = withAnalysisContext(documentUri.uri) {
+                val response: DecompilerResponse? = withAnalysisContext {
                     val psiFile = documentUri.findVirtualFile()?.findPsiFile(project)
                     psiFile?.let { DecompilerResponse(it.text, it.language.id.lowercase()) }
                 }

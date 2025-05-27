@@ -35,7 +35,7 @@ object LSSemanticTokensProviderKotlinImpl : LSSemanticTokensProvider {
 
     context(LSServer)
     override suspend fun full(params: SemanticTokensParams): List<LSSemanticTokenWithRange> {
-        return withAnalysisContext(params.textDocument.uri.uri) {
+        return withAnalysisContext {
             val file = params.textDocument.findVirtualFile() ?: return@withAnalysisContext emptyList()
             val ktFile = file.findPsiFile(project) as? KtFile ?: return@withAnalysisContext emptyList()
             val document = file.findDocument() ?: return@withAnalysisContext emptyList()
