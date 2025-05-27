@@ -3,7 +3,7 @@ Language Server for Kotlin
 
 [![Kotlin Alpha](https://kotl.in/badges/experimental.svg)](https://kotlinlang.org/docs/components-stability.html)
 [![JetBrains incubator project](https://jb.gg/badges/incubator.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
-
+![GitHub Release](https://img.shields.io/github/v/release/Kotlin/kotlin-lsp)
 
 Pre-alpha official Kotlin support for Visual Studio Code and an implementation of [Language Server Protocol](https://github.com/Microsoft/language-server-protocol)
 for the Kotlin language.
@@ -13,7 +13,7 @@ implementation.
 
 ### Quick Start
 
-1. Download the latest build of VSC extension via [RELEASES.md](RELEASES.md)
+1. Download the latest build of VSC extension from the [Releases Page](https://github.com/Kotlin/kotlin-lsp/releases)
 2. Install it as a VSC Extension via `Extensions | More Action | Install from VSIX`
     * Alternatively, it is possible to drag-and-drop VSIX extension directly into `Extensions` tool window
 3. Ensure that your Java version is 17 or above
