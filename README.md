@@ -3,7 +3,7 @@ Language Server for Kotlin
 
 [![Kotlin Alpha](https://kotl.in/badges/experimental.svg)](https://kotlinlang.org/docs/components-stability.html)
 [![JetBrains incubator project](https://jb.gg/badges/incubator.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
-![GitHub Release](https://img.shields.io/github/v/release/Kotlin/kotlin-lsp)
+[![GitHub Release](https://img.shields.io/github/v/release/Kotlin/kotlin-lsp)](https://github.com/Kotlin/kotlin-lsp/releases/latest)
 
 Pre-alpha official Kotlin support for Visual Studio Code and an implementation of [Language Server Protocol](https://github.com/Microsoft/language-server-protocol)
 for the Kotlin language.
