@@ -1,5 +1,5 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
-package com.jetbrains.ls.api.features.impl.common.kotlin.workspaceSymbols
+package com.jetbrains.ls.api.features.impl.common.kotlin.symbols
 
 import com.intellij.navigation.ChooseByNameContributor
 import com.intellij.navigation.NavigationItem
@@ -8,16 +8,13 @@ import com.intellij.psi.util.parentsOfType
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
-import com.jetbrains.ls.api.features.impl.common.workspaceSymbols.AbstractLSWorkspaceSymbolProvider
-import com.jetbrains.lsp.protocol.SymbolKind
+import com.jetbrains.ls.api.features.impl.common.symbols.AbstractLSWorkspaceSymbolProvider
 import com.jetbrains.lsp.protocol.WorkspaceSymbol
 import org.jetbrains.kotlin.idea.goto.KotlinGotoClassContributor
 import org.jetbrains.kotlin.idea.goto.KotlinGotoFunctionSymbolContributor
 import org.jetbrains.kotlin.idea.goto.KotlinGotoPropertySymbolContributor
 import org.jetbrains.kotlin.idea.goto.KotlinGotoTypeAliasContributor
-import org.jetbrains.kotlin.lexer.KtTokens
-import org.jetbrains.kotlin.psi.*
-import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
+import org.jetbrains.kotlin.psi.KtNamedDeclaration
 
 internal object LSWorkspaceSymbolProviderKotlinImpl : AbstractLSWorkspaceSymbolProvider() {
     override fun getContributors(): List<ChooseByNameContributor> = listOf(
@@ -53,32 +50,4 @@ internal object LSWorkspaceSymbolProviderKotlinImpl : AbstractLSWorkspaceSymbolP
             ?: containingKtFile.packageFqName.asString()
     }
 
-    private fun KtNamedDeclaration.getKind(): SymbolKind? = when (this) {
-        is KtEnumEntry -> SymbolKind.EnumMember
-        is KtClass -> when {
-            isInterface() -> SymbolKind.Interface
-            isEnum() -> SymbolKind.Enum
-            else -> SymbolKind.Class
-        }
-
-        is KtObjectDeclaration -> SymbolKind.Object
-        is KtConstructor<*> -> SymbolKind.Constructor
-        is KtNamedFunction -> when {
-            containingClassOrObject != null -> SymbolKind.Method
-            hasModifier(KtTokens.OPERATOR_KEYWORD) -> SymbolKind.Operator
-            else -> SymbolKind.Function
-        }
-
-        is KtProperty -> when {
-            isLocal -> SymbolKind.Variable
-            hasModifier(KtTokens.CONST_KEYWORD) -> SymbolKind.Constant
-            else -> SymbolKind.Property
-        }
-
-        is KtTypeAlias -> SymbolKind.Class
-
-        is KtParameter -> SymbolKind.Variable
-        is KtTypeParameter -> SymbolKind.TypeParameter
-        else -> null
-    }
 }

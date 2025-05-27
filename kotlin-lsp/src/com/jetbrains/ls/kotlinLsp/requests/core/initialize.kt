@@ -88,6 +88,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
                 ),
                 referencesProvider = OrBoolean(true),
                 hoverProvider = OrBoolean(true),
+                documentSymbolProvider = OrBoolean(true),
                 workspaceSymbolProvider = OrBoolean.of(WorkspaceSymbolOptions(resolveProvider = false, workDoneProgress = true)),
                 workspace = ServerWorkspaceCapabilities(
                     workspaceFolders = WorkspaceFoldersServerCapabilities(

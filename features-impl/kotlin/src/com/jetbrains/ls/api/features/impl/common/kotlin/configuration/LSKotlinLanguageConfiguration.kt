@@ -15,16 +15,16 @@ import com.jetbrains.ls.api.features.impl.common.kotlin.definitions.LSKotlinPack
 import com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.compiler.LSKotlinCompilerDiagnosticsFixesCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.compiler.LSKotlinCompilerDiagnosticsProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.intentions.LSKotlinIntentionCodeActionProviderImpl
+import com.jetbrains.ls.api.features.impl.common.kotlin.symbols.LSDocumentSymbolProviderKotlin
 import com.jetbrains.ls.api.features.impl.common.kotlin.hover.LSHoverProviderKotlinImpl
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.impl.common.kotlin.semanticTokens.LSSemanticTokensProviderKotlinImpl
 import com.jetbrains.ls.api.features.impl.common.kotlin.usages.kotlinUsagesIjPlugins
-import com.jetbrains.ls.api.features.impl.common.kotlin.workspaceSymbols.LSWorkspaceSymbolProviderKotlinImpl
+import com.jetbrains.ls.api.features.impl.common.kotlin.symbols.LSWorkspaceSymbolProviderKotlinImpl
 import com.jetbrains.ls.api.features.impl.common.references.LSReferencesProviderCommonImpl
 import com.jetbrains.ls.api.features.language.LSLanguageConfiguration
 import com.jetbrains.ls.api.features.utils.ijPluginByXml
 import org.jetbrains.kotlin.idea.base.fir.codeInsight.FirCodeInsightForClassPath
-import org.jetbrains.kotlin.idea.plugin.common.KotlinPluginCommonClassForClassPath
 
 val LSKotlinLanguageConfiguration: LSLanguageConfiguration = LSLanguageConfiguration(
     entries = listOf(
@@ -41,6 +41,7 @@ val LSKotlinLanguageConfiguration: LSLanguageConfiguration = LSLanguageConfigura
         LSKotlinCompilerDiagnosticsProvider,
         LSKotlinCompilerDiagnosticsFixesCodeActionProvider,
         LSWorkspaceSymbolProviderKotlinImpl,
+        LSDocumentSymbolProviderKotlin,
         LSKotlinIntentionCodeActionProviderImpl,
     ),
     plugins = listOf(

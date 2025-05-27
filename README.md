@@ -60,6 +60,7 @@ The best way to track current capabilities and what is going to be supported in 
 * [ ] Code formatting
 * [ ] Fully-featured Windows support
 * [x] Reactive updates from the filesystem
+* [x] Document symbols (Outline) 
 
 
 ### Project Status

@@ -1,11 +1,11 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
-package com.jetbrains.ls.api.features.impl.common.workspaceSymbols
+package com.jetbrains.ls.api.features.impl.common.symbols
 
 import com.intellij.navigation.ChooseByNameContributor
 import com.intellij.navigation.NavigationItem
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.features.workspaceSymbols.LSWorkspaceSymbolProvider
+import com.jetbrains.ls.api.features.symbols.LSWorkspaceSymbolProvider
 import com.jetbrains.lsp.protocol.WorkspaceSymbol
 import com.jetbrains.lsp.protocol.WorkspaceSymbolParams
 import kotlinx.coroutines.channels.SendChannel
