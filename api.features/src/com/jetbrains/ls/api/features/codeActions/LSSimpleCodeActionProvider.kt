@@ -1,6 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.codeActions
 
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.vfs.VirtualFile
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.LSAnalysisContext
@@ -35,8 +36,10 @@ abstract class LSSimpleCodeActionProvider<P : Any> : LSCodeActionProvider, LSCom
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val documentUri = params.textDocument.uri
         val params = withAnalysisContext {
-            val file = documentUri.findVirtualFile() ?: return@withAnalysisContext null
-            getData(file, params)
+            runReadAction {
+                val file = documentUri.findVirtualFile() ?: return@runReadAction null
+                getData(file, params)
+            }
         } ?: return@flow
         val arguments = buildList {
             add(LSP.json.encodeToJsonElement(documentUri))
@@ -70,9 +73,11 @@ abstract class LSSimpleCodeActionProvider<P : Any> : LSCodeActionProvider, LSCom
             otherArgs: List<JsonElement>,
         ): List<TextEdit> {
             return withAnalysisContext {
-                val file = documentUri.findVirtualFile() ?: return@withAnalysisContext emptyList()
-                val argument = otherArgs.firstOrNull()?.let { LSP.json.decodeFromJsonElement(dataSerializer, it) } ?: (NoData as P)
-                execute(file, argument)
+                runReadAction {
+                    val file = documentUri.findVirtualFile() ?: return@runReadAction emptyList()
+                    val argument = otherArgs.firstOrNull()?.let { LSP.json.decodeFromJsonElement(dataSerializer, it) } ?: (NoData as P)
+                    execute(file, argument)
+                }
             }
         }
     }

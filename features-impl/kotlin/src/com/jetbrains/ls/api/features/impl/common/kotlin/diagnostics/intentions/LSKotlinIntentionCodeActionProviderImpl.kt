@@ -6,6 +6,7 @@ import com.intellij.modcommand.ActionContext
 import com.intellij.modcommand.ModPsiUpdater
 import com.intellij.modcommand.ModShowConflicts
 import com.intellij.modcommand.ModTemplateBuilder
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.diagnostic.getOrLogException
 import com.intellij.openapi.editor.Document
@@ -61,23 +62,25 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
         if (!params.shouldProvideKind(CodeActionKind.QuickFix)) return@flow
         val uri = params.textDocument.uri.uri
         withAnalysisContext {
-            val file = uri.findVirtualFile() ?: return@withAnalysisContext emptyList()
-            val ktFile = file.findPsiFile(project) as? KtFile ?: return@withAnalysisContext emptyList()
-            val document = file.findDocument() ?: return@withAnalysisContext emptyList()
-            val actions = createActions()
-            analyze(ktFile) {
-                val result = mutableListOf<CodeAction>()
-                for (ktElement in ktFile.descendantsOfType<KtElement>()) {
-                    if (!params.range.intersects(ktElement.textRange.toLspRange(document))) continue
-                    val actionContext = createActionContext(ktFile, ktElement)
-                    for (action in actions) {
-                        val codeAction = runCatching {
-                            toCodeAction(action, actionContext, ktElement, document, params, uri, file)
-                        }.getOrLogException { LOG.debug(it) } ?: continue
-                        result += codeAction
+            runReadAction {
+                val file = uri.findVirtualFile() ?: return@runReadAction emptyList()
+                val ktFile = file.findPsiFile(project) as? KtFile ?: return@runReadAction emptyList()
+                val document = file.findDocument() ?: return@runReadAction emptyList()
+                val actions = createActions()
+                analyze(ktFile) {
+                    val result = mutableListOf<CodeAction>()
+                    for (ktElement in ktFile.descendantsOfType<KtElement>()) {
+                        if (!params.range.intersects(ktElement.textRange.toLspRange(document))) continue
+                        val actionContext = createActionContext(ktFile, ktElement)
+                        for (action in actions) {
+                            val codeAction = runCatching {
+                                toCodeAction(action, actionContext, ktElement, document, params, uri, file)
+                            }.getOrLogException { LOG.debug(it) } ?: continue
+                            result += codeAction
+                        }
                     }
+                    result
                 }
-                result
             }
         }.forEach { emit(it) }
     }
@@ -137,9 +140,10 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
                 LSP.json.decodeFromJsonElement(PsiSerializablePointer.serializer(), psiElementJson)
             } ?: return@e emptyList()
             action as KotlinApplicableModCommandAction<KtElement, Any>
-            withAnalysisContext {
-                val file = documentUri.findVirtualFile() ?: return@withAnalysisContext emptyList()
-                withWritableFile(documentUri.uri) {
+            withWritableFile(documentUri.uri) {
+                withAnalysisContext {
+                    val file = runReadAction { documentUri.findVirtualFile() } ?: return@withAnalysisContext emptyList()
+
                     PsiFileTextEditsCollector.collectTextEdits(file) { ktFile ->
                         check(ktFile is KtFile) { "PsiFile is not KtFile but ${ktFile}" }
 
@@ -152,7 +156,10 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
                             val elementContext = action.getElementContext(psiElement) ?: return@collectTextEdits
                             val psiUpdater = FakeModPsiUpdater(psiElement)
                             action.invoke(actionContext, psiElement, elementContext, psiUpdater)
-                        }.getOrLogException { LOG.debug(it) }
+                        }.getOrLogException {
+                            //achtung!
+                            LOG.debug(it)
+                        }
                     }
                 }
             }

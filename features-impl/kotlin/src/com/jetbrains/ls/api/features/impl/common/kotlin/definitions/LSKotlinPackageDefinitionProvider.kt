@@ -1,6 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.kotlin.definitions
 
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiPackage
@@ -29,20 +30,22 @@ internal object LSKotlinPackageDefinitionProvider : LSDefinitionProvider {
     override fun provideDefinitions(params: DefinitionParams): Flow<Location> = flow {
         val uri = params.textDocument.uri.uri
         withAnalysisContext {
-            val file = uri.findVirtualFile() ?: return@withAnalysisContext emptyList()
-            val psiFile = file.findPsiFile(project) ?: return@withAnalysisContext emptyList()
-            val document = file.findDocument() ?: return@withAnalysisContext emptyList()
-            val offset = document.offsetByPosition(params.position)
-            val reference = psiFile.findReferenceAt(offset) ?: return@withAnalysisContext emptyList()
-            val psiPackage = (reference.resolve() as? PsiPackage) ?: return@withAnalysisContext emptyList()
+            runReadAction {
+                val file = uri.findVirtualFile() ?: return@runReadAction emptyList()
+                val psiFile = file.findPsiFile(project) ?: return@runReadAction emptyList()
+                val document = file.findDocument() ?: return@runReadAction emptyList()
+                val offset = document.offsetByPosition(params.position)
+                val reference = psiFile.findReferenceAt(offset) ?: return@runReadAction emptyList()
+                val psiPackage = (reference.resolve() as? PsiPackage) ?: return@runReadAction emptyList()
 
-            // A hackish replacement for PsiPackage.directories which is not working because of the missing logic in FakePackageIndexImpl.
-            StubIndex.getInstance()
-                .getContainingFilesIterator(KotlinExactPackagesIndex.NAME, psiPackage.qualifiedName, project, EverythingGlobalScope())
-                .asSequence()
-                .filterNot { it.isFromLibrary() }
-                .mapNotNull { it.parent?.uri?.let { Location(DocumentUri(it), Range.BEGINNING) } }
-                .toList()
+                // A hackish replacement for PsiPackage.directories which is not working because of the missing logic in FakePackageIndexImpl.
+                StubIndex.getInstance()
+                    .getContainingFilesIterator(KotlinExactPackagesIndex.NAME, psiPackage.qualifiedName, project, EverythingGlobalScope())
+                    .asSequence()
+                    .filterNot { it.isFromLibrary() }
+                    .mapNotNull { it.parent?.uri?.let { Location(DocumentUri(it), Range.BEGINNING) } }
+                    .toList()
+            }
         }.forEach { emit(it) }
     }
 }

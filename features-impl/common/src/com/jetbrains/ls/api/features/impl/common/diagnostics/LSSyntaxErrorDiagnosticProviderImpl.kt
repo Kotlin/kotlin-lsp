@@ -1,6 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.diagnostics
 
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
@@ -24,11 +25,13 @@ class LSSyntaxErrorDiagnosticProviderImpl(
 ) : LSDiagnosticProvider {
     context(LSServer)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
-        withAnalysisContext a@{
-            val file = params.textDocument.findVirtualFile() ?: return@a emptyList()
-            val document = file.findDocument() ?: return@a emptyList()
-            val psiFile = file.findPsiFile(project) ?: return@a emptyList()
-            getSyntaxErrors(psiFile, document)
+        withAnalysisContext {
+            runReadAction a@ {
+                val file = params.textDocument.findVirtualFile() ?: return@a emptyList()
+                val document = file.findDocument() ?: return@a emptyList()
+                val psiFile = file.findPsiFile(project) ?: return@a emptyList()
+                getSyntaxErrors(psiFile, document)
+            }
         }.forEach { emit(it) }
     }
 

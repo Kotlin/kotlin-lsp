@@ -1,6 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.kotlin.semanticTokens
 
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
@@ -36,14 +37,16 @@ object LSSemanticTokensProviderKotlinImpl : LSSemanticTokensProvider {
     context(LSServer)
     override suspend fun full(params: SemanticTokensParams): List<LSSemanticTokenWithRange> {
         return withAnalysisContext {
-            val file = params.textDocument.findVirtualFile() ?: return@withAnalysisContext emptyList()
-            val ktFile = file.findPsiFile(project) as? KtFile ?: return@withAnalysisContext emptyList()
-            val document = file.findDocument() ?: return@withAnalysisContext emptyList()
-            val leafs = ktFile.allNonWhitespaceChildren()
-            if (leafs.isEmpty()) return@withAnalysisContext emptyList()
-            analyze(ktFile) {
-                leafs.mapNotNull { element ->
-                    element.getRangeWithToken(document)
+            runReadAction {
+                val file = params.textDocument.findVirtualFile() ?: return@runReadAction emptyList()
+                val ktFile = file.findPsiFile(project) as? KtFile ?: return@runReadAction emptyList()
+                val document = file.findDocument() ?: return@runReadAction emptyList()
+                val leafs = ktFile.allNonWhitespaceChildren()
+                if (leafs.isEmpty()) return@runReadAction emptyList()
+                analyze(ktFile) {
+                    leafs.mapNotNull { element ->
+                        element.getRangeWithToken(document)
+                    }
                 }
             }
         }

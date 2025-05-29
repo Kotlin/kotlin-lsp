@@ -4,6 +4,7 @@ package com.jetbrains.ls.api.features.impl.common.diagnostics.inspections
 import com.intellij.codeInspection.*
 import com.intellij.codeInspection.ex.InspectionManagerEx
 import com.intellij.lang.Language
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.getOrLogException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.util.TextRange
@@ -31,16 +32,18 @@ class LSInspectionDiagnosticProviderImpl(
     context(LSServer)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
         val onTheFly = false
-        withAnalysisContext c@{
-            val file = params.textDocument.findVirtualFile() ?: return@c emptyList()
-            val psiFile = file.findPsiFile(project) ?: return@c emptyList()
-            val inspections = getInspections(psiFile.language).ifEmpty { return@c emptyList() }
-            val holder = ProblemsHolder(InspectionManagerEx(project), psiFile, onTheFly)
-            val visitors = inspections.map { inspection ->
-                InspectionWithVisitor(inspection, inspection.buildVisitor(holder, onTheFly))
-            }
+        withAnalysisContext {
+            runReadAction c@{
+                val file = params.textDocument.findVirtualFile() ?: return@c emptyList()
+                val psiFile = file.findPsiFile(project) ?: return@c emptyList()
+                val inspections = getInspections(psiFile.language).ifEmpty { return@c emptyList() }
+                val holder = ProblemsHolder(InspectionManagerEx(project), psiFile, onTheFly)
+                val visitors = inspections.map { inspection ->
+                    InspectionWithVisitor(inspection, inspection.buildVisitor(holder, onTheFly))
+                }
 
-            collectDiagnostics(holder, psiFile, file, visitors)
+                collectDiagnostics(holder, psiFile, file, visitors)
+            }
         }.forEach { emit(it) }
     }
 

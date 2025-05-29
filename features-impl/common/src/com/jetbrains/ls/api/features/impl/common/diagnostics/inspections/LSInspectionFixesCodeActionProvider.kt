@@ -3,6 +3,7 @@ package com.jetbrains.ls.api.features.impl.common.diagnostics.inspections
 
 import com.intellij.codeInspection.*
 import com.intellij.codeInspection.ex.InspectionManagerEx
+import com.intellij.openapi.application.runReadAction
 import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.uri
@@ -31,22 +32,24 @@ class LSInspectionFixesCodeActionProvider(
         val diagnosticData = params.diagnosticData<InspectionDiagnosticData>().ifEmpty { return@flow }
 
         withAnalysisContext {
-            val file = params.textDocument.findVirtualFile() ?: return@withAnalysisContext emptyList()
-            diagnosticData.flatMap { data ->
-                data.data.fixes.map { quickFix ->
-                    CodeAction(
-                        title = quickFix.name,
-                        kind = CodeActionKind.QuickFix,
-                        diagnostics = listOf(data.diagnostic),
-                        command = Command(
-                            commandDescriptor.title,
-                            commandDescriptor.name,
-                            arguments = listOf(
-                                LSP.json.encodeToJsonElement(file.uri),
-                                LSP.json.encodeToJsonElement(quickFix),
+            runReadAction {
+                val file = params.textDocument.findVirtualFile() ?: return@runReadAction emptyList()
+                diagnosticData.flatMap { data ->
+                    data.data.fixes.map { quickFix ->
+                        CodeAction(
+                            title = quickFix.name,
+                            kind = CodeActionKind.QuickFix,
+                            diagnostics = listOf(data.diagnostic),
+                            command = Command(
+                                commandDescriptor.title,
+                                commandDescriptor.name,
+                                arguments = listOf(
+                                    LSP.json.encodeToJsonElement(file.uri),
+                                    LSP.json.encodeToJsonElement(quickFix),
+                                ),
                             ),
-                        ),
-                    )
+                        )
+                    }
                 }
             }
         }.forEach { emit(it) }
@@ -57,12 +60,13 @@ class LSInspectionFixesCodeActionProvider(
         "inspection.applyFix",
         LSDocumentCommandExecutor { documentUri, otherArgs ->
             val fix = LSP.json.decodeFromJsonElement<InspectionQuickfixData>(otherArgs[0])
-            withAnalysisContext {
-                val file = documentUri.findVirtualFile() ?: return@withAnalysisContext emptyList()
-
-                PsiFileTextEditsCollector.collectTextEdits(file) { psiFile ->
-                    val (fix, descriptor) = findRealFix(fix, psiFile) ?: return@collectTextEdits
-                    fix.applyFix(project, descriptor)
+            withWritableFile(documentUri.uri) {
+                withAnalysisContext {
+                    val file = runReadAction { documentUri.findVirtualFile() } ?: return@withAnalysisContext emptyList()
+                    PsiFileTextEditsCollector.collectTextEdits(file) { psiFile ->
+                        val (fix, descriptor) = findRealFix(fix, psiFile) ?: return@collectTextEdits
+                        fix.applyFix(project, descriptor)
+                    }
                 }
             }
         }

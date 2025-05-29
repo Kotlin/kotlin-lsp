@@ -3,6 +3,7 @@ package com.jetbrains.ls.api.features.impl.common.symbols
 
 import com.intellij.navigation.ChooseByNameContributor
 import com.intellij.navigation.NavigationItem
+import com.intellij.openapi.application.runReadAction
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.symbols.LSWorkspaceSymbolProvider
@@ -37,13 +38,13 @@ abstract class AbstractLSWorkspaceSymbolProvider : LSWorkspaceSymbolProvider {
         query: String,
         channel: SendChannel<WorkspaceSymbol>
     ) {
-        val names = contributor.getNames(project, /* includeNonProjectItems = */ false)
+        val names = runReadAction { contributor.getNames(project, /* includeNonProjectItems = */ false) }
         if (names.isEmpty()) return
         for (name in names) {
             if (query.isEmpty() || name.contains(query, ignoreCase = true)/*TODO some fancy fuzzy search should probably be here*/) {
-                val items = contributor.getItemsByName(name, query, project, /* includeNonProjectItems = */ false)
+                val items = runReadAction { contributor.getItemsByName(name, query, project, /* includeNonProjectItems = */ false) }
                 for (item in items) {
-                    createWorkspaceSymbol(item, contributor)?.let { channel.send(it) }
+                    runReadAction { createWorkspaceSymbol(item, contributor) }?.let { channel.send(it) }
                 }
             }
         }

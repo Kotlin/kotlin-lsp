@@ -3,6 +3,10 @@ package com.jetbrains.ls.api.features.textEdits
 
 import com.intellij.lang.Language
 import com.intellij.lang.LanguageExtension
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.invokeAndWaitIfNeeded
+import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.vfs.VirtualFile
@@ -19,22 +23,31 @@ object PsiFileTextEditsCollector {
         file: VirtualFile,
         modificationAction: (file: PsiFile) -> Unit
     ): List<TextEdit> {
-        val originalPsi = file.findPsiFile(project)
-            ?: error("Can't find PSI file for file ${file.uri}")
-        val fileForModification =
-            FileForModificationFactory.forLanguage(originalPsi.language).createFileForModifications(originalPsi, setOriginalFile = false)
+        val app = ApplicationManager.getApplication()
+        app.assertReadAccessNotAllowed()
 
-        val document: Document = fileForModification.virtualFile.findDocument()
-            ?: error("Can't find document for file ${file.uri}")
-        val textBeforeCommand = document.text
-        CommandProcessor.getInstance().executeCommand(
-            project,
-            { modificationAction(fileForModification) },
-            @Suppress("HardCodedStringLiteral") "Collecting Text Edits",
-            null,
-        )
-        val textAfterCommand = document.text
-        return TextEditsComputer.computeTextEdits(textBeforeCommand, textAfterCommand)
+        return invokeAndWaitIfNeeded {
+            runWriteAction {
+                var res: List<TextEdit>? = null
+                CommandProcessor.getInstance().executeCommand(
+                    project,
+                    {
+                        val originalPsi = file.findPsiFile(project) ?: error("Can't find PSI file for file ${file.uri}")
+                        val fileForModification = FileForModificationFactory.forLanguage(originalPsi.language).createFileForModifications(originalPsi, setOriginalFile = false)
+                        val document: Document = fileForModification.virtualFile.findDocument() ?: error("Can't find document for file ${file.uri}")
+                        val textBeforeCommand = document.text
+                        modificationAction(fileForModification)
+                        val textAfterCommand = document.text
+                        res = TextEditsComputer.computeTextEdits(textBeforeCommand, textAfterCommand)
+                    },
+                    @Suppress("HardCodedStringLiteral") "Collecting Text Edits",
+                    null,
+                )
+                requireNotNull(res) {
+                    "command was not run"
+                }
+            }
+        }
     }
 
     interface FileForModificationFactory {

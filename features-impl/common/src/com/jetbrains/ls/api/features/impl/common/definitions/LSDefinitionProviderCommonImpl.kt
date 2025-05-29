@@ -1,6 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.definitions
 
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
@@ -32,20 +33,22 @@ class LSDefinitionProviderCommonImpl(
     override fun provideDefinitions(params: DefinitionParams): Flow<Location> = flow {
         val uri = params.textDocument.uri.uri
         withAnalysisContext {
-            val file = uri.findVirtualFile() ?: return@withAnalysisContext emptyList()
-            val psiFile = file.findPsiFile(project) ?: return@withAnalysisContext emptyList()
-            val document = file.findDocument() ?: return@withAnalysisContext emptyList()
-            val offset = document.offsetByPosition(params.position)
-            val reference = psiFile.findReferenceAt(offset) ?: return@withAnalysisContext emptyList()
-            val resolvedTo = when (reference) {
-                is PsiPolyVariantReference -> reference.multiResolve(false).mapNotNull { it.element }
-                else -> listOfNotNull(reference.resolve())
-            }
+            runReadAction {
+                val file = uri.findVirtualFile() ?: return@runReadAction emptyList()
+                val psiFile = file.findPsiFile(project) ?: return@runReadAction emptyList()
+                val document = file.findDocument() ?: return@runReadAction emptyList()
+                val offset = document.offsetByPosition(params.position)
+                val reference = psiFile.findReferenceAt(offset) ?: return@runReadAction emptyList()
+                val resolvedTo = when (reference) {
+                    is PsiPolyVariantReference -> reference.multiResolve(false).mapNotNull { it.element }
+                    else -> listOfNotNull(reference.resolve())
+                }
 
-            resolvedTo.mapNotNull {
-                when (it) {
-                    is PsiPackage -> it.directory?.uri?.let { Location(DocumentUri(it), Range.BEGINNING) }
-                    else -> it.getLspLocationForDefinition()
+                resolvedTo.mapNotNull {
+                    when (it) {
+                        is PsiPackage -> it.directory?.uri?.let { Location(DocumentUri(it), Range.BEGINNING) }
+                        else -> it.getLspLocationForDefinition()
+                    }
                 }
             }
         }.forEach { emit(it) }

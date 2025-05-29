@@ -1,6 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.compiler
 
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
@@ -32,12 +33,14 @@ internal object LSKotlinCompilerDiagnosticsProvider : LSDiagnosticProvider {
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
         val uri = params.textDocument.uri.uri
         withAnalysisContext {
-            val file = uri.findVirtualFile() ?: return@withAnalysisContext emptyList()
-            val ktFile = file.findPsiFile(project) as? KtFile ?: return@withAnalysisContext emptyList()
-            val document = file.findDocument() ?: return@withAnalysisContext emptyList()
-            analyze(ktFile) {
-                val diagnostics = ktFile.collectDiagnostics(filter = KaDiagnosticCheckerFilter.ONLY_COMMON_CHECKERS)
-                diagnostics.flatMap { it.toLsp(document, file) }
+            runReadAction {
+                val file = uri.findVirtualFile() ?: return@runReadAction emptyList()
+                val ktFile = file.findPsiFile(project) as? KtFile ?: return@runReadAction emptyList()
+                val document = file.findDocument() ?: return@runReadAction emptyList()
+                analyze(ktFile) {
+                    val diagnostics = ktFile.collectDiagnostics(filter = KaDiagnosticCheckerFilter.ONLY_COMMON_CHECKERS)
+                    diagnostics.flatMap { it.toLsp(document, file) }
+                }
             }
         }.forEach { emit(it) }
     }

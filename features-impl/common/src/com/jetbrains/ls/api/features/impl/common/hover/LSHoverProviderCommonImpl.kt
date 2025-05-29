@@ -3,6 +3,7 @@ package com.jetbrains.ls.api.features.impl.common.hover
 
 import com.intellij.lang.Language
 import com.intellij.lang.LanguageExtension
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
@@ -22,19 +23,21 @@ import com.jetbrains.lsp.protocol.MarkupKindType
 abstract class AbstractLSHoverProvider : LSHoverProvider {
     context(LSServer)
     override suspend fun getHover(params: HoverParams): Hover? {
-        return withAnalysisContext a@{
-            val file = params.findVirtualFile() ?: return@a null
-            val psiFile = file.findPsiFile(project) ?: return@a null
-            val document = file.findDocument() ?: return@a null
-            val offset = document.offsetByPosition(params.position)
-            val reference = psiFile.findReferenceAt(offset) ?: return@a null
+        return withAnalysisContext {
+            runReadAction a@{
+                val file = params.findVirtualFile() ?: return@a null
+                val psiFile = file.findPsiFile(project) ?: return@a null
+                val document = file.findDocument() ?: return@a null
+                val offset = document.offsetByPosition(params.position)
+                val reference = psiFile.findReferenceAt(offset) ?: return@a null
 
-            val markdown = generateMarkdownForElementReferencedBy(file, reference) ?: return@a null
+                val markdown = generateMarkdownForElementReferencedBy(file, reference) ?: return@a null
 
-            Hover(
-                MarkupContent(MarkupKindType.Markdown, markdown),
-                range = reference.element.textRange.toLspRange(document),
-            )
+                Hover(
+                    MarkupContent(MarkupKindType.Markdown, markdown),
+                    range = reference.element.textRange.toLspRange(document),
+                )
+            }
         }
     }
 

@@ -6,6 +6,7 @@ import com.intellij.codeInsight.completion.insertCompletion
 import com.intellij.codeInsight.completion.performCompletion
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementPresentation
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.getOrLogException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.vfs.findDocument
@@ -39,31 +40,33 @@ class LSCompletionProviderCommonImpl(
     context(LSServer)
     override suspend fun provideCompletion(params: CompletionParams): CompletionList {
         return withAnalysisContext {
-            val file = params.textDocument.findVirtualFile() ?: return@withAnalysisContext EMPTY_COMPLETION_LIST
-            val psiFile = file.findPsiFile(project) ?: return@withAnalysisContext EMPTY_COMPLETION_LIST
-            val document = file.findDocument() ?: return@withAnalysisContext EMPTY_COMPLETION_LIST
-            val offset = document.offsetByPosition(params.position)
-            val completionProcess = createCompletionProcess(project, psiFile, offset)
-            val lookupElements = performCompletion(completionProcess)
-            val completionItems = lookupElements.mapIndexed { i, lookup ->
-                val lookupPresentation = LookupElementPresentation().also { lookup.renderElement(it) }
-                val data = CompletionItemData(this.uniqueId, params, lookup.lookupString, lookupElementPointer(lookup))
-                CompletionItem(
-                    label = lookupPresentation.itemText ?: lookup.lookupString,
-                    sortText = getSortedFieldByIndex(i),
-                    labelDetails = CompletionItemLabelDetails(
-                        detail = lookupPresentation.tailText,
-                        description = lookupPresentation.typeText,
-                    ),
-                    kind = lookup.psiElement?.let { LSCompletionItemKindProvider.getKind(it) },
-                    textEdit = emptyTextEdit(params.position),
-                    data = LSP.json.encodeToJsonElement(data)
-                )
+            runReadAction {
+                val file = params.textDocument.findVirtualFile() ?: return@runReadAction EMPTY_COMPLETION_LIST
+                val psiFile = file.findPsiFile(project) ?: return@runReadAction EMPTY_COMPLETION_LIST
+                val document = file.findDocument() ?: return@runReadAction EMPTY_COMPLETION_LIST
+                val offset = document.offsetByPosition(params.position)
+                val completionProcess = createCompletionProcess(project, psiFile, offset)
+                val lookupElements = performCompletion(completionProcess)
+                val completionItems = lookupElements.mapIndexed { i, lookup ->
+                    val lookupPresentation = LookupElementPresentation().also { lookup.renderElement(it) }
+                    val data = CompletionItemData(this.uniqueId, params, lookup.lookupString, lookupElementPointer(lookup))
+                    CompletionItem(
+                        label = lookupPresentation.itemText ?: lookup.lookupString,
+                        sortText = getSortedFieldByIndex(i),
+                        labelDetails = CompletionItemLabelDetails(
+                            detail = lookupPresentation.tailText,
+                            description = lookupPresentation.typeText,
+                            ),
+                        kind = lookup.psiElement?.let { LSCompletionItemKindProvider.getKind(it) },
+                        textEdit = emptyTextEdit(params.position),
+                        data = LSP.json.encodeToJsonElement(data)
+                    )
+                }
+                CompletionList(
+                    isIncomplete = false,
+                    items = completionItems,
+                    )
             }
-            CompletionList(
-                isIncomplete = false,
-                items = completionItems,
-            )
         }
     }
 
@@ -79,42 +82,44 @@ class LSCompletionProviderCommonImpl(
         }
 
         return withAnalysisContext {
-            val file = params.textDocument.findVirtualFile() ?: return@withAnalysisContext null
-            val originalPsiFile = file.findPsiFile(project) ?: return@withAnalysisContext null
-            val psiFile = FileForModificationFactory.forLanguage(originalPsiFile.language)
-                .createFileForModifications(originalPsiFile, setOriginalFile = true)
-            val document = file.findDocument() ?: return@withAnalysisContext null
-            val offset = document.offsetByPosition(params.position)
+            runReadAction {
+                val file = params.textDocument.findVirtualFile() ?: return@runReadAction null
+                val originalPsiFile = file.findPsiFile(project) ?: return@runReadAction null
+                val psiFile = FileForModificationFactory.forLanguage(originalPsiFile.language)
+                    .createFileForModifications(originalPsiFile, setOriginalFile = true)
+                val document = file.findDocument() ?: return@runReadAction null
+                val offset = document.offsetByPosition(params.position)
 
-            val completionProcess = createCompletionProcess(project, psiFile, offset)
-            val lookupElements = performCompletion(completionProcess)
-            val lookup = lookupElements.firstOrNull { it.lookupString == lookupString && lookupElementPointer(it) == pointer } ?: return@withAnalysisContext null
-            runCatching {
-                insertCompletion(project, psiFile, lookup, completionProcess.parameters!!)
-            }.getOrLogException { LOG.error("Failed to apply completion", it) }
-            val oldText = originalPsiFile.text
-            val newText = psiFile.viewProvider.contents.toString() // TODO: Replace with psiFile.text when document commit is implemented
-            var textEdits = computeTextEdits(oldText, newText)
-                // TODO: A dirty hack to make imports work before we implement document commit
-                .map { if (it.range.start.character == 0 && it.newText.startsWith("import ")) it.copy(newText = it.newText + '\n') else it }
+                val completionProcess = createCompletionProcess(project, psiFile, offset)
+                val lookupElements = performCompletion(completionProcess)
+                val lookup = lookupElements.firstOrNull { it.lookupString == lookupString && lookupElementPointer(it) == pointer } ?: return@runReadAction null
+                runCatching {
+                    insertCompletion(project, psiFile, lookup, completionProcess.parameters!!)
+                }.getOrLogException { LOG.error("Failed to apply completion", it) }
+                val oldText = originalPsiFile.text
+                val newText = psiFile.viewProvider.contents.toString() // TODO: Replace with psiFile.text when document commit is implemented
+                var textEdits = computeTextEdits(oldText, newText)
+                    // TODO: A dirty hack to make imports work before we implement document commit
+                    .map { if (it.range.start.character == 0 && it.newText.startsWith("import ")) it.copy(newText = it.newText + '\n') else it }
 
-            // A client-side command, thus inherently client-specific. At the moment, we support only VS Code.
-            val command = when {
-                textEdits.isEmpty() -> null
-                textEdits.last().newText.endsWith(")") -> VSCODE_MOVE_ONE_CHARACTER_LEFT
-                textEdits.last().newText.endsWith(" }") -> VSCODE_MOVE_TWO_CHARACTERS_LEFT
-                else -> null
+                // A client-side command, thus inherently client-specific. At the moment, we support only VS Code.
+                val command = when {
+                    textEdits.isEmpty() -> null
+                    textEdits.last().newText.endsWith(")") -> VSCODE_MOVE_ONE_CHARACTER_LEFT
+                    textEdits.last().newText.endsWith(" }") -> VSCODE_MOVE_TWO_CHARACTERS_LEFT
+                    else -> null
+                }
+
+                val documentation = lookup.psiElement
+                    ?.let {  getMarkdownDoc(it) }
+                    ?.let { StringOrMarkupContent(MarkupContent(MarkupKindType.Markdown, it)) }
+
+                completionItem.copy(
+                    additionalTextEdits = textEdits,
+                    command = command,
+                    documentation = documentation
+                )
             }
-
-            val documentation = lookup.psiElement
-                ?.let {  getMarkdownDoc(it) }
-                ?.let { StringOrMarkupContent(MarkupContent(MarkupKindType.Markdown, it)) }
-
-            completionItem.copy(
-                additionalTextEdits = textEdits,
-                command = command,
-                documentation = documentation
-            )
         }
     }
 

@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.compiler
 
 import com.intellij.codeInsight.intention.IntentionAction
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.getOrLogException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Editor
@@ -43,32 +44,34 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
 
         val uri = params.textDocument.uri.uri
         withAnalysisContext {
-            val file = params.textDocument.findVirtualFile() ?: return@withAnalysisContext emptyList()
-            val quickFixService = KotlinQuickFixService.getInstance()
-            val ktFile = file.findPsiFile(project) as? KtFile ?: return@withAnalysisContext emptyList()
-            val document = file.findDocument() ?: return@withAnalysisContext emptyList()
             withWritableFile(uri) {
-            analyze(ktFile) {
-                val kaDiagnostics = ktFile.collectDiagnostics(filter = KaDiagnosticCheckerFilter.ONLY_COMMON_CHECKERS)
-                if (kaDiagnostics.isEmpty()) return@analyze emptyList()
-                val editor = createEditorWithCaret(document, caretOffset = 0)
-                val result = mutableListOf<CodeAction>()
-                for (data in diagnosticData) {
-                    val kaDiagnostic = kaDiagnostics.firstOrNull { data.data.matches(it) } ?: continue
-                    with(quickFixService) {
-                        result += getQuickFixesAsCodeActions(
-                            project,
-                            ktFile,
-                            editor,
-                            params.textDocument.uri,
-                            kaDiagnostic,
-                            data.diagnostic,
-                        )
+                runReadAction {
+                    val file = params.textDocument.findVirtualFile() ?: return@runReadAction emptyList()
+                    val quickFixService = KotlinQuickFixService.getInstance()
+                    val ktFile = file.findPsiFile(project) as? KtFile ?: return@runReadAction emptyList()
+                    val document = file.findDocument() ?: return@runReadAction emptyList()
+                    analyze(ktFile) {
+                        val kaDiagnostics = ktFile.collectDiagnostics(filter = KaDiagnosticCheckerFilter.ONLY_COMMON_CHECKERS)
+                        if (kaDiagnostics.isEmpty()) return@analyze emptyList()
+                        val editor = createEditorWithCaret(document, caretOffset = 0)
+                        val result = mutableListOf<CodeAction>()
+                        for (data in diagnosticData) {
+                            val kaDiagnostic = kaDiagnostics.firstOrNull { data.data.matches(it) } ?: continue
+                            with(quickFixService) {
+                                result += getQuickFixesAsCodeActions(
+                                    project,
+                                    ktFile,
+                                    editor,
+                                    params.textDocument.uri,
+                                    kaDiagnostic,
+                                    data.diagnostic,
+                                )
+                            }
+                        }
+                        result
                     }
                 }
-                result
             }
-                }
         }.forEach { emit(it) }
     }
 
@@ -119,7 +122,7 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
             val diagnosticData = lspDiagnostic.diagnosticData<KotlinCompilerDiagnosticData>() ?: return@e emptyList()
             val fix = LSP.json.decodeFromJsonElement<KotlinCompilerDiagnosticQuickfixData>(otherArgs[1])
             withAnalysisContext {
-                val file = documentUri.findVirtualFile() ?: return@withAnalysisContext emptyList()
+                val file = runReadAction { documentUri.findVirtualFile() } ?: return@withAnalysisContext emptyList()
                 withWritableFile(documentUri.uri) {
                     PsiFileTextEditsCollector.collectTextEdits(file) { ktFile ->
                         check(ktFile is KtFile) { "PsiFile is not KtFile but ${ktFile}" }

@@ -1,6 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.decompiler
 
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.vfs.findPsiFile
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
@@ -29,8 +30,10 @@ object LSDecompileCommandDescriptorProvider : LSCommandDescriptorProvider {
                     throwLspError(ExecuteCommand, "Unexpected URI scheme to decompile: $scheme", Unit, ErrorCodes.InvalidParams, null)
                 }
                 val response: DecompilerResponse? = withAnalysisContext {
-                    val psiFile = documentUri.findVirtualFile()?.findPsiFile(project)
-                    psiFile?.let { DecompilerResponse(it.text, it.language.id.lowercase()) }
+                    runReadAction {
+                        val psiFile = documentUri.findVirtualFile()?.findPsiFile(project)
+                        psiFile?.let { DecompilerResponse(it.text, it.language.id.lowercase()) }
+                    }
                 }
 
                 response?.let{LSP.json.encodeToJsonElement(it)} ?: JsonPrimitive(null as String?)
