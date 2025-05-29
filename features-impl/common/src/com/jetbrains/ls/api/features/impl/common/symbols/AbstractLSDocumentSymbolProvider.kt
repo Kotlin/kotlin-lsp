@@ -1,6 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.symbols
 
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
@@ -15,20 +16,23 @@ import com.jetbrains.lsp.protocol.DocumentSymbolParams
 import com.jetbrains.lsp.protocol.SymbolKind
 import com.jetbrains.lsp.protocol.SymbolTag
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 
 abstract class AbstractLSDocumentSymbolProvider : LSDocumentSymbolProvider {
     context(LSServer)
-    override fun getDocumentSymbols(params: DocumentSymbolParams): Flow<DocumentSymbol> = channelFlow {
+    override fun getDocumentSymbols(params: DocumentSymbolParams): Flow<DocumentSymbol> = flow {
         val uri = params.textDocument.uri.uri
-        withAnalysisContext(uri) {
-            uri.findVirtualFile()
-                ?.findPsiFile(project)
-                ?.let { getNestedDeclarations(it) }
-                ?.forEach { declaration ->
-                    mapDeclaration(declaration)?.let { channel.send(it) }
-                }
-        }
+        withAnalysisContext {
+            runReadAction {
+                uri.findVirtualFile()
+                    ?.findPsiFile(project)
+                    ?.let { getNestedDeclarations(it) }
+                    ?.mapNotNull { declaration ->
+                        mapDeclaration(declaration)
+                    } ?: emptyList()
+            }
+        }.forEach { emit(it) }
     }
 
     context(LSAnalysisContext)
@@ -55,6 +59,7 @@ abstract class AbstractLSDocumentSymbolProvider : LSDocumentSymbolProvider {
             is PsiNameIdentifierOwner -> element.name
             else -> null
         }
+
     protected abstract fun getKind(element: PsiElement): SymbolKind?
     protected abstract fun isDeprecated(element: PsiElement): Boolean
     protected abstract fun getNestedDeclarations(element: PsiElement): List<PsiElement>
