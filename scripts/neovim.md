@@ -35,7 +35,7 @@ Requires manual launch of language server
 2. Configure [nvim.lsp](https://neovim.io/doc/user/lsp.html) e.g:
     ```lua
     {
-      cmd = vim.lsp.rpc.connect('127.0.0.1', tonumber(9999))
+      cmd = vim.lsp.rpc.connect('127.0.0.1', tonumber(9999)),
       single_file_support = true,
       filetypes = { "kotlin" },
       root_markers = { "build.gradle", "build.gradle.kts", "pom.xml" },
