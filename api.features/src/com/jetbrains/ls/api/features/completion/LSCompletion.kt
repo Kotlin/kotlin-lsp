@@ -29,7 +29,7 @@ object LSCompletion {
         if (isEmpty()) return CompletionList.EMPTY_COMPLETE
         if (size == 1) return first()
 
-        require(all { it.isIncomplete }) { "Combining incomplete results is not yet supported" }
+        require(none { it.isIncomplete }) { "Combining incomplete results is not yet supported" }
         require(all { it.itemDefaults == null }) { "Combining itemDefaults is not yet supported" }
         return CompletionList(
             isIncomplete = false,

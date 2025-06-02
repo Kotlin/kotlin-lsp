@@ -30,6 +30,7 @@ import org.jetbrains.kotlin.resolve.jvm.platform.JvmPlatformAnalyzerServices
 /**
  * Taken from https://github.com/darthorimar/rekot
  */
+@Deprecated("Use `LSCompletionProviderKotlinImpl` instead")
 internal object LSRekotBasedKotlinCompletionProviderImpl : LSCompletionProvider {
     override val uniqueId: String get() = this::class.java.name
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)

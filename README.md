@@ -53,7 +53,7 @@ The best way to track current capabilities and what is going to be supported in 
 * [x] Completion
   * [x] Analysis-API based completion
   * [x] IJ-based completion
-    * [ ] Enable IJ-based completion
+    * [x] Enable IJ-based completion
 * [ ] KDoc support
   * [x] In-project documentation hovers
   * [ ] Dependencies/Java documentation hovers from `source.jar`

@@ -5,7 +5,6 @@ import com.intellij.lang.Language
 import com.intellij.lang.LanguageExtension
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.invokeAndWaitIfNeeded
-import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.diagnostic.logger
@@ -39,7 +38,7 @@ object PsiFileTextEditsCollector {
                     {
                         val originalPsi = file.findPsiFile(project) ?: error("Can't find PSI file for file ${file.uri}")
                         val fileForModification = FileForModificationFactory.forLanguage(originalPsi.language)
-                            .createFileForModifications(originalPsi, setOriginalFile = false)
+                            .createFileForModifications(originalPsi)
                         val document: Document = fileForModification.virtualFile.findDocument() ?: error("Can't find document for file ${file.uri}")
                         val textBeforeCommand = document.text
                         try {
@@ -63,7 +62,7 @@ object PsiFileTextEditsCollector {
     }
 
     interface FileForModificationFactory {
-        fun createFileForModifications(file: PsiFile, setOriginalFile: Boolean): PsiFile
+        fun createFileForModifications(file: PsiFile): PsiFile
 
         private object Extension : LanguageExtension<FileForModificationFactory>("ls.fileForModificationFactory")
 
