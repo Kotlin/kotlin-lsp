@@ -2,18 +2,20 @@
 package com.jetbrains.ls.api.features.impl.common.kotlin.semanticTokens
 
 import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
+import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
-import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.semanticTokens.*
 import com.jetbrains.lsp.protocol.SemanticTokensParams
+import kotlinx.coroutines.CancellationException
 import org.jetbrains.annotations.ApiStatus
 import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.analysis.api.analyze
@@ -25,6 +27,8 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.psi.KtSimpleNameExpression
 import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
+
+private val LOG = logger<LSSemanticTokensProviderKotlinImpl>()
 
 @ApiStatus.Internal
 object LSSemanticTokensProviderKotlinImpl : LSSemanticTokensProvider {
@@ -53,8 +57,8 @@ object LSSemanticTokensProviderKotlinImpl : LSSemanticTokensProvider {
     }
 
     context(LSServer, KaSession)
-    private fun PsiElement.getRangeWithToken(document: Document): LSSemanticTokenWithRange? {
-        return when (this) {
+    private fun PsiElement.getRangeWithToken(document: Document): LSSemanticTokenWithRange? = try {
+        when (this) {
             is KtSimpleNameExpression -> {
                 val resolvedTo = mainReference.resolveToSymbol() ?: return null
                 val token = getRangeWithToken(resolvedTo) ?: return null
@@ -74,6 +78,13 @@ object LSSemanticTokensProviderKotlinImpl : LSSemanticTokensProvider {
 
             else -> null
         }
+    }
+    catch (e: CancellationException) {
+        throw e
+    }
+    catch (e: Throwable) {
+        LOG.error(e)
+        null
     }
 
     context(LSServer, KaSession)
