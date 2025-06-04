@@ -3,7 +3,7 @@ package com.jetbrains.ls.kotlinLsp
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.options.*
-import com.github.ajalt.clikt.parameters.types.*
+import com.github.ajalt.clikt.parameters.types.int
 import com.intellij.openapi.application.PathManager
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.LSServerContext
@@ -46,7 +46,7 @@ private class RunKotlinLspCommand : CliktCommand(name = "kotlin-lsp") {
 
     override fun run() {
         initKotlinLspLogger(writeToStdOut = !stdio)
-        initIdeaHomePath()
+        initIdeaPaths()
         setLspKotlinPluginModeIfRunningFromProductionLsp()
 
         val config = createConfiguration()
@@ -92,11 +92,17 @@ private suspend fun handleRequests(input: InputStream, output: OutputStream, con
     }
 }
 
-private fun initIdeaHomePath() {
-    val ideaHomePath =
-        getIJPathIfRunningFromSources()
-            ?: createTempDirectory("idea-home").absolutePathString()
-    System.setProperty("idea.home.path", ideaHomePath)
+private fun initIdeaPaths() {
+    val fromSources = getIJPathIfRunningFromSources()
+    if (fromSources != null) {
+        System.setProperty("idea.home.path", fromSources)
+        System.setProperty("idea.config.path", "$fromSources/config/idea")
+        System.setProperty("idea.system.path", "$fromSources/system/idea")
+    }
+    else {
+        val tmp = createTempDirectory("idea-home").absolutePathString()
+        System.setProperty("idea.home.path", tmp)
+    }
 }
 
 private fun setLspKotlinPluginModeIfRunningFromProductionLsp() {
