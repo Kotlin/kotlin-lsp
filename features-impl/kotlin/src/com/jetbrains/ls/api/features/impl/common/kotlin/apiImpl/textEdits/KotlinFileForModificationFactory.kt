@@ -3,15 +3,20 @@ package com.jetbrains.ls.api.features.impl.common.kotlin.apiImpl.textEdits
 
 import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.features.textEdits.PsiFileTextEditsCollector
+import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.projectStructure.contextModule
 import org.jetbrains.kotlin.idea.base.projectStructure.getKaModule
 import org.jetbrains.kotlin.psi.KtPsiFactory
+import org.jetbrains.kotlin.analysis.api.projectStructure.analysisContextModule
 
 internal class KotlinFileForModificationFactory : PsiFileTextEditsCollector.FileForModificationFactory {
-    override fun createFileForModifications(file: PsiFile): PsiFile {
-        val project = file.project
-        val copyKtFile = KtPsiFactory(project, markGenerated = true, eventSystemEnabled = true).createFile(file.text)
-        copyKtFile.contextModule = file.getKaModule(project, useSiteModule = null)
-        return copyKtFile
-    }
+    @OptIn(KaImplementationDetail::class)
+    override fun createFileForModifications(file: PsiFile): PsiFile =
+        KtPsiFactory(project = file.project, markGenerated = false, eventSystemEnabled = true)
+            .createFile(file.text)
+            .also {
+                val module = file.getKaModule(file.project, useSiteModule = null)
+                it.contextModule = module
+                it.virtualFile.analysisContextModule = module
+            }
 }
