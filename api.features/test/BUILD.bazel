@@ -13,7 +13,7 @@ jvm_library(
   srcs = glob(["test/**/*.kt", "test/**/*.java"], allow_empty = True),
   deps = [
     "@lib//:kotlin-stdlib",
-    "//language-server/community/protocol",
+    "@community//fleet/lsp.protocol",
     "@lib//:kotlinx-coroutines-core",
     "//language-server/community/api.core",
     "//language-server/community/api.core:api.core_test_lib",

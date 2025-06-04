@@ -35,7 +35,7 @@ jvm_library(
     "@lib//:kotlinx-serialization-json",
     "@lib//:kotlinx-serialization-core",
     "//language-server/analyzer",
-    "//language-server/community/protocol",
+    "@community//fleet/lsp.protocol",
     "@community//platform/code-style-api:codeStyle",
     "@community//platform/lang-impl",
     "@community//java/java-psi-api:psi",

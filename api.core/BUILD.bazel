@@ -19,7 +19,7 @@ jvm_library(
     "@community//platform/util",
     "@community//platform/workspace/storage",
     "@community//platform/workspace/jps",
-    "//language-server/community/protocol",
+    "@community//fleet/lsp.protocol",
   ]
 )
 
@@ -35,7 +35,7 @@ jvm_library(
     "@community//platform/util",
     "@community//platform/workspace/storage",
     "@community//platform/workspace/jps",
-    "//language-server/community/protocol",
+    "@community//fleet/lsp.protocol",
     "@lib//:junit5",
     "@lib//:junit5Jupiter",
   ]

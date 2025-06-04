@@ -17,7 +17,7 @@ jvm_library(
   kotlinc_opts = ":custom",
   deps = [
     "@lib//:kotlin-stdlib",
-    "//language-server/community/protocol",
+    "@community//fleet/lsp.protocol",
     "@community//fleet/util/core",
     "@community//platform/core-api:core",
     "@community//platform/core-impl",

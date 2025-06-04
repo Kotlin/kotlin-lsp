@@ -43,7 +43,7 @@ jvm_library(
     "@lib//:kotlinc-analysis-api-k2",
     "@community//java/java-psi-api:psi",
     "//language-server/analyzer",
-    "//language-server/community/protocol",
+    "@community//fleet/lsp.protocol",
     "//language-server/community/api.features",
     "@community//plugins/kotlin/base/code-insight",
     "@community//plugins/kotlin/code-insight/api",
