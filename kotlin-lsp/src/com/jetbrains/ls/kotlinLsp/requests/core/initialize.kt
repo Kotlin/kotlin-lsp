@@ -11,6 +11,7 @@ import com.jetbrains.ls.api.features.completion.LSCompletionProvider
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokens
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
+import com.jetbrains.ls.imports.jps.JpsWorkspaceImporter
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
 import com.jetbrains.ls.kotlinLsp.connection.Client
 import com.jetbrains.ls.kotlinLsp.util.importProject
@@ -143,6 +144,12 @@ private suspend fun initFolder(
             JsonWorkspaceImporter.isApplicableDirectory(folderPath) -> {
                 lspClient.reportProgressMessage(params, "Importing ${folderPath / "workspace.json"}")
                 importProject(folderPath, JsonWorkspaceImporter, params)
+                return
+            }
+
+            JpsWorkspaceImporter.isApplicableDirectory(folderPath) -> {
+                lspClient.reportProgressMessage(params, "Importing JPS project: $folderPath")
+                importProject(folderPath, JpsWorkspaceImporter, params)
                 return
             }
 
