@@ -10,15 +10,15 @@ import com.intellij.openapi.application.invokeAndWaitIfNeeded
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
-import com.jetbrains.ls.api.core.util.findVirtualFile
-import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.util.findVirtualFile
+import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.features.completion.CompletionItemData
 import com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider
 import com.jetbrains.ls.api.features.completion.LSCompletionProvider
 import com.jetbrains.ls.api.features.impl.common.hover.AbstractLSHoverProvider.LSMarkdownDocProvider.Companion.getMarkdownDoc
-import com.jetbrains.ls.api.features.textEdits.PsiFileTextEditsCollector
+import com.jetbrains.ls.api.features.textEdits.PsiFileTextEditsCollector.collectTextEdits
 import com.jetbrains.ls.api.features.utils.PsiSerializablePointer
 import com.jetbrains.lsp.protocol.*
 import kotlinx.serialization.SerializationException
@@ -79,15 +79,14 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider {
         return withAnalysisContext {
             val file = params.textDocument.findVirtualFile() ?: return@withAnalysisContext null
             var lookup: LookupElement? = null
-            val rawTextEdits = PsiFileTextEditsCollector.collectTextEdits(file) { psiFile ->
-                val document = file.findDocument() ?: return@collectTextEdits
+            val rawTextEdits = collectTextEdits(file) { fileForModification ->
+                val document = fileForModification.fileDocument
                 val offset = document.offsetByPosition(params.position)
-
-                val completionProcess = createCompletionProcess(project, psiFile, offset)
+                val completionProcess = createCompletionProcess(project, fileForModification, offset)
                 val lookupElements = performCompletion(completionProcess)
                 lookup = lookupElements.firstOrNull { it.lookupString == lookupString && lookupElementPointer(it) == pointer }
                     ?: return@collectTextEdits
-                insertCompletion(project, psiFile, lookup, completionProcess.parameters!!)
+                insertCompletion(project, fileForModification, lookup, completionProcess.parameters!!)
             }
 
             val textEdits = transformTextEdits(rawTextEdits)

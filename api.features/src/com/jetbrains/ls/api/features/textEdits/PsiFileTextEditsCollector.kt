@@ -8,13 +8,11 @@ import com.intellij.openapi.application.invokeAndWaitIfNeeded
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.diagnostic.logger
-import com.intellij.openapi.editor.Document
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiFile
-import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.core.LSAnalysisContext
+import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.lsp.protocol.TextEdit
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -39,8 +37,7 @@ object PsiFileTextEditsCollector {
                         val originalPsi = file.findPsiFile(project) ?: error("Can't find PSI file for file ${file.uri}")
                         val fileForModification = FileForModificationFactory.forLanguage(originalPsi.language)
                             .createFileForModifications(originalPsi)
-                        val document: Document = fileForModification.virtualFile.findDocument() ?: error("Can't find document for file ${file.uri}")
-                        val textBeforeCommand = document.text
+                        val textBeforeCommand = fileForModification.text
                         try {
                             modificationAction(fileForModification)
                         } catch (ce: CancellationException) {
@@ -48,7 +45,7 @@ object PsiFileTextEditsCollector {
                         } catch (x: Throwable) {
                             logger.error("command failed", x)
                         }
-                        val textAfterCommand = document.text
+                        val textAfterCommand = fileForModification.text
                         res = TextEditsComputer.computeTextEdits(textBeforeCommand, textAfterCommand)
                     },
                     @Suppress("HardCodedStringLiteral") "Collecting Text Edits",
