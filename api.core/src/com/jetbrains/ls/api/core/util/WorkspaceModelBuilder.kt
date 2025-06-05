@@ -43,7 +43,7 @@ suspend fun updateWorkspaceModel(updater: context(WorkspaceModelBuilder) () -> U
                 tableId = LibraryTableId.ProjectLibraryTableId,
                 roots = lib.roots.map { root ->
                     LibraryRoot(
-                        url = urlManager.getOrCreateFromUrl(root.lspUriToIntellijUri()),
+                        url = urlManager.getOrCreateFromUrl(root.lspUriToIntellijUri()!!),
                         type = LibraryRootTypeId.COMPILED
                     )
                 },
@@ -52,7 +52,7 @@ suspend fun updateWorkspaceModel(updater: context(WorkspaceModelBuilder) () -> U
         }
 
         val newContentRoots = dirs.map { workspaceFolder ->
-            val folderUrl = urlManager.getOrCreateFromUrl(workspaceFolder.uri.lspUriToIntellijUri())
+            val folderUrl = urlManager.getOrCreateFromUrl(workspaceFolder.uri.lspUriToIntellijUri()!!)
             ContentRootEntity(
                 url = folderUrl,
                 excludedPatterns = emptyList(),

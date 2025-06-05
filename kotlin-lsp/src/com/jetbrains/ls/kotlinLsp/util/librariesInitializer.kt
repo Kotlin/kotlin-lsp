@@ -3,16 +3,7 @@ package com.jetbrains.ls.kotlinLsp.util
 
 import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
 import com.intellij.openapi.util.io.toNioPathOrNull
-import com.intellij.platform.workspace.jps.entities.DependencyScope
-import com.intellij.platform.workspace.jps.entities.InheritedSdkDependency
-import com.intellij.platform.workspace.jps.entities.LibraryDependency
-import com.intellij.platform.workspace.jps.entities.LibraryEntity
-import com.intellij.platform.workspace.jps.entities.LibraryRoot
-import com.intellij.platform.workspace.jps.entities.LibraryRootTypeId
-import com.intellij.platform.workspace.jps.entities.LibraryTableId
-import com.intellij.platform.workspace.jps.entities.ModuleEntity
-import com.intellij.platform.workspace.jps.entities.SdkDependency
-import com.intellij.platform.workspace.jps.entities.modifyModuleEntity
+import com.intellij.platform.workspace.jps.entities.*
 import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.entities
@@ -20,20 +11,12 @@ import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.PathUtil
 import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.core.util.LSLibrary
-import com.jetbrains.ls.api.core.util.WorkspaceModelBuilder
-import com.jetbrains.ls.api.core.util.intellijUriToLspUri
-import com.jetbrains.ls.api.core.util.lspUriToIntellijUri
-import com.jetbrains.ls.api.core.util.toLspUri
+import com.jetbrains.ls.api.core.util.*
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.reportProgressMessage
-import com.jetbrains.lsp.protocol.MessageType
-import com.jetbrains.lsp.protocol.ShowMessageNotification
-import com.jetbrains.lsp.protocol.ShowMessageParams
-import com.jetbrains.lsp.protocol.URI
-import com.jetbrains.lsp.protocol.WorkDoneProgressParams
+import com.jetbrains.lsp.protocol.*
 import org.jetbrains.kotlin.idea.base.plugin.artifacts.KotlinArtifacts
 import org.jetbrains.kotlin.idea.compiler.configuration.isRunningFromSources
 import java.nio.file.Path
@@ -64,7 +47,7 @@ internal fun createJDKEntity(source: EntitySource, virtualFileUrlManager: Virtua
         tableId = LibraryTableId.ProjectLibraryTableId,
         roots = javaHome().map { root ->
             LibraryRoot(
-                url = virtualFileUrlManager.getOrCreateFromUrl(root.lspUriToIntellijUri()),
+                url = virtualFileUrlManager.getOrCreateFromUrl(root.lspUriToIntellijUri()!!),
                 type = LibraryRootTypeId.COMPILED
             )
         },

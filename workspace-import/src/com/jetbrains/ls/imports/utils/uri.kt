@@ -18,6 +18,6 @@ private fun String.asIntelliJUriString(): String {
     val path = substringAfter("://")
     val uri = "$scheme://$path"
     val lspUri = UriConverter.intellijUriToLspUri(uri)
-    return UriConverter.lspUriToIntellijUri(lspUri)
+    return UriConverter.lspUriToIntellijUri(lspUri)!!
 }
 

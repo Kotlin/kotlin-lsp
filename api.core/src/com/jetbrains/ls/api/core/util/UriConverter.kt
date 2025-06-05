@@ -32,7 +32,7 @@ import java.net.URI as JavaUri
  * ```
  */
 object UriConverter {
-    fun lspUriToIntellijUri(uriString: String): String {
+    fun lspUriToIntellijUri(uriString: String): String? {
         val uri = JavaUri(uriString).withoutAuthority()
         return when (val scheme = uri.scheme) {
             "file" -> {
@@ -52,32 +52,29 @@ object UriConverter {
                 "${scheme}://$path!/$inJarPath"
             }
 
-            else -> uriString // Return unchanged for unknown schemes
+            else -> null
         }
     }
 
-    fun intellijUriToLspUri(path: String): String {
-        return intellijUriToLspUri(path, defaultScheme = null)// scheme is always present in the IJ URIs
-    }
-
-    fun localAbsolutePathStringToLspUri(path: String): String {
+    fun localAbsolutePathToIntellijUri(path: String): String {
         val isJar = path.endsWith(".jar")
-        var path = path
-        path = FileUtilRt.toSystemIndependentName(path)
-        if (isJar) {
-            path = "$path!/"
-        }
-        val scheme = if (isJar) "jar" else "file"
-        return intellijUriToLspUri(path, defaultScheme = scheme)
+        val path = FileUtilRt.toSystemIndependentName(path)
+        return "${if (isJar) "jar" else "file"}://$path${if (isJar) "!/" else ""}"
     }
 
-    private fun intellijUriToLspUri(path: String, defaultScheme: String?): String {
-        val jarSeparatorIndex = path.indexOf("!/")
+    fun localAbsolutePathToLspUri(path: String): String {
+        return intellijUriToLspUri(localAbsolutePathToIntellijUri(path))
+    }
+
+    fun intellijUriToLspUri(uri: String): String {
+        val scheme = uri.substringBefore("://")
+        val defaultScheme = if (scheme == "file") "file" else null
+        val jarSeparatorIndex = uri.indexOf("!/")
         if (jarSeparatorIndex < 0) {
-            return path.toUriString(defaultScheme)
+            return uri.toUriString(defaultScheme)
         }
-        val jarPath = path.take(jarSeparatorIndex).toUriString(defaultScheme)
-        val inJarPath = path.substring(jarSeparatorIndex + 2).toUriString(defaultScheme = null).removePrefix("/")
+        val jarPath = uri.take(jarSeparatorIndex).toUriString(defaultScheme)
+        val inJarPath = uri.substring(jarSeparatorIndex + 2).toUriString(defaultScheme = null).removePrefix("/")
         return "$jarPath!/$inJarPath"
     }
 
@@ -129,12 +126,12 @@ object UriConverter {
     }
 }
 
-fun URI.lspUriToIntellijUri(): String = UriConverter.lspUriToIntellijUri(uri)
+fun URI.lspUriToIntellijUri(): String? = UriConverter.lspUriToIntellijUri(uri)
 
 fun String.intellijUriToLspUri(): URI = URI(UriConverter.intellijUriToLspUri(this))
 
 fun Path.toLspUri(): URI {
     val path = absolutePathString()
-    val uriString = UriConverter.localAbsolutePathStringToLspUri(path)
+    val uriString = UriConverter.localAbsolutePathToLspUri(path)
     return URI(uriString)
 }

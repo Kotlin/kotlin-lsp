@@ -2,7 +2,6 @@
 package com.jetbrains.ls.api.core.util
 
 import com.intellij.openapi.util.SystemInfoRt
-import com.jetbrains.lsp.protocol.URI
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.nio.file.Path
@@ -376,10 +375,10 @@ class UriConverterTest {
     private fun testContractForLspUri(
         lspUri: String
     ) {
-        val intellij1 = UriConverter.lspUriToIntellijUri(lspUri)
+        val intellij1 = UriConverter.lspUriToIntellijUri(lspUri)!!
 
         val lsp2: String = UriConverter.intellijUriToLspUri(intellij1)
-        val intellij2 = UriConverter.lspUriToIntellijUri(lsp2)
+        val intellij2 = UriConverter.lspUriToIntellijUri(lsp2)!!
 
 
         val lsp3 = UriConverter.intellijUriToLspUri(intellij2)
@@ -393,7 +392,7 @@ class UriConverterTest {
     ) {
         val lsp1: String = UriConverter.intellijUriToLspUri(intellijUri)
 
-        val intellij2 = UriConverter.lspUriToIntellijUri(lsp1)
+        val intellij2 = UriConverter.lspUriToIntellijUri(lsp1)!!
         val lsp2 = UriConverter.intellijUriToLspUri(intellij2)
 
         val intellij3 = UriConverter.lspUriToIntellijUri(lsp2)

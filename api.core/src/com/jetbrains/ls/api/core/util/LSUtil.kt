@@ -5,12 +5,7 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
-import com.jetbrains.lsp.protocol.DocumentUri
-import com.jetbrains.lsp.protocol.Position
-import com.jetbrains.lsp.protocol.Range
-import com.jetbrains.lsp.protocol.TextDocumentIdentifier
-import com.jetbrains.lsp.protocol.TextDocumentPositionParams
-import com.jetbrains.lsp.protocol.URI
+import com.jetbrains.lsp.protocol.*
 
 val VirtualFile.uri: URI
     get() = url.intellijUriToLspUri()
@@ -24,7 +19,7 @@ fun Document.positionByOffset(offset: Int): Position {
 }
 
 fun URI.findVirtualFile(): VirtualFile? =
-    VirtualFileManager.getInstance().findFileByUrl(lspUriToIntellijUri())
+    lspUriToIntellijUri()?.let { VirtualFileManager.getInstance().findFileByUrl(it) }
 
 fun TextRange.toLspRange(document: Document): Range =
     Range(
