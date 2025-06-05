@@ -45,6 +45,14 @@
         "path": "./syntaxes/kotlin.tmLanguage.json"
       }
     ],
+    "debuggers": [
+      {
+        "type": "intellij_debugger",
+        "label": "IntelliJ Debugger",
+        "languages": ["java", "kotlin"],
+        "configurationAttributes": {}
+      }
+    ],
     "configuration": [
       {
         "title": "Kotlin by JetBrains",
