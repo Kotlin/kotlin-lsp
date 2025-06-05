@@ -22,6 +22,7 @@ import com.jetbrains.lsp.implementation.LspHandlersBuilder
 import com.jetbrains.lsp.implementation.reportProgress
 import com.jetbrains.lsp.implementation.reportProgressMessage
 import com.jetbrains.lsp.protocol.*
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.JsonPrimitive
 import java.nio.file.Path
 import kotlin.io.path.*
@@ -159,6 +160,8 @@ private suspend fun initFolder(
                 return
             }
         }
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: Exception) {
         exceptionDuringImport = true
         val message = (e as? WorkspaceImportException)?.message ?: "Error importing project"
@@ -173,6 +176,7 @@ private suspend fun initFolder(
             LogMessageNotification,
             LogMessageParams(MessageType.Error, logMessage)
         )
+        LOG.error(e)
     }
 
     if (exceptionDuringImport) {
