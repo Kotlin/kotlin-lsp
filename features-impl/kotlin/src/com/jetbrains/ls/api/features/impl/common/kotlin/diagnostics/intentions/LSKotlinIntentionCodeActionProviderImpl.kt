@@ -231,6 +231,15 @@ private class FakeModPsiUpdater(
 
             override fun field(
                 element: PsiElement,
+                rangeInElement: TextRange,
+                varName: String,
+                expression: Expression
+            ): ModTemplateBuilder {
+                return this
+            }
+
+            override fun field(
+                element: PsiElement,
                 varName: String,
                 dependantVariableName: String,
                 alwaysStopAt: Boolean
