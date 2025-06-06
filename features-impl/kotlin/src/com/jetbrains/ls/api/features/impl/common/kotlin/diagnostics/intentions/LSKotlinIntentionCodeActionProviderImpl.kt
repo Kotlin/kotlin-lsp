@@ -3,6 +3,7 @@ package com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.intentions
 
 import com.intellij.codeInsight.template.Expression
 import com.intellij.modcommand.ActionContext
+import com.intellij.modcommand.ModCommand
 import com.intellij.modcommand.ModPsiUpdater
 import com.intellij.modcommand.ModShowConflicts
 import com.intellij.modcommand.ModTemplateBuilder
@@ -46,6 +47,7 @@ import org.jetbrains.kotlin.idea.codeinsight.api.applicable.intentions.KotlinApp
 import org.jetbrains.kotlin.idea.k2.codeinsight.intentions.MovePropertyToConstructorIntention
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtFile
+import java.util.function.Function
 
 internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, LSCommandDescriptorProvider {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSKotlinLanguage)
@@ -248,6 +250,10 @@ private class FakeModPsiUpdater(
             }
 
             override fun finishAt(offset: Int): ModTemplateBuilder {
+                return this
+            }
+
+            override fun onTemplateFinished(templateFinishFunction: Function<in PsiFile, out ModCommand>): ModTemplateBuilder {
                 return this
             }
         }
