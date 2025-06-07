@@ -5,7 +5,8 @@
 There is a preset configuration for using `kotlin-lsp` with Neovim in the
 official [`nvim-lspconfig`](https://github.com/neovim/nvim-lspconfig) plugin.
 
-To use it, just enable it in your configuration.
+To use it, just enable it in your configuration and ensure `kotlin-lsp` is
+available in `PATH` (or override the `cmd` option to point at the right place).
 
 ```lua
 -- enable the language server
