@@ -1,5 +1,23 @@
 # neovim setup
 
+## `nvim-lspconfig` setup
+
+There is a preset configuration for using `kotlin-lsp` with Neovim in the
+official [`nvim-lspconfig`](https://github.com/neovim/nvim-lspconfig) plugin.
+
+To use it, just enable it in your configuration and ensure `kotlin-lsp` is
+available in `PATH` (or override the `cmd` option to point at the right place).
+
+```lua
+-- enable the language server
+vim.lsp.enable('kotlin-lsp')
+
+-- configure its options
+vim.lsp.config('kotlin-lsp', {
+    single_file_support = false,
+})
+```
+
 ## stdio way
 
 1. Ensure socat and netcat are installed
