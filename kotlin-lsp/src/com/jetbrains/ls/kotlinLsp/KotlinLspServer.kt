@@ -81,7 +81,10 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
 
                 is KotlinLspServerMode.Socket -> {
                     logSystemInfo()
-                    tcpConnection(mode) { input, output ->
+                    tcpConnection(
+                        clientMode = mode is KotlinLspServerMode.Socket.Client,
+                        port = mode.port,
+                    ) { input, output ->
                         handleRequests(input, output, config, mode)
                     }
                 }
@@ -179,31 +182,5 @@ fun createLspHandlers(config: LSConfiguration, exitSignal: CompletableDeferred<U
 private fun preloadKotlinStdlibWhenRunningFromSources() {
     if (isRunningFromSources) {
         KotlinArtifacts.kotlinStdlib
-    }
-}
-
-private suspend fun tcpConnection(mode: KotlinLspServerMode.Socket, body: suspend CoroutineScope.(InputStream, OutputStream) -> Unit) {
-    when (mode) {
-        is KotlinLspServerMode.Socket.Client -> {
-            tcpClient(mode.port, body)
-        }
-
-        is KotlinLspServerMode.Socket.Server -> {
-            tcpServer(mode.port, body)
-        }
-    }
-}
-
-/**
- * VSC opens a **server** socket for LSP to connect to it.
- */
-private suspend fun tcpClient(port: Int, body: suspend CoroutineScope.(InputStream, OutputStream) -> Unit) {
-    val socket = runInterruptible(Dispatchers.IO) {
-        Socket("localhost", port)
-    }
-    socket.use {
-        coroutineScope {
-            body(socket.getInputStream(), socket.getOutputStream())
-        }
     }
 }
