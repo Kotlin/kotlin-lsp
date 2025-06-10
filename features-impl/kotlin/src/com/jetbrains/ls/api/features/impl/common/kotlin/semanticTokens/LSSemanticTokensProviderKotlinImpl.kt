@@ -25,6 +25,7 @@ import org.jetbrains.kotlin.idea.references.mainReference
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
+import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtSimpleNameExpression
 import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
 
@@ -64,6 +65,8 @@ object LSSemanticTokensProviderKotlinImpl : LSSemanticTokensProvider {
                 val token = getRangeWithToken(resolvedTo) ?: return null
                 LSSemanticTokenWithRange(token, textRange.toLspRange(document))
             }
+
+            is KtParameter if isFunctionTypeParameter -> null
 
             is KtNamedDeclaration -> {
                 // todo should probably be implemented on the vscode side
