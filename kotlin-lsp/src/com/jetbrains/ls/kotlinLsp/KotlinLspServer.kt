@@ -22,14 +22,14 @@ import com.jetbrains.ls.kotlinLsp.util.addKotlinStdlib
 import com.jetbrains.ls.kotlinLsp.util.logSystemInfo
 import com.jetbrains.ls.snapshot.api.impl.core.createServerStarterAnalyzerImpl
 import com.jetbrains.lsp.implementation.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.kotlin.idea.base.plugin.artifacts.KotlinArtifacts
 import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutMode
 import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutModeProvider
 import org.jetbrains.kotlin.idea.compiler.configuration.isRunningFromSources
-import java.io.InputStream
-import java.io.OutputStream
-import java.net.Socket
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.createTempDirectory
 
@@ -45,11 +45,19 @@ private class RunKotlinLspCommand : CliktCommand(name = "kotlin-lsp") {
         .help("Whether the Kotlin LSP server is used in client mode. If not set, server mode will be used with a port specified by `${::socket.name}`")
         .validate { if (it && stdio) fail("Can't use stdio mode with client mode") }
 
+    val multiclient: Boolean by option().flag()
+        .help("Whether the Kotlin LSP server is used in multiclient mode. If not set, server will be shut down after the first client disconnects.`")
+        .validate {
+            if (it && stdio) fail("Stdio mode doesn't support multiclient mode")
+            if (it && client) fail("Client mode doesn't support multiclient mode")
+        }
+
+
     private fun createRunConfig(): KotlinLspServerRunConfig {
         val mode = when {
             stdio -> KotlinLspServerMode.Stdio
-            client -> KotlinLspServerMode.Socket.Client(socket)
-            else -> KotlinLspServerMode.Socket.Server(socket)
+            client -> KotlinLspServerMode.Socket(TcpConnectionConfig.Client(port = socket))
+            else -> KotlinLspServerMode.Socket(TcpConnectionConfig.Server(port = socket, isMulticlient = multiclient))
         }
         return KotlinLspServerRunConfig(mode)
     }
@@ -76,16 +84,17 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
                 KotlinLspServerMode.Stdio -> {
                     val stdout = System.out
                     System.setOut(System.err)
-                    handleRequests(System.`in`, stdout, config, mode)
+                    stdioConnection(System.`in`, stdout) { connection ->
+                        handleRequests(connection, config, mode)
+                    }
                 }
 
                 is KotlinLspServerMode.Socket -> {
                     logSystemInfo()
                     tcpConnection(
-                        clientMode = mode is KotlinLspServerMode.Socket.Client,
-                        port = mode.port,
+                        mode.config,
                     ) { connection ->
-                        handleRequests(connection.inputStream, connection.outputStream, config, mode)
+                        handleRequests(connection, config, mode)
                     }
                 }
             }
@@ -94,11 +103,19 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
 }
 
 context(LSServerContext)
-private suspend fun handleRequests(input: InputStream, output: OutputStream, config: LSConfiguration, mode: KotlinLspServerMode) {
-    withBaseProtocolFraming(input, output) { incoming, outgoing ->
+private suspend fun handleRequests(connection: LspConnection, config: LSConfiguration, mode: KotlinLspServerMode) {
+    val shutdownOnExitSignal = when (mode) {
+        is KotlinLspServerMode.Socket -> when (val tcpConfig = mode.config) {
+            is TcpConnectionConfig.Client -> true
+            is TcpConnectionConfig.Server -> !tcpConfig.isMulticlient
+        }
+        KotlinLspServerMode.Stdio -> true
+    }
+    val exitSignal = if (shutdownOnExitSignal) CompletableDeferred<Unit>() else null
+
+    withBaseProtocolFraming(connection, exitSignal) { incoming, outgoing ->
         withServer {
-            val exitSignal = CompletableDeferred<Unit>()
-            val handler = createLspHandlers(config, exitSignal, clientMode = mode is KotlinLspServerMode.Socket.Client)
+            val handler = createLspHandlers(config, exitSignal)
 
             withLsp(
                 incoming,
@@ -108,7 +125,11 @@ private suspend fun handleRequests(input: InputStream, output: OutputStream, con
                     Client.contextElement(lspClient)
                 },
             ) { lsp ->
-                exitSignal.await()
+                if (exitSignal != null) {
+                    exitSignal.await()
+                } else {
+                    awaitCancellation()
+                }
             }
         }
     }
@@ -164,12 +185,12 @@ fun createConfiguration(
 }
 
 context(LSServer)
-fun createLspHandlers(config: LSConfiguration, exitSignal: CompletableDeferred<Unit>, clientMode: Boolean = false): LspHandlers {
+fun createLspHandlers(config: LSConfiguration, exitSignal: CompletableDeferred<Unit>?): LspHandlers {
     with(config) {
         return lspHandlers {
             initializeRequest()
             setTraceNotification()
-            shutdownRequest(clientMode, exitSignal)
+            shutdownRequest(exitSignal)
             fileUpdateRequests()
             features()
         }

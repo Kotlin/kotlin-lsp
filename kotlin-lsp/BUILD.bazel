@@ -51,6 +51,9 @@ jvm_library(
     "@community//fleet/rhizomedb",
     "@community//fleet/kernel",
     "@community//platform/service-container",
+    "@community//libraries/io",
+    "@lib//:io-ktor-io",
+    "@lib//:ktor-network-tls",
   ]
 )
 ### auto-generated section `build language-server.kotlin-lsp` end

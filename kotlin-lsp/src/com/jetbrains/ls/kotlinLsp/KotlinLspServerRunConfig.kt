@@ -1,5 +1,7 @@
 package com.jetbrains.ls.kotlinLsp
 
+import com.jetbrains.lsp.implementation.TcpConnectionConfig
+
 class KotlinLspServerRunConfig(
     val mode: KotlinLspServerMode
 )
@@ -7,10 +9,5 @@ class KotlinLspServerRunConfig(
 sealed interface KotlinLspServerMode {
     object Stdio : KotlinLspServerMode
 
-    sealed interface Socket : KotlinLspServerMode {
-        val port: Int
-
-        class Server(override val port: Int) : Socket
-        class Client(override val port: Int) : Socket
-    }
+    data class Socket(val config: TcpConnectionConfig) : KotlinLspServerMode
 }
