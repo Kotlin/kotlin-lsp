@@ -84,8 +84,8 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
                     tcpConnection(
                         clientMode = mode is KotlinLspServerMode.Socket.Client,
                         port = mode.port,
-                    ) { input, output ->
-                        handleRequests(input, output, config, mode)
+                    ) { connection ->
+                        handleRequests(connection.inputStream, connection.outputStream, config, mode)
                     }
                 }
             }
