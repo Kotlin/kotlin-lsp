@@ -32,9 +32,11 @@ import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutModePr
 import org.jetbrains.kotlin.idea.compiler.configuration.isRunningFromSources
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.createTempDirectory
+import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
     RunKotlinLspCommand().main(args)
+    exitProcess(0)
 }
 
 private class RunKotlinLspCommand : CliktCommand(name = "kotlin-lsp") {
