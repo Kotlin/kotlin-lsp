@@ -1,9 +1,6 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.kotlinLsp
 
-import com.github.ajalt.clikt.core.CliktCommand
-import com.github.ajalt.clikt.parameters.options.*
-import com.github.ajalt.clikt.parameters.types.int
 import com.intellij.openapi.application.PathManager
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.LSServerContext
@@ -35,38 +32,16 @@ import kotlin.io.path.createTempDirectory
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
-    RunKotlinLspCommand().main(args)
-    exitProcess(0)
-}
-
-private class RunKotlinLspCommand : CliktCommand(name = "kotlin-lsp") {
-    val socket: Int by option().int().default(9999).help("A port which will be used for a Kotlin LSP connection. Default is 9999")
-    val stdio: Boolean by option().flag()
-        .help("Whether the Kotlin LSP server is used in stdio mode. If not set, server mode will be used with a port specified by `${::socket.name}`")
-    val client: Boolean by option().flag()
-        .help("Whether the Kotlin LSP server is used in client mode. If not set, server mode will be used with a port specified by `${::socket.name}`")
-        .validate { if (it && stdio) fail("Can't use stdio mode with client mode") }
-
-    val multiclient: Boolean by option().flag()
-        .help("Whether the Kotlin LSP server is used in multiclient mode. If not set, server will be shut down after the first client disconnects.`")
-        .validate {
-            if (it && stdio) fail("Stdio mode doesn't support multiclient mode")
-            if (it && client) fail("Client mode doesn't support multiclient mode")
+    when (val command = parseArguments(args)) {
+        is KotlinLspCommand.Help -> {
+            println(command.message)
+            exitProcess(0)
         }
-
-
-    private fun createRunConfig(): KotlinLspServerRunConfig {
-        val mode = when {
-            stdio -> KotlinLspServerMode.Stdio
-            client -> KotlinLspServerMode.Socket(TcpConnectionConfig.Client(port = socket))
-            else -> KotlinLspServerMode.Socket(TcpConnectionConfig.Server(port = socket, isMulticlient = multiclient))
+        is KotlinLspCommand.RunLsp -> {
+            val runConfig = command.config
+            run(runConfig)
+            exitProcess(0)
         }
-        return KotlinLspServerRunConfig(mode)
-    }
-
-    override fun run() {
-        val runConfig = createRunConfig()
-        run(runConfig)
     }
 }
 
