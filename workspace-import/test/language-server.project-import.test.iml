@@ -37,6 +37,7 @@
     <orderEntry type="module" module-name="language-server.project-import" scope="TEST" />
     <orderEntry type="module" module-name="intellij.platform.workspace.jps" scope="TEST" />
     <orderEntry type="module" module-name="language-server.api.impl.analyzer" scope="TEST" />
+    <orderEntry type="library" scope="TEST" name="kotlinx-coroutines-core" level="project" />
     <orderEntry type="module" module-name="language-server.api.core" scope="TEST" />
     <orderEntry type="module" module-name="kotlin.base.facet" scope="TEST" />
     <orderEntry type="library" scope="TEST" name="kotlinx-serialization-json" level="project" />

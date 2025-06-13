@@ -24,6 +24,7 @@ jvm_library(
     "@lib//:kotlin-stdlib",
     "@lib//:kotlinx-coroutines-core",
     "@community//platform/analysis-api:analysis",
+    "@community//platform/core-api:core",
     "@community//platform/workspace/storage",
     "//language-server/community/api.core",
     "@community//platform/analysis-impl",

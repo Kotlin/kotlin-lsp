@@ -29,6 +29,7 @@ jvm_library(
     "//language-server/community/workspace-import:language-server-project-import",
     "@community//platform/workspace/jps",
     "//language-server/api.impl.analyzer",
+    "@lib//:kotlinx-coroutines-core",
     "//language-server/community/api.core",
     "//language-server/community/api.core:api.core_test_lib",
     "@community//plugins/kotlin/base/facet",
