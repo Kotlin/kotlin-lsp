@@ -15,7 +15,7 @@ data class KotlinLspServerRunConfig(
 )
 
 sealed interface KotlinLspServerMode {
-    object Stdio : KotlinLspServerMode
+    data object Stdio : KotlinLspServerMode
 
     data class Socket(val config: TcpConnectionConfig) : KotlinLspServerMode
 }

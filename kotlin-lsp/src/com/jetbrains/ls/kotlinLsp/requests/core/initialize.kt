@@ -14,9 +14,11 @@ import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
 import com.jetbrains.ls.imports.jps.JpsWorkspaceImporter
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
 import com.jetbrains.ls.kotlinLsp.connection.Client
+import com.jetbrains.ls.kotlinLsp.util.getSystemInfo
 import com.jetbrains.ls.kotlinLsp.util.importProject
 import com.jetbrains.ls.kotlinLsp.util.registerStdlibAndJdk
 import com.jetbrains.ls.kotlinLsp.util.sendSystemInfoToClient
+import com.jetbrains.lsp.implementation.LspClient
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.LspHandlersBuilder
 import com.jetbrains.lsp.implementation.reportProgress
@@ -31,6 +33,8 @@ context(LSServer, LSConfiguration)
 internal fun LspHandlersBuilder.initializeRequest() {
     request(Initialize) { initParams ->
         Client.update { it.copy(trace = initParams.trace) }
+
+        lspClient.sendRunConfigurationInfoToClient()
         lspClient.sendSystemInfoToClient()
 
         LOG.info("Got `initialize` request from ${initParams.clientInfo ?: "unknown"}\nparams:\n${LSP.json.encodeToString(InitializeParams.serializer(), initParams)}")
@@ -107,6 +111,15 @@ internal fun LspHandlersBuilder.initializeRequest() {
         LOG.info("InitializeResult:\n${LSP.json.encodeToString(InitializeResult.serializer(), result)}")
         result
     }
+}
+
+private fun LspClient.sendRunConfigurationInfoToClient() {
+    val client = Client.current ?: return
+    val runConfig = client.runConfig
+    notify(
+        LogMessageNotification,
+        LogMessageParams(MessageType.Info, "Process stared with\n${runConfig}"),
+    )
 }
 
 context(LSServer, LSConfiguration, LspHandlerContext)

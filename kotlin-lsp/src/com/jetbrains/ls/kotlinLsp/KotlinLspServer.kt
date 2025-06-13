@@ -62,7 +62,7 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
                     val stdout = System.out
                     System.setOut(System.err)
                     stdioConnection(System.`in`, stdout) { connection ->
-                        handleRequests(connection, config, mode)
+                        handleRequests(connection, runConfig, config, mode)
                     }
                 }
 
@@ -71,7 +71,7 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
                     tcpConnection(
                         mode.config,
                     ) { connection ->
-                        handleRequests(connection, config, mode)
+                        handleRequests(connection, runConfig, config, mode)
                     }
                 }
             }
@@ -80,7 +80,7 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
 }
 
 context(LSServerContext)
-private suspend fun handleRequests(connection: LspConnection, config: LSConfiguration, mode: KotlinLspServerMode) {
+private suspend fun handleRequests(connection: LspConnection, runConfig: KotlinLspServerRunConfig, config: LSConfiguration, mode: KotlinLspServerMode) {
     val shutdownOnExitSignal = when (mode) {
         is KotlinLspServerMode.Socket -> when (val tcpConfig = mode.config) {
             is TcpConnectionConfig.Client -> true
@@ -99,7 +99,7 @@ private suspend fun handleRequests(connection: LspConnection, config: LSConfigur
                 outgoing,
                 handler,
                 createCoroutineContext = { lspClient ->
-                    Client.contextElement(lspClient)
+                    Client.contextElement(lspClient, runConfig)
                 },
             ) { lsp ->
                 if (exitSignal != null) {
