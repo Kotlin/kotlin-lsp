@@ -13,7 +13,7 @@ implementation.
 
 ### Quick Start
 
-1. Download the latest build of VSC extension from the [Releases Page](https://github.com/Kotlin/kotlin-lsp/releases)
+1. Download the latest build of VSC extension or Standalone version from the [Releases Page](https://github.com/Kotlin/kotlin-lsp/releases)
 2. Install it as a VSC Extension via `Extensions | More Action | Install from VSIX`
     * Alternatively, it is possible to drag-and-drop VSIX extension directly into `Extensions` tool window
 3. Ensure that your Java version is 17 or above
