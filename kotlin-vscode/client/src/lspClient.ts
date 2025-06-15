@@ -55,7 +55,7 @@ export function getLspClient(): LanguageClient | undefined {
  * Starts the LSP client applying all user options. If the client is already running, restarts it.
  */
 export async function startLspClient(): Promise<void> {
-    const runClient = await createLpsClient()
+    const runClient = await createLspClient()
     if (!runClient) return;
     await stopLspClient()
     _client = runClient;
@@ -133,7 +133,7 @@ async function ensureCorrectJavaVersion(javaCommand: string): Promise<boolean> {
     } catch (error) {
         console.error('Error executing Java command:', error);
         vscode.window.showErrorMessage('Failed to execute Java command to run lsp server. ' +
-                `Please ensure that \`${jrePathForLspSettingName}\` option is set correctly to to the JRE installation path.` +
+                `Please ensure that \`${jrePathForLspSettingName}\` option is set correctly to the JRE installation path.` +
                 `Current value is \`${getJrePathForKotlinLSP()}\``);
         return false;
     }
@@ -154,7 +154,7 @@ async function createServerOptions(): Promise<ServerOptions | null> {
     }
 }
 
-async function createLpsClient(): Promise<LanguageClient | null> {
+async function createLspClient(): Promise<LanguageClient | null> {
     const clientOptions: LanguageClientOptions = {
         documentSelector: [
             {scheme: 'file', language: 'kotlin'},
