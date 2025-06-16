@@ -37,13 +37,11 @@ import com.intellij.platform.workspace.storage.entities
 import com.intellij.platform.workspace.storage.url.VirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.encodeToString
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
 import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.platform.workspace.jps.entities.ModuleDependencyItem
-import com.intellij.platform.workspace.storage.annotations.Child
 import com.intellij.util.descriptors.ConfigFileItem
 import org.jetbrains.kotlin.config.KotlinModuleKind
 import org.jetbrains.kotlin.idea.workspaceModel.CompilerSettingsData
@@ -93,7 +91,7 @@ private fun toDataClass(entity: ModuleEntity, workspacePath: Path): ModuleData =
     )
 
 private fun toDataClass(
-    contentRoot: @Child ContentRootEntity,
+    contentRoot: ContentRootEntity,
     workspacePath: Path
 ): ContentRootData = ContentRootData(
     path = toPath(contentRoot.url, workspacePath),
