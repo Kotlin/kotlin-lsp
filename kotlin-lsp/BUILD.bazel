@@ -69,6 +69,7 @@ jvm_library(
     "@community//platform/core-api:core",
     "@community//platform/core-impl",
     "@community//java/java-psi-api:psi",
+    "@community//platform/projectModel-api:projectModel",
     "@community//platform/util",
     "@lib//:kotlinx-coroutines-core",
     "@lib//:kotlinx-serialization-json",
