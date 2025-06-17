@@ -56,6 +56,11 @@
           "type": "string",
           "default": null,
           "description": "A path to the JRE that will be used to run the LSP. It should be at least version 17. If not specified, default java version will be used"
+        },
+        "kotlinLSP.additionalJvmArgs": {
+          "type": "array",
+          "default": [],
+          "description": "Additional JVM arguments to pass to the LSP server"
         }
       }
     },

@@ -178,7 +178,8 @@ async function getRunningJavaServerLspOptions(): Promise<ServerOptions | null> {
     const extractPath = getContext().asAbsolutePath(path.join('server', 'extracted', 'lib'));
 
     const args: string[] = []
-    args.push(...jvmOptions)
+    args.push(...defaultJvmOptions)
+    args.push(...getUserJvmOptions())
     args.push(
         '-classpath', extractPath + path.sep + '*',
         'com.jetbrains.ls.kotlinLsp.KotlinLspServerKt', '--client',
@@ -196,7 +197,14 @@ async function getRunningJavaServerLspOptions(): Promise<ServerOptions | null> {
     };
 }
 
-const jvmOptions = [
+const jvmOptionsSettingName = 'kotlinLSP.additionalJvmArgs';
+
+function getUserJvmOptions() : string[] {
+    const settings = vscode.workspace.getConfiguration().get<string[]>(jvmOptionsSettingName)
+    return settings ?? []
+}
+
+const defaultJvmOptions = [
     "--add-opens", "java.base/java.io=ALL-UNNAMED",
     "--add-opens", "java.base/java.lang=ALL-UNNAMED",
     "--add-opens", "java.base/java.lang.ref=ALL-UNNAMED",
