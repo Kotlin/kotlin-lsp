@@ -6,7 +6,9 @@ import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.partialResults.LSConcurrentResponseHandler
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.CodeAction
+import com.jetbrains.lsp.protocol.CodeActionKind
 import com.jetbrains.lsp.protocol.CodeActionParams
+import kotlinx.coroutines.flow.onEach
 
 object LSCodeActions {
     context(LSServer, LSConfiguration, LspHandlerContext)
@@ -14,9 +16,31 @@ object LSCodeActions {
         return LSConcurrentResponseHandler.streamResultsIfPossibleOrRespondDirectly(
             params.partialResultToken,
             CodeAction.serializer(),
-            entriesFor<LSCodeActionProvider>(params.textDocument),
-        ) {
-            it.getCodeActions(params)
+            getProviders(params),
+        ) { provider ->
+            provider.getCodeActions(params)
+                .onEach { it.ensureCanBeProvidedBy(provider) }
+        }
+    }
+
+    context(LSConfiguration)
+    fun supportedCodeActionKinds(): List<CodeActionKind> {
+        return entries<LSCodeActionProvider>().flatMapTo(mutableSetOf()) { it.providesOnlyKinds }.toList()
+    }
+
+
+    private fun CodeAction.ensureCanBeProvidedBy(provider: LSCodeActionProvider) {
+        check(kind in provider.providesOnlyKinds) {
+            "Code action $title is not supported by ${provider.javaClass.name}. The only supported kinds are: ${provider.providesOnlyKinds.joinToString()}"
+        }
+    }
+
+    context(LSConfiguration)
+    private fun getProviders(params: CodeActionParams): List<LSCodeActionProvider> {
+        val all = entriesFor<LSCodeActionProvider>(params.textDocument)
+        val only = params.context.only?.toSet() ?: return all
+        return all.filter { provider ->
+            provider.providesOnlyKinds.any { it in only }
         }
     }
 }

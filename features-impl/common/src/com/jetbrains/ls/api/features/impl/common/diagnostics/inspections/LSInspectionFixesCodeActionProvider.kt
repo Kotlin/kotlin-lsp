@@ -26,9 +26,10 @@ class LSInspectionFixesCodeActionProvider(
     override val supportedLanguages: Set<LSLanguage>,
 ) : LSCodeActionProvider, LSCommandDescriptorProvider {
 
+    override val providesOnlyKinds: Set<CodeActionKind> = setOf(CodeActionKind.QuickFix)
+
     context(LSServer)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
-        if (!params.shouldProvideKind(CodeActionKind.QuickFix)) return@flow
         val diagnosticData = params.diagnosticData<InspectionDiagnosticData>().ifEmpty { return@flow }
 
         withAnalysisContext {

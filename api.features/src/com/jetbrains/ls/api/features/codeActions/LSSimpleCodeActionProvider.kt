@@ -20,9 +20,11 @@ import kotlinx.serialization.json.encodeToJsonElement
 
 abstract class LSSimpleCodeActionProvider<P : Any> : LSCodeActionProvider, LSCommandDescriptorProvider {
     protected abstract val title: String
-    protected open val kind: CodeActionKind? = null
+    protected abstract val kind: CodeActionKind
     protected open val isPreferred: Boolean? = null
     protected open val commandName: String get() = title
+
+    final override val providesOnlyKinds: Set<CodeActionKind> get ()= setOf(kind)
 
     abstract val dataSerializer: KSerializer<P>
 

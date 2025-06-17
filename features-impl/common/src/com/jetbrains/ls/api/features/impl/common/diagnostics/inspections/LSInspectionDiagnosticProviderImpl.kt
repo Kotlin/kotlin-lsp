@@ -59,7 +59,7 @@ class LSInspectionDiagnosticProviderImpl(
         BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.K2MemberVisibilityCanBePrivateInspection", "slow, performs find usages"),
         BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.diagnosticBased.VariableNeverReadInspection", "very slow, uses extended checkers"),
         BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.diagnosticBased.AssignedValueIsNeverReadInspection", "very slow, uses extended checkers"),
-    
+
         BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.expressions.ExplicitThisInspection", "too noisy https://github.com/Kotlin/kotlin-lsp/issues/20"),
         BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.ImplicitThisInspection", "too noisy https://github.com/Kotlin/kotlin-lsp/issues/20"),
         BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.PublicApiImplicitTypeInspection", "too noisy https://github.com/Kotlin/kotlin-lsp/issues/4"),

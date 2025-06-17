@@ -36,10 +36,10 @@ import org.jetbrains.kotlin.psi.KtFile
 
 internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActionProvider, LSCommandDescriptorProvider {
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
+    override val providesOnlyKinds: Set<CodeActionKind> = setOf(CodeActionKind.QuickFix)
 
     context(LSServer)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
-        if (!params.shouldProvideKind(CodeActionKind.QuickFix)) return@flow
         val diagnosticData = params.diagnosticData<KotlinCompilerDiagnosticData>().ifEmpty { return@flow }
 
         val uri = params.textDocument.uri.uri

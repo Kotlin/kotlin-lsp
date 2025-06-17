@@ -51,6 +51,7 @@ import java.util.function.Function
 
 internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, LSCommandDescriptorProvider {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSKotlinLanguage)
+    override val providesOnlyKinds: Set<CodeActionKind> = setOf(CodeActionKind.QuickFix)
 
     private fun createActions(): List<KotlinApplicableModCommandAction<*, *>> {
         return listOf(
@@ -61,7 +62,6 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
 
     context(LSServer)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
-        if (!params.shouldProvideKind(CodeActionKind.QuickFix)) return@flow
         val uri = params.textDocument.uri.uri
         withAnalysisContext {
             runReadAction {
