@@ -17,6 +17,7 @@ jvm_library(
     "@lib//:gradle",
     "@lib//:kotlin-stdlib",
     "@community//jps/model-serialization",
+    "@community//platform/lang-core",
     "@community//platform/projectModel-api:projectModel",
     "@community//platform/workspace/jps",
     "@community//platform/workspace/storage",
