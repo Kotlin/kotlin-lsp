@@ -1,10 +1,16 @@
 ### auto-generated section `build language-server.project-import` start
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
-load("@rules_jvm//:jvm.bzl", "jvm_library")
+load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_resources")
 
 create_kotlinc_options(
   name = "custom",
   context_receivers = True
+)
+
+jvm_resources(
+  name = "language-server-project-import_resources",
+  files = glob(["resources/**/*"]),
+  strip_prefix = "resources"
 )
 
 jvm_library(
@@ -21,6 +27,7 @@ jvm_library(
     "@community//platform/projectModel-api:projectModel",
     "@community//platform/workspace/jps",
     "@community//platform/workspace/storage",
+    "@community//platform/util/jdom",
     "//language-server/community/api.core",
     "@community//plugins/gradle",
     "@community//platform/util",
@@ -31,7 +38,8 @@ jvm_library(
     "@community//plugins/kotlin/base/facet",
     "@community//jps/model-api:model",
     "@lib//:kotlinc-kotlin-jps-common",
-    "@lib//:kotlinc-kotlin-jps-plugin-classpath",
-  ]
+    "@lib//:kotlinc-kotlin-compiler-common",
+  ],
+  runtime_deps = [":language-server-project-import_resources"]
 )
 ### auto-generated section `build language-server.project-import` end

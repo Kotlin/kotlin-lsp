@@ -25,7 +25,6 @@ import org.jetbrains.kotlin.idea.facet.KotlinFacetType
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
 import org.jetbrains.kotlin.idea.workspaceModel.kotlinSettings
 import org.jetbrains.kotlin.idea.workspaceModel.toCompilerSettingsData
-import org.jetbrains.kotlin.jps.model.JpsKotlinFacetModuleExtension
 import java.io.IOException
 import java.nio.file.Path
 import kotlin.io.path.div
