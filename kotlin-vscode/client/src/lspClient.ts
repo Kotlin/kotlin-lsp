@@ -183,6 +183,7 @@ async function getRunningJavaServerLspOptions(): Promise<ServerOptions | null> {
     args.push(
         '-classpath', extractPath + path.sep + '*',
         'com.jetbrains.ls.kotlinLsp.KotlinLspServerKt', '--client',
+        '--system-path', getContext().globalStorageUri.fsPath,
     );
     if (runWithJavaSupport()) {
         args.push('--with-java')

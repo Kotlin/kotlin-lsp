@@ -2,16 +2,15 @@ package com.jetbrains.ls.kotlinLsp
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.PrintHelpMessage
-import com.github.ajalt.clikt.parameters.options.default
-import com.github.ajalt.clikt.parameters.options.flag
-import com.github.ajalt.clikt.parameters.options.help
-import com.github.ajalt.clikt.parameters.options.option
-import com.github.ajalt.clikt.parameters.options.validate
+import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.int
+import com.github.ajalt.clikt.parameters.types.path
 import com.jetbrains.lsp.implementation.TcpConnectionConfig
+import java.nio.file.Path
 
 data class KotlinLspServerRunConfig(
-    val mode: KotlinLspServerMode
+    val mode: KotlinLspServerMode,
+    val systemPath: Path? = null,
 )
 
 sealed interface KotlinLspServerMode {
@@ -37,12 +36,15 @@ sealed class KotlinLspCommand {
 }
 
 private class Parser : CliktCommand(name = "kotlin-lsp") {
-    val socket: Int by option().int().default(9999).help("A port which will be used for a Kotlin LSP connection. Default is 9999")
+    val socket: Int by option().int().default(9999)
+        .help("A port which will be used for a Kotlin LSP connection. Default is 9999")
     val stdio: Boolean by option().flag()
         .help("Whether the Kotlin LSP server is used in stdio mode. If not set, server mode will be used with a port specified by `${::socket.name}`")
     val client: Boolean by option().flag()
         .help("Whether the Kotlin LSP server is used in client mode. If not set, server mode will be used with a port specified by `${::socket.name}`")
         .validate { if (it && stdio) fail("Can't use stdio mode with client mode") }
+    val systemPath: Path? by option().path()
+        .help("Path for Kotlin LSP caches and indexes")
 
     val multiclient: Boolean by option().flag()
         .help("Whether the Kotlin LSP server is used in multiclient mode. If not set, server will be shut down after the first client disconnects.`")
@@ -58,7 +60,7 @@ private class Parser : CliktCommand(name = "kotlin-lsp") {
             client -> KotlinLspServerMode.Socket(TcpConnectionConfig.Client(port = socket))
             else -> KotlinLspServerMode.Socket(TcpConnectionConfig.Server(port = socket, isMulticlient = multiclient))
         }
-        return KotlinLspServerRunConfig(mode)
+        return KotlinLspServerRunConfig(mode, systemPath)
     }
 
     override fun run() {}

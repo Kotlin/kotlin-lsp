@@ -2,6 +2,7 @@
 package com.jetbrains.ls.kotlinLsp
 
 import com.intellij.openapi.application.PathManager
+import com.intellij.openapi.diagnostic.fileLogger
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.LSServerContext
 import com.jetbrains.ls.api.features.LSConfiguration
@@ -27,7 +28,9 @@ import org.jetbrains.kotlin.idea.base.plugin.artifacts.KotlinArtifacts
 import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutMode
 import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutModeProvider
 import org.jetbrains.kotlin.idea.compiler.configuration.isRunningFromSources
+import java.nio.file.Path
 import kotlin.io.path.absolutePathString
+import kotlin.io.path.createDirectories
 import kotlin.io.path.createTempDirectory
 import kotlin.system.exitProcess
 
@@ -45,10 +48,13 @@ fun main(args: Array<String>) {
     }
 }
 
+// use after `initKotlinLspLogger` call
+private val LOG by lazy { fileLogger() }
+
 private fun run(runConfig: KotlinLspServerRunConfig) {
     val mode = runConfig.mode
     initKotlinLspLogger(writeToStdOut = mode != KotlinLspServerMode.Stdio)
-    initIdeaPaths()
+    initIdeaPaths(runConfig.systemPath)
     setLspKotlinPluginModeIfRunningFromProductionLsp()
     val config = createConfiguration()
 
@@ -112,7 +118,7 @@ private suspend fun handleRequests(connection: LspConnection, runConfig: KotlinL
     }
 }
 
-private fun initIdeaPaths() {
+private fun initIdeaPaths(systemPath: Path?) {
     val fromSources = getIJPathIfRunningFromSources()
     if (fromSources != null) {
         System.setProperty("idea.home.path", fromSources)
@@ -120,9 +126,13 @@ private fun initIdeaPaths() {
         System.setProperty("idea.system.path", "$fromSources/system/idea")
     }
     else {
-        val tmp = createTempDirectory("idea-home").absolutePathString()
-        System.setProperty("idea.home.path", tmp)
+        val path = systemPath?.createDirectories() ?: createTempDirectory("idea-system")
+        System.setProperty("idea.home.path", "$path")
+        System.setProperty("idea.config.path", "$path/config")
+        System.setProperty("idea.system.path", "$path/system")
     }
+    LOG.info("idea.config.path=${System.getProperty("idea.config.path")}")
+    LOG.info("idea.system.path=${System.getProperty("idea.system.path")}")
 }
 
 private fun setLspKotlinPluginModeIfRunningFromProductionLsp() {
