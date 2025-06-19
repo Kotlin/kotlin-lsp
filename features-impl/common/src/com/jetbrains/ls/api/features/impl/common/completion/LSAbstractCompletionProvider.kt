@@ -7,6 +7,7 @@ import com.intellij.codeInsight.completion.performCompletion
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementPresentation
 import com.intellij.openapi.application.invokeAndWaitIfNeeded
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
@@ -99,9 +100,11 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider {
                 else -> null
             }
 
-            val documentation = lookup?.psiElement
-                ?.let { getMarkdownDoc(it) }
-                ?.let { StringOrMarkupContent(MarkupContent(MarkupKindType.Markdown, it)) }
+            val documentation = runReadAction {
+                lookup?.psiElement
+                    ?.let { getMarkdownDoc(it) }
+                    ?.let { StringOrMarkupContent(MarkupContent(MarkupKindType.Markdown, it)) }
+            }
 
             completionItem.copy(
                 additionalTextEdits = textEdits,
