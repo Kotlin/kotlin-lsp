@@ -74,7 +74,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
                             tokenModifiers = registry.modifiers.map { it.name },
                         )
                     },
-                    range = false,
+                    range = true,
                     full = true,
                 ),
                 completionProvider = CompletionRegistrationOptionsImpl(

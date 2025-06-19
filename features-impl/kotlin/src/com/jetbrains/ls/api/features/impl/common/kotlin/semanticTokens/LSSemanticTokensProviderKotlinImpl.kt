@@ -8,13 +8,20 @@ import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
+import com.intellij.psi.util.descendantsOfType
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
+import com.jetbrains.ls.api.core.util.toTextRange
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.semanticTokens.*
+import com.jetbrains.ls.api.features.utils.allNonWhitespaceChildren
+import com.jetbrains.lsp.protocol.Range
 import com.jetbrains.lsp.protocol.SemanticTokensParams
+import com.jetbrains.lsp.protocol.SemanticTokensRangeParams
+import com.jetbrains.lsp.protocol.TextDocumentIdentifier
+import com.jetbrains.lsp.protocol.intersects
 import kotlinx.coroutines.CancellationException
 import org.jetbrains.annotations.ApiStatus
 import org.jetbrains.kotlin.analysis.api.KaSession
@@ -41,12 +48,26 @@ object LSSemanticTokensProviderKotlinImpl : LSSemanticTokensProvider {
 
     context(LSServer)
     override suspend fun full(params: SemanticTokensParams): List<LSSemanticTokenWithRange> {
+        return getTokens(params.textDocument, range = null)
+
+    }
+
+    context(LSServer)
+    override suspend fun range(params: SemanticTokensRangeParams): List<LSSemanticTokenWithRange> {
+        return getTokens(params.textDocument, params.range)
+    }
+
+    /**
+     * @param range `null` means tokens from the whole file`
+     */
+    context(LSServer)
+    private suspend fun getTokens(textDocument: TextDocumentIdentifier, range:Range?): List<LSSemanticTokenWithRange> {
         return withAnalysisContext {
             runReadAction {
-                val file = params.textDocument.findVirtualFile() ?: return@runReadAction emptyList()
+                val file = textDocument.findVirtualFile() ?: return@runReadAction emptyList()
                 val ktFile = file.findPsiFile(project) as? KtFile ?: return@runReadAction emptyList()
                 val document = file.findDocument() ?: return@runReadAction emptyList()
-                val leafs = ktFile.allNonWhitespaceChildren()
+                val leafs = ktFile.allNonWhitespaceChildren(document, range)
                 if (leafs.isEmpty()) return@runReadAction emptyList()
                 analyze(ktFile) {
                     leafs.mapNotNull { element ->
@@ -179,11 +200,6 @@ object LSSemanticTokensProviderKotlinImpl : LSSemanticTokensProvider {
                 }
             }
         }
-    }
-
-
-    private fun KtFile.allNonWhitespaceChildren(): List<PsiElement> {
-        return collectDescendantsOfType<PsiElement>().filter { it !is PsiWhiteSpace }
     }
 
     private fun FqName.isFromKotlinStdlib(): Boolean {

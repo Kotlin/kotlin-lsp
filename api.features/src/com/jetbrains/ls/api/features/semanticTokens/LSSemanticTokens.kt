@@ -6,13 +6,23 @@ import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.semanticTokens.encoding.SemanticTokensEncoder
 import com.jetbrains.lsp.protocol.SemanticTokens
 import com.jetbrains.lsp.protocol.SemanticTokensParams
+import com.jetbrains.lsp.protocol.SemanticTokensRangeParams
 
+// todo send partial results here
 object LSSemanticTokens {
     context(LSServer, LSConfiguration)
     suspend fun semanticTokensFull(params: SemanticTokensParams): SemanticTokens {
-        // todo send partial results here
         val providers = entriesFor<LSSemanticTokensProvider>(params.textDocument)
         val result = providers.flatMap { it.full(params) }
+        val registry = createRegistry()
+        val encoded = SemanticTokensEncoder.encode(result, registry)
+        return SemanticTokens(resultId = null, data = encoded)
+    }
+
+    context(LSServer, LSConfiguration)
+    suspend fun semanticTokensRange(params: SemanticTokensRangeParams): SemanticTokens {
+        val providers = entriesFor<LSSemanticTokensProvider>(params.textDocument)
+        val result = providers.flatMap { it.range(params) }
         val registry = createRegistry()
         val encoded = SemanticTokensEncoder.encode(result, registry)
         return SemanticTokens(resultId = null, data = encoded)

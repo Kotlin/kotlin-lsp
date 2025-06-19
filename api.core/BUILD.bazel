@@ -39,6 +39,8 @@ jvm_library(
     "@community//fleet/lsp.protocol",
     "@lib//:junit5",
     "@lib//:junit5Jupiter",
+    "@community//platform/testFramework",
+    "@community//platform/testFramework:testFramework_test_lib",
   ]
 )
 

@@ -10,8 +10,29 @@ import com.jetbrains.lsp.protocol.*
 val VirtualFile.uri: URI
     get() = url.intellijUriToLspUri()
 
-fun Document.offsetByPosition(position: Position): Int = 
-    getLineStartOffset(position.line) + position.character
+/**
+ * Calculates the absolute offset in the document text based on the given position (line and character offset).
+ *
+ * @param position The position in the document, represented by a line number (zero-based) and
+ *                 character offset in that line (zero-based).
+ * @return The absolute offset in the document, which represents the character index corresponding
+ *         to the given position. If the position line is outside the document bounds, returns the document
+ *         end offset. If the character offset is outside the line bounds, returns the line end offset.
+ */
+fun Document.offsetByPosition(position: Position): Int {
+    val textLength = textLength
+    if (position.line >= lineCount) {
+        // lsp position may be outside the document, which means the end of the document
+        return textLength
+    }
+    val lineStart = getLineStartOffset(position.line)
+    val lineEnd = getLineEndOffset(position.line)
+    if (position.character > lineEnd - lineStart) {
+        // lsp position may be outside the line range, which means the end of the line
+        return lineEnd
+    }
+    return lineStart + position.character
+}
 
 fun Document.positionByOffset(offset: Int): Position {
     val line = getLineNumber(offset) 

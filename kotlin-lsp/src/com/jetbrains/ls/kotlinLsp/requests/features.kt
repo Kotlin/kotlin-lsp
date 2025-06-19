@@ -19,6 +19,7 @@ import com.jetbrains.lsp.protocol.CodeActions.CodeActionRequest
 import com.jetbrains.lsp.protocol.Commands.ExecuteCommand
 import com.jetbrains.lsp.protocol.Diagnostics.DocumentDiagnosticRequestType
 import com.jetbrains.lsp.protocol.SemanticTokensRequests.SemanticTokensFullRequest
+import com.jetbrains.lsp.protocol.SemanticTokensRequests.SemanticTokensRangeRequest
 import com.jetbrains.lsp.protocol.WorkspaceSymbolRequests.WorkspaceSymbolRequest
 
 context(LSServer, LSConfiguration)
@@ -32,6 +33,7 @@ internal fun LspHandlersBuilder.features() {
     request(HoverRequestType) { LSHover.getHover(it) }
     request(ReferenceRequestType) { LSReferences.getReferences(it) }
     request(SemanticTokensFullRequest) { LSSemanticTokens.semanticTokensFull(it) }
+    request(SemanticTokensRangeRequest) { LSSemanticTokens.semanticTokensRange(it) }
     request(WorkspaceSymbolRequest) { LSWorkspaceSymbols.getSymbols(it) }
     request(DocumentSymbolRequest) { LSDocumentSymbols.getSymbols(it) }
 }
