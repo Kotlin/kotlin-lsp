@@ -5,6 +5,7 @@ import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.fileLogger
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.LSServerContext
+import com.jetbrains.ls.api.core.withServer
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.impl.common.configuration.LSCommonConfiguration
 import com.jetbrains.ls.api.features.impl.common.kotlin.configuration.LSKotlinLanguageConfiguration
@@ -85,7 +86,7 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
     }
 }
 
-context(LSServerContext)
+context(_: LSServerContext)
 private suspend fun handleRequests(connection: LspConnection, runConfig: KotlinLspServerRunConfig, config: LSConfiguration, mode: KotlinLspServerMode) {
     val shutdownOnExitSignal = when (mode) {
         is KotlinLspServerMode.Socket -> when (val tcpConfig = mode.config) {
@@ -177,7 +178,7 @@ fun createConfiguration(
     )
 }
 
-context(LSServer)
+context(_: LSServer)
 fun createLspHandlers(config: LSConfiguration, exitSignal: CompletableDeferred<Unit>?): LspHandlers {
     with(config) {
         return lspHandlers {

@@ -17,7 +17,6 @@ internal fun TextRange.toLspLocation(file: VirtualFile, document: Document): Loc
     return Location(DocumentUri(file.uri), toLspRange(document))
 }
 
-context(LSAnalysisContext)
 internal fun PsiElement.getLspLocation(): Location? {
     val textRange = textRange ?: return null
     val virtualFile = containingFile.virtualFile
@@ -27,7 +26,6 @@ internal fun PsiElement.getLspLocation(): Location? {
     return textRange.toLspLocation(virtualFile, document)
 }
 
-context(LSAnalysisContext)
 fun PsiElement.getLspLocationForDefinition(): Location? {
     (this as? PsiNameIdentifierOwner)?.nameIdentifier?.getLspLocation()?.let { return it }
     return getLspLocation()

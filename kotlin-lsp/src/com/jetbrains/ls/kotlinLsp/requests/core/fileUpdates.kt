@@ -2,10 +2,11 @@
 package com.jetbrains.ls.kotlinLsp.requests.core
 
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.documents
 import com.jetbrains.lsp.implementation.LspHandlersBuilder
 import com.jetbrains.lsp.protocol.DocumentSync
 
-context(LSServer)
+context(_: LSServer)
 internal fun LspHandlersBuilder.fileUpdateRequests() {
     notification(DocumentSync.DidOpen) { didOpen ->
         documents.didOpen(

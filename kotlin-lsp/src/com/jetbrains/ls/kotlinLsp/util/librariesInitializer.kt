@@ -15,9 +15,11 @@ import com.intellij.util.PathUtil
 import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.customName
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.*
+import com.jetbrains.ls.api.core.workspaceStructure
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.lsp.implementation.LspHandlerContext
+import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.implementation.reportProgressMessage
 import com.jetbrains.lsp.protocol.*
 import org.jetbrains.kotlin.idea.base.plugin.artifacts.KotlinArtifacts
@@ -26,13 +28,11 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.isDirectory
 
-context(WorkspaceModelBuilder)
-fun addJdkFromJavaHome() {
+fun WorkspaceModelBuilder.addJdkFromJavaHome() {
     addLibrary(LSLibrary(javaHome(), name = "jdk"))
 }
 
-context(WorkspaceModelBuilder)
-fun addKotlinStdlib() {
+fun WorkspaceModelBuilder.addKotlinStdlib() {
     addLibrary(
         LSLibrary(
             listOf(
@@ -74,8 +74,7 @@ fun getKotlinStdlibPath(): Path {
     }
 }
 
-context(WorkspaceModelBuilder)
-fun registerStdlibAndJdk() {
+fun WorkspaceModelBuilder.registerStdlibAndJdk() {
     addKotlinStdlib()
     addJdkFromJavaHome()
 }
@@ -87,7 +86,7 @@ fun javaHome(): List<URI> {
     return JavaSdkImpl.findClasses(path, false).map { (it.replace("!/", "!/modules/").intellijUriToLspUri()) }
 }
 
-context(LSServer, LspHandlerContext)
+context(_: LSServer, _: LspHandlerContext)
 suspend fun importProject(
     folderPath: Path,
     importer: WorkspaceImporter,

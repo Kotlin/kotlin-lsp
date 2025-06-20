@@ -7,7 +7,9 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
+import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.impl.common.utils.getLspLocation
 import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
 import com.jetbrains.ls.api.features.symbols.LSDocumentSymbolProvider
@@ -20,7 +22,7 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 
 abstract class AbstractLSDocumentSymbolProvider : LSDocumentSymbolProvider {
-    context(LSServer)
+    context(_: LSServer)
     override fun getDocumentSymbols(params: DocumentSymbolParams): Flow<DocumentSymbol> = flow {
         val uri = params.textDocument.uri.uri
         withAnalysisContext {
@@ -35,7 +37,7 @@ abstract class AbstractLSDocumentSymbolProvider : LSDocumentSymbolProvider {
         }.forEach { emit(it) }
     }
 
-    context(LSAnalysisContext)
+    context(_: LSAnalysisContext)
     private fun mapDeclaration(element: PsiElement): DocumentSymbol? {
         val name = getName(element) ?: return null
         val kind = getKind(element) ?: return null

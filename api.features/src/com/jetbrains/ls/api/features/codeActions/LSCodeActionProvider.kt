@@ -16,6 +16,6 @@ interface LSCodeActionProvider : LSLanguageSpecificConfigurationEntry {
      */
     val providesOnlyKinds: Set<CodeActionKind>
 
-    context(LSServer)
+    context(_: LSServer)
     fun getCodeActions(params: CodeActionParams): Flow<CodeAction>
 }

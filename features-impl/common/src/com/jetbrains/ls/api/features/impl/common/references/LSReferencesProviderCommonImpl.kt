@@ -9,8 +9,10 @@ import com.intellij.openapi.progress.runBlockingCancellable
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
+import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.references.LSReferencesProvider
@@ -22,7 +24,7 @@ import kotlinx.coroutines.flow.channelFlow
 class LSReferencesProviderCommonImpl(
     override val supportedLanguages: Set<LSLanguage>,
 ) : LSReferencesProvider {
-    context(LSServer)
+    context(_: LSServer)
     override fun getReferences(params: ReferenceParams): Flow<Location> = channelFlow {
         withAnalysisContext {
             runReadAction a@{

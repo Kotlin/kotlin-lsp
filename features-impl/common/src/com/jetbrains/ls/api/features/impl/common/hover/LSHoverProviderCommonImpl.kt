@@ -14,6 +14,8 @@ import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.project
+import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.hover.LSHoverProvider
 import com.jetbrains.lsp.protocol.Hover
 import com.jetbrains.lsp.protocol.HoverParams
@@ -21,7 +23,7 @@ import com.jetbrains.lsp.protocol.MarkupContent
 import com.jetbrains.lsp.protocol.MarkupKindType
 
 abstract class AbstractLSHoverProvider : LSHoverProvider {
-    context(LSServer)
+    context(_: LSServer)
     override suspend fun getHover(params: HoverParams): Hover? {
         return withAnalysisContext {
             runReadAction a@{
@@ -41,7 +43,7 @@ abstract class AbstractLSHoverProvider : LSHoverProvider {
         }
     }
 
-    context(LSServer, LSAnalysisContext)
+    context(_: LSServer, _: LSAnalysisContext)
     abstract fun generateMarkdownForElementReferencedBy(virtualFile: VirtualFile, reference: PsiReference): String?
 
     interface LSMarkdownDocProvider {

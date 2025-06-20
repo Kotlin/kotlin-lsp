@@ -13,6 +13,9 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.project
+import com.jetbrains.ls.api.core.withAnalysisContext
+import com.jetbrains.ls.api.core.withWritableFile
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
@@ -38,7 +41,7 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
     override val providesOnlyKinds: Set<CodeActionKind> = setOf(CodeActionKind.QuickFix)
 
-    context(LSServer)
+    context(_: LSServer)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val diagnosticData = params.diagnosticData<KotlinCompilerDiagnosticData>().ifEmpty { return@flow }
 
@@ -75,7 +78,7 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
         }.forEach { emit(it) }
     }
 
-    context(KaSession)
+    context(kaSession: KaSession)
     private fun KotlinQuickFixService.getQuickFixesAsCodeActions(
         project: Project,
         file: KtFile,
@@ -83,7 +86,7 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
         documentUri: DocumentUri,
         kaDiagnostic: KaDiagnosticWithPsi<*>,
         lspDiagnostic: Diagnostic,
-    ): List<CodeAction> {
+    ): List<CodeAction>  = with(kaSession) {
         return (getQuickFixesWithCatchingFor(kaDiagnostic) + getLazyQuickFixesWithCatchingFor(kaDiagnostic))
             .mapNotNull { fixes ->
                 fixes.getOrLogException { LOG.warn(it) }
@@ -153,7 +156,7 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
         }
     )
 
-    context(LSAnalysisContext)
+    context(_: LSAnalysisContext)
     private fun Sequence<IntentionAction>.findCandidate(
         fix: KotlinCompilerDiagnosticQuickfixData,
         editor: Editor,

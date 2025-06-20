@@ -29,7 +29,6 @@ internal data class InspectionQuickfixData(
     }
 
     companion object {
-        context(LSAnalysisContext, LSServer)
         fun createByFix(
             fix: QuickFix<*>,
             inspectionTool: LocalInspectionTool,

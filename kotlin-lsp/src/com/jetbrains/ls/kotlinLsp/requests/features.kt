@@ -22,7 +22,7 @@ import com.jetbrains.lsp.protocol.SemanticTokensRequests.SemanticTokensFullReque
 import com.jetbrains.lsp.protocol.SemanticTokensRequests.SemanticTokensRangeRequest
 import com.jetbrains.lsp.protocol.WorkspaceSymbolRequests.WorkspaceSymbolRequest
 
-context(LSServer, LSConfiguration)
+context(_: LSServer, _: LSConfiguration)
 internal fun LspHandlersBuilder.features() {
     request(CodeActionRequest) { LSCodeActions.getCodeActions(it) }
     request(ExecuteCommand) { LSCommand.executeCommand(it) }

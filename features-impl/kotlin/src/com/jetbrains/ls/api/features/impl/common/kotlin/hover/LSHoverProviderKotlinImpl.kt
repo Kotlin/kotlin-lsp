@@ -6,6 +6,7 @@ import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiReference
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.features.impl.common.hover.AbstractLSHoverProvider
 import com.jetbrains.ls.api.features.impl.common.hover.markdownMultilineCode
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
@@ -27,7 +28,7 @@ import org.jetbrains.kotlin.renderer.render
 object LSHoverProviderKotlinImpl : AbstractLSHoverProvider() {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSKotlinLanguage)
 
-    context(LSServer, LSAnalysisContext)
+    context(_: LSServer, _: LSAnalysisContext)
     override fun generateMarkdownForElementReferencedBy(virtualFile: VirtualFile, reference: PsiReference): String? {
         if (reference !is KtReference) return null
         val ktFile = virtualFile.findPsiFile(project) as? KtFile ?: return null
@@ -37,8 +38,8 @@ object LSHoverProviderKotlinImpl : AbstractLSHoverProvider() {
         }
     }
 
-    context(KaSession)
-    private fun getMarkdownContent(symbol: KaSymbol): String? {
+    context(kaSession: KaSession)
+    private fun getMarkdownContent(symbol: KaSymbol): String? = with(kaSession) {
         val renderedSymbol = when (symbol) {
             is KaPackageSymbol -> "package ${symbol.fqName.render()}"
             is KaDeclarationSymbol -> buildString {
@@ -61,7 +62,7 @@ object LSHoverProviderKotlinImpl : AbstractLSHoverProvider() {
         }
     }
 
-    context(KaSession)
+    context(_: KaSession)
     private fun getMarkdownDoc(symbol: KaSymbol): String? {
         val psi = symbol.psi ?: return null
         return LSMarkdownDocProvider.getMarkdownDoc(psi)

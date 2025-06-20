@@ -13,8 +13,10 @@ import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
+import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.completion.CompletionItemData
 import com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider
 import com.jetbrains.ls.api.features.completion.LSCompletionProvider
@@ -31,7 +33,7 @@ import kotlinx.serialization.json.encodeToJsonElement
 abstract class LSAbstractCompletionProvider : LSCompletionProvider {
     override val supportsResolveRequest: Boolean get() = true
 
-    context(LSServer)
+    context(_: LSServer)
     override suspend fun provideCompletion(params: CompletionParams): CompletionList {
         return withAnalysisContext {
             invokeAndWaitIfNeeded {
@@ -44,7 +46,7 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider {
                     val lookupElements = performCompletion(completionProcess)
                     val completionItems = lookupElements.mapIndexed { i, lookup ->
                         val lookupPresentation = LookupElementPresentation().also { lookup.renderElement(it) }
-                        val data = CompletionItemData(this.uniqueId, params, lookup.lookupString, lookupElementPointer(lookup))
+                        val data = CompletionItemData(uniqueId, params, lookup.lookupString, lookupElementPointer(lookup))
                         CompletionItem(
                             label = lookupPresentation.itemText ?: lookup.lookupString,
                             sortText = getSortedFieldByIndex(i),
@@ -66,7 +68,7 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider {
         }
     }
 
-    context(LSServer)
+    context(_: LSServer)
     override suspend fun resolveCompletion(completionItem: CompletionItem): CompletionItem? {
         val data = completionItem.data ?: return null
         val (_, params, lookupString, pointer) = try {
@@ -135,7 +137,7 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider {
             return TextEditOrInsertReplaceEdit(InsertReplaceEdit("", range, range))
         }
 
-        context(LSServer, LSAnalysisContext)
+        context(_: LSServer, _: LSAnalysisContext)
         private fun lookupElementPointer(lookup: LookupElement): PsiSerializablePointer? =
             lookup.psiElement?.let { psiElement ->
                 psiElement.containingFile?.virtualFile?.let { file ->

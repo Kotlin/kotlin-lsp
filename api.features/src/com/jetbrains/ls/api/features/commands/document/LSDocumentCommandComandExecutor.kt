@@ -4,16 +4,17 @@ package com.jetbrains.ls.api.features.commands.document
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.commands.LSCommandExecutor
 import com.jetbrains.lsp.implementation.LspHandlerContext
+import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.protocol.*
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
 
 fun interface LSDocumentCommandExecutor : LSCommandExecutor {
-    context(LspHandlerContext, LSServer)
+    context(_: LspHandlerContext, _: LSServer)
     suspend fun executeForDocument(documentUri: DocumentUri, otherArgs: List<JsonElement>): List<TextEdit>
 
-    context(LspHandlerContext, LSServer)
+    context(_: LspHandlerContext, _: LSServer)
     override suspend fun execute(arguments: List<JsonElement>): JsonElement {
         require(arguments.isNotEmpty()) { "Expected >= 1 argument, got: ${arguments.size}" }
         val documentUri = LSP.json.decodeFromJsonElement<DocumentUri>(arguments.first())

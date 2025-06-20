@@ -3,6 +3,8 @@ package com.jetbrains.ls.api.features.codeActions
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSConfiguration
+import com.jetbrains.ls.api.features.entries
+import com.jetbrains.ls.api.features.entriesFor
 import com.jetbrains.ls.api.features.partialResults.LSConcurrentResponseHandler
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.CodeAction
@@ -11,7 +13,7 @@ import com.jetbrains.lsp.protocol.CodeActionParams
 import kotlinx.coroutines.flow.onEach
 
 object LSCodeActions {
-    context(LSServer, LSConfiguration, LspHandlerContext)
+    context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
     suspend fun getCodeActions(params: CodeActionParams): List<CodeAction> {
         return LSConcurrentResponseHandler.streamResultsIfPossibleOrRespondDirectly(
             params.partialResultToken,
@@ -23,7 +25,7 @@ object LSCodeActions {
         }
     }
 
-    context(LSConfiguration)
+    context(_: LSConfiguration)
     fun supportedCodeActionKinds(): List<CodeActionKind> {
         return entries<LSCodeActionProvider>().flatMapTo(mutableSetOf()) { it.providesOnlyKinds }.toList()
     }
@@ -35,7 +37,7 @@ object LSCodeActions {
         }
     }
 
-    context(LSConfiguration)
+    context(_: LSConfiguration)
     private fun getProviders(params: CodeActionParams): List<LSCodeActionProvider> {
         val all = entriesFor<LSCodeActionProvider>(params.textDocument)
         val only = params.context.only?.toSet() ?: return all

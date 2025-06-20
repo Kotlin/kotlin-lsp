@@ -8,15 +8,18 @@ import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.util.endOffset
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.util.positionByOffset
+import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.completion.LSCompletionProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.lsp.protocol.*
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.analysis.api.projectStructure.contextModule
 import org.jetbrains.kotlin.idea.base.projectStructure.getKaModule
 import org.jetbrains.kotlin.idea.base.util.isImported
@@ -36,7 +39,7 @@ internal object LSRekotBasedKotlinCompletionProviderImpl : LSCompletionProvider 
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
     override val supportsResolveRequest: Boolean get() = false
 
-    context(LSServer)
+    context(_: LSServer)
     override suspend fun provideCompletion(params: CompletionParams): CompletionList {
         return withAnalysisContext {
             runReadAction {
@@ -50,7 +53,7 @@ internal object LSRekotBasedKotlinCompletionProviderImpl : LSCompletionProvider 
         }
     }
 
-    context(LSAnalysisContext)
+    context(_: LSAnalysisContext)
     private fun createItems(
         fileForCompletion: KtFile,
         originalDocument: Document,

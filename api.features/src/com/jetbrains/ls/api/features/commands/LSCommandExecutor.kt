@@ -6,6 +6,6 @@ import com.jetbrains.lsp.implementation.LspHandlerContext
 import kotlinx.serialization.json.JsonElement
 
 fun interface LSCommandExecutor {
-    context(LspHandlerContext, LSServer)
+    context(_: LspHandlerContext, _: LSServer)
     suspend fun execute(arguments: List<JsonElement>): JsonElement
 }

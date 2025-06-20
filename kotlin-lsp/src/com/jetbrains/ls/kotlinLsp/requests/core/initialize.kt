@@ -8,7 +8,9 @@ import com.jetbrains.ls.api.core.util.toLspUri
 import com.jetbrains.ls.api.core.util.updateWorkspaceModel
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.codeActions.LSCodeActions
+import com.jetbrains.ls.api.features.allCommandDescriptors
 import com.jetbrains.ls.api.features.completion.LSCompletionProvider
+import com.jetbrains.ls.api.features.entries
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokens
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
@@ -22,6 +24,7 @@ import com.jetbrains.ls.kotlinLsp.util.sendSystemInfoToClient
 import com.jetbrains.lsp.implementation.LspClient
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.LspHandlersBuilder
+import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.implementation.reportProgress
 import com.jetbrains.lsp.implementation.reportProgressMessage
 import com.jetbrains.lsp.protocol.*
@@ -30,7 +33,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import java.nio.file.Path
 import kotlin.io.path.*
 
-context(LSServer, LSConfiguration)
+context(_: LSServer, _: LSConfiguration)
 internal fun LspHandlersBuilder.initializeRequest() {
     request(Initialize) { initParams ->
         Client.update { it.copy(trace = initParams.trace) }
@@ -123,7 +126,7 @@ private fun LspClient.sendRunConfigurationInfoToClient() {
     )
 }
 
-context(LSServer, LSConfiguration, LspHandlerContext)
+context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
 private suspend fun indexFolders(
     folders: List<WorkspaceFolder>,
     params: InitializeParams,
@@ -147,7 +150,7 @@ private suspend fun indexFolders(
     )
 }
 
-context(LSServer, LSConfiguration, LspHandlerContext)
+context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
 private suspend fun initFolder(
     folder: WorkspaceFolder,
     params: InitializeParams,
@@ -202,7 +205,7 @@ private suspend fun initFolder(
 }
 
 
-context(LSServer, LSConfiguration, LspHandlerContext)
+context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
 private suspend fun initFolderForLightEdit(
     folder: WorkspaceFolder,
     params: InitializeParams,

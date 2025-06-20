@@ -8,8 +8,10 @@ import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
+import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnosticProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
@@ -29,7 +31,7 @@ import org.jetbrains.kotlin.psi.KtFile
 internal object LSKotlinCompilerDiagnosticsProvider : LSDiagnosticProvider {
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
 
-    context(LSServer)
+    context(_: LSServer)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
         val uri = params.textDocument.uri.uri
         withAnalysisContext {
@@ -46,7 +48,7 @@ internal object LSKotlinCompilerDiagnosticsProvider : LSDiagnosticProvider {
     }
 }
 
-context(KaSession, LSAnalysisContext, LSServer)
+context(_: KaSession, _: LSAnalysisContext, _: LSServer)
 private fun KaDiagnosticWithPsi<*>.toLsp(document: Document, file: VirtualFile): List<Diagnostic> {
     val data = KotlinCompilerDiagnosticData.create(this, file)
     return textRanges.map { textRange ->

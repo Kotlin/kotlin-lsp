@@ -8,7 +8,7 @@ import com.jetbrains.lsp.protocol.Hover
 import com.jetbrains.lsp.protocol.HoverParams
 
 interface LSHoverProvider : LSLanguageSpecificConfigurationEntry {
-    context(LSServer)
+    context(_: LSServer)
     suspend fun getHover(params: HoverParams): Hover?
 }
 

@@ -63,7 +63,6 @@ sealed class PsiSerializablePointer {
     }
 
     companion object {
-        context(LSAnalysisContext, LSServer)
         fun create(psi: PsiElement, file: VirtualFile): PsiSerializablePointer {
             return when (psi) {
                 is PsiFile -> {

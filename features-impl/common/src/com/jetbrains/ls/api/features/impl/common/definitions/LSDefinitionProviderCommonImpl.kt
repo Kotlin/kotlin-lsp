@@ -19,6 +19,8 @@ import com.jetbrains.ls.api.features.definition.LSDefinitionProvider
 import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.analyzer.java.JavaFilePackageIndex
+import com.jetbrains.ls.api.core.project
+import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.lsp.protocol.DefinitionParams
 import com.jetbrains.lsp.protocol.DocumentUri
 import com.jetbrains.lsp.protocol.Location
@@ -29,7 +31,7 @@ import kotlinx.coroutines.flow.flow
 class LSDefinitionProviderCommonImpl(
     override val supportedLanguages: Set<LSLanguage>,
 ) : LSDefinitionProvider {
-    context(LSServer@LSServer)
+    context(_: LSServer)
     override fun provideDefinitions(params: DefinitionParams): Flow<Location> = flow {
         val uri = params.textDocument.uri.uri
         withAnalysisContext {
@@ -57,7 +59,6 @@ class LSDefinitionProviderCommonImpl(
 
 // A temporary replacement for PsiPackage.directories which is not working because of the missing logic in FakePackageIndexImpl.
 // THis one works only for Java sources and JAR dependencies, Kotlin packages are handled in LSKotlinPackageDefinitionProvider.
-context(LSAnalysisContext)
 private val PsiPackage.directory: VirtualFile?
     get() {
         return StubIndex.getInstance()

@@ -25,8 +25,11 @@ import com.intellij.psi.util.descendantsOfType
 import com.intellij.psi.util.startOffset
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
+import com.jetbrains.ls.api.core.withAnalysisContext
+import com.jetbrains.ls.api.core.withWritableFile
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
@@ -60,7 +63,7 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
     }
 
 
-    context(LSServer)
+    context(_: LSServer)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val uri = params.textDocument.uri.uri
         withAnalysisContext {
@@ -87,7 +90,7 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
         }.forEach { emit(it) }
     }
 
-    context(LSAnalysisContext)
+    context(_: LSAnalysisContext)
     private fun createActionContext(ktFile: KtFile, element: PsiElement) = ActionContext(
         project,
         ktFile,
@@ -96,7 +99,7 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
         element,
     )
 
-    context(KaSession, LSAnalysisContext, LSServer)
+    context(kaSession: KaSession, _: LSAnalysisContext, _: LSServer)
     private fun toCodeAction(
         action: KotlinApplicableModCommandAction<*, *>,
         actionContext: ActionContext,
@@ -109,7 +112,7 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
         action as KotlinApplicableModCommandAction<KtElement, *>
         val presentation = action.getPresentation(actionContext) ?: return null
         if (!action.isApplicableByPsi(child)) return null
-        if (with(action) { prepareContext(child) == null }) return null
+        if (with(action) { kaSession.prepareContext(child) == null }) return null
         val ranges = action.getApplicableRanges(child).map {
             it.shiftRight(child.startOffset).toLspRange(document)
         }

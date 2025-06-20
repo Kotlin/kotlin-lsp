@@ -12,19 +12,19 @@ import org.jetbrains.kotlin.idea.completion.lookups.TailTextProvider
 import org.jetbrains.kotlin.types.Variance
 
 internal object CompletionItemFactory {
-    context(KaSession)
+    context(_: KaSession)
     fun createCompletionItem(symbol: KaDeclarationSymbol): RekotCompletionItem.Declaration? {
         return createCompletionItem(middle = renderSymbolMiddle(symbol), symbol = symbol)
     }
 
-    context(KaSession)
+    context(_: KaSession)
     fun createCompletionItem(signature: KaCallableSignature<*>): RekotCompletionItem.Declaration? {
         val symbol = signature.symbol
         return createCompletionItem(middle = renderSignatureMiddle(signature), symbol = symbol)
     }
 
-    context(KaSession)
-    private fun createCompletionItem(middle: String?, symbol: KaDeclarationSymbol): RekotCompletionItem.Declaration? {
+    context(kaSession: KaSession)
+    private fun createCompletionItem(middle: String?, symbol: KaDeclarationSymbol): RekotCompletionItem.Declaration? = with(kaSession) {
         val name = symbol.name?.asString() ?: ""
         if (name.contains(COMPLETION_FAKE_IDENTIFIER)) return null
         val (textToInsert, offset) = getInsertionText(symbol) ?: return null
@@ -60,7 +60,7 @@ internal object CompletionItemFactory {
         }
     }
 
-    context(KaSession)
+    context(_: KaSession)
     private fun getInsertionText(declaration: KaDeclarationSymbol): Pair<String, Int>? {
         return when {
             declaration is KaFunctionSymbol -> {
@@ -77,25 +77,26 @@ internal object CompletionItemFactory {
         }
     }
 
-    context(KaSession)
-    private fun KaFunctionSymbol.hasSingleFunctionTypeParameter(): Boolean {
+    context(kaSession: KaSession)
+    private fun KaFunctionSymbol.hasSingleFunctionTypeParameter(): Boolean = with(kaSession) {
         val singleParameter = valueParameters.singleOrNull() ?: return false
         val kind = singleParameter.returnType.functionTypeKind ?: return false
-        return kind == FunctionTypeKind.Function || kind == FunctionTypeKind.SuspendFunction
+        kind == FunctionTypeKind.Function || kind == FunctionTypeKind.SuspendFunction
     }
 
-    context(KaSession)
-    private fun renderSymbolMiddle(symbol: KaSymbol): String? =
+    context(kaSession: KaSession)
+    private fun renderSymbolMiddle(symbol: KaSymbol): String? = with(kaSession) {
         when (symbol) {
             is KaFunctionSymbol -> renderSignatureMiddle(symbol.asSignature())
             is KaVariableSymbol -> renderSignatureMiddle(symbol.asSignature())
 
             else -> null
         }
+    }
 
 
-    context(KaSession)
-    private fun renderSignatureMiddle(symbol: KaCallableSignature<*>): String? =
+    context(kaSession: KaSession)
+    private fun renderSignatureMiddle(symbol: KaCallableSignature<*>): String? = with(kaSession) {
         when (symbol) {
             is KaFunctionSignature<*> ->
                 buildString {
@@ -118,4 +119,5 @@ internal object CompletionItemFactory {
                     append(symbol.returnType.render(KaTypeRendererForSource.WITH_SHORT_NAMES, Variance.OUT_VARIANCE))
                 }
         }
+    }
 }

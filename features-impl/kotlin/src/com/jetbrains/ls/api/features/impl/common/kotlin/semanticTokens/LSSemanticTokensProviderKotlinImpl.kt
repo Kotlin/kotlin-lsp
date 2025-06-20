@@ -10,9 +10,11 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.descendantsOfType
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.util.toTextRange
+import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.semanticTokens.*
@@ -46,13 +48,13 @@ object LSSemanticTokensProviderKotlinImpl : LSSemanticTokensProvider {
         return LSSemanticTokenRegistry(LSSemanticTokenTypePredefined.ALL, LSSemanticTokenModifierPredefined.ALL)
     }
 
-    context(LSServer)
+    context(_: LSServer)
     override suspend fun full(params: SemanticTokensParams): List<LSSemanticTokenWithRange> {
         return getTokens(params.textDocument, range = null)
 
     }
 
-    context(LSServer)
+    context(_: LSServer)
     override suspend fun range(params: SemanticTokensRangeParams): List<LSSemanticTokenWithRange> {
         return getTokens(params.textDocument, params.range)
     }
@@ -60,7 +62,7 @@ object LSSemanticTokensProviderKotlinImpl : LSSemanticTokensProvider {
     /**
      * @param range `null` means tokens from the whole file`
      */
-    context(LSServer)
+    context(_: LSServer)
     private suspend fun getTokens(textDocument: TextDocumentIdentifier, range:Range?): List<LSSemanticTokenWithRange> {
         return withAnalysisContext {
             runReadAction {
@@ -78,29 +80,32 @@ object LSSemanticTokensProviderKotlinImpl : LSSemanticTokensProvider {
         }
     }
 
-    context(LSServer, KaSession)
+    context(_: LSServer, kaSession: KaSession)
     private fun PsiElement.getRangeWithToken(document: Document): LSSemanticTokenWithRange? = try {
-        when (this) {
-            is KtSimpleNameExpression -> {
-                val resolvedTo = mainReference.resolveToSymbol() ?: return null
-                val token = getRangeWithToken(resolvedTo) ?: return null
-                LSSemanticTokenWithRange(token, textRange.toLspRange(document))
+        val psiElement = this
+        with(kaSession) {
+            when (psiElement) {
+                is KtSimpleNameExpression -> {
+                    val resolvedTo = psiElement.mainReference.resolveToSymbol() ?: return null
+                    val token = getRangeWithToken(resolvedTo) ?: return null
+                    LSSemanticTokenWithRange(token, textRange.toLspRange(document))
+                }
+
+                is KtParameter if isFunctionTypeParameter -> null
+
+                is KtNamedDeclaration -> {
+                    // todo should probably be implemented on the vscode side
+                    //  or, if on the lsp server side, then it should work on PSI, without resolve which is faster
+                    val nameIdentifier = psiElement.nameIdentifier ?: return null
+                    val token = getRangeWithToken(psiElement.symbol) ?: return null
+                    LSSemanticTokenWithRange(
+                        token.withModifiers(LSSemanticTokenModifierPredefined.DECLARATION),
+                        nameIdentifier.textRange.toLspRange(document),
+                    )
+                }
+
+                else -> null
             }
-
-            is KtParameter if isFunctionTypeParameter -> null
-
-            is KtNamedDeclaration -> {
-                // todo should probably be implemented on the vscode side
-                //  or, if on the lsp server side, then it should work on PSI, without resolve which is faster
-                val nameIdentifier = nameIdentifier ?: return null
-                val token = getRangeWithToken(symbol) ?: return null
-                LSSemanticTokenWithRange(
-                    token.withModifiers(LSSemanticTokenModifierPredefined.DECLARATION),
-                    nameIdentifier.textRange.toLspRange(document),
-                )
-            }
-
-            else -> null
         }
     }
     catch (e: CancellationException) {
@@ -111,8 +116,8 @@ object LSSemanticTokensProviderKotlinImpl : LSSemanticTokensProvider {
         null
     }
 
-    context(LSServer, KaSession)
-    private fun getRangeWithToken(symbol: KaSymbol): LSSemanticToken? {
+    context(_: LSServer, kaSession: KaSession)
+    private fun getRangeWithToken(symbol: KaSymbol): LSSemanticToken? = with(kaSession) {
         val type = when (symbol) {
             is KaPackageSymbol -> LSSemanticTokenTypePredefined.NAMESPACE
             is KaTypeAliasSymbol -> return symbol.expandedType.expandedSymbol?.let { getRangeWithToken(it) }

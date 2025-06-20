@@ -5,6 +5,7 @@ import com.intellij.platform.workspace.jps.entities.*
 import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.entities
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.workspaceStructure
 import com.jetbrains.lsp.protocol.URI
 import com.jetbrains.lsp.protocol.WorkspaceFolder
 import java.nio.file.Path
@@ -17,8 +18,8 @@ interface WorkspaceModelBuilder {
     fun addLibrary(library: LSLibrary)
 }
 
-context(LSServer)
-suspend fun updateWorkspaceModel(updater: context(WorkspaceModelBuilder) () -> Unit) {
+context(_: LSServer)
+suspend fun updateWorkspaceModel(updater: WorkspaceModelBuilder.() -> Unit) {
     val libs = mutableListOf<LSLibrary>()
     val dirs = mutableListOf<WorkspaceFolder>()
 

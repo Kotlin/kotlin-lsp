@@ -3,6 +3,7 @@ package com.jetbrains.ls.api.features.partialResults
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.lsp.implementation.LspHandlerContext
+import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.implementation.streamResultsIfPossibleOrRespondDirectly
 import com.jetbrains.lsp.protocol.ProgressToken
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -13,7 +14,7 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.serialization.KSerializer
 
 internal object LSConcurrentResponseHandler {
-    context(LspHandlerContext, LSServer)
+    context(_: LspHandlerContext, _: LSServer)
     suspend fun <H, R> respondDirectlyWithResultsCollectedConcurrently(
         providers: List<H>,
         getResults: (H) -> Flow<R>
@@ -23,7 +24,7 @@ internal object LSConcurrentResponseHandler {
     }
 
 
-    context(LspHandlerContext, LSServer)
+    context(_: LspHandlerContext, _: LSServer)
     suspend fun <H, R> streamResultsIfPossibleOrRespondDirectly(
         partialResultToken: ProgressToken?,
         resultSerializer: KSerializer<R>,

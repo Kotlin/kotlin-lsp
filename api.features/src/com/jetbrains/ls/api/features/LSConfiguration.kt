@@ -17,7 +17,6 @@ class LSConfiguration(
     val languages: List<LSLanguage>,
 ) {
     val allCommandDescriptors: List<LSCommandDescriptor> = entries<LSCommandDescriptorProvider>().flatMap { it.commandDescriptors }
-    val allSemanticTokensProviders: List<LSSemanticTokensProvider> = entries<LSSemanticTokensProvider>()
 
     init {
         allCommandDescriptors.requireNoDuplicatesBy { it.name }
@@ -65,6 +64,29 @@ class LSConfiguration(
         return languages.firstOrNull { it.matches(document) }
     }
 }
+
+context(configuration: LSConfiguration)
+fun languageFor(document: TextDocumentIdentifier): LSLanguage? =
+    configuration.languageFor(document)
+
+context(configuration: LSConfiguration)
+inline fun <reified E : LSLanguageSpecificConfigurationEntry> entriesFor(document: TextDocumentIdentifier): List<E> =
+    configuration.entriesFor(document)
+
+context(configuration: LSConfiguration)
+inline fun <reified E : LSLanguageSpecificConfigurationEntry> entriesFor(language: LSLanguage): List<E> =
+    configuration.entriesFor(language)
+
+context(configuration: LSConfiguration)
+fun commandDescriptorByCommandName(commandName: String): LSCommandDescriptor? =
+    configuration.commandDescriptorByCommandName(commandName)
+
+context(configuration: LSConfiguration)
+inline fun <reified E : LSConfigurationEntry> entries(): List<E> =
+    configuration.entries()
+
+context(configuration: LSConfiguration)
+inline val allCommandDescriptors: List<LSCommandDescriptor> get() = configuration.allCommandDescriptors
 
 fun LSConfiguration(
     languageConfigurations: List<LSLanguageConfiguration>,

@@ -11,9 +11,9 @@ import com.jetbrains.lsp.protocol.CompletionParams
 interface LSCompletionProvider : LSLanguageSpecificConfigurationEntry, LSUniqueConfigurationEntry {
     val supportsResolveRequest: Boolean
 
-    context(LSServer)
+    context(_: LSServer)
     suspend fun provideCompletion(params: CompletionParams): CompletionList
 
-    context(LSServer)
+    context(_: LSServer)
     suspend fun resolveCompletion(completionItem: CompletionItem): CompletionItem? = null
 }

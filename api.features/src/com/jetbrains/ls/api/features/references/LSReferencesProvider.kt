@@ -8,6 +8,6 @@ import com.jetbrains.lsp.protocol.ReferenceParams
 import kotlinx.coroutines.flow.Flow
 
 interface LSReferencesProvider : LSLanguageSpecificConfigurationEntry {
-    context(LSServer)
+    context(_: LSServer)
     fun getReferences(params: ReferenceParams): Flow<Location>
 }

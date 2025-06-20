@@ -3,20 +3,22 @@ package com.jetbrains.ls.api.features.completion
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSConfiguration
+import com.jetbrains.ls.api.features.entries
+import com.jetbrains.ls.api.features.entriesFor
 import com.jetbrains.ls.api.features.utils.PsiSerializablePointer
 import com.jetbrains.lsp.protocol.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.decodeFromJsonElement
 
 object LSCompletion {
-    context(LSServer, LSConfiguration)
+    context(_: LSServer, _: LSConfiguration)
     suspend fun getCompletion(params: CompletionParams): CompletionList {
         // todo support partial results
         val results = entriesFor<LSCompletionProvider>(params.textDocument).map { it.provideCompletion(params) }
         return results.combined()
     }
 
-    context(LSServer, LSConfiguration)
+    context(_: LSServer, _: LSConfiguration)
     suspend fun resolveCompletion(params: CompletionItem): CompletionItem {
         val data: CompletionItemData = runCatching {
             val data = params.data ?: return params

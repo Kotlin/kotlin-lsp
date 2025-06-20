@@ -40,8 +40,8 @@ internal object CompletionItemsProvider {
         }
     }
 
-    context(KaSession)
-    private fun createItems(ktFile: KtFile, element: PsiElement, parentKtElement: KtElement): List<RekotCompletionItem>? {
+    context(kaSession: KaSession)
+    private fun createItems(ktFile: KtFile, element: PsiElement, parentKtElement: KtElement): List<RekotCompletionItem>?= with(kaSession) {
         val position = getPosition(parentKtElement) ?: run {
             return completeKeywords(element, position = null)
         }
@@ -144,12 +144,12 @@ internal object CompletionItemsProvider {
     }.getOrLogException { LOG.debug(it) }
         ?: emptyList() // do not fail the whole completion when one item fails, not well tested
 
-    context(KaSession)
+    context(kaSession: KaSession)
     private fun CompletionItemsCollector.completeAfterDot(
         position: CompletionPosition.AfterDot,
         file: KtFile,
         element: KtElement,
-    ) {
+    ) = with(kaSession) {
         when (val receiverTarget = position.receiver.mainReference?.resolveToSymbol()) {
             is KaClassSymbol -> {
                 completeStaticMembers(receiverTarget)
@@ -176,12 +176,12 @@ internal object CompletionItemsProvider {
         }
     }
 
-    context(KaSession)
-    private fun CompletionItemsCollector.completeStaticMembers(kaClassSymbol: KaClassSymbol) {
+    context(kaSession: KaSession)
+    private fun CompletionItemsCollector.completeStaticMembers(kaClassSymbol: KaClassSymbol) = with(kaSession) {
         add(kaClassSymbol.staticDeclaredMemberScope.callables(nameFilter))
     }
 
-    context(KaSession)
+    context(_: KaSession)
     private fun CompletionItemsCollector.completeIdentifier(file: KtFile, element: KtElement) {
         completeScopeContext(file, element)
         for (declaration in getKotlinDeclarationsFromIndex(file, nameFilter)) {
@@ -192,8 +192,8 @@ internal object CompletionItemsProvider {
         }
     }
 
-    context(KaSession)
-    private fun CompletionItemsCollector.completeScopeContext(file: KtFile, element: KtElement) {
+    context(kaSession: KaSession)
+    private fun CompletionItemsCollector.completeScopeContext(file: KtFile, element: KtElement) = with(kaSession) {
         val scopeContext = file.scopeContext(element)
         for (scope in scopeContext.scopes) {
             add(scope.scope.callables(nameFilter))
@@ -204,7 +204,7 @@ internal object CompletionItemsProvider {
         }
     }
 
-    context(KaSession)
+    context(_: KaSession)
     private fun getKotlinDeclarationsFromIndex(ktFile: KtFile, filter: (Name) -> Boolean): Sequence<KaDeclarationSymbol> {
         val symbolProvider = KtSymbolFromIndexProvider(ktFile)
         return (symbolProvider.getKotlinClassesByNameFilter(filter) +
@@ -212,7 +212,7 @@ internal object CompletionItemsProvider {
     }
 
 
-    context(KaSession)
+    context(_: KaSession)
     private fun getJavaDeclarationsFromIndex(ktFile: KtFile, filter: (Name) -> Boolean): Sequence<KaDeclarationSymbol> {
         val symbolProvider = KtSymbolFromIndexProvider(ktFile)
 
@@ -229,8 +229,8 @@ internal object CompletionItemsProvider {
     }
 
 
-    context(KaSession)
-    private fun CompletionItemsCollector.completeType(file: KtFile, element: KtElement, nameFilter: (Name) -> Boolean) {
+    context(kaSession: KaSession)
+    private fun CompletionItemsCollector.completeType(file: KtFile, element: KtElement, nameFilter: (Name) -> Boolean) = with(kaSession) {
         for (scope in file.scopeContext(element).scopes) {
             add(scope.scope.classifiers(nameFilter))
         }
@@ -244,11 +244,10 @@ internal object CompletionItemsProvider {
         for (declaration in symbolProvider.getJavaClassesByNameFilter(nameFilter)) {
             add(declaration) { withImport() }
         }
-        return
     }
 
-    context(KaSession)
-    private fun CompletionItemsCollector.completeNestedType(position: CompletionPosition.NestedType) {
+    context(kaSession: KaSession)
+    private fun CompletionItemsCollector.completeNestedType(position: CompletionPosition.NestedType) = with(kaSession) {
         val classifiers =
             when (val symbol = position.receiver.referenceExpression?.mainReference?.resolveToSymbol()) {
                 is KaTypeAliasSymbol -> symbol.expandedType.scope?.getClassifierSymbols(nameFilter)
@@ -258,19 +257,19 @@ internal object CompletionItemsProvider {
         add(classifiers)
     }
 
-    context(KaSession)
+    context(_: KaSession)
     private fun CompletionItemsCollector.completeTypeScope(scope: KaTypeScope) {
         add(scope.getCallableSignatures(nameFilter))
         add(scope.getClassifierSymbols(nameFilter))
     }
 
-    context(KaSession)
+    context(_: KaSession)
     private fun CompletionItemsCollector.completeScope(scope: KaScope) {
         add(scope.callables(nameFilter))
         add(scope.classifiers(nameFilter))
     }
 
-    context(KaSession)
+    context(_: KaSession)
     private fun getPosition(element: KtElement): CompletionPosition? =
         when (element) {
             is KtNameReferenceExpression -> {

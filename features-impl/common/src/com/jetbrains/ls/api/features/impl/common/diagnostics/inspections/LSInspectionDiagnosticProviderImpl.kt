@@ -14,8 +14,9 @@ import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiFile
-import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.project
+import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnosticProvider
@@ -29,7 +30,7 @@ import kotlin.reflect.KClass
 class LSInspectionDiagnosticProviderImpl(
     override val supportedLanguages: Set<LSLanguage>,
 ): LSDiagnosticProvider {
-    context(LSServer)
+    context(_: LSServer)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
         val onTheFly = false
         withAnalysisContext {
@@ -120,7 +121,6 @@ class LSInspectionDiagnosticProviderImpl(
             .filterIsInstance<LocalInspectionTool>()
     }
 
-    context(LSAnalysisContext, LSServer)
     private fun collectDiagnostics(
         holder: ProblemsHolder,
         psiFile: PsiFile,
@@ -159,7 +159,6 @@ class LSInspectionDiagnosticProviderImpl(
         val visitor: PsiElementVisitor,
     )
 
-    context(LSAnalysisContext, LSServer)
     private fun ProblemsHolder.collectDiagnostics(
         file: VirtualFile,
         localInspectionTool: LocalInspectionTool,
@@ -180,7 +179,6 @@ class LSInspectionDiagnosticProviderImpl(
         }
     }
 
-    context(LSAnalysisContext, LSServer)
     private fun ProblemDescriptor.range(): TextRange? {
         val element = psiElement ?: return null
         val elementRange = element.textRange ?: return null
@@ -190,7 +188,6 @@ class LSInspectionDiagnosticProviderImpl(
     }
 
 
-    context(LSAnalysisContext, LSServer)
     private fun ProblemDescriptor.createDiagnosticData(
         localInspectionTool: LocalInspectionTool,
         element: PsiElement,

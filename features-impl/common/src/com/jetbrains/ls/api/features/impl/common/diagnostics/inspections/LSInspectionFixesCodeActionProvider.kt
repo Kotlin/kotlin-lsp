@@ -9,6 +9,9 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.project
+import com.jetbrains.ls.api.core.withAnalysisContext
+import com.jetbrains.ls.api.core.withWritableFile
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
@@ -28,7 +31,7 @@ class LSInspectionFixesCodeActionProvider(
 
     override val providesOnlyKinds: Set<CodeActionKind> = setOf(CodeActionKind.QuickFix)
 
-    context(LSServer)
+    context(_: LSServer)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val diagnosticData = params.diagnosticData<InspectionDiagnosticData>().ifEmpty { return@flow }
 
@@ -78,7 +81,7 @@ class LSInspectionFixesCodeActionProvider(
         val descriptor: ProblemDescriptor,
     )
 
-    context(LSAnalysisContext)
+    context(_: LSAnalysisContext)
     private fun findRealFix(
         fix: InspectionQuickfixData,
         psiFile: PsiFile,
