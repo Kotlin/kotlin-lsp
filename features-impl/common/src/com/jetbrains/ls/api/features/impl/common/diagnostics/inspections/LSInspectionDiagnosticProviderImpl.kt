@@ -14,10 +14,10 @@ import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiFile
-import com.jetbrains.ls.api.core.util.findVirtualFile
-import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.util.findVirtualFile
+import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnosticProvider
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.lsp.protocol.*
@@ -111,7 +111,10 @@ class LSInspectionDiagnosticProviderImpl(
             .mapNotNull { inspection ->
                 runCatching {
                     Class.forName(inspection.implementationClass).getConstructor().newInstance()
-                }.getOrLogException { LOG.warn(it) }
+                }.getOrLogException {
+                    if (LOG.isTraceEnabled) LOG.warn(it)
+                    else LOG.warn(it.toString())
+                }
             }
             .filterNot { blacklist.containsSuperClass(it) }
             .filterIsInstance<LocalInspectionTool>()
@@ -130,7 +133,10 @@ class LSInspectionDiagnosticProviderImpl(
             for ((inspection, visitor) in visitors) {
                 runCatching {
                     element.accept(visitor)
-                }.getOrLogException { LOG.warn(it) }
+                }.getOrLogException {
+                    if (LOG.isTraceEnabled) LOG.warn(it)
+                    else LOG.warn(it.toString())
+                }
                 if (holder.hasResults()) {
                     results += holder.collectDiagnostics(file, inspection, element)
                 }
