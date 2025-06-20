@@ -14,7 +14,8 @@ class KotlinLspServerRunConfigKtTest {
 
     @Test
     fun `tcp client`() {
-        doConsistencyTest(KotlinLspServerRunConfig(KotlinLspServerMode.Socket(TcpConnectionConfig.Client(port = 9999))))
+        doConsistencyTest(KotlinLspServerRunConfig(KotlinLspServerMode.Socket(
+            TcpConnectionConfig.Client(host = "127.0.0.1", port = 9999))))
     }
 
     @Test
@@ -23,8 +24,9 @@ class KotlinLspServerRunConfigKtTest {
             KotlinLspServerRunConfig(
                 KotlinLspServerMode.Socket(
                     TcpConnectionConfig.Server(
+                        host = "127.0.0.1",
                         port = 9999,
-                        isMulticlient = false
+                        isMultiClient = false
                     )
                 )
             )
@@ -37,15 +39,16 @@ class KotlinLspServerRunConfigKtTest {
             KotlinLspServerRunConfig(
                 KotlinLspServerMode.Socket(
                     TcpConnectionConfig.Server(
+                        host = "127.0.0.1",
                         port = 9999,
-                        isMulticlient = true
+                        isMultiClient = true
                     )
                 )
             )
         )
     }
 
-    private fun doConsistencyTest(config: KotlinLspServerRunConfig, ) {
+    private fun doConsistencyTest(config: KotlinLspServerRunConfig) {
         val arguments = config.toArguments()
         val parsed = parseArguments(arguments.toTypedArray()) as KotlinLspCommand.RunLsp
         Assertions.assertEquals(config, parsed.config)

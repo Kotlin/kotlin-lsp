@@ -90,7 +90,7 @@ private suspend fun handleRequests(connection: LspConnection, runConfig: KotlinL
     val shutdownOnExitSignal = when (mode) {
         is KotlinLspServerMode.Socket -> when (val tcpConfig = mode.config) {
             is TcpConnectionConfig.Client -> true
-            is TcpConnectionConfig.Server -> !tcpConfig.isMulticlient
+            is TcpConnectionConfig.Server -> !tcpConfig.isMultiClient
         }
         KotlinLspServerMode.Stdio -> true
     }
@@ -121,18 +121,24 @@ private suspend fun handleRequests(connection: LspConnection, runConfig: KotlinL
 private fun initIdeaPaths(systemPath: Path?) {
     val fromSources = getIJPathIfRunningFromSources()
     if (fromSources != null) {
-        System.setProperty("idea.home.path", fromSources)
-        System.setProperty("idea.config.path", "$fromSources/config/idea")
-        System.setProperty("idea.system.path", "$fromSources/system/idea")
+        systemProperty("idea.home.path", fromSources)
+        systemProperty("idea.config.path", "$fromSources/config/idea", ifAbsent = true)
+        systemProperty("idea.system.path", "$fromSources/system/idea", ifAbsent = true)
     }
     else {
         val path = systemPath?.createDirectories() ?: createTempDirectory("idea-system")
-        System.setProperty("idea.home.path", "$path")
-        System.setProperty("idea.config.path", "$path/config")
-        System.setProperty("idea.system.path", "$path/system")
+        systemProperty("idea.home.path", "$path")
+        systemProperty("idea.config.path", "$path/config", ifAbsent = true)
+        systemProperty("idea.system.path", "$path/system", ifAbsent = true)
     }
     LOG.info("idea.config.path=${System.getProperty("idea.config.path")}")
     LOG.info("idea.system.path=${System.getProperty("idea.system.path")}")
+}
+
+private fun systemProperty(name: String, value: String, ifAbsent: Boolean = false) {
+    if (!ifAbsent || System.getProperty(name) == null) {
+        System.setProperty(name, value)
+    }
 }
 
 private fun setLspKotlinPluginModeIfRunningFromProductionLsp() {
