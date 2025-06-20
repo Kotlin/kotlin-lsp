@@ -13,13 +13,13 @@
 3. Create a symlink inside your `PATH` to `kotlin-lsp.sh` script, e.g.:
 
     ```sh
-    ln -s $KOTLIN_LSP_DIR/kotlin-lsp.sh $HOME/.local/bin/kotlin-ls
+    ln -s $KOTLIN_LSP_DIR/kotlin-lsp.sh $HOME/.local/bin/kotlin-lsp
     ```
 
 4. Configure [nvim.lsp](https://neovim.io/doc/user/lsp.html) e.g:
     ```lua
     {
-      cmd = { "kotlin-ls", "--stdio" },
+      cmd = { "kotlin-lsp", "--stdio" },
       single_file_support = true,
       filetypes = { "kotlin" },
       root_markers = { "build.gradle", "build.gradle.kts", "pom.xml" },
