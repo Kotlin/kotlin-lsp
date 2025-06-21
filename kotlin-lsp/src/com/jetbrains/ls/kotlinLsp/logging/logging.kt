@@ -71,7 +71,10 @@ private class LSPLogger(private val category: String, private val writeToStdOut:
                     appendLine()
                     appendLine(t.message)
                     append(t.stackTraceToString())
-                    attachmentsToString(t).takeIf { it.isNotEmpty() }?.let { appendLine(); append(it) }
+                    try {
+                        attachmentsToString(t).takeIf { it.isNotEmpty() }?.let { appendLine(); append(it) }
+                    } catch (_: Throwable) {
+                    }
                 }
 
                 if (details.isNotEmpty()) {
