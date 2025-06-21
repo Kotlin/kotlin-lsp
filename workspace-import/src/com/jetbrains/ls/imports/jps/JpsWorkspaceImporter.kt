@@ -2,18 +2,21 @@
 package com.jetbrains.ls.imports.jps
 
 import com.intellij.openapi.application.PathManager
+import com.intellij.openapi.projectRoots.JavaSdk
+import com.intellij.openapi.roots.OrderRootType
 import com.intellij.platform.workspace.jps.entities.*
 import com.intellij.platform.workspace.jps.entities.LibraryTableId.ProjectLibraryTableId
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
+import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.SdkBridgeImpl
+import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.SdkBridgeImpl.Companion.mutableSdkMap
+import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.customName
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.utils.toIntellijUri
-import org.jetbrains.jps.model.java.JavaResourceRootType
-import org.jetbrains.jps.model.java.JavaSourceRootType
-import org.jetbrains.jps.model.java.JpsJavaExtensionService
-import org.jetbrains.jps.model.java.JpsJavaModuleType
+import org.jetbrains.jps.model.java.*
+import org.jetbrains.jps.model.library.JpsLibraryType
 import org.jetbrains.jps.model.library.JpsOrderRootType
 import org.jetbrains.jps.model.module.JpsLibraryDependency
 import org.jetbrains.jps.model.module.JpsModuleDependency
@@ -36,10 +39,13 @@ object JpsWorkspaceImporter : WorkspaceImporter {
         virtualFileUrlManager: VirtualFileUrlManager,
         onUnresolvedDependency: (String) -> Unit,
     ): MutableEntityStorage = try {
-        val model = JpsSerializationManager.getInstance().loadModel(projectDirectory.toString(), PathManager.getOptionsPath(), true)
+        val optionsDirectory = Path.of(System.getProperty(
+            "idea.config.path.original", PathManager.getConfigPath())) / PathManager.OPTIONS_DIRECTORY
+        val model = JpsSerializationManager.getInstance().loadModel(projectDirectory, null, optionsDirectory, true)
         val storage = MutableEntityStorage.create()
         val entitySource = WorkspaceEntitySource(projectDirectory.toIntellijUri(virtualFileUrlManager))
         val libs = mutableSetOf<String>()
+        val sdks = mutableSetOf<String>()
 
         model.project.modules.forEach { module ->
             val kotlinFacetModuleExtension = module.container.getChild(JpsKotlinFacetModuleExtension.KIND)
@@ -86,11 +92,12 @@ object JpsWorkspaceImporter : WorkspaceImporter {
                             )
                         }
                         is JpsSdkDependency -> {
-                            val sdk = dependency.resolveSdk() ?: return@mapNotNull null
+                            val sdkReference = dependency.sdkReference ?: return@mapNotNull null
+                            sdks.add(sdkReference.sdkName)
                             SdkDependency(
                                 sdk = SdkId(
-                                    name = sdk.name,
-                                    type = sdk.type.toString(),
+                                    name = sdkReference.sdkName,
+                                    type = dependency.sdkType.toSdkType()
                                 )
                             )
                         }
@@ -171,6 +178,32 @@ object JpsWorkspaceImporter : WorkspaceImporter {
             }
             storage addEntity entity
         }
+        model.global.libraryCollection.libraries.forEach { library ->
+            if (!sdks.contains(library.name)) return@forEach
+            when (library.type) {
+                is JpsJavaSdkType -> {
+                    val builder = SdkEntity(
+                        name = library.name,
+                        type = library.type.toSdkType(),
+                        roots = library.getRootUrls(JpsOrderRootType.COMPILED).mapNotNull {
+                            val url = if (it.startsWith("jrt://")) it.replace("!/", "!/modules/") else it
+                            SdkRoot(
+                                virtualFileUrlManager.getOrCreateFromUrl(url),
+                                SdkRootTypeId(OrderRootType.CLASSES.customName),
+                            )
+                        },
+                        additionalData = "",
+                        entitySource = entitySource
+                    )
+                    val entity = storage addEntity builder
+                    // for KaLibrarySdkModuleImpl
+                    storage.mutableSdkMap.addMapping(entity, SdkBridgeImpl(builder))
+                }
+
+                is JpsLibraryType -> {
+                }
+            }
+        }
         storage
 
     } catch (e: IOException) {
@@ -185,4 +218,9 @@ object JpsWorkspaceImporter : WorkspaceImporter {
     override fun isApplicableDirectory(projectDirectory: Path): Boolean {
         return (projectDirectory / ".idea" / "modules.xml").exists()
     }
+}
+
+private fun JpsLibraryType<*>.toSdkType(): String = when (this) {
+    is JpsJavaSdkType -> JavaSdk.getInstance().name
+    else -> toString()
 }

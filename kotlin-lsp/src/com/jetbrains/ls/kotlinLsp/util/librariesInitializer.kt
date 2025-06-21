@@ -1,7 +1,9 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.kotlinLsp.util
 
+import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
+import com.intellij.openapi.roots.OrderRootType
 import com.intellij.openapi.util.io.toNioPathOrNull
 import com.intellij.platform.workspace.jps.entities.*
 import com.intellij.platform.workspace.storage.EntitySource
@@ -10,6 +12,7 @@ import com.intellij.platform.workspace.storage.entities
 import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.PathUtil
+import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.customName
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.*
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
@@ -39,19 +42,18 @@ fun addKotlinStdlib() {
     )
 }
 
-
-// TODO LSP-149 should be a real jdk entity
-internal fun createJDKEntity(source: EntitySource, virtualFileUrlManager: VirtualFileUrlManager): LibraryEntity.Builder {
-    return LibraryEntity(
-        name = "JDK",
-        tableId = LibraryTableId.ProjectLibraryTableId,
+internal fun createDefaultJDKEntity(source: EntitySource, virtualFileUrlManager: VirtualFileUrlManager): SdkEntity.Builder {
+    return SdkEntity(
+        name = "Java SDK",
+        type = JavaSdk.getInstance().name,
         roots = javaHome().map { root ->
-            LibraryRoot(
-                url = virtualFileUrlManager.getOrCreateFromUrl(root.lspUriToIntellijUri()!!),
-                type = LibraryRootTypeId.COMPILED
+            SdkRoot(
+                virtualFileUrlManager.getOrCreateFromUrl(root.lspUriToIntellijUri()!!),
+                SdkRootTypeId(OrderRootType.CLASSES.customName),
             )
         },
-        entitySource = source,
+        additionalData = "",
+        entitySource = source
     )
 }
 
@@ -100,21 +102,24 @@ suspend fun importProject(
                 ShowMessageParams(MessageType.Warning, unresolved.joinToString(", ", "Couldn't resolve some dependencies: ")),
             )
         }
-        addFakeJdKLibrary(folderPath, virtualFileUrlManager, imported)
+        val noSdk = imported.entities(SdkEntity::class.java).firstOrNull() == null
+        if (noSdk) {
+            addDefaultJavaSDK(folderPath, virtualFileUrlManager, imported)
+        }
         storage.applyChangesFrom(imported)
         lspClient.reportProgressMessage(params, "Indexing project")
     }
     lspClient.reportProgressMessage(params, "Project is indexed")
 }
 
-private fun addFakeJdKLibrary(
+private fun addDefaultJavaSDK(
     folderPath: Path,
     virtualFileUrlManager: VirtualFileUrlManager,
     imported: MutableEntityStorage,
 ) {
     val entitySource = WorkspaceEntitySource(folderPath.toVirtualFileUrl(virtualFileUrlManager))
 
-    val jdk = imported addEntity createJDKEntity(
+    val jdk = imported addEntity createDefaultJDKEntity(
         entitySource,
         virtualFileUrlManager
     )
@@ -124,7 +129,7 @@ private fun addFakeJdKLibrary(
             dependencies.firstOrNull { it is SdkDependency || it is InheritedSdkDependency }
                 ?.let { dependencies -= it }
 
-            dependencies += LibraryDependency(jdk.symbolicId, exported = false, scope = DependencyScope.COMPILE)
+            dependencies += SdkDependency(jdk.symbolicId)
         }
     }
 }
