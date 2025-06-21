@@ -13,14 +13,14 @@
 3. Create a symlink inside your `PATH` to `kotlin-lsp.sh` script, e.g.:
 
     ```sh
-    ln -s $KOTLIN_LSP_DIR/kotlin-lsp.sh $HOME/.local/bin/kotlin-ls
+    ln -s $KOTLIN_LSP_DIR/kotlin-lsp.sh $HOME/.local/bin/kotlin-lsp
     ```
 
 4. Add the below configuration to your [languages.toml](https://docs.helix-editor.com/languages.html) in `~/.config/helix/languages.toml`:
 
     ```toml
     [language-server.kotlin]
-    command = "kotlin-ls"
+    command = "kotlin-lsp"
     args = ["--stdio"]
     
     [[language]]
