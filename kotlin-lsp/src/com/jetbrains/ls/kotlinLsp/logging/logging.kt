@@ -2,6 +2,7 @@
 package com.jetbrains.ls.kotlinLsp.logging
 
 import com.intellij.openapi.diagnostic.DefaultLogger.attachmentsToString
+import com.intellij.openapi.diagnostic.IdeaLogRecordFormatter
 import com.intellij.openapi.diagnostic.LogLevel
 import com.intellij.openapi.diagnostic.Logger
 import com.jetbrains.ls.kotlinLsp.connection.Client
@@ -62,7 +63,7 @@ private class LSPLogger(private val category: String, private val writeToStdOut:
         val messageRendered by lazy(LazyThreadSafetyMode.NONE) {
             buildString {
                 append("[${level.levelName}] ")
-                append(category)
+                append(IdeaLogRecordFormatter.smartAbbreviate(category))
                 append(": ")
                 append(message)
 
