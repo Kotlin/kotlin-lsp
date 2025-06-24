@@ -105,7 +105,19 @@ internal object CompletionItemsProvider {
                 is RekotCompletionItem.Declaration -> item.copy(import = false)
                 is RekotCompletionItem.Keyword -> item
             }
-        }
+        }.sortedWith(compareBy<RekotCompletionItem> { item ->
+            when (item) {
+                is RekotCompletionItem.Keyword -> 0  // Keywords have highest priority
+                is RekotCompletionItem.Declaration -> when {
+                    // Local variables and parameters have high priority
+                    item.name.startsWith("var") || item.name.startsWith("val") -> 1
+                    // Properties and methods have medium priority
+                    item.import == false -> 2
+                    // Imported items have lower priority
+                    else -> 3
+                }
+            }
+        }.thenBy { it.name })  // Then sort alphabetically by name
 
         if (elements.isEmpty()) return null
         return elements

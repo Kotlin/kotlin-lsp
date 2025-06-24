@@ -71,7 +71,8 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
                                 )
                             }
                         }
-                        result
+                        // Sort code actions by title to ensure consistent ordering
+                        result.sortedBy { it.title }
                     }
                 }
             }
@@ -114,6 +115,8 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
                     ),
                 )
             }
+            // Sort actions by text to ensure consistent ordering within each diagnostic
+            .sortedBy { it.title }
             .toList()
     }
 

@@ -52,12 +52,21 @@ context(_: KaSession, _: LSAnalysisContext, _: LSServer)
 private fun KaDiagnosticWithPsi<*>.toLsp(document: Document, file: VirtualFile): List<Diagnostic> {
     val data = KotlinCompilerDiagnosticData.create(this, file)
     return textRanges.map { textRange ->
+        val enhancedMessage = buildString {
+            append(defaultMessage)
+            if (factoryName.isNotBlank() && !defaultMessage.contains(factoryName)) {
+                append(" (")
+                append(factoryName)
+                append(")")
+            }
+        }
+        
         Diagnostic(
             textRange.toLspRange(document),
             severity = severity.toLsp(),
             code = StringOrInt.string(factoryName),
             source = "Kotlin",
-            message = defaultMessage,
+            message = enhancedMessage,
             tags = emptyList(),
             data = LSP.json.encodeToJsonElement(data),
             relatedInformation = emptyList(),
