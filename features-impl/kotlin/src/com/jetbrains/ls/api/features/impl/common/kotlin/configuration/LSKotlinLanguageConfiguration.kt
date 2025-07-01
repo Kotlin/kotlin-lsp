@@ -9,6 +9,7 @@ import com.jetbrains.ls.api.features.impl.common.kotlin.apiImpl.lsApiKotlinImpl
 import com.jetbrains.ls.api.features.impl.common.kotlin.codeActions.LSOrganizeImportsCodeActionProviderKotlinImpl
 import com.jetbrains.ls.api.features.impl.common.kotlin.codeActions.kotlinCodeActionsPlugins
 import com.jetbrains.ls.api.features.impl.common.kotlin.codeStyle.kotlinCodeStylePlugin
+import com.jetbrains.ls.api.features.impl.common.kotlin.completion.LSCompletionProviderKotlinImpl
 import com.jetbrains.ls.api.features.impl.common.kotlin.completion.kotlinCompletionPlugin
 import com.jetbrains.ls.api.features.impl.common.kotlin.completion.rekot.LSRekotBasedKotlinCompletionProviderImpl
 import com.jetbrains.ls.api.features.impl.common.kotlin.definitions.LSKotlinPackageDefinitionProvider
@@ -30,7 +31,7 @@ import org.jetbrains.kotlin.idea.base.fir.codeInsight.FirCodeInsightForClassPath
 val LSKotlinLanguageConfiguration: LSLanguageConfiguration = LSLanguageConfiguration(
     entries = listOf(
         LSOrganizeImportsCodeActionProviderKotlinImpl,
-        LSRekotBasedKotlinCompletionProviderImpl,
+        LSCompletionProviderKotlinImpl,
         LSDefinitionProviderCommonImpl(setOf(LSKotlinLanguage)),
         LSHoverProviderKotlinImpl,
         LSKotlinPackageDefinitionProvider,

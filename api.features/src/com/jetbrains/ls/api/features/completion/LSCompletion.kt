@@ -5,9 +5,9 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.entries
 import com.jetbrains.ls.api.features.entriesFor
-import com.jetbrains.ls.api.features.utils.PsiSerializablePointer
 import com.jetbrains.lsp.protocol.*
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 
 object LSCompletion {
@@ -45,6 +45,5 @@ object LSCompletion {
 data class CompletionItemData(
     val providerId: String,
     val params: CompletionParams,
-    val lookupString: String,
-    val pointer: PsiSerializablePointer?
+    val additionalData: JsonElement,
 )
