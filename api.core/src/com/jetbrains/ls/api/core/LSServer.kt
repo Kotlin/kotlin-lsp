@@ -13,6 +13,10 @@ interface LSServer { // workspace?
         action: suspend context(LSAnalysisContext) CoroutineScope.() -> R,
     ): R
 
+    suspend fun <R> withWriteAnalysisContext(
+        action: suspend context(LSAnalysisContext, CoroutineScope) () -> R,
+    ): R
+
     suspend fun <R> withWritableFile(
         useSiteFileUri: URI,
         action: suspend CoroutineScope.() -> R,
@@ -32,6 +36,10 @@ inline val workspaceStructure: LSWorkspaceStructure get() = server.workspaceStru
 context(server: LSServer)
 suspend fun <R> withAnalysisContext(action: suspend context(LSAnalysisContext) CoroutineScope.() -> R): R =
     server.withAnalysisContext(action)
+
+context(server: LSServer)
+suspend fun <R> withWriteAnalysisContext(action: suspend context(LSAnalysisContext) CoroutineScope.() -> R): R =
+    server.withWriteAnalysisContext(action)
 
 context(server: LSServer)
 suspend fun <R> withWritableFile(useSiteFileUri: URI, action: suspend CoroutineScope.() -> R): R =
