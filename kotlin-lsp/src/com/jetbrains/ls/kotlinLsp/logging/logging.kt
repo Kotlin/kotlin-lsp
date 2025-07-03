@@ -7,6 +7,9 @@ import com.intellij.openapi.diagnostic.LogLevel
 import com.intellij.openapi.diagnostic.Logger
 import com.jetbrains.ls.kotlinLsp.connection.Client
 import com.jetbrains.lsp.protocol.*
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 
 fun initKotlinLspLogger(writeToStdOut: Boolean) {
@@ -26,6 +29,8 @@ private class KotlinLspLoggerFactory(private val writeToStdOut: Boolean) : Logge
  * - Common level: logs to the console, affected by [LogLevel]
  */
 private class LSPLogger(private val category: String, private val writeToStdOut: Boolean) : Logger() {
+    private val logCreation: Long = System.currentTimeMillis()
+    private val withDateTime: Boolean = true
     /**
      * [level] does not affect `$/logTrace` notifications,
      */
@@ -62,9 +67,31 @@ private class LSPLogger(private val category: String, private val writeToStdOut:
     private fun log(level: LogLevel, message: String?, t: Throwable?, details: Array<out String?> = emptyArray()) {
         val messageRendered by lazy(LazyThreadSafetyMode.NONE) {
             buildString {
-                append("[${level.levelName}] ")
+                val currentMillis = System.currentTimeMillis()
+                if (withDateTime) {
+                    val date = LocalDateTime.ofInstant(Instant.ofEpochMilli(currentMillis), ZoneId.systemDefault())
+                    append(date.year)
+                    append('-')
+                    append(date.monthValue.toString().padStart(2, '0'))
+                    append('-')
+                    append(date.dayOfMonth.toString().padStart(2, '0'))
+                    append(' ')
+                    append(date.hour.toString().padStart(2, '0'))
+                    append(':')
+                    append(date.minute.toString().padStart(2, '0'))
+                    append(':')
+                    append(date.second.toString().padStart(2, '0'))
+                    append(',')
+                    append((currentMillis % 1000).toString().padStart(3, '0'))
+                    append(' ')
+                }
+                append('[')
+                append((currentMillis - logCreation).toString().padStart(7))
+                append("] ")
+                append(level.levelName.toString().padStart(6))
+                append(" - ")
                 append(IdeaLogRecordFormatter.smartAbbreviate(category))
-                append(": ")
+                append(" - ")
                 append(message)
 
                 if (t != null) {
