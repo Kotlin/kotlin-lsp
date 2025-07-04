@@ -5,6 +5,10 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.findPsiFile
+import com.intellij.psi.PsiFile
+import com.jetbrains.ls.api.core.LSAnalysisContext
+import com.jetbrains.ls.api.core.project
 import com.jetbrains.lsp.protocol.*
 
 val VirtualFile.uri: URI
@@ -59,6 +63,11 @@ fun TextDocumentIdentifier.findVirtualFile(): VirtualFile? = uri.uri.findVirtual
 fun DocumentUri.findVirtualFile(): VirtualFile? = uri.findVirtualFile()
 
 fun TextDocumentPositionParams.findVirtualFile(): VirtualFile? = textDocument.findVirtualFile()
+
+context(_: LSAnalysisContext)
+fun VirtualFile.findPsiFile(): PsiFile? {
+    return findPsiFile(project)
+}
 
 fun VirtualFile.isFromLibrary(): Boolean {
     val scheme = uri.scheme

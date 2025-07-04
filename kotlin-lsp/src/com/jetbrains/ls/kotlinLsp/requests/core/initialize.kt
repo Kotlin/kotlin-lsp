@@ -105,6 +105,11 @@ internal fun LspHandlersBuilder.initializeRequest() {
                         supported = true,
                         changeNotifications = JsonPrimitive(true),
                     )
+                ),
+                signatureHelpProvider = SignatureHelpOptions(
+                    triggerCharacters = listOf("(", ","),
+                    retriggerCharacters = listOf(","),
+                    workDoneProgress = false
                 )
             ),
             serverInfo = InitializeResult.ServerInfo(

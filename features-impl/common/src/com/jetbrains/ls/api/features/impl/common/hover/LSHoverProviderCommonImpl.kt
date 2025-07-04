@@ -21,6 +21,7 @@ import com.jetbrains.lsp.protocol.Hover
 import com.jetbrains.lsp.protocol.HoverParams
 import com.jetbrains.lsp.protocol.MarkupContent
 import com.jetbrains.lsp.protocol.MarkupKindType
+import com.jetbrains.lsp.protocol.StringOrMarkupContent
 
 abstract class AbstractLSHoverProvider : LSHoverProvider {
     context(_: LSServer)
@@ -54,6 +55,11 @@ abstract class AbstractLSHoverProvider : LSHoverProvider {
         companion object {
             fun getMarkdownDoc(element: PsiElement): String? =
                 forLanguage(element.language)?.getMarkdownDoc(element)
+
+            fun getMarkdownDocAsStringOrMarkupContent(psiElement: PsiElement): StringOrMarkupContent? {
+                val doc = getMarkdownDoc(psiElement) ?: return null
+                return StringOrMarkupContent(MarkupContent(MarkupKindType.Markdown, doc))
+            }
 
             fun forLanguage(language: Language): LSMarkdownDocProvider? =
                 Extension.forLanguage(language)

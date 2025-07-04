@@ -15,12 +15,13 @@ import com.jetbrains.ls.api.features.impl.common.kotlin.definitions.LSKotlinPack
 import com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.compiler.LSKotlinCompilerDiagnosticsFixesCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.compiler.LSKotlinCompilerDiagnosticsProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.intentions.LSKotlinIntentionCodeActionProviderImpl
-import com.jetbrains.ls.api.features.impl.common.kotlin.symbols.LSDocumentSymbolProviderKotlin
 import com.jetbrains.ls.api.features.impl.common.kotlin.hover.LSHoverProviderKotlinImpl
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.impl.common.kotlin.semanticTokens.LSSemanticTokensProviderKotlinImpl
-import com.jetbrains.ls.api.features.impl.common.kotlin.usages.kotlinUsagesIjPlugins
+import com.jetbrains.ls.api.features.impl.common.kotlin.signatureHelp.LSSignatureHelpKotlinImpl
+import com.jetbrains.ls.api.features.impl.common.kotlin.symbols.LSDocumentSymbolProviderKotlin
 import com.jetbrains.ls.api.features.impl.common.kotlin.symbols.LSWorkspaceSymbolProviderKotlinImpl
+import com.jetbrains.ls.api.features.impl.common.kotlin.usages.kotlinUsagesIjPlugins
 import com.jetbrains.ls.api.features.impl.common.references.LSReferencesProviderCommonImpl
 import com.jetbrains.ls.api.features.language.LSLanguageConfiguration
 import com.jetbrains.ls.api.features.utils.ijPluginByXml
@@ -43,6 +44,7 @@ val LSKotlinLanguageConfiguration: LSLanguageConfiguration = LSLanguageConfigura
         LSWorkspaceSymbolProviderKotlinImpl,
         LSDocumentSymbolProviderKotlin,
         LSKotlinIntentionCodeActionProviderImpl,
+        LSSignatureHelpKotlinImpl,
     ),
     plugins = listOf(
         lsApiKotlinImpl,
