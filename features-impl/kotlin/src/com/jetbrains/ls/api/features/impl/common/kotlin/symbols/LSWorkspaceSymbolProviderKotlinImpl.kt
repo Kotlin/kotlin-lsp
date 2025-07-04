@@ -40,7 +40,7 @@ internal object LSWorkspaceSymbolProviderKotlinImpl : AbstractLSWorkspaceSymbolP
             kind = ktNamedDeclaration.getKind() ?: return null,
             tags = null, // todo handle deprecations
             containerName = ktNamedDeclaration.getClosestContainerQualifiedName(),
-            location = ktNamedDeclaration.getLspLocationForDefinition() ?: return null,
+            location = ktNamedDeclaration.getLspLocationForDefinition()?.let { WorkspaceSymbol.SymbolLocation.Full(it) } ?: return null,
             data = null,
         )
     }

@@ -15,6 +15,7 @@ import com.jetbrains.ls.api.features.rename.LSRename
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokens
 import com.jetbrains.ls.api.features.signatureHelp.LSSignatureHelp
 import com.jetbrains.ls.api.features.symbols.LSWorkspaceSymbols
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.LspHandlersBuilder
 import com.jetbrains.lsp.protocol.*
 import com.jetbrains.lsp.protocol.CodeActions.CodeActionRequest
@@ -25,10 +26,10 @@ import com.jetbrains.lsp.protocol.SemanticTokensRequests.SemanticTokensRangeRequ
 import com.jetbrains.lsp.protocol.WorkspaceSymbolRequests.WorkspaceSymbolRequest
 
 context(_: LSServer, _: LSConfiguration)
-internal fun LspHandlersBuilder.features() {
-    request(CodeActionRequest) { LSCodeActions.getCodeActions(it) }
+internal fun LspHandlersBuilder<LspHandlerContext>.features() {
+    request(CodeActionRequest) { LSCodeActions.getCodeActions(it).map{ CommandOrCodeAction.CodeAction(it) } }
     request(ExecuteCommand) { LSCommand.executeCommand(it) }
-    request(CompletionRequestType) { LSCompletion.getCompletion(it) }
+    request(CompletionRequestType) { LSCompletion.getCompletion(it).let { CompletionResult.MaybeIncomplete(it) } }
     request(CompletionResolveRequestType) { LSCompletion.resolveCompletion(it) }
     request(DefinitionRequestType) { LSDefinition.getDefinition(it) }
     request(DocumentDiagnosticRequestType) { LSDiagnostic.getDiagnostics(it) }

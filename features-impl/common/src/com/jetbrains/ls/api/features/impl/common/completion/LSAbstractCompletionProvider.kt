@@ -88,9 +88,9 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider {
 
         private const val MAX_INT_DIGITS_COUNT = Int.MAX_VALUE.toString().length
 
-        private fun emptyTextEdit(position: Position): TextEditOrInsertReplaceEdit {
+        private fun emptyTextEdit(position: Position): CompletionItem.Edit {
             val range = Range(position, position)
-            return TextEditOrInsertReplaceEdit(InsertReplaceEdit("", range, range))
+            return CompletionItem.Edit.InsertReplace(InsertReplaceEdit("", range, range))
         }
     }
 }

@@ -33,7 +33,7 @@ import java.nio.file.Path
 import kotlin.io.path.*
 
 context(_: LSServer, _: LSConfiguration)
-internal fun LspHandlersBuilder.initializeRequest() {
+internal fun LspHandlersBuilder<LspHandlerContext>.initializeRequest() {
     request(Initialize) { initParams ->
         Client.update { it.copy(trace = initParams.trace) }
 
@@ -60,7 +60,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
 
         val result = InitializeResult(
             capabilities = ServerCapabilities(
-                textDocumentSync = TextDocumentSync(TextDocumentSyncKind.Incremental),
+                textDocumentSync = TextDocumentSyncKind.Incremental,
                 definitionProvider = OrBoolean(true),
                 diagnosticProvider = DiagnosticOptions(
                     identifier = null,
@@ -76,10 +76,11 @@ internal fun LspHandlersBuilder.initializeRequest() {
                             tokenModifiers = registry.modifiers.map { it.name },
                         )
                     },
-                    range = true,
-                    full = true,
+                    range = OrBoolean(true),
+                    full = OrBoolean(true),
                 ),
-                completionProvider = CompletionRegistrationOptionsImpl(
+                completionProvider = CompletionRegistrationOptions(
+                    documentSelector = null,
                     triggerCharacters = listOf("."), // todo should be customized?
                     allCommitCharacters = null,
                     resolveProvider = entries<LSCompletionProvider>().any { it.supportsResolveRequest },
