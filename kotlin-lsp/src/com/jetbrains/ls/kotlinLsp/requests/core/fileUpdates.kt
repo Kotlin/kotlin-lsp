@@ -12,7 +12,7 @@ internal fun LspHandlersBuilder.fileUpdateRequests() {
         documents.didOpen(
             uri = didOpen.textDocument.uri.uri,
             fileText = didOpen.textDocument.text,
-            version = didOpen.textDocument.version.toLong(),
+            version = didOpen.textDocument.version,
             languageId = didOpen.textDocument.languageId
         )
     }

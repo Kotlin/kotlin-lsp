@@ -6,9 +6,11 @@ import com.jetbrains.lsp.protocol.URI
 
 interface LSDocuments {
     
-    suspend fun didOpen(uri: URI, fileText: String, version: Long, languageId: String)
+    suspend fun didOpen(uri: URI, fileText: String, version: Int, languageId: String)
     
     suspend fun didClose(uri: URI)
     
     suspend fun didChange(uri: URI, changes: List<TextDocumentContentChangeEvent>)
+
+    fun getVersion(uri: URI): Int?
 }

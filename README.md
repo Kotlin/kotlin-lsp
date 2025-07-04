@@ -56,7 +56,7 @@ The best way to track current capabilities and what is going to be supported in 
   * [x] Organize imports
   * [x] Go to reference
 * [ ] Refactorings
-  * [ ] Rename
+  * [x] Rename
   * [ ] Move
   * [ ] Change signature
 * [x] On-the-fly Kotlin diagnostics

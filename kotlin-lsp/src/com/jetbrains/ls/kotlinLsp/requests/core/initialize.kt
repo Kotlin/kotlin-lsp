@@ -17,7 +17,6 @@ import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
 import com.jetbrains.ls.imports.jps.JpsWorkspaceImporter
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
 import com.jetbrains.ls.kotlinLsp.connection.Client
-import com.jetbrains.ls.kotlinLsp.util.getSystemInfo
 import com.jetbrains.ls.kotlinLsp.util.importProject
 import com.jetbrains.ls.kotlinLsp.util.registerStdlibAndJdk
 import com.jetbrains.ls.kotlinLsp.util.sendSystemInfoToClient
@@ -106,11 +105,12 @@ internal fun LspHandlersBuilder.initializeRequest() {
                         changeNotifications = JsonPrimitive(true),
                     )
                 ),
+                renameProvider = OrBoolean(true),
                 signatureHelpProvider = SignatureHelpOptions(
                     triggerCharacters = listOf("(", ","),
                     retriggerCharacters = listOf(","),
                     workDoneProgress = false
-                )
+                ),
             ),
             serverInfo = InitializeResult.ServerInfo(
                 name = "Kotlin LSP by JetBrains",

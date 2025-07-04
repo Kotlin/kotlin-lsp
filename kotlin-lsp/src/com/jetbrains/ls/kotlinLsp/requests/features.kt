@@ -11,6 +11,7 @@ import com.jetbrains.ls.api.features.diagnostics.LSDiagnostic
 import com.jetbrains.ls.api.features.symbols.LSDocumentSymbols
 import com.jetbrains.ls.api.features.hover.LSHover
 import com.jetbrains.ls.api.features.references.LSReferences
+import com.jetbrains.ls.api.features.rename.LSRename
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokens
 import com.jetbrains.ls.api.features.signatureHelp.LSSignatureHelp
 import com.jetbrains.ls.api.features.symbols.LSWorkspaceSymbols
@@ -38,4 +39,5 @@ internal fun LspHandlersBuilder.features() {
     request(WorkspaceSymbolRequest) { LSWorkspaceSymbols.getSymbols(it) }
     request(DocumentSymbolRequest) { LSDocumentSymbols.getSymbols(it) }
     request(SignatureHelpRequest) { LSSignatureHelp.getSignatureHelp(it) }
+    request(RenameRequestType) { LSRename.rename(it) }
 }

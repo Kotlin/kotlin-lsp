@@ -22,6 +22,13 @@ interface LSServer { // workspace?
         action: suspend CoroutineScope.() -> R,
     ): R
 
+    suspend fun <R> withWritableFiles(
+        useSiteFileUris: Iterable<URI>,
+        action: suspend CoroutineScope.() -> R,
+    ): R
+
+    suspend fun withRenamesEnabled(action: suspend CoroutineScope.() -> Unit): Map<URI, URI>
+
     val documents: LSDocuments
 
     val workspaceStructure: LSWorkspaceStructure
@@ -44,6 +51,14 @@ suspend fun <R> withWriteAnalysisContext(action: suspend context(LSAnalysisConte
 context(server: LSServer)
 suspend fun <R> withWritableFile(useSiteFileUri: URI, action: suspend CoroutineScope.() -> R): R =
     server.withWritableFile(useSiteFileUri, action)
+
+context(server: LSServer)
+suspend fun <R> withWritableFiles(useSiteFileUris: Iterable<URI>, action: suspend CoroutineScope.() -> R): R =
+    server.withWritableFiles(useSiteFileUris, action)
+
+context(server: LSServer)
+suspend fun withRenamesEnabled( action: suspend CoroutineScope.() -> Unit): Map<URI, URI> =
+    server.withRenamesEnabled(action)
 
 interface LSAnalysisContext {
     val project: Project
