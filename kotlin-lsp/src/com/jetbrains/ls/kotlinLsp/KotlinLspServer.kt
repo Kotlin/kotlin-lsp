@@ -3,6 +3,7 @@ package com.jetbrains.ls.kotlinLsp
 
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.fileLogger
+import com.jetbrains.analyzer.filewatcher.FileWatcher
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.LSServerContext
 import com.jetbrains.ls.api.core.withServer
@@ -28,10 +29,11 @@ import org.jetbrains.kotlin.idea.base.plugin.artifacts.KotlinArtifacts
 import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutMode
 import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutModeProvider
 import org.jetbrains.kotlin.idea.compiler.configuration.isRunningFromSources
+import java.lang.invoke.MethodHandles
+import java.net.URLDecoder
 import java.nio.file.Path
-import kotlin.io.path.absolutePathString
-import kotlin.io.path.createDirectories
-import kotlin.io.path.createTempDirectory
+import java.nio.file.Paths
+import kotlin.io.path.*
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
@@ -113,15 +115,28 @@ private fun initIdeaPaths(systemPath: Path?) {
         systemProperty("idea.home.path", fromSources)
         systemProperty("idea.config.path", "$fromSources/config/idea", ifAbsent = true)
         systemProperty("idea.system.path", "$fromSources/system/idea", ifAbsent = true)
+        FileWatcher.initLibrary(
+            Path.of(PathManager.getHomePath()) /
+                    "fleet" / "native" / "target" / "download" / "filewatcher")
     }
     else {
         val path = systemPath?.createDirectories() ?: createTempDirectory("idea-system")
         systemProperty("idea.home.path", "$path")
         systemProperty("idea.config.path", "$path/config", ifAbsent = true)
         systemProperty("idea.system.path", "$path/system", ifAbsent = true)
+        FileWatcher.initLibrary(getInstallationPath() / "native")
     }
     LOG.info("idea.config.path=${System.getProperty("idea.config.path")}")
     LOG.info("idea.system.path=${System.getProperty("idea.system.path")}")
+}
+
+private fun getInstallationPath(): Path {
+    val path = MethodHandles.lookup().lookupClass().getProtectionDomain().codeSource.location.path
+    val jarPath = Paths.get(URLDecoder.decode(path, "UTF-8"))
+    check(jarPath.extension == "jar") { "Path to jar is expected to end with .jar: $jarPath" }
+    val libsDir = jarPath.parent
+    check(libsDir.name == "lib") { "lib dir is expected to be named `lib`: $libsDir" }
+    return libsDir.parent
 }
 
 private fun systemProperty(name: String, value: String, ifAbsent: Boolean = false) {
