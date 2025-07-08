@@ -11,6 +11,7 @@ import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefiniti
 import com.jetbrains.ls.api.features.impl.common.symbols.AbstractLSWorkspaceSymbolProvider
 import com.jetbrains.lsp.protocol.WorkspaceSymbol
 import org.jetbrains.kotlin.idea.goto.KotlinGotoClassContributor
+import org.jetbrains.kotlin.idea.goto.KotlinGotoClassSymbolContributor
 import org.jetbrains.kotlin.idea.goto.KotlinGotoFunctionSymbolContributor
 import org.jetbrains.kotlin.idea.goto.KotlinGotoPropertySymbolContributor
 import org.jetbrains.kotlin.idea.goto.KotlinGotoTypeAliasContributor
@@ -18,7 +19,7 @@ import org.jetbrains.kotlin.psi.KtNamedDeclaration
 
 internal object LSWorkspaceSymbolProviderKotlinImpl : AbstractLSWorkspaceSymbolProvider() {
     override fun getContributors(): List<ChooseByNameContributor> = listOf(
-        KotlinGotoClassContributor(),
+        KotlinGotoClassSymbolContributor(),
         KotlinGotoTypeAliasContributor(),
         KotlinGotoFunctionSymbolContributor(),
         KotlinGotoPropertySymbolContributor(),
