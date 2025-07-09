@@ -3,19 +3,15 @@ package com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.compiler
 
 import com.intellij.codeInsight.intention.IntentionAction
 import com.intellij.openapi.application.runReadAction
-import com.intellij.openapi.diagnostic.getOrLogException
+import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
+import com.jetbrains.ls.api.core.*
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
-import com.jetbrains.ls.api.core.LSAnalysisContext
-import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.core.project
-import com.jetbrains.ls.api.core.withAnalysisContext
-import com.jetbrains.ls.api.core.withWritableFile
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
@@ -89,13 +85,13 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
     ): List<CodeAction>  = with(kaSession) {
         return (getQuickFixesWithCatchingFor(kaDiagnostic) + getLazyQuickFixesWithCatchingFor(kaDiagnostic))
             .mapNotNull { fixes ->
-                fixes.getOrLogException { LOG.warn(it) }
+                fixes.getOrHandleException { LOG.warn(it) }
             }
             .filter { intentionAction ->
                 runCatching {
                     // this call may also compute some text inside the intention
                     intentionAction.isAvailable(project, editor, file)
-                }.getOrLogException { LOG.warn(it) } ?: false
+                }.getOrHandleException { LOG.warn(it) } ?: false
             }
             .map { intentionAction ->
                 val fix = KotlinCompilerDiagnosticQuickfixData.createByIntentionAction(intentionAction)

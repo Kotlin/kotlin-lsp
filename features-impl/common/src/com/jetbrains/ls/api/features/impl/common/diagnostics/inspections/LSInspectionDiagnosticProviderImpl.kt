@@ -6,7 +6,7 @@ import com.intellij.codeInspection.*
 import com.intellij.codeInspection.ex.InspectionManagerEx
 import com.intellij.lang.Language
 import com.intellij.openapi.application.runReadAction
-import com.intellij.openapi.diagnostic.getOrLogException
+import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
@@ -115,7 +115,7 @@ class LSInspectionDiagnosticProviderImpl(
             .mapNotNull { inspection ->
                 runCatching {
                     Class.forName(inspection.implementationClass).getConstructor().newInstance()
-                }.getOrLogException {
+                }.getOrHandleException {
                     if (LOG.isTraceEnabled) LOG.warn(it)
                     else LOG.warn(it.toString())
                 }
@@ -138,7 +138,7 @@ class LSInspectionDiagnosticProviderImpl(
             for ((inspection, visitor) in visitors) {
                 runCatching {
                     element.accept(visitor)
-                }.getOrLogException {
+                }.getOrHandleException {
                     if (LOG.isTraceEnabled) LOG.warn(it)
                     else LOG.warn(it.toString())
                 }

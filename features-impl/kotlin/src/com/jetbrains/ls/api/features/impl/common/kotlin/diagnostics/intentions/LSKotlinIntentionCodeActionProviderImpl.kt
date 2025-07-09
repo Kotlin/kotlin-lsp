@@ -9,7 +9,7 @@ import com.intellij.modcommand.ModShowConflicts
 import com.intellij.modcommand.ModTemplateBuilder
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.fileLogger
-import com.intellij.openapi.diagnostic.getOrLogException
+import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.util.NlsContexts
@@ -80,7 +80,7 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
                         for (action in actions) {
                             val codeAction = runCatching {
                                 toCodeAction(action, actionContext, ktElement, document, params, uri, file)
-                            }.getOrLogException { LOG.debug(it) } ?: continue
+                            }.getOrHandleException { LOG.debug(it) } ?: continue
                             result += codeAction
                         }
                     }
@@ -161,7 +161,7 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
                             val elementContext = action.getElementContext(psiElement) ?: return@collectTextEdits
                             val psiUpdater = FakeModPsiUpdater(psiElement)
                             action.invoke(actionContext, psiElement, elementContext, psiUpdater)
-                        }.getOrLogException {
+                        }.getOrHandleException {
                             //achtung!
                             LOG.debug(it)
                         }

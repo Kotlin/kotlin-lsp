@@ -2,7 +2,7 @@
 package com.jetbrains.ls.api.features.impl.common.kotlin.completion.rekot
 
 import com.intellij.openapi.diagnostic.fileLogger
-import com.intellij.openapi.diagnostic.getOrLogException
+import com.intellij.openapi.diagnostic.getOrHandleException
 import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.analysis.api.components.KaCompletionExtensionCandidateChecker
 import org.jetbrains.kotlin.analysis.api.components.KaExtensionApplicabilityResult
@@ -129,7 +129,7 @@ internal class CompletionItemsCollector(
             if (symbol.name?.asString()?.contains(COMPLETION_FAKE_IDENTIFIER) == true) return false
             if (!symbolFilter.accepts(symbol)) return false
             return true
-        }.getOrLogException { LOG.debug(it) } ?: false
+        }.getOrHandleException { LOG.debug(it) } ?: false
     }
 
     context(kaSession: KaSession)
@@ -140,7 +140,7 @@ internal class CompletionItemsCollector(
                 is KaExtensionApplicabilityResult.Applicable -> substitute(applicability.substitutor)
                 else -> null
             }
-        }.getOrLogException { LOG.debug(it) }
+        }.getOrHandleException { LOG.debug(it) }
     }
 
     fun build(): Collection<RekotCompletionItem> {

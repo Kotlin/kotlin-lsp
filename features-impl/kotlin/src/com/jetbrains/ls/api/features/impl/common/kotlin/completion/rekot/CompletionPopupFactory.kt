@@ -7,7 +7,7 @@ import com.intellij.codeInsight.completion.PrefixMatcher
 import com.intellij.codeInsight.completion.scope.JavaCompletionProcessor
 import com.intellij.codeInsight.lookup.LookupElementPresentation
 import com.intellij.openapi.diagnostic.fileLogger
-import com.intellij.openapi.diagnostic.getOrLogException
+import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.source.tree.java.PsiReferenceExpressionImpl
 import com.intellij.psi.util.parentOfType
@@ -143,7 +143,7 @@ internal object CompletionItemsProvider {
             }
         }
         return result
-    }.getOrLogException { LOG.debug(it) }
+    }.getOrHandleException { LOG.debug(it) }
         ?: emptyList() // do not fail the whole completion when one item fails, not well tested
 
     context(kaSession: KaSession)
