@@ -16,12 +16,18 @@ import kotlin.io.path.nameWithoutExtension
 interface WorkspaceModelBuilder {
     fun addFolder(workspaceFolder: WorkspaceFolder)
     fun addLibrary(library: LSLibrary)
+    fun removeFolder(workspaceFolder: WorkspaceFolder)
+    fun removeLibrary(libraryName: String)
+    fun clearAll()
 }
 
 context(_: LSServer)
 suspend fun updateWorkspaceModel(updater: WorkspaceModelBuilder.() -> Unit) {
     val libs = mutableListOf<LSLibrary>()
     val dirs = mutableListOf<WorkspaceFolder>()
+    val foldersToRemove = mutableListOf<WorkspaceFolder>()
+    val librariesToRemove = mutableListOf<String>()
+    var shouldClearAll = false
 
     val builder = object : WorkspaceModelBuilder {
         override fun addFolder(workspaceFolder: WorkspaceFolder) {
@@ -31,6 +37,18 @@ suspend fun updateWorkspaceModel(updater: WorkspaceModelBuilder.() -> Unit) {
         override fun addLibrary(library: LSLibrary) {
             libs.add(library)
         }
+
+        override fun removeFolder(workspaceFolder: WorkspaceFolder) {
+            foldersToRemove.add(workspaceFolder)
+        }
+
+        override fun removeLibrary(libraryName: String) {
+            librariesToRemove.add(libraryName)
+        }
+
+        override fun clearAll() {
+            shouldClearAll = true
+        }
     }
 
     updater(builder)
@@ -38,6 +56,28 @@ suspend fun updateWorkspaceModel(updater: WorkspaceModelBuilder.() -> Unit) {
     workspaceStructure.updateWorkspaceModelDirectly { urlManager, storage ->
         val source = object : EntitySource {}
 
+        if (shouldClearAll) {
+            // Remove all existing content roots and libraries
+            storage.entities<ContentRootEntity>().forEach { storage.removeEntity(it) }
+            storage.entities<LibraryEntity>().forEach { storage.removeEntity(it) }
+        }
+
+        // Remove specific folders
+        for (folderToRemove in foldersToRemove) {
+            val folderUrl = urlManager.getOrCreateFromUrl(folderToRemove.uri.lspUriToIntellijUri()!!)
+            storage.entities<ContentRootEntity>()
+                .filter { it.url == folderUrl }
+                .forEach { storage.removeEntity(it) }
+        }
+
+        // Remove specific libraries
+        for (libraryToRemove in librariesToRemove) {
+            storage.entities<LibraryEntity>()
+                .filter { it.name == libraryToRemove }
+                .forEach { storage.removeEntity(it) }
+        }
+
+        // Add new libraries
         val libEntities = libs.map { lib ->
             storage addEntity LibraryEntity(
                 name = lib.name,
@@ -91,13 +131,18 @@ suspend fun updateWorkspaceModel(updater: WorkspaceModelBuilder.() -> Unit) {
         }
 
         storage.modifyModuleEntity(mainModule) {
-            dependencies += libEntities.map { libEntity ->
-                LibraryDependency(
-                    library = libEntity.symbolicId,
-                    exported = false,
-                    scope = DependencyScope.COMPILE
-                )
-            }
+            // Only add new library dependencies, don't duplicate existing ones
+            val existingLibNames = dependencies.filterIsInstance<LibraryDependency>().map { it.library.name }.toSet()
+            val newLibDependencies = libEntities
+                .filter { it.name !in existingLibNames }
+                .map { libEntity ->
+                    LibraryDependency(
+                        library = libEntity.symbolicId,
+                        exported = false,
+                        scope = DependencyScope.COMPILE
+                    )
+                }
+            dependencies += newLibDependencies
             contentRoots += newContentRoots
         }
     }    
