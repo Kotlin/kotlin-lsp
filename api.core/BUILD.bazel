@@ -21,6 +21,9 @@ jvm_library(
     "@community//platform/workspace/storage",
     "@community//platform/workspace/jps",
     "@community//fleet/lsp.protocol",
+    "@community//platform/lang-core",
+    "@community//platform/projectModel-api:projectModel",
+    "@community//platform/projectModel-impl",
   ]
 )
 
@@ -41,6 +44,9 @@ jvm_library(
     "@lib//:junit5Jupiter",
     "@community//platform/testFramework",
     "@community//platform/testFramework:testFramework_test_lib",
+    "@community//platform/lang-core",
+    "@community//platform/projectModel-api:projectModel",
+    "@community//platform/projectModel-impl",
   ]
 )
 

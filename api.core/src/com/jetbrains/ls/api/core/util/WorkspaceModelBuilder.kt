@@ -1,6 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.core.util
 
+import com.intellij.openapi.projectRoots.SdkType
 import com.intellij.platform.workspace.jps.entities.*
 import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.entities
@@ -14,6 +15,7 @@ import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.nameWithoutExtension
 
 interface WorkspaceModelBuilder {
+    fun addSdk(sdk: LSSdk)
     fun addFolder(workspaceFolder: WorkspaceFolder)
     fun addLibrary(library: LSLibrary)
     fun removeFolder(workspaceFolder: WorkspaceFolder)
@@ -23,6 +25,7 @@ interface WorkspaceModelBuilder {
 
 context(_: LSServer)
 suspend fun updateWorkspaceModel(updater: WorkspaceModelBuilder.() -> Unit) {
+    var sdkToAdd: LSSdk? = null
     val libs = mutableListOf<LSLibrary>()
     val dirs = mutableListOf<WorkspaceFolder>()
     val foldersToRemove = mutableListOf<WorkspaceFolder>()
@@ -30,6 +33,10 @@ suspend fun updateWorkspaceModel(updater: WorkspaceModelBuilder.() -> Unit) {
     var shouldClearAll = false
 
     val builder = object : WorkspaceModelBuilder {
+        override fun addSdk(sdk: LSSdk) {
+            sdkToAdd = sdk
+        }
+
         override fun addFolder(workspaceFolder: WorkspaceFolder) {
             dirs.add(workspaceFolder)
         }
@@ -145,13 +152,30 @@ suspend fun updateWorkspaceModel(updater: WorkspaceModelBuilder.() -> Unit) {
             dependencies += newLibDependencies
             contentRoots += newContentRoots
         }
-    }    
+
+        sdkToAdd?.let {
+            addSdk(
+                name = it.name,
+                type = it.type,
+                roots = it.roots,
+                urlManager = urlManager,
+                source = source,
+                storage = storage
+            )
+        }
+    }
 }
 
 data class LSLibrary(
     val roots: List<URI>,
     val name: String,
 )
+
+data class LSSdk(
+    val roots: List<URI>,
+    val name: String,
+    val type: SdkType) {
+}
 
 fun jarLibraries(directory: Path): List<LSLibrary> =
     directory

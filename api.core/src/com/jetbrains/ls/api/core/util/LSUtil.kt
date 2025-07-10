@@ -2,14 +2,31 @@
 package com.jetbrains.ls.api.core.util
 
 import com.intellij.openapi.editor.Document
+import com.intellij.openapi.projectRoots.SdkType
+import com.intellij.openapi.roots.OrderRootType
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.findPsiFile
+import com.intellij.platform.workspace.jps.entities.InheritedSdkDependency
+import com.intellij.platform.workspace.jps.entities.ModuleEntity
+import com.intellij.platform.workspace.jps.entities.SdkDependency
+import com.intellij.platform.workspace.jps.entities.SdkEntity
+import com.intellij.platform.workspace.jps.entities.SdkRoot
+import com.intellij.platform.workspace.jps.entities.SdkRootTypeId
+import com.intellij.platform.workspace.jps.entities.modifyModuleEntity
+import com.intellij.platform.workspace.storage.EntitySource
+import com.intellij.platform.workspace.storage.MutableEntityStorage
+import com.intellij.platform.workspace.storage.entities
+import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.psi.PsiFile
+import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.SdkBridgeImpl
+import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.SdkBridgeImpl.Companion.mutableSdkMap
+import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.customName
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.lsp.protocol.*
+import kotlin.sequences.forEach
 
 val VirtualFile.uri: URI
     get() = url.intellijUriToLspUri()
@@ -72,4 +89,38 @@ fun VirtualFile.findPsiFile(): PsiFile? {
 fun VirtualFile.isFromLibrary(): Boolean {
     val scheme = uri.scheme
     return scheme == "jrt" || scheme == "jar" || uri.uri.contains("!")
+}
+
+fun addSdk(
+    name: String,
+    type: SdkType,
+    roots: List<URI>,
+    urlManager: VirtualFileUrlManager,
+    source: EntitySource,
+    storage: MutableEntityStorage
+) {
+    val sdkEntity = SdkEntity(
+        name = name,
+        type = type.name,
+        roots = roots.map { root ->
+            SdkRoot(
+                urlManager.getOrCreateFromUrl(root.lspUriToIntellijUri()!!),
+                SdkRootTypeId(OrderRootType.CLASSES.customName),
+            )
+        },
+        additionalData = "",
+        entitySource = source
+    )
+    val jdk = storage addEntity sdkEntity
+
+    storage.mutableSdkMap.addMapping(jdk, SdkBridgeImpl(sdkEntity))
+
+    storage.entities<ModuleEntity>().forEach { module ->
+        storage.modifyModuleEntity(module) {
+            dependencies = (
+                    dependencies.filterNot { it is SdkDependency || it is InheritedSdkDependency }
+                            + SdkDependency(jdk.symbolicId)
+                    ).toMutableList()
+        }
+    }
 }

@@ -3,25 +3,28 @@ package com.jetbrains.ls.kotlinLsp.util
 
 import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
-import com.intellij.openapi.roots.OrderRootType
 import com.intellij.openapi.util.io.toNioPathOrNull
-import com.intellij.platform.workspace.jps.entities.*
-import com.intellij.platform.workspace.storage.EntitySource
-import com.intellij.platform.workspace.storage.MutableEntityStorage
-import com.intellij.platform.workspace.storage.entities
+import com.intellij.platform.workspace.jps.entities.SdkEntity
 import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
-import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.PathUtil
-import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.customName
 import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.core.util.*
+import com.jetbrains.ls.api.core.util.LSLibrary
+import com.jetbrains.ls.api.core.util.LSSdk
+import com.jetbrains.ls.api.core.util.WorkspaceModelBuilder
+import com.jetbrains.ls.api.core.util.addSdk
+import com.jetbrains.ls.api.core.util.intellijUriToLspUri
+import com.jetbrains.ls.api.core.util.toLspUri
 import com.jetbrains.ls.api.core.workspaceStructure
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.implementation.reportProgressMessage
-import com.jetbrains.lsp.protocol.*
+import com.jetbrains.lsp.protocol.MessageType
+import com.jetbrains.lsp.protocol.ShowMessageNotification
+import com.jetbrains.lsp.protocol.ShowMessageParams
+import com.jetbrains.lsp.protocol.URI
+import com.jetbrains.lsp.protocol.WorkDoneProgressParams
 import org.jetbrains.kotlin.idea.base.plugin.artifacts.KotlinArtifacts
 import org.jetbrains.kotlin.idea.compiler.configuration.isRunningFromSources
 import java.nio.file.Path
@@ -29,7 +32,11 @@ import java.nio.file.Paths
 import kotlin.io.path.isDirectory
 
 fun WorkspaceModelBuilder.addJdkFromJavaHome() {
-    addLibrary(LSLibrary(javaHome(), name = "jdk"))
+    addSdk(LSSdk(
+        name = "Java SDK",
+        type = JavaSdk.getInstance(),
+        roots = javaHome()
+    ))
 }
 
 fun WorkspaceModelBuilder.addKotlinStdlib() {
@@ -39,21 +46,6 @@ fun WorkspaceModelBuilder.addKotlinStdlib() {
                getKotlinStdlibPath().toLspUri(),
             ), name = "stdlib"
         )
-    )
-}
-
-internal fun createDefaultJDKEntity(source: EntitySource, virtualFileUrlManager: VirtualFileUrlManager): SdkEntity.Builder {
-    return SdkEntity(
-        name = "Java SDK",
-        type = JavaSdk.getInstance().name,
-        roots = javaHome().map { root ->
-            SdkRoot(
-                virtualFileUrlManager.getOrCreateFromUrl(root.lspUriToIntellijUri()!!),
-                SdkRootTypeId(OrderRootType.CLASSES.customName),
-            )
-        },
-        additionalData = "",
-        entitySource = source
     )
 }
 
@@ -76,7 +68,7 @@ fun getKotlinStdlibPath(): Path {
 
 fun WorkspaceModelBuilder.registerStdlibAndJdk() {
     addKotlinStdlib()
-    addJdkFromJavaHome()
+    addSdk( LSSdk(roots = javaHome(), name = "Java SDK", type = JavaSdk.getInstance()))
 }
 
 fun javaHome(): List<URI> {
@@ -103,32 +95,16 @@ suspend fun importProject(
         }
         val noSdk = imported.entities(SdkEntity::class.java).firstOrNull() == null
         if (noSdk) {
-            addDefaultJavaSDK(folderPath, virtualFileUrlManager, imported)
+            addSdk(
+                name = "Java SDK",
+                type = JavaSdk.getInstance(),
+                roots = javaHome(),
+                urlManager = virtualFileUrlManager,
+                source = WorkspaceEntitySource(folderPath.toVirtualFileUrl(virtualFileUrlManager)),
+                storage = imported
+            )
         }
         storage.applyChangesFrom(imported)
-        lspClient.reportProgressMessage(params, "Indexing project")
     }
     lspClient.reportProgressMessage(params, "Project is indexed")
-}
-
-private fun addDefaultJavaSDK(
-    folderPath: Path,
-    virtualFileUrlManager: VirtualFileUrlManager,
-    imported: MutableEntityStorage,
-) {
-    val entitySource = WorkspaceEntitySource(folderPath.toVirtualFileUrl(virtualFileUrlManager))
-
-    val jdk = imported addEntity createDefaultJDKEntity(
-        entitySource,
-        virtualFileUrlManager
-    )
-
-    for (module in imported.entities<ModuleEntity>()) {
-        imported.modifyModuleEntity(module) {
-            dependencies.firstOrNull { it is SdkDependency || it is InheritedSdkDependency }
-                ?.let { dependencies -= it }
-
-            dependencies += SdkDependency(jdk.symbolicId)
-        }
-    }
 }
