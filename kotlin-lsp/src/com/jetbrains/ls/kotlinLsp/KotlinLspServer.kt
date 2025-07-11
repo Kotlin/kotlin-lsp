@@ -23,7 +23,6 @@ import com.jetbrains.ls.snapshot.api.impl.core.createServerStarterAnalyzerImpl
 import com.jetbrains.lsp.implementation.*
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.kotlin.idea.base.plugin.artifacts.KotlinArtifacts
 import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutMode
@@ -69,7 +68,7 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
                     val stdout = System.out
                     System.setOut(System.err)
                     stdioConnection(System.`in`, stdout) { connection ->
-                        handleRequests(connection, runConfig, config, mode)
+                        handleRequests(connection, runConfig, config)
                     }
                 }
 
@@ -78,7 +77,7 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
                     tcpConnection(
                         mode.config,
                     ) { connection ->
-                        handleRequests(connection, runConfig, config, mode)
+                        handleRequests(connection, runConfig, config)
                     }
                 }
             }
@@ -87,15 +86,8 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
 }
 
 context(_: LSServerContext)
-private suspend fun handleRequests(connection: LspConnection, runConfig: KotlinLspServerRunConfig, config: LSConfiguration, mode: KotlinLspServerMode) {
-    val shutdownOnExitSignal = when (mode) {
-        is KotlinLspServerMode.Socket -> when (val tcpConfig = mode.config) {
-            is TcpConnectionConfig.Client -> true
-            is TcpConnectionConfig.Server -> !tcpConfig.isMultiClient
-        }
-        KotlinLspServerMode.Stdio -> true
-    }
-    val exitSignal = if (shutdownOnExitSignal) CompletableDeferred<Unit>() else null
+private suspend fun handleRequests(connection: LspConnection, runConfig: KotlinLspServerRunConfig, config: LSConfiguration) {
+    val exitSignal = CompletableDeferred<Unit>()
 
     withBaseProtocolFraming(connection, exitSignal) { incoming, outgoing ->
         withServer {
@@ -109,11 +101,7 @@ private suspend fun handleRequests(connection: LspConnection, runConfig: KotlinL
                     Client.contextElement(lspClient, runConfig)
                 },
             ) { lsp ->
-                if (exitSignal != null) {
-                    exitSignal.await()
-                } else {
-                    awaitCancellation()
-                }
+                exitSignal.await()
             }
         }
     }
