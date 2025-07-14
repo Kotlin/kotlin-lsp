@@ -1,6 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.kotlinLsp
 
+import com.intellij.openapi.application.ClassPathUtil.addKotlinStdlib
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.fileLogger
 import com.jetbrains.analyzer.filewatcher.FileWatcher
@@ -33,6 +34,7 @@ import java.lang.invoke.MethodHandles
 import java.net.URLDecoder
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.*
 import kotlin.io.path.*
 import kotlin.system.exitProcess
 
@@ -169,14 +171,12 @@ private fun getIJPathIfRunningFromSources(): String? {
 }
 
 
-fun createConfiguration(
-    additionalConfigurations: List<LSLanguageConfiguration> = emptyList(),
-): LSConfiguration {
+fun createConfiguration(): LSConfiguration {
     return LSConfiguration(
         buildList {
             add(LSCommonConfiguration)
             add(LSKotlinLanguageConfiguration)
-            addAll(additionalConfigurations)
+            addAll(getAdditionalLanguageConfigurations())
         }
     )
 }
@@ -200,5 +200,15 @@ fun createLspHandlers(config: LSConfiguration, exitSignal: CompletableDeferred<U
 private fun preloadKotlinStdlibWhenRunningFromSources() {
     if (isRunningFromSources) {
         KotlinArtifacts.kotlinStdlib
+    }
+}
+
+interface LanguageConfigurationProvider {
+    val languageConfiguration: LSLanguageConfiguration
+}
+
+private fun getAdditionalLanguageConfigurations(): List<LSLanguageConfiguration> {
+    return ServiceLoader.load(LanguageConfigurationProvider::class.java).map {
+        it.languageConfiguration
     }
 }
