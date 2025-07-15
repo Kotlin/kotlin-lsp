@@ -1,14 +1,21 @@
 import * as vscode from "vscode"
+import {workspace} from "vscode"
 import * as path from "node:path"
 import {promisify} from 'util';
 import {exec} from 'child_process';
-import * as fs from "node:fs"
-import {ExtensionContext, workspace} from "vscode"
-import {Disposable, LanguageClient, LanguageClientOptions, ServerOptions, State, StateChangeEvent, StreamInfo, TransportKind} from 'vscode-languageclient/node';
+import {
+    Disposable,
+    LanguageClient,
+    LanguageClientOptions,
+    ServerOptions,
+    State,
+    StateChangeEvent,
+    StreamInfo,
+    TransportKind
+} from 'vscode-languageclient/node';
 import * as net from "node:net"
 import * as os from 'os';
 import {extensionId, getContext} from "./extension"
-import { runWithJavaSupport } from "./java";
 
 const execAsync = promisify(exec);
 
@@ -185,9 +192,6 @@ async function getRunningJavaServerLspOptions(): Promise<ServerOptions | null> {
         'com.jetbrains.ls.kotlinLsp.KotlinLspServerKt', '--client',
         '--system-path', getContext().globalStorageUri.fsPath,
     );
-    if (runWithJavaSupport()) {
-        args.push('--with-java')
-    }
     return <ServerOptions>{
         command: javaCommand,
         args: args,
