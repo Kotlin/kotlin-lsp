@@ -10,6 +10,6 @@ import com.jetbrains.lsp.protocol.SetTraceNotificationType
 context(_: LSServer, _: LSConfiguration)
 internal fun LspHandlersBuilder.setTraceNotification() {
     notification(SetTraceNotificationType) { traceParams ->
-        Client.update { it.copy(trace = traceParams) }
+        Client.update { it.copy(trace = traceParams.value) }
     }
 }
