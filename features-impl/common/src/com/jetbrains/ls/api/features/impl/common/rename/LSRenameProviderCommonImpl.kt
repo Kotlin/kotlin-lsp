@@ -45,14 +45,15 @@ class LSRenameProviderCommonImpl(
             val processor = runReadAction a@{
                 val file = params.findVirtualFile() ?: return@a null
                 val psiFile = file.findPsiFile(project) ?: return@a null
-                originals[psiFile] = psiFile.text
                 val document = file.findDocument() ?: return@a null
                 val offset = document.offsetByPosition(params.position)
                 val psiSymbolService = PsiSymbolService.getInstance()
                 val targets = targetSymbols(psiFile, offset).mapNotNull { psiSymbolService.extractElementFromSymbol(it) }
                 val element = targets.firstOrNull()
                     ?: throwLspError(RenameRequestType, "This element cannot be renamed", Unit, ErrorCodes.InvalidParams, null)
-
+                element.containingFile?.let {
+                    originals[it] = it.text
+                }
                 Renamer(project, element, params.newName, true, false)
             } ?: return@withWriteAnalysisContext emptyList()
 
@@ -67,14 +68,10 @@ class LSRenameProviderCommonImpl(
                 CommandProcessor.getInstance().executeCommand(project, {
                     try {
                         runBlockingCancellable {
-                            val writeableFiles = originals.keys.map { it.virtualFile.uri }.toSet()
-
-                            withWritableFiles(writeableFiles) {
-                                withRenamesEnabled { processor.rename() }
-                                    .forEach { (oldUri, newUri) ->
-                                        renames.add(RenameFile(DocumentUri(oldUri), DocumentUri(newUri)))
-                                    }
-                            }
+                            withRenamesEnabled { processor.rename() }
+                                .forEach { (oldUri, newUri) ->
+                                    renames.add(RenameFile(DocumentUri(oldUri), DocumentUri(newUri)))
+                                }
                         }
                     } catch (e: Throwable) {
                         err.set(e)
