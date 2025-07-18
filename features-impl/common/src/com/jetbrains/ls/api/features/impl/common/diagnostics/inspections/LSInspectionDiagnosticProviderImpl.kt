@@ -108,6 +108,7 @@ class LSInspectionDiagnosticProviderImpl(
     private fun getInspections(language: Language): List<LocalInspectionTool> {
         return LocalInspectionEP.LOCAL_INSPECTION.extensionList
             .filter { it.language == language.id }
+            .filter { it.enabledByDefault }
             .filterNot { blacklist.containsImplementation(it.implementationClass) }
             .mapNotNull { inspection ->
                 runCatching {
