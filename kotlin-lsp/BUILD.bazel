@@ -1,10 +1,9 @@
 ### auto-generated section `build language-server.kotlin-lsp` start
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
-load("@community//build:tests-options.bzl", "jps_test")
-load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_test")
+load("@rules_jvm//:jvm.bzl", "jvm_library")
 
 create_kotlinc_options(
-  name = "custom",
+  name = "custom_kotlin-lsp",
   context_parameters = True,
   opt_in = ["org.jetbrains.kotlin.analysis.api.KaExperimentalApi"],
   when_guards = True
@@ -15,7 +14,7 @@ jvm_library(
   module_name = "language-server.kotlin-lsp",
   visibility = ["//visibility:public"],
   srcs = glob(["src/**/*.kt", "src/**/*.java"], allow_empty = True),
-  kotlinc_opts = ":custom",
+  kotlinc_opts = ":custom_kotlin-lsp",
   deps = [
     "@lib//:kotlin-stdlib",
     "@community//fleet/lsp.protocol",
@@ -63,7 +62,7 @@ jvm_library(
   name = "kotlin-lsp_test_lib",
   visibility = ["//visibility:public"],
   srcs = glob(["test/**/*.kt", "test/**/*.java"], allow_empty = True),
-  kotlinc_opts = ":custom",
+  kotlinc_opts = ":custom_kotlin-lsp",
   associates = [":kotlin-lsp"],
   deps = [
     "@lib//:kotlin-stdlib",
@@ -117,9 +116,13 @@ jvm_library(
     "@lib//:junit5Params",
   ]
 )
+### auto-generated section `build language-server.kotlin-lsp` end
+
+### auto-generated section `test language-server.kotlin-lsp` start
+load("@community//build:tests-options.bzl", "jps_test")
 
 jps_test(
   name = "kotlin-lsp_test",
   runtime_deps = [":kotlin-lsp_test_lib"]
 )
-### auto-generated section `build language-server.kotlin-lsp` end
+### auto-generated section `test language-server.kotlin-lsp` end

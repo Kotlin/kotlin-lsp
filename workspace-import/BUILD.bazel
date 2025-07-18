@@ -3,7 +3,7 @@ load("@community//build:compiler-options.bzl", "create_kotlinc_options")
 load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_resources")
 
 create_kotlinc_options(
-  name = "custom",
+  name = "custom_language-server-project-import",
   context_parameters = True
 )
 
@@ -18,7 +18,7 @@ jvm_library(
   module_name = "language-server.project-import",
   visibility = ["//visibility:public"],
   srcs = glob(["gen/**/*.kt", "gen/**/*.java", "src/**/*.kt", "src/**/*.java"], allow_empty = True),
-  kotlinc_opts = ":custom",
+  kotlinc_opts = ":custom_language-server-project-import",
   deps = [
     "@lib//:gradle",
     "@lib//:kotlin-stdlib",
