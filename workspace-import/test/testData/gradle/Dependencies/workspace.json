@@ -25,17 +25,17 @@
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.21",
                     "scope": "compile"
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.10",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.21",
                     "scope": "compile"
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.9.10",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
                     "scope": "compile"
                 },
                 {
@@ -51,11 +51,6 @@
                 {
                     "type": "library",
                     "name": "Gradle: ch.qos.logback:logback-classic:1.4.11",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-common:1.9.10",
                     "scope": "compile"
                 },
                 {
@@ -153,17 +148,17 @@
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.21",
                     "scope": "compile"
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.10",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.21",
                     "scope": "compile"
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.9.10",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
                     "scope": "compile"
                 },
                 {
@@ -179,11 +174,6 @@
                 {
                     "type": "library",
                     "name": "Gradle: ch.qos.logback:logback-classic:1.4.11",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-common:1.9.10",
                     "scope": "compile"
                 },
                 {
@@ -228,12 +218,12 @@
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-test-junit5:1.9.10",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-test-junit5:2.2.0",
                     "scope": "test"
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-test:1.9.10",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-test:2.2.0",
                     "scope": "test"
                 },
                 {
@@ -263,22 +253,22 @@
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.junit.jupiter:junit-jupiter-params:5.10.0",
+                    "name": "Gradle: org.junit.jupiter:junit-jupiter-params:5.10.1",
                     "scope": "test"
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.junit.jupiter:junit-jupiter-api:5.10.0",
+                    "name": "Gradle: org.junit.jupiter:junit-jupiter-api:5.10.1",
                     "scope": "test"
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.junit.platform:junit-platform-commons:1.10.0",
+                    "name": "Gradle: org.junit.platform:junit-platform-commons:1.10.1",
                     "scope": "test"
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.junit.jupiter:junit-jupiter:5.10.0",
+                    "name": "Gradle: org.junit.jupiter:junit-jupiter:5.10.1",
                     "scope": "test"
                 },
                 {
@@ -313,17 +303,17 @@
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.junit.platform:junit-platform-launcher:1.10.0",
+                    "name": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.10.1",
                     "scope": "test"
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.10.0",
+                    "name": "Gradle: org.junit.platform:junit-platform-launcher:1.10.1",
                     "scope": "test"
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.junit.platform:junit-platform-engine:1.10.0",
+                    "name": "Gradle: org.junit.platform:junit-platform-engine:1.10.1",
                     "scope": "test"
                 },
                 {
@@ -748,104 +738,87 @@
             }
         },
         {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-common:1.9.10",
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.21",
             "type": "java-imported",
             "roots": [
                 {
-                    "path": "kotlin-stdlib-common-1.9.10.jar"
-                }
-            ],
-            "properties": {
-                "attributes": {
-                    "groupId": "org.jetbrains.kotlin",
-                    "artifactId": "kotlin-stdlib-common",
-                    "version": "1.9.10",
-                    "baseVersion": "1.9.10"
-                }
-            }
-        },
-        {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.10",
-            "type": "java-imported",
-            "roots": [
-                {
-                    "path": "kotlin-stdlib-jdk7-1.9.10.jar"
+                    "path": "kotlin-stdlib-jdk7-1.8.21.jar"
                 }
             ],
             "properties": {
                 "attributes": {
                     "groupId": "org.jetbrains.kotlin",
                     "artifactId": "kotlin-stdlib-jdk7",
-                    "version": "1.9.10",
-                    "baseVersion": "1.9.10"
+                    "version": "1.8.21",
+                    "baseVersion": "1.8.21"
                 }
             }
         },
         {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10",
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.21",
             "type": "java-imported",
             "roots": [
                 {
-                    "path": "kotlin-stdlib-jdk8-1.9.10.jar"
+                    "path": "kotlin-stdlib-jdk8-1.8.21.jar"
                 }
             ],
             "properties": {
                 "attributes": {
                     "groupId": "org.jetbrains.kotlin",
                     "artifactId": "kotlin-stdlib-jdk8",
-                    "version": "1.9.10",
-                    "baseVersion": "1.9.10"
+                    "version": "1.8.21",
+                    "baseVersion": "1.8.21"
                 }
             }
         },
         {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.9.10",
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
             "type": "java-imported",
             "roots": [
                 {
-                    "path": "kotlin-stdlib-1.9.10.jar"
+                    "path": "kotlin-stdlib-2.2.0.jar"
                 }
             ],
             "properties": {
                 "attributes": {
                     "groupId": "org.jetbrains.kotlin",
                     "artifactId": "kotlin-stdlib",
-                    "version": "1.9.10",
-                    "baseVersion": "1.9.10"
+                    "version": "2.2.0",
+                    "baseVersion": "2.2.0"
                 }
             }
         },
         {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-test-junit5:1.9.10",
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-test-junit5:2.2.0",
             "type": "java-imported",
             "roots": [
                 {
-                    "path": "kotlin-test-junit5-1.9.10.jar"
+                    "path": "kotlin-test-junit5-2.2.0.jar"
                 }
             ],
             "properties": {
                 "attributes": {
                     "groupId": "org.jetbrains.kotlin",
                     "artifactId": "kotlin-test-junit5",
-                    "version": "1.9.10",
-                    "baseVersion": "1.9.10"
+                    "version": "2.2.0",
+                    "baseVersion": "2.2.0"
                 }
             }
         },
         {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-test:1.9.10",
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-test:2.2.0",
             "type": "java-imported",
             "roots": [
                 {
-                    "path": "kotlin-test-1.9.10.jar"
+                    "path": "kotlin-test-2.2.0.jar"
                 }
             ],
             "properties": {
                 "attributes": {
                     "groupId": "org.jetbrains.kotlin",
                     "artifactId": "kotlin-test",
-                    "version": "1.9.10",
-                    "baseVersion": "1.9.10"
+                    "version": "2.2.0",
+                    "baseVersion": "2.2.0"
                 }
             }
         },
@@ -884,121 +857,121 @@
             }
         },
         {
-            "name": "Gradle: org.junit.jupiter:junit-jupiter-api:5.10.0",
+            "name": "Gradle: org.junit.jupiter:junit-jupiter-api:5.10.1",
             "type": "java-imported",
             "roots": [
                 {
-                    "path": "junit-jupiter-api-5.10.0.jar"
+                    "path": "junit-jupiter-api-5.10.1.jar"
                 }
             ],
             "properties": {
                 "attributes": {
                     "groupId": "org.junit.jupiter",
                     "artifactId": "junit-jupiter-api",
-                    "version": "5.10.0",
-                    "baseVersion": "5.10.0"
+                    "version": "5.10.1",
+                    "baseVersion": "5.10.1"
                 }
             }
         },
         {
-            "name": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.10.0",
+            "name": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.10.1",
             "type": "java-imported",
             "roots": [
                 {
-                    "path": "junit-jupiter-engine-5.10.0.jar"
+                    "path": "junit-jupiter-engine-5.10.1.jar"
                 }
             ],
             "properties": {
                 "attributes": {
                     "groupId": "org.junit.jupiter",
                     "artifactId": "junit-jupiter-engine",
-                    "version": "5.10.0",
-                    "baseVersion": "5.10.0"
+                    "version": "5.10.1",
+                    "baseVersion": "5.10.1"
                 }
             }
         },
         {
-            "name": "Gradle: org.junit.jupiter:junit-jupiter-params:5.10.0",
+            "name": "Gradle: org.junit.jupiter:junit-jupiter-params:5.10.1",
             "type": "java-imported",
             "roots": [
                 {
-                    "path": "junit-jupiter-params-5.10.0.jar"
+                    "path": "junit-jupiter-params-5.10.1.jar"
                 }
             ],
             "properties": {
                 "attributes": {
                     "groupId": "org.junit.jupiter",
                     "artifactId": "junit-jupiter-params",
-                    "version": "5.10.0",
-                    "baseVersion": "5.10.0"
+                    "version": "5.10.1",
+                    "baseVersion": "5.10.1"
                 }
             }
         },
         {
-            "name": "Gradle: org.junit.jupiter:junit-jupiter:5.10.0",
+            "name": "Gradle: org.junit.jupiter:junit-jupiter:5.10.1",
             "type": "java-imported",
             "roots": [
                 {
-                    "path": "junit-jupiter-5.10.0.jar"
+                    "path": "junit-jupiter-5.10.1.jar"
                 }
             ],
             "properties": {
                 "attributes": {
                     "groupId": "org.junit.jupiter",
                     "artifactId": "junit-jupiter",
-                    "version": "5.10.0",
-                    "baseVersion": "5.10.0"
+                    "version": "5.10.1",
+                    "baseVersion": "5.10.1"
                 }
             }
         },
         {
-            "name": "Gradle: org.junit.platform:junit-platform-commons:1.10.0",
+            "name": "Gradle: org.junit.platform:junit-platform-commons:1.10.1",
             "type": "java-imported",
             "roots": [
                 {
-                    "path": "junit-platform-commons-1.10.0.jar"
+                    "path": "junit-platform-commons-1.10.1.jar"
                 }
             ],
             "properties": {
                 "attributes": {
                     "groupId": "org.junit.platform",
                     "artifactId": "junit-platform-commons",
-                    "version": "1.10.0",
-                    "baseVersion": "1.10.0"
+                    "version": "1.10.1",
+                    "baseVersion": "1.10.1"
                 }
             }
         },
         {
-            "name": "Gradle: org.junit.platform:junit-platform-engine:1.10.0",
+            "name": "Gradle: org.junit.platform:junit-platform-engine:1.10.1",
             "type": "java-imported",
             "roots": [
                 {
-                    "path": "junit-platform-engine-1.10.0.jar"
+                    "path": "junit-platform-engine-1.10.1.jar"
                 }
             ],
             "properties": {
                 "attributes": {
                     "groupId": "org.junit.platform",
                     "artifactId": "junit-platform-engine",
-                    "version": "1.10.0",
-                    "baseVersion": "1.10.0"
+                    "version": "1.10.1",
+                    "baseVersion": "1.10.1"
                 }
             }
         },
         {
-            "name": "Gradle: org.junit.platform:junit-platform-launcher:1.10.0",
+            "name": "Gradle: org.junit.platform:junit-platform-launcher:1.10.1",
             "type": "java-imported",
             "roots": [
                 {
-                    "path": "junit-platform-launcher-1.10.0.jar"
+                    "path": "junit-platform-launcher-1.10.1.jar"
                 }
             ],
             "properties": {
                 "attributes": {
                     "groupId": "org.junit.platform",
                     "artifactId": "junit-platform-launcher",
-                    "version": "1.10.0",
-                    "baseVersion": "1.10.0"
+                    "version": "1.10.1",
+                    "baseVersion": "1.10.1"
                 }
             }
         },
