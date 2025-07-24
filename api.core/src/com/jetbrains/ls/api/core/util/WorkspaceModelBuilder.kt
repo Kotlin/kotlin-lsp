@@ -6,6 +6,7 @@ import com.intellij.platform.workspace.jps.entities.*
 import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.entities
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.LSWorkspaceStructure
 import com.jetbrains.ls.api.core.workspaceStructure
 import com.jetbrains.lsp.protocol.URI
 import com.jetbrains.lsp.protocol.WorkspaceFolder
@@ -16,6 +17,7 @@ import kotlin.io.path.nameWithoutExtension
 
 interface WorkspaceModelBuilder {
     fun addSdk(sdk: LSSdk)
+    fun removeSdk(sdkName: String)
     fun addFolder(workspaceFolder: WorkspaceFolder)
     fun addLibrary(library: LSLibrary)
     fun removeFolder(workspaceFolder: WorkspaceFolder)
@@ -25,7 +27,12 @@ interface WorkspaceModelBuilder {
 
 context(_: LSServer)
 suspend fun updateWorkspaceModel(updater: WorkspaceModelBuilder.() -> Unit) {
+    workspaceStructure.updateWorkspaceModel(updater)
+}
+
+suspend fun LSWorkspaceStructure.updateWorkspaceModel(updater: WorkspaceModelBuilder.() -> Unit) {
     var sdkToAdd: LSSdk? = null
+    var sdkToRemove: String? = null
     val libs = mutableListOf<LSLibrary>()
     val dirs = mutableListOf<WorkspaceFolder>()
     val foldersToRemove = mutableListOf<WorkspaceFolder>()
@@ -35,6 +42,10 @@ suspend fun updateWorkspaceModel(updater: WorkspaceModelBuilder.() -> Unit) {
     val builder = object : WorkspaceModelBuilder {
         override fun addSdk(sdk: LSSdk) {
             sdkToAdd = sdk
+        }
+
+        override fun removeSdk(sdkName: String) {
+            sdkToRemove = sdkName
         }
 
         override fun addFolder(workspaceFolder: WorkspaceFolder) {
@@ -60,7 +71,7 @@ suspend fun updateWorkspaceModel(updater: WorkspaceModelBuilder.() -> Unit) {
 
     updater(builder)
 
-    workspaceStructure.updateWorkspaceModelDirectly { urlManager, storage ->
+    updateWorkspaceModelDirectly { urlManager, storage ->
         val source = object : EntitySource {}
 
         if (shouldClearAll) {
@@ -162,6 +173,15 @@ suspend fun updateWorkspaceModel(updater: WorkspaceModelBuilder.() -> Unit) {
                 source = source,
                 storage = storage
             )
+        }
+
+        if (sdkToRemove != null) {
+            storage.entities<SdkEntity>().filter { it.name == sdkToRemove }.forEach { storage.removeEntity(it) }
+            storage.entities(ModuleEntity::class.java).forEach { module ->
+                storage.modifyModuleEntity(module) {
+                    dependencies.removeAll { (it as? SdkDependency)?.sdk?.name == sdkToRemove }
+                }
+            }
         }
     }
 }
