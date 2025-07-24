@@ -112,6 +112,7 @@ internal fun LspHandlersBuilder<LspHandlerContext>.initializeRequest() {
                     retriggerCharacters = listOf(","),
                     workDoneProgress = false
                 ),
+                documentFormattingProvider = OrBoolean(true),
             ),
             serverInfo = InitializeResult.ServerInfo(
                 name = "Kotlin LSP by JetBrains",

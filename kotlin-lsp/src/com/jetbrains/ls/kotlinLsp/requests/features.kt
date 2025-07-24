@@ -8,6 +8,7 @@ import com.jetbrains.ls.api.features.commands.LSCommand
 import com.jetbrains.ls.api.features.completion.LSCompletion
 import com.jetbrains.ls.api.features.definition.LSDefinition
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnostic
+import com.jetbrains.ls.api.features.formatting.LSDocumentFormatting
 import com.jetbrains.ls.api.features.symbols.LSDocumentSymbols
 import com.jetbrains.ls.api.features.hover.LSHover
 import com.jetbrains.ls.api.features.references.LSReferences
@@ -41,4 +42,6 @@ internal fun LspHandlersBuilder<LspHandlerContext>.features() {
     request(DocumentSymbolRequest) { LSDocumentSymbols.getSymbols(it) }
     request(SignatureHelpRequest) { LSSignatureHelp.getSignatureHelp(it) }
     request(RenameRequestType) { LSRename.rename(it) }
+    request(FormattingRequestType) { LSDocumentFormatting.formatting(it) }
+    request(RangeFormattingRequestType) { LSDocumentFormatting.rangeFormatting(it) }
 }

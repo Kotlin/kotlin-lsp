@@ -5,13 +5,13 @@ import com.jetbrains.ls.api.features.impl.common.definitions.LSDefinitionProvide
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSSyntaxErrorDiagnosticProviderImpl
 import com.jetbrains.ls.api.features.impl.common.diagnostics.inspections.LSInspectionDiagnosticProviderImpl
 import com.jetbrains.ls.api.features.impl.common.diagnostics.inspections.LSInspectionFixesCodeActionProvider
+import com.jetbrains.ls.api.features.impl.common.formatting.LSFormattingProviderCommonImpl
 import com.jetbrains.ls.api.features.impl.common.kotlin.apiImpl.lsApiKotlinImpl
 import com.jetbrains.ls.api.features.impl.common.kotlin.codeActions.LSOrganizeImportsCodeActionProviderKotlinImpl
 import com.jetbrains.ls.api.features.impl.common.kotlin.codeActions.kotlinCodeActionsPlugins
 import com.jetbrains.ls.api.features.impl.common.kotlin.codeStyle.kotlinCodeStylePlugin
 import com.jetbrains.ls.api.features.impl.common.kotlin.completion.LSCompletionProviderKotlinImpl
 import com.jetbrains.ls.api.features.impl.common.kotlin.completion.kotlinCompletionPlugin
-import com.jetbrains.ls.api.features.impl.common.kotlin.completion.rekot.LSRekotBasedKotlinCompletionProviderImpl
 import com.jetbrains.ls.api.features.impl.common.kotlin.definitions.LSKotlinPackageDefinitionProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.compiler.LSKotlinCompilerDiagnosticsFixesCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.compiler.LSKotlinCompilerDiagnosticsProvider
@@ -48,6 +48,7 @@ val LSKotlinLanguageConfiguration: LSLanguageConfiguration = LSLanguageConfigura
         LSKotlinIntentionCodeActionProviderImpl,
         LSSignatureHelpKotlinImpl,
         LSRenameProviderCommonImpl(setOf(LSKotlinLanguage)),
+        LSFormattingProviderCommonImpl(setOf(LSKotlinLanguage)),
     ),
     plugins = listOf(
         lsApiKotlinImpl,
