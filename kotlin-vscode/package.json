@@ -18,7 +18,7 @@
   "categories": [
     "Programming Languages"
   ],
-  "main": "./client/out/extension",
+  "main": "./out/extension",
   "activationEvents": [
     "onLanguage:kotlin",
     "onCommand:jetbrains.activateLsp"
@@ -78,11 +78,15 @@
     ]
   },
   "devDependencies": {
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "compile": "^0.0.2",
+    "run": "^1.5.0",
+    "@types/vscode": "^1.96.0",
+    "@types/node": "^22.13.8",
+    "vscode-tmgrammar-test": "^0.1.3"
   },
   "dependencies": {
-    "compile": "^0.0.2",
-    "run": "^1.5.0"
+    "vscode-languageclient": "9.0.1"
   },
   "scripts": {
     "apply-intellij": "node apply-intellij.js",
@@ -90,6 +94,7 @@
     "compile": "tsc -b",
     "watch": "tsc -b -w",
     "unpack-server": "rm -rf server/extracted && mkdir -p server/extracted && unzip -o $LSP_ZIP_PATH -d server/extracted",
-    "postinstall": "cd client && npm install"
+    "test": "vscode-tmgrammar-snap --grammar syntaxes/kotlin.tmLanguage.json --scope source.kotlin testSources/tokenization/*.kt",
+    "updateGrammarTests": "vscode-tmgrammar-snap --grammar syntaxes/kotlin.tmLanguage.json --scope source.kotlin --updateSnapshot testSources/tokenization/*.kt"
   }
 }
