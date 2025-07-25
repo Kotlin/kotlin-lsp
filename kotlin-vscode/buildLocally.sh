@@ -72,4 +72,5 @@ restore_original() {
 
 trap restore_original EXIT
 
+npm install
 npx --yes vsce package --baseContentUrl=https://github.com/Kotlin/kotlin-lsp/tree/main/kotlin-vscode
