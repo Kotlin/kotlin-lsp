@@ -14,6 +14,7 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
+import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.core.withWriteAnalysisContext
 import com.jetbrains.ls.api.features.completion.CompletionItemData
 import com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider
@@ -27,12 +28,7 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider {
 
     context(_: LSServer)
     override suspend fun provideCompletion(params: CompletionParams): CompletionList {
-        return withWriteAnalysisContext {
-            /*
-                TODO we modify nothing here, but withWriteAnalysisContext runs on an empty snapshot without LL FIR caches
-                and there some problems with psi-cache <-> fir cache consistency: LSP-170
-                so here should be a regular [withAnalysisContext] with hot LL FIR/PSI caches, which will speed the completion up
-            */
+        return withAnalysisContext {
             invokeAndWaitIfNeeded {
                 runWriteAction {
                     val file = params.textDocument.findVirtualFile() ?: return@runWriteAction EMPTY_COMPLETION_LIST
