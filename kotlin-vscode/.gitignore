@@ -1,4 +1,5 @@
 out/
+dist/
 server/extracted
 node_modules
 client/node_modules

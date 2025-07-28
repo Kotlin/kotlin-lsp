@@ -1,5 +1,11 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
-    kotlin("jvm") version "1.9.10"
+    kotlin("jvm") version "2.2.0"
+}
+
+repositories {
+    mavenCentral()
 }
 
 subprojects {
@@ -9,7 +15,9 @@ subprojects {
 
     plugins.apply("org.jetbrains.kotlin.jvm")
 
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = "17"
+    kotlin {
+        compilerOptions {
+            jvmTarget = JvmTarget.fromTarget("17")
+        }
     }
 }

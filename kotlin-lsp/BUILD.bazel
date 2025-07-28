@@ -4,9 +4,9 @@ load("@rules_jvm//:jvm.bzl", "jvm_library")
 
 create_kotlinc_options(
   name = "custom_kotlin-lsp",
-  context_parameters = True,
   opt_in = ["org.jetbrains.kotlin.analysis.api.KaExperimentalApi"],
-  when_guards = True
+  x_context_parameters = True,
+  x_when_guards = True
 )
 
 jvm_library(

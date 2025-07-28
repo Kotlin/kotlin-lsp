@@ -4,7 +4,7 @@ load("@rules_jvm//:jvm.bzl", "jvm_library")
 
 create_kotlinc_options(
   name = "custom_test",
-  context_parameters = True
+  x_context_parameters = True
 )
 
 jvm_library(

@@ -3,11 +3,12 @@ package com.jetbrains.ls.kotlinLsp.requests.core
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.documents
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.LspHandlersBuilder
 import com.jetbrains.lsp.protocol.DocumentSync
 
 context(_: LSServer)
-internal fun LspHandlersBuilder.fileUpdateRequests() {
+internal fun LspHandlersBuilder<LspHandlerContext>.fileUpdateRequests() {
     notification(DocumentSync.DidOpen) { didOpen ->
         documents.didOpen(
             uri = didOpen.textDocument.uri.uri,

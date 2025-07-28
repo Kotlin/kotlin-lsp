@@ -4,7 +4,7 @@ load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_resources")
 
 create_kotlinc_options(
   name = "custom_language-server-project-import",
-  context_parameters = True
+  x_context_parameters = True
 )
 
 jvm_resources(

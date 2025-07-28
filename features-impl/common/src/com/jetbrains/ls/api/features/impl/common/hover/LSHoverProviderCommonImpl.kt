@@ -37,7 +37,7 @@ abstract class AbstractLSHoverProvider : LSHoverProvider {
                 val markdown = generateMarkdownForElementReferencedBy(file, reference) ?: return@a null
 
                 Hover(
-                    MarkupContent(MarkupKindType.Markdown, markdown),
+                    Hover.Content.Markup(MarkupContent(MarkupKindType.Markdown, markdown)),
                     range = reference.element.textRange.toLspRange(document),
                 )
             }
