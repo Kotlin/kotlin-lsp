@@ -101,7 +101,6 @@ private suspend fun handleRequests(connection: LspConnection, runConfig: KotlinL
                 incoming,
                 outgoing,
                 handler,
-                createContext = ::LspHandlerContext,
                 createCoroutineContext = { lspClient ->
                     Client.contextElement(lspClient, runConfig)
                 },

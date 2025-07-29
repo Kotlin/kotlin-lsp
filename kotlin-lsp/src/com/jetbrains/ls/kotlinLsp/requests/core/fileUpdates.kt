@@ -8,7 +8,7 @@ import com.jetbrains.lsp.implementation.LspHandlersBuilder
 import com.jetbrains.lsp.protocol.DocumentSync
 
 context(_: LSServer)
-internal fun LspHandlersBuilder<LspHandlerContext>.fileUpdateRequests() {
+internal fun LspHandlersBuilder.fileUpdateRequests() {
     notification(DocumentSync.DidOpen) { didOpen ->
         documents.didOpen(
             uri = didOpen.textDocument.uri.uri,

@@ -33,7 +33,7 @@ import java.nio.file.Path
 import kotlin.io.path.*
 
 context(_: LSServer, _: LSConfiguration)
-internal fun LspHandlersBuilder<LspHandlerContext>.initializeRequest() {
+internal fun LspHandlersBuilder.initializeRequest() {
     request(Initialize) { initParams ->
         Client.update { it.copy(trace = initParams.trace) }
 

@@ -10,7 +10,7 @@ import com.jetbrains.lsp.protocol.Shutdown
 import kotlinx.coroutines.CompletableDeferred
 
 context(_: LSServer, _: LSConfiguration)
-internal fun LspHandlersBuilder<LspHandlerContext>.shutdownRequest(exitSignal: CompletableDeferred<Unit>?) {
+internal fun LspHandlersBuilder.shutdownRequest(exitSignal: CompletableDeferred<Unit>?) {
     request(Shutdown) {
         // TODO All the requests and notifications after this one should return InvalidRequest
         // https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#shutdown

@@ -27,7 +27,7 @@ import com.jetbrains.lsp.protocol.SemanticTokensRequests.SemanticTokensRangeRequ
 import com.jetbrains.lsp.protocol.WorkspaceSymbolRequests.WorkspaceSymbolRequest
 
 context(_: LSServer, _: LSConfiguration)
-internal fun LspHandlersBuilder<LspHandlerContext>.features() {
+internal fun LspHandlersBuilder.features() {
     request(CodeActionRequest) { LSCodeActions.getCodeActions(it).map{ CommandOrCodeAction.CodeAction(it) } }
     request(ExecuteCommand) { LSCommand.executeCommand(it) }
     request(CompletionRequestType) { LSCompletion.getCompletion(it).let { CompletionResult.MaybeIncomplete(it) } }
