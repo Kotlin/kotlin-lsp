@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features.impl.common.kotlin.hover
 
 import com.intellij.psi.PsiElement
+import com.jetbrains.ls.api.features.impl.common.documentaiton.formatDocComment
 import com.jetbrains.ls.api.features.impl.common.hover.AbstractLSHoverProvider
 import com.jetbrains.ls.api.features.impl.common.hover.markdownMultilineCode
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
@@ -13,13 +14,8 @@ internal class LSMarkdownDocProviderKotlinImpl : AbstractLSHoverProvider.LSMarkd
         val ktElement = element.unwrapped as? KtDeclaration ?: return null
         val kdDocText = ktElement.docComment?.text ?: return null
         return markdownMultilineCode(
-            kdDocText.formatKdoc(),
+            formatDocComment(kdDocText),
             language = LSKotlinLanguage.lspName
         )
-    }
-
-    private fun String.formatKdoc(): String {
-        val trimmedLines = trim().lines().map { it.trim() }.filter { it.isNotEmpty() }
-        return trimmedLines.joinToString(separator = "\n") { if (it.startsWith("/*")) it else " $it" }
     }
 }
