@@ -75,6 +75,7 @@ jvm_library(
     "@community//plugins/kotlin/completion/api",
     "//codeServer/core",
     "@community//plugins/kotlin/fir",
+    "@community//plugins/kotlin/navigation",
   ],
   runtime_deps = [":kotlin_resources"]
 )

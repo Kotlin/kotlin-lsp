@@ -60,15 +60,20 @@ object JpsWorkspaceImporter : WorkspaceImporter {
                                 val libEntity = LibraryEntity(
                                     name = library.name,
                                     tableId = ProjectLibraryTableId,
-                                    roots = library.getPaths(JpsOrderRootType.COMPILED).mapNotNull {
-                                        if (!it.exists()) {
-                                            onUnresolvedDependency(it.toString())
-                                            return@mapNotNull null
+                                    roots = buildList {
+                                        library.getPaths(JpsOrderRootType.COMPILED).mapNotNullTo(this) {
+                                            if (!it.exists()) {
+                                                onUnresolvedDependency(it.toString())
+                                                return@mapNotNull null
+                                            }
+                                            LibraryRoot(
+                                                it.toIntellijUri(virtualFileUrlManager),
+                                                LibraryRootTypeId.COMPILED
+                                            )
                                         }
-                                        LibraryRoot(
-                                            it.toIntellijUri(virtualFileUrlManager),
-                                            LibraryRootTypeId.COMPILED
-                                        )
+                                        library.getPaths(JpsOrderRootType.SOURCES).mapTo(this) {
+                                            LibraryRoot(it.toIntellijUri(virtualFileUrlManager), LibraryRootTypeId.SOURCES)
+                                        }
                                     },
                                     entitySource = entitySource
                                 ) {

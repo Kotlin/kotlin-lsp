@@ -42,9 +42,9 @@ fun WorkspaceModelBuilder.addJdkFromJavaHome() {
 fun WorkspaceModelBuilder.addKotlinStdlib() {
     addLibrary(
         LSLibrary(
-            listOf(
-               getKotlinStdlibPath().toLspUri(),
-            ), name = "stdlib"
+            binaryRoots = listOf(getKotlinStdlibPath().toLspUri()),
+            sourceRoots = listOfNotNull(getKotlinStdlibSourcesPath()?.toLspUri()),
+            name = "stdlib"
         )
     )
 }
@@ -65,6 +65,20 @@ fun getKotlinStdlibPath(): Path {
         }
     }
 }
+
+fun getKotlinStdlibSourcesPath(): Path? {
+    return when {
+        isRunningFromSources -> {
+            // get kotlin stdlib used for monorepo compilation
+            KotlinArtifacts.kotlinStdlibSources.toPath()
+        }
+
+        else -> {
+           null // TODO we should probably bundle the sources jar
+        }
+    }
+}
+
 
 fun WorkspaceModelBuilder.registerStdlibAndJdk() {
     addKotlinStdlib()

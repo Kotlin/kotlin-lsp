@@ -76,5 +76,6 @@
     <orderEntry type="module" module-name="kotlin.completion.api" />
     <orderEntry type="module" module-name="intellij.codeServer.core" />
     <orderEntry type="module" module-name="kotlin.fir" />
+    <orderEntry type="module" module-name="kotlin.navigation" />
   </component>
 </module>

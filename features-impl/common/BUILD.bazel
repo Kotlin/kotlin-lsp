@@ -51,6 +51,7 @@ jvm_library(
     "@community//platform/projectModel-api:projectModel",
     "@community//platform/platform-impl:ide-impl",
     "@community//platform/usageView",
+    "@community//platform/ide-core",
   ],
   runtime_deps = [":common_resources"]
 )

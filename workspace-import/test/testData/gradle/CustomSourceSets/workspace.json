@@ -281,6 +281,10 @@
             "roots": [
                 {
                     "path": "kotlin-reflect-2.2.0.jar"
+                },
+                {
+                    "path": "kotlin-reflect-2.2.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -298,6 +302,10 @@
             "roots": [
                 {
                     "path": "kotlin-stdlib-2.2.0.jar"
+                },
+                {
+                    "path": "kotlin-stdlib-2.2.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -315,6 +323,10 @@
             "roots": [
                 {
                     "path": "annotations-13.0.jar"
+                },
+                {
+                    "path": "annotations-13.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {

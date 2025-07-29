@@ -100,11 +100,19 @@ suspend fun LSWorkspaceStructure.updateWorkspaceModel(updater: WorkspaceModelBui
             storage addEntity LibraryEntity(
                 name = lib.name,
                 tableId = LibraryTableId.ProjectLibraryTableId,
-                roots = lib.roots.map { root ->
-                    LibraryRoot(
-                        url = urlManager.getOrCreateFromUrl(root.lspUriToIntellijUri()!!),
-                        type = LibraryRootTypeId.COMPILED
-                    )
+                roots = buildList {
+                    lib.binaryRoots.mapTo(this) { root ->
+                        LibraryRoot(
+                            url = urlManager.getOrCreateFromUrl(root.lspUriToIntellijUri()!!),
+                            type = LibraryRootTypeId.COMPILED
+                        )
+                    }
+                    lib.sourceRoots.mapTo(this) { root ->
+                        LibraryRoot(
+                            url = urlManager.getOrCreateFromUrl(root.lspUriToIntellijUri()!!),
+                            type = LibraryRootTypeId.SOURCES
+                        )
+                    }
                 },
                 entitySource = source,
             )
@@ -187,7 +195,8 @@ suspend fun LSWorkspaceStructure.updateWorkspaceModel(updater: WorkspaceModelBui
 }
 
 data class LSLibrary(
-    val roots: List<URI>,
+    val binaryRoots: List<URI>,
+    val sourceRoots: List<URI> = emptyList(),
     val name: String,
 )
 
@@ -203,7 +212,7 @@ fun jarLibraries(directory: Path): List<LSLibrary> =
         .filter { it.extension == "jar" }
         .map { library ->
             LSLibrary(
-                roots = listOf(library.toLspUri()),
+                binaryRoots = listOf(library.toLspUri()),
                 name = library.nameWithoutExtension,
             )
         }

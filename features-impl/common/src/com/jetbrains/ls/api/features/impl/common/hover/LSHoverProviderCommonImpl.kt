@@ -54,7 +54,7 @@ abstract class AbstractLSHoverProvider : LSHoverProvider {
 
         companion object {
             fun getMarkdownDoc(element: PsiElement): String? =
-                forLanguage(element.language)?.getMarkdownDoc(element)
+                forLanguage(element.language)?.getMarkdownDoc(element.navigationElement ?: element)
 
             fun getMarkdownDocAsStringOrMarkupContent(psiElement: PsiElement): StringOrMarkupContent? {
                 val doc = getMarkdownDoc(psiElement) ?: return null

@@ -9,7 +9,6 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.util.uri
-import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.lsp.protocol.DocumentUri
 import com.jetbrains.lsp.protocol.Location
 
@@ -27,6 +26,10 @@ internal fun PsiElement.getLspLocation(): Location? {
 }
 
 fun PsiElement.getLspLocationForDefinition(): Location? {
+    val navigationElement = getNavigationElement()
+    if (navigationElement != null && navigationElement != this) {
+        return navigationElement.getLspLocationForDefinition()
+    }
     (this as? PsiNameIdentifierOwner)?.nameIdentifier?.getLspLocation()?.let { return it }
     return getLspLocation()
 }

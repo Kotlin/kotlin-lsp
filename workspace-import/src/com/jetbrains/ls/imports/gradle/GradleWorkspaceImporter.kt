@@ -58,11 +58,17 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                                                     val libEntity = LibraryEntity(
                                                         name = name,
                                                         tableId = ProjectLibraryTableId,
-                                                        roots = listOf(
+                                                        roots = listOfNotNull(
                                                             LibraryRoot(
                                                                 dependency.file.toPath().toIntellijUri(virtualFileUrlManager),
                                                                 LibraryRootTypeId.COMPILED
-                                                            )
+                                                            ),
+                                                            dependency.source?.let {
+                                                                LibraryRoot(
+                                                                    it.toPath().toIntellijUri(virtualFileUrlManager),
+                                                                    LibraryRootTypeId.SOURCES
+                                                                )
+                                                            }
                                                         ),
                                                         entitySource = entitySource
                                                     ) {
