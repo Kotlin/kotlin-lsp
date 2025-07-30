@@ -4,6 +4,7 @@ package com.jetbrains.ls.kotlinLsp
 import com.intellij.openapi.application.ClassPathUtil.addKotlinStdlib
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.fileLogger
+import com.intellij.openapi.util.io.FileUtilRt
 import com.jetbrains.analyzer.filewatcher.FileWatcher
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.LSServerContext
@@ -30,6 +31,7 @@ import org.jetbrains.kotlin.idea.base.plugin.artifacts.KotlinArtifacts
 import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutMode
 import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutModeProvider
 import org.jetbrains.kotlin.idea.compiler.configuration.isRunningFromSources
+import java.io.File
 import java.lang.invoke.MethodHandles
 import java.net.URLDecoder
 import java.nio.file.Path
@@ -134,7 +136,7 @@ private fun initIdeaPaths(systemPath: Path?) {
 
 private fun getInstallationPath(): Path {
     val path = MethodHandles.lookup().lookupClass().getProtectionDomain().codeSource.location.path
-    val jarPath = Paths.get(URLDecoder.decode(path, "UTF-8"))
+    val jarPath = Paths.get(FileUtilRt.toSystemDependentName(URLDecoder.decode(path, "UTF-8")).removePrefix("\\"))
     check(jarPath.extension == "jar") { "Path to jar is expected to end with .jar: $jarPath" }
     val libsDir = jarPath.parent
     check(libsDir.name == "lib") { "lib dir is expected to be named `lib`: $libsDir" }
@@ -165,7 +167,8 @@ private fun isRunningFromProductionLsp(): Boolean {
 private fun getIJPathIfRunningFromSources(): String? {
     val serverClass = Class.forName("com.jetbrains.ls.kotlinLsp.KotlinLspServerKt")
     val jar = PathManager.getJarForClass(serverClass)?.absolutePathString() ?: return null
-    val expectedOutDir = "/out/classes/production/language-server.kotlin-lsp"
+    val SEP = File.separator
+    val expectedOutDir = "${SEP}out${SEP}classes${SEP}production${SEP}language-server.kotlin-lsp"
     if (!jar.endsWith(expectedOutDir)) return null
     return jar.removeSuffix(expectedOutDir)
 }
