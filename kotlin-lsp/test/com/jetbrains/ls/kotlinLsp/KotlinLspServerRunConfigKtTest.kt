@@ -4,18 +4,25 @@ package com.jetbrains.ls.kotlinLsp
 import com.jetbrains.lsp.implementation.TcpConnectionConfig
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import java.nio.file.Paths
 
 
 class KotlinLspServerRunConfigKtTest {
     @Test
     fun `stdio`() {
-        doConsistencyTest(KotlinLspServerRunConfig(KotlinLspServerMode.Stdio))
+        doConsistencyTest(KotlinLspServerRunConfig(KotlinLspServerMode.Stdio, systemPath = null))
     }
 
     @Test
     fun `tcp client`() {
-        doConsistencyTest(KotlinLspServerRunConfig(KotlinLspServerMode.Socket(
-            TcpConnectionConfig.Client(host = "127.0.0.1", port = 9999))))
+        doConsistencyTest(
+            KotlinLspServerRunConfig(
+                KotlinLspServerMode.Socket(
+                    TcpConnectionConfig.Client(host = "127.0.0.1", port = 9999)
+                ),
+                systemPath = Paths.get("/path/to/system"),
+            )
+        )
     }
 
     @Test
@@ -28,7 +35,8 @@ class KotlinLspServerRunConfigKtTest {
                         port = 9999,
                         isMultiClient = false
                     )
-                )
+                ),
+                systemPath = Paths.get("/path/to/system"),
             )
         )
     }
@@ -43,7 +51,8 @@ class KotlinLspServerRunConfigKtTest {
                         port = 9999,
                         isMultiClient = true
                     )
-                )
+                ),
+                systemPath = null,
             )
         )
     }

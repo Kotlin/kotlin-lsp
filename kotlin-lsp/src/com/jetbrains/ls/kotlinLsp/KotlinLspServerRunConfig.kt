@@ -10,7 +10,7 @@ import java.nio.file.Path
 
 data class KotlinLspServerRunConfig(
     val mode: KotlinLspServerMode,
-    val systemPath: Path? = null,
+    val systemPath: Path?,
 )
 
 sealed interface KotlinLspServerMode {
@@ -79,17 +79,20 @@ private fun String.toSocketConfig(): SocketConfig {
     return SocketConfig(host, port)
 }
 
-fun KotlinLspServerRunConfig.toArguments(): List<String> =
+fun KotlinLspServerRunConfig.toArguments(): List<String> = buildList {
     when (mode) {
-        is KotlinLspServerMode.Stdio -> listOf("--stdio")
+        is KotlinLspServerMode.Stdio -> add("--stdio")
         is KotlinLspServerMode.Socket -> when (val tcpConfig = mode.config) {
-            is TcpConnectionConfig.Client -> buildList {
+            is TcpConnectionConfig.Client -> {
                 add("--client")
                 add("--socket=${tcpConfig.host}:${tcpConfig.port}")
             }
-            is TcpConnectionConfig.Server -> buildList {
+
+            is TcpConnectionConfig.Server ->  {
                 add("--socket=${tcpConfig.host}:${tcpConfig.port}")
                 if (tcpConfig.isMultiClient) add("--multi-client")
             }
         }
     }
+    if (systemPath != null) add("--system-path=$systemPath")
+}
