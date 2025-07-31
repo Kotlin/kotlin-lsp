@@ -7,8 +7,8 @@ import com.jetbrains.ls.api.core.util.jarLibraries
 import com.jetbrains.ls.api.core.util.toLspUri
 import com.jetbrains.ls.api.core.util.updateWorkspaceModel
 import com.jetbrains.ls.api.features.LSConfiguration
-import com.jetbrains.ls.api.features.codeActions.LSCodeActions
 import com.jetbrains.ls.api.features.allCommandDescriptors
+import com.jetbrains.ls.api.features.codeActions.LSCodeActions
 import com.jetbrains.ls.api.features.completion.LSCompletionProvider
 import com.jetbrains.ls.api.features.entries
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokens
@@ -20,12 +20,7 @@ import com.jetbrains.ls.kotlinLsp.connection.Client
 import com.jetbrains.ls.kotlinLsp.util.importProject
 import com.jetbrains.ls.kotlinLsp.util.registerStdlibAndJdk
 import com.jetbrains.ls.kotlinLsp.util.sendSystemInfoToClient
-import com.jetbrains.lsp.implementation.LspClient
-import com.jetbrains.lsp.implementation.LspHandlerContext
-import com.jetbrains.lsp.implementation.LspHandlersBuilder
-import com.jetbrains.lsp.implementation.lspClient
-import com.jetbrains.lsp.implementation.reportProgress
-import com.jetbrains.lsp.implementation.reportProgressMessage
+import com.jetbrains.lsp.implementation.*
 import com.jetbrains.lsp.protocol.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.JsonPrimitive
@@ -145,8 +140,14 @@ private suspend fun indexFolders(
         )
     )
 
-    for (folder in folders) {
-        initFolder(folder, params)
+    if (folders.isNotEmpty()) {
+        for (folder in folders) {
+            initFolder(folder, params)
+        }
+    }
+    else {
+        lspClient.reportProgressMessage(params, "Using light mode")
+        initLightEditMode(params, null)
     }
 
     lspClient.reportProgress(
@@ -208,28 +209,28 @@ private suspend fun initFolder(
     } else {
         LOG.info("No build system found for $folderPath, switching to light edit")
     }
-    initFolderForLightEdit(folder, params)
-}
-
-
-context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
-private suspend fun initFolderForLightEdit(
-    folder: WorkspaceFolder,
-    params: InitializeParams,
-) {
-    val folderPath = folder.path()
 
     lspClient.reportProgressMessage(params, "No build system found for $folderPath, using light mode")
+    initLightEditMode(params, folder)
+}
+
+context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
+private suspend fun initLightEditMode(
+    params: InitializeParams,
+    folder: WorkspaceFolder?,
+) {
     updateWorkspaceModel {
         registerStdlibAndJdk()
-        addFolder(folder)
-        if (folder.uri.scheme == URI.Schemas.FILE) {
-            val path = folderPath
-            val librariesDir = path / "libraries"
-            if (librariesDir.isDirectory()) {
-                lspClient.reportProgressMessage(params, "Found `libraries` directory: $librariesDir, adding")
-                jarLibraries(librariesDir).forEach { lib ->
-                    addLibrary(lib)
+        if (folder != null) {
+            addFolder(folder)
+            if (folder.uri.scheme == URI.Schemas.FILE) {
+                val path = folder.path()
+                val librariesDir = path / "libraries"
+                if (librariesDir.isDirectory()) {
+                    lspClient.reportProgressMessage(params, "Found `libraries` directory: $librariesDir, adding")
+                    jarLibraries(librariesDir).forEach { lib ->
+                        addLibrary(lib)
+                    }
                 }
             }
         }
