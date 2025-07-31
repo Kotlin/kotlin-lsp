@@ -37,6 +37,8 @@ jvm_library(
     "@community//java/openapi:java",
     "@community//plugins/kotlin/base/facet",
     "@community//jps/model-api:model",
+    "@community//jps/model-impl",
+    "@community//platform/eel-provider",
     "@lib//:kotlinc-kotlin-jps-common",
     "@lib//:kotlinc-kotlin-compiler-common",
   ],
