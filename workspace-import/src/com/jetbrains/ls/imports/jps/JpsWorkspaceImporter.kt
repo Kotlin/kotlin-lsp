@@ -7,6 +7,7 @@ import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.impl.JavaHomeFinder
 import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
 import com.intellij.openapi.roots.OrderRootType
+import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.platform.eel.provider.getEelDescriptor
 import com.intellij.platform.workspace.jps.entities.*
 import com.intellij.platform.workspace.jps.entities.LibraryTableId.ProjectLibraryTableId
@@ -30,6 +31,7 @@ import org.jetbrains.jps.model.module.JpsModuleSourceDependency
 import org.jetbrains.jps.model.module.JpsSdkDependency
 import org.jetbrains.jps.model.serialization.*
 import org.jetbrains.jps.model.serialization.impl.JpsPathVariablesConfigurationImpl
+import org.jetbrains.jps.util.JpsPathUtil
 import org.jetbrains.kotlin.config.isHmpp
 import org.jetbrains.kotlin.idea.facet.KotlinFacetType
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
@@ -72,18 +74,19 @@ object JpsWorkspaceImporter : WorkspaceImporter {
                                     name = library.name,
                                     tableId = ProjectLibraryTableId,
                                     roots = buildList {
-                                        library.getPaths(JpsOrderRootType.COMPILED).mapNotNullTo(this) {
-                                            if (!it.exists()) {
-                                                onUnresolvedDependency(it.toString())
+                                        library.getRootUrls(JpsOrderRootType.COMPILED).mapNotNullTo(this) { url ->
+                                            val fileUrl = virtualFileUrlManager.getOrCreateFromUrl(url)
+                                            if (!Path.of(JpsPathUtil.urlToPath(url)).exists()) {
+                                                onUnresolvedDependency(url)
                                                 return@mapNotNull null
                                             }
                                             LibraryRoot(
-                                                it.toIntellijUri(virtualFileUrlManager),
+                                                fileUrl,
                                                 LibraryRootTypeId.COMPILED
                                             )
                                         }
-                                        library.getPaths(JpsOrderRootType.SOURCES).mapTo(this) {
-                                            LibraryRoot(it.toIntellijUri(virtualFileUrlManager), LibraryRootTypeId.SOURCES)
+                                        library.getRootUrls(JpsOrderRootType.SOURCES).mapTo(this) { url ->
+                                            LibraryRoot(virtualFileUrlManager.getOrCreateFromUrl(url), LibraryRootTypeId.SOURCES)
                                         }
                                     },
                                     entitySource = entitySource
@@ -208,12 +211,20 @@ object JpsWorkspaceImporter : WorkspaceImporter {
                     val builder = SdkEntity(
                         name = library.name,
                         type = library.type.toSdkType(),
-                        roots = library.getRootUrls(JpsOrderRootType.COMPILED).mapNotNull {
-                            val url = if (it.startsWith("jrt://")) it.replace("!/", "!/modules/") else it
-                            SdkRoot(
-                                virtualFileUrlManager.getOrCreateFromUrl(url),
-                                SdkRootTypeId(OrderRootType.CLASSES.customName),
-                            )
+                        roots = buildList {
+                            library.getRootUrls(JpsOrderRootType.COMPILED).mapNotNullTo(this) { url ->
+                                val url = url.run { if (startsWith("jrt://")) replace("!/", "!/modules/") else this }
+                                SdkRoot(
+                                    virtualFileUrlManager.getOrCreateFromUrl(url),
+                                    SdkRootTypeId(OrderRootType.CLASSES.customName),
+                                )
+                            }
+                            library.getRootUrls(JpsOrderRootType.SOURCES).mapNotNullTo(this) { url ->
+                                SdkRoot(
+                                    virtualFileUrlManager.getOrCreateFromUrl(url),
+                                    SdkRootTypeId(OrderRootType.SOURCES.customName),
+                                )
+                            }
                         },
                         additionalData = "",
                         entitySource = entitySource
@@ -257,16 +268,29 @@ private fun detectJavaSdks(
             suggestedName != null && sdkName.contains(suggestedName, ignoreCase = true)
         } ?: detectedSdks.maxBy { it.versionInfo?.version?.feature ?: 0 }
         LOG.info("Detected SDK [$sdkName]: ${sdk.path}")
+        val classRoots = JavaSdkImpl.findClasses(Path.of(sdk.path), false)
+            .map { (it.replace("!/", "!/modules/")) }
         SdkEntity(
             name = sdkName,
             type = JavaSdk.getInstance().name,
-            roots = JavaSdkImpl.findClasses(Path.of(sdk.path), false).map { (it.replace("!/", "!/modules/")) }
-                .map {
+            roots = buildList {
+                classRoots.mapTo(this) {
                     SdkRoot(
                         virtualFileUrlManager.getOrCreateFromUrl(it),
                         SdkRootTypeId(OrderRootType.CLASSES.customName),
                     )
-                },
+                }
+                val srcZip = Path.of(sdk.path, "lib", "src.zip")
+                if (srcZip.exists()) {
+                    val prefix = "jar://${FileUtilRt.toSystemIndependentName(srcZip.toString())}!/"
+                    classRoots.mapTo(this) {
+                        SdkRoot(
+                            virtualFileUrlManager.getOrCreateFromUrl("$prefix${it.substringAfterLast("/")}"),
+                            SdkRootTypeId(OrderRootType.SOURCES.customName),
+                        )
+                    }
+                }
+            },
             additionalData = "",
             entitySource = entitySource
         )

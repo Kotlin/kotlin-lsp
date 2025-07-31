@@ -5,16 +5,11 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.projectRoots.SdkType
 import com.intellij.openapi.roots.OrderRootType
 import com.intellij.openapi.util.TextRange
+import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.findPsiFile
-import com.intellij.platform.workspace.jps.entities.InheritedSdkDependency
-import com.intellij.platform.workspace.jps.entities.ModuleEntity
-import com.intellij.platform.workspace.jps.entities.SdkDependency
-import com.intellij.platform.workspace.jps.entities.SdkEntity
-import com.intellij.platform.workspace.jps.entities.SdkRoot
-import com.intellij.platform.workspace.jps.entities.SdkRootTypeId
-import com.intellij.platform.workspace.jps.entities.modifyModuleEntity
+import com.intellij.platform.workspace.jps.entities.*
 import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.entities
@@ -26,7 +21,8 @@ import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.customName
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.lsp.protocol.*
-import kotlin.sequences.forEach
+import java.nio.file.Path
+import kotlin.io.path.exists
 
 val VirtualFile.uri: URI
     get() = url.intellijUriToLspUri()
@@ -102,11 +98,25 @@ fun addSdk(
     val sdkEntity = SdkEntity(
         name = name,
         type = type.name,
-        roots = roots.map { root ->
-            SdkRoot(
-                urlManager.getOrCreateFromUrl(root.lspUriToIntellijUri()!!),
-                SdkRootTypeId(OrderRootType.CLASSES.customName),
-            )
+        roots = if (roots.isEmpty()) emptyList() else buildList {
+            roots.mapTo(this) { root ->
+                SdkRoot(
+                    urlManager.getOrCreateFromUrl(root.lspUriToIntellijUri()!!),
+                    SdkRootTypeId(OrderRootType.CLASSES.customName),
+                )
+            }
+
+            val javaHome = roots.first().lspUriToIntellijUri()!!.substringAfter("://").substringBeforeLast("!/")
+            val srcZip = Path.of(FileUtilRt.toSystemDependentName(javaHome), "lib", "src.zip")
+            if (srcZip.exists()) {
+                val prefix = "jar://${FileUtilRt.toSystemIndependentName(srcZip.toString())}!/"
+                roots.mapTo(this) { root ->
+                    SdkRoot(
+                        urlManager.getOrCreateFromUrl("$prefix${root.uri.substringAfterLast("/")}"),
+                        SdkRootTypeId(OrderRootType.SOURCES.customName),
+                    )
+                }
+            }
         },
         additionalData = "",
         entitySource = source
