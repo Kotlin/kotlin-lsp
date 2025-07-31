@@ -109,9 +109,9 @@ internal class Renamer(
 
                 for (entry in renames.entries) {
                     val usages =
-                        ReadAction.compute<Array<UsageInfo>?, RuntimeException?>(ThrowableComputable {
+                        ReadAction.compute<Array<UsageInfo>, RuntimeException>(ThrowableComputable {
                             RenameUtil.findUsages(
-                                entry.key!!, entry.value, refactoringScope,
+                                entry.key, entry.value, refactoringScope,
                                 searchInComments, searchTextOccurrences, allRenames
                             )
                         })
