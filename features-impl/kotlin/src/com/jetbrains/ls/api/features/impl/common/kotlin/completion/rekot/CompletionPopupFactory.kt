@@ -78,10 +78,12 @@ internal object CompletionItemsProvider {
             }
         val symbolFilter: CompletionItemsCollector.SymbolFilter = when (position) {
             is CompletionPosition.Type if position.isAnnotation -> CompletionItemsCollector.SymbolFilter { symbol ->
-                when (symbol) {
-                    is KaClassSymbol -> symbol.classKind == KaClassKind.ANNOTATION_CLASS
-                    is KaTypeAliasSymbol -> symbol.expandedType.expandedSymbol?.classKind == KaClassKind.ANNOTATION_CLASS
-                    else -> false
+                with(contextOf<KaSession>()) {
+                    when (symbol) {
+                        is KaClassSymbol -> symbol.classKind == KaClassKind.ANNOTATION_CLASS
+                        is KaTypeAliasSymbol -> symbol.expandedType.expandedSymbol?.classKind == KaClassKind.ANNOTATION_CLASS
+                        else -> false
+                    }
                 }
             }
             else -> CompletionItemsCollector.SymbolFilter { true }
