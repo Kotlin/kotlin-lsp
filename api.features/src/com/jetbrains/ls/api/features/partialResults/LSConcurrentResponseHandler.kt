@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.serialization.KSerializer
 
 internal object LSConcurrentResponseHandler {
-    context(_: LspHandlerContext, _: LSServer)
+    context(_: LSServer)
     suspend fun <H, R> respondDirectlyWithResultsCollectedConcurrently(
         providers: List<H>,
         getResults: (H) -> Flow<R>
