@@ -15,6 +15,7 @@ import java.time.ZoneId
 fun initKotlinLspLogger(writeToStdOut: Boolean) {
     Logger.setFactory(KotlinLspLoggerFactory(writeToStdOut))
     com.intellij.serviceContainer.checkServiceFromWriteAccess = false
+    com.intellij.codeInsight.multiverse.logMultiverseState = false
 }
 
 private class KotlinLspLoggerFactory(private val writeToStdOut: Boolean) : Logger.Factory {
