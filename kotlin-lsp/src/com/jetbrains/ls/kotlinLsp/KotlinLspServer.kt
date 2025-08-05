@@ -31,7 +31,7 @@ import org.jetbrains.kotlin.idea.base.plugin.artifacts.KotlinArtifacts
 import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutMode
 import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutModeProvider
 import org.jetbrains.kotlin.idea.compiler.configuration.isRunningFromSources
-import java.io.File
+import java.awt.Toolkit
 import java.lang.invoke.MethodHandles
 import java.net.URLDecoder
 import java.nio.file.Path
@@ -61,6 +61,7 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
     val mode = runConfig.mode
     initKotlinLspLogger(writeToStdOut = mode != KotlinLspServerMode.Stdio)
     initIdeaPaths(runConfig.systemPath)
+    initHeadlessToolkit()
     setLspKotlinPluginModeIfRunningFromProductionLsp()
     val config = createConfiguration()
 
@@ -106,7 +107,7 @@ private suspend fun handleRequests(connection: LspConnection, runConfig: KotlinL
                 createCoroutineContext = { lspClient ->
                     Client.contextElement(lspClient, runConfig)
                 },
-            ) { lsp ->
+            ) { _ ->
                 exitSignal.await()
             }
         }
@@ -163,12 +164,28 @@ private fun isRunningFromProductionLsp(): Boolean {
     return !isRunningFromSources()
 }
 
+private fun initHeadlessToolkit() {
+    //System.setProperty("apple.awt.UIElement", "true")
+    val field = ClassLoader.getPlatformClassLoader().loadClass("java.awt.GraphicsEnvironment")
+        .declaredFields.find { it.name == "headless" }!!
+    field.setAccessible(true)
+    val prev = field.get(null) as Boolean?
+    field.set(null, true)
+    val current: Toolkit?
+    try {
+        current = Toolkit.getDefaultToolkit()
+        if (!current::class.java.name.endsWith("HeadlessToolkit")) {
+            throw AssertionError("Unexpected awt.Toolkit: ${current::class.java.name}")
+        }
+    } finally {
+        field.set(null, prev)
+    }
+}
 
 private fun getIJPathIfRunningFromSources(): String? {
     val serverClass = Class.forName("com.jetbrains.ls.kotlinLsp.KotlinLspServerKt")
     val jar = PathManager.getJarForClass(serverClass)?.absolutePathString() ?: return null
-    val SEP = File.separator
-    val expectedOutDir = "${SEP}out${SEP}classes${SEP}production${SEP}language-server.kotlin-lsp"
+    val expectedOutDir = FileUtilRt.toSystemDependentName("/out/classes/production/language-server.kotlin-lsp")
     if (!jar.endsWith(expectedOutDir)) return null
     return jar.removeSuffix(expectedOutDir)
 }
