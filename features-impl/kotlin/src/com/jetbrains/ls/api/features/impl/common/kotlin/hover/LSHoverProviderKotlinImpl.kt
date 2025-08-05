@@ -1,12 +1,13 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.kotlin.hover
 
-import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.openapi.vfs.findPsiFile
-import com.intellij.psi.PsiReference
+import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiMember
+import com.intellij.psi.PsiPackage
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.features.impl.common.hover.AbstractLSHoverProvider
 import com.jetbrains.ls.api.features.impl.common.hover.markdownMultilineCode
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
@@ -21,7 +22,8 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaConstructorSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaDeclarationSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaPackageSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbol
-import org.jetbrains.kotlin.idea.references.KtReference
+import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.renderer.render
 
@@ -29,11 +31,17 @@ object LSHoverProviderKotlinImpl : AbstractLSHoverProvider() {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSKotlinLanguage)
 
     context(_: LSServer, _: LSAnalysisContext)
-    override fun generateMarkdownForElementReferencedBy(virtualFile: VirtualFile, reference: PsiReference): String? {
-        if (reference !is KtReference) return null
-        val ktFile = virtualFile.findPsiFile(project) as? KtFile ?: return null
-        return analyze(ktFile) {
-            val symbol = reference.resolveToSymbol() ?: return null
+    override fun generateMarkdownForPsiElementTarget(target: PsiElement, from: PsiFile): String? {
+        if (from !is KtFile) return null
+
+        return analyze(from) {
+            val symbol = when (target) {
+                is KtDeclaration -> target.symbol
+                is PsiClass -> target.namedClassSymbol
+                is PsiMember -> target.callableSymbol
+                is PsiPackage -> findPackage(FqName(target.qualifiedName))
+                else -> null
+            } ?: return null
             getMarkdownContent(symbol)
         }
     }

@@ -14,6 +14,7 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
+import com.jetbrains.ls.api.features.impl.common.utils.getTargetsAtPosition
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.references.LSReferencesProvider
 import com.jetbrains.lsp.protocol.Location
@@ -31,9 +32,7 @@ class LSReferencesProviderCommonImpl(
                 val file = params.findVirtualFile() ?: return@a
                 val psiFile = file.findPsiFile(project) ?: return@a
                 val document = file.findDocument() ?: return@a
-                val offset = document.offsetByPosition(params.position)
-                val psiSymbolService = PsiSymbolService.getInstance()
-                val targets = targetSymbols(psiFile, offset).mapNotNull { psiSymbolService.extractElementFromSymbol(it) }
+                val targets = psiFile.getTargetsAtPosition(params.position, document)
                 if (targets.isEmpty()) return@a
 
                 val findUsagesManager = FindUsagesManager(project)

@@ -21,6 +21,7 @@ import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.analyzer.java.JavaFilePackageIndex
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.withAnalysisContext
+import com.jetbrains.ls.api.features.impl.common.utils.getTargetsAtPosition
 import com.jetbrains.lsp.protocol.DefinitionParams
 import com.jetbrains.lsp.protocol.DocumentUri
 import com.jetbrains.lsp.protocol.Location
@@ -39,14 +40,9 @@ class LSDefinitionProviderCommonImpl(
                 val file = uri.findVirtualFile() ?: return@runReadAction emptyList()
                 val psiFile = file.findPsiFile(project) ?: return@runReadAction emptyList()
                 val document = file.findDocument() ?: return@runReadAction emptyList()
-                val offset = document.offsetByPosition(params.position)
-                val reference = psiFile.findReferenceAt(offset) ?: return@runReadAction emptyList()
-                val resolvedTo = when (reference) {
-                    is PsiPolyVariantReference -> reference.multiResolve(false).mapNotNull { it.element }
-                    else -> listOfNotNull(reference.resolve())
-                }
+                val targets = psiFile.getTargetsAtPosition(params.position, document)
 
-                resolvedTo.mapNotNull {
+                targets.mapNotNull {
                     when (it) {
                         is PsiPackage -> it.directory?.uri?.let { Location(DocumentUri(it), Range.BEGINNING) }
                         else -> it.getLspLocationForDefinition()
