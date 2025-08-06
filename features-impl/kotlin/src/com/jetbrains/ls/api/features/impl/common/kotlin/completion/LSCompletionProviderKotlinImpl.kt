@@ -17,6 +17,7 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.completion.CompletionItemData
+import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
 import com.jetbrains.ls.api.features.impl.common.completion.LSAbstractCompletionProvider
 import com.jetbrains.ls.api.features.impl.common.hover.AbstractLSHoverProvider.LSMarkdownDocProvider.Companion.getMarkdownDoc
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
@@ -37,7 +38,7 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtPsiFactory
 
 object LSCompletionProviderKotlinImpl : LSAbstractCompletionProvider() {
-    override val uniqueId: String = "KotlinCompletionProvider"
+    override val uniqueId: LSUniqueConfigurationEntry.UniqueId = LSUniqueConfigurationEntry.UniqueId("KotlinCompletionProvider")
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
 
 

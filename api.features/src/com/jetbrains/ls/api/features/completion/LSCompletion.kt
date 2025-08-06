@@ -3,12 +3,14 @@ package com.jetbrains.ls.api.features.completion
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSConfiguration
-import com.jetbrains.ls.api.features.entries
+import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
 import com.jetbrains.ls.api.features.entriesFor
+import com.jetbrains.ls.api.features.entryById
+import com.jetbrains.ls.api.features.resolve.ResolveDataWithConfigurationEntryId
+import com.jetbrains.ls.api.features.resolve.getConfigurationEntryId
 import com.jetbrains.lsp.protocol.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.decodeFromJsonElement
 
 object LSCompletion {
     context(_: LSServer, _: LSConfiguration)
@@ -19,12 +21,10 @@ object LSCompletion {
     }
 
     context(_: LSServer, _: LSConfiguration)
-    suspend fun resolveCompletion(params: CompletionItem): CompletionItem {
-        val data: CompletionItemData = runCatching {
-            val data = params.data ?: return params
-            LSP.json.decodeFromJsonElement<CompletionItemData>(data)
-        }.getOrNull() ?: return params
-        return entries<LSCompletionProvider>().firstOrNull { it.uniqueId == data.providerId }?.resolveCompletion(params) ?: params
+    suspend fun resolveCompletion(item: CompletionItem): CompletionItem {
+        val uniqueId = getConfigurationEntryId(item.data) ?: return item
+        val entry = entryById<LSCompletionProvider>(uniqueId) ?: return item
+        return entry.resolveCompletion(item) ?: item
     }
 
     private fun List<CompletionList>.combined(): CompletionList {
@@ -43,7 +43,7 @@ object LSCompletion {
 //todo should be later moved to a common features module
 @Serializable
 data class CompletionItemData(
-    val providerId: String,
     val params: CompletionParams,
     val additionalData: JsonElement,
-)
+    override val configurationEntryId: LSUniqueConfigurationEntry.UniqueId,
+) : ResolveDataWithConfigurationEntryId

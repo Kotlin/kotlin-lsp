@@ -41,7 +41,7 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider {
                     val completionItems = lookupElements.mapIndexed  { i, lookup ->
                         val lookupPresentation = LookupElementPresentation().also { lookup.renderElement(it) }
                         val additionalData = createAdditionalData(lookup, completionProcess.arranger.itemMatcher(lookup)) ?: return@mapIndexed null
-                        val data = CompletionItemData(uniqueId, params, additionalData)
+                        val data = CompletionItemData(params, additionalData, uniqueId)
                         CompletionItem(
                             label = lookupPresentation.itemText ?: lookup.lookupString,
                             sortText = getSortedFieldByIndex(i),

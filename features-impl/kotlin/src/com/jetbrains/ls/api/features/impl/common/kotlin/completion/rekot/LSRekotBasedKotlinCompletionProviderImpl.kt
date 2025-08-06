@@ -14,6 +14,7 @@ import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.completion.LSCompletionProvider
+import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.utils.isSource
@@ -35,7 +36,8 @@ import org.jetbrains.kotlin.resolve.jvm.platform.JvmPlatformAnalyzerServices
  * Taken from https://github.com/darthorimar/rekot
  */
 internal object LSRekotBasedKotlinCompletionProviderImpl : LSCompletionProvider {
-    override val uniqueId: String get() = this::class.java.name
+    override val uniqueId: LSUniqueConfigurationEntry.UniqueId = LSUniqueConfigurationEntry.UniqueId(this::class.java.name)
+
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
     override val supportsResolveRequest: Boolean get() = false
 
