@@ -3,6 +3,39 @@
 This file contains TeamCity auto-generated download links that are updated on a weekly basis.
 These are pre-alpha builds that are built directly from `master` branch after the initial acceptance.
 
+### v0.253.10311
+* :test_tube: **Kotlin for VS Code Extension**  
+  Includes the Kotlin Language Server bundled for use with Visual Studio Code.
+  [Download](https://download-cdn.jetbrains.com/kotlin-lsp/0.253.10311/kotlin-0.253.10311.vsix) &nbsp;|&nbsp; [SHA-256 Checksum](https://download-cdn.jetbrains.com/kotlin-lsp/0.253.10311/kotlin-0.253.10311.vsix.sha256)
+
+* :card_index_dividers: **Kotlin Language Server (Standalone ZIP)**  
+  Standalone version of the Kotlin LSP for editors other than VS Code.
+  [Download](https://download-cdn.jetbrains.com/kotlin-lsp/0.253.10311/kotlin-0.253.10311.zip) &nbsp;|&nbsp; [SHA-256 Checksum](https://download-cdn.jetbrains.com/kotlin-lsp/0.253.10311/kotlin-0.253.10311.zip.sha256)
+
+##### Changelog
+
+#### 🛠 LSP capabilities
+* Rename refactoring (`textDocument/rename`)
+* Kotlin code formatting (`textDocument/formatting` and `textDocument/rangeFormatting`)
+    * Auto-applied on quickfixes, configurable via LSP protocol, IntelliJ implementation
+* Navigation to libraries/JDK sources (`textDocument/definition`)
+* Documentation on hover (`textDocument/hover`)
+* Signature help (`textDocument/signatureHelp`)
+* Faster highlighting on large files (`textDocument/semanticTokens/range`)
+
+#### ✨ UX improvements
+* Native support of external file system changes (i.e. `git pull`)
+* Multiple caching layers with on-disk persistence are added
+    * Should drastically reduce memory pressure on large projects
+* Full-blown code completion from IntelliJ IDEA
+* More fine-tuned inspections and diagnostics set enabled by default
+* Proper termination sequence of LSP process when the corresponding extension is closed
+
+#### Other
+* 🐛 Fixed some bugs here and there, introduced new ones
+* 🧩 VSC extension bundling
+* 🪟 Wrestled with `\` on Windows on multiple occasions. All on-disk persistence is hopefully platform-independent for now 
+
 ### v0.252.17811
 - :test_tube: **Kotlin for VS Code Extension**  
   Includes the Kotlin Language Server bundled for use with Visual Studio Code.  
