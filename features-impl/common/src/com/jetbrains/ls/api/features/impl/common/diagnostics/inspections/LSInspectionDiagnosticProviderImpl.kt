@@ -22,6 +22,7 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnosticProvider
 import com.jetbrains.ls.api.features.language.LSLanguage
+import com.jetbrains.ls.api.features.utils.isSource
 import com.jetbrains.lsp.protocol.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -33,6 +34,7 @@ class LSInspectionDiagnosticProviderImpl(
 ): LSDiagnosticProvider {
     context(_: LSServer)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
+        if (!params.textDocument.isSource()) return@flow
         val onTheFly = false
         withAnalysisContext {
             runReadAction c@{

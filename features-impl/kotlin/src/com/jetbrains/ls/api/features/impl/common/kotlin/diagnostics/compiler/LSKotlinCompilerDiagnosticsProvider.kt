@@ -15,6 +15,7 @@ import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnosticProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
+import com.jetbrains.ls.api.features.utils.isSource
 import com.jetbrains.lsp.protocol.Diagnostic
 import com.jetbrains.lsp.protocol.DocumentDiagnosticParams
 import com.jetbrains.lsp.protocol.LSP
@@ -33,6 +34,7 @@ internal object LSKotlinCompilerDiagnosticsProvider : LSDiagnosticProvider {
 
     context(_: LSServer)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
+        if (!params.textDocument.isSource()) return@flow
         val uri = params.textDocument.uri.uri
         withAnalysisContext {
             runReadAction {

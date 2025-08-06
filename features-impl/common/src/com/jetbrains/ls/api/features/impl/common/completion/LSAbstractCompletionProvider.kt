@@ -15,10 +15,10 @@ import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.withAnalysisContext
-import com.jetbrains.ls.api.core.withWriteAnalysisContext
 import com.jetbrains.ls.api.features.completion.CompletionItemData
 import com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider
 import com.jetbrains.ls.api.features.completion.LSCompletionProvider
+import com.jetbrains.ls.api.features.utils.isSource
 import com.jetbrains.lsp.protocol.*
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.encodeToJsonElement
@@ -28,6 +28,7 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider {
 
     context(_: LSServer)
     override suspend fun provideCompletion(params: CompletionParams): CompletionList {
+        if (!params.textDocument.isSource()) return CompletionList.EMPTY_COMPLETE
         return withAnalysisContext {
             invokeAndWaitIfNeeded {
                 runWriteAction {

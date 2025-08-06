@@ -164,8 +164,8 @@ async function createServerOptions(): Promise<ServerOptions | null> {
 async function createLspClient(): Promise<LanguageClient | null> {
     const clientOptions: LanguageClientOptions = {
         documentSelector: [
-            {scheme: 'file', language: 'kotlin'},
-            {scheme: 'file', language: 'java'},
+            {scheme: 'file', language: 'kotlin'}, {scheme: 'jar', language: 'kotlin'},
+            {scheme: 'file', language: 'java'  }, {scheme: 'jar', language: 'java'  }, {scheme: 'jrt', language: 'java'},
         ],
         progressOnInitialization: true,
     };

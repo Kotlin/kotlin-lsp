@@ -15,6 +15,7 @@ import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnosticProvider
 import com.jetbrains.ls.api.features.language.LSLanguage
+import com.jetbrains.ls.api.features.utils.isSource
 import com.jetbrains.lsp.protocol.Diagnostic
 import com.jetbrains.lsp.protocol.DiagnosticSeverity
 import com.jetbrains.lsp.protocol.DocumentDiagnosticParams
@@ -27,6 +28,7 @@ class LSSyntaxErrorDiagnosticProviderImpl(
 ) : LSDiagnosticProvider {
     context(_: LSServer)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
+        if (!params.textDocument.isSource()) return@flow
         withAnalysisContext {
             runReadAction a@ {
                 val file = params.textDocument.findVirtualFile() ?: return@a emptyList()
