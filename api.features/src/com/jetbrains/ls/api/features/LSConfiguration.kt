@@ -8,7 +8,6 @@ import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.language.LSLanguageConfiguration
 import com.jetbrains.ls.api.features.language.matches
-import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokensProvider
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 
 class LSConfiguration(
@@ -60,6 +59,13 @@ class LSConfiguration(
         return entriesByLanguage[language]?.filterIsInstance<E>() ?: emptyList()
     }
 
+    inline fun <reified E : LSUniqueConfigurationEntry> entryById(
+        id: LSUniqueConfigurationEntry.UniqueId,
+    ): E? {
+        val entries = entries<E>()
+        return entries.firstOrNull { it.uniqueId == id }
+    }
+
     fun languageFor(document: TextDocumentIdentifier): LSLanguage? {
         return languages.firstOrNull { it.matches(document) }
     }
@@ -76,6 +82,10 @@ inline fun <reified E : LSLanguageSpecificConfigurationEntry> entriesFor(documen
 context(configuration: LSConfiguration)
 inline fun <reified E : LSLanguageSpecificConfigurationEntry> entriesFor(language: LSLanguage): List<E> =
     configuration.entriesFor(language)
+
+context(configuration: LSConfiguration)
+inline fun <reified E : LSUniqueConfigurationEntry> entryById(id: LSUniqueConfigurationEntry.UniqueId): E? =
+    configuration.entryById<E>(id)
 
 context(configuration: LSConfiguration)
 fun commandDescriptorByCommandName(commandName: String): LSCommandDescriptor? =

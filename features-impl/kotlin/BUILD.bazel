@@ -76,6 +76,7 @@ jvm_library(
     "//codeServer/core",
     "@community//plugins/kotlin/fir",
     "@community//plugins/kotlin/navigation",
+    "@community//plugins/kotlin/code-insight/impl-base",
   ],
   runtime_deps = [":kotlin_resources"]
 )

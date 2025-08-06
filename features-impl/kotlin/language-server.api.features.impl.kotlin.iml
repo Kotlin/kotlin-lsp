@@ -77,5 +77,6 @@
     <orderEntry type="module" module-name="intellij.codeServer.core" />
     <orderEntry type="module" module-name="kotlin.fir" />
     <orderEntry type="module" module-name="kotlin.navigation" />
+    <orderEntry type="module" module-name="kotlin.code-insight.impl-base" />
   </component>
 </module>
