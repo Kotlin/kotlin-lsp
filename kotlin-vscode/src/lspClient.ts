@@ -184,13 +184,14 @@ async function getRunningJavaServerLspOptions(): Promise<ServerOptions | null> {
 
     const extractPath = getContext().asAbsolutePath(path.join('server', 'extracted', 'lib'));
 
+    const context = getContext()
     const args: string[] = []
     args.push(...defaultJvmOptions)
     args.push(...getUserJvmOptions())
     args.push(
         '-classpath', extractPath + path.sep + '*',
         'com.jetbrains.ls.kotlinLsp.KotlinLspServerKt', '--client',
-        '--system-path', getContext().globalStorageUri.fsPath,
+        '--system-path', (context.storageUri ?? context.globalStorageUri).fsPath,
     );
     return <ServerOptions>{
         command: javaCommand,

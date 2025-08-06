@@ -32,6 +32,7 @@ import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutMode
 import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutModeProvider
 import org.jetbrains.kotlin.idea.compiler.configuration.isRunningFromSources
 import java.awt.Toolkit
+import java.io.RandomAccessFile
 import java.lang.invoke.MethodHandles
 import java.net.URLDecoder
 import java.nio.file.Path
@@ -125,7 +126,23 @@ private fun initIdeaPaths(systemPath: Path?) {
                     "fleet" / "native" / "target" / "download" / "filewatcher")
     }
     else {
-        val path = systemPath?.createDirectories() ?: createTempDirectory("idea-system")
+        val path = systemPath
+            ?.createDirectories()
+            ?.takeIf {
+                val lockFile = (it / ".app.lock").toFile()
+                val channel = RandomAccessFile(lockFile, "rw").channel
+                val isLockAcquired = channel.tryLock() != null
+                if (!isLockAcquired) {
+                    LOG.info("The specified workspace data path is already in use: $it")
+                    channel.close()
+                }
+                isLockAcquired
+            }
+            ?: createTempDirectory("idea-system").also {
+                @Suppress("SSBasedInspection")
+                it.toFile().deleteOnExit()
+            }
+
         systemProperty("idea.home.path", "$path")
         systemProperty("idea.config.path", "$path/config", ifAbsent = true)
         systemProperty("idea.system.path", "$path/system", ifAbsent = true)
