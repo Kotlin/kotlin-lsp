@@ -3,14 +3,15 @@
 This file contains TeamCity auto-generated download links that are updated on a weekly basis.
 These are pre-alpha builds that are built directly from `master` branch after the initial acceptance.
 
-### v0.253.10311
-* :test_tube: **Kotlin for VS Code Extension**  
-  Includes the Kotlin Language Server bundled for use with Visual Studio Code.
-  [Download](https://download-cdn.jetbrains.com/kotlin-lsp/0.253.10311/kotlin-0.253.10311.vsix) &nbsp;|&nbsp; [SHA-256 Checksum](https://download-cdn.jetbrains.com/kotlin-lsp/0.253.10311/kotlin-0.253.10311.vsix.sha256)
+### v0.253.10629
+- :test_tube: **Kotlin for VS Code Extension**  
+  Includes the Kotlin Language Server bundled for use with Visual Studio Code.  
+  [Download](https://download-cdn.jetbrains.com/kotlin-lsp/0.253.10629/kotlin-0.253.10629.vsix) &nbsp;|&nbsp; [SHA-256 Checksum](https://download-cdn.jetbrains.com/kotlin-lsp/0.253.10629/kotlin-0.253.10629.vsix.sha256)
 
-* :card_index_dividers: **Kotlin Language Server (Standalone ZIP)**  
-  Standalone version of the Kotlin LSP for editors other than VS Code.
-  [Download](https://download-cdn.jetbrains.com/kotlin-lsp/0.253.10311/kotlin-0.253.10311.zip) &nbsp;|&nbsp; [SHA-256 Checksum](https://download-cdn.jetbrains.com/kotlin-lsp/0.253.10311/kotlin-0.253.10311.zip.sha256)
+- :card_index_dividers: **Kotlin Language Server (Standalone ZIP)**  
+  Standalone version of the Kotlin LSP for editors other than VS Code.  
+  [Download](https://download-cdn.jetbrains.com/kotlin-lsp/0.253.10629/kotlin-0.253.10629.zip) &nbsp;|&nbsp; [SHA-256 Checksum](https://download-cdn.jetbrains.com/kotlin-lsp/0.253.10629/kotlin-0.253.10629.zip.sha256)
+
 
 ##### Changelog
 
