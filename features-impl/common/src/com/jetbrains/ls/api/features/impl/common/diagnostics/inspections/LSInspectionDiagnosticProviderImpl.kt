@@ -1,6 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.diagnostics.inspections
 
+import com.intellij.codeHighlighting.HighlightDisplayLevel
 import com.intellij.codeInspection.*
 import com.intellij.codeInspection.ex.InspectionManagerEx
 import com.intellij.lang.Language
@@ -61,8 +62,6 @@ class LSInspectionDiagnosticProviderImpl(
         BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.diagnosticBased.VariableNeverReadInspection", "very slow, uses extended checkers"),
         BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.diagnosticBased.AssignedValueIsNeverReadInspection", "very slow, uses extended checkers"),
 
-        BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.expressions.ExplicitThisInspection", "too noisy https://github.com/Kotlin/kotlin-lsp/issues/20"),
-        BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.ImplicitThisInspection", "too noisy https://github.com/Kotlin/kotlin-lsp/issues/20"),
         BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.PublicApiImplicitTypeInspection", "too noisy https://github.com/Kotlin/kotlin-lsp/issues/4"),
 
         BlackListEntry.InspectionSuperClass("org.jetbrains.kotlin.idea.codeinsight.api.applicable.inspections.KotlinKtDiagnosticBasedInspectionBase", "they are slow as calling additional diagnostic collection"),
@@ -109,6 +108,7 @@ class LSInspectionDiagnosticProviderImpl(
         return LocalInspectionEP.LOCAL_INSPECTION.extensionList
             .filter { it.language == language.id }
             .filter { it.enabledByDefault }
+            .filter { HighlightDisplayLevel.find(it.level) != HighlightDisplayLevel.DO_NOT_SHOW }
             .filterNot { blacklist.containsImplementation(it.implementationClass) }
             .mapNotNull { inspection ->
                 runCatching {
@@ -120,6 +120,8 @@ class LSInspectionDiagnosticProviderImpl(
             }
             .filterNot { blacklist.containsSuperClass(it) }
             .filterIsInstance<LocalInspectionTool>()
+            .takeIf { it.isNotEmpty() }
+            ?: emptyList()
     }
 
     private fun collectDiagnostics(
@@ -166,18 +168,20 @@ class LSInspectionDiagnosticProviderImpl(
         element: PsiElement
     ): List<Diagnostic> {
         val document = file.findDocument() ?: return emptyList()
-        return results.mapNotNull { result ->
-            val data = result.createDiagnosticData(localInspectionTool, element, file)
-            Diagnostic(
-                range = result.range()?.toLspRange(document) ?: return@mapNotNull null,
-                severity = result.highlightType.toLsp(),
-                // todo handle markers from [com.intellij.codeInspection.CommonProblemDescriptor.getDescriptionTemplate]
-                message = result.tooltipTemplate,
-                code = StringOrInt.string(localInspectionTool.id),
-                tags = result.highlightType.toLspTags(),
-                data = LSP.json.encodeToJsonElement(data),
-            )
-        }
+        return results
+            .filter { it.highlightType != ProblemHighlightType.INFORMATION }
+            .mapNotNull { result ->
+                val data = result.createDiagnosticData(localInspectionTool, element, file)
+                Diagnostic(
+                    range = result.range()?.toLspRange(document) ?: return@mapNotNull null,
+                    severity = result.highlightType.toLsp(),
+                    // todo handle markers from [com.intellij.codeInspection.CommonProblemDescriptor.getDescriptionTemplate]
+                    message = result.tooltipTemplate,
+                    code = StringOrInt.string(localInspectionTool.id),
+                    tags = result.highlightType.toLspTags(),
+                    data = LSP.json.encodeToJsonElement(data),
+                )
+            }
     }
 
     private fun ProblemDescriptor.range(): TextRange? {
