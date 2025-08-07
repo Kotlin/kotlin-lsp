@@ -25,6 +25,16 @@ import com.jetbrains.ls.imports.utils.toIntellijUri
 import java.io.ByteArrayOutputStream
 
 object GradleWorkspaceImporter : WorkspaceImporter {
+    private const val IDEA_SYNC_ACTIVE_PROPERTY = "idea.sync.active"
+    private const val KOTLIN_LSP_IMPORT_PROPERTY = "com.jetbrains.ls.imports.gradle"
+    private val IMPORTER_PROPERTIES = mapOf(
+        // This immitates how IntelliJ invokes gradle during sync.
+        // Some builds/plugins depend on this property to configure their build for sync
+        IDEA_SYNC_ACTIVE_PROPERTY to "true",
+        // Since this is not actually IntelliJ, offer an alternative identification
+        KOTLIN_LSP_IMPORT_PROPERTY to "true"
+    )
+
     override suspend fun importWorkspace(
         projectDirectory: Path,
         virtualFileUrlManager: VirtualFileUrlManager,
@@ -35,7 +45,9 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                 val connector = GradleConnector.newConnector().forProjectDirectory(projectDirectory.toFile())
 
                 connector.connect().use { connection ->
-                    val ideaProject = connection.getModel(IdeaProject::class.java)
+                    val ideaProject = connection.model(IdeaProject::class.java)
+                        .withSystemProperties(IMPORTER_PROPERTIES)
+                        .get()
                     val storage = MutableEntityStorage.create()
                     val entitySource = WorkspaceEntitySource(projectDirectory.toIntellijUri(virtualFileUrlManager))
                     val libs = mutableSetOf<String>()
@@ -166,6 +178,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                     }
                     val out = ByteArrayOutputStream()
                     connection.newBuild().forTasks("dependencies")
+                        .withSystemProperties(IMPORTER_PROPERTIES)
                         .setStandardOutput(out)
                         .run()
                     val output = out.toString()
