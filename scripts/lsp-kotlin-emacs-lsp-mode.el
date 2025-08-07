@@ -1,5 +1,5 @@
 (defun kotlin-lsp-server-start-fun (port)
-     (list "kotlin-lsp.sh" "--port" (number-to-string port)))
+     (list "kotlin-lsp.sh" "--socket" (number-to-string port)))
 (with-eval-after-load 'lsp-mode
   (add-to-list 'lsp-language-id-configuration
 	       '(kotlin-mode . "kotlin"))
