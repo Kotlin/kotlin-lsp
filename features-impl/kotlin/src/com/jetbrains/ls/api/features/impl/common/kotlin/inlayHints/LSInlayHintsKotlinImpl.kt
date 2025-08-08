@@ -27,7 +27,7 @@ internal object LSInlayHintsKotlinImpl : LSInlayHintsCommonImpl(
     override fun createProviders(): List<Provider> {
         return listOf(
             Provider(KtReferencesTypeHintsProvider(), KotlinHintFactory(kind = InlayHintKind.Type)),
-            Provider(KtLambdasHintsProvider(), KotlinHintFactory(kind = InlayHintKind.Type)),
+            Provider(KtLambdasHintsProvider(printSeparatingSpace = true), KotlinHintFactory(kind = InlayHintKind.Type)),
             Provider(KtParameterHintsProvider(), KotlinHintFactory(paddingRight = true, kind = InlayHintKind.Parameter)),
             Provider(KtDefaultParameterInlayHintsProvider(), KotlinHintFactory(paddingRight = true, kind = InlayHintKind.Parameter)),
             Provider(KtCallChainHintsProvider(), KotlinHintFactory()),
