@@ -43,6 +43,7 @@ jvm_library(
     "@community//platform/eel-provider",
     "@lib//:kotlinc-kotlin-jps-common",
     "@lib//:kotlinc-kotlin-compiler-common",
+    "@community//platform/external-system-impl:externalSystem-impl",
   ],
   runtime_deps = [":language-server-project-import_resources"]
 )

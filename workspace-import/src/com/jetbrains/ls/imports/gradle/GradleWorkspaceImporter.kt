@@ -1,6 +1,8 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.gradle
 
+import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil
 import com.intellij.platform.workspace.jps.entities.*
 import com.intellij.platform.workspace.jps.entities.LibraryTableId.ProjectLibraryTableId
 import com.intellij.platform.workspace.storage.MutableEntityStorage
@@ -8,21 +10,25 @@ import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImporter
+import com.jetbrains.ls.imports.utils.toIntellijUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.gradle.tooling.GradleConnector
+import org.gradle.tooling.ProjectConnection
 import org.gradle.tooling.model.DomainObjectSet
+import org.gradle.tooling.model.build.BuildEnvironment
 import org.gradle.tooling.model.idea.*
+import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.config.KotlinFacetSettings
 import org.jetbrains.kotlin.config.KotlinModuleKind
 import org.jetbrains.kotlin.idea.facet.KotlinFacetType
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
 import org.jetbrains.kotlin.idea.workspaceModel.kotlinSettings
+import org.jetbrains.plugins.gradle.jvmcompat.GradleJvmSupportMatrix
+import java.io.ByteArrayOutputStream
 import java.nio.file.Path
 import kotlin.io.path.div
 import kotlin.io.path.exists
-import com.jetbrains.ls.imports.utils.toIntellijUri
-import java.io.ByteArrayOutputStream
 
 object GradleWorkspaceImporter : WorkspaceImporter {
     private const val IDEA_SYNC_ACTIVE_PROPERTY = "idea.sync.active"
@@ -35,6 +41,8 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         KOTLIN_LSP_IMPORT_PROPERTY to "true"
     )
 
+    private val LOG = logger<GradleWorkspaceImporter>()
+
     override suspend fun importWorkspace(
         projectDirectory: Path,
         virtualFileUrlManager: VirtualFileUrlManager,
@@ -45,6 +53,8 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                 val connector = GradleConnector.newConnector().forProjectDirectory(projectDirectory.toFile())
 
                 connector.connect().use { connection ->
+                    checkGradleJavaCompatibility(connection)
+
                     val ideaProject = connection.model(IdeaProject::class.java)
                         .withSystemProperties(IMPORTER_PROPERTIES)
                         .get()
@@ -253,5 +263,19 @@ object GradleWorkspaceImporter : WorkspaceImporter {
             err = err.cause
         }
         throw e
+    }
+
+    private fun checkGradleJavaCompatibility(connection: ProjectConnection) {
+        val buildEnv = connection.getModel(BuildEnvironment::class.java) ?: return
+        val gradleVersionStr = buildEnv.gradle.gradleVersion ?: return
+        val gradleVersion = GradleVersion.version(gradleVersionStr)
+        val javaHome = buildEnv.java.javaHome ?: return
+        val javaVersion = ExternalSystemJdkUtil.getJavaVersion(javaHome.absolutePath) ?: return
+        val isSupported = GradleJvmSupportMatrix.isSupported(gradleVersion, javaVersion)
+
+        if (!isSupported) {
+            val message = "$gradleVersion doesn't support Java $javaVersion."
+            throw WorkspaceImportException(message, message)
+        }
     }
 }
