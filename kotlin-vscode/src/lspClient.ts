@@ -13,6 +13,7 @@ import {
     StreamInfo,
     TransportKind
 } from 'vscode-languageclient/node';
+import {chmodSync} from 'fs';
 import * as net from "node:net"
 import * as os from 'os';
 import {extensionId, getContext} from "./extension"
@@ -93,10 +94,15 @@ const minimumSupportedJavaVersion = 21
 
 
 function getJrePathForKotlinLSP() {
-    return vscode.workspace.getConfiguration().get<string>(jrePathForLspSettingName)
+    const configured = vscode.workspace.getConfiguration().get<string>(jrePathForLspSettingName)
+    if (configured) return configured
+    const relative = os.platform() === 'darwin'
+            ? path.join('server', 'jre', 'Contents', 'Home')
+            : path.join('server', 'jre')
+    return getContext().asAbsolutePath(relative)
 }
 
-async function getJavaPath(): Promise<string | null> {
+function getJavaPath(): string {
     let jrePath = getJrePathForKotlinLSP();
 
     if (!jrePath) {
@@ -104,7 +110,11 @@ async function getJavaPath(): Promise<string | null> {
     }
 
     const javaExecutable = os.platform() === 'win32' ? 'java.exe' : 'java';
-    return path.join(jrePath, 'bin', javaExecutable);
+    const javaBin = path.join(jrePath, 'bin', javaExecutable);
+    if (os.platform() !== 'win32') {
+        chmodSync(javaBin, 0o755);
+    }
+    return javaBin
 }
 
 async function ensureCorrectJavaVersion(javaCommand: string): Promise<boolean> {

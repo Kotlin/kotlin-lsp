@@ -1,3 +1,18 @@
+java_binary(
+    name = "run",
+    runtime_deps = [ ":kotlin-lsp" ],
+    main_class = "com.jetbrains.ls.kotlinLsp.KotlinLspServerKt",
+    args = [ "--multi-client" ],
+    jvm_flags = [
+        "-Xmx8g",
+        "-XX:+HeapDumpOnOutOfMemoryError",
+        "--add-opens=java.base/java.lang=ALL-UNNAMED",
+        "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+        "--add-opens=java.base/jdk.internal.ref=ALL-UNNAMED",
+    ],
+    visibility = ["//visibility:public"],
+)
+
 ### auto-generated section `build language-server.kotlin-lsp` start
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
 load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_resources")

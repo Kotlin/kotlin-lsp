@@ -131,7 +131,7 @@ private fun initIdeaPaths(systemPath: Path?) {
         systemProperty("idea.home.path", fromSources)
         systemProperty("idea.config.path", "$fromSources/config/idea", ifAbsent = true)
         systemProperty("idea.system.path", "$fromSources/system/idea", ifAbsent = true)
-        FileWatcher.initLibrary(
+        FileWatcher.initLibraryFromSources(
             PathManager.getHomeDir() /
                     "fleet" / "native" / "target" / "download" / "filewatcher")
     }
