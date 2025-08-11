@@ -6,7 +6,7 @@ import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
 import com.jetbrains.ls.api.features.language.LSLanguage
-import com.jetbrains.ls.api.features.language.LSLanguageConfiguration
+import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.api.features.language.matches
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 
@@ -99,7 +99,7 @@ context(configuration: LSConfiguration)
 inline val allCommandDescriptors: List<LSCommandDescriptor> get() = configuration.allCommandDescriptors
 
 fun LSConfiguration(
-    languageConfigurations: List<LSLanguageConfiguration>,
+    languageConfigurations: List<LSConfigurationPiece>,
 ): LSConfiguration {
     return LSConfiguration(
         entries = languageConfigurations.flatMap { it.entries },
@@ -109,7 +109,7 @@ fun LSConfiguration(
 }
 
 fun LSConfiguration(
-    vararg languageConfigurations: LSLanguageConfiguration,
+    vararg languageConfigurations: LSConfigurationPiece,
 ): LSConfiguration {
     return LSConfiguration(languageConfigurations.toList())
 }

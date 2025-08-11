@@ -12,7 +12,7 @@ import com.jetbrains.ls.api.core.withServer
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.impl.common.configuration.LSCommonConfiguration
 import com.jetbrains.ls.api.features.impl.common.kotlin.configuration.LSKotlinLanguageConfiguration
-import com.jetbrains.ls.api.features.language.LSLanguageConfiguration
+import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.kotlinLsp.connection.Client
 import com.jetbrains.ls.kotlinLsp.logging.initKotlinLspLogger
 import com.jetbrains.ls.kotlinLsp.requests.core.fileUpdateRequests
@@ -241,10 +241,10 @@ private fun preloadKotlinStdlibWhenRunningFromSources() {
 }
 
 interface LanguageConfigurationProvider {
-    val languageConfiguration: LSLanguageConfiguration
+    val languageConfiguration: LSConfigurationPiece
 }
 
-private fun getAdditionalLanguageConfigurations(): List<LSLanguageConfiguration> {
+private fun getAdditionalLanguageConfigurations(): List<LSConfigurationPiece> {
     return ServiceLoader.load(LanguageConfigurationProvider::class.java).map {
         it.languageConfiguration
     }
