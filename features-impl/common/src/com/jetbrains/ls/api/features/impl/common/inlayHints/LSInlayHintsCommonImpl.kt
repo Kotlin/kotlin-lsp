@@ -25,6 +25,7 @@ import com.jetbrains.ls.api.features.utils.toPsiPointer
 import com.jetbrains.lsp.protocol.InlayHint
 import com.jetbrains.lsp.protocol.InlayHintParams
 import com.jetbrains.lsp.protocol.LSP
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
@@ -44,7 +45,7 @@ abstract class LSInlayHintsCommonImpl(
         val factory: HintFactory
     )
 
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override fun getInlayHints(params: InlayHintParams): Flow<InlayHint> = flow {
         val result = mutableListOf<InlayHint>()
         withAnalysisContext {
@@ -72,6 +73,7 @@ abstract class LSInlayHintsCommonImpl(
     }
 
     context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override suspend fun resolveInlayHint(hint: InlayHint): InlayHint? {
         val dataJson = hint.data ?: return null
         val data = LSP.json.decodeFromJsonElement(InlayHintResolveData.serializer(), dataJson)

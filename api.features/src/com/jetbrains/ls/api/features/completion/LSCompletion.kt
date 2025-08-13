@@ -8,19 +8,20 @@ import com.jetbrains.ls.api.features.entriesFor
 import com.jetbrains.ls.api.features.entryById
 import com.jetbrains.ls.api.features.resolve.ResolveDataWithConfigurationEntryId
 import com.jetbrains.ls.api.features.resolve.getConfigurationEntryId
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
 object LSCompletion {
-    context(_: LSServer, _: LSConfiguration)
+    context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
     suspend fun getCompletion(params: CompletionParams): CompletionList {
         // todo support partial results
         val results = entriesFor<LSCompletionProvider>(params.textDocument).map { it.provideCompletion(params) }
         return results.combined()
     }
 
-    context(_: LSServer, _: LSConfiguration)
+    context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
     suspend fun resolveCompletion(item: CompletionItem): CompletionItem {
         val uniqueId = getConfigurationEntryId(item.data) ?: return item
         val entry = entryById<LSCompletionProvider>(uniqueId) ?: return item

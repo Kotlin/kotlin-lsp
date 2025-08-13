@@ -24,6 +24,7 @@ import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguag
 import com.jetbrains.ls.api.features.impl.common.vscode.VsCodeCommands
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -56,7 +57,7 @@ object LSCompletionProviderKotlinImpl : LSAbstractCompletionProvider() {
 
 
     @OptIn(KaImplementationDetail::class)
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override suspend fun resolveCompletion(completionItem: CompletionItem): CompletionItem? {
         val data = json.decodeFromJsonElement<CompletionItemData>(completionItem.data ?: return null)
         val kotlinData = json.decodeFromJsonElement<KotlinCompletionLookupItemData>(data.additionalData)

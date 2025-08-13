@@ -3,10 +3,11 @@ package com.jetbrains.ls.api.features.signatureHelp
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSLanguageSpecificConfigurationEntry
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.SignatureHelp
 import com.jetbrains.lsp.protocol.SignatureHelpParams
 
 interface LSSignatureHelpProvider : LSLanguageSpecificConfigurationEntry {
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     suspend fun getSignatureHelp(params: SignatureHelpParams): SignatureHelp?
 }

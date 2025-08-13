@@ -23,6 +23,7 @@ import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnosticProvider
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.utils.isSource
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -32,7 +33,7 @@ import kotlin.reflect.KClass
 class LSInspectionDiagnosticProviderImpl(
     override val supportedLanguages: Set<LSLanguage>,
 ): LSDiagnosticProvider {
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
         if (!params.textDocument.isSource()) return@flow
         val onTheFly = false

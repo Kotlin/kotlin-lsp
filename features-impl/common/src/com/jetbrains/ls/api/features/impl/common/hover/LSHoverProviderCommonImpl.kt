@@ -20,6 +20,7 @@ import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.hover.LSHoverProvider
 import com.jetbrains.ls.api.features.impl.common.utils.getTargetsAtPosition
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.Hover
 import com.jetbrains.lsp.protocol.HoverParams
 import com.jetbrains.lsp.protocol.MarkupContent
@@ -29,7 +30,7 @@ import com.jetbrains.lsp.protocol.Range
 import com.jetbrains.lsp.protocol.StringOrMarkupContent
 
 abstract class AbstractLSHoverProvider : LSHoverProvider {
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override suspend fun getHover(params: HoverParams): Hover? {
         return withAnalysisContext {
             runReadAction a@{

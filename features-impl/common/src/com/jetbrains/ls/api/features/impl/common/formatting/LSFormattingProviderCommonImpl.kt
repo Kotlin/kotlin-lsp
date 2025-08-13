@@ -18,17 +18,18 @@ import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.formatting.LSFormattingProvider
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.textEdits.PsiFileTextEditsCollector
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.*
 
 class LSFormattingProviderCommonImpl(
     override val supportedLanguages: Set<LSLanguage>
 ) : LSFormattingProvider {
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override suspend fun getFormatting(params: DocumentFormattingParams): List<TextEdit>? {
         return format(params.textDocument, params.options, range = null)
     }
 
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override suspend fun getFormattingRanged(params: DocumentRangeFormattingParams): List<TextEdit>? {
         return format(params.textDocument, params.options, params.range)
     }

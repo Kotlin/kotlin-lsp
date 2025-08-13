@@ -35,7 +35,7 @@ abstract class LSSimpleCodeActionProvider<P : Any> : LSCodeActionProvider, LSCom
     context(_: LSServer, _: LSAnalysisContext)
     abstract fun execute(file: VirtualFile, data: P): List<TextEdit>
 
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val documentUri = params.textDocument.uri
         val params = withAnalysisContext {

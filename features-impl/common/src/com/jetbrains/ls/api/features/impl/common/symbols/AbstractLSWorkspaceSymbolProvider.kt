@@ -9,6 +9,7 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.symbols.LSWorkspaceSymbolProvider
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.WorkspaceSymbol
 import com.jetbrains.lsp.protocol.WorkspaceSymbolParams
 import kotlinx.coroutines.channels.SendChannel
@@ -23,7 +24,7 @@ abstract class AbstractLSWorkspaceSymbolProvider : LSWorkspaceSymbolProvider {
     context(_: LSServer, _: LSAnalysisContext)
     abstract fun createWorkspaceSymbol(item: NavigationItem, contributor: ChooseByNameContributor): WorkspaceSymbol?
 
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     final override fun getWorkspaceSymbols(params: WorkspaceSymbolParams): Flow<WorkspaceSymbol> = channelFlow {
         withAnalysisContext {
             coroutineScope {

@@ -8,11 +8,12 @@ import com.jetbrains.ls.api.features.entriesFor
 import com.jetbrains.ls.api.features.partialResults.LSConcurrentResponseHandler
 import com.jetbrains.ls.api.features.resolve.getConfigurationEntryId
 import com.jetbrains.ls.api.features.entryById
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.InlayHint
 import com.jetbrains.lsp.protocol.InlayHintParams
 
 object LSInlayHints {
-    context(_: LSServer, _: LSConfiguration)
+    context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
     suspend fun inlayHints(params: InlayHintParams): List<InlayHint> {
         return LSConcurrentResponseHandler.respondDirectlyWithResultsCollectedConcurrently(
             entriesFor<LSInlayHintsProvider>(params.textDocument),
@@ -20,7 +21,7 @@ object LSInlayHints {
             it.getInlayHints(params)
         }
     }
-    context(_: LSServer, _: LSConfiguration)
+    context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
     suspend fun resolveInlayHint(hint: InlayHint): InlayHint {
         val uniqueId = getConfigurationEntryId(hint.data) ?: return hint
         val entry = entryById<LSInlayHintsProvider>(uniqueId) ?: return hint

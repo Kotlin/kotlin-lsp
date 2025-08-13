@@ -3,11 +3,12 @@ package com.jetbrains.ls.api.features.symbols
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSLanguageSpecificConfigurationEntry
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.DocumentSymbol
 import com.jetbrains.lsp.protocol.DocumentSymbolParams
 import kotlinx.coroutines.flow.Flow
 
 interface LSDocumentSymbolProvider : LSLanguageSpecificConfigurationEntry {
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     fun getDocumentSymbols(params: DocumentSymbolParams): Flow<DocumentSymbol>
 }

@@ -13,6 +13,7 @@ import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.impl.common.utils.getLspLocation
 import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
 import com.jetbrains.ls.api.features.symbols.LSDocumentSymbolProvider
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.DocumentSymbol
 import com.jetbrains.lsp.protocol.DocumentSymbolParams
 import com.jetbrains.lsp.protocol.SymbolKind
@@ -22,7 +23,7 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 
 abstract class AbstractLSDocumentSymbolProvider : LSDocumentSymbolProvider {
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override fun getDocumentSymbols(params: DocumentSymbolParams): Flow<DocumentSymbol> = flow {
         val uri = params.textDocument.uri.uri
         withAnalysisContext {

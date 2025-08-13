@@ -19,6 +19,7 @@ import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguag
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.semanticTokens.*
 import com.jetbrains.ls.api.features.utils.allNonWhitespaceChildren
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.Range
 import com.jetbrains.lsp.protocol.SemanticTokensParams
 import com.jetbrains.lsp.protocol.SemanticTokensRangeParams
@@ -48,13 +49,13 @@ object LSSemanticTokensProviderKotlinImpl : LSSemanticTokensProvider {
         return LSSemanticTokenRegistry(LSSemanticTokenTypePredefined.ALL, LSSemanticTokenModifierPredefined.ALL)
     }
 
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override suspend fun full(params: SemanticTokensParams): List<LSSemanticTokenWithRange> {
         return getTokens(params.textDocument, range = null)
 
     }
 
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override suspend fun range(params: SemanticTokensRangeParams): List<LSSemanticTokenWithRange> {
         return getTokens(params.textDocument, params.range)
     }

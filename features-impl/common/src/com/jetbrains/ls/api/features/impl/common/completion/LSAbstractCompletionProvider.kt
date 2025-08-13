@@ -19,6 +19,7 @@ import com.jetbrains.ls.api.features.completion.CompletionItemData
 import com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider
 import com.jetbrains.ls.api.features.completion.LSCompletionProvider
 import com.jetbrains.ls.api.features.utils.isSource
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.*
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.encodeToJsonElement
@@ -26,7 +27,7 @@ import kotlinx.serialization.json.encodeToJsonElement
 abstract class LSAbstractCompletionProvider : LSCompletionProvider {
     override val supportsResolveRequest: Boolean get() = true
 
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override suspend fun provideCompletion(params: CompletionParams): CompletionList {
         if (!params.textDocument.isSource()) return CompletionList.EMPTY_COMPLETE
         return withAnalysisContext {

@@ -18,6 +18,7 @@ import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.utils.isSource
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.*
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -41,7 +42,7 @@ internal object LSRekotBasedKotlinCompletionProviderImpl : LSCompletionProvider 
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
     override val supportsResolveRequest: Boolean get() = false
 
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override suspend fun provideCompletion(params: CompletionParams): CompletionList {
         if (!params.textDocument.isSource()) return CompletionList.EMPTY_COMPLETE
         return withAnalysisContext {

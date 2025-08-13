@@ -22,6 +22,7 @@ import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.rename.LSRenameProvider
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
 import com.jetbrains.lsp.implementation.LspException
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.throwLspError
 import com.jetbrains.lsp.protocol.*
 import java.util.concurrent.atomic.AtomicReference
@@ -37,7 +38,7 @@ class LSRenameProviderCommonImpl(
         private val LOG = logger<LSRenameProviderCommonImpl>()
     }
 
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override suspend fun rename(params: RenameParams): WorkspaceEdit? {
         val originals = mutableMapOf<PsiFile, String>()
         val renames = mutableListOf<RenameFile>()

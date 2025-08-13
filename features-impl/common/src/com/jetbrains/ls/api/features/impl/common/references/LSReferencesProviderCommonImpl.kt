@@ -17,6 +17,7 @@ import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefiniti
 import com.jetbrains.ls.api.features.impl.common.utils.getTargetsAtPosition
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.references.LSReferencesProvider
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.Location
 import com.jetbrains.lsp.protocol.ReferenceParams
 import kotlinx.coroutines.flow.Flow
@@ -25,7 +26,7 @@ import kotlinx.coroutines.flow.channelFlow
 class LSReferencesProviderCommonImpl(
     override val supportedLanguages: Set<LSLanguage>,
 ) : LSReferencesProvider {
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override fun getReferences(params: ReferenceParams): Flow<Location> = channelFlow {
         withAnalysisContext {
             runReadAction a@{

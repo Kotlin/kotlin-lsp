@@ -22,6 +22,7 @@ import com.jetbrains.analyzer.java.JavaFilePackageIndex
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.impl.common.utils.getTargetsAtPosition
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.DefinitionParams
 import com.jetbrains.lsp.protocol.DocumentUri
 import com.jetbrains.lsp.protocol.Location
@@ -32,7 +33,7 @@ import kotlinx.coroutines.flow.flow
 class LSDefinitionProviderCommonImpl(
     override val supportedLanguages: Set<LSLanguage>,
 ) : LSDefinitionProvider {
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override fun provideDefinitions(params: DefinitionParams): Flow<Location> = flow {
         val uri = params.textDocument.uri.uri
         withAnalysisContext {

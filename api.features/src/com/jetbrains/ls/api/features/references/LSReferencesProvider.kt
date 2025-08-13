@@ -3,11 +3,12 @@ package com.jetbrains.ls.api.features.references
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSLanguageSpecificConfigurationEntry
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.Location
 import com.jetbrains.lsp.protocol.ReferenceParams
 import kotlinx.coroutines.flow.Flow
 
 interface LSReferencesProvider : LSLanguageSpecificConfigurationEntry {
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     fun getReferences(params: ReferenceParams): Flow<Location>
 }

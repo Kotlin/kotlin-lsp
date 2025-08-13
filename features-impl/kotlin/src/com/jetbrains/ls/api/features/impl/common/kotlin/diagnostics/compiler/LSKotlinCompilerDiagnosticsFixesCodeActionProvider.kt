@@ -21,6 +21,7 @@ import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguag
 import com.jetbrains.ls.api.features.impl.common.utils.createEditorWithCaret
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.textEdits.PsiFileTextEditsCollector
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -37,7 +38,7 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
     override val providesOnlyKinds: Set<CodeActionKind> = setOf(CodeActionKind.QuickFix)
 
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val diagnosticData = params.diagnosticData<KotlinCompilerDiagnosticData>().ifEmpty { return@flow }
 

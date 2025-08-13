@@ -3,6 +3,7 @@ package com.jetbrains.ls.api.features.codeActions
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSLanguageSpecificConfigurationEntry
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.CodeAction
 import com.jetbrains.lsp.protocol.CodeActionKind
 import com.jetbrains.lsp.protocol.CodeActionParams
@@ -16,6 +17,6 @@ interface LSCodeActionProvider : LSLanguageSpecificConfigurationEntry {
      */
     val providesOnlyKinds: Set<CodeActionKind>
 
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     fun getCodeActions(params: CodeActionParams): Flow<CodeAction>
 }

@@ -19,6 +19,7 @@ import com.jetbrains.ls.api.features.commands.document.LSDocumentCommandExecutor
 import com.jetbrains.ls.api.features.impl.common.diagnostics.diagnosticData
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.textEdits.PsiFileTextEditsCollector
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -31,7 +32,7 @@ class LSInspectionFixesCodeActionProvider(
 
     override val providesOnlyKinds: Set<CodeActionKind> = setOf(CodeActionKind.QuickFix)
 
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val diagnosticData = params.diagnosticData<InspectionDiagnosticData>().ifEmpty { return@flow }
 

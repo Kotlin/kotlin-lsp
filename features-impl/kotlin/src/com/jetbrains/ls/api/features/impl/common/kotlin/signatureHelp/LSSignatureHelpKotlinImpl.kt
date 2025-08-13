@@ -12,6 +12,7 @@ import com.jetbrains.ls.api.features.impl.common.hover.AbstractLSHoverProvider.L
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.signatureHelp.LSSignatureHelpProvider
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.ParameterInformation
 import com.jetbrains.lsp.protocol.SignatureHelp
 import com.jetbrains.lsp.protocol.SignatureHelpParams
@@ -33,7 +34,7 @@ object LSSignatureHelpKotlinImpl : LSSignatureHelpProvider {
         KotlinHighLevelArrayAccessParameterInfoHandler(),
     ) as List<KotlinHighLevelParameterInfoWithCallHandlerBase<KtElement, out KtElement>>
 
-    context(_: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override suspend fun getSignatureHelp(params: SignatureHelpParams): SignatureHelp? {
         return withAnalysisContext {
             runReadAction r@{
