@@ -123,7 +123,7 @@ abstract class LSInlayHintsCommonImpl(
         inlayOptions: InlayOptions,
     ): List<Presentation> {
         val collector = provider.intellijProvider.createCollector(psiFile, editor) ?: return emptyList()
-        val sink = Sink(inlayOptions)
+        val sink = LSCommonInlayTreeSink(inlayOptions)
         when (collector) {
             is SharedBypassCollector -> {
                 val traverser = SyntaxTraverser.psiTraverser(psiFile).onRange(textRange)
@@ -139,7 +139,7 @@ abstract class LSInlayHintsCommonImpl(
         return sink.presentations
     }
 
-    private class Sink(
+    private class LSCommonInlayTreeSink(
         private val inlayOptions: InlayOptions,
     ) : InlayTreeSink {
         private val _presentations: MutableList<Presentation> = mutableListOf()
@@ -153,7 +153,7 @@ abstract class LSInlayHintsCommonImpl(
             hintFormat: HintFormat,
             builder: PresentationTreeBuilder.() -> Unit
         ) {
-            _presentations += Presentation(InlayPositionSerializable.fromInlayPosition(position), tooltip, TreeBuilder().apply(builder).hints)
+            _presentations += Presentation(InlayPositionSerializable.fromInlayPosition(position), tooltip, LSCommonTreeBuilder().apply(builder).hints)
         }
 
         override fun whenOptionEnabled(optionId: String, block: () -> Unit) {
@@ -200,13 +200,13 @@ abstract class LSInlayHintsCommonImpl(
         }
     }
 
-    private class TreeBuilder() : PresentationTreeBuilder {
+    private class LSCommonTreeBuilder() : PresentationTreeBuilder {
         private val _hints: MutableList<Hint> = mutableListOf()
 
         val hints: List<Hint> get() = _hints
 
         override fun list(builder: PresentationTreeBuilder.() -> Unit) {
-            _hints += Hint.ListHint(TreeBuilder().apply(builder)._hints)
+            _hints += Hint.ListHint(LSCommonTreeBuilder().apply(builder)._hints)
         }
 
         override fun collapsibleList(
