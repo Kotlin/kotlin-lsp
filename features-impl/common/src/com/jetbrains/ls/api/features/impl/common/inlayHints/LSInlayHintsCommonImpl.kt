@@ -22,13 +22,18 @@ import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.resolve.ResolveDataWithConfigurationEntryId
 import com.jetbrains.ls.api.features.utils.PsiSerializablePointer
 import com.jetbrains.ls.api.features.utils.toPsiPointer
-import com.jetbrains.lsp.protocol.InlayHint
-import com.jetbrains.lsp.protocol.InlayHintParams
-import com.jetbrains.lsp.protocol.LSP
 import com.jetbrains.lsp.implementation.LspHandlerContext
+import com.jetbrains.lsp.implementation.lspClient
+import com.jetbrains.lsp.protocol.*
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
 
 abstract class LSInlayHintsCommonImpl(
     override val supportedLanguages: Set<LSLanguage>,
@@ -38,9 +43,11 @@ abstract class LSInlayHintsCommonImpl(
     /**
      * Provider order should be stable so multiple invocations return the same result.
      */
-    abstract fun createProviders(): List<Provider>
+    protected abstract fun createProviders(options: InlayOptions): List<Provider>
 
-    class Provider(
+    protected abstract val lspConfigurationParamsSection: String?
+
+    protected class Provider(
         val intellijProvider: InlayHintsProvider,
         val factory: HintFactory
     )
@@ -48,6 +55,8 @@ abstract class LSInlayHintsCommonImpl(
     context(_: LSServer, _: LspHandlerContext)
     override fun getInlayHints(params: InlayHintParams): Flow<InlayHint> = flow {
         val result = mutableListOf<InlayHint>()
+        val options = requestEnabledInlayOptions(params.textDocument)
+
         withAnalysisContext {
             runReadAction a@{
                 val file = params.textDocument.findVirtualFile() ?: return@a
@@ -56,14 +65,14 @@ abstract class LSInlayHintsCommonImpl(
                 val textRange = params.range.toTextRange(document)
                 val editor = ImaginaryEditor(project, document)
 
-                for ((providerIndex, provider) in createProviders().withIndex()) {
-                    val presentations = collectHints(provider, psiFile, editor, textRange)
+                for ((providerIndex, provider) in createProviders(options).withIndex()) {
+                    val presentations = collectHints(provider, psiFile, editor, textRange, options)
                     for (presentation in presentations) {
                         result += provider.factory.createHint(
                             presentation,
                             psiFile,
                             document,
-                            InlayHintResolveData(params, presentation, providerIndex, uniqueId),
+                            InlayHintResolveData(params, presentation, providerIndex, options,uniqueId),
                         ) ?: continue
                     }
                 }
@@ -72,7 +81,19 @@ abstract class LSInlayHintsCommonImpl(
         result.forEach { emit(it) }
     }
 
-    context(_: LSServer)
+    context(_: LspHandlerContext)
+    private suspend fun requestEnabledInlayOptions(document: TextDocumentIdentifier): InlayOptions {
+        val raw = lspClient.request(
+            Workspace.Configuration,
+            ConfigurationParams(
+                listOf(
+                    ConfigurationItem(document.uri.uri, lspConfigurationParamsSection),
+                )
+            )
+        )
+        return InlayOptions.create(raw)
+    }
+
     context(_: LSServer, _: LspHandlerContext)
     override suspend fun resolveInlayHint(hint: InlayHint): InlayHint? {
         val dataJson = hint.data ?: return null
@@ -82,13 +103,13 @@ abstract class LSInlayHintsCommonImpl(
                 val file = data.params.textDocument.findVirtualFile() ?: return@a null
                 val psiFile = file.findPsiFile(project) ?: return@a null
                 val document = file.findDocument() ?: return@a null
-                val provider = createProviders()[data.providerIndex]
+                val provider = createProviders(data.options)[data.providerIndex]
                 provider.factory.resolveHint(hint, data.presentation, psiFile, document)
             }
         }
     }
 
-    interface HintFactory {
+    protected interface HintFactory {
         fun createHint(presentation: Presentation, psiFile: PsiFile, document: Document, data: InlayHintResolveData): InlayHint?
 
         fun resolveHint(hint: InlayHint, presentation: Presentation, psiFile: PsiFile, document: Document): InlayHint? = null
@@ -99,9 +120,10 @@ abstract class LSInlayHintsCommonImpl(
         psiFile: PsiFile,
         editor: ImaginaryEditor,
         textRange: TextRange,
+        inlayOptions: InlayOptions,
     ): List<Presentation> {
         val collector = provider.intellijProvider.createCollector(psiFile, editor) ?: return emptyList()
-        val sink = Sink()
+        val sink = Sink(inlayOptions)
         when (collector) {
             is SharedBypassCollector -> {
                 val traverser = SyntaxTraverser.psiTraverser(psiFile).onRange(textRange)
@@ -117,7 +139,9 @@ abstract class LSInlayHintsCommonImpl(
         return sink.presentations
     }
 
-    private class Sink : InlayTreeSink {
+    private class Sink(
+        private val inlayOptions: InlayOptions,
+    ) : InlayTreeSink {
         private val _presentations: MutableList<Presentation> = mutableListOf()
 
         val presentations: List<Presentation> get() = _presentations
@@ -133,8 +157,46 @@ abstract class LSInlayHintsCommonImpl(
         }
 
         override fun whenOptionEnabled(optionId: String, block: () -> Unit) {
-            // TODO
-            block()
+           if (inlayOptions.isEnabled(optionId)) {
+               block()
+           }
+        }
+    }
+
+
+    @Serializable
+    protected class InlayOptions(private val enabled: Set<String>) {
+        fun isEnabled(optionId: String): Boolean {
+            return enabled.contains(optionId)
+        }
+
+        companion object {
+            fun create(raw: List<JsonElement?>): InlayOptions {
+                val enabled = mutableSetOf<String>()
+
+                fun handleRecursively(element: JsonElement, path: PersistentList<String>) {
+                    when (element) {
+                        is JsonObject -> {
+                            for ((key, value) in element) {
+                                handleRecursively(value, path.add(key))
+                            }
+                        }
+
+                        is JsonPrimitive if element.booleanOrNull == true -> {
+                            enabled += path.joinToString(".")
+                        }
+
+                        else -> {}
+                    }
+                }
+
+                for (element in raw) {
+                    if (element == null) continue
+                    handleRecursively(element, persistentListOf())
+                }
+
+                return InlayOptions(enabled)
+            }
         }
     }
 
@@ -258,10 +320,11 @@ abstract class LSInlayHintsCommonImpl(
     }
 
     @Serializable
-    data class InlayHintResolveData(
+    protected data class InlayHintResolveData(
         val params: InlayHintParams,
         val presentation: Presentation,
         val providerIndex: Int,
+        val options: InlayOptions, // we need it to be the same between the main and resolve requests, so we pass it instead of rerequesting
         override val configurationEntryId: LSUniqueConfigurationEntry.UniqueId,
     ) : ResolveDataWithConfigurationEntryId
 

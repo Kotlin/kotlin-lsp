@@ -44,8 +44,9 @@
         "path": "./syntaxes/kotlin.tmLanguage.json"
       }
     ],
-    "configuration": {
-      "title": "Kotlin",
+    "configuration": [
+      {
+      "title": "LSP Server",
       "properties": {
         "kotlinLSP.dev.serverPort": {
           "type": "number",
@@ -64,6 +65,67 @@
         }
       }
     },
+      {
+        "title": "Inlay",
+        "properties": {
+          "jetbrains.kotlin.hints.settings.types.property": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show inlay hints for property types"
+          },
+          "jetbrains.kotlin.hints.settings.types.variable": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show inlay hints for local variable types"
+          },
+          "jetbrains.kotlin.hints.type.function.return": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show inlay hints for function return types"
+          },
+          "jetbrains.kotlin.hints.type.function.parameter": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show inlay hints for function parameter types"
+          },
+          "jetbrains.kotlin.hints.settings.lambda.return": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show inlay hints for return expressions"
+          },
+          "jetbrains.kotlin.hints.lambda.receivers.parameters": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show inlay hints for implicit receivers and parameters"
+          },
+          "jetbrains.kotlin.hints.settings.value.ranges": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show inlay hints for ranges"
+          },
+          "jetbrains.kotlin.hints.value.kotlin.time": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show kotlin.time package warning inlay hints"
+          },
+          "jetbrains.kotlin.hints.parameters": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show parameter names"
+          },
+          "jetbrains.kotlin.hints.parameters.compiled": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show compiled parameter names"
+          },
+          "jetbrains.kotlin.hints.parameters.excluded": {
+            "type": "boolean",
+            "default": false,
+            "description": "Show excluded parameter names"
+          }
+        }
+      }
+    ],
     "commands": [
       {
         "command": "jetbrains.exportWorkspaceToJson",

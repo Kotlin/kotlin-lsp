@@ -52,6 +52,8 @@ jvm_library(
     "@community//platform/platform-impl:ide-impl",
     "@community//platform/usageView",
     "@community//platform/ide-core",
+    "@community//plugins/kotlin/code-insight/impl-base",
+    "@lib//:kotlinx-collections-immutable",
   ],
   runtime_deps = [":common_resources"]
 )

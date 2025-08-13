@@ -57,5 +57,7 @@
     <orderEntry type="module" module-name="intellij.platform.ide.impl" />
     <orderEntry type="module" module-name="intellij.platform.usageView" />
     <orderEntry type="module" module-name="intellij.platform.ide.core" />
+    <orderEntry type="module" module-name="kotlin.code-insight.impl-base" />
+    <orderEntry type="library" name="kotlinx-collections-immutable" level="project" />
   </component>
 </module>
