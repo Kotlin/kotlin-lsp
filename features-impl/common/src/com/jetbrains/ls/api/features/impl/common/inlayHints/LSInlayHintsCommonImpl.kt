@@ -233,14 +233,14 @@ abstract class LSInlayHintsCommonImpl(
     }
 
     @Serializable
-    class Presentation(
+    protected class Presentation(
         val position: InlayPositionSerializable,
         val tooltip: String?,
         val hints: List<Hint>,
     )
 
     @Serializable
-    sealed interface InlayPositionSerializable {
+    protected sealed interface InlayPositionSerializable {
         fun toOriginal(): InlayPosition
 
         @Serializable
@@ -281,7 +281,7 @@ abstract class LSInlayHintsCommonImpl(
     }
 
     @Serializable
-    data class InlayActionDataSerializable(val payload: InlayActionPayloadDataSerializable, val handlerId: String) {
+    protected data class InlayActionDataSerializable(val payload: InlayActionPayloadDataSerializable, val handlerId: String) {
         companion object {
             fun fromInlayActionData(data: InlayActionData): InlayActionDataSerializable {
                 return InlayActionDataSerializable(
@@ -301,7 +301,7 @@ abstract class LSInlayHintsCommonImpl(
     }
 
     @Serializable
-    sealed interface InlayActionPayloadDataSerializable {
+    protected sealed interface InlayActionPayloadDataSerializable {
         fun toOriginal(project: Project): InlayActionPayload
 
         @Serializable
@@ -330,7 +330,7 @@ abstract class LSInlayHintsCommonImpl(
 
 
     @Serializable
-    sealed interface Hint {
+    protected sealed interface Hint {
         @Serializable
         class ListHint(val hints: List<Hint>) : Hint
 
