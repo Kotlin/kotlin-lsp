@@ -26,6 +26,7 @@ import com.jetbrains.ls.api.features.impl.common.kotlin.symbols.LSWorkspaceSymbo
 import com.jetbrains.ls.api.features.impl.common.kotlin.usages.kotlinUsagesIjPlugins
 import com.jetbrains.ls.api.features.impl.common.references.LSReferencesProviderCommonImpl
 import com.jetbrains.ls.api.features.impl.common.rename.LSRenameProviderCommonImpl
+import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.api.features.utils.ijPluginByXml
 import org.jetbrains.kotlin.idea.base.fir.codeInsight.FirCodeInsightForClassPath
@@ -34,11 +35,11 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
     entries = listOf(
         LSOrganizeImportsCodeActionProviderKotlinImpl,
         LSCompletionProviderKotlinImpl,
-        LSDefinitionProviderCommonImpl(setOf(LSKotlinLanguage)),
+        LSDefinitionProviderCommonImpl(setOf(LSKotlinLanguage), TargetKind.ALL),
         LSHoverProviderKotlinImpl,
         LSKotlinPackageDefinitionProvider,
         LSSemanticTokensProviderKotlinImpl,
-        LSReferencesProviderCommonImpl(setOf(LSKotlinLanguage)),
+        LSReferencesProviderCommonImpl(setOf(LSKotlinLanguage), TargetKind.ALL),
         LSInspectionDiagnosticProviderImpl(setOf(LSKotlinLanguage)),
         LSInspectionFixesCodeActionProvider(setOf(LSKotlinLanguage)),
         LSSyntaxErrorDiagnosticProviderImpl(setOf(LSKotlinLanguage)),

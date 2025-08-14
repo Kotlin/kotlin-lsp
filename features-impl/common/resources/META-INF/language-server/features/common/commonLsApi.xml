@@ -10,4 +10,12 @@
       <with attribute="implementationClass" implements="com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider"/>
     </extensionPoint>
   </extensionPoints>
+
+  <extensions defaultExtensionNs="ls">
+    <markdownDocProvider language="JAVA"
+                         implementationClass="com.jetbrains.ls.api.features.impl.javaBase.documentation.LSMarkdownDocProviderJavaImpl"/>
+
+    <completionItemKindProvider language="JAVA"
+                                implementationClass="com.jetbrains.ls.api.features.impl.javaBase.completion.LSCompletionItemKindProviderJavaImpl"/>
+  </extensions>
 </idea-plugin>

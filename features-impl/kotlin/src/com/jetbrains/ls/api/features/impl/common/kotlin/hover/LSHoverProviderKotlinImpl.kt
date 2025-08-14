@@ -11,6 +11,7 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.impl.common.hover.AbstractLSHoverProvider
 import com.jetbrains.ls.api.features.impl.common.hover.markdownMultilineCode
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
+import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
 import com.jetbrains.ls.api.features.language.LSLanguage
 import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.analysis.api.analyze
@@ -27,7 +28,7 @@ import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.renderer.render
 
-object LSHoverProviderKotlinImpl : AbstractLSHoverProvider() {
+object LSHoverProviderKotlinImpl : AbstractLSHoverProvider(TargetKind.ALL) {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSKotlinLanguage)
 
     context(_: LSServer, _: LSAnalysisContext)

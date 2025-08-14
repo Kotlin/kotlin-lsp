@@ -19,6 +19,7 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.hover.LSHoverProvider
+import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
 import com.jetbrains.ls.api.features.impl.common.utils.getTargetsAtPosition
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.Hover
@@ -29,7 +30,10 @@ import com.jetbrains.lsp.protocol.Position
 import com.jetbrains.lsp.protocol.Range
 import com.jetbrains.lsp.protocol.StringOrMarkupContent
 
-abstract class AbstractLSHoverProvider : LSHoverProvider {
+abstract class AbstractLSHoverProvider(
+    private val targetKinds: Set<TargetKind>
+) : LSHoverProvider {
+    protected open fun acceptTarget(target: PsiElement): Boolean = true
     context(_: LSServer, _: LspHandlerContext)
     override suspend fun getHover(params: HoverParams): Hover? {
         return withAnalysisContext {
@@ -37,7 +41,9 @@ abstract class AbstractLSHoverProvider : LSHoverProvider {
                 val file = params.findVirtualFile() ?: return@a null
                 val psiFile = file.findPsiFile(project) ?: return@a null
                 val document = file.findDocument() ?: return@a null
-                val targets = psiFile.getTargetsAtPosition(params.position, document)
+                val targets =
+                    psiFile.getTargetsAtPosition(params.position, document, targetKinds)
+                        .filter { acceptTarget(it) }
                 if (targets.isEmpty()) return@a null
 
 

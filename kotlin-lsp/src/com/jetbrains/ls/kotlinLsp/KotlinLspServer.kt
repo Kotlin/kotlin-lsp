@@ -12,6 +12,7 @@ import com.jetbrains.ls.api.core.withServer
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.impl.common.configuration.LSCommonConfiguration
 import com.jetbrains.ls.api.features.impl.common.kotlin.configuration.LSKotlinLanguageConfiguration
+import com.jetbrains.ls.api.features.impl.javaBase.configuration.LSJavaBaseLanguageConfiguration
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.kotlinLsp.connection.Client
 import com.jetbrains.ls.kotlinLsp.logging.initKotlinLspLogger
@@ -213,6 +214,7 @@ fun createConfiguration(): LSConfiguration {
         buildList {
             add(LSCommonConfiguration)
             add(LSKotlinLanguageConfiguration)
+            add(LSJavaBaseLanguageConfiguration)
             addAll(getAdditionalLanguageConfigurations())
         }
     )

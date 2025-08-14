@@ -58,6 +58,7 @@ jvm_library(
     "@community//platform/service-container",
     "@lib//:ktor-network-tls",
     "@lib//:kotlinx-io-core",
+    "//language-server/community/features-impl/java-base",
   ]
 )
 
@@ -117,6 +118,7 @@ jvm_library(
     "@lib//:junit5Jupiter",
     "@lib//:junit5Launcher",
     "@lib//:junit5Params",
+    "//language-server/community/features-impl/java-base",
   ]
 )
 ### auto-generated section `build language-server.kotlin-lsp` end

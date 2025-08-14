@@ -13,6 +13,7 @@ import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.withAnalysisContext
+import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
 import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
 import com.jetbrains.ls.api.features.impl.common.utils.getTargetsAtPosition
 import com.jetbrains.ls.api.features.language.LSLanguage
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.channelFlow
 
 class LSReferencesProviderCommonImpl(
     override val supportedLanguages: Set<LSLanguage>,
+    private val targetKinds: Set<TargetKind>
 ) : LSReferencesProvider {
     context(_: LSServer, _: LspHandlerContext)
     override fun getReferences(params: ReferenceParams): Flow<Location> = channelFlow {
@@ -33,7 +35,7 @@ class LSReferencesProviderCommonImpl(
                 val file = params.findVirtualFile() ?: return@a
                 val psiFile = file.findPsiFile(project) ?: return@a
                 val document = file.findDocument() ?: return@a
-                val targets = psiFile.getTargetsAtPosition(params.position, document)
+                val targets = psiFile.getTargetsAtPosition(params.position, document, targetKinds)
                 if (targets.isEmpty()) return@a
 
                 val findUsagesManager = FindUsagesManager(project)

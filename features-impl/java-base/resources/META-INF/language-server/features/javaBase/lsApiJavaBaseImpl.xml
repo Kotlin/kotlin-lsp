@@ -1,0 +1,14 @@
+<idea-plugin>
+  <id>features/javaBase/apiImpl</id>
+  <vendor>JetBrains</vendor>
+
+  <extensions defaultExtensionNs="ls">
+    <markdownDocProvider language="JAVA"
+                         implementationClass="com.jetbrains.ls.api.features.impl.javaBase.documentation.LSMarkdownDocProviderJavaImpl"/>
+
+    <completionItemKindProvider language=""
+                                implementationClass="com.jetbrains.ls.api.features.impl.javaBase.completion.LSCompletionItemKindProviderAnyImpl"/>
+    <completionItemKindProvider language="JAVA"
+                         implementationClass="com.jetbrains.ls.api.features.impl.javaBase.completion.LSCompletionItemKindProviderJavaImpl"/>
+  </extensions>
+</idea-plugin>

@@ -21,6 +21,7 @@ import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.analyzer.java.JavaFilePackageIndex
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.withAnalysisContext
+import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
 import com.jetbrains.ls.api.features.impl.common.utils.getTargetsAtPosition
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.DefinitionParams
@@ -32,6 +33,7 @@ import kotlinx.coroutines.flow.flow
 
 class LSDefinitionProviderCommonImpl(
     override val supportedLanguages: Set<LSLanguage>,
+    private val targetKinds: Set<TargetKind>
 ) : LSDefinitionProvider {
     context(_: LSServer, _: LspHandlerContext)
     override fun provideDefinitions(params: DefinitionParams): Flow<Location> = flow {
@@ -41,7 +43,7 @@ class LSDefinitionProviderCommonImpl(
                 val file = uri.findVirtualFile() ?: return@runReadAction emptyList()
                 val psiFile = file.findPsiFile(project) ?: return@runReadAction emptyList()
                 val document = file.findDocument() ?: return@runReadAction emptyList()
-                val targets = psiFile.getTargetsAtPosition(params.position, document)
+                val targets = psiFile.getTargetsAtPosition(params.position, document, targetKinds)
 
                 targets.mapNotNull {
                     when (it) {
