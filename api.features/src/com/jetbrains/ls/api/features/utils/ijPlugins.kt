@@ -22,7 +22,7 @@ fun ijPluginByXml(
     return when {
         xmlResourcePath.startsWith(PluginManagerCore.META_INF) -> {
             // normal plugin xml
-            loadForCoreEnv( // TODO initialize(context = initContext)
+            loadForCoreEnv(
                 pluginRoot,
                 xmlResourcePath, relativeDir = "",
                 id = if (useFakePluginId) createFakePluginId() else null
@@ -31,7 +31,7 @@ fun ijPluginByXml(
 
         else -> {
             // v2 plugin xml
-            loadForCoreEnv(pluginRoot, xmlResourcePath, relativeDir = "", id = createFakePluginId()) // TODO initialize(context = initContext)
+            loadForCoreEnv(pluginRoot, xmlResourcePath, relativeDir = "", id = createFakePluginId())
         }
     }
         ?: error("Failed to load plugin descriptor from $xmlResourcePath")
