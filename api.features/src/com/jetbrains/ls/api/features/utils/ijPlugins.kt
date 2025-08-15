@@ -3,7 +3,7 @@ package com.jetbrains.ls.api.features.utils
 
 import com.intellij.ide.plugins.PluginMainDescriptor
 import com.intellij.ide.plugins.PluginManagerCore
-import com.intellij.ide.plugins.loadAndInitForCoreEnv
+import com.intellij.ide.plugins.loadForCoreEnv
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.extensions.PluginId
 import java.nio.file.Path
@@ -22,7 +22,7 @@ fun ijPluginByXml(
     return when {
         xmlResourcePath.startsWith(PluginManagerCore.META_INF) -> {
             // normal plugin xml
-            loadAndInitForCoreEnv(
+            loadForCoreEnv( // TODO initialize(context = initContext)
                 pluginRoot,
                 xmlResourcePath, relativeDir = "",
                 id = if (useFakePluginId) createFakePluginId() else null
@@ -31,7 +31,7 @@ fun ijPluginByXml(
 
         else -> {
             // v2 plugin xml
-            loadAndInitForCoreEnv(pluginRoot, xmlResourcePath, relativeDir = "", id = createFakePluginId())
+            loadForCoreEnv(pluginRoot, xmlResourcePath, relativeDir = "", id = createFakePluginId()) // TODO initialize(context = initContext)
         }
     }
         ?: error("Failed to load plugin descriptor from $xmlResourcePath")
