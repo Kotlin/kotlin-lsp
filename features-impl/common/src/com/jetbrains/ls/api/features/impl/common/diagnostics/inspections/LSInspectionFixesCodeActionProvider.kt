@@ -12,6 +12,7 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.core.withWritableFile
+import com.jetbrains.ls.api.core.withWriteAnalysisContext
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
@@ -66,8 +67,8 @@ class LSInspectionFixesCodeActionProvider(
         LSDocumentCommandExecutor { documentUri, otherArgs ->
             val fix = LSP.json.decodeFromJsonElement<InspectionQuickfixData>(otherArgs[0])
             withWritableFile(documentUri.uri) {
-                withAnalysisContext {
-                    val file = runReadAction { documentUri.findVirtualFile() } ?: return@withAnalysisContext emptyList()
+                withWriteAnalysisContext {
+                    val file = runReadAction { documentUri.findVirtualFile() } ?: return@withWriteAnalysisContext emptyList()
                     PsiFileTextEditsCollector.collectTextEdits(file) { psiFile ->
                         val (fix, descriptor) = findRealFix(fix, psiFile) ?: return@collectTextEdits
                         fix.applyFix(project, descriptor)

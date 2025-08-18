@@ -30,6 +30,7 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.core.withWritableFile
+import com.jetbrains.ls.api.core.withWriteAnalysisContext
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
@@ -147,8 +148,8 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
             } ?: return@e emptyList()
             action as KotlinApplicableModCommandAction<KtElement, Any>
             withWritableFile(documentUri.uri) {
-                withAnalysisContext {
-                    val file = runReadAction { documentUri.findVirtualFile() } ?: return@withAnalysisContext emptyList()
+                withWriteAnalysisContext {
+                    val file = runReadAction { documentUri.findVirtualFile() } ?: return@withWriteAnalysisContext emptyList()
 
                     PsiFileTextEditsCollector.collectTextEdits(file) { ktFile ->
                         check(ktFile is KtFile) { "PsiFile is not KtFile but ${ktFile}" }

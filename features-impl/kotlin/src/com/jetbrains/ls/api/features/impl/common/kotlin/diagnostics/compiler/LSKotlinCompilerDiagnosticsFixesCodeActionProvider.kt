@@ -122,8 +122,8 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
             val diagnosticData = lspDiagnostic.diagnosticData<KotlinCompilerDiagnosticData>() ?: return@e emptyList()
             val fix = LSP.json.decodeFromJsonElement<KotlinCompilerDiagnosticQuickfixData>(otherArgs[1])
             withWritableFile(documentUri.uri) {
-                withAnalysisContext {
-                    val file = runReadAction { documentUri.findVirtualFile() } ?: return@withAnalysisContext emptyList()
+                withWriteAnalysisContext {
+                    val file = runReadAction { documentUri.findVirtualFile() } ?: return@withWriteAnalysisContext emptyList()
                     PsiFileTextEditsCollector.collectTextEdits(file) { ktFile ->
                         check(ktFile is KtFile) { "PsiFile is not KtFile but ${ktFile}" }
                         val candidates = analyze(ktFile) {

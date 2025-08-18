@@ -22,6 +22,6 @@
       <applicationService serviceImplementation="org.jetbrains.kotlin.idea.codeinsight.api.applicators.fixes.KotlinQuickFixService"/>
 
     <applicationService serviceInterface="org.jetbrains.kotlin.idea.base.codeInsight.ShortenReferencesFacility"
-                        serviceImplementation="com.jetbrains.ls.api.features.impl.common.kotlin.codeActions.NoOpReferenceShortener" overrides="true"/>
+                        serviceImplementation="org.jetbrains.kotlin.idea.base.fir.codeInsight.SymbolBasedShortenReferencesFacility"/>
   </extensions>
 </idea-plugin>
