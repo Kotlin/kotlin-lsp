@@ -6,9 +6,6 @@ import com.jetbrains.lsp.protocol.URI
 import kotlinx.coroutines.CoroutineScope
 
 interface LSServer { // workspace?
-    /**
-     * @param useSiteFileUri we may have multiple projects in the workspace, [URI] is used to find a correct one
-     */
     suspend fun <R> withAnalysisContext(
         action: suspend context(LSAnalysisContext) CoroutineScope.() -> R,
     ): R
