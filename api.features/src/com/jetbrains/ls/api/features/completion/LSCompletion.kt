@@ -16,7 +16,6 @@ import kotlinx.serialization.json.JsonElement
 object LSCompletion {
     context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
     suspend fun getCompletion(params: CompletionParams): CompletionList {
-        // todo support partial results
         val results = entriesFor<LSCompletionProvider>(params.textDocument).map { it.provideCompletion(params) }
         return results.combined()
     }

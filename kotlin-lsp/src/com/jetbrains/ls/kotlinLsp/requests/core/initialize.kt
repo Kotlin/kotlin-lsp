@@ -31,6 +31,7 @@ context(_: LSServer, _: LSConfiguration)
 internal fun LspHandlersBuilder.initializeRequest() {
     request(Initialize) { initParams ->
         Client.update { it.copy(trace = initParams.trace) }
+        // TODO take into account client capabilities LSP-223
 
         lspClient.sendRunConfigurationInfoToClient()
         lspClient.sendSystemInfoToClient()
@@ -53,6 +54,8 @@ internal fun LspHandlersBuilder.initializeRequest() {
 
         indexFolders(folders, initParams)
 
+        // TODO LSP-226 determine base on entries,
+        // TODO LSP-227 register capabilities dynamically for each language separately
         val result = InitializeResult(
             capabilities = ServerCapabilities(
                 textDocumentSync = TextDocumentSyncKind.Incremental,
@@ -76,7 +79,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
                 ),
                 completionProvider = CompletionRegistrationOptions(
                     documentSelector = null,
-                    triggerCharacters = listOf("."), // todo should be customized?
+                    triggerCharacters = listOf("."), // TODO LSP-226 should be customized
                     allCommitCharacters = null,
                     resolveProvider = entries<LSCompletionProvider>().any { it.supportsResolveRequest },
                     completionItem = null,
@@ -112,7 +115,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
             ),
             serverInfo = InitializeResult.ServerInfo(
                 name = "Kotlin LSP by JetBrains",
-                version = "0.1" // todo proper version here from the build number
+                version = "0.1" // TODO LSP-225 proper version here from the build number
             ),
         )
         LOG.info("InitializeResult:\n${LSP.json.encodeToString(InitializeResult.serializer(), result)}")

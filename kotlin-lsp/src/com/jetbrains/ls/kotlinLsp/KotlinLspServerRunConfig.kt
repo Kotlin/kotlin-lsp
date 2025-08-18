@@ -1,3 +1,4 @@
+// Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.kotlinLsp
 
 import com.github.ajalt.clikt.core.BadParameterValue
@@ -54,6 +55,8 @@ private class Parser : CliktCommand(name = "kotlin-lsp") {
             if (it && stdio) fail("Stdio mode doesn't support multiclient mode")
             if (it && client) fail("Client mode doesn't support multiclient mode")
         }
+
+    // TODO also parse --version flag, see LSP-225
 
     fun createRunConfig(): KotlinLspServerRunConfig {
         val mode = when {

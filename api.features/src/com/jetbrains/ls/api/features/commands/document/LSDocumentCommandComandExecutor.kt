@@ -21,7 +21,7 @@ fun interface LSDocumentCommandExecutor : LSCommandExecutor {
 
         val edits = executeForDocument(documentUri, arguments.drop(1))
         if (edits.isNotEmpty()) {
-            // todo handle returned results
+            // TODO LSP-235 handle errors during application
             lspClient.request(
                 ApplyEditRequests.ApplyEdit,
                 ApplyWorkspaceEditParams(

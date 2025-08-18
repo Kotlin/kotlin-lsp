@@ -13,6 +13,8 @@ internal class LSMarkdownDocProviderJavaImpl : AbstractLSHoverProvider.LSMarkdow
     override fun getMarkdownDoc(element: PsiElement): String? {
         if (element !is PsiJavaDocumentedElement) return null
         val javadocText = element.docComment?.text ?: return null
+
+        // TODO LSP-239 should be rendered as proper markdown
         return markdownMultilineCode(
           formatDocComment(javadocText),
           language = LSJavaLanguage.lspName

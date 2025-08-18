@@ -65,7 +65,7 @@ fun getKotlinStdlibSourcesPath(): Path? {
         }
 
         else -> {
-           null // TODO we should probably bundle the sources jar
+           null // LSP-224 TODO we should bundle the sources jar
         }
     }
 }

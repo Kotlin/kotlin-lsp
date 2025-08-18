@@ -212,7 +212,7 @@ class LSInspectionDiagnosticProviderImpl(
 private val LOG = logger<LSInspectionDiagnosticProviderImpl>()
 
 
-// TODO design, currently some random conversions
+// TODO LSP-241 design, currently some random conversions
 private fun ProblemHighlightType.toLsp(): DiagnosticSeverity = when (this) {
     ProblemHighlightType.GENERIC_ERROR_OR_WARNING -> DiagnosticSeverity.Hint
     ProblemHighlightType.LIKE_UNKNOWN_SYMBOL -> DiagnosticSeverity.Error
@@ -228,7 +228,7 @@ private fun ProblemHighlightType.toLsp(): DiagnosticSeverity = when (this) {
     ProblemHighlightType.POSSIBLE_PROBLEM -> DiagnosticSeverity.Warning
 }
 
-// TODO design, currently some random conversions
+// TODO LSP-241 design, currently some random conversions
 private fun ProblemHighlightType.toLspTags(): List<DiagnosticTag>? = when (this) {
     ProblemHighlightType.GENERIC_ERROR_OR_WARNING -> null
     ProblemHighlightType.LIKE_UNKNOWN_SYMBOL -> null

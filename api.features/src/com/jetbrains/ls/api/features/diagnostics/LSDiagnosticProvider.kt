@@ -9,7 +9,7 @@ import com.jetbrains.lsp.protocol.DocumentDiagnosticParams
 import kotlinx.coroutines.flow.Flow
 
 interface LSDiagnosticProvider : LSLanguageSpecificConfigurationEntry {
-    // todo handle other parts of `DocumentDiagnosticReport`
+    // TODO LSP-237 handle other parts of `DocumentDiagnosticReport`
     context(_: LSServer, _: LspHandlerContext)
     fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic>
 }

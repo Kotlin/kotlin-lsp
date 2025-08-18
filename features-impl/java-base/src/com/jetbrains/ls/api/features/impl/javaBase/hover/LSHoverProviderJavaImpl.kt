@@ -40,7 +40,7 @@ open class LSHoverProviderJavaImpl(targetKinds: Set<TargetKind>) : AbstractLSHov
             is PsiMethod -> PsiFormatUtil.formatMethod(element, PsiSubstitutor.EMPTY, OPTIONS, OPTIONS)
             is PsiVariable -> PsiFormatUtil.formatVariable(element, OPTIONS, PsiSubstitutor.EMPTY)
             is PsiClass -> {
-                // todo this will not print the class/interface/etc keywords
+                // TODO LSP-238 this will not print the class/interface/etc keywords
                 PsiFormatUtil.formatClass(element, OPTIONS)
             }
             is PsiPackage -> "package ${element.qualifiedName}"

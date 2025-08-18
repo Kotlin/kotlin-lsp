@@ -39,7 +39,9 @@ class LSReferencesProviderCommonImpl(
                 if (targets.isEmpty()) return@a
 
                 val findUsagesManager = FindUsagesManager(project)
-                val target = targets.first()/*todo handle all of them?*/
+
+                // TODO LSP-241 handle all of them
+                val target = targets.first()
                 val handler = findUsagesManager.getFindUsagesHandler(target, true/*forbid showing dialogs*/) ?: return@a
 
                 if (params.context.includeDeclaration) {

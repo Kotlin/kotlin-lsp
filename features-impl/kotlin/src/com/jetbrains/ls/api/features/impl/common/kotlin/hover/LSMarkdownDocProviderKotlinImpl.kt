@@ -13,6 +13,7 @@ internal class LSMarkdownDocProviderKotlinImpl : AbstractLSHoverProvider.LSMarkd
     override fun getMarkdownDoc(element: PsiElement): String? {
         val ktElement = element.unwrapped as? KtDeclaration ?: return null
         val kdDocText = ktElement.docComment?.text ?: return null
+        // TODO LSP-239 should be rendered as proper markdown
         return markdownMultilineCode(
             formatDocComment(kdDocText),
             language = LSKotlinLanguage.lspName

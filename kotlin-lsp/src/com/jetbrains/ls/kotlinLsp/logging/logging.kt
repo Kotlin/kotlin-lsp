@@ -29,6 +29,7 @@ private class KotlinLspLoggerFactory(private val writeToStdOut: Boolean) : Logge
  * - Trace/Debug level: (usually, not enabled by the end user), needed only for debugging. It is sent by `$/setTrace`
  * - Common level: logs to the console, affected by [LogLevel]
  */
+// TODO LSP-229 should store logs on disk
 private class LSPLogger(private val category: String, private val writeToStdOut: Boolean) : Logger() {
     private val logCreation: Long = System.currentTimeMillis()
     private val withDateTime: Boolean = true
@@ -37,6 +38,7 @@ private class LSPLogger(private val category: String, private val writeToStdOut:
      */
     private var level: LogLevel = LogLevel.INFO
 
+    // TODO LSP-226 the level should affect all loggers with the same category
     override fun setLevel(level: LogLevel) {
         this.level = level
     }
@@ -137,7 +139,7 @@ private class LSPLogger(private val category: String, private val writeToStdOut:
                     if (shouldNotifyForDebug) {
                         client.lspClient.notify(
                             LogTraceNotificationType,
-                            LogTraceParams(messageRendered, verbose = null/*todo provide more details here?*/)
+                            LogTraceParams(messageRendered, verbose = null/*TODO LSP-229 provide more details here?*/)
                         )
                     }
                 }

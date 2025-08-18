@@ -11,7 +11,7 @@ import com.jetbrains.lsp.protocol.SemanticTokens
 import com.jetbrains.lsp.protocol.SemanticTokensParams
 import com.jetbrains.lsp.protocol.SemanticTokensRangeParams
 
-// todo send partial results here
+// TODO LSP-236 send partial results here
 object LSSemanticTokens {
     context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
     suspend fun semanticTokensFull(params: SemanticTokensParams): SemanticTokens {

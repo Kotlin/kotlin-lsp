@@ -50,11 +50,11 @@ class LSFormattingProviderCommonImpl(
 
                     codeStyleManager.reformatText(psiFile, listOf(textRange))
                 })
-                // todo handle FormattingOptions.[trimTrailingWhitespace, insertFinalNewline, trimFinalNewlines]
             }
         }
     }
 
+    // TODO LSP-239 handle FormattingOptions.[trimTrailingWhitespace, insertFinalNewline, trimFinalNewlines]
     context(_: LSAnalysisContext)
     private fun FormattingOptions.toIntellijJSettings(psiFile: PsiFile): CodeStyleSettings {
         val settings = CodeStyleSettingsManager.getInstance(project).cloneSettings(CodeStyle.getSettings(psiFile))
