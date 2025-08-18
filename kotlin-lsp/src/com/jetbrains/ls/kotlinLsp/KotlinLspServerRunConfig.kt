@@ -55,6 +55,12 @@ private class Parser : CliktCommand(name = "kotlin-lsp") {
             if (it && stdio) fail("Stdio mode doesn't support multiclient mode")
             if (it && client) fail("Client mode doesn't support multiclient mode")
         }
+    val scoped: Boolean by option().flag()
+        .help("Whether the Kotlin LSP server is used in scoped mode, meaning that a workspace is isolated for each file (hence, each file has its own scope)")
+        .validate {
+            if (it && stdio) fail("Stdio mode doesn't support scoped mode")
+            if (it && client) fail("Client mode doesn't support scoped mode")
+        }
 
     // TODO also parse --version flag, see LSP-225
 
@@ -64,7 +70,7 @@ private class Parser : CliktCommand(name = "kotlin-lsp") {
             client -> KotlinLspServerMode.Socket(TcpConnectionConfig.Client(
                 host = socket.host, port = socket.port))
             else -> KotlinLspServerMode.Socket(TcpConnectionConfig.Server(
-                host = socket.host, port = socket.port, isMultiClient = multiClient))
+                host = socket.host, port = socket.port, isMultiClient = multiClient, isScoped = scoped))
         }
         return KotlinLspServerRunConfig(mode, systemPath)
     }
@@ -94,6 +100,7 @@ fun KotlinLspServerRunConfig.toArguments(): List<String> = buildList {
             is TcpConnectionConfig.Server ->  {
                 add("--socket=${tcpConfig.host}:${tcpConfig.port}")
                 if (tcpConfig.isMultiClient) add("--multi-client")
+                if (tcpConfig.isScoped) add("--scoped")
             }
         }
     }

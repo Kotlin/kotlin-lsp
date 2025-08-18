@@ -10,6 +10,7 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.LSServerContext
 import com.jetbrains.ls.api.core.withServer
 import com.jetbrains.ls.api.features.LSConfiguration
+import com.jetbrains.ls.api.features.completion.LSCompletion
 import com.jetbrains.ls.api.features.impl.common.configuration.LSCommonConfiguration
 import com.jetbrains.ls.api.features.impl.common.kotlin.configuration.LSKotlinLanguageConfiguration
 import com.jetbrains.ls.api.features.impl.javaBase.configuration.LSJavaBaseLanguageConfiguration
@@ -25,6 +26,8 @@ import com.jetbrains.ls.kotlinLsp.util.addKotlinStdlib
 import com.jetbrains.ls.kotlinLsp.util.logSystemInfo
 import com.jetbrains.ls.snapshot.api.impl.core.createServerStarterAnalyzerImpl
 import com.jetbrains.lsp.implementation.*
+import com.jetbrains.lsp.protocol.CompletionRequestType
+import com.jetbrains.lsp.protocol.CompletionResult
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -48,6 +51,7 @@ fun main(args: Array<String>) {
             println(command.message)
             exitProcess(0)
         }
+
         is KotlinLspCommand.RunLsp -> {
             val runConfig = command.config
             run(runConfig)
@@ -68,7 +72,14 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
 
     val config = createConfiguration()
 
-    val starter = createServerStarterAnalyzerImpl(config.plugins, isUnitTestMode = false)
+    val starter =
+        if (mode is KotlinLspServerMode.Socket && mode.config.isScoped) {
+            // TODO: create proper server starter for scoped LSP
+            createServerStarterAnalyzerImpl(config.plugins, isUnitTestMode = false)
+        } else {
+            createServerStarterAnalyzerImpl(config.plugins, isUnitTestMode = false)
+        }
+
     @Suppress("RAW_RUN_BLOCKING")
     runBlocking(Dispatchers.Default) {
         starter.start {
@@ -99,9 +110,15 @@ context(_: LSServerContext)
 private suspend fun handleRequests(connection: LspConnection, runConfig: KotlinLspServerRunConfig, config: LSConfiguration) {
     val exitSignal = CompletableDeferred<Unit>()
 
+
     withBaseProtocolFraming(connection, exitSignal) { incoming, outgoing ->
         withServer {
-            val handler = createLspHandlers(config, exitSignal)
+            val handler =
+                if ((runConfig.mode as? KotlinLspServerMode.Socket)?.config?.isScoped == true) {
+                    createScopedLSPHandlers(config, exitSignal)
+                } else {
+                    createLspHandlers(config, exitSignal)
+                }
 
             withLsp(
                 incoming,
@@ -220,6 +237,22 @@ fun createLspHandlers(config: LSConfiguration, exitSignal: CompletableDeferred<U
             shutdownRequest(exitSignal)
             fileUpdateRequests()
             features()
+        }
+    }
+}
+
+context(_: LSServer)
+fun createScopedLSPHandlers(config: LSConfiguration, exitSignal: CompletableDeferred<Unit>?): LspHandlers {
+    with(config) {
+        return lspHandlers {
+            // should make initialization/didOpen behave differently maybe
+            initializeRequest()
+            setTraceNotification()
+            fileUpdateRequests()
+            shutdownRequest(exitSignal)
+            request(CompletionRequestType) { params ->
+                LSCompletion.getCompletion(params).let { CompletionResult.MaybeIncomplete(it) }
+            }
         }
     }
 }
