@@ -17,7 +17,7 @@ jvm_library(
   name = "language-server-project-import",
   module_name = "language-server.project-import",
   visibility = ["//visibility:public"],
-  srcs = glob(["gen/**/*.kt", "gen/**/*.java", "src/**/*.kt", "src/**/*.java"], allow_empty = True),
+  srcs = glob(["gen/**/*.kt", "gen/**/*.java", "src/**/*.kt", "src/**/*.java", "src/**/*.form"], allow_empty = True),
   kotlinc_opts = ":custom_language-server-project-import",
   deps = [
     "@lib//:gradle",

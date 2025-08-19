@@ -16,7 +16,7 @@ jvm_library(
   name = "kotlin-lsp",
   module_name = "language-server.kotlin-lsp",
   visibility = ["//visibility:public"],
-  srcs = glob(["src/**/*.kt", "src/**/*.java"], allow_empty = True),
+  srcs = glob(["src/**/*.kt", "src/**/*.java", "src/**/*.form"], allow_empty = True),
   kotlinc_opts = ":custom_kotlin-lsp",
   deps = [
     "@lib//:kotlin-stdlib",
@@ -65,7 +65,7 @@ jvm_library(
 jvm_library(
   name = "kotlin-lsp_test_lib",
   visibility = ["//visibility:public"],
-  srcs = glob(["test/**/*.kt", "test/**/*.java"], allow_empty = True),
+  srcs = glob(["test/**/*.kt", "test/**/*.java", "test/**/*.form"], allow_empty = True),
   kotlinc_opts = ":custom_kotlin-lsp",
   associates = [":kotlin-lsp"],
   deps = [
