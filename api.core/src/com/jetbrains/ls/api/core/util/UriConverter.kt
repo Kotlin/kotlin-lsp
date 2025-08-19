@@ -86,7 +86,7 @@ object UriConverter {
         var path = this.toString()
         if (SystemInfoRt.isWindows && path.length > 2 && path[1] == ':') {
             // make the drive letter lowercase, intellij cares about that
-            path = path[0].lowercase() + path.substring(1)
+            path = path[0].uppercase() + path.substring(1)
         }
         path = FileUtilRt.toSystemIndependentName(path)
         if (!SystemInfoRt.isWindows) {
