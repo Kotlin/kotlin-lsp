@@ -64,6 +64,7 @@ private val LOG by lazy { fileLogger() }
 
 private fun run(runConfig: KotlinLspServerRunConfig) {
     val mode = runConfig.mode
+    val isScoped = (runConfig.mode as KotlinLspServerMode.Socket).config.isScoped
     initKotlinLspLogger(writeToStdOut = mode != KotlinLspServerMode.Stdio)
     initIdeaPaths(runConfig.systemPath)
     initHeadlessToolkit()
@@ -71,7 +72,7 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
 
     val config = createConfiguration()
 
-    val starter = createServerStarterAnalyzerImpl(config.plugins, isUnitTestMode = false)
+    val starter = createServerStarterAnalyzerImpl(config.plugins, isUnitTestMode = false, isScoped = isScoped)
 
     @Suppress("RAW_RUN_BLOCKING")
     runBlocking(Dispatchers.Default) {
@@ -91,7 +92,7 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
                     tcpConnection(
                         mode.config,
                     ) { connection ->
-                        handleRequests(connection, runConfig, config, runConfig.mode.config.isScoped)
+                        handleRequests(connection, runConfig, config, isScoped)
                     }
                 }
             }
@@ -121,7 +122,7 @@ private suspend fun handleRequests(
                 outgoing,
                 handler,
                 createCoroutineContext = { lspClient ->
-                    if (isScoped)  {
+                    if (isScoped) {
                         Client.contextElement(lspClient, runConfig) + ClientScopedSession.scopedSession()
                     } else {
                         Client.contextElement(lspClient, runConfig)
