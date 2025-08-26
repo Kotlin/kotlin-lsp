@@ -10,10 +10,10 @@ available in `PATH` (or override the `cmd` option to point at the right place).
 
 ```lua
 -- enable the language server
-vim.lsp.enable('kotlin-lsp')
+vim.lsp.enable('kotlin_lsp')
 
 -- configure its options
-vim.lsp.config('kotlin-lsp', {
+vim.lsp.config('kotlin_lsp', {
     single_file_support = false,
 })
 ```
