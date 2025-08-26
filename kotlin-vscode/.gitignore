@@ -1,6 +1,6 @@
 out/
 dist/
-server/extracted
+server/
 node_modules
 client/node_modules
 *.vsix

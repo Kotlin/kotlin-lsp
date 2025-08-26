@@ -157,7 +157,7 @@
     "vscode:prepublish": "npm run package && npm run unpack-server",
     "package": "webpack --mode production --devtool hidden-source-map",
     "apply-intellij": "node apply-intellij.js",
-    "unpack-server": "rm -rf server/extracted && mkdir -p server/extracted && unzip -o $LSP_ZIP_PATH -d server/extracted",
+    "unpack-server": "rm -rf server && mkdir -p server && unzip -o $LSP_ZIP_PATH -d server",
     "test": "vscode-tmgrammar-snap --grammar syntaxes/kotlin.tmLanguage.json --scope source.kotlin testSources/tokenization/*.kt",
     "updateGrammarTests": "vscode-tmgrammar-snap --grammar syntaxes/kotlin.tmLanguage.json --scope source.kotlin --updateSnapshot testSources/tokenization/*.kt"
   }

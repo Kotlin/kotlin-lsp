@@ -182,7 +182,7 @@ async function getRunningJavaServerLspOptions(): Promise<ServerOptions | null> {
     const isJavaVersionValid = await ensureCorrectJavaVersion(javaCommand);
     if (!isJavaVersionValid) return null;
 
-    const extractPath = getContext().asAbsolutePath(path.join('server', 'extracted', 'lib'));
+    const extractPath = getContext().asAbsolutePath(path.join('server', 'lib'));
 
     const context = getContext()
     const args: string[] = []
