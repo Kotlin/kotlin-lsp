@@ -16,7 +16,9 @@ fun ijPluginByXml(
     useFakePluginId: Boolean = false,
 ): PluginMainDescriptor {
     val xmlResourcePath = xmlResourcePath.removePrefix("/")
-    val pluginRoot = getPluginRoot(classForClasspath)
+    val pluginRoot = PathManager.getResourceRoot(classForClasspath, "/$xmlResourcePath")
+        ?.let { Paths.get(it) }
+        ?: error("Resource not found: $xmlResourcePath")
     fun createFakePluginId(): PluginId = PluginId.getId(xmlResourcePath)
 
     return when {
