@@ -5,9 +5,12 @@ import com.intellij.codeHighlighting.HighlightDisplayLevel
 import com.intellij.codeInspection.*
 import com.intellij.codeInspection.ex.InspectionManagerEx
 import com.intellij.lang.Language
+import com.intellij.modcommand.ModCommand
+import com.intellij.modcommand.ModCommandQuickFix
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
@@ -15,6 +18,7 @@ import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiFile
+import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.withAnalysisContext
@@ -23,6 +27,7 @@ import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnosticProvider
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.utils.isSource
+import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.*
 import kotlinx.coroutines.flow.Flow
@@ -127,6 +132,7 @@ class LSInspectionDiagnosticProviderImpl(
             ?: emptyList()
     }
 
+    context(_: LSAnalysisContext)
     private fun collectDiagnostics(
         holder: ProblemsHolder,
         psiFile: PsiFile,
@@ -144,7 +150,7 @@ class LSInspectionDiagnosticProviderImpl(
                     else LOG.warn(it.toString())
                 }
                 if (holder.hasResults()) {
-                    results += holder.collectDiagnostics(file, inspection, element)
+                    results += holder.collectDiagnostics(file, project, inspection)
                 }
                 holder.clearResults()
             }
@@ -167,14 +173,14 @@ class LSInspectionDiagnosticProviderImpl(
 
     private fun ProblemsHolder.collectDiagnostics(
         file: VirtualFile,
-        localInspectionTool: LocalInspectionTool,
-        element: PsiElement
+        project: Project,
+        localInspectionTool: LocalInspectionTool
     ): List<Diagnostic> {
         val document = file.findDocument() ?: return emptyList()
         return results
             .filter { it.highlightType != ProblemHighlightType.INFORMATION }
             .mapNotNull { result ->
-                val data = result.createDiagnosticData(localInspectionTool, element, file)
+                val data = result.createDiagnosticData(project)
                 Diagnostic(
                     range = result.range()?.toLspRange(document) ?: return@mapNotNull null,
                     severity = result.highlightType.toLsp(),
@@ -196,18 +202,28 @@ class LSInspectionDiagnosticProviderImpl(
     }
 
 
-    private fun ProblemDescriptor.createDiagnosticData(
-        localInspectionTool: LocalInspectionTool,
-        element: PsiElement,
-        file: VirtualFile
-    ): InspectionDiagnosticData? {
+    private fun ProblemDescriptor.createDiagnosticData(project: Project): InspectionDiagnosticData {
         return InspectionDiagnosticData(
-            fixes = fixes.orEmpty().map { fix ->
-                InspectionQuickfixData.createByFix(fix, localInspectionTool, element, file)
-            }
+            fixes = fixes.orEmpty()
+                .mapNotNull { fix ->
+                    val modCommand = getModCommand(fix, project, this) ?: return@mapNotNull null
+                    val modCommandData = ModCommandData.from(modCommand) ?: return@mapNotNull null
+                    InspectionQuickfixData(fix.name, modCommandData)
+                }
         )
     }
 }
+
+private fun getModCommand(fix: QuickFix<*>, project: Project, problemDescriptor: ProblemDescriptor): ModCommand? =
+    when (fix) {
+        is ModCommandQuickFix ->
+            fix.perform(project, problemDescriptor)
+        else -> {
+            LOG.debug("Unknown quick fix type: ${fix::class.java}")
+            null
+        }
+    }
+
 
 private val LOG = logger<LSInspectionDiagnosticProviderImpl>()
 

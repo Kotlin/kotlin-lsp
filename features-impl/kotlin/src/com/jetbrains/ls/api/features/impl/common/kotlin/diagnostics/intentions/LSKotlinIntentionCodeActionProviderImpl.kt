@@ -1,6 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.intentions
 
+import com.intellij.codeInsight.intention.CommonIntentionAction
 import com.intellij.codeInsight.template.Expression
 import com.intellij.modcommand.ActionContext
 import com.intellij.modcommand.ModCommand
@@ -10,11 +11,9 @@ import com.intellij.modcommand.ModTemplateBuilder
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.diagnostic.getOrHandleException
-import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.util.NlsContexts
 import com.intellij.openapi.util.TextRange
-import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
@@ -29,30 +28,28 @@ import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.withAnalysisContext
-import com.jetbrains.ls.api.core.withWritableFile
-import com.jetbrains.ls.api.core.withWriteAnalysisContext
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
-import com.jetbrains.ls.api.features.commands.document.LSDocumentCommandExecutor
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
+import com.jetbrains.ls.api.features.impl.common.utils.createEditorWithCaret
 import com.jetbrains.ls.api.features.language.LSLanguage
-import com.jetbrains.ls.api.features.textEdits.PsiFileTextEditsCollector
-import com.jetbrains.ls.api.features.utils.PsiSerializablePointer
+import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
 import com.jetbrains.lsp.implementation.LspHandlerContext
+import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.protocol.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
-import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.analysis.api.analyze
-import org.jetbrains.kotlin.idea.codeinsight.api.applicable.getElementContext
 import org.jetbrains.kotlin.idea.codeinsight.api.applicable.intentions.KotlinApplicableModCommandAction
 import org.jetbrains.kotlin.idea.k2.codeinsight.intentions.MovePropertyToConstructorIntention
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtFile
 import java.util.function.Function
+import com.jetbrains.ls.kotlinLsp.requests.core.executeCommand
 
 internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, LSCommandDescriptorProvider {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSKotlinLanguage)
@@ -81,7 +78,7 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
                         val actionContext = createActionContext(ktFile, ktElement)
                         for (action in actions) {
                             val codeAction = runCatching {
-                                toCodeAction(action, actionContext, ktElement, document, params, uri, file)
+                                toCodeAction(action, actionContext, ktElement)
                             }.getOrHandleException { LOG.debug(it) } ?: continue
                             result += codeAction
                         }
@@ -101,75 +98,48 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
         element,
     )
 
-    context(kaSession: KaSession, _: LSAnalysisContext, _: LSServer)
+    context(_: LSAnalysisContext, _: LSServer)
     private fun toCodeAction(
         action: KotlinApplicableModCommandAction<*, *>,
         actionContext: ActionContext,
-        child: KtElement,
-        document: Document,
-        params: CodeActionParams,
-        uri: URI,
-        file: VirtualFile
+        child: KtElement
     ): CodeAction? {
-        action as KotlinApplicableModCommandAction<KtElement, *>
-        val presentation = action.getPresentation(actionContext) ?: return null
-        if (!action.isApplicableByPsi(child)) return null
-        if (with(action) { kaSession.prepareContext(child) == null }) return null
-        val ranges = action.getApplicableRanges(child).map {
-            it.shiftRight(child.startOffset).toLspRange(document)
+        val modCodeAction = (action as? CommonIntentionAction)?.asModCommandAction()
+        if (modCodeAction == null) {
+            LOG.warn("Cannot convert $action to ModCommandAction")
+            return null
         }
-        if (ranges.none { params.range.intersects(it) }) return null
-        return CodeAction(
-            title = presentation.name,
-            kind = CodeActionKind.QuickFix,
-            diagnostics = null,
-            command = Command(
-                commandDescriptor.title,
-                commandDescriptor.name,
-                arguments = listOf(
-                    LSP.json.encodeToJsonElement(uri),
-                    LSP.json.encodeToJsonElement(action::class.java.name),
-                    LSP.json.encodeToJsonElement(PsiSerializablePointer.create(child, file)),
+        @Suppress("UNCHECKED_CAST")
+        if (!(action as KotlinApplicableModCommandAction<KtElement, *>).isApplicableByPsi(child)) return null
+        val presentation = action.getPresentation(actionContext) ?: return null
+        val file = child.containingKtFile
+        val document = file.virtualFile.findDocument() ?: return null
+        analyze(file) {
+            val editor = createEditorWithCaret(document, caretOffset = child.startOffset)
+            val modCommand = modCodeAction.perform(ActionContext.from(editor, child.containingKtFile))
+            val modCommandData = ModCommandData.from(modCommand) ?: return null
+            return CodeAction(
+                title = presentation.name,
+                kind = CodeActionKind.QuickFix,
+                diagnostics = null,
+                command = Command(
+                    commandDescriptor.title,
+                    commandDescriptor.name,
+                    arguments = listOf(
+                        LSP.json.encodeToJsonElement(modCommandData),
+                    ),
                 ),
-            ),
-        )
+            )
+        }
     }
 
     private val commandDescriptor = LSCommandDescriptor(
         "Kotlin Intention Apply Fix",
         "kotlinIntention.applyFix",
-        LSDocumentCommandExecutor e@{ documentUri, otherArgs ->
-            val action = otherArgs.getOrNull(0)?.let { actionClassJson ->
-                val actionClass = LSP.json.decodeFromJsonElement(String.serializer(), actionClassJson)
-                createActions().firstOrNull { it::class.java.name == actionClass }
-            } ?: return@e emptyList()
-            val psiPointer = otherArgs.getOrNull(1)?.let { psiElementJson ->
-                LSP.json.decodeFromJsonElement(PsiSerializablePointer.serializer(), psiElementJson)
-            } ?: return@e emptyList()
-            action as KotlinApplicableModCommandAction<KtElement, Any>
-            withWritableFile(documentUri.uri) {
-                withWriteAnalysisContext {
-                    val file = runReadAction { documentUri.findVirtualFile() } ?: return@withWriteAnalysisContext emptyList()
-
-                    PsiFileTextEditsCollector.collectTextEdits(file) { ktFile ->
-                        check(ktFile is KtFile) { "PsiFile is not KtFile but ${ktFile}" }
-
-                        val psiElement = psiPointer.restore(ktFile) as? KtElement ?: return@collectTextEdits
-                        val actionContext = createActionContext(ktFile, psiElement)
-
-                        runCatching {
-                            if (action.getPresentation(actionContext) == null) return@collectTextEdits
-                            if (!action.isApplicableByPsi(psiElement)) return@collectTextEdits
-                            val elementContext = action.getElementContext(psiElement) ?: return@collectTextEdits
-                            val psiUpdater = FakeModPsiUpdater(psiElement)
-                            action.invoke(actionContext, psiElement, elementContext, psiUpdater)
-                        }.getOrHandleException {
-                            //achtung!
-                            LOG.debug(it)
-                        }
-                    }
-                }
-            }
+        { arguments ->
+            val modCommandData = LSP.json.decodeFromJsonElement<ModCommandData>(arguments[0])
+            executeCommand(modCommandData, lspClient)
+            JsonPrimitive(true)
         }
     )
 
