@@ -30,102 +30,97 @@ import kotlin.io.path.*
 context(_: LSServer, _: LSConfiguration)
 internal fun LspHandlersBuilder.initializeRequest() {
     request(Initialize) { initParams ->
-        performInitialize(initParams)
-    }
-}
+        Client.update { it.copy(trace = initParams.trace) }
+        // TODO take into account client capabilities LSP-223
 
-context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
-internal suspend fun performInitialize(initParams: InitializeParams): InitializeResult {
-    Client.update { it.copy(trace = initParams.trace) }
-    // TODO take into account client capabilities LSP-223
+        lspClient.sendRunConfigurationInfoToClient()
+        lspClient.sendSystemInfoToClient()
 
-    lspClient.sendRunConfigurationInfoToClient()
-    lspClient.sendSystemInfoToClient()
+        LOG.info("Got `initialize` request from ${initParams.clientInfo ?: "unknown"}\nparams:\n${LSP.json.encodeToString(InitializeParams.serializer(), initParams)}")
 
-    LOG.info("Got `initialize` request from ${initParams.clientInfo ?: "unknown"}\nparams:\n${LSP.json.encodeToString(InitializeParams.serializer(), initParams)}")
+        val rootUri = initParams.rootUri
+        val rootPath = initParams.rootPath
+        val workspaceFolders = initParams.workspaceFolders
+        val folders = when {
+            workspaceFolders != null -> workspaceFolders
+            rootUri != null -> listOf(WorkspaceFolder(rootUri.uri, rootUri.uri.uri))
+            rootPath != null -> {
+                val path = Path(rootPath)
+                listOf(WorkspaceFolder(path.toLspUri(), path.name))
+            }
 
-    val rootUri = initParams.rootUri
-    val rootPath = initParams.rootPath
-    val workspaceFolders = initParams.workspaceFolders
-    val folders = when {
-        workspaceFolders != null -> workspaceFolders
-        rootUri != null -> listOf(WorkspaceFolder(rootUri.uri, rootUri.uri.uri))
-        rootPath != null -> {
-            val path = Path(rootPath)
-            listOf(WorkspaceFolder(path.toLspUri(), path.name))
+            else -> emptyList()
         }
 
-        else -> emptyList()
-    }
+        indexFolders(folders, initParams)
 
-    indexFolders(folders, initParams)
-
-    // TODO LSP-226 determine base on entries,
-    // TODO LSP-227 register capabilities dynamically for each language separately
-    val result = InitializeResult(
-        capabilities = ServerCapabilities(
-            textDocumentSync = TextDocumentSyncKind.Incremental,
-            definitionProvider = OrBoolean(true),
-            diagnosticProvider = DiagnosticOptions(
-                identifier = null,
-                interFileDependencies = true,
-                workspaceDiagnostics = false,
-                workDoneProgress = false,
-            ),
-            semanticTokensProvider = SemanticTokensOptions(
-                legend = run {
-                    val registry = LSSemanticTokens.createRegistry()
-                    SemanticTokensLegend(
-                        tokenTypes = registry.types.map { it.name },
-                        tokenModifiers = registry.modifiers.map { it.name },
-                    )
-                },
-                range = OrBoolean(true),
-                full = OrBoolean(true),
-            ),
-            completionProvider = CompletionRegistrationOptions(
-                documentSelector = null,
-                triggerCharacters = listOf("."), // TODO LSP-226 should be customized
-                allCommitCharacters = null,
-                resolveProvider = entries<LSCompletionProvider>().any { it.supportsResolveRequest },
-                completionItem = null,
-            ),
-            codeActionProvider = OrBoolean.of(
-                CodeActionOptions(
-                    codeActionKinds = LSCodeActions.supportedCodeActionKinds(),
-                    resolveProvider = false,
+        // TODO LSP-226 determine base on entries,
+        // TODO LSP-227 register capabilities dynamically for each language separately
+        val result = InitializeResult(
+            capabilities = ServerCapabilities(
+                textDocumentSync = TextDocumentSyncKind.Incremental,
+                definitionProvider = OrBoolean(true),
+                diagnosticProvider = DiagnosticOptions(
+                    identifier = null,
+                    interFileDependencies = true,
+                    workspaceDiagnostics = false,
                     workDoneProgress = false,
-                )
+                ),
+                semanticTokensProvider = SemanticTokensOptions(
+                    legend = run {
+                        val registry = LSSemanticTokens.createRegistry()
+                        SemanticTokensLegend(
+                            tokenTypes = registry.types.map { it.name },
+                            tokenModifiers = registry.modifiers.map { it.name },
+                        )
+                    },
+                    range = OrBoolean(true),
+                    full = OrBoolean(true),
+                ),
+                completionProvider = CompletionRegistrationOptions(
+                    documentSelector = null,
+                    triggerCharacters = listOf("."), // TODO LSP-226 should be customized
+                    allCommitCharacters = null,
+                    resolveProvider = entries<LSCompletionProvider>().any { it.supportsResolveRequest },
+                    completionItem = null,
+                ),
+                codeActionProvider = OrBoolean.of(
+                    CodeActionOptions(
+                        codeActionKinds = LSCodeActions.supportedCodeActionKinds(),
+                        resolveProvider = false,
+                        workDoneProgress = false,
+                    )
+                ),
+                executeCommandProvider = ExecuteCommandOptions(
+                    commands = allCommandDescriptors.map { it.name }
+                ),
+                referencesProvider = OrBoolean(true),
+                hoverProvider = OrBoolean(true),
+                documentSymbolProvider = OrBoolean(true),
+                workspaceSymbolProvider = OrBoolean.of(WorkspaceSymbolOptions(resolveProvider = false, workDoneProgress = true)),
+                workspace = ServerWorkspaceCapabilities(
+                    workspaceFolders = WorkspaceFoldersServerCapabilities(
+                        supported = true,
+                        changeNotifications = JsonPrimitive(true),
+                    )
+                ),
+                renameProvider = OrBoolean(true),
+                signatureHelpProvider = SignatureHelpOptions(
+                    triggerCharacters = listOf("(", ","),
+                    retriggerCharacters = listOf(","),
+                    workDoneProgress = false
+                ),
+                documentFormattingProvider = OrBoolean(true),
+                inlayHintProvider = OrBoolean.of(InlayHintRegistrationOptions(resolveProvider = true)),
             ),
-            executeCommandProvider = ExecuteCommandOptions(
-                commands = allCommandDescriptors.map { it.name }
+            serverInfo = InitializeResult.ServerInfo(
+                name = "Kotlin LSP by JetBrains",
+                version = "0.1" // TODO LSP-225 proper version here from the build number
             ),
-            referencesProvider = OrBoolean(true),
-            hoverProvider = OrBoolean(true),
-            documentSymbolProvider = OrBoolean(true),
-            workspaceSymbolProvider = OrBoolean.of(WorkspaceSymbolOptions(resolveProvider = false, workDoneProgress = true)),
-            workspace = ServerWorkspaceCapabilities(
-                workspaceFolders = WorkspaceFoldersServerCapabilities(
-                    supported = true,
-                    changeNotifications = JsonPrimitive(true),
-                )
-            ),
-            renameProvider = OrBoolean(true),
-            signatureHelpProvider = SignatureHelpOptions(
-                triggerCharacters = listOf("(", ","),
-                retriggerCharacters = listOf(","),
-                workDoneProgress = false
-            ),
-            documentFormattingProvider = OrBoolean(true),
-            inlayHintProvider = OrBoolean.of(InlayHintRegistrationOptions(resolveProvider = true)),
-        ),
-        serverInfo = InitializeResult.ServerInfo(
-            name = "Kotlin LSP by JetBrains",
-            version = "0.1" // TODO LSP-225 proper version here from the build number
-        ),
-    )
-    LOG.info("InitializeResult:\n${LSP.json.encodeToString(InitializeResult.serializer(), result)}")
-    return result
+        )
+        LOG.info("InitializeResult:\n${LSP.json.encodeToString(InitializeResult.serializer(), result)}")
+        result
+    }
 }
 
 private fun LspClient.sendRunConfigurationInfoToClient() {

@@ -12,6 +12,7 @@ import java.nio.file.Path
 data class KotlinLspServerRunConfig(
     val mode: KotlinLspServerMode,
     val systemPath: Path?,
+    val isolatedDocumentsMode: Boolean = false,
 )
 
 sealed interface KotlinLspServerMode {
@@ -55,12 +56,8 @@ private class Parser : CliktCommand(name = "kotlin-lsp") {
             if (it && stdio) fail("Stdio mode doesn't support multiclient mode")
             if (it && client) fail("Client mode doesn't support multiclient mode")
         }
-    val scoped: Boolean by option().flag()
-        .help("Whether the Kotlin LSP server is used in scoped mode, meaning that a workspace is isolated for each file (hence, each file has its own scope)")
-        .validate {
-            if (it && stdio) fail("Stdio mode doesn't support scoped mode")
-            if (it && client) fail("Client mode doesn't support scoped mode")
-        }
+    val isolatedDocuments: Boolean by option().flag()
+        .help("Whether the Kotlin LSP server is used in isolated documents mode, meaning that a workspace is isolated for each document (hence, each document has its own scope)")
 
     // TODO also parse --version flag, see LSP-225
 
@@ -70,9 +67,9 @@ private class Parser : CliktCommand(name = "kotlin-lsp") {
             client -> KotlinLspServerMode.Socket(TcpConnectionConfig.Client(
                 host = socket.host, port = socket.port))
             else -> KotlinLspServerMode.Socket(TcpConnectionConfig.Server(
-                host = socket.host, port = socket.port, isMultiClient = multiClient, isScoped = scoped))
+                host = socket.host, port = socket.port, isMultiClient = multiClient))
         }
-        return KotlinLspServerRunConfig(mode, systemPath)
+        return KotlinLspServerRunConfig(mode, systemPath, isolatedDocuments)
     }
 
     override fun run() {}
@@ -100,9 +97,9 @@ fun KotlinLspServerRunConfig.toArguments(): List<String> = buildList {
             is TcpConnectionConfig.Server ->  {
                 add("--socket=${tcpConfig.host}:${tcpConfig.port}")
                 if (tcpConfig.isMultiClient) add("--multi-client")
-                if (tcpConfig.isScoped) add("--scoped")
             }
         }
     }
     if (systemPath != null) add("--system-path=$systemPath")
+    if (isolatedDocumentsMode) add("--isolated-documents")
 }

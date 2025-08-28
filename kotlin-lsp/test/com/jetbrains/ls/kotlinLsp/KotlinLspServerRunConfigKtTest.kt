@@ -61,14 +61,14 @@ class KotlinLspServerRunConfigKtTest {
     fun `tcp server multiclient scoped`() {
         doConsistencyTest(
             KotlinLspServerRunConfig(
-                KotlinLspServerMode.Socket(
+                mode = KotlinLspServerMode.Socket(
                     TcpConnectionConfig.Server(
-                        host = "127.0.0.1",
-                        port = 9999,
-                        isMultiClient = true,
-                        isScoped = true,
+                      host = "127.0.0.1",
+                      port = 9999,
+                      isMultiClient = true,
                     )
                 ),
+                isolatedDocumentsMode = true,
                 systemPath = null,
             )
         )

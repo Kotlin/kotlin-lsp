@@ -1,0 +1,8 @@
+<idea-plugin>
+  <id>language-server/isolated-documents-mode</id>
+  <vendor>JetBrains</vendor>
+
+  <extensions defaultExtensionNs="org.jetbrains.kotlin">
+    <k2NotUnderContentRootModuleFactory implementation="com.jetbrains.ls.kotlinLsp.util.projectStructure.LspNotUnderContentRootModuleFactory"/>
+  </extensions>
+</idea-plugin>

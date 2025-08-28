@@ -30,7 +30,7 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider {
     context(_: LSServer, _: LspHandlerContext)
     override suspend fun provideCompletion(params: CompletionParams): CompletionList {
         if (!params.textDocument.isSource()) return CompletionList.EMPTY_COMPLETE
-        return withAnalysisContext {
+        return withAnalysisContext(params.textDocument.uri.uri) {
             invokeAndWaitIfNeeded {
                 runWriteAction {
                     val file = params.textDocument.findVirtualFile() ?: return@runWriteAction EMPTY_COMPLETION_LIST

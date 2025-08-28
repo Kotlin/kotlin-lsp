@@ -21,10 +21,9 @@ import com.jetbrains.ls.kotlinLsp.requests.core.initializeRequest
 import com.jetbrains.ls.kotlinLsp.requests.core.setTraceNotification
 import com.jetbrains.ls.kotlinLsp.requests.core.shutdownRequest
 import com.jetbrains.ls.kotlinLsp.requests.features
-import com.jetbrains.ls.snapshot.api.impl.core.scoped.ClientScopedSession
-import com.jetbrains.ls.kotlinLsp.requests.scoped.createScopedLSPHandlers
 import com.jetbrains.ls.kotlinLsp.util.addKotlinStdlib
 import com.jetbrains.ls.kotlinLsp.util.logSystemInfo
+import com.jetbrains.ls.kotlinLsp.util.configuration.IsolatedDocumentsPlugin
 import com.jetbrains.ls.snapshot.api.impl.core.createServerStarterAnalyzerImpl
 import com.jetbrains.lsp.implementation.*
 import kotlinx.coroutines.CompletableDeferred
@@ -64,15 +63,15 @@ private val LOG by lazy { fileLogger() }
 
 private fun run(runConfig: KotlinLspServerRunConfig) {
     val mode = runConfig.mode
-    val isScoped = (runConfig.mode as KotlinLspServerMode.Socket).config.isScoped
     initKotlinLspLogger(writeToStdOut = mode != KotlinLspServerMode.Stdio)
     initIdeaPaths(runConfig.systemPath)
     initHeadlessToolkit()
     KotlinPluginLayoutModeProvider.setForcedKotlinPluginLayoutMode(KotlinPluginLayoutMode.LSP)
 
-    val config = createConfiguration()
+    val config = createConfiguration(runConfig.isolatedDocumentsMode)
 
-    val starter = createServerStarterAnalyzerImpl(config.plugins, isUnitTestMode = false, isScoped = isScoped)
+    val starter =
+        createServerStarterAnalyzerImpl(config.plugins, isUnitTestMode = false, isolatedDocumentsMode = runConfig.isolatedDocumentsMode)
 
     @Suppress("RAW_RUN_BLOCKING")
     runBlocking(Dispatchers.Default) {
@@ -92,7 +91,7 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
                     tcpConnection(
                         mode.config,
                     ) { connection ->
-                        handleRequests(connection, runConfig, config, isScoped)
+                        handleRequests(connection, runConfig, config)
                     }
                 }
             }
@@ -105,28 +104,18 @@ private suspend fun handleRequests(
     connection: LspConnection,
     runConfig: KotlinLspServerRunConfig,
     config: LSConfiguration,
-    isScoped: Boolean = false
 ) {
     val exitSignal = CompletableDeferred<Unit>()
     withBaseProtocolFraming(connection, exitSignal) { incoming, outgoing ->
         withServer {
-            val handler =
-                if (isScoped) {
-                    createScopedLSPHandlers(config, exitSignal)
-                } else {
-                    createLspHandlers(config, exitSignal)
-                }
+            val handler = createLspHandlers(config, exitSignal)
 
             withLsp(
                 incoming,
                 outgoing,
                 handler,
                 createCoroutineContext = { lspClient ->
-                    if (isScoped) {
-                        Client.contextElement(lspClient, runConfig) + ClientScopedSession.scopedSession()
-                    } else {
-                        Client.contextElement(lspClient, runConfig)
-                    }
+                    Client.contextElement(lspClient, runConfig)
                 },
             ) { _ ->
                 exitSignal.await()
@@ -218,13 +207,14 @@ private fun getIJPathIfRunningFromSources(): String? {
 }
 
 
-fun createConfiguration(): LSConfiguration {
+fun createConfiguration(isolatedDocumentsMode: Boolean = false): LSConfiguration {
     return LSConfiguration(
         buildList {
             add(LSCommonConfiguration)
             add(LSKotlinLanguageConfiguration)
             add(LSJavaBaseLanguageConfiguration)
             addAll(getAdditionalLanguageConfigurations())
+            if (isolatedDocumentsMode) add(IsolatedDocumentsPlugin)
         }
     )
 }

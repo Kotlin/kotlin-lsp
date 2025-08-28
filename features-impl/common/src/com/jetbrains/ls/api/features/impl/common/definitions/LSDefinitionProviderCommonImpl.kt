@@ -38,7 +38,7 @@ class LSDefinitionProviderCommonImpl(
     context(_: LSServer, _: LspHandlerContext)
     override fun provideDefinitions(params: DefinitionParams): Flow<Location> = flow {
         val uri = params.textDocument.uri.uri
-        withAnalysisContext {
+        withAnalysisContext(uri) {
             runReadAction {
                 val file = uri.findVirtualFile() ?: return@runReadAction emptyList()
                 val psiFile = file.findPsiFile(project) ?: return@runReadAction emptyList()
