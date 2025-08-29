@@ -64,7 +64,8 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
     initKotlinLspLogger(writeToStdOut = mode != KotlinLspServerMode.Stdio)
     initIdeaPaths(runConfig.systemPath)
     initHeadlessToolkit()
-    setLspKotlinPluginModeIfRunningFromProductionLsp()
+    KotlinPluginLayoutModeProvider.setForcedKotlinPluginLayoutMode(KotlinPluginLayoutMode.LSP)
+
     val config = createConfiguration()
 
     val starter = createServerStarterAnalyzerImpl(config.plugins, isUnitTestMode = false)
@@ -123,7 +124,7 @@ private fun initIdeaPaths(systemPath: Path?) {
         systemProperty("idea.config.path", "$fromSources/config/idea", ifAbsent = true)
         systemProperty("idea.system.path", "$fromSources/system/idea", ifAbsent = true)
         FileWatcher.initLibrary(
-            Path.of(PathManager.getHomePath()) /
+            PathManager.getHomeDir() /
                     "fleet" / "native" / "target" / "download" / "filewatcher")
     }
     else {
@@ -168,20 +169,6 @@ private fun systemProperty(name: String, value: String, ifAbsent: Boolean = fals
     }
 }
 
-private fun setLspKotlinPluginModeIfRunningFromProductionLsp() {
-    if (isRunningFromProductionLsp()) {
-        KotlinPluginLayoutModeProvider.setForcedKotlinPluginLayoutMode(KotlinPluginLayoutMode.LSP)
-    }
-}
-
-private fun isRunningFromSources(): Boolean {
-    return getIJPathIfRunningFromSources() != null
-}
-
-private fun isRunningFromProductionLsp(): Boolean {
-    return !isRunningFromSources()
-}
-
 private fun initHeadlessToolkit() {
     //System.setProperty("apple.awt.UIElement", "true")
     val field = ClassLoader.getPlatformClassLoader().loadClass("java.awt.GraphicsEnvironment")
@@ -203,9 +190,13 @@ private fun initHeadlessToolkit() {
 private fun getIJPathIfRunningFromSources(): String? {
     val serverClass = Class.forName("com.jetbrains.ls.kotlinLsp.KotlinLspServerKt")
     val jar = PathManager.getJarForClass(serverClass)?.absolutePathString() ?: return null
-    val expectedOutDir = FileUtilRt.toSystemDependentName("/out/classes/production/language-server.kotlin-lsp")
-    if (!jar.endsWith(expectedOutDir)) return null
-    return jar.removeSuffix(expectedOutDir)
+    val outSuffixes = arrayOf(
+        "bazel-out/jvm-fastbuild/bin/language-server/community/kotlin-lsp/kotlin-lsp.jar",
+        "/out/classes/production/language-server.kotlin-lsp")
+    if (outSuffixes.any { jar.endsWith(FileUtilRt.toSystemDependentName(it)) }) {
+        return Path("").absolutePathString()
+    }
+    return null
 }
 
 
