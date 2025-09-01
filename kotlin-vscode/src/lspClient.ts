@@ -88,7 +88,7 @@ export async function stopLspClient(): Promise<void> {
 
 
 const jrePathForLspSettingName = 'kotlinLSP.jrePathToRunLsp';
-const minimumSupportedJavaVersion = 17
+const minimumSupportedJavaVersion = 21
 
 
 
