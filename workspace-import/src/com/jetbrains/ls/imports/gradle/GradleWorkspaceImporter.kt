@@ -1,8 +1,11 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+@file:Suppress("IO_FILE_USAGE")
+
 package com.jetbrains.ls.imports.gradle
 
 import com.intellij.openapi.diagnostic.logger
-import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil
+import com.intellij.openapi.projectRoots.impl.JavaHomeFinder.getFinder
+import com.intellij.platform.eel.provider.getEelDescriptor
 import com.intellij.platform.workspace.jps.entities.*
 import com.intellij.platform.workspace.jps.entities.LibraryTableId.ProjectLibraryTableId
 import com.intellij.platform.workspace.storage.MutableEntityStorage
@@ -24,8 +27,9 @@ import org.jetbrains.kotlin.config.KotlinModuleKind
 import org.jetbrains.kotlin.idea.facet.KotlinFacetType
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
 import org.jetbrains.kotlin.idea.workspaceModel.kotlinSettings
-import org.jetbrains.plugins.gradle.jvmcompat.GradleJvmSupportMatrix
+import org.jetbrains.plugins.gradle.jvmcompat.GradleJvmSupportMatrix.Companion.isSupported
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.div
 import kotlin.io.path.exists
@@ -53,10 +57,11 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                 val connector = GradleConnector.newConnector().forProjectDirectory(projectDirectory.toFile())
 
                 connector.connect().use { connection ->
-                    checkGradleJavaCompatibility(connection)
+                    val gradleJdk = getGradleJdk(projectDirectory, connection)
 
                     val ideaProject = connection.model(IdeaProject::class.java)
                         .withSystemProperties(IMPORTER_PROPERTIES)
+                        .setJavaHome(gradleJdk)
                         .get()
                     val storage = MutableEntityStorage.create()
                     val entitySource = WorkspaceEntitySource(projectDirectory.toIntellijUri(virtualFileUrlManager))
@@ -188,6 +193,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                     }
                     val out = ByteArrayOutputStream()
                     connection.newBuild().forTasks("dependencies")
+                        .setJavaHome(gradleJdk)
                         .withSystemProperties(IMPORTER_PROPERTIES)
                         .setStandardOutput(out)
                         .run()
@@ -265,17 +271,29 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         throw e
     }
 
-    private fun checkGradleJavaCompatibility(connection: ProjectConnection) {
-        val buildEnv = connection.getModel(BuildEnvironment::class.java) ?: return
-        val gradleVersionStr = buildEnv.gradle.gradleVersion ?: return
-        val gradleVersion = GradleVersion.version(gradleVersionStr)
-        val javaHome = buildEnv.java.javaHome ?: return
-        val javaVersion = ExternalSystemJdkUtil.getJavaVersion(javaHome.absolutePath) ?: return
-        val isSupported = GradleJvmSupportMatrix.isSupported(gradleVersion, javaVersion)
-
-        if (!isSupported) {
-            val message = "$gradleVersion doesn't support Java $javaVersion."
-            throw WorkspaceImportException(message, message)
+    /**
+     * Access to BuildEnvironment is safe because it does not trigger the compilation of build scripts and Gradle execution.
+     * So, we could safely choose the correct JDK for Gradle daemon that will be used for Gradle-related operations.
+     */
+    private fun getGradleJdk(projectDirectory: Path, connection: ProjectConnection): File {
+        val buildEnvironment = connection.getModel(BuildEnvironment::class.java)
+            ?: throw IllegalStateException("Unable to resolve Gradle Build Environment")
+        val knownJdks = getFinder(projectDirectory.getEelDescriptor())
+            .checkConfiguredJdks(false)
+            .checkEmbeddedJava(false)
+            .findExistingJdkEntries()
+        if (knownJdks.isEmpty()) {
+            throw IllegalStateException("Unable to find JDK for Gradle execution. No JDK's found on the machine!")
         }
+        val jdk = knownJdks
+            .first {
+                val version = it.versionInfo?.version ?: return@first false
+                isSupported(buildEnvironment.getGradleVersion(), version)
+            }
+        return File(jdk.path)
+    }
+
+    private fun BuildEnvironment.getGradleVersion(): GradleVersion {
+        return GradleVersion.version(gradle.gradleVersion)
     }
 }
