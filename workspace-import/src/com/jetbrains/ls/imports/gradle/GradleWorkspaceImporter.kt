@@ -28,6 +28,7 @@ import org.jetbrains.kotlin.idea.facet.KotlinFacetType
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
 import org.jetbrains.kotlin.idea.workspaceModel.kotlinSettings
 import org.jetbrains.plugins.gradle.jvmcompat.GradleJvmSupportMatrix.Companion.isSupported
+import org.jetbrains.plugins.gradle.jvmcompat.GradleJvmSupportMatrix.Companion.suggestLatestSupportedJavaVersion
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.nio.file.Path
@@ -283,13 +284,24 @@ object GradleWorkspaceImporter : WorkspaceImporter {
             .checkEmbeddedJava(false)
             .findExistingJdkEntries()
         if (knownJdks.isEmpty()) {
-            throw IllegalStateException("Unable to find JDK for Gradle execution. No JDK's found on the machine!")
+            throw WorkspaceImportException(
+                "Unable to find JDK for Gradle execution. No JDK's found on the machine!",
+                "There are no JDKs on the machine. Unable to run Gradle."
+            )
         }
+        val gradleVersion = buildEnvironment.getGradleVersion()
         val jdk = knownJdks
-            .first {
-                val version = it.versionInfo?.version ?: return@first false
-                isSupported(buildEnvironment.getGradleVersion(), version)
+            .find {
+                val version = it.versionInfo?.version ?: return@find false
+                isSupported(gradleVersion, version)
             }
+            ?: throw WorkspaceImportException(
+                """
+                    Found ${knownJdks.size} JDK's, but none of them is compatible with Gradle: $gradleVersion. 
+                    Please install a valid Java ${suggestLatestSupportedJavaVersion(gradleVersion)} distribution.
+                """.trimIndent(),
+                "Unable to find a compatible JDK for running a Gradle $gradleVersion daemon."
+            )
         return File(jdk.path)
     }
 
