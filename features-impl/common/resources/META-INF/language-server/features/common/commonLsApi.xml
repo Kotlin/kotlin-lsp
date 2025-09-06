@@ -10,4 +10,9 @@
       <with attribute="implementationClass" implements="com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider"/>
     </extensionPoint>
   </extensionPoints>
+
+  <extensions defaultExtensionNs="ls">
+    <completionItemKindProvider language=""
+                                implementationClass="com.jetbrains.ls.api.features.impl.common.completion.LSCompletionItemKindProviderAnyImpl"/>
+  </extensions>
 </idea-plugin>

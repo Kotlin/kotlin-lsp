@@ -3,14 +3,16 @@ load("@community//build:compiler-options.bzl", "create_kotlinc_options")
 load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_resources")
 
 create_kotlinc_options(
-  name = "custom",
-  context_receivers = True,
+  name = "custom_kotlin",
   opt_in = [
+    "com.intellij.openapi.util.IntellijInternalApi",
     "org.jetbrains.kotlin.analysis.api.KaExperimentalApi",
     "org.jetbrains.kotlin.analysis.api.KaIdeApi",
+    "org.jetbrains.kotlin.analysis.api.KaContextParameterApi",
     "kotlin.contracts.ExperimentalContracts",
   ],
-  when_guards = True
+  x_context_parameters = True,
+  x_when_guards = True
 )
 
 jvm_resources(
@@ -23,8 +25,8 @@ jvm_library(
   name = "kotlin",
   module_name = "language-server.api.features.impl.kotlin",
   visibility = ["//visibility:public"],
-  srcs = glob(["src/**/*.kt", "src/**/*.java"], allow_empty = True),
-  kotlinc_opts = ":custom",
+  srcs = glob(["src/**/*.kt", "src/**/*.java", "src/**/*.form"], allow_empty = True),
+  kotlinc_opts = ":custom_kotlin",
   deps = [
     "@lib//:kotlin-stdlib",
     "@lib//:kotlinx-coroutines-core",
@@ -69,6 +71,12 @@ jvm_library(
     "@community//plugins/kotlin/completion/impl-shared:kotlin-completion-impl-shared",
     "@community//plugins/kotlin/idea",
     "@community//plugins/kotlin/base/fir/code-insight",
+    "@lib//:kotlinc-analysis-api-impl-base",
+    "@community//plugins/kotlin/completion/api",
+    "//codeServer/core",
+    "@community//plugins/kotlin/fir",
+    "@community//plugins/kotlin/navigation",
+    "@community//plugins/kotlin/code-insight/impl-base",
   ],
   runtime_deps = [":kotlin_resources"]
 )

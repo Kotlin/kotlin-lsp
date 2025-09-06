@@ -5,17 +5,12 @@
             "dependencies": [
                 {
                     "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.9.10",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
                     "scope": "compile"
                 },
                 {
                     "type": "library",
                     "name": "Gradle: org.apache.commons:commons-lang3:3.12.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-common:1.9.10",
                     "scope": "compile"
                 },
                 {
@@ -58,17 +53,12 @@
             "dependencies": [
                 {
                     "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.9.10",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
                     "scope": "compile"
                 },
                 {
                     "type": "library",
                     "name": "Gradle: org.apache.commons:commons-lang3:3.12.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-common:1.9.10",
                     "scope": "compile"
                 },
                 {
@@ -119,6 +109,10 @@
             "roots": [
                 {
                     "path": "commons-lang3-3.12.0.jar"
+                },
+                {
+                    "path": "commons-lang3-3.12.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -131,36 +125,23 @@
             }
         },
         {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-common:1.9.10",
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
             "type": "java-imported",
             "roots": [
                 {
-                    "path": "kotlin-stdlib-common-1.9.10.jar"
-                }
-            ],
-            "properties": {
-                "attributes": {
-                    "groupId": "org.jetbrains.kotlin",
-                    "artifactId": "kotlin-stdlib-common",
-                    "version": "1.9.10",
-                    "baseVersion": "1.9.10"
-                }
-            }
-        },
-        {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.9.10",
-            "type": "java-imported",
-            "roots": [
+                    "path": "kotlin-stdlib-2.2.0.jar"
+                },
                 {
-                    "path": "kotlin-stdlib-1.9.10.jar"
+                    "path": "kotlin-stdlib-2.2.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
                 "attributes": {
                     "groupId": "org.jetbrains.kotlin",
                     "artifactId": "kotlin-stdlib",
-                    "version": "1.9.10",
-                    "baseVersion": "1.9.10"
+                    "version": "2.2.0",
+                    "baseVersion": "2.2.0"
                 }
             }
         },
@@ -170,6 +151,10 @@
             "roots": [
                 {
                     "path": "annotations-13.0.jar"
+                },
+                {
+                    "path": "annotations-13.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {

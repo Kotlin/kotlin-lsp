@@ -11,7 +11,7 @@ for the Kotlin language.
 The server is based on [IntelliJ IDEA](https://github.com/JetBrains/intellij-community) and the [IntelliJ IDEA Kotlin Plugin](https://github.com/JetBrains/intellij-community/tree/master/plugins/kotlin)
 implementation.
 
-### Quick Start
+### VS Code Quick Start
 
 1. Download the latest build of VSC extension or Standalone version from the [Releases Page](https://github.com/Kotlin/kotlin-lsp/releases)
 2. Install it as a VSC Extension via `Extensions | More Action | Install from VSIX`
@@ -20,6 +20,16 @@ implementation.
 4. Open a folder with JVM-only Kotlin Gradle project and the project will be immediately recognized and LSP activated
 
 ![quickstart_sample.gif](images/quickstart_sample.gif)
+
+### Install kotlin-lsp CLI
+
+For brew users: `brew install JetBrains/utils/kotlin-lsp`
+
+Manual installation:
+1. Download the standalone zip from the [Releases Page](https://github.com/Kotlin/kotlin-lsp/releases)
+2. Unpack zip
+3. `chmod +x $KOTLIN_LSP_DIR/kotlin-lsp.sh`
+4. Create a symlink inside your PATH `ln -s $KOTLIN_LSP_DIR/kotlin-lsp.sh $HOME/.local/bin/kotlin-lsp`
 
 ### Supported features and Roadmap
 
@@ -46,7 +56,7 @@ The best way to track current capabilities and what is going to be supported in 
   * [x] Organize imports
   * [x] Go to reference
 * [ ] Refactorings
-  * [ ] Rename
+  * [x] Rename
   * [ ] Move
   * [ ] Change signature
 * [x] On-the-fly Kotlin diagnostics

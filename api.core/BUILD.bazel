@@ -1,19 +1,18 @@
 ### auto-generated section `build language-server.api.core` start
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
-load("@community//build:tests-options.bzl", "jps_test")
-load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_test")
+load("@rules_jvm//:jvm.bzl", "jvm_library")
 
 create_kotlinc_options(
-  name = "custom",
-  context_receivers = True
+  name = "custom_api.core",
+  x_context_parameters = True
 )
 
 jvm_library(
   name = "api.core",
   module_name = "language-server.api.core",
   visibility = ["//visibility:public"],
-  srcs = glob(["src/**/*.kt", "src/**/*.java"], allow_empty = True),
-  kotlinc_opts = ":custom",
+  srcs = glob(["src/**/*.kt", "src/**/*.java", "src/**/*.form"], allow_empty = True),
+  kotlinc_opts = ":custom_api.core",
   deps = [
     "@lib//:kotlin-stdlib",
     "@community//platform/core-api:core",
@@ -21,14 +20,17 @@ jvm_library(
     "@community//platform/workspace/storage",
     "@community//platform/workspace/jps",
     "@community//fleet/lsp.protocol",
+    "@community//platform/lang-core",
+    "@community//platform/projectModel-api:projectModel",
+    "@community//platform/projectModel-impl",
   ]
 )
 
 jvm_library(
   name = "api.core_test_lib",
   visibility = ["//visibility:public"],
-  srcs = glob(["test/**/*.kt", "test/**/*.java"], allow_empty = True),
-  kotlinc_opts = ":custom",
+  srcs = glob(["test/**/*.kt", "test/**/*.java", "test/**/*.form"], allow_empty = True),
+  kotlinc_opts = ":custom_api.core",
   associates = [":api.core"],
   deps = [
     "@lib//:kotlin-stdlib",
@@ -41,11 +43,18 @@ jvm_library(
     "@lib//:junit5Jupiter",
     "@community//platform/testFramework",
     "@community//platform/testFramework:testFramework_test_lib",
+    "@community//platform/lang-core",
+    "@community//platform/projectModel-api:projectModel",
+    "@community//platform/projectModel-impl",
   ]
 )
+### auto-generated section `build language-server.api.core` end
+
+### auto-generated section `test language-server.api.core` start
+load("@community//build:tests-options.bzl", "jps_test")
 
 jps_test(
   name = "api.core_test",
   runtime_deps = [":api.core_test_lib"]
 )
-### auto-generated section `build language-server.api.core` end
+### auto-generated section `test language-server.api.core` end

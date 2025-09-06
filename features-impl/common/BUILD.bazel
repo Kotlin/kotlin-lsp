@@ -3,9 +3,12 @@ load("@community//build:compiler-options.bzl", "create_kotlinc_options")
 load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_resources")
 
 create_kotlinc_options(
-  name = "custom",
-  context_receivers = True,
-  opt_in = ["org.jetbrains.kotlin.analysis.api.KaExperimentalApi"]
+  name = "custom_common",
+  opt_in = [
+    "com.intellij.openapi.util.IntellijInternalApi",
+    "org.jetbrains.kotlin.analysis.api.KaExperimentalApi",
+  ],
+  x_context_parameters = True
 )
 
 jvm_resources(
@@ -18,8 +21,8 @@ jvm_library(
   name = "common",
   module_name = "language-server.api.features.impl.common",
   visibility = ["//visibility:public"],
-  srcs = glob(["src/**/*.kt", "src/**/*.java"], allow_empty = True),
-  kotlinc_opts = ":custom",
+  srcs = glob(["src/**/*.kt", "src/**/*.java", "src/**/*.form"], allow_empty = True),
+  kotlinc_opts = ":custom_common",
   deps = [
     "@lib//:kotlin-stdlib",
     "@lib//:kotlinx-coroutines-core",
@@ -44,6 +47,13 @@ jvm_library(
     "@community//platform/core-ui",
     "//codeServer/core",
     "//language-server/community/workspace-import:language-server-project-import",
+    "@community//platform/refactoring",
+    "@community//platform/projectModel-api:projectModel",
+    "@community//platform/platform-impl:ide-impl",
+    "@community//platform/usageView",
+    "@community//platform/ide-core",
+    "@community//plugins/kotlin/code-insight/impl-base",
+    "@lib//:kotlinx-collections-immutable",
   ],
   runtime_deps = [":common_resources"]
 )

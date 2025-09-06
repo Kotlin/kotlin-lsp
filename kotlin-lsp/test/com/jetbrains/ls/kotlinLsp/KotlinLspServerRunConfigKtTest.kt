@@ -4,17 +4,25 @@ package com.jetbrains.ls.kotlinLsp
 import com.jetbrains.lsp.implementation.TcpConnectionConfig
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import java.nio.file.Paths
 
 
 class KotlinLspServerRunConfigKtTest {
     @Test
     fun `stdio`() {
-        doConsistencyTest(KotlinLspServerRunConfig(KotlinLspServerMode.Stdio))
+        doConsistencyTest(KotlinLspServerRunConfig(KotlinLspServerMode.Stdio, systemPath = null))
     }
 
     @Test
     fun `tcp client`() {
-        doConsistencyTest(KotlinLspServerRunConfig(KotlinLspServerMode.Socket(TcpConnectionConfig.Client(port = 9999))))
+        doConsistencyTest(
+            KotlinLspServerRunConfig(
+                KotlinLspServerMode.Socket(
+                    TcpConnectionConfig.Client(host = "127.0.0.1", port = 9999)
+                ),
+                systemPath = Paths.get("/path/to/system"),
+            )
+        )
     }
 
     @Test
@@ -23,10 +31,12 @@ class KotlinLspServerRunConfigKtTest {
             KotlinLspServerRunConfig(
                 KotlinLspServerMode.Socket(
                     TcpConnectionConfig.Server(
+                        host = "127.0.0.1",
                         port = 9999,
-                        isMulticlient = false
+                        isMultiClient = false
                     )
-                )
+                ),
+                systemPath = Paths.get("/path/to/system"),
             )
         )
     }
@@ -37,15 +47,17 @@ class KotlinLspServerRunConfigKtTest {
             KotlinLspServerRunConfig(
                 KotlinLspServerMode.Socket(
                     TcpConnectionConfig.Server(
+                        host = "127.0.0.1",
                         port = 9999,
-                        isMulticlient = true
+                        isMultiClient = true
                     )
-                )
+                ),
+                systemPath = null,
             )
         )
     }
 
-    private fun doConsistencyTest(config: KotlinLspServerRunConfig, ) {
+    private fun doConsistencyTest(config: KotlinLspServerRunConfig) {
         val arguments = config.toArguments()
         val parsed = parseArguments(arguments.toTypedArray()) as KotlinLspCommand.RunLsp
         Assertions.assertEquals(config, parsed.config)

@@ -1,8 +1,8 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.completion
 
+import com.intellij.codeInsight.completion.PrefixMatcher
 import com.intellij.codeInsight.completion.createCompletionProcess
-import com.intellij.codeInsight.completion.insertCompletion
 import com.intellij.codeInsight.completion.performCompletion
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementPresentation
@@ -10,28 +10,26 @@ import com.intellij.openapi.application.invokeAndWaitIfNeeded
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
-import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
+import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.completion.CompletionItemData
 import com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider
 import com.jetbrains.ls.api.features.completion.LSCompletionProvider
-import com.jetbrains.ls.api.features.impl.common.hover.AbstractLSHoverProvider.LSMarkdownDocProvider.Companion.getMarkdownDoc
-import com.jetbrains.ls.api.features.textEdits.PsiFileTextEditsCollector.collectTextEdits
-import com.jetbrains.ls.api.features.utils.PsiSerializablePointer
+import com.jetbrains.ls.api.features.utils.isSource
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.*
-import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 
 abstract class LSAbstractCompletionProvider : LSCompletionProvider {
     override val supportsResolveRequest: Boolean get() = true
 
-    context(LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override suspend fun provideCompletion(params: CompletionParams): CompletionList {
+        if (!params.textDocument.isSource()) return CompletionList.EMPTY_COMPLETE
         return withAnalysisContext {
             invokeAndWaitIfNeeded {
                 runWriteAction {
@@ -39,11 +37,12 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider {
                     val psiFile = file.findPsiFile(project) ?: return@runWriteAction EMPTY_COMPLETION_LIST
                     val document = file.findDocument() ?: return@runWriteAction EMPTY_COMPLETION_LIST
                     val offset = document.offsetByPosition(params.position)
-                    val completionProcess = createCompletionProcess(project, psiFile, offset)
+                    val completionProcess = createCompletionProcess(project, psiFile, offset, invocationCount = params.computeInvocationCount())
                     val lookupElements = performCompletion(completionProcess)
-                    val completionItems = lookupElements.mapIndexed { i, lookup ->
+                    val completionItems = lookupElements.mapIndexed  { i, lookup ->
                         val lookupPresentation = LookupElementPresentation().also { lookup.renderElement(it) }
-                        val data = CompletionItemData(this.uniqueId, params, lookup.lookupString, lookupElementPointer(lookup))
+                        val additionalData = createAdditionalData(lookup, completionProcess.arranger.itemMatcher(lookup)) ?: return@mapIndexed null
+                        val data = CompletionItemData(params, additionalData, uniqueId)
                         CompletionItem(
                             label = lookupPresentation.itemText ?: lookup.lookupString,
                             sortText = getSortedFieldByIndex(i),
@@ -55,9 +54,9 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider {
                             textEdit = emptyTextEdit(params.position),
                             data = LSP.json.encodeToJsonElement(data)
                         )
-                    }
+                    }.filterNotNull()
                     CompletionList(
-                        isIncomplete = false,
+                        isIncomplete = true,
                         items = completionItems,
                     )
                 }
@@ -65,53 +64,13 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider {
         }
     }
 
-    context(LSServer)
-    override suspend fun resolveCompletion(completionItem: CompletionItem): CompletionItem? {
-        val data = completionItem.data ?: return null
-        val (_, params, lookupString, pointer) = try {
-            LSP.json.decodeFromJsonElement<CompletionItemData>(data)
-        } catch (_: SerializationException) {
-            return null
-        } catch (_: IllegalArgumentException) {
-            return null
-        }
-
-        return withAnalysisContext {
-            val file = params.textDocument.findVirtualFile() ?: return@withAnalysisContext null
-            var lookup: LookupElement? = null
-            val rawTextEdits = collectTextEdits(file) { fileForModification ->
-                val document = fileForModification.fileDocument
-                val offset = document.offsetByPosition(params.position)
-                val completionProcess = createCompletionProcess(project, fileForModification, offset)
-                val lookupElements = performCompletion(completionProcess)
-                lookup = lookupElements.firstOrNull { it.lookupString == lookupString && lookupElementPointer(it) == pointer }
-                    ?: return@collectTextEdits
-                insertCompletion(project, fileForModification, lookup, completionProcess.parameters!!)
-            }
-
-            val textEdits = transformTextEdits(rawTextEdits)
-
-            // A client-side command, thus inherently client-specific. At the moment, we support only VS Code.
-            val command = when {
-                textEdits.isEmpty() -> null
-                textEdits.last().newText.endsWith(")") -> VSCODE_MOVE_ONE_CHARACTER_LEFT
-                textEdits.last().newText.endsWith(" }") -> VSCODE_MOVE_TWO_CHARACTERS_LEFT
-                else -> null
-            }
-
-            val documentation = lookup?.psiElement
-                ?.let { getMarkdownDoc(it) }
-                ?.let { StringOrMarkupContent(MarkupContent(MarkupKindType.Markdown, it)) }
-
-            completionItem.copy(
-                additionalTextEdits = textEdits,
-                command = command,
-                documentation = documentation
-            )
-        }
+    private fun CompletionParams.computeInvocationCount(): Int {
+        // todo should be based on CompletionParams.context.triggerKind
+        return 1
     }
 
-    protected open fun transformTextEdits(textEdits: List<TextEdit>): List<TextEdit> = textEdits
+
+    abstract fun createAdditionalData(lookupElement: LookupElement, itemMatcher: PrefixMatcher): JsonElement?
 
     companion object {
         private val EMPTY_COMPLETION_LIST = CompletionList(isIncomplete = false, items = emptyList())
@@ -127,23 +86,10 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider {
 
         private const val MAX_INT_DIGITS_COUNT = Int.MAX_VALUE.toString().length
 
-        private fun emptyTextEdit(position: Position): TextEditOrInsertReplaceEdit {
+        private fun emptyTextEdit(position: Position): CompletionItem.Edit {
             val range = Range(position, position)
-            return TextEditOrInsertReplaceEdit(InsertReplaceEdit("", range, range))
+            return CompletionItem.Edit.InsertReplace(InsertReplaceEdit("", range, range))
         }
-
-        context(LSServer, LSAnalysisContext)
-        private fun lookupElementPointer(lookup: LookupElement): PsiSerializablePointer? =
-            lookup.psiElement?.let { psiElement ->
-                psiElement.containingFile?.virtualFile?.let { file ->
-                    PsiSerializablePointer.create(psiElement, file)
-                }
-            }
-
-        private val VSCODE_MOVE_ONE_CHARACTER_LEFT =
-            Command("Adjust Cursor", "cursorMove", listOf(JsonObject(mapOf("to" to JsonPrimitive("left")))))
-        private val VSCODE_MOVE_TWO_CHARACTERS_LEFT =
-            Command("Adjust Cursor", "cursorMove", listOf(JsonObject(mapOf("to" to JsonPrimitive("left"), "value" to JsonPrimitive(2)))))
     }
 }
 

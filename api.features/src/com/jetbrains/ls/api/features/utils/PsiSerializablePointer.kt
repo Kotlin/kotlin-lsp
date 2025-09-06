@@ -1,15 +1,15 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.utils
 
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiFileSystemItem
+import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.findPsiFile
+import com.intellij.psi.*
 import com.intellij.psi.util.endOffset
 import com.intellij.psi.util.startOffset
+import com.jetbrains.ls.api.core.util.lspUriToIntellijUri
 import com.jetbrains.ls.api.core.util.uri
-import com.jetbrains.ls.api.core.LSAnalysisContext
-import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.lsp.protocol.URI
 import kotlinx.serialization.Serializable
 
@@ -20,7 +20,14 @@ sealed class PsiSerializablePointer {
 
     abstract fun restore(psiFile: PsiFile): PsiElement?
 
-    abstract fun matches(element: PsiElement): Boolean
+    open fun restore(project: Project): PsiElement? {
+        val intellijUri = uri.lspUriToIntellijUri() ?: return null
+        val virtualFile = VirtualFileManager.getInstance().refreshAndFindFileByUrl(intellijUri) ?: return null
+        val psiFile = virtualFile.findPsiFile(project) ?: return null
+        return restore(psiFile)
+    }
+
+     abstract fun matches(element: PsiElement): Boolean
 
     @Serializable
     internal data class PsiFileSerializablePointer(
@@ -63,7 +70,12 @@ sealed class PsiSerializablePointer {
     }
 
     companion object {
-        context(LSAnalysisContext, LSServer)
+        fun fromPsiPointer(pointer: SmartPsiElementPointer<*>): PsiSerializablePointer {
+            val file = pointer.containingFile ?: error("File for pointer is null")
+            val element = pointer.element ?: error("Element for pointer is null")
+            return create(element, file.virtualFile)
+        }
+
         fun create(psi: PsiElement, file: VirtualFile): PsiSerializablePointer {
             return when (psi) {
                 is PsiFile -> {
@@ -79,4 +91,9 @@ sealed class PsiSerializablePointer {
             }
         }
     }
+}
+
+fun PsiSerializablePointer.toPsiPointer(project: Project): SmartPsiElementPointer<PsiElement> {
+    val element = restore(project) ?: error("Cannot restore ${this} for pointer")
+    return element.createSmartPointer()
 }

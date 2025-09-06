@@ -3,7 +3,7 @@ package com.jetbrains.ls.api.features.utils
 
 import com.intellij.ide.plugins.PluginMainDescriptor
 import com.intellij.ide.plugins.PluginManagerCore
-import com.intellij.ide.plugins.loadAndInitForCoreEnv
+import com.intellij.ide.plugins.loadForCoreEnv
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.extensions.PluginId
 import java.nio.file.Path
@@ -16,13 +16,15 @@ fun ijPluginByXml(
     useFakePluginId: Boolean = false,
 ): PluginMainDescriptor {
     val xmlResourcePath = xmlResourcePath.removePrefix("/")
-    val pluginRoot = getPluginRoot(classForClasspath)
+    val pluginRoot = PathManager.getResourceRoot(classForClasspath, "/$xmlResourcePath")
+        ?.let { Paths.get(it) }
+        ?: error("Resource not found: $xmlResourcePath")
     fun createFakePluginId(): PluginId = PluginId.getId(xmlResourcePath)
 
     return when {
         xmlResourcePath.startsWith(PluginManagerCore.META_INF) -> {
             // normal plugin xml
-            loadAndInitForCoreEnv(
+            loadForCoreEnv(
                 pluginRoot,
                 xmlResourcePath, relativeDir = "",
                 id = if (useFakePluginId) createFakePluginId() else null
@@ -31,7 +33,7 @@ fun ijPluginByXml(
 
         else -> {
             // v2 plugin xml
-            loadAndInitForCoreEnv(pluginRoot, xmlResourcePath, relativeDir = "", id = createFakePluginId())
+            loadForCoreEnv(pluginRoot, xmlResourcePath, relativeDir = "", id = createFakePluginId())
         }
     }
         ?: error("Failed to load plugin descriptor from $xmlResourcePath")

@@ -8,15 +8,21 @@ import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.util.endOffset
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.util.positionByOffset
+import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.completion.LSCompletionProvider
+import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
+import com.jetbrains.ls.api.features.utils.isSource
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.*
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.analysis.api.projectStructure.contextModule
 import org.jetbrains.kotlin.idea.base.projectStructure.getKaModule
 import org.jetbrains.kotlin.idea.base.util.isImported
@@ -30,14 +36,15 @@ import org.jetbrains.kotlin.resolve.jvm.platform.JvmPlatformAnalyzerServices
 /**
  * Taken from https://github.com/darthorimar/rekot
  */
-@Deprecated("Use `LSCompletionProviderKotlinImpl` instead")
 internal object LSRekotBasedKotlinCompletionProviderImpl : LSCompletionProvider {
-    override val uniqueId: String get() = this::class.java.name
+    override val uniqueId: LSUniqueConfigurationEntry.UniqueId = LSUniqueConfigurationEntry.UniqueId(this::class.java.name)
+
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
     override val supportsResolveRequest: Boolean get() = false
 
-    context(LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override suspend fun provideCompletion(params: CompletionParams): CompletionList {
+        if (!params.textDocument.isSource()) return CompletionList.EMPTY_COMPLETE
         return withAnalysisContext {
             runReadAction {
                 val file = params.textDocument.findVirtualFile() ?: return@runReadAction EMPTY_COMPLETION_LIST
@@ -50,7 +57,7 @@ internal object LSRekotBasedKotlinCompletionProviderImpl : LSCompletionProvider 
         }
     }
 
-    context(LSAnalysisContext)
+    context(_: LSAnalysisContext)
     private fun createItems(
         fileForCompletion: KtFile,
         originalDocument: Document,

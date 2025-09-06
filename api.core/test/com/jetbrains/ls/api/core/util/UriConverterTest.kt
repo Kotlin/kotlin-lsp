@@ -33,7 +33,7 @@ class UriConverterTest {
 
         onlyOnWindows {
             testLspToIntellij(
-                "file://d:/Program Files/aaa.jar!/aa bb",
+                "file://D:/Program Files/aaa.jar!/aa bb",
                 "file:///D:/Program%20Files/aaa.jar!/aa%20bb"
             )
         }
@@ -43,12 +43,12 @@ class UriConverterTest {
     fun `should convert LSP URI to IntelliJ URI for Windows paths`() {
         onlyOnWindows {
             testLspToIntellij(
-                "file://c:/Users/test/file.txt",
+                "file://C:/Users/test/file.txt",
                 "file:///C:/Users/test/file.txt"
             )
 
             testLspToIntellij(
-                "file://d:/Program Files/App/config.xml",
+                "file://D:/Program Files/App/config.xml",
                 "file:///D:/Program%20Files/App/config.xml"
             )
         }
@@ -58,7 +58,7 @@ class UriConverterTest {
     fun `should convert LSP URI to IntelliJ URI for JAR files`() {
         onlyOnWindows {
             testLspToIntellij(
-                "jar://c:/libs/app.jar!/",
+                "jar://C:/libs/app.jar!/",
                 "file:///C:/libs/app.jar"
             )
         }
@@ -73,7 +73,7 @@ class UriConverterTest {
         onlyOnWindows {
             // Platform-independent JAR tests
             testLspToIntellij(
-                "jar://d:/path/to/lib.jar!/com/example/Class.class",
+                "jar://D:/path/to/lib.jar!/com/example/Class.class",
                 "jar:///D:/path/to/lib.jar!/com/example/Class.class"
             )
         }
@@ -179,7 +179,7 @@ class UriConverterTest {
         onlyOnWindows {
             val windowsPath = Path.of("c:\\test\\path.txt")
             testLspToIntellij(
-                "file://c:/test/path.txt",
+                "file://C:/test/path.txt",
                 windowsPath.toLspUri().uri
             )
         }
@@ -239,17 +239,17 @@ class UriConverterTest {
 
         onlyOnWindows {
             testLspToIntellij(
-                "file://c:/path/with@symbol/file.txt",
+                "file://C:/path/with@symbol/file.txt",
                 "file:///c:/path/with%40symbol/file.txt"
             )
 
             testLspToIntellij(
-                "file://c:/path/with+plus/file.txt",
+                "file://C:/path/with+plus/file.txt",
                 "file:///c:/path/with%2Bplus/file.txt"
             )
 
             testLspToIntellij(
-                "file://c:/path/with,comma/file.txt",
+                "file://C:/path/with,comma/file.txt",
                 "file:///c:/path/with%2Ccomma/file.txt"
             )
         }
@@ -269,7 +269,7 @@ class UriConverterTest {
         onlyOnWindows {
             val longPath = "a".repeat(255) // Max filename length in many filesystems
             testLspToIntellij(
-                "file://c:/path/$longPath.txt",
+                "file://C:/path/$longPath.txt",
                 "file:///c:/path/$longPath.txt"
             )
         }
@@ -279,17 +279,17 @@ class UriConverterTest {
     fun `should convert Windows drive letter to uppercase`() {
         onlyOnWindows {
             testLspToIntellij(
-                "file://c:/Users/test.txt",
+                "file://C:/Users/test.txt",
                 "file:///c:/Users/test.txt"
             )
 
             testLspToIntellij(
-                "file://d:/Program Files/test.txt",
+                "file://D:/Program Files/test.txt",
                 "file:///d:/Program%20Files/test.txt"
             )
 
             testLspToIntellij(
-                "jar://e:/libs/app.jar!/",
+                "jar://E:/libs/app.jar!/",
                 "file:///e:/libs/app.jar"
             )
         }
@@ -312,12 +312,12 @@ class UriConverterTest {
 
         onlyOnWindows {
             testLspToIntellij(
-                "file://c:/path/привет/файл.txt",
+                "file://C:/path/привет/файл.txt",
                 "file:///C:/path/%D0%BF%D1%80%D0%B8%D0%B2%D0%B5%D1%82/%D1%84%D0%B0%D0%B9%D0%BB.txt"
             )
 
             testLspToIntellij(
-                "file://c:/path/测试/文件.txt",
+                "file://C:/path/测试/文件.txt",
                 "file:///C:/path/%E6%B5%8B%E8%AF%95/%E6%96%87%E4%BB%B6.txt"
             )
         }
@@ -347,6 +347,21 @@ class UriConverterTest {
                 val path = Path.of("d:\\path\\to\\nonJar.txt")
                 assertEquals("file:///d%3A/path/to/nonJar.txt", path.toLspUri().uri)
             }
+        }
+    }
+
+    @Test
+    fun `should convert drive letters to upper case in Windows paths`() {
+        onlyOnWindows {
+            testLspToIntellij(
+                "file://C:/path",
+                "file:///c:/path"
+            )
+
+            testLspToIntellij(
+                "file://D:/path",
+                "file:///D:/path"
+            )
         }
     }
 

@@ -3,9 +3,9 @@ package com.jetbrains.ls.kotlinLsp
 
 import com.jetbrains.lsp.implementation.LspConnection
 import io.ktor.utils.io.ByteWriteChannel
-import com.jetbrains.ls.kotlinLsp.ktorHack.asByteWriteChannel
 import io.ktor.utils.io.cancel
 import io.ktor.utils.io.jvm.javaio.toByteReadChannel
+import io.ktor.utils.io.streams.asByteWriteChannel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import java.io.InputStream

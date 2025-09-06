@@ -1,3 +1,4 @@
+// Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.kotlinLsp.util
 
 import com.intellij.openapi.diagnostic.Logger
@@ -13,7 +14,7 @@ internal fun getSystemInfo(): String = buildString {
     val runtime = Runtime.getRuntime()
     appendLine("System Info")
     appendLine("  os.name = ${OS.CURRENT.name}")
-    appendLine("  os.version = ${OS.CURRENT.version}")
+    appendLine("  os.version = ${OS.CURRENT.version()}")
     appendLine("  cpu.arch = ${if (CpuArch.isEmulated()) "${CpuArch.CURRENT}(emulated)" else "${CpuArch.CURRENT}"}")
     appendLine("  cpu.number: " + runtime.availableProcessors())
     appendLine("  java.version = ${SystemInfo.JAVA_RUNTIME_VERSION}")

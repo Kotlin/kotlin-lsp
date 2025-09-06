@@ -9,6 +9,10 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.project
+import com.jetbrains.ls.api.core.withAnalysisContext
+import com.jetbrains.ls.api.core.withWritableFile
+import com.jetbrains.ls.api.core.withWriteAnalysisContext
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
@@ -16,6 +20,7 @@ import com.jetbrains.ls.api.features.commands.document.LSDocumentCommandExecutor
 import com.jetbrains.ls.api.features.impl.common.diagnostics.diagnosticData
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.textEdits.PsiFileTextEditsCollector
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -28,7 +33,7 @@ class LSInspectionFixesCodeActionProvider(
 
     override val providesOnlyKinds: Set<CodeActionKind> = setOf(CodeActionKind.QuickFix)
 
-    context(LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val diagnosticData = params.diagnosticData<InspectionDiagnosticData>().ifEmpty { return@flow }
 
@@ -62,8 +67,8 @@ class LSInspectionFixesCodeActionProvider(
         LSDocumentCommandExecutor { documentUri, otherArgs ->
             val fix = LSP.json.decodeFromJsonElement<InspectionQuickfixData>(otherArgs[0])
             withWritableFile(documentUri.uri) {
-                withAnalysisContext {
-                    val file = runReadAction { documentUri.findVirtualFile() } ?: return@withAnalysisContext emptyList()
+                withWriteAnalysisContext {
+                    val file = runReadAction { documentUri.findVirtualFile() } ?: return@withWriteAnalysisContext emptyList()
                     PsiFileTextEditsCollector.collectTextEdits(file) { psiFile ->
                         val (fix, descriptor) = findRealFix(fix, psiFile) ?: return@collectTextEdits
                         fix.applyFix(project, descriptor)
@@ -78,7 +83,7 @@ class LSInspectionFixesCodeActionProvider(
         val descriptor: ProblemDescriptor,
     )
 
-    context(LSAnalysisContext)
+    context(_: LSAnalysisContext)
     private fun findRealFix(
         fix: InspectionQuickfixData,
         psiFile: PsiFile,

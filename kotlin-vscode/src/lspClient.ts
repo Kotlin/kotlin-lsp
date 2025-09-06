@@ -1,14 +1,21 @@
 import * as vscode from "vscode"
+import {workspace} from "vscode"
 import * as path from "node:path"
 import {promisify} from 'util';
 import {exec} from 'child_process';
-import * as fs from "node:fs"
-import {ExtensionContext, workspace} from "vscode"
-import {Disposable, LanguageClient, LanguageClientOptions, ServerOptions, State, StateChangeEvent, StreamInfo, TransportKind} from 'vscode-languageclient/node';
+import {
+    Disposable,
+    LanguageClient,
+    LanguageClientOptions,
+    ServerOptions,
+    State,
+    StateChangeEvent,
+    StreamInfo,
+    TransportKind
+} from 'vscode-languageclient/node';
 import * as net from "node:net"
 import * as os from 'os';
 import {extensionId, getContext} from "./extension"
-import { runWithJavaSupport } from "./java";
 
 const execAsync = promisify(exec);
 
@@ -55,7 +62,7 @@ export function getLspClient(): LanguageClient | undefined {
  * Starts the LSP client applying all user options. If the client is already running, restarts it.
  */
 export async function startLspClient(): Promise<void> {
-    const runClient = await createLpsClient()
+    const runClient = await createLspClient()
     if (!runClient) return;
     await stopLspClient()
     _client = runClient;
@@ -81,7 +88,7 @@ export async function stopLspClient(): Promise<void> {
 
 
 const jrePathForLspSettingName = 'kotlinLSP.jrePathToRunLsp';
-const minimumSupportedJavaVersion = 17
+const minimumSupportedJavaVersion = 21
 
 
 
@@ -133,7 +140,7 @@ async function ensureCorrectJavaVersion(javaCommand: string): Promise<boolean> {
     } catch (error) {
         console.error('Error executing Java command:', error);
         vscode.window.showErrorMessage('Failed to execute Java command to run lsp server. ' +
-                `Please ensure that \`${jrePathForLspSettingName}\` option is set correctly to to the JRE installation path.` +
+                `Please ensure that \`${jrePathForLspSettingName}\` option is set correctly to the JRE installation path.` +
                 `Current value is \`${getJrePathForKotlinLSP()}\``);
         return false;
     }
@@ -154,11 +161,11 @@ async function createServerOptions(): Promise<ServerOptions | null> {
     }
 }
 
-async function createLpsClient(): Promise<LanguageClient | null> {
+async function createLspClient(): Promise<LanguageClient | null> {
     const clientOptions: LanguageClientOptions = {
         documentSelector: [
-            {scheme: 'file', language: 'kotlin'},
-            {scheme: 'file', language: 'java'},
+            {scheme: 'file', language: 'kotlin'}, {scheme: 'jar', language: 'kotlin'},
+            {scheme: 'file', language: 'java'  }, {scheme: 'jar', language: 'java'  }, {scheme: 'jrt', language: 'java'},
         ],
         progressOnInitialization: true,
     };
@@ -175,19 +182,17 @@ async function getRunningJavaServerLspOptions(): Promise<ServerOptions | null> {
     const isJavaVersionValid = await ensureCorrectJavaVersion(javaCommand);
     if (!isJavaVersionValid) return null;
 
-    const extractPath = getContext().asAbsolutePath(path.join('server', 'extracted', 'lib'));
+    const extractPath = getContext().asAbsolutePath(path.join('server', 'lib'));
 
+    const context = getContext()
     const args: string[] = []
     args.push(...defaultJvmOptions)
     args.push(...getUserJvmOptions())
     args.push(
         '-classpath', extractPath + path.sep + '*',
         'com.jetbrains.ls.kotlinLsp.KotlinLspServerKt', '--client',
-        '--system-path', getContext().globalStorageUri.fsPath,
+        '--system-path', (context.storageUri ?? context.globalStorageUri).fsPath,
     );
-    if (runWithJavaSupport()) {
-        args.push('--with-java')
-    }
     return <ServerOptions>{
         command: javaCommand,
         args: args,

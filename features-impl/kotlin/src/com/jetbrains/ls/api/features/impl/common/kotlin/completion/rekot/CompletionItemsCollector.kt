@@ -2,7 +2,7 @@
 package com.jetbrains.ls.api.features.impl.common.kotlin.completion.rekot
 
 import com.intellij.openapi.diagnostic.fileLogger
-import com.intellij.openapi.diagnostic.getOrLogException
+import com.intellij.openapi.diagnostic.getOrHandleException
 import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.analysis.api.components.KaCompletionExtensionCandidateChecker
 import org.jetbrains.kotlin.analysis.api.components.KaExtensionApplicabilityResult
@@ -23,25 +23,25 @@ internal class CompletionItemsCollector(
     val symbolFilter:  SymbolFilter,
 ) {
     fun interface SymbolFilter {
-        context (KaSession)  fun accepts(symbol: KaDeclarationSymbol): Boolean
+        context(_: KaSession) fun accepts(symbol: KaDeclarationSymbol): Boolean
     }
     private val factory: CompletionItemFactory = CompletionItemFactory
 
     private val items = mutableListOf<RekotCompletionItem>()
     private val symbols = mutableSetOf<KaDeclarationSymbol>()
 
-    context(KaSession)
+    context(kaSession: KaSession)
     fun add(declaration: KtDeclaration?, modify: (DeclarationCompletionItemBuilder.() -> Unit)? = null) {
-        add(declaration?.symbol, modify)
+        with(kaSession) { add(declaration?.symbol, modify) }
     }
 
-    context(KaSession)
+    context(_: KaSession)
     @JvmName("addDeclarations")
     fun add(declarations: Iterable<KtDeclaration>, modify: (DeclarationCompletionItemBuilder.() -> Unit)? = null) {
         declarations.forEach { add(it, modify) }
     }
 
-    context(KaSession)
+    context(_: KaSession)
     fun add(symbol: KaDeclarationSymbol?, modify: (DeclarationCompletionItemBuilder.() -> Unit)? = null) {
         when (symbol) {
             null -> {}
@@ -62,18 +62,18 @@ internal class CompletionItemsCollector(
         }
     }
 
-    context(KaSession)
+    context(_: KaSession)
     @JvmName("addSymbols")
     fun add(symbols: Sequence<KaDeclarationSymbol>, modify: (DeclarationCompletionItemBuilder.() -> Unit)? = null) {
         symbols.forEach { add(it, modify) }
     }
 
-    context(KaSession)
+    context(_: KaSession)
     fun add(signature: KaCallableSignature<*>?, modify: (DeclarationCompletionItemBuilder.() -> Unit)? = null) {
         _add(signature, modify)
     }
 
-    context(KaSession)
+    context(_: KaSession)
     @JvmName("addSignatures")
     fun add(symbols: Sequence<KaCallableSignature<*>>, modify: (DeclarationCompletionItemBuilder.() -> Unit)? = null) {
         symbols.forEach { add(it, modify) }
@@ -83,7 +83,7 @@ internal class CompletionItemsCollector(
         this.items += items
     }
 
-    context(KaSession)
+    context(_: KaSession)
     @Suppress("FunctionName")
     private fun _add(symbol: KaDeclarationSymbol?, modify: (DeclarationCompletionItemBuilder.() -> Unit)?) {
         if (!acceptsSymbol(symbol)) return
@@ -99,7 +99,7 @@ internal class CompletionItemsCollector(
             }
     }
 
-    context(KaSession)
+    context(_: KaSession)
     @Suppress("FunctionName")
     private fun _add(signature: KaCallableSignature<*>?, modify: (DeclarationCompletionItemBuilder.() -> Unit)?) {
         if (!acceptsSymbol(signature?.symbol)) return
@@ -115,7 +115,7 @@ internal class CompletionItemsCollector(
                 }
     }
 
-    context(KaSession)
+    context(_: KaSession)
     private fun acceptsSymbol(symbol: KaDeclarationSymbol?): Boolean {
         contract { returns(true) implies (symbol != null) }
         return runCatching {
@@ -129,18 +129,18 @@ internal class CompletionItemsCollector(
             if (symbol.name?.asString()?.contains(COMPLETION_FAKE_IDENTIFIER) == true) return false
             if (!symbolFilter.accepts(symbol)) return false
             return true
-        }.getOrLogException { LOG.debug(it) } ?: false
+        }.getOrHandleException { LOG.debug(it) } ?: false
     }
 
-    context(KaSession)
-    private fun KaCallableSymbol.asApplicableSignature(): KaCallableSignature<KaCallableSymbol>? {
+    context(kaSession: KaSession)
+    private fun KaCallableSymbol.asApplicableSignature(): KaCallableSignature<KaCallableSymbol>? = with(kaSession) {
         val checker = applicabilityChecker ?: return asSignature()
         return runCatching {
             when (val applicability = checker.computeApplicability(this@asApplicableSignature)) {
                 is KaExtensionApplicabilityResult.Applicable -> substitute(applicability.substitutor)
                 else -> null
             }
-        }.getOrLogException { LOG.debug(it) }
+        }.getOrHandleException { LOG.debug(it) }
     }
 
     fun build(): Collection<RekotCompletionItem> {

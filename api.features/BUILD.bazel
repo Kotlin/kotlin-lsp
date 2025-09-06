@@ -3,9 +3,12 @@ load("@community//build:compiler-options.bzl", "create_kotlinc_options")
 load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_resources")
 
 create_kotlinc_options(
-  name = "custom",
-  context_receivers = True,
-  opt_in = ["org.jetbrains.kotlin.analysis.api.KaExperimentalApi"]
+  name = "custom_api.features",
+  opt_in = [
+    "com.intellij.openapi.util.IntellijInternalApi",
+    "org.jetbrains.kotlin.analysis.api.KaExperimentalApi",
+  ],
+  x_context_parameters = True
 )
 
 jvm_resources(
@@ -18,8 +21,8 @@ jvm_library(
   name = "api.features",
   module_name = "language-server.api.features",
   visibility = ["//visibility:public"],
-  srcs = glob(["src/**/*.kt", "src/**/*.java"], allow_empty = True),
-  kotlinc_opts = ":custom",
+  srcs = glob(["src/**/*.kt", "src/**/*.java", "src/**/*.form"], allow_empty = True),
+  kotlinc_opts = ":custom_api.features",
   deps = [
     "@lib//:kotlin-stdlib",
     "@community//fleet/lsp.protocol",

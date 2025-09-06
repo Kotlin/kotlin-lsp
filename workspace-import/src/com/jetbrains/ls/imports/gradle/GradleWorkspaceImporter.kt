@@ -1,6 +1,8 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.gradle
 
+import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil
 import com.intellij.platform.workspace.jps.entities.*
 import com.intellij.platform.workspace.jps.entities.LibraryTableId.ProjectLibraryTableId
 import com.intellij.platform.workspace.storage.MutableEntityStorage
@@ -8,23 +10,39 @@ import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImporter
+import com.jetbrains.ls.imports.utils.toIntellijUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.gradle.tooling.GradleConnector
+import org.gradle.tooling.ProjectConnection
 import org.gradle.tooling.model.DomainObjectSet
+import org.gradle.tooling.model.build.BuildEnvironment
 import org.gradle.tooling.model.idea.*
+import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.config.KotlinFacetSettings
 import org.jetbrains.kotlin.config.KotlinModuleKind
 import org.jetbrains.kotlin.idea.facet.KotlinFacetType
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
 import org.jetbrains.kotlin.idea.workspaceModel.kotlinSettings
+import org.jetbrains.plugins.gradle.jvmcompat.GradleJvmSupportMatrix
+import java.io.ByteArrayOutputStream
 import java.nio.file.Path
 import kotlin.io.path.div
 import kotlin.io.path.exists
-import com.jetbrains.ls.imports.utils.toIntellijUri
-import java.io.ByteArrayOutputStream
 
 object GradleWorkspaceImporter : WorkspaceImporter {
+    private const val IDEA_SYNC_ACTIVE_PROPERTY = "idea.sync.active"
+    private const val KOTLIN_LSP_IMPORT_PROPERTY = "com.jetbrains.ls.imports.gradle"
+    private val IMPORTER_PROPERTIES = mapOf(
+        // This immitates how IntelliJ invokes gradle during sync.
+        // Some builds/plugins depend on this property to configure their build for sync
+        IDEA_SYNC_ACTIVE_PROPERTY to "true",
+        // Since this is not actually IntelliJ, offer an alternative identification
+        KOTLIN_LSP_IMPORT_PROPERTY to "true"
+    )
+
+    private val LOG = logger<GradleWorkspaceImporter>()
+
     override suspend fun importWorkspace(
         projectDirectory: Path,
         virtualFileUrlManager: VirtualFileUrlManager,
@@ -35,7 +53,11 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                 val connector = GradleConnector.newConnector().forProjectDirectory(projectDirectory.toFile())
 
                 connector.connect().use { connection ->
-                    val ideaProject = connection.getModel(IdeaProject::class.java)
+                    checkGradleJavaCompatibility(connection)
+
+                    val ideaProject = connection.model(IdeaProject::class.java)
+                        .withSystemProperties(IMPORTER_PROPERTIES)
+                        .get()
                     val storage = MutableEntityStorage.create()
                     val entitySource = WorkspaceEntitySource(projectDirectory.toIntellijUri(virtualFileUrlManager))
                     val libs = mutableSetOf<String>()
@@ -58,11 +80,17 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                                                     val libEntity = LibraryEntity(
                                                         name = name,
                                                         tableId = ProjectLibraryTableId,
-                                                        roots = listOf(
+                                                        roots = listOfNotNull(
                                                             LibraryRoot(
                                                                 dependency.file.toPath().toIntellijUri(virtualFileUrlManager),
                                                                 LibraryRootTypeId.COMPILED
-                                                            )
+                                                            ),
+                                                            dependency.source?.let {
+                                                                LibraryRoot(
+                                                                    it.toPath().toIntellijUri(virtualFileUrlManager),
+                                                                    LibraryRootTypeId.SOURCES
+                                                                )
+                                                            }
                                                         ),
                                                         entitySource = entitySource
                                                     ) {
@@ -160,6 +188,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                     }
                     val out = ByteArrayOutputStream()
                     connection.newBuild().forTasks("dependencies")
+                        .withSystemProperties(IMPORTER_PROPERTIES)
                         .setStandardOutput(out)
                         .run()
                     val output = out.toString()
@@ -234,5 +263,19 @@ object GradleWorkspaceImporter : WorkspaceImporter {
             err = err.cause
         }
         throw e
+    }
+
+    private fun checkGradleJavaCompatibility(connection: ProjectConnection) {
+        val buildEnv = connection.getModel(BuildEnvironment::class.java) ?: return
+        val gradleVersionStr = buildEnv.gradle.gradleVersion ?: return
+        val gradleVersion = GradleVersion.version(gradleVersionStr)
+        val javaHome = buildEnv.java.javaHome ?: return
+        val javaVersion = ExternalSystemJdkUtil.getJavaVersion(javaHome.absolutePath) ?: return
+        val isSupported = GradleJvmSupportMatrix.isSupported(gradleVersion, javaVersion)
+
+        if (!isSupported) {
+            val message = "$gradleVersion doesn't support Java $javaVersion."
+            throw WorkspaceImportException(message, message)
+        }
     }
 }

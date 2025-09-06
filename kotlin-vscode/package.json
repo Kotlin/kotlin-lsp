@@ -18,7 +18,7 @@
   "categories": [
     "Programming Languages"
   ],
-  "main": "./client/out/extension",
+  "main": "./dist/extension",
   "activationEvents": [
     "onLanguage:kotlin",
     "onCommand:jetbrains.activateLsp"
@@ -44,8 +44,9 @@
         "path": "./syntaxes/kotlin.tmLanguage.json"
       }
     ],
-    "configuration":{
-      "title": "Kotlin",
+    "configuration": [
+      {
+      "title": "LSP Server",
       "properties": {
         "kotlinLSP.dev.serverPort": {
           "type": "number",
@@ -64,6 +65,67 @@
         }
       }
     },
+      {
+        "title": "Inlay",
+        "properties": {
+          "jetbrains.kotlin.hints.settings.types.property": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show inlay hints for property types"
+          },
+          "jetbrains.kotlin.hints.settings.types.variable": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show inlay hints for local variable types"
+          },
+          "jetbrains.kotlin.hints.type.function.return": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show inlay hints for function return types"
+          },
+          "jetbrains.kotlin.hints.type.function.parameter": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show inlay hints for function parameter types"
+          },
+          "jetbrains.kotlin.hints.settings.lambda.return": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show inlay hints for return expressions"
+          },
+          "jetbrains.kotlin.hints.lambda.receivers.parameters": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show inlay hints for implicit receivers and parameters"
+          },
+          "jetbrains.kotlin.hints.settings.value.ranges": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show inlay hints for ranges"
+          },
+          "jetbrains.kotlin.hints.value.kotlin.time": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show kotlin.time package warning inlay hints"
+          },
+          "jetbrains.kotlin.hints.parameters": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show parameter names"
+          },
+          "jetbrains.kotlin.hints.parameters.compiled": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show compiled parameter names"
+          },
+          "jetbrains.kotlin.hints.parameters.excluded": {
+            "type": "boolean",
+            "default": false,
+            "description": "Show excluded parameter names"
+          }
+        }
+      }
+    ],
     "commands": [
       {
         "command": "jetbrains.exportWorkspaceToJson",
@@ -78,17 +140,25 @@
     ]
   },
   "devDependencies": {
-    "typescript": "^5.7.2"
+    "@types/node": "^22.13.8",
+    "@types/vscode": "^1.96.0",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.7.2",
+    "vscode-tmgrammar-test": "^0.1.3",
+    "webpack": "^5.100.2",
+    "webpack-cli": "^6.0.1"
   },
   "dependencies": {
-    "compile": "^0.0.2",
-    "run": "^1.5.0"
+    "vscode-languageclient": "9.0.1"
   },
   "scripts": {
-    "vscode:prepublish": "npm install && npm run compile && npm run unpack-server",
-    "compile": "tsc -b",
-    "watch": "tsc -b -w",
-    "unpack-server": "rm -rf server/extracted && mkdir -p server/extracted && unzip -o $LSP_ZIP_PATH -d server/extracted",
-    "postinstall": "cd client && npm install"
+    "compile": "webpack --mode development",
+    "watch": "webpack --mode development --watch",
+    "vscode:prepublish": "npm run package && npm run unpack-server",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "apply-intellij": "node apply-intellij.js",
+    "unpack-server": "rm -rf server && mkdir -p server && unzip -o $LSP_ZIP_PATH -d server",
+    "test": "vscode-tmgrammar-snap --grammar syntaxes/kotlin.tmLanguage.json --scope source.kotlin testSources/tokenization/*.kt",
+    "updateGrammarTests": "vscode-tmgrammar-snap --grammar syntaxes/kotlin.tmLanguage.json --scope source.kotlin --updateSnapshot testSources/tokenization/*.kt"
   }
 }

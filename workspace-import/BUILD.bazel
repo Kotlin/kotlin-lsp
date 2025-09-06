@@ -3,8 +3,8 @@ load("@community//build:compiler-options.bzl", "create_kotlinc_options")
 load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_resources")
 
 create_kotlinc_options(
-  name = "custom",
-  context_receivers = True
+  name = "custom_language-server-project-import",
+  x_context_parameters = True
 )
 
 jvm_resources(
@@ -17,12 +17,13 @@ jvm_library(
   name = "language-server-project-import",
   module_name = "language-server.project-import",
   visibility = ["//visibility:public"],
-  srcs = glob(["gen/**/*.kt", "gen/**/*.java", "src/**/*.kt", "src/**/*.java"], allow_empty = True),
-  kotlinc_opts = ":custom",
+  srcs = glob(["gen/**/*.kt", "gen/**/*.java", "src/**/*.kt", "src/**/*.java", "src/**/*.form"], allow_empty = True),
+  kotlinc_opts = ":custom_language-server-project-import",
   deps = [
     "@lib//:gradle",
     "@lib//:kotlin-stdlib",
     "@community//jps/model-serialization",
+    "@community//platform/extensions",
     "@community//platform/lang-core",
     "@community//platform/projectModel-api:projectModel",
     "@community//platform/workspace/jps",
@@ -33,12 +34,16 @@ jvm_library(
     "@community//platform/util",
     "@lib//:kotlinx-serialization-core",
     "@lib//:kotlinx-serialization-json",
+    "@lib//:kotlinx-coroutines-core",
     "@community//java/java-impl:impl",
     "@community//java/openapi:java",
     "@community//plugins/kotlin/base/facet",
     "@community//jps/model-api:model",
+    "@community//jps/model-impl",
+    "@community//platform/eel-provider",
     "@lib//:kotlinc-kotlin-jps-common",
     "@lib//:kotlinc-kotlin-compiler-common",
+    "@community//platform/external-system-impl:externalSystem-impl",
   ],
   runtime_deps = [":language-server-project-import_resources"]
 )

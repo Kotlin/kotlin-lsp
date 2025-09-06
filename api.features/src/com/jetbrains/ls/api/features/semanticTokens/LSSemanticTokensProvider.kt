@@ -3,6 +3,7 @@ package com.jetbrains.ls.api.features.semanticTokens
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSLanguageSpecificConfigurationEntry
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.SemanticTokensParams
 import com.jetbrains.lsp.protocol.SemanticTokensRangeParams
 
@@ -12,12 +13,12 @@ interface LSSemanticTokensProvider : LSLanguageSpecificConfigurationEntry {
     /**
      * LSP method `textDocument/semanticTokens/full`
      */
-    context(LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     suspend fun full(params: SemanticTokensParams): List<LSSemanticTokenWithRange>
 
     /**
      * LSP method `textDocument/semanticTokens/range`
      */
-    context(LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     suspend fun range(params: SemanticTokensRangeParams): List<LSSemanticTokenWithRange>
 }

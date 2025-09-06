@@ -12,6 +12,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.LSAnalysisContext
+import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.lsp.protocol.TextEdit
 import kotlin.coroutines.cancellation.CancellationException
@@ -20,7 +21,7 @@ object PsiFileTextEditsCollector {
 
     private val logger = logger<PsiFileTextEditsCollector>()
 
-    context(LSAnalysisContext)
+    context(_: LSAnalysisContext)
     fun collectTextEdits(
         file: VirtualFile,
         modificationAction: (file: PsiFile) -> Unit

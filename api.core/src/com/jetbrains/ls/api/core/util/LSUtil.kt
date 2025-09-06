@@ -1,11 +1,29 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.core.util
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Document
+import com.intellij.openapi.projectRoots.SdkType
+import com.intellij.openapi.roots.OrderRootType
 import com.intellij.openapi.util.TextRange
+import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.findPsiFile
+import com.intellij.platform.workspace.jps.entities.*
+import com.intellij.platform.workspace.storage.EntitySource
+import com.intellij.platform.workspace.storage.MutableEntityStorage
+import com.intellij.platform.workspace.storage.entities
+import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
+import com.intellij.psi.PsiFile
+import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.SdkBridgeImpl
+import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.SdkBridgeImpl.Companion.mutableSdkMap
+import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.customName
+import com.jetbrains.ls.api.core.LSAnalysisContext
+import com.jetbrains.ls.api.core.project
 import com.jetbrains.lsp.protocol.*
+import java.nio.file.Path
+import kotlin.io.path.exists
 
 val VirtualFile.uri: URI
     get() = url.intellijUriToLspUri()
@@ -60,7 +78,63 @@ fun DocumentUri.findVirtualFile(): VirtualFile? = uri.findVirtualFile()
 
 fun TextDocumentPositionParams.findVirtualFile(): VirtualFile? = textDocument.findVirtualFile()
 
+context(_: LSAnalysisContext)
+fun VirtualFile.findPsiFile(): PsiFile? {
+    return findPsiFile(project)
+}
+
 fun VirtualFile.isFromLibrary(): Boolean {
     val scheme = uri.scheme
     return scheme == "jrt" || scheme == "jar" || uri.uri.contains("!")
+}
+
+fun addSdk(
+    name: String,
+    type: SdkType,
+    roots: List<URI>,
+    urlManager: VirtualFileUrlManager,
+    source: EntitySource,
+    storage: MutableEntityStorage
+) {
+    val sdkEntity = SdkEntity(
+        name = name,
+        type = type.name,
+        roots = if (roots.isEmpty()) emptyList() else buildList {
+            roots.mapTo(this) { root ->
+                SdkRoot(
+                    urlManager.getOrCreateFromUrl(root.lspUriToIntellijUri()!!),
+                    SdkRootTypeId(OrderRootType.CLASSES.customName),
+                )
+            }
+
+            val javaHome = roots.first().lspUriToIntellijUri()!!.substringAfter("://").substringBeforeLast("!/")
+            // TODO: Apparently, we need to run all tests two times, with and without JDK sources
+            if (!ApplicationManager.getApplication().isUnitTestMode) {
+                val srcZip = Path.of(FileUtilRt.toSystemDependentName(javaHome), "lib", "src.zip")
+                if (srcZip.exists()) {
+                    val prefix = "jar://${FileUtilRt.toSystemIndependentName(srcZip.toString())}!/"
+                    roots.mapTo(this) { root ->
+                        SdkRoot(
+                            urlManager.getOrCreateFromUrl("$prefix${root.uri.substringAfterLast("/")}"),
+                            SdkRootTypeId(OrderRootType.SOURCES.customName),
+                        )
+                    }
+                }
+            }
+        },
+        additionalData = "",
+        entitySource = source
+    )
+    val jdk = storage addEntity sdkEntity
+
+    storage.mutableSdkMap.addMapping(jdk, SdkBridgeImpl(sdkEntity))
+
+    storage.entities<ModuleEntity>().forEach { module ->
+        storage.modifyModuleEntity(module) {
+            dependencies = (
+                    dependencies.filterNot { it is SdkDependency || it is InheritedSdkDependency }
+                            + SdkDependency(jdk.symbolicId)
+                    ).toMutableList()
+        }
+    }
 }

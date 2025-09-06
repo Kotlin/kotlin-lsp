@@ -3,16 +3,15 @@ package com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.compiler
 
 import com.intellij.codeInsight.intention.IntentionAction
 import com.intellij.openapi.application.runReadAction
-import com.intellij.openapi.diagnostic.getOrLogException
+import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
+import com.jetbrains.ls.api.core.*
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
-import com.jetbrains.ls.api.core.LSAnalysisContext
-import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
@@ -22,6 +21,7 @@ import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguag
 import com.jetbrains.ls.api.features.impl.common.utils.createEditorWithCaret
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.textEdits.PsiFileTextEditsCollector
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -38,7 +38,7 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
     override val providesOnlyKinds: Set<CodeActionKind> = setOf(CodeActionKind.QuickFix)
 
-    context(LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val diagnosticData = params.diagnosticData<KotlinCompilerDiagnosticData>().ifEmpty { return@flow }
 
@@ -75,7 +75,7 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
         }.forEach { emit(it) }
     }
 
-    context(KaSession)
+    context(kaSession: KaSession)
     private fun KotlinQuickFixService.getQuickFixesAsCodeActions(
         project: Project,
         file: KtFile,
@@ -83,16 +83,16 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
         documentUri: DocumentUri,
         kaDiagnostic: KaDiagnosticWithPsi<*>,
         lspDiagnostic: Diagnostic,
-    ): List<CodeAction> {
+    ): List<CodeAction>  = with(kaSession) {
         return (getQuickFixesWithCatchingFor(kaDiagnostic) + getLazyQuickFixesWithCatchingFor(kaDiagnostic))
             .mapNotNull { fixes ->
-                fixes.getOrLogException { LOG.warn(it) }
+                fixes.getOrHandleException { LOG.warn(it) }
             }
             .filter { intentionAction ->
                 runCatching {
                     // this call may also compute some text inside the intention
                     intentionAction.isAvailable(project, editor, file)
-                }.getOrLogException { LOG.warn(it) } ?: false
+                }.getOrHandleException { LOG.warn(it) } ?: false
             }
             .map { intentionAction ->
                 val fix = KotlinCompilerDiagnosticQuickfixData.createByIntentionAction(intentionAction)
@@ -122,8 +122,8 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
             val diagnosticData = lspDiagnostic.diagnosticData<KotlinCompilerDiagnosticData>() ?: return@e emptyList()
             val fix = LSP.json.decodeFromJsonElement<KotlinCompilerDiagnosticQuickfixData>(otherArgs[1])
             withWritableFile(documentUri.uri) {
-                withAnalysisContext {
-                    val file = runReadAction { documentUri.findVirtualFile() } ?: return@withAnalysisContext emptyList()
+                withWriteAnalysisContext {
+                    val file = runReadAction { documentUri.findVirtualFile() } ?: return@withWriteAnalysisContext emptyList()
                     PsiFileTextEditsCollector.collectTextEdits(file) { ktFile ->
                         check(ktFile is KtFile) { "PsiFile is not KtFile but ${ktFile}" }
                         val candidates = analyze(ktFile) {
@@ -153,7 +153,7 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
         }
     )
 
-    context(LSAnalysisContext)
+    context(_: LSAnalysisContext)
     private fun Sequence<IntentionAction>.findCandidate(
         fix: KotlinCompilerDiagnosticQuickfixData,
         editor: Editor,

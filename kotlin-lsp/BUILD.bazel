@@ -1,21 +1,23 @@
 ### auto-generated section `build language-server.kotlin-lsp` start
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
-load("@community//build:tests-options.bzl", "jps_test")
-load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_test")
+load("@rules_jvm//:jvm.bzl", "jvm_library")
 
 create_kotlinc_options(
-  name = "custom",
-  context_receivers = True,
-  opt_in = ["org.jetbrains.kotlin.analysis.api.KaExperimentalApi"],
-  when_guards = True
+  name = "custom_kotlin-lsp",
+  opt_in = [
+    "com.intellij.openapi.util.IntellijInternalApi",
+    "org.jetbrains.kotlin.analysis.api.KaExperimentalApi",
+  ],
+  x_context_parameters = True,
+  x_when_guards = True
 )
 
 jvm_library(
   name = "kotlin-lsp",
   module_name = "language-server.kotlin-lsp",
   visibility = ["//visibility:public"],
-  srcs = glob(["src/**/*.kt", "src/**/*.java"], allow_empty = True),
-  kotlinc_opts = ":custom",
+  srcs = glob(["src/**/*.kt", "src/**/*.java", "src/**/*.form"], allow_empty = True),
+  kotlinc_opts = ":custom_kotlin-lsp",
   deps = [
     "@lib//:kotlin-stdlib",
     "@community//fleet/lsp.protocol",
@@ -31,6 +33,7 @@ jvm_library(
     "@lib//:kotlinx-serialization-core",
     "@lib//:kotlinc-kotlin-compiler-common",
     "@community//platform/workspace/storage",
+    "//language-server/analyzer.filewatcher",
     "//language-server/community/api.core",
     "//language-server/api.impl.analyzer",
     "@lib//:kotlinc-analysis-api",
@@ -55,14 +58,15 @@ jvm_library(
     "@community//platform/service-container",
     "@lib//:ktor-network-tls",
     "@lib//:kotlinx-io-core",
+    "//language-server/community/features-impl/java-base",
   ]
 )
 
 jvm_library(
   name = "kotlin-lsp_test_lib",
   visibility = ["//visibility:public"],
-  srcs = glob(["test/**/*.kt", "test/**/*.java"], allow_empty = True),
-  kotlinc_opts = ":custom",
+  srcs = glob(["test/**/*.kt", "test/**/*.java", "test/**/*.form"], allow_empty = True),
+  kotlinc_opts = ":custom_kotlin-lsp",
   associates = [":kotlin-lsp"],
   deps = [
     "@lib//:kotlin-stdlib",
@@ -79,6 +83,7 @@ jvm_library(
     "@lib//:kotlinx-serialization-core",
     "@lib//:kotlinc-kotlin-compiler-common",
     "@community//platform/workspace/storage",
+    "//language-server/analyzer.filewatcher",
     "//language-server/community/api.core",
     "//language-server/community/api.core:api.core_test_lib",
     "//language-server/api.impl.analyzer",
@@ -113,11 +118,16 @@ jvm_library(
     "@lib//:junit5Jupiter",
     "@lib//:junit5Launcher",
     "@lib//:junit5Params",
+    "//language-server/community/features-impl/java-base",
   ]
 )
+### auto-generated section `build language-server.kotlin-lsp` end
+
+### auto-generated section `test language-server.kotlin-lsp` start
+load("@community//build:tests-options.bzl", "jps_test")
 
 jps_test(
   name = "kotlin-lsp_test",
   runtime_deps = [":kotlin-lsp_test_lib"]
 )
-### auto-generated section `build language-server.kotlin-lsp` end
+### auto-generated section `test language-server.kotlin-lsp` end

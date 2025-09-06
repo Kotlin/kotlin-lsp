@@ -1,11 +1,12 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.diagnostics.inspections
 
+import com.intellij.codeHighlighting.HighlightDisplayLevel
 import com.intellij.codeInspection.*
 import com.intellij.codeInspection.ex.InspectionManagerEx
 import com.intellij.lang.Language
 import com.intellij.openapi.application.runReadAction
-import com.intellij.openapi.diagnostic.getOrLogException
+import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
@@ -14,12 +15,15 @@ import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiFile
+import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.project
+import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
-import com.jetbrains.ls.api.core.LSAnalysisContext
-import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnosticProvider
 import com.jetbrains.ls.api.features.language.LSLanguage
+import com.jetbrains.ls.api.features.utils.isSource
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -29,8 +33,9 @@ import kotlin.reflect.KClass
 class LSInspectionDiagnosticProviderImpl(
     override val supportedLanguages: Set<LSLanguage>,
 ): LSDiagnosticProvider {
-    context(LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
+        if (!params.textDocument.isSource()) return@flow
         val onTheFly = false
         withAnalysisContext {
             runReadAction c@{
@@ -60,8 +65,6 @@ class LSInspectionDiagnosticProviderImpl(
         BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.diagnosticBased.VariableNeverReadInspection", "very slow, uses extended checkers"),
         BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.diagnosticBased.AssignedValueIsNeverReadInspection", "very slow, uses extended checkers"),
 
-        BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.expressions.ExplicitThisInspection", "too noisy https://github.com/Kotlin/kotlin-lsp/issues/20"),
-        BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.ImplicitThisInspection", "too noisy https://github.com/Kotlin/kotlin-lsp/issues/20"),
         BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.PublicApiImplicitTypeInspection", "too noisy https://github.com/Kotlin/kotlin-lsp/issues/4"),
 
         BlackListEntry.InspectionSuperClass("org.jetbrains.kotlin.idea.codeinsight.api.applicable.inspections.KotlinKtDiagnosticBasedInspectionBase", "they are slow as calling additional diagnostic collection"),
@@ -107,17 +110,23 @@ class LSInspectionDiagnosticProviderImpl(
     private fun getInspections(language: Language): List<LocalInspectionTool> {
         return LocalInspectionEP.LOCAL_INSPECTION.extensionList
             .filter { it.language == language.id }
+            .filter { it.enabledByDefault }
+            .filter { HighlightDisplayLevel.find(it.level) != HighlightDisplayLevel.DO_NOT_SHOW }
             .filterNot { blacklist.containsImplementation(it.implementationClass) }
             .mapNotNull { inspection ->
                 runCatching {
                     Class.forName(inspection.implementationClass).getConstructor().newInstance()
-                }.getOrLogException { LOG.warn(it) }
+                }.getOrHandleException {
+                    if (LOG.isTraceEnabled) LOG.warn(it)
+                    else LOG.warn(it.toString())
+                }
             }
             .filterNot { blacklist.containsSuperClass(it) }
             .filterIsInstance<LocalInspectionTool>()
+            .takeIf { it.isNotEmpty() }
+            ?: emptyList()
     }
 
-    context(LSAnalysisContext, LSServer)
     private fun collectDiagnostics(
         holder: ProblemsHolder,
         psiFile: PsiFile,
@@ -130,7 +139,10 @@ class LSInspectionDiagnosticProviderImpl(
             for ((inspection, visitor) in visitors) {
                 runCatching {
                     element.accept(visitor)
-                }.getOrLogException { LOG.warn(it) }
+                }.getOrHandleException {
+                    if (LOG.isTraceEnabled) LOG.warn(it)
+                    else LOG.warn(it.toString())
+                }
                 if (holder.hasResults()) {
                     results += holder.collectDiagnostics(file, inspection, element)
                 }
@@ -153,28 +165,28 @@ class LSInspectionDiagnosticProviderImpl(
         val visitor: PsiElementVisitor,
     )
 
-    context(LSAnalysisContext, LSServer)
     private fun ProblemsHolder.collectDiagnostics(
         file: VirtualFile,
         localInspectionTool: LocalInspectionTool,
         element: PsiElement
     ): List<Diagnostic> {
         val document = file.findDocument() ?: return emptyList()
-        return results.mapNotNull { result ->
-            val data = result.createDiagnosticData(localInspectionTool, element, file)
-            Diagnostic(
-                range = result.range()?.toLspRange(document) ?: return@mapNotNull null,
-                severity = result.highlightType.toLsp(),
-                // todo handle markers from [com.intellij.codeInspection.CommonProblemDescriptor.getDescriptionTemplate]
-                message = result.tooltipTemplate,
-                code = StringOrInt.string(localInspectionTool.id),
-                tags = result.highlightType.toLspTags(),
-                data = LSP.json.encodeToJsonElement(data),
-            )
-        }
+        return results
+            .filter { it.highlightType != ProblemHighlightType.INFORMATION }
+            .mapNotNull { result ->
+                val data = result.createDiagnosticData(localInspectionTool, element, file)
+                Diagnostic(
+                    range = result.range()?.toLspRange(document) ?: return@mapNotNull null,
+                    severity = result.highlightType.toLsp(),
+                    // todo handle markers from [com.intellij.codeInspection.CommonProblemDescriptor.getDescriptionTemplate]
+                    message = result.tooltipTemplate,
+                    code = StringOrInt.string(localInspectionTool.id),
+                    tags = result.highlightType.toLspTags(),
+                    data = LSP.json.encodeToJsonElement(data),
+                )
+            }
     }
 
-    context(LSAnalysisContext, LSServer)
     private fun ProblemDescriptor.range(): TextRange? {
         val element = psiElement ?: return null
         val elementRange = element.textRange ?: return null
@@ -184,7 +196,6 @@ class LSInspectionDiagnosticProviderImpl(
     }
 
 
-    context(LSAnalysisContext, LSServer)
     private fun ProblemDescriptor.createDiagnosticData(
         localInspectionTool: LocalInspectionTool,
         element: PsiElement,
@@ -201,7 +212,7 @@ class LSInspectionDiagnosticProviderImpl(
 private val LOG = logger<LSInspectionDiagnosticProviderImpl>()
 
 
-// TODO design, currently some random conversions
+// TODO LSP-241 design, currently some random conversions
 private fun ProblemHighlightType.toLsp(): DiagnosticSeverity = when (this) {
     ProblemHighlightType.GENERIC_ERROR_OR_WARNING -> DiagnosticSeverity.Hint
     ProblemHighlightType.LIKE_UNKNOWN_SYMBOL -> DiagnosticSeverity.Error
@@ -217,7 +228,7 @@ private fun ProblemHighlightType.toLsp(): DiagnosticSeverity = when (this) {
     ProblemHighlightType.POSSIBLE_PROBLEM -> DiagnosticSeverity.Warning
 }
 
-// TODO design, currently some random conversions
+// TODO LSP-241 design, currently some random conversions
 private fun ProblemHighlightType.toLspTags(): List<DiagnosticTag>? = when (this) {
     ProblemHighlightType.GENERIC_ERROR_OR_WARNING -> null
     ProblemHighlightType.LIKE_UNKNOWN_SYMBOL -> null

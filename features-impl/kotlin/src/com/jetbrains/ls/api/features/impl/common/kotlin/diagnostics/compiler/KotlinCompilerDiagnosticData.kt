@@ -28,7 +28,6 @@ internal data class KotlinCompilerDiagnosticData(
     companion object {
         val source: DiagnosticSource = DiagnosticSource("kotlinCompilerDiagnostic")
 
-        context(LSAnalysisContext, LSServer)
         fun create(diagnostic: KaDiagnosticWithPsi<*>, file: VirtualFile): KotlinCompilerDiagnosticData {
             val psi = PsiSerializablePointer.create(diagnostic.psi, file)
             return KotlinCompilerDiagnosticData(

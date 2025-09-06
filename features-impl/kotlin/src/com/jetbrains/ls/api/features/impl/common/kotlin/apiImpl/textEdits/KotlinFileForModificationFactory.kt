@@ -18,5 +18,6 @@ internal class KotlinFileForModificationFactory : PsiFileTextEditsCollector.File
                 val module = file.getKaModule(file.project, useSiteModule = null)
                 it.contextModule = module
                 it.virtualFile.analysisContextModule = module
+                it.name = file.name
             }
 }

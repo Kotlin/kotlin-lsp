@@ -7,6 +7,7 @@ import com.intellij.openapi.vfs.findPsiFile
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.features.codeActions.LSSimpleCodeActionProvider
 import com.jetbrains.ls.api.features.codeActions.LSSimpleCodeActionProvider.NoData
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
@@ -27,13 +28,13 @@ internal object LSOrganizeImportsCodeActionProviderKotlinImpl : LSSimpleCodeActi
     override val kind: CodeActionKind get() = CodeActionKind.SourceOrganizeImports
     override val dataSerializer: KSerializer<NoData> get() = NoData.serializer()
 
-    context(LSServer, LSAnalysisContext)
+    context(_: LSServer, _: LSAnalysisContext)
     override fun getData(file: VirtualFile, params: CodeActionParams): NoData? {
         if (file.findPsiFile(project) !is KtFile) return null
         return NoData
     }
 
-    context(LSServer, LSAnalysisContext)
+    context(_: LSServer, _: LSAnalysisContext)
     override fun execute(
         file: VirtualFile,
         data: NoData

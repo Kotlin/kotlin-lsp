@@ -1,17 +1,17 @@
 ### auto-generated section `build language-server.api.features.test` start
-load("@community//build:tests-options.bzl", "jps_test")
-load("@rules_java//java:defs.bzl", "java_library")
-load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_test")
+load("@rules_jvm//:jvm.bzl", "jvm_library")
 
-java_library(
+jvm_library(
   name = "test",
-  visibility = ["//visibility:public"]
+  visibility = ["//visibility:public"],
+  srcs = glob([], allow_empty = True)
 )
 
 jvm_library(
   name = "test_test_lib",
+  module_name = "language-server.api.features.test",
   visibility = ["//visibility:public"],
-  srcs = glob(["test/**/*.kt", "test/**/*.java"], allow_empty = True),
+  srcs = glob(["test/**/*.kt", "test/**/*.java", "test/**/*.form"], allow_empty = True),
   deps = [
     "@lib//:kotlin-stdlib",
     "@community//fleet/lsp.protocol",
@@ -29,9 +29,13 @@ jvm_library(
     "//language-server/community/api.features",
   ]
 )
+### auto-generated section `build language-server.api.features.test` end
+
+### auto-generated section `test language-server.api.features.test` start
+load("@community//build:tests-options.bzl", "jps_test")
 
 jps_test(
   name = "test_test",
   runtime_deps = [":test_test_lib"]
 )
-### auto-generated section `build language-server.api.features.test` end
+### auto-generated section `test language-server.api.features.test` end

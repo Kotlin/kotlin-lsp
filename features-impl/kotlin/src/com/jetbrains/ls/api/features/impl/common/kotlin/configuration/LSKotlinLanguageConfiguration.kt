@@ -5,6 +5,7 @@ import com.jetbrains.ls.api.features.impl.common.definitions.LSDefinitionProvide
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSSyntaxErrorDiagnosticProviderImpl
 import com.jetbrains.ls.api.features.impl.common.diagnostics.inspections.LSInspectionDiagnosticProviderImpl
 import com.jetbrains.ls.api.features.impl.common.diagnostics.inspections.LSInspectionFixesCodeActionProvider
+import com.jetbrains.ls.api.features.impl.common.formatting.LSFormattingProviderCommonImpl
 import com.jetbrains.ls.api.features.impl.common.kotlin.apiImpl.lsApiKotlinImpl
 import com.jetbrains.ls.api.features.impl.common.kotlin.codeActions.LSOrganizeImportsCodeActionProviderKotlinImpl
 import com.jetbrains.ls.api.features.impl.common.kotlin.codeActions.kotlinCodeActionsPlugins
@@ -15,26 +16,30 @@ import com.jetbrains.ls.api.features.impl.common.kotlin.definitions.LSKotlinPack
 import com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.compiler.LSKotlinCompilerDiagnosticsFixesCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.compiler.LSKotlinCompilerDiagnosticsProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.intentions.LSKotlinIntentionCodeActionProviderImpl
-import com.jetbrains.ls.api.features.impl.common.kotlin.symbols.LSDocumentSymbolProviderKotlin
 import com.jetbrains.ls.api.features.impl.common.kotlin.hover.LSHoverProviderKotlinImpl
+import com.jetbrains.ls.api.features.impl.common.kotlin.inlayHints.LSInlayHintsKotlinImpl
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.impl.common.kotlin.semanticTokens.LSSemanticTokensProviderKotlinImpl
-import com.jetbrains.ls.api.features.impl.common.kotlin.usages.kotlinUsagesIjPlugins
+import com.jetbrains.ls.api.features.impl.common.kotlin.signatureHelp.LSSignatureHelpKotlinImpl
+import com.jetbrains.ls.api.features.impl.common.kotlin.symbols.LSDocumentSymbolProviderKotlin
 import com.jetbrains.ls.api.features.impl.common.kotlin.symbols.LSWorkspaceSymbolProviderKotlinImpl
+import com.jetbrains.ls.api.features.impl.common.kotlin.usages.kotlinUsagesIjPlugins
 import com.jetbrains.ls.api.features.impl.common.references.LSReferencesProviderCommonImpl
-import com.jetbrains.ls.api.features.language.LSLanguageConfiguration
+import com.jetbrains.ls.api.features.impl.common.rename.LSRenameProviderCommonImpl
+import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
+import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.api.features.utils.ijPluginByXml
 import org.jetbrains.kotlin.idea.base.fir.codeInsight.FirCodeInsightForClassPath
 
-val LSKotlinLanguageConfiguration: LSLanguageConfiguration = LSLanguageConfiguration(
+val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
     entries = listOf(
         LSOrganizeImportsCodeActionProviderKotlinImpl,
         LSCompletionProviderKotlinImpl,
-        LSDefinitionProviderCommonImpl(setOf(LSKotlinLanguage)),
+        LSDefinitionProviderCommonImpl(setOf(LSKotlinLanguage), TargetKind.ALL),
         LSHoverProviderKotlinImpl,
         LSKotlinPackageDefinitionProvider,
         LSSemanticTokensProviderKotlinImpl,
-        LSReferencesProviderCommonImpl(setOf(LSKotlinLanguage)),
+        LSReferencesProviderCommonImpl(setOf(LSKotlinLanguage), TargetKind.ALL),
         LSInspectionDiagnosticProviderImpl(setOf(LSKotlinLanguage)),
         LSInspectionFixesCodeActionProvider(setOf(LSKotlinLanguage)),
         LSSyntaxErrorDiagnosticProviderImpl(setOf(LSKotlinLanguage)),
@@ -43,6 +48,10 @@ val LSKotlinLanguageConfiguration: LSLanguageConfiguration = LSLanguageConfigura
         LSWorkspaceSymbolProviderKotlinImpl,
         LSDocumentSymbolProviderKotlin,
         LSKotlinIntentionCodeActionProviderImpl,
+        LSSignatureHelpKotlinImpl,
+        LSRenameProviderCommonImpl(setOf(LSKotlinLanguage)),
+        LSFormattingProviderCommonImpl(setOf(LSKotlinLanguage)),
+        LSInlayHintsKotlinImpl,
     ),
     plugins = listOf(
         lsApiKotlinImpl,

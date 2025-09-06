@@ -4,6 +4,7 @@ package com.jetbrains.ls.api.features.completion
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSLanguageSpecificConfigurationEntry
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.CompletionItem
 import com.jetbrains.lsp.protocol.CompletionList
 import com.jetbrains.lsp.protocol.CompletionParams
@@ -11,9 +12,9 @@ import com.jetbrains.lsp.protocol.CompletionParams
 interface LSCompletionProvider : LSLanguageSpecificConfigurationEntry, LSUniqueConfigurationEntry {
     val supportsResolveRequest: Boolean
 
-    context(LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     suspend fun provideCompletion(params: CompletionParams): CompletionList
 
-    context(LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     suspend fun resolveCompletion(completionItem: CompletionItem): CompletionItem? = null
 }

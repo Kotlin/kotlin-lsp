@@ -9,7 +9,7 @@ import com.intellij.modcommand.ModShowConflicts
 import com.intellij.modcommand.ModTemplateBuilder
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.fileLogger
-import com.intellij.openapi.diagnostic.getOrLogException
+import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.util.NlsContexts
@@ -25,8 +25,12 @@ import com.intellij.psi.util.descendantsOfType
 import com.intellij.psi.util.startOffset
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
+import com.jetbrains.ls.api.core.withAnalysisContext
+import com.jetbrains.ls.api.core.withWritableFile
+import com.jetbrains.ls.api.core.withWriteAnalysisContext
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
@@ -35,6 +39,7 @@ import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguag
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.textEdits.PsiFileTextEditsCollector
 import com.jetbrains.ls.api.features.utils.PsiSerializablePointer
+import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -60,7 +65,7 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
     }
 
 
-    context(LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val uri = params.textDocument.uri.uri
         withAnalysisContext {
@@ -77,7 +82,7 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
                         for (action in actions) {
                             val codeAction = runCatching {
                                 toCodeAction(action, actionContext, ktElement, document, params, uri, file)
-                            }.getOrLogException { LOG.debug(it) } ?: continue
+                            }.getOrHandleException { LOG.debug(it) } ?: continue
                             result += codeAction
                         }
                     }
@@ -87,7 +92,7 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
         }.forEach { emit(it) }
     }
 
-    context(LSAnalysisContext)
+    context(_: LSAnalysisContext)
     private fun createActionContext(ktFile: KtFile, element: PsiElement) = ActionContext(
         project,
         ktFile,
@@ -96,7 +101,7 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
         element,
     )
 
-    context(KaSession, LSAnalysisContext, LSServer)
+    context(kaSession: KaSession, _: LSAnalysisContext, _: LSServer)
     private fun toCodeAction(
         action: KotlinApplicableModCommandAction<*, *>,
         actionContext: ActionContext,
@@ -109,7 +114,7 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
         action as KotlinApplicableModCommandAction<KtElement, *>
         val presentation = action.getPresentation(actionContext) ?: return null
         if (!action.isApplicableByPsi(child)) return null
-        if (with(action) { prepareContext(child) == null }) return null
+        if (with(action) { kaSession.prepareContext(child) == null }) return null
         val ranges = action.getApplicableRanges(child).map {
             it.shiftRight(child.startOffset).toLspRange(document)
         }
@@ -143,8 +148,8 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
             } ?: return@e emptyList()
             action as KotlinApplicableModCommandAction<KtElement, Any>
             withWritableFile(documentUri.uri) {
-                withAnalysisContext {
-                    val file = runReadAction { documentUri.findVirtualFile() } ?: return@withAnalysisContext emptyList()
+                withWriteAnalysisContext {
+                    val file = runReadAction { documentUri.findVirtualFile() } ?: return@withWriteAnalysisContext emptyList()
 
                     PsiFileTextEditsCollector.collectTextEdits(file) { ktFile ->
                         check(ktFile is KtFile) { "PsiFile is not KtFile but ${ktFile}" }
@@ -158,7 +163,7 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
                             val elementContext = action.getElementContext(psiElement) ?: return@collectTextEdits
                             val psiUpdater = FakeModPsiUpdater(psiElement)
                             action.invoke(actionContext, psiElement, elementContext, psiUpdater)
-                        }.getOrLogException {
+                        }.getOrHandleException {
                             //achtung!
                             LOG.debug(it)
                         }

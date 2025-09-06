@@ -9,7 +9,6 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.util.uri
-import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.lsp.protocol.DocumentUri
 import com.jetbrains.lsp.protocol.Location
 
@@ -17,7 +16,6 @@ internal fun TextRange.toLspLocation(file: VirtualFile, document: Document): Loc
     return Location(DocumentUri(file.uri), toLspRange(document))
 }
 
-context(LSAnalysisContext)
 internal fun PsiElement.getLspLocation(): Location? {
     val textRange = textRange ?: return null
     val virtualFile = containingFile.virtualFile
@@ -27,8 +25,11 @@ internal fun PsiElement.getLspLocation(): Location? {
     return textRange.toLspLocation(virtualFile, document)
 }
 
-context(LSAnalysisContext)
 fun PsiElement.getLspLocationForDefinition(): Location? {
+    val navigationElement = getNavigationElement()
+    if (navigationElement != null && navigationElement != this) {
+        return navigationElement.getLspLocationForDefinition()
+    }
     (this as? PsiNameIdentifierOwner)?.nameIdentifier?.getLspLocation()?.let { return it }
     return getLspLocation()
 }

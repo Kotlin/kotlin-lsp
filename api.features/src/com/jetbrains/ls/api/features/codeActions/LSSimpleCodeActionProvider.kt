@@ -6,6 +6,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.commands.document.LSDocumentCommandExecutor
@@ -28,13 +29,13 @@ abstract class LSSimpleCodeActionProvider<P : Any> : LSCodeActionProvider, LSCom
 
     abstract val dataSerializer: KSerializer<P>
 
-    context(LSServer, LSAnalysisContext)
+    context(_: LSServer, _: LSAnalysisContext)
     abstract fun getData(file: VirtualFile, params: CodeActionParams): P?
 
-    context(LSServer, LSAnalysisContext)
+    context(_: LSServer, _: LSAnalysisContext)
     abstract fun execute(file: VirtualFile, data: P): List<TextEdit>
 
-    context(LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val documentUri = params.textDocument.uri
         val params = withAnalysisContext {
@@ -69,7 +70,7 @@ abstract class LSSimpleCodeActionProvider<P : Any> : LSCodeActionProvider, LSCom
         listOf(LSCommandDescriptor(title, commandName, LSSimpleDocumentCommandExecutor()))
 
     internal inner class LSSimpleDocumentCommandExecutor : LSDocumentCommandExecutor {
-        context(LspHandlerContext, LSServer)
+        context(_: LspHandlerContext, _: LSServer)
         override suspend fun executeForDocument(
             documentUri: DocumentUri,
             otherArgs: List<JsonElement>,

@@ -2,15 +2,20 @@
 package com.jetbrains.ls.kotlinLsp.logging
 
 import com.intellij.openapi.diagnostic.DefaultLogger.attachmentsToString
+import com.intellij.openapi.diagnostic.IdeaLogRecordFormatter
 import com.intellij.openapi.diagnostic.LogLevel
 import com.intellij.openapi.diagnostic.Logger
 import com.jetbrains.ls.kotlinLsp.connection.Client
 import com.jetbrains.lsp.protocol.*
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 
 fun initKotlinLspLogger(writeToStdOut: Boolean) {
     Logger.setFactory(KotlinLspLoggerFactory(writeToStdOut))
     com.intellij.serviceContainer.checkServiceFromWriteAccess = false
+    com.intellij.codeInsight.multiverse.logMultiverseState = false
 }
 
 private class KotlinLspLoggerFactory(private val writeToStdOut: Boolean) : Logger.Factory {
@@ -24,12 +29,16 @@ private class KotlinLspLoggerFactory(private val writeToStdOut: Boolean) : Logge
  * - Trace/Debug level: (usually, not enabled by the end user), needed only for debugging. It is sent by `$/setTrace`
  * - Common level: logs to the console, affected by [LogLevel]
  */
+// TODO LSP-229 should store logs on disk
 private class LSPLogger(private val category: String, private val writeToStdOut: Boolean) : Logger() {
+    private val logCreation: Long = System.currentTimeMillis()
+    private val withDateTime: Boolean = true
     /**
      * [level] does not affect `$/logTrace` notifications,
      */
     private var level: LogLevel = LogLevel.INFO
 
+    // TODO LSP-226 the level should affect all loggers with the same category
     override fun setLevel(level: LogLevel) {
         this.level = level
     }
@@ -61,16 +70,41 @@ private class LSPLogger(private val category: String, private val writeToStdOut:
     private fun log(level: LogLevel, message: String?, t: Throwable?, details: Array<out String?> = emptyArray()) {
         val messageRendered by lazy(LazyThreadSafetyMode.NONE) {
             buildString {
-                append("[${level.levelName}] ")
-                append(category)
-                append(": ")
+                val currentMillis = System.currentTimeMillis()
+                if (withDateTime) {
+                    val date = LocalDateTime.ofInstant(Instant.ofEpochMilli(currentMillis), ZoneId.systemDefault())
+                    append(date.year)
+                    append('-')
+                    append(date.monthValue.toString().padStart(2, '0'))
+                    append('-')
+                    append(date.dayOfMonth.toString().padStart(2, '0'))
+                    append(' ')
+                    append(date.hour.toString().padStart(2, '0'))
+                    append(':')
+                    append(date.minute.toString().padStart(2, '0'))
+                    append(':')
+                    append(date.second.toString().padStart(2, '0'))
+                    append(',')
+                    append((currentMillis % 1000).toString().padStart(3, '0'))
+                    append(' ')
+                }
+                append('[')
+                append((currentMillis - logCreation).toString().padStart(7))
+                append("] ")
+                append(level.levelName.toString().padStart(6))
+                append(" - ")
+                append(IdeaLogRecordFormatter.smartAbbreviate(category))
+                append(" - ")
                 append(message)
 
                 if (t != null) {
                     appendLine()
                     appendLine(t.message)
                     append(t.stackTraceToString())
-                    attachmentsToString(t).takeIf { it.isNotEmpty() }?.let { appendLine(); append(it) }
+                    try {
+                        attachmentsToString(t).takeIf { it.isNotEmpty() }?.let { appendLine(); append(it) }
+                    } catch (_: Throwable) {
+                    }
                 }
 
                 if (details.isNotEmpty()) {
@@ -105,7 +139,7 @@ private class LSPLogger(private val category: String, private val writeToStdOut:
                     if (shouldNotifyForDebug) {
                         client.lspClient.notify(
                             LogTraceNotificationType,
-                            LogTraceParams(messageRendered, verbose = null/*todo provide more details here?*/)
+                            LogTraceParams(messageRendered, verbose = null/*TODO LSP-229 provide more details here?*/)
                         )
                     }
                 }

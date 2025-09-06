@@ -1351,6 +1351,10 @@
             "roots": [
                 {
                     "path": "logback-classic-1.5.16.jar"
+                },
+                {
+                    "path": "logback-classic-1.5.16-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1368,6 +1372,10 @@
             "roots": [
                 {
                     "path": "logback-core-1.5.16.jar"
+                },
+                {
+                    "path": "logback-core-1.5.16-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1385,6 +1393,10 @@
             "roots": [
                 {
                     "path": "jackson-annotations-2.18.2.jar"
+                },
+                {
+                    "path": "jackson-annotations-2.18.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1402,6 +1414,10 @@
             "roots": [
                 {
                     "path": "jackson-core-2.18.2.jar"
+                },
+                {
+                    "path": "jackson-core-2.18.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1419,6 +1435,10 @@
             "roots": [
                 {
                     "path": "jackson-databind-2.18.2.jar"
+                },
+                {
+                    "path": "jackson-databind-2.18.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1436,6 +1456,10 @@
             "roots": [
                 {
                     "path": "jackson-datatype-jdk8-2.18.2.jar"
+                },
+                {
+                    "path": "jackson-datatype-jdk8-2.18.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1453,6 +1477,10 @@
             "roots": [
                 {
                     "path": "jackson-datatype-jsr310-2.18.2.jar"
+                },
+                {
+                    "path": "jackson-datatype-jsr310-2.18.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1470,6 +1498,10 @@
             "roots": [
                 {
                     "path": "jackson-module-parameter-names-2.18.2.jar"
+                },
+                {
+                    "path": "jackson-module-parameter-names-2.18.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1487,6 +1519,10 @@
             "roots": [
                 {
                     "path": "classmate-1.7.0.jar"
+                },
+                {
+                    "path": "classmate-1.7.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1504,6 +1540,10 @@
             "roots": [
                 {
                     "path": "caffeine-3.1.8.jar"
+                },
+                {
+                    "path": "caffeine-3.1.8-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1521,6 +1561,10 @@
             "roots": [
                 {
                     "path": "docker-java-api-3.4.0.jar"
+                },
+                {
+                    "path": "docker-java-api-3.4.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1538,6 +1582,10 @@
             "roots": [
                 {
                     "path": "docker-java-transport-zerodep-3.4.0.jar"
+                },
+                {
+                    "path": "docker-java-transport-zerodep-3.4.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1555,6 +1603,10 @@
             "roots": [
                 {
                     "path": "docker-java-transport-3.4.0.jar"
+                },
+                {
+                    "path": "docker-java-transport-3.4.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1572,6 +1624,10 @@
             "roots": [
                 {
                     "path": "error_prone_annotations-2.21.1.jar"
+                },
+                {
+                    "path": "error_prone_annotations-2.21.1-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1589,6 +1645,10 @@
             "roots": [
                 {
                     "path": "h2-2.3.232.jar"
+                },
+                {
+                    "path": "h2-2.3.232-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1606,6 +1666,10 @@
             "roots": [
                 {
                     "path": "json-path-2.9.0.jar"
+                },
+                {
+                    "path": "json-path-2.9.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1623,6 +1687,10 @@
             "roots": [
                 {
                     "path": "mysql-connector-j-9.1.0.jar"
+                },
+                {
+                    "path": "mysql-connector-j-9.1.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1640,6 +1708,10 @@
             "roots": [
                 {
                     "path": "istack-commons-runtime-4.1.2.jar"
+                },
+                {
+                    "path": "istack-commons-runtime-4.1.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1657,6 +1729,10 @@
             "roots": [
                 {
                     "path": "android-json-0.0.20131108.vaadin1.jar"
+                },
+                {
+                    "path": "android-json-0.0.20131108.vaadin1-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1674,6 +1750,10 @@
             "roots": [
                 {
                     "path": "HikariCP-5.1.0.jar"
+                },
+                {
+                    "path": "HikariCP-5.1.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1691,6 +1771,10 @@
             "roots": [
                 {
                     "path": "micrometer-commons-1.14.3.jar"
+                },
+                {
+                    "path": "micrometer-commons-1.14.3-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1708,6 +1792,10 @@
             "roots": [
                 {
                     "path": "micrometer-core-1.14.3.jar"
+                },
+                {
+                    "path": "micrometer-core-1.14.3-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1725,6 +1813,10 @@
             "roots": [
                 {
                     "path": "micrometer-jakarta9-1.14.3.jar"
+                },
+                {
+                    "path": "micrometer-jakarta9-1.14.3-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1742,6 +1834,10 @@
             "roots": [
                 {
                     "path": "micrometer-observation-1.14.3.jar"
+                },
+                {
+                    "path": "micrometer-observation-1.14.3-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1759,6 +1855,10 @@
             "roots": [
                 {
                     "path": "reactor-core-3.7.2.jar"
+                },
+                {
+                    "path": "reactor-core-3.7.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1776,6 +1876,10 @@
             "roots": [
                 {
                     "path": "jandex-3.2.0.jar"
+                },
+                {
+                    "path": "jandex-3.2.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1793,6 +1897,10 @@
             "roots": [
                 {
                     "path": "jakarta.activation-api-2.1.3.jar"
+                },
+                {
+                    "path": "jakarta.activation-api-2.1.3-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1810,6 +1918,10 @@
             "roots": [
                 {
                     "path": "jakarta.annotation-api-2.1.1.jar"
+                },
+                {
+                    "path": "jakarta.annotation-api-2.1.1-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1827,6 +1939,10 @@
             "roots": [
                 {
                     "path": "jakarta.inject-api-2.0.1.jar"
+                },
+                {
+                    "path": "jakarta.inject-api-2.0.1-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1844,6 +1960,10 @@
             "roots": [
                 {
                     "path": "jakarta.persistence-api-3.1.0.jar"
+                },
+                {
+                    "path": "jakarta.persistence-api-3.1.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1861,6 +1981,10 @@
             "roots": [
                 {
                     "path": "jakarta.transaction-api-2.0.1.jar"
+                },
+                {
+                    "path": "jakarta.transaction-api-2.0.1-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1878,6 +2002,10 @@
             "roots": [
                 {
                     "path": "jakarta.validation-api-3.0.2.jar"
+                },
+                {
+                    "path": "jakarta.validation-api-3.0.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1895,6 +2023,10 @@
             "roots": [
                 {
                     "path": "jakarta.xml.bind-api-4.0.2.jar"
+                },
+                {
+                    "path": "jakarta.xml.bind-api-4.0.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1912,6 +2044,10 @@
             "roots": [
                 {
                     "path": "cache-api-1.1.1.jar"
+                },
+                {
+                    "path": "cache-api-1.1.1-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1929,6 +2065,10 @@
             "roots": [
                 {
                     "path": "junit-4.13.2.jar"
+                },
+                {
+                    "path": "junit-4.13.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1946,6 +2086,10 @@
             "roots": [
                 {
                     "path": "byte-buddy-agent-1.15.11.jar"
+                },
+                {
+                    "path": "byte-buddy-agent-1.15.11-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1963,6 +2107,10 @@
             "roots": [
                 {
                     "path": "byte-buddy-1.15.11.jar"
+                },
+                {
+                    "path": "byte-buddy-1.15.11-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1980,6 +2128,10 @@
             "roots": [
                 {
                     "path": "jna-5.13.0.jar"
+                },
+                {
+                    "path": "jna-5.13.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1997,6 +2149,10 @@
             "roots": [
                 {
                     "path": "accessors-smart-2.5.1.jar"
+                },
+                {
+                    "path": "accessors-smart-2.5.1-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2014,6 +2170,10 @@
             "roots": [
                 {
                     "path": "json-smart-2.5.1.jar"
+                },
+                {
+                    "path": "json-smart-2.5.1-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2031,6 +2191,10 @@
             "roots": [
                 {
                     "path": "antlr4-runtime-4.13.0.jar"
+                },
+                {
+                    "path": "antlr4-runtime-4.13.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2048,6 +2212,10 @@
             "roots": [
                 {
                     "path": "commons-compress-1.24.0.jar"
+                },
+                {
+                    "path": "commons-compress-1.24.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2065,6 +2233,10 @@
             "roots": [
                 {
                     "path": "log4j-api-2.24.3.jar"
+                },
+                {
+                    "path": "log4j-api-2.24.3-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2082,6 +2254,10 @@
             "roots": [
                 {
                     "path": "log4j-to-slf4j-2.24.3.jar"
+                },
+                {
+                    "path": "log4j-to-slf4j-2.24.3-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2099,6 +2275,10 @@
             "roots": [
                 {
                     "path": "tomcat-embed-core-10.1.34.jar"
+                },
+                {
+                    "path": "tomcat-embed-core-10.1.34-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2116,6 +2296,10 @@
             "roots": [
                 {
                     "path": "tomcat-embed-el-10.1.34.jar"
+                },
+                {
+                    "path": "tomcat-embed-el-10.1.34-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2133,6 +2317,10 @@
             "roots": [
                 {
                     "path": "tomcat-embed-websocket-10.1.34.jar"
+                },
+                {
+                    "path": "tomcat-embed-websocket-10.1.34-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2150,6 +2338,10 @@
             "roots": [
                 {
                     "path": "apiguardian-api-1.1.2.jar"
+                },
+                {
+                    "path": "apiguardian-api-1.1.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2167,6 +2359,10 @@
             "roots": [
                 {
                     "path": "aspectjweaver-1.9.22.1.jar"
+                },
+                {
+                    "path": "aspectjweaver-1.9.22.1-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2184,6 +2380,10 @@
             "roots": [
                 {
                     "path": "assertj-core-3.26.3.jar"
+                },
+                {
+                    "path": "assertj-core-3.26.3-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2201,6 +2401,10 @@
             "roots": [
                 {
                     "path": "attoparser-2.0.7.RELEASE.jar"
+                },
+                {
+                    "path": "attoparser-2.0.7.RELEASE-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2218,6 +2422,10 @@
             "roots": [
                 {
                     "path": "awaitility-4.2.2.jar"
+                },
+                {
+                    "path": "awaitility-4.2.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2235,6 +2443,10 @@
             "roots": [
                 {
                     "path": "checker-qual-3.48.3.jar"
+                },
+                {
+                    "path": "checker-qual-3.48.3-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2252,6 +2464,10 @@
             "roots": [
                 {
                     "path": "angus-activation-2.0.2.jar"
+                },
+                {
+                    "path": "angus-activation-2.0.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2269,6 +2485,10 @@
             "roots": [
                 {
                     "path": "jaxb-core-4.0.5.jar"
+                },
+                {
+                    "path": "jaxb-core-4.0.5-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2286,6 +2506,10 @@
             "roots": [
                 {
                     "path": "jaxb-runtime-4.0.5.jar"
+                },
+                {
+                    "path": "jaxb-runtime-4.0.5-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2303,6 +2527,10 @@
             "roots": [
                 {
                     "path": "txw2-4.0.5.jar"
+                },
+                {
+                    "path": "txw2-4.0.5-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2320,6 +2548,10 @@
             "roots": [
                 {
                     "path": "junit-platform-native-0.10.3.jar"
+                },
+                {
+                    "path": "junit-platform-native-0.10.3-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2337,6 +2569,10 @@
             "roots": [
                 {
                     "path": "hamcrest-core-2.2.jar"
+                },
+                {
+                    "path": "hamcrest-core-2.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2354,6 +2590,10 @@
             "roots": [
                 {
                     "path": "hamcrest-2.2.jar"
+                },
+                {
+                    "path": "hamcrest-2.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2371,6 +2611,10 @@
             "roots": [
                 {
                     "path": "HdrHistogram-2.2.2.jar"
+                },
+                {
+                    "path": "HdrHistogram-2.2.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2388,6 +2632,10 @@
             "roots": [
                 {
                     "path": "hibernate-commons-annotations-7.0.3.Final.jar"
+                },
+                {
+                    "path": "hibernate-commons-annotations-7.0.3.Final-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2405,6 +2653,10 @@
             "roots": [
                 {
                     "path": "hibernate-core-6.6.5.Final.jar"
+                },
+                {
+                    "path": "hibernate-core-6.6.5.Final-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2422,6 +2674,10 @@
             "roots": [
                 {
                     "path": "hibernate-validator-8.0.2.Final.jar"
+                },
+                {
+                    "path": "hibernate-validator-8.0.2.Final-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2439,6 +2695,10 @@
             "roots": [
                 {
                     "path": "jboss-logging-3.6.1.Final.jar"
+                },
+                {
+                    "path": "jboss-logging-3.6.1.Final-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2456,6 +2716,10 @@
             "roots": [
                 {
                     "path": "annotations-17.0.0.jar"
+                },
+                {
+                    "path": "annotations-17.0.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2473,6 +2737,10 @@
             "roots": [
                 {
                     "path": "jspecify-1.0.0.jar"
+                },
+                {
+                    "path": "jspecify-1.0.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2490,6 +2758,10 @@
             "roots": [
                 {
                     "path": "junit-jupiter-api-5.11.4.jar"
+                },
+                {
+                    "path": "junit-jupiter-api-5.11.4-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2507,6 +2779,10 @@
             "roots": [
                 {
                     "path": "junit-jupiter-engine-5.11.4.jar"
+                },
+                {
+                    "path": "junit-jupiter-engine-5.11.4-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2524,6 +2800,10 @@
             "roots": [
                 {
                     "path": "junit-jupiter-params-5.11.4.jar"
+                },
+                {
+                    "path": "junit-jupiter-params-5.11.4-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2541,6 +2821,10 @@
             "roots": [
                 {
                     "path": "junit-jupiter-5.11.4.jar"
+                },
+                {
+                    "path": "junit-jupiter-5.11.4-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2558,6 +2842,10 @@
             "roots": [
                 {
                     "path": "junit-platform-commons-1.11.4.jar"
+                },
+                {
+                    "path": "junit-platform-commons-1.11.4-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2575,6 +2863,10 @@
             "roots": [
                 {
                     "path": "junit-platform-console-1.11.4.jar"
+                },
+                {
+                    "path": "junit-platform-console-1.11.4-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2592,6 +2884,10 @@
             "roots": [
                 {
                     "path": "junit-platform-engine-1.11.4.jar"
+                },
+                {
+                    "path": "junit-platform-engine-1.11.4-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2609,6 +2905,10 @@
             "roots": [
                 {
                     "path": "junit-platform-launcher-1.11.4.jar"
+                },
+                {
+                    "path": "junit-platform-launcher-1.11.4-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2626,6 +2926,10 @@
             "roots": [
                 {
                     "path": "junit-platform-reporting-1.11.4.jar"
+                },
+                {
+                    "path": "junit-platform-reporting-1.11.4-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2643,6 +2947,10 @@
             "roots": [
                 {
                     "path": "LatencyUtils-2.0.3.jar"
+                },
+                {
+                    "path": "LatencyUtils-2.0.3-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2660,6 +2968,10 @@
             "roots": [
                 {
                     "path": "mockito-core-5.14.2.jar"
+                },
+                {
+                    "path": "mockito-core-5.14.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2677,6 +2989,10 @@
             "roots": [
                 {
                     "path": "mockito-junit-jupiter-5.14.2.jar"
+                },
+                {
+                    "path": "mockito-junit-jupiter-5.14.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2694,6 +3010,10 @@
             "roots": [
                 {
                     "path": "objenesis-3.3.jar"
+                },
+                {
+                    "path": "objenesis-3.3-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2711,6 +3031,10 @@
             "roots": [
                 {
                     "path": "opentest4j-1.3.0.jar"
+                },
+                {
+                    "path": "opentest4j-1.3.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2728,6 +3052,10 @@
             "roots": [
                 {
                     "path": "asm-9.6.jar"
+                },
+                {
+                    "path": "asm-9.6-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2745,6 +3073,10 @@
             "roots": [
                 {
                     "path": "postgresql-42.7.5.jar"
+                },
+                {
+                    "path": "postgresql-42.7.5-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2762,6 +3094,10 @@
             "roots": [
                 {
                     "path": "reactive-streams-1.0.4.jar"
+                },
+                {
+                    "path": "reactive-streams-1.0.4-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2779,6 +3115,10 @@
             "roots": [
                 {
                     "path": "duct-tape-1.0.8.jar"
+                },
+                {
+                    "path": "duct-tape-1.0.8-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2796,6 +3136,10 @@
             "roots": [
                 {
                     "path": "jsonassert-1.5.3.jar"
+                },
+                {
+                    "path": "jsonassert-1.5.3-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2813,6 +3157,10 @@
             "roots": [
                 {
                     "path": "jul-to-slf4j-2.0.16.jar"
+                },
+                {
+                    "path": "jul-to-slf4j-2.0.16-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2830,6 +3178,10 @@
             "roots": [
                 {
                     "path": "slf4j-api-2.0.16.jar"
+                },
+                {
+                    "path": "slf4j-api-2.0.16-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2847,6 +3199,10 @@
             "roots": [
                 {
                     "path": "spring-boot-actuator-autoconfigure-3.4.2.jar"
+                },
+                {
+                    "path": "spring-boot-actuator-autoconfigure-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2864,6 +3220,10 @@
             "roots": [
                 {
                     "path": "spring-boot-actuator-3.4.2.jar"
+                },
+                {
+                    "path": "spring-boot-actuator-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2881,6 +3241,10 @@
             "roots": [
                 {
                     "path": "spring-boot-autoconfigure-3.4.2.jar"
+                },
+                {
+                    "path": "spring-boot-autoconfigure-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2898,6 +3262,10 @@
             "roots": [
                 {
                     "path": "spring-boot-devtools-3.4.2.jar"
+                },
+                {
+                    "path": "spring-boot-devtools-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2915,6 +3283,10 @@
             "roots": [
                 {
                     "path": "spring-boot-docker-compose-3.4.2.jar"
+                },
+                {
+                    "path": "spring-boot-docker-compose-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2932,6 +3304,10 @@
             "roots": [
                 {
                     "path": "spring-boot-starter-actuator-3.4.2.jar"
+                },
+                {
+                    "path": "spring-boot-starter-actuator-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2949,6 +3325,10 @@
             "roots": [
                 {
                     "path": "spring-boot-starter-cache-3.4.2.jar"
+                },
+                {
+                    "path": "spring-boot-starter-cache-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2966,6 +3346,10 @@
             "roots": [
                 {
                     "path": "spring-boot-starter-data-jpa-3.4.2.jar"
+                },
+                {
+                    "path": "spring-boot-starter-data-jpa-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2983,6 +3367,10 @@
             "roots": [
                 {
                     "path": "spring-boot-starter-jdbc-3.4.2.jar"
+                },
+                {
+                    "path": "spring-boot-starter-jdbc-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3000,6 +3388,10 @@
             "roots": [
                 {
                     "path": "spring-boot-starter-json-3.4.2.jar"
+                },
+                {
+                    "path": "spring-boot-starter-json-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3017,6 +3409,10 @@
             "roots": [
                 {
                     "path": "spring-boot-starter-logging-3.4.2.jar"
+                },
+                {
+                    "path": "spring-boot-starter-logging-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3034,6 +3430,10 @@
             "roots": [
                 {
                     "path": "spring-boot-starter-test-3.4.2.jar"
+                },
+                {
+                    "path": "spring-boot-starter-test-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3051,6 +3451,10 @@
             "roots": [
                 {
                     "path": "spring-boot-starter-thymeleaf-3.4.2.jar"
+                },
+                {
+                    "path": "spring-boot-starter-thymeleaf-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3068,6 +3472,10 @@
             "roots": [
                 {
                     "path": "spring-boot-starter-tomcat-3.4.2.jar"
+                },
+                {
+                    "path": "spring-boot-starter-tomcat-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3085,6 +3493,10 @@
             "roots": [
                 {
                     "path": "spring-boot-starter-validation-3.4.2.jar"
+                },
+                {
+                    "path": "spring-boot-starter-validation-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3102,6 +3514,10 @@
             "roots": [
                 {
                     "path": "spring-boot-starter-web-3.4.2.jar"
+                },
+                {
+                    "path": "spring-boot-starter-web-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3119,6 +3535,10 @@
             "roots": [
                 {
                     "path": "spring-boot-starter-3.4.2.jar"
+                },
+                {
+                    "path": "spring-boot-starter-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3136,6 +3556,10 @@
             "roots": [
                 {
                     "path": "spring-boot-test-autoconfigure-3.4.2.jar"
+                },
+                {
+                    "path": "spring-boot-test-autoconfigure-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3153,6 +3577,10 @@
             "roots": [
                 {
                     "path": "spring-boot-test-3.4.2.jar"
+                },
+                {
+                    "path": "spring-boot-test-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3170,6 +3598,10 @@
             "roots": [
                 {
                     "path": "spring-boot-testcontainers-3.4.2.jar"
+                },
+                {
+                    "path": "spring-boot-testcontainers-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3187,6 +3619,10 @@
             "roots": [
                 {
                     "path": "spring-boot-3.4.2.jar"
+                },
+                {
+                    "path": "spring-boot-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3204,6 +3640,10 @@
             "roots": [
                 {
                     "path": "spring-data-commons-3.4.2.jar"
+                },
+                {
+                    "path": "spring-data-commons-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3221,6 +3661,10 @@
             "roots": [
                 {
                     "path": "spring-data-jpa-3.4.2.jar"
+                },
+                {
+                    "path": "spring-data-jpa-3.4.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3238,6 +3682,10 @@
             "roots": [
                 {
                     "path": "spring-aop-6.2.2.jar"
+                },
+                {
+                    "path": "spring-aop-6.2.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3255,6 +3703,10 @@
             "roots": [
                 {
                     "path": "spring-aspects-6.2.2.jar"
+                },
+                {
+                    "path": "spring-aspects-6.2.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3272,6 +3724,10 @@
             "roots": [
                 {
                     "path": "spring-beans-6.2.2.jar"
+                },
+                {
+                    "path": "spring-beans-6.2.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3289,6 +3745,10 @@
             "roots": [
                 {
                     "path": "spring-context-support-6.2.2.jar"
+                },
+                {
+                    "path": "spring-context-support-6.2.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3306,6 +3766,10 @@
             "roots": [
                 {
                     "path": "spring-context-6.2.2.jar"
+                },
+                {
+                    "path": "spring-context-6.2.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3323,6 +3787,10 @@
             "roots": [
                 {
                     "path": "spring-core-6.2.2.jar"
+                },
+                {
+                    "path": "spring-core-6.2.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3340,6 +3808,10 @@
             "roots": [
                 {
                     "path": "spring-expression-6.2.2.jar"
+                },
+                {
+                    "path": "spring-expression-6.2.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3357,6 +3829,10 @@
             "roots": [
                 {
                     "path": "spring-jcl-6.2.2.jar"
+                },
+                {
+                    "path": "spring-jcl-6.2.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3374,6 +3850,10 @@
             "roots": [
                 {
                     "path": "spring-jdbc-6.2.2.jar"
+                },
+                {
+                    "path": "spring-jdbc-6.2.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3391,6 +3871,10 @@
             "roots": [
                 {
                     "path": "spring-orm-6.2.2.jar"
+                },
+                {
+                    "path": "spring-orm-6.2.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3408,6 +3892,10 @@
             "roots": [
                 {
                     "path": "spring-test-6.2.2.jar"
+                },
+                {
+                    "path": "spring-test-6.2.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3425,6 +3913,10 @@
             "roots": [
                 {
                     "path": "spring-tx-6.2.2.jar"
+                },
+                {
+                    "path": "spring-tx-6.2.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3442,6 +3934,10 @@
             "roots": [
                 {
                     "path": "spring-web-6.2.2.jar"
+                },
+                {
+                    "path": "spring-web-6.2.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3459,6 +3955,10 @@
             "roots": [
                 {
                     "path": "spring-webmvc-6.2.2.jar"
+                },
+                {
+                    "path": "spring-webmvc-6.2.2-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3476,6 +3976,10 @@
             "roots": [
                 {
                     "path": "database-commons-1.20.4.jar"
+                },
+                {
+                    "path": "database-commons-1.20.4-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3493,6 +3997,10 @@
             "roots": [
                 {
                     "path": "jdbc-1.20.4.jar"
+                },
+                {
+                    "path": "jdbc-1.20.4-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3510,6 +4018,10 @@
             "roots": [
                 {
                     "path": "junit-jupiter-1.20.4.jar"
+                },
+                {
+                    "path": "junit-jupiter-1.20.4-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3527,6 +4039,10 @@
             "roots": [
                 {
                     "path": "mysql-1.20.4.jar"
+                },
+                {
+                    "path": "mysql-1.20.4-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3544,6 +4060,10 @@
             "roots": [
                 {
                     "path": "testcontainers-1.20.4.jar"
+                },
+                {
+                    "path": "testcontainers-1.20.4-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3561,6 +4081,10 @@
             "roots": [
                 {
                     "path": "thymeleaf-spring6-3.1.3.RELEASE.jar"
+                },
+                {
+                    "path": "thymeleaf-spring6-3.1.3.RELEASE-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3578,6 +4102,10 @@
             "roots": [
                 {
                     "path": "thymeleaf-3.1.3.RELEASE.jar"
+                },
+                {
+                    "path": "thymeleaf-3.1.3.RELEASE-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3595,6 +4123,10 @@
             "roots": [
                 {
                     "path": "unbescape-1.1.6.RELEASE.jar"
+                },
+                {
+                    "path": "unbescape-1.1.6.RELEASE-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3612,6 +4144,10 @@
             "roots": [
                 {
                     "path": "bootstrap-5.3.3.jar"
+                },
+                {
+                    "path": "bootstrap-5.3.3-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3629,6 +4165,10 @@
             "roots": [
                 {
                     "path": "font-awesome-4.7.0.jar"
+                },
+                {
+                    "path": "font-awesome-4.7.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3646,6 +4186,10 @@
             "roots": [
                 {
                     "path": "webjars-locator-lite-1.0.1.jar"
+                },
+                {
+                    "path": "webjars-locator-lite-1.0.1-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3663,6 +4207,10 @@
             "roots": [
                 {
                     "path": "xmlunit-core-2.10.0.jar"
+                },
+                {
+                    "path": "xmlunit-core-2.10.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -3680,6 +4228,10 @@
             "roots": [
                 {
                     "path": "snakeyaml-2.3.jar"
+                },
+                {
+                    "path": "snakeyaml-2.3-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {

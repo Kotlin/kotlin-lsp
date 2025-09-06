@@ -1,4 +1,15 @@
-.vscode/**
-.vscode-test/**
+*.backup
+*.vsix
+*.zip
 .gitignore
+.vscode
+.vscode-test
+apply-intellij.js
+buildLocally.sh
+node_modules
 out
+package-lock.json
+src/**
+testSources
+tsconfig.json
+webpack.config.js

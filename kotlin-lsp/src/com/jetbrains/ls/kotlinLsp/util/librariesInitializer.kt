@@ -1,20 +1,19 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.kotlinLsp.util
 
+import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
 import com.intellij.openapi.util.io.toNioPathOrNull
-import com.intellij.platform.workspace.jps.entities.*
-import com.intellij.platform.workspace.storage.EntitySource
-import com.intellij.platform.workspace.storage.MutableEntityStorage
-import com.intellij.platform.workspace.storage.entities
+import com.intellij.platform.workspace.jps.entities.SdkEntity
 import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
-import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.PathUtil
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.*
+import com.jetbrains.ls.api.core.workspaceStructure
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.lsp.implementation.LspHandlerContext
+import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.implementation.reportProgressMessage
 import com.jetbrains.lsp.protocol.*
 import org.jetbrains.kotlin.idea.base.plugin.artifacts.KotlinArtifacts
@@ -23,35 +22,21 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.isDirectory
 
-context(WorkspaceModelBuilder)
-fun addJdkFromJavaHome() {
-    addLibrary(LSLibrary(javaHome(), name = "jdk"))
+fun WorkspaceModelBuilder.addJdkFromJavaHome() {
+    addSdk(LSSdk(
+        name = "Java SDK",
+        type = JavaSdk.getInstance(),
+        roots = javaHome()
+    ))
 }
 
-context(WorkspaceModelBuilder)
-fun addKotlinStdlib() {
+fun WorkspaceModelBuilder.addKotlinStdlib() {
     addLibrary(
         LSLibrary(
-            listOf(
-               getKotlinStdlibPath().toLspUri(),
-            ), name = "stdlib"
+            binaryRoots = listOf(getKotlinStdlibPath().toLspUri()),
+            sourceRoots = listOfNotNull(getKotlinStdlibSourcesPath()?.toLspUri()),
+            name = "stdlib"
         )
-    )
-}
-
-
-// TODO LSP-149 should be a real jdk entity
-internal fun createJDKEntity(source: EntitySource, virtualFileUrlManager: VirtualFileUrlManager): LibraryEntity.Builder {
-    return LibraryEntity(
-        name = "JDK",
-        tableId = LibraryTableId.ProjectLibraryTableId,
-        roots = javaHome().map { root ->
-            LibraryRoot(
-                url = virtualFileUrlManager.getOrCreateFromUrl(root.lspUriToIntellijUri()!!),
-                type = LibraryRootTypeId.COMPILED
-            )
-        },
-        entitySource = source,
     )
 }
 
@@ -72,10 +57,23 @@ fun getKotlinStdlibPath(): Path {
     }
 }
 
-context(WorkspaceModelBuilder)
-fun registerStdlibAndJdk() {
+fun getKotlinStdlibSourcesPath(): Path? {
+    return when {
+        isRunningFromSources -> {
+            // get kotlin stdlib used for monorepo compilation
+            KotlinArtifacts.kotlinStdlibSources.toPath()
+        }
+
+        else -> {
+           null // LSP-224 TODO we should bundle the sources jar
+        }
+    }
+}
+
+
+fun WorkspaceModelBuilder.registerStdlibAndJdk() {
     addKotlinStdlib()
-    addJdkFromJavaHome()
+    addSdk( LSSdk(roots = javaHome(), name = "Java SDK", type = JavaSdk.getInstance()))
 }
 
 fun javaHome(): List<URI> {
@@ -85,7 +83,7 @@ fun javaHome(): List<URI> {
     return JavaSdkImpl.findClasses(path, false).map { (it.replace("!/", "!/modules/").intellijUriToLspUri()) }
 }
 
-context(LSServer, LspHandlerContext)
+context(_: LSServer, _: LspHandlerContext)
 suspend fun importProject(
     folderPath: Path,
     importer: WorkspaceImporter,
@@ -100,31 +98,18 @@ suspend fun importProject(
                 ShowMessageParams(MessageType.Warning, unresolved.joinToString(", ", "Couldn't resolve some dependencies: ")),
             )
         }
-        addFakeJdKLibrary(folderPath, virtualFileUrlManager, imported)
+        val noSdk = imported.entities(SdkEntity::class.java).firstOrNull() == null
+        if (noSdk) {
+            addSdk(
+                name = "Java SDK",
+                type = JavaSdk.getInstance(),
+                roots = javaHome(),
+                urlManager = virtualFileUrlManager,
+                source = WorkspaceEntitySource(folderPath.toVirtualFileUrl(virtualFileUrlManager)),
+                storage = imported
+            )
+        }
         storage.applyChangesFrom(imported)
-        lspClient.reportProgressMessage(params, "Indexing project")
     }
     lspClient.reportProgressMessage(params, "Project is indexed")
-}
-
-private fun addFakeJdKLibrary(
-    folderPath: Path,
-    virtualFileUrlManager: VirtualFileUrlManager,
-    imported: MutableEntityStorage,
-) {
-    val entitySource = WorkspaceEntitySource(folderPath.toVirtualFileUrl(virtualFileUrlManager))
-
-    val jdk = imported addEntity createJDKEntity(
-        entitySource,
-        virtualFileUrlManager
-    )
-
-    for (module in imported.entities<ModuleEntity>()) {
-        imported.modifyModuleEntity(module) {
-            dependencies.firstOrNull { it is SdkDependency || it is InheritedSdkDependency }
-                ?.let { dependencies -= it }
-
-            dependencies += LibraryDependency(jdk.symbolicId, exported = false, scope = DependencyScope.COMPILE)
-        }
-    }
 }
