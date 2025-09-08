@@ -5,6 +5,7 @@ import com.intellij.openapi.application.ClassPathUtil.addKotlinStdlib
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.util.io.FileUtilRt
+import com.intellij.util.SystemProperties
 import com.jetbrains.analyzer.filewatcher.FileWatcher
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.LSServerContext
@@ -22,8 +23,8 @@ import com.jetbrains.ls.kotlinLsp.requests.core.setTraceNotification
 import com.jetbrains.ls.kotlinLsp.requests.core.shutdownRequest
 import com.jetbrains.ls.kotlinLsp.requests.features
 import com.jetbrains.ls.kotlinLsp.util.addKotlinStdlib
-import com.jetbrains.ls.kotlinLsp.util.logSystemInfo
 import com.jetbrains.ls.kotlinLsp.util.configuration.IsolatedDocumentsPlugin
+import com.jetbrains.ls.kotlinLsp.util.logSystemInfo
 import com.jetbrains.ls.snapshot.api.impl.core.createServerStarterAnalyzerImpl
 import com.jetbrains.lsp.implementation.*
 import kotlinx.coroutines.CompletableDeferred
@@ -66,7 +67,7 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
     initKotlinLspLogger(writeToStdOut = mode != KotlinLspServerMode.Stdio)
     initIdeaPaths(runConfig.systemPath)
     initHeadlessToolkit()
-    KotlinPluginLayoutModeProvider.setForcedKotlinPluginLayoutMode(KotlinPluginLayoutMode.LSP)
+    initExtraProperties()
 
     val config = createConfiguration(runConfig.isolatedDocumentsMode)
 
@@ -174,6 +175,12 @@ private fun systemProperty(name: String, value: String, ifAbsent: Boolean = fals
     if (!ifAbsent || System.getProperty(name) == null) {
         System.setProperty(name, value)
     }
+}
+
+private fun initExtraProperties() {
+    KotlinPluginLayoutModeProvider.setForcedKotlinPluginLayoutMode(KotlinPluginLayoutMode.LSP)
+    // TrigramIndex.isEnabled() -> false:
+    SystemProperties.setProperty("find.use.indexing.searcher.extensions", "false")
 }
 
 private fun initHeadlessToolkit() {
