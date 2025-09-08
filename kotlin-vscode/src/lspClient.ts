@@ -36,7 +36,7 @@ export function initLspClient() {
 /**
  * Subscribes to the LSP client events. The subscription will be called on every state change.
  *
- * We cannot subscibe to the client events directly, because the client instance may be changed
+ * We cannot subscribe to the client events directly because the client instance may be changed
  *
  * @param subscription - function to call on state change
  */
@@ -88,8 +88,8 @@ export async function stopLspClient(): Promise<void> {
 
 
 const jrePathForLspSettingName = 'kotlinLSP.jrePathToRunLsp';
+// IMPORTANT: when updating this constant, please update the `kotlinLSP.jrePathToRunLsp` setting description in package.json as well
 const minimumSupportedJavaVersion = 21
-
 
 
 function getJrePathForKotlinLSP() {
