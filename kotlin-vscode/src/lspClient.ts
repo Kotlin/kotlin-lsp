@@ -124,10 +124,11 @@ async function ensureCorrectJavaVersion(javaCommand: string): Promise<boolean> {
 
         if (isNaN(majorVersion) || majorVersion < minimumSupportedJavaVersion) {
             const openSettingsButtonText = 'Open Settings'
-            vscode.window.showErrorMessage(`Java version ${minimumSupportedJavaVersion} or higher is required to run Kotlin LSP.\n
-             Current version: ${versionMatch[1]}.\n
-             Please change the \`${jrePathForLspSettingName}\` setting to point to a JRE installation with version ${minimumSupportedJavaVersion} or higher.`,
-                    openSettingsButtonText,
+            vscode.window.showErrorMessage(
+                    `Kotlin LSP requires Java ${minimumSupportedJavaVersion} or later.
+                     You are currently using version ${versionMatch[1]}. 
+                     Please update the ${jrePathForLspSettingName} setting to point to a JRE ${minimumSupportedJavaVersion}+ installation`,
+                openSettingsButtonText,
             ).then(selection => {
                 if (selection === openSettingsButtonText) {
                     vscode.commands.executeCommand('workbench.action.openSettings', `${extensionId}.${jrePathForLspSettingName}`);

@@ -56,7 +56,7 @@
         "kotlinLSP.jrePathToRunLsp": {
           "type": "string",
           "default": null,
-          "description": "A path to the JRE that will be used to run the LSP. It should be at least version 17. If not specified, default java version will be used"
+          "description": "Path to the JRE used to run the Kotlin LSP. Requires version 21 or higher. If unspecified, the default Java version is used."
         },
         "kotlinLSP.additionalJvmArgs": {
           "type": "array",
