@@ -6,6 +6,7 @@ import com.intellij.model.psi.impl.targetSymbols
 import com.intellij.openapi.application.ex.ApplicationUtil
 import com.intellij.openapi.application.invokeAndWaitIfNeeded
 import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.writeIntentReadAction
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.diagnostic.LogLevel
 import com.intellij.openapi.diagnostic.logger
@@ -35,6 +36,7 @@ class LSRenameProviderCommonImpl(
             // Suppress irrelevant "Can't invokeAndWait from WT to EDT: probably leads to deadlock" messages
             ApplicationUtil.LOG.setLevel(LogLevel.OFF)
         }
+
         private val LOG = logger<LSRenameProviderCommonImpl>()
     }
 
@@ -69,7 +71,11 @@ class LSRenameProviderCommonImpl(
                 CommandProcessor.getInstance().executeCommand(project, {
                     try {
                         runBlockingCancellable {
-                            withRenamesEnabled { processor.rename() }
+                            withRenamesEnabled {
+                                writeIntentReadAction {
+                                    processor.rename()
+                                }
+                            }
                                 .forEach { (oldUri, newUri) ->
                                     renames.add(RenameFile(DocumentUri(oldUri), DocumentUri(newUri)))
                                 }
