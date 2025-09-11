@@ -7,7 +7,7 @@ import com.intellij.codeInsight.completion.performCompletion
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementPresentation
 import com.intellij.openapi.application.invokeAndWaitIfNeeded
-import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.jetbrains.ls.api.core.LSServer
@@ -33,7 +33,7 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider {
             CompletionList.EMPTY_COMPLETE
         } else {
             withAnalysisContext(params.textDocument.uri.uri) {
-                runReadAction {
+                readAction {
                     params.textDocument.findVirtualFile()?.let { file ->
                         file.findPsiFile(project)?.let { psiFile ->
                             file.findDocument()?.offsetByPosition(params.position)?.let { offset ->
@@ -50,7 +50,7 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider {
                             invocationCount = params.computeInvocationCount()
                         )
                     }
-                    runReadAction {
+                    readAction {
                         val lookupElements = performCompletion(completionProcess)
                         val completionItems = lookupElements.mapIndexedNotNull { i, lookup ->
                             val lookupPresentation = LookupElementPresentation().also {
