@@ -7,7 +7,7 @@ import com.intellij.codeInsight.completion.performCompletion
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementPresentation
 import com.intellij.openapi.application.invokeAndWaitIfNeeded
-import com.intellij.openapi.application.runWriteAction
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.jetbrains.ls.api.core.LSServer
@@ -29,37 +29,61 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider {
 
     context(_: LSServer, _: LspHandlerContext)
     override suspend fun provideCompletion(params: CompletionParams): CompletionList {
-        if (!params.textDocument.isSource()) return CompletionList.EMPTY_COMPLETE
-        return withAnalysisContext(params.textDocument.uri.uri) {
-            invokeAndWaitIfNeeded {
-                runWriteAction {
-                    val file = params.textDocument.findVirtualFile() ?: return@runWriteAction EMPTY_COMPLETION_LIST
-                    val psiFile = file.findPsiFile(project) ?: return@runWriteAction EMPTY_COMPLETION_LIST
-                    val document = file.findDocument() ?: return@runWriteAction EMPTY_COMPLETION_LIST
-                    val offset = document.offsetByPosition(params.position)
-                    val completionProcess = createCompletionProcess(project, psiFile, offset, invocationCount = params.computeInvocationCount())
-                    val lookupElements = performCompletion(completionProcess)
-                    val completionItems = lookupElements.mapIndexed  { i, lookup ->
-                        val lookupPresentation = LookupElementPresentation().also { lookup.renderElement(it) }
-                        val additionalData = createAdditionalData(lookup, completionProcess.arranger.itemMatcher(lookup)) ?: return@mapIndexed null
-                        val data = CompletionItemData(params, additionalData, uniqueId)
-                        CompletionItem(
-                            label = lookupPresentation.itemText ?: lookup.lookupString,
-                            sortText = getSortedFieldByIndex(i),
-                            labelDetails = CompletionItemLabelDetails(
-                                detail = lookupPresentation.tailText,
-                                description = lookupPresentation.typeText,
-                            ),
-                            kind = lookup.psiElement?.let { LSCompletionItemKindProvider.getKind(it) },
-                            textEdit = emptyTextEdit(params.position),
-                            data = LSP.json.encodeToJsonElement(data)
+        return if (!params.textDocument.isSource()) {
+            CompletionList.EMPTY_COMPLETE
+        } else {
+            withAnalysisContext(params.textDocument.uri.uri) {
+                runReadAction {
+                    params.textDocument.findVirtualFile()?.let { file ->
+                        file.findPsiFile(project)?.let { psiFile ->
+                            file.findDocument()?.offsetByPosition(params.position)?.let { offset ->
+                                psiFile to offset
+                            }
+                        }
+                    }
+                }?.let { (psiFile, offset) ->
+                    val completionProcess = invokeAndWaitIfNeeded {
+                        createCompletionProcess(
+                            project = project,
+                            file = psiFile,
+                            offset = offset,
+                            invocationCount = params.computeInvocationCount()
                         )
-                    }.filterNotNull()
-                    CompletionList(
-                        isIncomplete = true,
-                        items = completionItems,
-                    )
-                }
+                    }
+                    runReadAction {
+                        val lookupElements = performCompletion(completionProcess)
+                        val completionItems = lookupElements.mapIndexedNotNull { i, lookup ->
+                            val lookupPresentation = LookupElementPresentation().also {
+                                lookup.renderElement(it)
+                            }
+                            createAdditionalData(
+                                lookupElement = lookup,
+                                itemMatcher = completionProcess.arranger.itemMatcher(lookup)
+                            )?.let { additionalData ->
+                                val data = CompletionItemData(
+                                    params = params,
+                                    additionalData = additionalData,
+                                    configurationEntryId = uniqueId
+                                )
+                                CompletionItem(
+                                    label = lookupPresentation.itemText ?: lookup.lookupString,
+                                    sortText = getSortedFieldByIndex(i),
+                                    labelDetails = CompletionItemLabelDetails(
+                                        detail = lookupPresentation.tailText,
+                                        description = lookupPresentation.typeText,
+                                    ),
+                                    kind = lookup.psiElement?.let { LSCompletionItemKindProvider.getKind(it) },
+                                    textEdit = emptyTextEdit(params.position),
+                                    data = LSP.json.encodeToJsonElement(data)
+                                )
+                            }
+                        }
+                        CompletionList(
+                            isIncomplete = true,
+                            items = completionItems,
+                        )
+                    }
+                } ?: EMPTY_COMPLETION_LIST
             }
         }
     }
