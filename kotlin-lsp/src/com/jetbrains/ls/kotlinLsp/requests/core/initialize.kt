@@ -85,6 +85,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
                     completionItem = null,
                 ),
                 codeActionProvider = OrBoolean.of(
+                    CodeActionOptions.serializer(),
                     CodeActionOptions(
                         codeActionKinds = LSCodeActions.supportedCodeActionKinds(),
                         resolveProvider = false,
@@ -97,7 +98,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
                 referencesProvider = OrBoolean(true),
                 hoverProvider = OrBoolean(true),
                 documentSymbolProvider = OrBoolean(true),
-                workspaceSymbolProvider = OrBoolean.of(WorkspaceSymbolOptions(resolveProvider = false, workDoneProgress = true)),
+                workspaceSymbolProvider = OrBoolean.of(WorkspaceSymbolOptions.serializer(), WorkspaceSymbolOptions(resolveProvider = false, workDoneProgress = true)),
                 workspace = ServerWorkspaceCapabilities(
                     workspaceFolders = WorkspaceFoldersServerCapabilities(
                         supported = true,
@@ -111,7 +112,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
                     workDoneProgress = false
                 ),
                 documentFormattingProvider = OrBoolean(true),
-                inlayHintProvider = OrBoolean.of(InlayHintRegistrationOptions(resolveProvider = true)),
+                inlayHintProvider = OrBoolean.of(InlayHintRegistrationOptions.serializer(), InlayHintRegistrationOptions(resolveProvider = true)),
             ),
             serverInfo = InitializeResult.ServerInfo(
                 name = "Kotlin LSP by JetBrains",
