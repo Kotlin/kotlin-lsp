@@ -123,7 +123,7 @@ internal object LSRekotBasedKotlinCompletionProviderImpl : LSCompletionProvider 
         )
     }
 
-    private val defaultImports = JvmPlatformAnalyzerServices.getDefaultImports(includeLowPriorityImports = true)
+    private val defaultImports = JvmPlatformAnalyzerServices.defaultImportsProvider.getDefaultImports(includeLowPriorityImports = true)
 
 
     private fun createFileForCompletion(original: KtFile, offset: Int): KtFile {
