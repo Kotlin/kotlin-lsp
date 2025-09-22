@@ -146,8 +146,7 @@ jvm_library(
     "@lib//:kotlinc-analysis-api-platform-interface",
     "@community//plugins/kotlin/base/fir/project-structure",
     "@community//plugins/kotlin/base/fir/project-structure:project-structure_test_lib",
-  ],
-  runtime_deps = [":kotlin-lsp_resources"]
+  ]
 )
 ### auto-generated section `build language-server.kotlin-lsp` end
 
