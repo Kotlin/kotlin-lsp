@@ -31,8 +31,8 @@ jvm_library(
     "//language-server/community/api.core",
     "@community//platform/analysis-impl",
     "@community//platform/util",
-    "@lib//:kotlinx-serialization-json",
-    "@lib//:kotlinx-serialization-core",
+    "@community//libraries/kotlinx/serialization/json",
+    "@community//libraries/kotlinx/serialization/core",
     "@ultimate_lib//:java-diff-utils",
   ],
   runtime_deps = [":api.features_resources"]
