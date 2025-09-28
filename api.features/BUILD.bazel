@@ -1,6 +1,6 @@
 ### auto-generated section `build language-server.api.features` start
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
-load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_resources")
+load("@rules_jvm//:jvm.bzl", "jvm_library", "resourcegroup")
 
 create_kotlinc_options(
   name = "custom_api.features",
@@ -11,9 +11,9 @@ create_kotlinc_options(
   x_context_parameters = True
 )
 
-jvm_resources(
+resourcegroup(
   name = "api.features_resources",
-  files = glob(["resources/**/*"]),
+  srcs = glob(["resources/**/*"]),
   strip_prefix = "resources"
 )
 
@@ -22,6 +22,7 @@ jvm_library(
   module_name = "language-server.api.features",
   visibility = ["//visibility:public"],
   srcs = glob(["src/**/*.kt", "src/**/*.java", "src/**/*.form"], allow_empty = True),
+  resources = [":api.features_resources"],
   kotlinc_opts = ":custom_api.features",
   deps = [
     "@lib//:kotlin-stdlib",
@@ -34,7 +35,6 @@ jvm_library(
     "@community//libraries/kotlinx/serialization/json",
     "@community//libraries/kotlinx/serialization/core",
     "@ultimate_lib//:java-diff-utils",
-  ],
-  runtime_deps = [":api.features_resources"]
+  ]
 )
 ### auto-generated section `build language-server.api.features` end
