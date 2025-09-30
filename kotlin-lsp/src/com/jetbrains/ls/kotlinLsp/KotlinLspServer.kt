@@ -7,6 +7,7 @@ import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.util.SystemProperties
 import com.jetbrains.analyzer.filewatcher.FileWatcher
+import com.jetbrains.analyzer.filewatcher.downloadFileWatcherBinaries
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.LSServerContext
 import com.jetbrains.ls.api.core.withServer
@@ -131,9 +132,9 @@ private fun initIdeaPaths(systemPath: Path?) {
         systemProperty("idea.home.path", fromSources)
         systemProperty("idea.config.path", "$fromSources/config/idea", ifAbsent = true)
         systemProperty("idea.system.path", "$fromSources/system/idea", ifAbsent = true)
-        FileWatcher.initLibraryFromSources(
-            PathManager.getHomeDir() /
-                    "fleet" / "native" / "target" / "download" / "filewatcher")
+
+        val nativeFileWatcherPath = downloadFileWatcherBinaries(PathManager.getHomeDir() / "community")
+        FileWatcher.initLibraryFromSources(nativeFileWatcherPath)
     }
     else {
         val path = systemPath

@@ -73,4 +73,5 @@ fi
     --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED \
     --add-opens jdk.internal.jvmstat/sun.jvmstat.monitor=ALL-UNNAMED \
     --add-opens jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED \
+    --enable-native-access=ALL-UNNAMED \
     -cp "$DIR/lib/*" com.jetbrains.ls.kotlinLsp.KotlinLspServerKt "$@"

@@ -1,6 +1,6 @@
 ### auto-generated section `build language-server.api.features.impl.common` start
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
-load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_resources")
+load("@rules_jvm//:jvm.bzl", "jvm_library", "resourcegroup")
 
 create_kotlinc_options(
   name = "custom_common",
@@ -11,9 +11,9 @@ create_kotlinc_options(
   x_context_parameters = True
 )
 
-jvm_resources(
+resourcegroup(
   name = "common_resources",
-  files = glob(["resources/**/*"]),
+  srcs = glob(["resources/**/*"]),
   strip_prefix = "resources"
 )
 
@@ -22,6 +22,7 @@ jvm_library(
   module_name = "language-server.api.features.impl.common",
   visibility = ["//visibility:public"],
   srcs = glob(["src/**/*.kt", "src/**/*.java", "src/**/*.form"], allow_empty = True),
+  resources = [":common_resources"],
   kotlinc_opts = ":custom_common",
   deps = [
     "@lib//:kotlin-stdlib",
@@ -36,8 +37,8 @@ jvm_library(
     "@community//platform/util:util-ui",
     "@community//platform/editor-ui-api:editor-ui",
     "@community//platform/editor-ui-ex:editor-ex",
-    "@lib//:kotlinx-serialization-json",
-    "@lib//:kotlinx-serialization-core",
+    "@community//libraries/kotlinx/serialization/json",
+    "@community//libraries/kotlinx/serialization/core",
     "//language-server/analyzer",
     "@community//fleet/lsp.protocol",
     "@community//platform/code-style-api:codeStyle",
@@ -54,7 +55,6 @@ jvm_library(
     "@community//platform/ide-core",
     "@community//plugins/kotlin/code-insight/impl-base",
     "@lib//:kotlinx-collections-immutable",
-  ],
-  runtime_deps = [":common_resources"]
+  ]
 )
 ### auto-generated section `build language-server.api.features.impl.common` end

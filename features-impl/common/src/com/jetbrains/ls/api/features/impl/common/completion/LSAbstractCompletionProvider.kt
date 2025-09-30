@@ -74,7 +74,7 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider {
                                     ),
                                     kind = lookup.psiElement?.let { LSCompletionItemKindProvider.getKind(it) },
                                     textEdit = emptyTextEdit(params.position),
-                                    data = LSP.json.encodeToJsonElement(data)
+                                    data = LSP.json.encodeToJsonElement(CompletionItemData.serializer(), data)
                                 )
                             }
                         }
