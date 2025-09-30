@@ -291,6 +291,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         }
         val gradleVersion = buildEnvironment.getGradleVersion()
         val jdk = knownJdks
+            .sorted() // Newest first
             .find {
                 val version = it.versionInfo?.version ?: return@find false
                 isSupported(gradleVersion, version)
