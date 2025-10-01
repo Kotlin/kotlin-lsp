@@ -81,6 +81,7 @@ jvm_library(
     "@lib//:ktor-network-tls",
     "@lib//:kotlinx-io-core",
     "//language-server/community/features-impl/java-base",
+    "@community//libraries/ktor/io",
     "@lib//:kotlinc-analysis-api-platform-interface",
     "@community//plugins/kotlin/base/fir/project-structure",
   ]
@@ -143,6 +144,7 @@ jvm_library(
     "@lib//:junit5Launcher",
     "@lib//:junit5Params",
     "//language-server/community/features-impl/java-base",
+    "@community//libraries/ktor/io",
     "@lib//:kotlinc-analysis-api-platform-interface",
     "@community//plugins/kotlin/base/fir/project-structure",
     "@community//plugins/kotlin/base/fir/project-structure:project-structure_test_lib",

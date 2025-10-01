@@ -74,6 +74,7 @@
     <orderEntry type="library" scope="TEST" name="JUnit5Launcher" level="project" />
     <orderEntry type="library" scope="TEST" name="JUnit5Params" level="project" />
     <orderEntry type="module" module-name="language-server.api.features.impl.java-base" />
+    <orderEntry type="module" module-name="intellij.libraries.ktor.io" />
     <orderEntry type="library" name="kotlinc.analysis-api-platform-interface" level="project" />
     <orderEntry type="module" module-name="kotlin.base.fir.project-structure" />
   </component>
