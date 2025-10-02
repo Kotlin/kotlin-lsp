@@ -14,13 +14,18 @@ if [ ! -d "$DIR/lib" ]; then
     exit 1
 fi
 
-JAVA_BIN="java"
-if [ -n "$JAVA_HOME" ]; then
-    JAVA_BIN="$JAVA_HOME/bin/java"
-    if [ ! -x "$JAVA_BIN" ]; then
-        echo >&2 -e "'java' should be on the PATH or JAVA_HOME must point to a valid JDK installation"
-        exit 1
-    fi
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    LOCAL_JRE_PATH="$DIR/jre/Contents/Home"
+else
+    LOCAL_JRE_PATH="$DIR/jre"
+fi
+
+if [ -d "$LOCAL_JRE_PATH" ] && [ -f "$LOCAL_JRE_PATH/bin/java" ]; then
+    chmod +x "$LOCAL_JRE_PATH/bin/java"
+    JAVA_BIN="$LOCAL_JRE_PATH/bin/java"
+else
+    echo >&2 -e "'java' was not found at $LOCAL_JRE_PATH, installation corrupted"
+    exit 1
 fi
 
 "$JAVA_BIN" \

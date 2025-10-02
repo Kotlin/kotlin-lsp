@@ -12,13 +12,11 @@ if not exist "%DIR%\lib" (
     exit /b 1
 )
 
-set "JAVA_BIN=java"
-if defined JAVA_HOME (
-    set "JAVA_BIN=%JAVA_HOME%\bin\java.exe"
-    "%JAVA_BIN%" -version >nul 2>&1 || (
-        echo 'java' should be on the PATH or JAVA_HOME must point to a valid JDK installation 1>&2
-        exit /b 1
-    )
+set "JAVA_BIN=%DIR%\jre\bin\java.exe"
+
+if not exist "%JAVA_BIN%" (
+    echo JRE not found at %DIR%\jre\bin\java.exe 1>&2
+    exit /b 1
 )
 
 "%JAVA_BIN%" ^
