@@ -178,15 +178,16 @@ private suspend fun initFolder(
                 return
             }
 
-            JpsWorkspaceImporter.isApplicableDirectory(folderPath) -> {
-                lspClient.reportProgressMessage(params, "Importing JPS project: $folderPath")
-                importProject(folderPath, JpsWorkspaceImporter, params)
-                return
-            }
-
             GradleWorkspaceImporter.isApplicableDirectory(folderPath) -> {
                 lspClient.reportProgressMessage(params, "Importing Gradle project: $folderPath")
                 importProject(folderPath, GradleWorkspaceImporter, params)
+                return
+            }
+
+            // JpsWorkspaceImporter must be triggered after all other importers as it accepts anything containing .idea directory
+            JpsWorkspaceImporter.isApplicableDirectory(folderPath) -> {
+                lspClient.reportProgressMessage(params, "Importing JPS project: $folderPath")
+                importProject(folderPath, JpsWorkspaceImporter, params)
                 return
             }
         }
