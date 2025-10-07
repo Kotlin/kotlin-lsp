@@ -33,7 +33,8 @@
           "kotlin"
         ],
         "extensions": [
-          ".kt"
+          ".kt",
+          ".kts"
         ],
         "configuration": "./language-configuration.json"
       }
