@@ -179,6 +179,9 @@ async function createLspClient(): Promise<LanguageClient | null> {
             {scheme: 'file', language: 'java'  }, {scheme: 'jar', language: 'java'  }, {scheme: 'jrt', language: 'java'},
         ],
         progressOnInitialization: true,
+        initializationOptions: {
+            storageUri: getContext().storageUri?.toString(),
+        },
     };
     let serverOptions = await createServerOptions()
     if (!serverOptions) return null

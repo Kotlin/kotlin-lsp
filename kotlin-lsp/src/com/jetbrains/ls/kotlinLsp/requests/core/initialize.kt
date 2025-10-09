@@ -20,8 +20,10 @@ import com.jetbrains.ls.kotlinLsp.connection.Client
 import com.jetbrains.ls.kotlinLsp.util.importProject
 import com.jetbrains.ls.kotlinLsp.util.registerStdlibAndJdk
 import com.jetbrains.ls.kotlinLsp.util.sendSystemInfoToClient
+import com.jetbrains.ls.snapshot.api.impl.core.InitializeParamsEntity
 import com.jetbrains.lsp.implementation.*
 import com.jetbrains.lsp.protocol.*
+import fleet.kernel.change
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.JsonPrimitive
 import java.nio.file.Path
@@ -50,6 +52,10 @@ internal fun LspHandlersBuilder.initializeRequest() {
             }
 
             else -> emptyList()
+        }
+
+        change {
+            InitializeParamsEntity.single().initializeParams.complete(initParams)
         }
 
         indexFolders(folders, initParams)
