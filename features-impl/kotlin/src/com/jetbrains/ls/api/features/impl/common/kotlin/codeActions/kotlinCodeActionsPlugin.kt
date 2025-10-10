@@ -7,7 +7,7 @@ import org.jetbrains.kotlin.idea.codeInsight.inspections.shared.KotlinUnusedImpo
 import org.jetbrains.kotlin.idea.k2.codeinsight.inspections.UsePropertyAccessSyntaxInspection
 
 internal val kotlinCodeActionsPlugins: List<PluginMainDescriptor> = listOf(
-    ijPluginByXml("META-INF/language-server/features/kotlin/codeActions.xml"),
-    ijPluginByXml("kotlin.code-insight.inspections.k2.xml", classForClasspath = UsePropertyAccessSyntaxInspection::class.java),
-    ijPluginByXml("kotlin.code-insight.inspections.shared.xml", classForClasspath = KotlinUnusedImportInspection::class.java),
+  ijPluginByXml("META-INF/language-server/features/kotlin/codeActions.xml"),
+  ijPluginByXml("intellij.kotlin.codeInsight.inspections.xml", classForClasspath = UsePropertyAccessSyntaxInspection::class.java),
+  ijPluginByXml("kotlin.code-insight.inspections.shared.xml", classForClasspath = KotlinUnusedImportInspection::class.java),
 )

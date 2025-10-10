@@ -39,8 +39,8 @@
     <orderEntry type="module" module-name="intellij.platform.core.impl" />
     <orderEntry type="module" module-name="intellij.platform.analysis" />
     <orderEntry type="module" module-name="intellij.platform.util" />
-    <orderEntry type="module" module-name="kotlin.completion.impl.k2" />
-    <orderEntry type="module" module-name="kotlin.code-insight.k2" />
+    <orderEntry type="module" module-name="intellij.kotlin.completion.impl" />
+    <orderEntry type="module" module-name="intellij.kotlin.codeInsight" />
     <orderEntry type="library" name="kotlinc.kotlin-compiler-common" level="project" />
     <orderEntry type="library" name="kotlinc.analysis-api" level="project" />
     <orderEntry type="library" name="kotlinc.analysis-api-k2" level="project" />
@@ -48,35 +48,35 @@
     <orderEntry type="module" module-name="language-server.analyzer" />
     <orderEntry type="module" module-name="fleet.lsp.protocol" />
     <orderEntry type="module" module-name="language-server.api.features" />
-    <orderEntry type="module" module-name="kotlin.base.code-insight" />
-    <orderEntry type="module" module-name="kotlin.code-insight.api" />
-    <orderEntry type="module" module-name="kotlin.code-insight.fixes.k2" />
+    <orderEntry type="module" module-name="intellij.kotlin.base.codeInsight" />
+    <orderEntry type="module" module-name="intellij.kotlin.codeInsight.api" />
+    <orderEntry type="module" module-name="intellij.kotlin.codeInsight.fixes" />
     <orderEntry type="module" module-name="intellij.platform.indexing" />
-    <orderEntry type="module" module-name="kotlin.base.indices" />
-    <orderEntry type="module" module-name="kotlin.base.project-structure" />
-    <orderEntry type="module" module-name="kotlin.code-insight.inspections.k2" />
+    <orderEntry type="module" module-name="intellij.kotlin.base.indices" />
+    <orderEntry type="module" module-name="intellij.kotlin.base.projectStructure" />
+    <orderEntry type="module" module-name="intellij.kotlin.codeInsight.inspections" />
     <orderEntry type="module" module-name="kotlin.code-insight.inspections.shared" />
-    <orderEntry type="module" module-name="kotlin.code-insight.intentions.k2" />
-    <orderEntry type="module" module-name="kotlin.formatter.minimal" />
+    <orderEntry type="module" module-name="intellij.kotlin.codeInsight.intentions" />
+    <orderEntry type="module" module-name="intellij.kotlin.formatter.minimal" />
     <orderEntry type="module" module-name="kotlin.plugin.common" />
     <orderEntry type="module" module-name="intellij.platform.editor.ex" />
     <orderEntry type="module" module-name="intellij.platform.editor.ui" />
-    <orderEntry type="module" module-name="kotlin.searching.k2" />
+    <orderEntry type="module" module-name="intellij.kotlin.searching" />
     <orderEntry type="module" module-name="kotlin.plugin.k2" />
     <orderEntry type="module" module-name="intellij.platform.lang" />
-    <orderEntry type="module" module-name="kotlin.base.analysis" />
-    <orderEntry type="module" module-name="kotlin.base.analysis-api.utils" />
+    <orderEntry type="module" module-name="intellij.kotlin.base.analysis" />
+    <orderEntry type="module" module-name="intellij.kotlin.base.analysis.utils" />
     <orderEntry type="module" module-name="intellij.java.psi.impl" />
     <orderEntry type="module" module-name="intellij.java.impl" />
-    <orderEntry type="module" module-name="kotlin.base.util" />
+    <orderEntry type="module" module-name="intellij.kotlin.base.util" />
     <orderEntry type="module" module-name="kotlin.completion.impl.shared" />
     <orderEntry type="module" module-name="kotlin.idea" />
-    <orderEntry type="module" module-name="kotlin.base.fir.code-insight" />
+    <orderEntry type="module" module-name="intellij.kotlin.codeInsight.base" />
     <orderEntry type="library" name="kotlinc.analysis-api-impl-base" level="project" />
-    <orderEntry type="module" module-name="kotlin.completion.api" />
+    <orderEntry type="module" module-name="intellij.kotlin.completion.api" />
     <orderEntry type="module" module-name="intellij.codeServer.core" />
     <orderEntry type="module" module-name="kotlin.fir" />
-    <orderEntry type="module" module-name="kotlin.navigation" />
-    <orderEntry type="module" module-name="kotlin.code-insight.impl-base" />
+    <orderEntry type="module" module-name="intellij.kotlin.navigation" />
+    <orderEntry type="module" module-name="intellij.kotlin.codeInsight.shared" />
   </component>
 </module>

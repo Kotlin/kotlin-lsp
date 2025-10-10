@@ -57,9 +57,9 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         lsApiKotlinImpl,
         kotlinCompletionPlugin,
         ijPluginByXml(
-            "kotlin.base.fir.code-insight.xml",
-            classForClasspath = FirCodeInsightForClassPath::class.java,
-            useFakePluginId = true,
+          "intellij.kotlin.codeInsight.base.xml",
+          classForClasspath = FirCodeInsightForClassPath::class.java,
+          useFakePluginId = true,
         ),
         *kotlinCodeActionsPlugins.toTypedArray(),
         *kotlinUsagesIjPlugins.toTypedArray(),

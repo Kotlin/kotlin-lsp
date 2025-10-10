@@ -8,8 +8,8 @@ import org.jetbrains.kotlin.idea.searching.kmp.KotlinK2ExpectActualSupport
 
 internal val kotlinUsagesIjPlugins: List<PluginMainDescriptor> by lazy {
     listOf(
-        ijPluginByXml("META-INF/searching-base.xml", KotlinPluginCommonClassForClassPath::class.java, useFakePluginId = true),
-        ijPluginByXml("META-INF/language-server/features/kotlin/usages.xml"),
-        ijPluginByXml("kotlin.searching.k2.xml", KotlinK2ExpectActualSupport::class.java),
+      ijPluginByXml("META-INF/searching-base.xml", KotlinPluginCommonClassForClassPath::class.java, useFakePluginId = true),
+      ijPluginByXml("META-INF/language-server/features/kotlin/usages.xml"),
+      ijPluginByXml("intellij.kotlin.searching.xml", KotlinK2ExpectActualSupport::class.java),
     )
 }

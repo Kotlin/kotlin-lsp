@@ -53,7 +53,7 @@ jvm_library(
     "@community//platform/platform-impl:ide-impl",
     "@community//platform/usageView",
     "@community//platform/ide-core",
-    "@community//plugins/kotlin/code-insight/impl-base",
+    "@community//plugins/kotlin/code-insight/impl-base:kotlin-codeInsight-shared",
     "@community//libraries/kotlinx/collections-immutable:libraries-kotlinx-collections-immutable",
   ]
 )

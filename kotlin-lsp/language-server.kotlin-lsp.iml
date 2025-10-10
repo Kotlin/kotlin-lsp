@@ -51,16 +51,16 @@
     <orderEntry type="library" name="kotlinc.analysis-api-k2" level="project" />
     <orderEntry type="module" module-name="intellij.java.impl" />
     <orderEntry type="module" module-name="intellij.java" />
-    <orderEntry type="module" module-name="kotlin.base.plugin" />
+    <orderEntry type="module" module-name="intellij.kotlin.base.plugin" />
     <orderEntry type="module" module-name="language-server.api.features" />
     <orderEntry type="module" module-name="intellij.platform.editor.ex" />
     <orderEntry type="module" module-name="kotlin.fir" />
-    <orderEntry type="module" module-name="kotlin.base.project-structure" />
+    <orderEntry type="module" module-name="intellij.kotlin.base.projectStructure" />
     <orderEntry type="module" module-name="language-server.api.features.impl.common" />
     <orderEntry type="module" module-name="language-server.api.features.impl.kotlin" />
     <orderEntry type="module" module-name="language-server.analyzer" />
-    <orderEntry type="module" module-name="kotlin.base.code-insight" />
-    <orderEntry type="module" module-name="kotlin.searching.base" />
+    <orderEntry type="module" module-name="intellij.kotlin.base.codeInsight" />
+    <orderEntry type="module" module-name="intellij.kotlin.searching.base" />
     <orderEntry type="module" module-name="language-server.project-import" />
     <orderEntry type="module" module-name="intellij.platform.workspace.jps" />
     <orderEntry type="library" name="clikt" level="project" />
@@ -76,6 +76,6 @@
     <orderEntry type="module" module-name="language-server.api.features.impl.java-base" />
     <orderEntry type="module" module-name="intellij.libraries.ktor.io" />
     <orderEntry type="library" name="kotlinc.analysis-api-platform-interface" level="project" />
-    <orderEntry type="module" module-name="kotlin.base.fir.project-structure" />
+    <orderEntry type="module" module-name="intellij.kotlin.projectStructure" />
   </component>
 </module>
