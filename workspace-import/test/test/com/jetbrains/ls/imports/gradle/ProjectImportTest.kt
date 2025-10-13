@@ -92,7 +92,7 @@ class ProjectImportTest {
         runBlocking(Dispatchers.Default) {
             // to be able to access services registered in analyzer.xml during import
             createServerStarterAnalyzerImpl(emptyList(), isUnitTestMode = true).start {
-                storageRef.set(importer.tryImportWorkspace(projectDir, IdeVirtualFileUrlManagerImpl(true), {}))
+                storageRef.set(importer.importWorkspace(projectDir, IdeVirtualFileUrlManagerImpl(true), {}))
             }
         }
 

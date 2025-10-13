@@ -45,6 +45,8 @@ jvm_library(
     "@lib//:kotlinc-kotlin-jps-common",
     "@lib//:kotlinc-kotlin-compiler-common",
     "@community//platform/external-system-impl:externalSystem-impl",
+    "@community//platform/core-api:core",
+    "@community//plugins/kotlin/base/plugin",
   ]
 )
 ### auto-generated section `build language-server.project-import` end

@@ -19,7 +19,8 @@ object JsonWorkspaceImporter : WorkspaceImporter {
         projectDirectory: Path,
         virtualFileUrlManager: VirtualFileUrlManager,
         onUnresolvedDependency: (String) -> Unit
-    ): MutableEntityStorage {
+    ): MutableEntityStorage? {
+        if (!isApplicableDirectory(projectDirectory)) return null
         try {
             val content = (projectDirectory / "workspace.json").toFile().readText()
             val workspaceData = Json.decodeFromString<WorkspaceData>(content)
@@ -46,12 +47,10 @@ object JsonWorkspaceImporter : WorkspaceImporter {
                 "Error parsing workspace.json",
                 "Error parsing workspace.json:\n ${e.message ?: e.stackTraceToString()}"
             )
-        } catch (e: Exception) {
-            throw e
         }
     }
 
-    override fun isApplicableDirectory(projectDirectory: Path): Boolean =
+    private fun isApplicableDirectory(projectDirectory: Path): Boolean =
         (projectDirectory / "workspace.json").exists()
 
 }

@@ -14,8 +14,6 @@ import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.utils.toIntellijUri
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.ProjectConnection
 import org.gradle.tooling.model.DomainObjectSet
@@ -53,162 +51,160 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         projectDirectory: Path,
         virtualFileUrlManager: VirtualFileUrlManager,
         onUnresolvedDependency: (String) -> Unit,
-    ): MutableEntityStorage {
+    ): MutableEntityStorage? {
+        if (!isApplicableDirectory(projectDirectory)) return null
         val storage = try {
-            withContext(Dispatchers.IO) {
-                val connector = GradleConnector.newConnector().forProjectDirectory(projectDirectory.toFile())
+            val connector = GradleConnector.newConnector().forProjectDirectory(projectDirectory.toFile())
 
-                connector.connect().use { connection ->
-                    val gradleJdk = getGradleJdk(projectDirectory, connection)
+            connector.connect().use { connection ->
+                val gradleJdk = getGradleJdk(projectDirectory, connection)
 
-                    val ideaProject = connection.model(IdeaProject::class.java)
-                        .withSystemProperties(IMPORTER_PROPERTIES)
-                        .setJavaHome(gradleJdk)
-                        .get()
-                    val storage = MutableEntityStorage.create()
-                    val entitySource = WorkspaceEntitySource(projectDirectory.toIntellijUri(virtualFileUrlManager))
-                    val libs = mutableSetOf<String>()
+                val ideaProject = connection.model(IdeaProject::class.java)
+                    .withSystemProperties(IMPORTER_PROPERTIES)
+                    .setJavaHome(gradleJdk)
+                    .get()
+                val storage = MutableEntityStorage.create()
+                val entitySource = WorkspaceEntitySource(projectDirectory.toIntellijUri(virtualFileUrlManager))
+                val libs = mutableSetOf<String>()
 
-                    ideaProject.modules.forEach { module ->
-                        for (isMain in arrayOf(true, false)) {
-                            val entity = ModuleEntity(
-                                name = module.moduleName(isMain),
-                                dependencies = buildList {
-                                    module.dependencies.mapNotNullTo(this) { dependency ->
-                                        if (isMain && dependency.scope.scope == "TEST") return@mapNotNullTo null
-                                        when (dependency) {
-                                            is IdeaSingleEntryLibraryDependency -> {
-                                                val ver = dependency.gradleModuleVersion ?: return@mapNotNullTo null
-                                                val name = if (ver.version.isNotEmpty())
-                                                    "Gradle: ${ver.group}:${ver.name}:${ver.version}"
-                                                else
-                                                    "Gradle: ${ver.group}:${ver.name}"
-                                                if (libs.add(name)) {
-                                                    val libEntity = LibraryEntity(
-                                                        name = name,
-                                                        tableId = ProjectLibraryTableId,
-                                                        roots = listOfNotNull(
-                                                            LibraryRoot(
-                                                                dependency.file.toPath().toIntellijUri(virtualFileUrlManager),
-                                                                LibraryRootTypeId.COMPILED
-                                                            ),
-                                                            dependency.source?.let {
-                                                                LibraryRoot(
-                                                                    it.toPath().toIntellijUri(virtualFileUrlManager),
-                                                                    LibraryRootTypeId.SOURCES
-                                                                )
-                                                            }
+                ideaProject.modules.forEach { module ->
+                    for (isMain in arrayOf(true, false)) {
+                        val entity = ModuleEntity(
+                            name = module.moduleName(isMain),
+                            dependencies = buildList {
+                                module.dependencies.mapNotNullTo(this) { dependency ->
+                                    if (isMain && dependency.scope.scope == "TEST") return@mapNotNullTo null
+                                    when (dependency) {
+                                        is IdeaSingleEntryLibraryDependency -> {
+                                            val ver = dependency.gradleModuleVersion ?: return@mapNotNullTo null
+                                            val name = if (ver.version.isNotEmpty())
+                                                "Gradle: ${ver.group}:${ver.name}:${ver.version}"
+                                            else
+                                                "Gradle: ${ver.group}:${ver.name}"
+                                            if (libs.add(name)) {
+                                                val libEntity = LibraryEntity(
+                                                    name = name,
+                                                    tableId = ProjectLibraryTableId,
+                                                    roots = listOfNotNull(
+                                                        LibraryRoot(
+                                                            dependency.file.toPath().toIntellijUri(virtualFileUrlManager),
+                                                            LibraryRootTypeId.COMPILED
                                                         ),
-                                                        entitySource = entitySource
-                                                    ) {
-                                                        typeId = LibraryTypeId("java-imported")
-                                                    }
-                                                    storage addEntity libEntity
-                                                    storage addEntity LibraryPropertiesEntity(entitySource) {
-                                                        propertiesXmlTag =
-                                                            "<properties groupId=\"${ver.group}\" artifactId=\"${ver.name}\" version=\"${ver.version}\" baseVersion=\"${ver.version}\" />"
-                                                        library = libEntity
-                                                    }
-                                                }
-                                                LibraryDependency(
-                                                    library = LibraryId(name, ProjectLibraryTableId),
-                                                    exported = dependency.exported,
-                                                    scope = DependencyScope.valueOf(dependency.scope.scope)
-                                                )
-                                            }
-
-                                            is IdeaModuleDependency -> ModuleDependency(
-                                                module = ModuleId(dependency.targetModuleName + ".main"),
-                                                exported = dependency.exported,
-                                                scope = DependencyScope.valueOf(dependency.scope.scope),
-                                                productionOnTest = false
-                                            )
-
-                                            else -> null
-                                        }
-                                    }
-                                    add(ModuleSourceDependency)
-                                    module.jdkName.let { jdkName ->
-                                        if (jdkName != null) add(SdkDependency(SdkId(jdkName, "JavaSDK")))
-                                        else add(InheritedSdkDependency)
-                                    }
-                                    if (!isMain) {
-                                        add(
-                                            ModuleDependency(
-                                                module = ModuleId(module.moduleName(isMain = true)),
-                                                exported = false,
-                                                scope = DependencyScope.COMPILE,
-                                                productionOnTest = false
-                                            )
-                                        )
-                                    }
-                                },
-                                entitySource = entitySource
-                            ) {
-                                createFacet(module, isMain = isMain)?.let { facet -> kotlinSettings += facet }
-                                this.type = ModuleTypeId("JAVA_MODULE")
-                                this.contentRoots = module.contentRoots.mapNotNull { root ->
-                                    val rootPath = root.rootDirectory.toPath()
-                                    if (!rootPath.exists()) return@mapNotNull null
-                                    ContentRootEntity(
-                                        rootPath.toIntellijUri(virtualFileUrlManager),
-                                        listOf(),
-                                        entitySource
-                                    ) {
-                                        fun sourceRoots(
-                                            rootType: String,
-                                            directories: DomainObjectSet<out IdeaSourceDirectory>
-                                        ): List<ModifiableSourceRootEntity> =
-                                            directories.mapNotNull { sourceDirectory ->
-                                                val sourceRoot = sourceDirectory.directory.toPath()
-                                                if (!sourceRoot.exists()) return@mapNotNull null
-                                                SourceRootEntity(
-                                                    url = sourceRoot.toIntellijUri(virtualFileUrlManager),
-                                                    rootTypeId = SourceRootTypeId(rootType),
+                                                        dependency.source?.let {
+                                                            LibraryRoot(
+                                                                it.toPath().toIntellijUri(virtualFileUrlManager),
+                                                                LibraryRootTypeId.SOURCES
+                                                            )
+                                                        }
+                                                    ),
                                                     entitySource = entitySource
                                                 ) {
-                                                    this.contentRoot = this@ContentRootEntity
+                                                    typeId = LibraryTypeId("java-imported")
+                                                }
+                                                storage addEntity libEntity
+                                                storage addEntity LibraryPropertiesEntity(entitySource) {
+                                                    propertiesXmlTag =
+                                                        "<properties groupId=\"${ver.group}\" artifactId=\"${ver.name}\" version=\"${ver.version}\" baseVersion=\"${ver.version}\" />"
+                                                    library = libEntity
                                                 }
                                             }
-
-                                        this.sourceRoots = if (isMain)
-                                            sourceRoots("java-source", root.sourceDirectories) +
-                                                    sourceRoots("java-resource", root.resourceDirectories)
-                                        else
-                                            sourceRoots("java-test", root.testDirectories) +
-                                                    sourceRoots("java-test-resource", root.testResourceDirectories)
-
-                                        this.excludedUrls = root.excludeDirectories.map {
-                                            ExcludeUrlEntity(
-                                                url = it.toPath().toIntellijUri(virtualFileUrlManager),
-                                                entitySource = entitySource
+                                            LibraryDependency(
+                                                library = LibraryId(name, ProjectLibraryTableId),
+                                                exported = dependency.exported,
+                                                scope = DependencyScope.valueOf(dependency.scope.scope)
                                             )
                                         }
 
-                                        this.module = this@ModuleEntity
+                                        is IdeaModuleDependency -> ModuleDependency(
+                                            module = ModuleId(dependency.targetModuleName + ".main"),
+                                            exported = dependency.exported,
+                                            scope = DependencyScope.valueOf(dependency.scope.scope),
+                                            productionOnTest = false
+                                        )
+
+                                        else -> null
                                     }
                                 }
+                                add(ModuleSourceDependency)
+                                module.jdkName.let { jdkName ->
+                                    if (jdkName != null) add(SdkDependency(SdkId(jdkName, "JavaSDK")))
+                                    else add(InheritedSdkDependency)
+                                }
+                                if (!isMain) {
+                                    add(
+                                        ModuleDependency(
+                                            module = ModuleId(module.moduleName(isMain = true)),
+                                            exported = false,
+                                            scope = DependencyScope.COMPILE,
+                                            productionOnTest = false
+                                        )
+                                    )
+                                }
+                            },
+                            entitySource = entitySource
+                        ) {
+                            createFacet(module, isMain = isMain)?.let { facet -> kotlinSettings += facet }
+                            this.type = ModuleTypeId("JAVA_MODULE")
+                            this.contentRoots = module.contentRoots.mapNotNull { root ->
+                                val rootPath = root.rootDirectory.toPath()
+                                if (!rootPath.exists()) return@mapNotNull null
+                                ContentRootEntity(
+                                    rootPath.toIntellijUri(virtualFileUrlManager),
+                                    listOf(),
+                                    entitySource
+                                ) {
+                                    fun sourceRoots(
+                                        rootType: String,
+                                        directories: DomainObjectSet<out IdeaSourceDirectory>
+                                    ): List<ModifiableSourceRootEntity> =
+                                        directories.mapNotNull { sourceDirectory ->
+                                            val sourceRoot = sourceDirectory.directory.toPath()
+                                            if (!sourceRoot.exists()) return@mapNotNull null
+                                            SourceRootEntity(
+                                                url = sourceRoot.toIntellijUri(virtualFileUrlManager),
+                                                rootTypeId = SourceRootTypeId(rootType),
+                                                entitySource = entitySource
+                                            ) {
+                                                this.contentRoot = this@ContentRootEntity
+                                            }
+                                        }
+
+                                    this.sourceRoots = if (isMain)
+                                        sourceRoots("java-source", root.sourceDirectories) +
+                                                sourceRoots("java-resource", root.resourceDirectories)
+                                    else
+                                        sourceRoots("java-test", root.testDirectories) +
+                                                sourceRoots("java-test-resource", root.testResourceDirectories)
+
+                                    this.excludedUrls = root.excludeDirectories.map {
+                                        ExcludeUrlEntity(
+                                            url = it.toPath().toIntellijUri(virtualFileUrlManager),
+                                            entitySource = entitySource
+                                        )
+                                    }
+
+                                    this.module = this@ModuleEntity
+                                }
                             }
-
-                            storage addEntity entity
                         }
-                    }
-                    val out = ByteArrayOutputStream()
-                    connection.newBuild().forTasks("dependencies")
-                        .setJavaHome(gradleJdk)
-                        .withSystemProperties(IMPORTER_PROPERTIES)
-                        .setStandardOutput(out)
-                        .run()
-                    val output = out.toString()
-                    output.lines()
-                        .filter { it.endsWith(" FAILED") }
-                        .distinct()
-                        .map { it.removeSuffix(" FAILED").substringAfterLast(' ') }
-                        .forEach { onUnresolvedDependency(it) }
-                    storage
-                }
-            }
 
+                        storage addEntity entity
+                    }
+                }
+                val out = ByteArrayOutputStream()
+                connection.newBuild().forTasks("dependencies")
+                    .setJavaHome(gradleJdk)
+                    .withSystemProperties(IMPORTER_PROPERTIES)
+                    .setStandardOutput(out)
+                    .run()
+                val output = out.toString()
+                output.lines()
+                    .filter { it.endsWith(" FAILED") }
+                    .distinct()
+                    .map { it.removeSuffix(" FAILED").substringAfterLast(' ') }
+                    .forEach { onUnresolvedDependency(it) }
+                storage
+            }
         } catch (e: Throwable) {
             handleError(e)
         }
@@ -246,7 +242,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         return if (isMain) "${this.name}.main" else "${this.name}.test"
     }
 
-    override fun isApplicableDirectory(projectDirectory: Path): Boolean {
+    private fun isApplicableDirectory(projectDirectory: Path): Boolean {
         return listOf(
             "build.gradle",
             "build.gradle.kts",

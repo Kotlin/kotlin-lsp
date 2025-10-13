@@ -132,10 +132,12 @@ fun addSdk(
 
     storage.entities<ModuleEntity>().forEach { module ->
         storage.modifyModuleEntity(module) {
-            dependencies = (
-                    dependencies.filterNot { it is SdkDependency || it is InheritedSdkDependency }
-                            + SdkDependency(jdk.symbolicId)
-                    ).toMutableList()
+            dependencies = dependencies.map {
+                when (it) {
+                    is InheritedSdkDependency -> SdkDependency(jdk.symbolicId)
+                    else -> it
+                }
+            }.toMutableList()
         }
     }
 }

@@ -2,22 +2,28 @@
 package com.jetbrains.ls.kotlinLsp.requests.core
 
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.projectRoots.JavaSdk
+import com.intellij.platform.workspace.jps.entities.SdkEntity
+import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
 import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.core.util.jarLibraries
+import com.jetbrains.ls.api.core.util.addSdk
 import com.jetbrains.ls.api.core.util.toLspUri
 import com.jetbrains.ls.api.core.util.updateWorkspaceModel
+import com.jetbrains.ls.api.core.workspaceStructure
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.allCommandDescriptors
 import com.jetbrains.ls.api.features.codeActions.LSCodeActions
 import com.jetbrains.ls.api.features.completion.LSCompletionProvider
 import com.jetbrains.ls.api.features.entries
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokens
+import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
 import com.jetbrains.ls.imports.jps.JpsWorkspaceImporter
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
+import com.jetbrains.ls.imports.light.LightWorkspaceImporter
 import com.jetbrains.ls.kotlinLsp.connection.Client
-import com.jetbrains.ls.kotlinLsp.util.importProject
+import com.jetbrains.ls.kotlinLsp.util.jdkRoots
 import com.jetbrains.ls.kotlinLsp.util.registerStdlibAndJdk
 import com.jetbrains.ls.kotlinLsp.util.sendSystemInfoToClient
 import com.jetbrains.ls.snapshot.api.impl.core.InitializeParamsEntity
@@ -25,6 +31,8 @@ import com.jetbrains.lsp.implementation.*
 import com.jetbrains.lsp.protocol.*
 import fleet.kernel.change
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonPrimitive
 import java.nio.file.Path
 import kotlin.io.path.*
@@ -38,7 +46,14 @@ internal fun LspHandlersBuilder.initializeRequest() {
         lspClient.sendRunConfigurationInfoToClient()
         lspClient.sendSystemInfoToClient()
 
-        LOG.info("Got `initialize` request from ${initParams.clientInfo ?: "unknown"}\nparams:\n${LSP.json.encodeToString(InitializeParams.serializer(), initParams)}")
+        LOG.info(
+            "Got `initialize` request from ${initParams.clientInfo ?: "unknown"}\nparams:\n${
+                LSP.json.encodeToString(
+                    InitializeParams.serializer(),
+                    initParams
+                )
+            }"
+        )
 
         val rootUri = initParams.rootUri
         val rootPath = initParams.rootPath
@@ -104,7 +119,10 @@ internal fun LspHandlersBuilder.initializeRequest() {
                 referencesProvider = OrBoolean(true),
                 hoverProvider = OrBoolean(true),
                 documentSymbolProvider = OrBoolean(true),
-                workspaceSymbolProvider = OrBoolean.of(WorkspaceSymbolOptions.serializer(), WorkspaceSymbolOptions(resolveProvider = false, workDoneProgress = true)),
+                workspaceSymbolProvider = OrBoolean.of(
+                    WorkspaceSymbolOptions.serializer(),
+                    WorkspaceSymbolOptions(resolveProvider = false, workDoneProgress = true)
+                ),
                 workspace = ServerWorkspaceCapabilities(
                     workspaceFolders = WorkspaceFoldersServerCapabilities(
                         supported = true,
@@ -118,7 +136,10 @@ internal fun LspHandlersBuilder.initializeRequest() {
                     workDoneProgress = false
                 ),
                 documentFormattingProvider = OrBoolean(true),
-                inlayHintProvider = OrBoolean.of(InlayHintRegistrationOptions.serializer(), InlayHintRegistrationOptions(resolveProvider = true)),
+                inlayHintProvider = OrBoolean.of(
+                    InlayHintRegistrationOptions.serializer(),
+                    InlayHintRegistrationOptions(resolveProvider = true)
+                ),
             ),
             serverInfo = InitializeResult.ServerInfo(
                 name = "Kotlin LSP by JetBrains",
@@ -155,10 +176,9 @@ private suspend fun indexFolders(
         for (folder in folders) {
             initFolder(folder, params)
         }
-    }
-    else {
+    } else {
         lspClient.reportProgressMessage(params, "Using light mode")
-        initLightEditMode(params, null)
+        singleFileMode(params)
     }
 
     lspClient.reportProgress(
@@ -169,83 +189,71 @@ private suspend fun indexFolders(
     )
 }
 
+private val importers = listOf(JsonWorkspaceImporter, GradleWorkspaceImporter, JpsWorkspaceImporter, LightWorkspaceImporter)
+
 context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
 private suspend fun initFolder(
     folder: WorkspaceFolder,
     params: InitializeParams,
 ) {
     val folderPath = folder.path()
-    var exceptionDuringImport = false
-    try {
-        when {
-            JsonWorkspaceImporter.isApplicableDirectory(folderPath) -> {
-                lspClient.reportProgressMessage(params, "Importing ${folderPath / "workspace.json"}")
-                importProject(folderPath, JsonWorkspaceImporter, params)
-                return
-            }
 
-            GradleWorkspaceImporter.isApplicableDirectory(folderPath) -> {
-                lspClient.reportProgressMessage(params, "Importing Gradle project: $folderPath")
-                importProject(folderPath, GradleWorkspaceImporter, params)
-                return
-            }
+    workspaceStructure.updateWorkspaceModelDirectly { virtualFileUrlManager, storage ->
+        for (importer in importers) {
+            val unresolved = mutableSetOf<String>()
+            lspClient.reportProgressMessage(params, "Trying to import using ${importer.javaClass.simpleName}")
+            val imported = try {
+                withContext(Dispatchers.IO) {
+                    importer.importWorkspace(folderPath, virtualFileUrlManager, unresolved::add)
+                } ?: continue
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    val message = (e as? WorkspaceImportException)?.message ?: "Error importing project"
+                    val logMessage = (e as? WorkspaceImportException)?.logMessage ?: "Error importing project:\n${e.stackTraceToString()}"
 
-            // JpsWorkspaceImporter must be triggered after all other importers as it accepts anything containing .idea directory
-            JpsWorkspaceImporter.isApplicableDirectory(folderPath) -> {
-                lspClient.reportProgressMessage(params, "Importing JPS project: $folderPath")
-                importProject(folderPath, JpsWorkspaceImporter, params)
-                return
+                    lspClient.notify(
+                        ShowMessageNotification,
+                        ShowMessageParams(MessageType.Error, "$message Check the log for details."),
+                    )
+
+                    lspClient.notify(
+                        LogMessageNotification,
+                        LogMessageParams(MessageType.Error, logMessage)
+                    )
+                    LOG.error(e)
+                    continue
+                }
+            if (unresolved.isNotEmpty()) {
+                lspClient.notify(
+                    ShowMessageNotification,
+                    ShowMessageParams(MessageType.Warning, unresolved.joinToString(", ", "Couldn't resolve some dependencies: ")),
+                )
             }
+            storage.applyChangesFrom(imported)
+
+            break
         }
-    } catch (e: CancellationException) {
-        throw e
-    } catch (e: Exception) {
-        exceptionDuringImport = true
-        val message = (e as? WorkspaceImportException)?.message ?: "Error importing project"
-        val logMessage = (e as? WorkspaceImportException)?.logMessage ?: "Error importing project:\n${e.stackTraceToString()}"
-
-        lspClient.notify(
-            ShowMessageNotification,
-            ShowMessageParams(MessageType.Error, "$message Check the log for details."),
-        )
-
-        lspClient.notify(
-            LogMessageNotification,
-            LogMessageParams(MessageType.Error, logMessage)
-        )
-        LOG.error(e)
+        val noSdk = storage.entities(SdkEntity::class.java).firstOrNull() == null
+        if (noSdk) {
+            addSdk(
+                name = "Java SDK",
+                type = JavaSdk.getInstance(),
+                roots = jdkRoots(),
+                urlManager = virtualFileUrlManager,
+                source = WorkspaceEntitySource(folderPath.toVirtualFileUrl(virtualFileUrlManager)),
+                storage = storage
+            )
+        }
+        lspClient.reportProgressMessage(params, "Indexing...")
     }
-
-    if (exceptionDuringImport) {
-        LOG.warn("Failed to import project $folderPath, switching to light edit")
-    } else {
-        LOG.info("No build system found for $folderPath, switching to light edit")
-    }
-
-    lspClient.reportProgressMessage(params, "No build system found for $folderPath, using light mode")
-    initLightEditMode(params, folder)
+    lspClient.reportProgressMessage(params, "Project is indexed")
 }
 
 context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
-private suspend fun initLightEditMode(
-    params: InitializeParams,
-    folder: WorkspaceFolder?,
-) {
+private suspend fun singleFileMode(params: InitializeParams) {
     updateWorkspaceModel {
         registerStdlibAndJdk()
-        if (folder != null) {
-            addFolder(folder)
-            if (folder.uri.scheme == URI.Schemas.FILE) {
-                val path = folder.path()
-                val librariesDir = path / "libraries"
-                if (librariesDir.isDirectory()) {
-                    lspClient.reportProgressMessage(params, "Found `libraries` directory: $librariesDir, adding")
-                    jarLibraries(librariesDir).forEach { lib ->
-                        addLibrary(lib)
-                    }
-                }
-            }
-        }
         lspClient.reportProgressMessage(params, "Indexing")
     }
     lspClient.reportProgressMessage(params, "Project is indexed")
