@@ -1,6 +1,8 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.kotlinLsp.util
 
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.projectRoots.DefaultJdkConfigurator
 import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
 import com.intellij.openapi.util.io.toNioPathOrNull
@@ -26,7 +28,7 @@ fun WorkspaceModelBuilder.addJdkFromJavaHome() {
     addSdk(LSSdk(
         name = "Java SDK",
         type = JavaSdk.getInstance(),
-        roots = javaHome()
+        roots = jdkRoots()
     ))
 }
 
@@ -73,12 +75,16 @@ fun getKotlinStdlibSourcesPath(): Path? {
 
 fun WorkspaceModelBuilder.registerStdlibAndJdk() {
     addKotlinStdlib()
-    addSdk( LSSdk(roots = javaHome(), name = "Java SDK", type = JavaSdk.getInstance()))
+    addSdk( LSSdk(roots = jdkRoots(), name = "Java SDK", type = JavaSdk.getInstance()))
 }
 
-fun javaHome(): List<URI> {
-    val javaHome = System.getProperty("java.home")
-    val path = Paths.get(javaHome)
+fun javaHome(): String {
+    val jdkConfigurator = ApplicationManager.getApplication().getService(DefaultJdkConfigurator::class.java)
+    return jdkConfigurator.guessJavaHome() ?: System.getProperty("java.home")
+}
+
+fun jdkRoots(): List<URI> {
+    val path = Paths.get(javaHome())
     require(path.isDirectory()) { "Expected a directory, got $path" }
     return JavaSdkImpl.findClasses(path, false).map { (it.replace("!/", "!/modules/").intellijUriToLspUri()) }
 }
@@ -103,7 +109,7 @@ suspend fun importProject(
             addSdk(
                 name = "Java SDK",
                 type = JavaSdk.getInstance(),
-                roots = javaHome(),
+                roots = jdkRoots(),
                 urlManager = virtualFileUrlManager,
                 source = WorkspaceEntitySource(folderPath.toVirtualFileUrl(virtualFileUrlManager)),
                 storage = imported
