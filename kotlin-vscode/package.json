@@ -63,6 +63,11 @@
           "type": "array",
           "default": [],
           "description": "Additional JVM arguments to pass to the LSP server"
+        },
+        "kotlinLSP.jdkToUseForImportedWorkspaces": {
+          "type": "string",
+          "default": null,
+          "description": "Path to the JDK to be used wth imported workspaces."
         }
       }
     },

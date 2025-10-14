@@ -8,7 +8,11 @@ import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
 import com.intellij.openapi.util.io.toNioPathOrNull
 import com.intellij.util.PathUtil
 import com.jetbrains.ls.api.core.util.*
+import com.jetbrains.ls.snapshot.api.impl.core.InitializeParamsEntity
 import com.jetbrains.lsp.protocol.URI
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import org.jetbrains.kotlin.idea.base.plugin.artifacts.KotlinArtifacts
 import org.jetbrains.kotlin.idea.compiler.configuration.isRunningFromSources
 import java.nio.file.Path
@@ -69,7 +73,24 @@ fun WorkspaceModelBuilder.registerStdlibAndJdk() {
     addSdk( LSSdk(roots = jdkRoots(), name = "Java SDK", type = JavaSdk.getInstance()))
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 fun javaHome(): String {
+    val initializeParams = InitializeParamsEntity.single().initializeParams.takeIf { it.isCompleted }?.getCompleted()
+    val defaultJdkPath = initializeParams?.initializationOptions
+        ?.let { it as? JsonObject }
+        ?.get("defaultJdk")
+        ?.let { it as? JsonPrimitive }
+        ?.takeIf { it.isString }
+        ?.content
+        ?.takeIf { it.isNotBlank()}
+
+    if (defaultJdkPath != null) {
+        if (!Path.of(defaultJdkPath).isDirectory()) {
+            error("Configured Java home does not exist or is not a directory: $defaultJdkPath")
+        }
+        return defaultJdkPath
+    }
+
     val jdkConfigurator = ApplicationManager.getApplication().getService(DefaultJdkConfigurator::class.java)
     return jdkConfigurator.guessJavaHome() ?: System.getProperty("java.home")
 }
