@@ -11,6 +11,7 @@ import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.platform.eel.provider.getEelDescriptor
 import com.intellij.platform.workspace.jps.entities.*
 import com.intellij.platform.workspace.jps.entities.LibraryTableId.ProjectLibraryTableId
+import com.intellij.platform.workspace.storage.InternalEnvironmentName
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.SdkBridgeImpl
@@ -201,7 +202,7 @@ object JpsWorkspaceImporter : WorkspaceImporter {
             detectJavaSdks(projectDirectory, sdks, virtualFileUrlManager, entitySource).forEach { builder ->
                 val entity = storage addEntity builder
                 // for KaLibrarySdkModuleImpl
-                storage.mutableSdkMap.addMapping(entity, SdkBridgeImpl(builder))
+                storage.mutableSdkMap.addMapping(entity, SdkBridgeImpl(builder, InternalEnvironmentName.Local))
             }
         }
         model.global.libraryCollection.libraries.forEach { library ->
@@ -231,7 +232,7 @@ object JpsWorkspaceImporter : WorkspaceImporter {
                     )
                     val entity = storage addEntity builder
                     // for KaLibrarySdkModuleImpl
-                    storage.mutableSdkMap.addMapping(entity, SdkBridgeImpl(builder))
+                    storage.mutableSdkMap.addMapping(entity, SdkBridgeImpl(builder, InternalEnvironmentName.Local))
                 }
 
                 is JpsLibraryType -> {

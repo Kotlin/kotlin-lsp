@@ -12,6 +12,7 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.platform.workspace.jps.entities.*
 import com.intellij.platform.workspace.storage.EntitySource
+import com.intellij.platform.workspace.storage.InternalEnvironmentName
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.entities
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
@@ -127,7 +128,7 @@ fun addSdk(
     )
     val jdk = storage addEntity sdkEntity
 
-    storage.mutableSdkMap.addMapping(jdk, SdkBridgeImpl(sdkEntity))
+    storage.mutableSdkMap.addMapping(jdk, SdkBridgeImpl(sdkEntity, InternalEnvironmentName.Local))
 
     storage.entities<ModuleEntity>().forEach { module ->
         storage.modifyModuleEntity(module) {
