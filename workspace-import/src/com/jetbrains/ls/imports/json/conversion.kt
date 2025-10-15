@@ -41,12 +41,15 @@ import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
 import com.intellij.openapi.util.io.FileUtilRt
+import com.intellij.platform.workspace.jps.entities.ModifiableFacetEntity
+import com.intellij.platform.workspace.jps.entities.ModifiableModuleEntity
 import com.intellij.platform.workspace.jps.entities.ModuleDependencyItem
 import com.intellij.util.descriptors.ConfigFileItem
 import org.jetbrains.kotlin.config.KotlinModuleKind
 import org.jetbrains.kotlin.idea.workspaceModel.CompilerSettingsData
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
 import com.jetbrains.ls.imports.utils.toIntellijUri
+import org.jetbrains.kotlin.idea.workspaceModel.ModifiableKotlinSettingsEntity
 
 
 fun workspaceData(storage: EntityStorage, workspacePath: Path): WorkspaceData =
@@ -270,7 +273,7 @@ fun workspaceModel(
         libraryEntities[libraryData.name] = libraryEntity
     }
 
-    fun toEntityBuilder(moduleData: ModuleData): ModuleEntity.Builder = ModuleEntity(
+    fun toEntityBuilder(moduleData: ModuleData): ModifiableModuleEntity = ModuleEntity(
         name = moduleData.name,
         dependencies = emptyList(),
         entitySource = entitySource
@@ -334,8 +337,8 @@ fun workspaceModel(
 private fun toEntity(
     kotlinSettingsData: KotlinSettingsData,
     entitySource: EntitySource,
-    module: ModuleEntity.Builder
-): KotlinSettingsEntity.Builder = KotlinSettingsEntity(
+    module: ModifiableModuleEntity
+): ModifiableKotlinSettingsEntity = KotlinSettingsEntity(
     name = kotlinSettingsData.name,
     moduleId = ModuleId(kotlinSettingsData.module),
     sourceRoots = kotlinSettingsData.sourceRoots,
@@ -372,8 +375,8 @@ private fun toEntity(
 
 private fun addFacetRecursive(
     data: FacetData,
-    moduleEntity: ModuleEntity.Builder,
-): FacetEntity.Builder =
+    moduleEntity: ModifiableModuleEntity,
+): ModifiableFacetEntity =
     FacetEntity(
         name = data.name,
         typeId = FacetEntityTypeId(data.type),

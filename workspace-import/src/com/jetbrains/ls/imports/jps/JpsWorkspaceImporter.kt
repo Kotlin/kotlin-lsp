@@ -260,7 +260,7 @@ private fun detectJavaSdks(
     sdks: Collection<String>,
     virtualFileUrlManager: VirtualFileUrlManager,
     entitySource: WorkspaceEntitySource,
-): List<SdkEntity.Builder> {
+): List<ModifiableSdkEntity> {
     val detectedSdks = JavaHomeFinder.findJdks(projectDirectory.getEelDescriptor(), false)
     if (detectedSdks.isEmpty()) return emptyList()
     return sdks.map { sdkName ->
