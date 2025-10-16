@@ -151,7 +151,7 @@ suspend fun LSWorkspaceStructure.updateWorkspaceModel(updater: WorkspaceModelBui
         val mainModule = storage.entities<ModuleEntity>().singleOrNull() ?: run {
             storage addEntity ModuleEntity(
                 name = "main",
-                dependencies = listOf<ModuleDependencyItem>(ModuleSourceDependency),
+                dependencies = listOf(ModuleSourceDependency, InheritedSdkDependency),
                 entitySource = source,
             )
         }

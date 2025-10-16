@@ -19,14 +19,6 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.isDirectory
 
-fun WorkspaceModelBuilder.addJdkFromJavaHome() {
-    addSdk(LSSdk(
-        name = "Java SDK",
-        type = JavaSdk.getInstance(),
-        roots = jdkRoots()
-    ))
-}
-
 fun WorkspaceModelBuilder.addKotlinStdlib() {
     addLibrary(
         LSLibrary(
