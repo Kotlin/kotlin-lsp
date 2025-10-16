@@ -23,7 +23,6 @@ import com.jetbrains.ls.kotlinLsp.requests.core.initializeRequest
 import com.jetbrains.ls.kotlinLsp.requests.core.setTraceNotification
 import com.jetbrains.ls.kotlinLsp.requests.core.shutdownRequest
 import com.jetbrains.ls.kotlinLsp.requests.features
-import com.jetbrains.ls.kotlinLsp.util.addKotlinStdlib
 import com.jetbrains.ls.kotlinLsp.util.configuration.IsolatedDocumentsPlugin
 import com.jetbrains.ls.kotlinLsp.util.logSystemInfo
 import com.jetbrains.ls.snapshot.api.impl.core.createServerStarterAnalyzerImpl

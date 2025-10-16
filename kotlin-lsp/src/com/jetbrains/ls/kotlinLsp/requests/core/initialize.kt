@@ -3,12 +3,14 @@ package com.jetbrains.ls.kotlinLsp.requests.core
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.projectRoots.JavaSdk
-import com.intellij.platform.workspace.jps.entities.SdkEntity
-import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
+import com.intellij.platform.workspace.jps.entities.*
+import com.intellij.platform.workspace.storage.EntitySource
+import com.intellij.platform.workspace.storage.MutableEntityStorage
+import com.intellij.platform.workspace.storage.entities
+import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.core.util.addSdk
+import com.jetbrains.ls.api.core.util.createSdkEntity
 import com.jetbrains.ls.api.core.util.toLspUri
-import com.jetbrains.ls.api.core.util.updateWorkspaceModel
 import com.jetbrains.ls.api.core.workspaceStructure
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.allCommandDescriptors
@@ -16,7 +18,6 @@ import com.jetbrains.ls.api.features.codeActions.LSCodeActions
 import com.jetbrains.ls.api.features.completion.LSCompletionProvider
 import com.jetbrains.ls.api.features.entries
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokens
-import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
 import com.jetbrains.ls.imports.jps.JpsWorkspaceImporter
@@ -24,7 +25,6 @@ import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
 import com.jetbrains.ls.imports.light.LightWorkspaceImporter
 import com.jetbrains.ls.kotlinLsp.connection.Client
 import com.jetbrains.ls.kotlinLsp.util.jdkRoots
-import com.jetbrains.ls.kotlinLsp.util.registerStdlibAndJdk
 import com.jetbrains.ls.kotlinLsp.util.sendSystemInfoToClient
 import com.jetbrains.ls.snapshot.api.impl.core.InitializeParamsEntity
 import com.jetbrains.lsp.implementation.*
@@ -35,7 +35,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonPrimitive
 import java.nio.file.Path
-import kotlin.io.path.*
+import kotlin.io.path.Path
+import kotlin.io.path.name
+import kotlin.io.path.toPath
 
 context(_: LSServer, _: LSConfiguration)
 internal fun LspHandlersBuilder.initializeRequest() {
@@ -171,20 +173,48 @@ private suspend fun indexFolders(
             title = "Initializing project",
         )
     )
-
-    if (folders.isNotEmpty()) {
-        for (folder in folders) {
-            initFolder(folder, params)
+    workspaceStructure.updateWorkspaceModelDirectly { virtualFileUrlManager, storage ->
+        if (folders.isNotEmpty()) {
+            for (folder in folders) {
+                initFolder(folder, params, virtualFileUrlManager, storage)
+            }
+        } else {
+            lspClient.reportProgressMessage(params, "Using light mode")
+            val imported = LightWorkspaceImporter.emptyWorkspace(virtualFileUrlManager)
+            storage.applyChangesFrom(imported)
         }
-    } else {
-        lspClient.reportProgressMessage(params, "Using light mode")
-        singleFileMode(params)
+
+        var defaultJdk = storage.entities(SdkEntity::class.java).firstOrNull { it.entitySource == DefaultJdkEntitySource }
+        storage.entities<ModuleEntity>().forEach { module ->
+            storage.modifyModuleEntity(module) {
+                dependencies = dependencies.map {
+                    when (it) {
+                        is InheritedSdkDependency -> {
+                            defaultJdk = defaultJdk
+                                ?: createSdkEntity(
+                                    name = "Java SDK",
+                                    type = JavaSdk.getInstance(),
+                                    roots = jdkRoots(),
+                                    urlManager = virtualFileUrlManager,
+                                    source = DefaultJdkEntitySource,
+                                    storage
+                                )
+                            SdkDependency(defaultJdk.symbolicId)
+                        }
+
+                        else -> it
+                    }
+                }.toMutableList()
+            }
+        }
+
+        lspClient.reportProgressMessage(params, "Indexing...")
     }
 
     lspClient.reportProgress(
         params,
         WorkDoneProgress.End(
-            message = "Project imported and indexed",
+            message = "Workspace is imported and indexed",
         )
     )
 }
@@ -195,69 +225,49 @@ context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
 private suspend fun initFolder(
     folder: WorkspaceFolder,
     params: InitializeParams,
+    virtualFileUrlManager: VirtualFileUrlManager,
+    storage: MutableEntityStorage,
 ) {
+    lspClient.reportProgressMessage(params, "Importing folder ${folder.uri.asJavaUri().path}")
     val folderPath = folder.path()
+    for (importer in importers) {
+        val unresolved = mutableSetOf<String>()
+        lspClient.reportProgressMessage(params, "Trying to import using ${importer.javaClass.simpleName}")
+        val imported = try {
+            withContext(Dispatchers.IO) {
+                importer.importWorkspace(folderPath, virtualFileUrlManager, unresolved::add)
+            } ?: continue
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            val message = (e as? WorkspaceImportException)?.message ?: "Error importing folder"
+            val logMessage = (e as? WorkspaceImportException)?.logMessage ?: "Error importing folder:\n${e.stackTraceToString()}"
 
-    workspaceStructure.updateWorkspaceModelDirectly { virtualFileUrlManager, storage ->
-        for (importer in importers) {
-            val unresolved = mutableSetOf<String>()
-            lspClient.reportProgressMessage(params, "Trying to import using ${importer.javaClass.simpleName}")
-            val imported = try {
-                withContext(Dispatchers.IO) {
-                    importer.importWorkspace(folderPath, virtualFileUrlManager, unresolved::add)
-                } ?: continue
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    val message = (e as? WorkspaceImportException)?.message ?: "Error importing project"
-                    val logMessage = (e as? WorkspaceImportException)?.logMessage ?: "Error importing project:\n${e.stackTraceToString()}"
+            lspClient.notify(
+                ShowMessageNotification,
+                ShowMessageParams(MessageType.Error, "$message Check the log for details."),
+            )
 
-                    lspClient.notify(
-                        ShowMessageNotification,
-                        ShowMessageParams(MessageType.Error, "$message Check the log for details."),
-                    )
-
-                    lspClient.notify(
-                        LogMessageNotification,
-                        LogMessageParams(MessageType.Error, logMessage)
-                    )
-                    LOG.error(e)
-                    continue
-                }
-            if (unresolved.isNotEmpty()) {
-                lspClient.notify(
-                    ShowMessageNotification,
-                    ShowMessageParams(MessageType.Warning, unresolved.joinToString(", ", "Couldn't resolve some dependencies: ")),
-                )
-            }
-            storage.applyChangesFrom(imported)
-
-            break
+            lspClient.notify(
+                LogMessageNotification,
+                LogMessageParams(MessageType.Error, logMessage)
+            )
+            LOG.error(e)
+            continue
         }
-        val noSdk = storage.entities(SdkEntity::class.java).firstOrNull() == null
-        if (noSdk) {
-            addSdk(
-                name = "Java SDK",
-                type = JavaSdk.getInstance(),
-                roots = jdkRoots(),
-                urlManager = virtualFileUrlManager,
-                source = WorkspaceEntitySource(folderPath.toVirtualFileUrl(virtualFileUrlManager)),
-                storage = storage
+        if (unresolved.isNotEmpty()) {
+            lspClient.notify(
+                ShowMessageNotification,
+                ShowMessageParams(MessageType.Warning, unresolved.joinToString(", ", "Couldn't resolve some dependencies: ")),
             )
         }
-        lspClient.reportProgressMessage(params, "Indexing...")
+        storage.applyChangesFrom(imported)
+
+        break
     }
-    lspClient.reportProgressMessage(params, "Project is indexed")
 }
 
-context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
-private suspend fun singleFileMode(params: InitializeParams) {
-    updateWorkspaceModel {
-        registerStdlibAndJdk()
-        lspClient.reportProgressMessage(params, "Indexing")
-    }
-    lspClient.reportProgressMessage(params, "Project is indexed")
-}
+private object DefaultJdkEntitySource : EntitySource
 
 private fun WorkspaceFolder.path(): Path = uri.asJavaUri().toPath()
 

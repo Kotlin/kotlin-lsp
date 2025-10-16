@@ -3,7 +3,6 @@ package com.jetbrains.ls.kotlinLsp.util
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.projectRoots.DefaultJdkConfigurator
-import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
 import com.intellij.openapi.util.io.toNioPathOrNull
 import com.intellij.util.PathUtil
@@ -18,16 +17,6 @@ import org.jetbrains.kotlin.idea.compiler.configuration.isRunningFromSources
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.isDirectory
-
-fun WorkspaceModelBuilder.addKotlinStdlib() {
-    addLibrary(
-        LSLibrary(
-            binaryRoots = listOf(getKotlinStdlibPath().toLspUri()),
-            sourceRoots = listOfNotNull(getKotlinStdlibSourcesPath()?.toLspUri()),
-            name = "stdlib"
-        )
-    )
-}
 
 fun getKotlinStdlibPath(): Path {
     return when {
@@ -57,12 +46,6 @@ fun getKotlinStdlibSourcesPath(): Path? {
            null // LSP-224 TODO we should bundle the sources jar
         }
     }
-}
-
-
-fun WorkspaceModelBuilder.registerStdlibAndJdk() {
-    addKotlinStdlib()
-    addSdk( LSSdk(roots = jdkRoots(), name = "Java SDK", type = JavaSdk.getInstance()))
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)

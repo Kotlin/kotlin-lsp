@@ -97,7 +97,29 @@ fun addSdk(
     source: EntitySource,
     storage: MutableEntityStorage
 ) {
-    val sdkEntity = SdkEntity(
+    val jdk =createSdkEntity(name, type, roots, urlManager, source, storage)
+
+    storage.entities<ModuleEntity>().forEach { module ->
+        storage.modifyModuleEntity(module) {
+            dependencies = dependencies.map {
+                when (it) {
+                    is InheritedSdkDependency -> SdkDependency(jdk.symbolicId)
+                    else -> it
+                }
+            }.toMutableList()
+        }
+    }
+}
+
+fun createSdkEntity(
+    name: String,
+    type: SdkType,
+    roots: List<URI>,
+    urlManager: VirtualFileUrlManager,
+    source: EntitySource,
+    storage: MutableEntityStorage
+): SdkEntity {
+    val builder = SdkEntity(
         name = name,
         type = type.name,
         roots = if (roots.isEmpty()) emptyList() else buildList {
@@ -126,18 +148,7 @@ fun addSdk(
         additionalData = "",
         entitySource = source
     )
-    val jdk = storage addEntity sdkEntity
-
-    storage.mutableSdkMap.addMapping(jdk, SdkBridgeImpl(sdkEntity, InternalEnvironmentName.Local))
-
-    storage.entities<ModuleEntity>().forEach { module ->
-        storage.modifyModuleEntity(module) {
-            dependencies = dependencies.map {
-                when (it) {
-                    is InheritedSdkDependency -> SdkDependency(jdk.symbolicId)
-                    else -> it
-                }
-            }.toMutableList()
-        }
-    }
+    val jdk = storage addEntity builder
+    storage.mutableSdkMap.addMapping(jdk, SdkBridgeImpl(builder, InternalEnvironmentName.Local))
+    return jdk
 }

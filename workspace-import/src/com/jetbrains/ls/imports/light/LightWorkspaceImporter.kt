@@ -2,13 +2,13 @@
 package com.jetbrains.ls.imports.light
 
 import com.intellij.platform.workspace.jps.entities.*
+import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.entities
 import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.PathUtil
 import com.jetbrains.ls.api.core.util.UriConverter
-import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import org.jetbrains.kotlin.idea.base.plugin.artifacts.KotlinArtifacts
 import org.jetbrains.kotlin.idea.compiler.configuration.isRunningFromSources
@@ -24,9 +24,18 @@ object LightWorkspaceImporter : WorkspaceImporter {
         projectDirectory: Path,
         virtualFileUrlManager: VirtualFileUrlManager,
         onUnresolvedDependency: (String) -> Unit
+    ): MutableEntityStorage =
+        createLightWorkspace(projectDirectory, virtualFileUrlManager)
+
+    fun emptyWorkspace(virtualFileUrlManager: VirtualFileUrlManager): MutableEntityStorage =
+        createLightWorkspace(null, virtualFileUrlManager)
+
+    private fun createLightWorkspace(
+        projectDirectory: Path?,
+        virtualFileUrlManager: VirtualFileUrlManager
     ): MutableEntityStorage {
         val storage = MutableEntityStorage.create()
-        val entitySource = WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager))
+        val entitySource = object : EntitySource {}
 
         val stdlibUrl = UriConverter.localAbsolutePathToIntellijUri(getKotlinStdlibPath())
         val stdlibSourcesUrl = getKotlinStdlibSourcesPath()?.let { UriConverter.localAbsolutePathToIntellijUri(it) }
@@ -40,24 +49,6 @@ object LightWorkspaceImporter : WorkspaceImporter {
             entitySource = entitySource
         )
 
-        val librariesDir = projectDirectory / "libraries"
-        if (librariesDir.isDirectory()) {
-            librariesDir.listDirectoryEntries().filter { it.extension == "jar" }.forEach { jar ->
-                val jarUrl = UriConverter.localAbsolutePathToIntellijUri(jar.absolutePathString())
-                storage addEntity LibraryEntity(
-                    name = jar.nameWithoutExtension,
-                    tableId = LibraryTableId.ProjectLibraryTableId,
-                    roots = listOf(
-                        LibraryRoot(
-                            url = virtualFileUrlManager.getOrCreateFromUrl(jarUrl),
-                            type = LibraryRootTypeId.COMPILED
-                        )
-                    ),
-                    entitySource = entitySource
-                )
-            }
-        }
-
         val moduleBuilder = ModuleEntity(
             name = "main",
             dependencies = listOf(ModuleSourceDependency, InheritedSdkDependency),
@@ -65,45 +56,63 @@ object LightWorkspaceImporter : WorkspaceImporter {
         )
         val theModule = storage addEntity moduleBuilder
 
-        val contentRootUrl = projectDirectory.toVirtualFileUrl(virtualFileUrlManager)
-        val contentRoot = ContentRootEntity(
-            url = contentRootUrl,
-            excludedPatterns = emptyList(),
-            entitySource = entitySource
-        ) {
-            excludedUrls = listOf(
-                ExcludeUrlEntity(virtualFileUrlManager.getOrCreateFromUrl(contentRootUrl.url + "/build"), entitySource),
-                ExcludeUrlEntity(virtualFileUrlManager.getOrCreateFromUrl(contentRootUrl.url + "/target"), entitySource)
-            )
-            sourceRoots = listOf(
-                SourceRootEntity(
-                    url = contentRootUrl,
-                    rootTypeId = SourceRootTypeId("java-source"),
-                    entitySource = entitySource
-                ) {
-                    this.contentRoot = this@ContentRootEntity
-                }
-            )
-            module = moduleBuilder
-        }
-        storage addEntity contentRoot
-        storage.modifyModuleEntity(theModule) {
-            contentRoots += contentRoot
-        }
+        if (projectDirectory != null) {
+            val contentRootUrl = projectDirectory.toVirtualFileUrl(virtualFileUrlManager)
+            val contentRoot = ContentRootEntity(
+                url = contentRootUrl,
+                excludedPatterns = emptyList(),
+                entitySource = entitySource
+            ) {
+                excludedUrls = listOf(
+                    ExcludeUrlEntity(virtualFileUrlManager.getOrCreateFromUrl(contentRootUrl.url + "/build"), entitySource),
+                    ExcludeUrlEntity(virtualFileUrlManager.getOrCreateFromUrl(contentRootUrl.url + "/target"), entitySource)
+                )
+                sourceRoots = listOf(
+                    SourceRootEntity(
+                        url = contentRootUrl,
+                        rootTypeId = SourceRootTypeId("java-source"),
+                        entitySource = entitySource
+                    ) {
+                        this.contentRoot = this@ContentRootEntity
+                    }
+                )
+                module = moduleBuilder
+            }
+            storage addEntity contentRoot
+            storage.modifyModuleEntity(theModule) {
+                contentRoots += contentRoot
+            }
 
-        storage.modifyModuleEntity(theModule) {
-            dependencies += storage.entities<LibraryEntity>()
-                .map { libEntity ->
-                    LibraryDependency(
-                        library = libEntity.symbolicId,
-                        exported = false,
-                        scope = DependencyScope.COMPILE
+            val librariesDir = projectDirectory / "libraries"
+            if (librariesDir.isDirectory()) {
+                librariesDir.listDirectoryEntries().filter { it.extension == "jar" }.forEach { jar ->
+                    val jarUrl = UriConverter.localAbsolutePathToIntellijUri(jar.absolutePathString())
+                    storage addEntity LibraryEntity(
+                        name = jar.nameWithoutExtension,
+                        tableId = LibraryTableId.ProjectLibraryTableId,
+                        roots = listOf(
+                            LibraryRoot(
+                                url = virtualFileUrlManager.getOrCreateFromUrl(jarUrl),
+                                type = LibraryRootTypeId.COMPILED
+                            )
+                        ),
+                        entitySource = entitySource
                     )
                 }
+            }
+            storage.modifyModuleEntity(theModule) {
+                dependencies += storage.entities<LibraryEntity>()
+                    .map { libEntity ->
+                        LibraryDependency(
+                            library = libEntity.symbolicId,
+                            exported = false,
+                            scope = DependencyScope.COMPILE
+                        )
+                    }
+            }
         }
 
         return storage
-
     }
 
     private fun getKotlinStdlibPath(): String =
