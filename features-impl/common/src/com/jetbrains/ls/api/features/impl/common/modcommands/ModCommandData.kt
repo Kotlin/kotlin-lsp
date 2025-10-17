@@ -3,6 +3,7 @@ package com.jetbrains.ls.kotlinLsp.requests.core
 
 import com.intellij.modcommand.*
 import com.intellij.openapi.diagnostic.logger
+import com.jetbrains.ls.api.core.util.intellijUriToLspUri
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
 import com.jetbrains.lsp.implementation.LspClient
 import com.jetbrains.lsp.protocol.ApplyEditRequests.ApplyEdit
@@ -19,7 +20,6 @@ import com.jetbrains.lsp.protocol.ShowMessageRequestParams
 import com.jetbrains.lsp.protocol.TextDocumentEdit
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 import com.jetbrains.lsp.protocol.TextEdit
-import com.jetbrains.lsp.protocol.URI
 import com.jetbrains.lsp.protocol.Window
 import com.jetbrains.lsp.protocol.WorkspaceEdit
 import kotlinx.serialization.Serializable
@@ -102,9 +102,9 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient) {
                             label = "Create ${command.fileUrl}",
                             edit = WorkspaceEdit(
                                 documentChanges = listOf(
-                                    CreateFile(DocumentUri(URI(command.fileUrl))),
+                                    CreateFile(DocumentUri(command.fileUrl.intellijUriToLspUri())),
                                     TextDocumentEdit(
-                                        textDocument = TextDocumentIdentifier(DocumentUri(URI(command.fileUrl))),
+                                        textDocument = TextDocumentIdentifier(DocumentUri(command.fileUrl.intellijUriToLspUri())),
                                         edits = listOf(TextEdit(Range.BEGINNING, command.content.text))
                                     )
                                 ),
@@ -121,7 +121,7 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient) {
                 ApplyWorkspaceEditParams(
                     label = "Delete ${command.fileUrl}",
                     edit = WorkspaceEdit(
-                        documentChanges = listOf(DeleteFile(DocumentUri(URI(command.fileUrl)))),
+                        documentChanges = listOf(DeleteFile(DocumentUri(command.fileUrl.intellijUriToLspUri()))),
                     )
                 )
             )
@@ -132,7 +132,7 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient) {
                 ApplyWorkspaceEditParams(
                     label = "Move ${command.fileUrl} to ${command.targetUrl}",
                     edit = WorkspaceEdit(
-                        documentChanges = listOf(RenameFile(DocumentUri(URI(command.fileUrl)), DocumentUri(URI(command.targetUrl)))),
+                        documentChanges = listOf(RenameFile(DocumentUri(command.fileUrl.intellijUriToLspUri()), DocumentUri(command.targetUrl.intellijUriToLspUri()))),
                     )
                 )
             )
@@ -143,18 +143,16 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient) {
                 ApplyWorkspaceEditParams(
                     label = "Update ${command.fileUrl}",
                     edit = WorkspaceEdit(
-                        changes = mapOf(DocumentUri(URI(command.fileUrl)) to computeTextEdits(command.oldText, command.newText))
+                        changes = mapOf(DocumentUri(command.fileUrl.intellijUriToLspUri()) to computeTextEdits(command.oldText, command.newText))
                     )
                 )
             )
 
         is ModCommandData.Navigate -> {
-            val uri = URI(command.fileUrl)
-
             client.request(
                 ShowDocument,
                 ShowDocumentParams(
-                    uri = uri,
+                    uri = command.fileUrl.intellijUriToLspUri(),
                     external = false,
                     takeFocus = command.selectionStart != -1 || command.caret != -1,
                     // TODO: LSP-163 support selection and caret taking into account the effects of the previously applied commands
