@@ -119,7 +119,7 @@ object UriConverter {
         path = path.removePrefix("/")
         if (SystemInfoRt.isWindows && path.length > 2 && path[1] == ':') {
             // encode `:` with `%3A` as vscode does this to have consistent uris
-           path = path[0].lowercase() + "%3A" + path.substring(2)
+           path = path[0].uppercase() + "%3A" + path.substring(2)
         }
         path = "/$path"
         return path
