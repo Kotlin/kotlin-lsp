@@ -36,6 +36,7 @@ jvm_library(
     "//language-server/community/api.features",
     "@community//platform/util:util-ui",
     "@community//platform/editor-ui-api:editor-ui",
+    "@community//platform/core-impl",
     "@community//platform/editor-ui-ex:editor-ex",
     "@community//libraries/kotlinx/serialization/json",
     "@community//libraries/kotlinx/serialization/core",

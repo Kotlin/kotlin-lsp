@@ -31,6 +31,7 @@ jvm_library(
     "@community//platform/core-api:core",
     "//language-server/community/api.core",
     "@community//platform/analysis-impl",
+    "@community//platform/core-impl",
     "@community//platform/util",
     "@community//libraries/kotlinx/serialization/json",
     "@community//libraries/kotlinx/serialization/core",
