@@ -276,4 +276,5 @@ const defaultJvmOptions = [
     "--add-opens", "jdk.internal.jvmstat/sun.jvmstat.monitor=ALL-UNNAMED",
     "--add-opens", "jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED",
     "--enable-native-access=ALL-UNNAMED",
+    "-Djdk.lang.Process.launchMechanism=FORK",
 ]

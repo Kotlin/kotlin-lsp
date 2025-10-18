@@ -70,4 +70,5 @@ if not exist "%JAVA_BIN%" (
   --add-opens jdk.internal.jvmstat/sun.jvmstat.monitor=ALL-UNNAMED ^
   --add-opens jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED ^
   --enable-native-access=ALL-UNNAMED ^
+  -Djdk.lang.Process.launchMechanism=FORK ^
   -cp "%DIR%\lib\*" com.jetbrains.ls.kotlinLsp.KotlinLspServerKt %*
