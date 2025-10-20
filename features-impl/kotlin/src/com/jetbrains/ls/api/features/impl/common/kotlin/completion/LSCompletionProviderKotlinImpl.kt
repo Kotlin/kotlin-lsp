@@ -91,7 +91,7 @@ object LSCompletionProviderKotlinImpl : LSAbstractCompletionProvider() {
 
                         completionItem.copy(
                             additionalTextEdits = edits,
-                            command = if (caretOffset != 0) VsCodeCommands.moveCursorCommand(caretOffset) else null,
+                            command = VsCodeCommands.moveCursorCommand(caretOffset, completionProcess.caret.offset),
                             documentation = computeDocumentation(lookup),
                         )
                     }
