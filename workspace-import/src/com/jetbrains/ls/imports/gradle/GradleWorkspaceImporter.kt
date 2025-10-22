@@ -24,7 +24,7 @@ import org.jetbrains.kotlin.config.KotlinFacetSettings
 import org.jetbrains.kotlin.config.KotlinModuleKind
 import org.jetbrains.kotlin.idea.facet.KotlinFacetType
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
-import org.jetbrains.kotlin.idea.workspaceModel.ModifiableKotlinSettingsEntity
+import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntityBuilder
 import org.jetbrains.kotlin.idea.workspaceModel.kotlinSettings
 import org.jetbrains.plugins.gradle.jvmcompat.GradleJvmSupportMatrix.Companion.isSupported
 import org.jetbrains.plugins.gradle.jvmcompat.GradleJvmSupportMatrix.Companion.suggestLatestSupportedJavaVersion
@@ -160,7 +160,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                                             fun sourceRoots(
                                                 rootType: String,
                                                 directories: DomainObjectSet<out IdeaSourceDirectory>
-                                            ): List<ModifiableSourceRootEntity> =
+                                            ): List<SourceRootEntityBuilder> =
                                                 directories.mapNotNull { sourceDirectory ->
                                                     val sourceRoot = sourceDirectory.directory.toPath()
                                                     if (!sourceRoot.exists()) return@mapNotNull null
@@ -220,7 +220,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         }
     }
 
-    private fun ModifiableModuleEntity.createFacet(module: IdeaModule, isMain: Boolean): ModifiableKotlinSettingsEntity? {
+    private fun ModuleEntityBuilder.createFacet(module: IdeaModule, isMain: Boolean): KotlinSettingsEntityBuilder? {
         return KotlinSettingsEntity(
             name = KotlinFacetType.INSTANCE.presentableName,
             moduleId = ModuleId(module.moduleName(isMain)),

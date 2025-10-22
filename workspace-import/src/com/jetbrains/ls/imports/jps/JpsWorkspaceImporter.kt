@@ -264,7 +264,7 @@ object JpsWorkspaceImporter : WorkspaceImporter {
         sdks: Collection<String>,
         virtualFileUrlManager: VirtualFileUrlManager,
         entitySource: WorkspaceEntitySource,
-    ): List<ModifiableSdkEntity> {
+    ): List<SdkEntityBuilder> {
         val detectedSdks = JavaHomeFinder.findJdks(projectDirectory.getEelDescriptor(), false)
         if (detectedSdks.isEmpty()) return emptyList()
         return sdks.map { sdkName ->

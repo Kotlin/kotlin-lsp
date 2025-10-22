@@ -2,33 +2,10 @@
 package com.jetbrains.ls.imports.json
 
 
-import com.intellij.platform.workspace.jps.entities.ContentRootEntity
-import com.intellij.platform.workspace.jps.entities.DependencyScope
-import com.intellij.platform.workspace.jps.entities.ExcludeUrlEntity
-import com.intellij.platform.workspace.jps.entities.FacetEntity
-import com.intellij.platform.workspace.jps.entities.FacetEntityTypeId
-import com.intellij.platform.workspace.jps.entities.InheritedSdkDependency
-import com.intellij.platform.workspace.jps.entities.LibraryDependency
-import com.intellij.platform.workspace.jps.entities.LibraryEntity
-import com.intellij.platform.workspace.jps.entities.LibraryPropertiesEntity
-import com.intellij.platform.workspace.jps.entities.LibraryRoot
-import com.intellij.platform.workspace.jps.entities.LibraryRootTypeId
-import com.intellij.platform.workspace.jps.entities.LibraryTableId
+import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
+import com.intellij.openapi.util.io.FileUtilRt
+import com.intellij.platform.workspace.jps.entities.*
 import com.intellij.platform.workspace.jps.entities.LibraryTableId.ModuleLibraryTableId
-import com.intellij.platform.workspace.jps.entities.LibraryTypeId
-import com.intellij.platform.workspace.jps.entities.ModuleDependency
-import com.intellij.platform.workspace.jps.entities.ModuleEntity
-import com.intellij.platform.workspace.jps.entities.ModuleId
-import com.intellij.platform.workspace.jps.entities.ModuleSourceDependency
-import com.intellij.platform.workspace.jps.entities.ModuleTypeId
-import com.intellij.platform.workspace.jps.entities.SdkDependency
-import com.intellij.platform.workspace.jps.entities.SdkEntity
-import com.intellij.platform.workspace.jps.entities.SdkId
-import com.intellij.platform.workspace.jps.entities.SdkRoot
-import com.intellij.platform.workspace.jps.entities.SdkRootTypeId
-import com.intellij.platform.workspace.jps.entities.SourceRootEntity
-import com.intellij.platform.workspace.jps.entities.SourceRootTypeId
-import com.intellij.platform.workspace.jps.entities.libraryProperties
 import com.intellij.platform.workspace.jps.serialization.impl.toPath
 import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.EntityStorage
@@ -36,20 +13,15 @@ import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.entities
 import com.intellij.platform.workspace.storage.url.VirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
-import kotlinx.serialization.json.Json
-import java.nio.file.Path
-import kotlin.io.path.absolutePathString
-import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
-import com.intellij.openapi.util.io.FileUtilRt
-import com.intellij.platform.workspace.jps.entities.ModifiableFacetEntity
-import com.intellij.platform.workspace.jps.entities.ModifiableModuleEntity
-import com.intellij.platform.workspace.jps.entities.ModuleDependencyItem
 import com.intellij.util.descriptors.ConfigFileItem
+import com.jetbrains.ls.imports.utils.toIntellijUri
+import kotlinx.serialization.json.Json
 import org.jetbrains.kotlin.config.KotlinModuleKind
 import org.jetbrains.kotlin.idea.workspaceModel.CompilerSettingsData
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
-import com.jetbrains.ls.imports.utils.toIntellijUri
-import org.jetbrains.kotlin.idea.workspaceModel.ModifiableKotlinSettingsEntity
+import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntityBuilder
+import java.nio.file.Path
+import kotlin.io.path.absolutePathString
 
 
 fun workspaceData(storage: EntityStorage, workspacePath: Path): WorkspaceData =
@@ -273,7 +245,7 @@ fun workspaceModel(
         libraryEntities[libraryData.name] = libraryEntity
     }
 
-    fun toEntityBuilder(moduleData: ModuleData): ModifiableModuleEntity = ModuleEntity(
+    fun toEntityBuilder(moduleData: ModuleData): ModuleEntityBuilder = ModuleEntity(
         name = moduleData.name,
         dependencies = emptyList(),
         entitySource = entitySource
@@ -337,8 +309,8 @@ fun workspaceModel(
 private fun toEntity(
     kotlinSettingsData: KotlinSettingsData,
     entitySource: EntitySource,
-    module: ModifiableModuleEntity
-): ModifiableKotlinSettingsEntity = KotlinSettingsEntity(
+    module: ModuleEntityBuilder
+): KotlinSettingsEntityBuilder = KotlinSettingsEntity(
     name = kotlinSettingsData.name,
     moduleId = ModuleId(kotlinSettingsData.module),
     sourceRoots = kotlinSettingsData.sourceRoots,
@@ -374,9 +346,9 @@ private fun toEntity(
 }
 
 private fun addFacetRecursive(
-    data: FacetData,
-    moduleEntity: ModifiableModuleEntity,
-): ModifiableFacetEntity =
+  data: FacetData,
+  moduleEntity: ModuleEntityBuilder,
+): FacetEntityBuilder =
     FacetEntity(
         name = data.name,
         typeId = FacetEntityTypeId(data.type),
