@@ -3,14 +3,11 @@ package com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.intentions
 
 import com.intellij.codeInsight.intention.CommonIntentionAction
 import com.intellij.codeInsight.template.Expression
-import com.intellij.modcommand.ActionContext
-import com.intellij.modcommand.ModCommand
-import com.intellij.modcommand.ModPsiUpdater
-import com.intellij.modcommand.ModShowConflicts
-import com.intellij.modcommand.ModTemplateBuilder
+import com.intellij.modcommand.*
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.diagnostic.getOrHandleException
+import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.util.NlsContexts
 import com.intellij.openapi.util.TextRange
@@ -35,6 +32,7 @@ import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguag
 import com.jetbrains.ls.api.features.impl.common.utils.createEditorWithCaret
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
+import com.jetbrains.ls.kotlinLsp.requests.core.executeCommand
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.protocol.*
@@ -49,7 +47,6 @@ import org.jetbrains.kotlin.idea.k2.codeinsight.intentions.MovePropertyToConstru
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtFile
 import java.util.function.Function
-import com.jetbrains.ls.kotlinLsp.requests.core.executeCommand
 
 internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, LSCommandDescriptorProvider {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSKotlinLanguage)
@@ -149,7 +146,7 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
 private val LOG = fileLogger()
 
 private class FakeModPsiUpdater(
-    psiElement: KtElement,
+    var psiElement: KtElement,
 ) : ModPsiUpdater {
     var caret = psiElement.startOffset
 
@@ -259,5 +256,9 @@ private class FakeModPsiUpdater(
 
     override fun getCaretOffset(): Int {
         return caret
+    }
+
+    override fun getDocument(): Document {
+        return psiElement.containingFile.fileDocument
     }
 }
