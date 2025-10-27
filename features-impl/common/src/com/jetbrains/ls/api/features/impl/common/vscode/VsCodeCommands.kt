@@ -9,29 +9,37 @@ import kotlin.math.absoluteValue
 
 // see https://code.visualstudio.com/api/references/commands
 object VsCodeCommands {
-    fun moveCursorCommand(offset: Int, absoluteOffset: Int?): Command {
-        val parameters = CursorMoveCommandParameters.fromRelativeOffset(offset)
-        return Command(
-            title = "Adjust Cursor",
-            command = Names.MOVE_CURSOR,
-            arguments = listOfNotNull(
-                LSP.json.encodeToJsonElement(CursorMoveCommandParameters.serializer(), parameters),
+    fun moveCursorCommand(offset: Int, absoluteOffset: Int?): Command? {
+        return if (offset != 0 || absoluteOffset != null) {
+            Command(
+                title = "Adjust Cursor",
+                command = Names.MOVE_CURSOR,
+                arguments = listOfNotNull(
+                    offset.takeIf { it != 0 }?.let {
+                        LSP.json.encodeToJsonElement(
+                            CursorMoveCommandParameters.serializer(),
+                            CursorMoveCommandParameters.fromRelativeOffset(offset)
+                        )
+                    },
 
-                // TODO: Currently we use the command for moving a caret after completion insert handler.
-                //  The challenge is we only know the final text, not how it was generated, making it difficult
-                //  to calculate proper caret movement. Ideally, we would send absolute targret offset to the client
-                //  and let them position the caret.
-                //  Since VSCode doesn't support absolute positioning,
-                //  we include both: relative offset (used by VSCode) and absolute offset (for Fleet).
-                //  Once VSCode-counterpart implements absolute positioning support, we can remove the relative offset parameter.
-                absoluteOffset?.let {
-                    LSP.json.encodeToJsonElement(
-                        CursorMoveCommandParameters.serializer(),
-                        CursorMoveCommandParameters(CursorMoveTarget.OFFSET, it)
-                    )
-                }
+                    // TODO: Currently we use the command for moving a caret after completion insert handler.
+                    //  The challenge is we only know the final text, not how it was generated, making it difficult
+                    //  to calculate proper caret movement. Ideally, we would send absolute targret offset to the client
+                    //  and let them position the caret.
+                    //  Since VSCode doesn't support absolute positioning,
+                    //  we include both: relative offset (used by VSCode) and absolute offset (for Fleet).
+                    //  Once VSCode-counterpart implements absolute positioning support, we can remove the relative offset parameter.
+                    absoluteOffset?.let {
+                        LSP.json.encodeToJsonElement(
+                            CursorMoveCommandParameters.serializer(),
+                            CursorMoveCommandParameters(CursorMoveTarget.OFFSET, it)
+                        )
+                    }
+                )
             )
-        )
+        } else {
+            null
+        }
     }
 
     object Names {
