@@ -3,15 +3,13 @@ package com.jetbrains.ls.api.features.completion
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSConfiguration
-import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
 import com.jetbrains.ls.api.features.entriesFor
 import com.jetbrains.ls.api.features.entryById
-import com.jetbrains.ls.api.features.resolve.ResolveDataWithConfigurationEntryId
 import com.jetbrains.ls.api.features.resolve.getConfigurationEntryId
 import com.jetbrains.lsp.implementation.LspHandlerContext
-import com.jetbrains.lsp.protocol.*
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
+import com.jetbrains.lsp.protocol.CompletionItem
+import com.jetbrains.lsp.protocol.CompletionList
+import com.jetbrains.lsp.protocol.CompletionParams
 
 object LSCompletion {
     context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
@@ -40,10 +38,3 @@ object LSCompletion {
     }
 }
 
-//todo should be later moved to a common features module
-@Serializable
-data class CompletionItemData(
-    val params: CompletionParams,
-    val additionalData: JsonElement,
-    override val configurationEntryId: LSUniqueConfigurationEntry.UniqueId,
-) : ResolveDataWithConfigurationEntryId

@@ -15,20 +15,18 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
+import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.core.withAnalysisContext
-import com.jetbrains.ls.api.features.completion.CompletionItemData
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
 import com.jetbrains.ls.api.features.impl.common.completion.LSAbstractCompletionProvider
-import com.jetbrains.ls.api.features.impl.common.hover.AbstractLSHoverProvider.LSMarkdownDocProvider.Companion.getMarkdownDoc
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
-import com.jetbrains.ls.api.features.impl.common.vscode.VsCodeCommands
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer
 import com.jetbrains.lsp.implementation.LspHandlerContext
+import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.protocol.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.modules.SerializersModule
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaDanglingFileResolutionMode
@@ -53,51 +51,57 @@ object LSCompletionProviderKotlinImpl : LSAbstractCompletionProvider() {
         return json.encodeToJsonElement(KotlinCompletionLookupItemData.serializer(), data)
     }
 
+    override val completionCommand: String
+        get() = "jetbrains.kotlin.completion.apply"
+
     private val lookupModelConverterConfig = LookupModelConverter.Config(safeMode = true)
 
 
-    @OptIn(KaImplementationDetail::class)
-    context(_: LSServer, _: LspHandlerContext)
-    override suspend fun resolveCompletion(completionItem: CompletionItem): CompletionItem? {
-        val data = json.decodeFromJsonElement<CompletionItemData>(completionItem.data ?: return null)
-        val kotlinData = json.decodeFromJsonElement<KotlinCompletionLookupItemData>(data.additionalData)
-        val params = data.params
-
-        return withAnalysisContext {
+    context(_: LspHandlerContext, _: LSServer)
+    override suspend fun applyCompletion(completionData: CompletionData) {
+        val (edits, position) = withAnalysisContext {
             invokeAndWaitIfNeeded {
                 runWriteAction {
-                    val physicalVirtualFile = params.textDocument.findVirtualFile() ?: return@runWriteAction null
+                    val physicalVirtualFile = completionData.params.textDocument.findVirtualFile() ?: return@runWriteAction null
                     val physicalPsiFile = physicalVirtualFile.findPsiFile(project) ?: return@runWriteAction null
                     val initialText = physicalPsiFile.text
 
                     withFileForModification(
                         physicalPsiFile,
                     ) { fileForModification ->
-                        val lookup = LookupModelConverter.deserializeLookupElementForInsertion(kotlinData.model, project)
                         val document = fileForModification.fileDocument
-
-                        val caretBefore = document.offsetByPosition(params.position)
-
+                        val caretBefore = document.offsetByPosition(completionData.params.position)
                         val completionProcess = createCompletionProcess(project, fileForModification, caretBefore)
-                        completionProcess.arranger.registerMatcher(lookup, CamelHumpMatcher(kotlinData.prefix))
-                        insertCompletion(project, fileForModification, lookup, completionProcess.parameters!!)
+                        completionProcess.arranger.registerMatcher(completionData.lookup, CamelHumpMatcher(completionData.itemMatcher.prefix))
+                        insertCompletion(project, fileForModification, completionData.lookup, completionProcess.parameters!!)
 
                         val edits = TextEditsComputer.computeTextEdits(initialText, fileForModification.text)
 
-                        val caretOffset = run {
-                            val caretAfter = completionProcess.caret.offset
-                            caretAfter - caretBefore - edits.countAddedCharactersToLine(params.position.line)
-                        }
-
-                        completionItem.copy(
-                            additionalTextEdits = edits,
-                            command = VsCodeCommands.moveCursorCommand(caretOffset, completionProcess.caret.offset),
-                            documentation = computeDocumentation(lookup),
-                        )
+                        edits to document.positionByOffset(completionProcess.caret.offset)
                     }
                 }
             }
-        }
+        } ?: error("Unable to apply completion")
+
+        lspClient.request(
+            ApplyEditRequests.ApplyEdit,
+            ApplyWorkspaceEditParams(
+                label = null,
+                edit = WorkspaceEdit(
+                    changes = mapOf(completionData.params.textDocument.uri to edits)
+                )
+            )
+        )
+
+        lspClient.request(
+            ShowDocument,
+            ShowDocumentParams(
+                uri = completionData.params.textDocument.uri.uri,
+                external = false,
+                takeFocus = true,
+                selection = Range(position, position)
+            )
+        )
     }
 
     @OptIn(KaImplementationDetail::class)
@@ -115,23 +119,6 @@ object LSCompletionProviderKotlinImpl : LSAbstractCompletionProvider() {
         return withDanglingFileResolutionMode(fileForModification, KaDanglingFileResolutionMode.IGNORE_SELF) {
             action(fileForModification)
         }
-    }
-
-
-    private fun computeDocumentation(lookup: LookupElement): StringOrMarkupContent? {
-        return lookup.psiElement
-            ?.let { getMarkdownDoc(it) }
-            ?.let { StringOrMarkupContent(MarkupContent(MarkupKindType.Markdown, it)) }
-    }
-
-    private fun List<TextEdit>.countAddedCharactersToLine(line: Int): Int {
-        return this
-            .filter { it.range.isSingleLine() && it.range.start.line == line }
-            .sumOf { it.countAddedChars() }
-    }
-
-    private fun TextEdit.countAddedChars(): Int {
-        return this.newText.length + this.range.end.character - this.range.start.character
     }
 
     private val json = Json(LSP.json) {
