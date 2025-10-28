@@ -3,7 +3,11 @@ package com.jetbrains.ls.kotlinLsp.requests.core
 
 import com.intellij.modcommand.*
 import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.editor.impl.DocumentImpl
+import com.intellij.openapi.vfs.findDocument
+import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.intellijUriToLspUri
+import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
 import com.jetbrains.lsp.implementation.LspClient
 import com.jetbrains.lsp.protocol.ApplyEditRequests.ApplyEdit
@@ -77,6 +81,7 @@ sealed interface ModCommandData {
                     is ModCreateFile.Binary -> CreateFile.Content.Binary(Base64.getEncoder().encodeToString(c.bytes))
                 }
             )
+
             is ModDeleteFile -> DeleteFile(command.file.url)
             is ModMoveFile -> MoveFile(command.file.url, command.targetFile.url.replace("mock://", "file://"))
             is ModUpdateFileText -> UpdateFileText(command.file.url, command.oldText, command.newText)
@@ -90,12 +95,16 @@ sealed interface ModCommandData {
 }
 
 suspend fun executeCommand(command: ModCommandData, client: LspClient) {
+    executeCommand(command, client, mutableMapOf())
+}
+
+suspend fun executeCommand(command: ModCommandData, client: LspClient, changedFiles: MutableMap<String, String>) {
     when (command) {
         is ModCommandData.Nothing -> {}
 
         is ModCommandData.CreateFile ->
             when (command.content) {
-                is ModCommandData.CreateFile.Content.Text ->
+                is ModCommandData.CreateFile.Content.Text -> {
                     client.request(
                         ApplyEdit,
                         ApplyWorkspaceEditParams(
@@ -111,6 +120,9 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient) {
                             )
                         )
                     )
+                    changedFiles[command.fileUrl] = command.content.text
+                }
+
                 else -> error("Unsupported content ${command.content}")
             }
 
@@ -132,43 +144,72 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient) {
                 ApplyWorkspaceEditParams(
                     label = "Move ${command.fileUrl} to ${command.targetUrl}",
                     edit = WorkspaceEdit(
-                        documentChanges = listOf(RenameFile(DocumentUri(command.fileUrl.intellijUriToLspUri()), DocumentUri(command.targetUrl.intellijUriToLspUri()))),
+                        documentChanges = listOf(
+                            RenameFile(
+                                DocumentUri(command.fileUrl.intellijUriToLspUri()),
+                                DocumentUri(command.targetUrl.intellijUriToLspUri())
+                            )
+                        ),
                     )
                 )
             )
 
-        is ModCommandData.UpdateFileText ->
+        is ModCommandData.UpdateFileText -> {
             client.request(
                 ApplyEdit,
                 ApplyWorkspaceEditParams(
                     label = "Update ${command.fileUrl}",
                     edit = WorkspaceEdit(
-                        changes = mapOf(DocumentUri(command.fileUrl.intellijUriToLspUri()) to computeTextEdits(command.oldText, command.newText))
+                        changes = mapOf(
+                            DocumentUri(command.fileUrl.intellijUriToLspUri()) to computeTextEdits(
+                                command.oldText,
+                                command.newText
+                            )
+                        )
                     )
                 )
             )
+            changedFiles[command.fileUrl] = command.newText
+        }
 
         is ModCommandData.Navigate -> {
+            val selectionStart = command.selectionStart.takeIf { it != -1 } ?: command.caret
+            val selectionEnd = command.selectionEnd.takeIf { it != -1 } ?: command.caret
+            var selection: Range? = null
+            if (selectionStart != -1 && selectionEnd != -1) {
+                val doc = changedFiles.get(command.fileUrl)?.let { DocumentImpl(it) }
+                    ?: command.fileUrl.intellijUriToLspUri().findVirtualFile()?.findDocument()
+
+                if (doc != null) {
+                    selection = Range(
+                        doc.positionByOffset(selectionStart),
+                        doc.positionByOffset(selectionEnd)
+                    )
+                }
+            }
+
             client.request(
                 ShowDocument,
                 ShowDocumentParams(
                     uri = command.fileUrl.intellijUriToLspUri(),
                     external = false,
-                    takeFocus = command.selectionStart != -1 || command.caret != -1,
-                    // TODO: LSP-163 support selection and caret taking into account the effects of the previously applied commands
+                    takeFocus = selection != null,
+                    selection = selection,
                 )
             )
         }
 
-        is ModCommandData.Composite -> command.commands.forEach { executeCommand(it, client) }
+        is ModCommandData.Composite -> command.commands.forEach { executeCommand(it, client, changedFiles) }
         is ModCommandData.DisplayMessage ->
-            client.request(Window.ShowMessageRequest, ShowMessageRequestParams(
-                type = when (command.kind) {
-                    ModDisplayMessage.MessageKind.ERROR -> MessageType.Error
-                    ModDisplayMessage.MessageKind.INFORMATION -> MessageType.Info
-                },
-                message = command.message,
-                actions = null)
+            client.request(
+                Window.ShowMessageRequest, ShowMessageRequestParams(
+                    type = when (command.kind) {
+                        ModDisplayMessage.MessageKind.ERROR -> MessageType.Error
+                        ModDisplayMessage.MessageKind.INFORMATION -> MessageType.Info
+                    },
+                    message = command.message,
+                    actions = null
+                )
             )
     }
 }
