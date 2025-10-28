@@ -120,7 +120,7 @@ private class LSPLogger(private val category: String, private val writeToStdOut:
 
         Client.current?.let { client ->
             fun logMessage(messageType: MessageType) {
-                client.lspClient.notify(
+                client.lspClient.notifyAsync(
                     LogMessageNotification,
                     LogMessageParams(messageType, messageRendered),
                 )
@@ -137,7 +137,7 @@ private class LSPLogger(private val category: String, private val writeToStdOut:
                         TraceValue.Messages, TraceValue.Verbose -> true
                     }
                     if (shouldNotifyForDebug) {
-                        client.lspClient.notify(
+                        client.lspClient.notifyAsync(
                             LogTraceNotificationType,
                             LogTraceParams(messageRendered, verbose = null/*TODO LSP-229 provide more details here?*/)
                         )

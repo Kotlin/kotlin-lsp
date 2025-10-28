@@ -28,7 +28,7 @@ internal fun logSystemInfo() {
     LOG.info(getSystemInfo())
 }
 
-internal fun LspClient.sendSystemInfoToClient() {
+internal suspend fun LspClient.sendSystemInfoToClient() {
     notify(
         LogMessageNotification,
         LogMessageParams(MessageType.Info, getSystemInfo()),
