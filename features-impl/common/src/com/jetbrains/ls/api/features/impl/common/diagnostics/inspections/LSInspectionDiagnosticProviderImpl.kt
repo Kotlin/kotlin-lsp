@@ -21,9 +21,9 @@ import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
-import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
+import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnosticProvider
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.utils.isSource
@@ -114,13 +114,14 @@ class LSInspectionDiagnosticProviderImpl(
 
     private fun getInspections(language: Language): List<LocalInspectionTool> {
         return LocalInspectionEP.LOCAL_INSPECTION.extensionList
+            .asSequence()
             .filter { it.language == language.id }
             .filter { it.enabledByDefault }
             .filter { HighlightDisplayLevel.find(it.level) != HighlightDisplayLevel.DO_NOT_SHOW }
             .filterNot { blacklist.containsImplementation(it.implementationClass) }
             .mapNotNull { inspection ->
                 runCatching {
-                    Class.forName(inspection.implementationClass).getConstructor().newInstance()
+                    inspection.instantiateTool()
                 }.getOrHandleException {
                     if (LOG.isTraceEnabled) LOG.warn(it)
                     else LOG.warn(it.toString())
@@ -128,6 +129,7 @@ class LSInspectionDiagnosticProviderImpl(
             }
             .filterNot { blacklist.containsSuperClass(it) }
             .filterIsInstance<LocalInspectionTool>()
+            .toList()
             .takeIf { it.isNotEmpty() }
             ?: emptyList()
     }
