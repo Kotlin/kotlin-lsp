@@ -27,9 +27,9 @@ import com.jetbrains.ls.kotlinLsp.connection.Client
 import com.jetbrains.ls.kotlinLsp.util.jdkRoots
 import com.jetbrains.ls.kotlinLsp.util.sendSystemInfoToClient
 import com.jetbrains.ls.snapshot.api.impl.core.InitializeParamsEntity
+import com.jetbrains.ls.snapshot.api.impl.core.lspInitializationOptions
 import com.jetbrains.lsp.implementation.*
 import com.jetbrains.lsp.protocol.*
-import com.jetbrains.lsp.protocol.WorkDoneProgress
 import com.jetbrains.lsp.protocol.WorkDoneProgress.Report
 import fleet.kernel.change
 import kotlinx.coroutines.CancellationException
@@ -77,7 +77,9 @@ internal fun LspHandlersBuilder.initializeRequest() {
             InitializeParamsEntity.single().initializeParams.complete(initParams)
         }
 
-        indexFolders(folders, initParams)
+        if (initParams.lspInitializationOptions?.skipImport != "true") {
+            indexFolders(folders, initParams)
+        }
 
         // TODO LSP-226 determine base on entries,
         // TODO LSP-227 register capabilities dynamically for each language separately
