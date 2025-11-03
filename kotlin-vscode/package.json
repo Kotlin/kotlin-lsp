@@ -57,17 +57,17 @@
         "kotlinLSP.jrePathToRunLsp": {
           "type": "string",
           "default": null,
-          "description": "Path to the JRE used to run the Kotlin LSP. Requires version 21 or higher. If unspecified, the bundled JetBrains Runtime is used."
+          "description": "Path of the JRE used to run the Kotlin LSP. Requires version 21 or higher. If unspecified, the bundled JetBrains Runtime is used."
         },
         "kotlinLSP.additionalJvmArgs": {
           "type": "array",
           "default": [],
           "description": "Additional JVM arguments to pass to the LSP server"
         },
-        "kotlinLSP.jdkToUseForImportedWorkspaces": {
+        "kotlinLSP.jdkForSymbolResolution": {
           "type": "string",
           "default": null,
-          "description": "Path to the JDK to be used wth imported workspaces."
+          "description": "Path of the JDK for symbol resolution"
         }
       }
     },
