@@ -65,7 +65,8 @@ object LightWorkspaceImporter : WorkspaceImporter {
             ) {
                 excludedUrls = listOf(
                     ExcludeUrlEntity(virtualFileUrlManager.getOrCreateFromUrl(contentRootUrl.url + "/build"), entitySource),
-                    ExcludeUrlEntity(virtualFileUrlManager.getOrCreateFromUrl(contentRootUrl.url + "/target"), entitySource)
+                    ExcludeUrlEntity(virtualFileUrlManager.getOrCreateFromUrl(contentRootUrl.url + "/target"), entitySource),
+                    ExcludeUrlEntity(virtualFileUrlManager.getOrCreateFromUrl(contentRootUrl.url + "/libraries"), entitySource)
                 )
                 sourceRoots = listOf(
                     SourceRootEntity(
