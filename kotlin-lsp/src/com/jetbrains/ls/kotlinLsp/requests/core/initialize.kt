@@ -10,7 +10,6 @@ import com.intellij.platform.workspace.storage.entities
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.createSdkEntity
-import com.jetbrains.ls.api.core.util.toLspUri
 import com.jetbrains.ls.api.core.workspaceStructure
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.allCommandDescriptors
@@ -30,6 +29,7 @@ import com.jetbrains.ls.snapshot.api.impl.core.InitializeParamsEntity
 import com.jetbrains.ls.snapshot.api.impl.core.lspInitializationOptions
 import com.jetbrains.lsp.implementation.*
 import com.jetbrains.lsp.protocol.*
+import com.jetbrains.ls.api.core.util.workspaceFolderPaths
 import com.jetbrains.lsp.protocol.WorkDoneProgress.Report
 import fleet.kernel.change
 import kotlinx.coroutines.CancellationException
@@ -37,9 +37,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonPrimitive
 import java.nio.file.Path
-import kotlin.io.path.Path
-import kotlin.io.path.name
-import kotlin.io.path.toPath
 
 context(_: LSServer, _: LSConfiguration)
 internal fun LspHandlersBuilder.initializeRequest() {
@@ -59,19 +56,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
             }"
         )
 
-        val rootUri = initParams.rootUri
-        val rootPath = initParams.rootPath
-        val workspaceFolders = initParams.workspaceFolders
-        val folders = when {
-            workspaceFolders != null -> workspaceFolders
-            rootUri != null -> listOf(WorkspaceFolder(rootUri.uri, rootUri.uri.uri))
-            rootPath != null -> {
-                val path = Path(rootPath)
-                listOf(WorkspaceFolder(path.toLspUri(), path.name))
-            }
-
-            else -> emptyList()
-        }
+        val folders = workspaceFolderPaths(initParams)
 
         change {
             InitializeParamsEntity.single().initializeParams.complete(initParams)
@@ -168,7 +153,7 @@ private suspend fun LspClient.sendRunConfigurationInfoToClient() {
 
 context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
 private suspend fun indexFolders(
-    folders: List<WorkspaceFolder>,
+    folders: List<Path>,
     params: InitializeParams,
 ) {
     lspClient.withProgress(params) { progress ->
@@ -227,20 +212,19 @@ private val importers = listOf(JsonWorkspaceImporter, GradleWorkspaceImporter, J
 
 context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
 private suspend fun initFolder(
-    folder: WorkspaceFolder,
+    folder: Path,
     params: InitializeParams,
     virtualFileUrlManager: VirtualFileUrlManager,
     storage: MutableEntityStorage,
 ) {
     lspClient.withProgress(params) { progress ->
-        progress.report(Report(message = "Importing folder ${folder.uri.asJavaUri().path}"))
-        val folderPath = folder.path()
+        progress.report(Report(message = "Importing folder ${folder}"))
         for (importer in importers) {
             val unresolved = mutableSetOf<String>()
             progress.report(Report(message = "Trying to import using ${importer.javaClass.simpleName}"))
             val imported = try {
                 withContext(Dispatchers.IO) {
-                    importer.importWorkspace(folderPath, virtualFileUrlManager, unresolved::add)
+                    importer.importWorkspace(folder, virtualFileUrlManager, unresolved::add)
                 } ?: continue
             } catch (e: CancellationException) {
                 throw e
@@ -274,7 +258,5 @@ private suspend fun initFolder(
 }
 
 private object DefaultJdkEntitySource : EntitySource
-
-private fun WorkspaceFolder.path(): Path = uri.asJavaUri().toPath()
 
 private val LOG = Logger.getInstance("initialize")

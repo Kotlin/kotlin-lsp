@@ -25,6 +25,7 @@ import com.jetbrains.ls.api.core.project
 import com.jetbrains.lsp.protocol.*
 import java.nio.file.Path
 import kotlin.io.path.exists
+import kotlin.io.path.toPath
 
 val VirtualFile.uri: URI
     get() = url.intellijUriToLspUri()
@@ -152,3 +153,11 @@ fun createSdkEntity(
     storage.mutableSdkMap.addMapping(jdk, SdkBridgeImpl(builder, InternalEnvironmentName.Local))
     return jdk
 }
+
+@Suppress("DEPRECATION")
+fun workspaceFolderPaths(params: InitializeParams): List<Path> =
+    params.workspaceFolders?.map { it.uri.asJavaUri().toPath() }
+        ?: params.rootUri?.let { listOf(it.uri.asJavaUri().toPath()) }
+        ?: params.rootPath?.let { listOf(Path.of(it)) }
+        ?: emptyList()
+

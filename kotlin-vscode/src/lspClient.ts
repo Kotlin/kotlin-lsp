@@ -206,8 +206,10 @@ async function getRunningJavaServerLspOptions(): Promise<ServerOptions | null> {
     args.push(
         '-classpath', extractPath + path.sep + '*',
         'com.jetbrains.ls.kotlinLsp.KotlinLspServerKt', '--client',
-        '--system-path', (context.storageUri ?? context.globalStorageUri).fsPath,
     );
+    if (context.storageUri) {
+        args.push('--system-path', context.storageUri.fsPath)
+    }
     return <ServerOptions>{
         command: javaCommand,
         args: args,
