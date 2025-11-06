@@ -156,16 +156,11 @@ private suspend fun indexFolders(
     folders: List<Path>,
     params: InitializeParams,
 ) {
-    lspClient.withProgress(params) { progress ->
-        progress.report(
-            WorkDoneProgress.Begin(
-                title = "Initializing project",
-            )
-        )
+    lspClient.withProgress(params, beginTitle = "Initializing project") { progress ->
         workspaceStructure.updateWorkspaceModelDirectly { virtualFileUrlManager, storage ->
             if (folders.isNotEmpty()) {
                 for (folder in folders) {
-                    initFolder(folder, params, virtualFileUrlManager, storage)
+                    initFolder(folder, progress, virtualFileUrlManager, storage)
                 }
             } else {
                 progress.report(Report(message = "Using light mode"))
@@ -200,10 +195,8 @@ private suspend fun indexFolders(
             progress.report(Report(message = "Indexing..."))
         }
 
-        progress.report(
-            WorkDoneProgress.End(
-                message = "Workspace is imported and indexed",
-            )
+        WorkDoneProgress.End(
+            message = "Workspace is imported and indexed",
         )
     }
 }
@@ -213,47 +206,45 @@ private val importers = listOf(JsonWorkspaceImporter, GradleWorkspaceImporter, J
 context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
 private suspend fun initFolder(
     folder: Path,
-    params: InitializeParams,
+    progress: ProgressReporter,
     virtualFileUrlManager: VirtualFileUrlManager,
     storage: MutableEntityStorage,
 ) {
-    lspClient.withProgress(params) { progress ->
-        progress.report(Report(message = "Importing folder ${folder}"))
-        for (importer in importers) {
-            val unresolved = mutableSetOf<String>()
-            progress.report(Report(message = "Trying to import using ${importer.javaClass.simpleName}"))
-            val imported = try {
-                withContext(Dispatchers.IO) {
-                    importer.importWorkspace(folder, virtualFileUrlManager, unresolved::add)
-                } ?: continue
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Throwable) {
-                val message = (e as? WorkspaceImportException)?.message ?: "Error importing folder"
-                val logMessage = (e as? WorkspaceImportException)?.logMessage ?: "Error importing folder:\n${e.stackTraceToString()}"
+    progress.report(Report(message = "Importing folder ${folder}"))
+    for (importer in importers) {
+        val unresolved = mutableSetOf<String>()
+        progress.report(Report(message = "Trying to import using ${importer.javaClass.simpleName}"))
+        val imported = try {
+            withContext(Dispatchers.IO) {
+                importer.importWorkspace(folder, virtualFileUrlManager, unresolved::add)
+            } ?: continue
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            val message = (e as? WorkspaceImportException)?.message ?: "Error importing folder"
+            val logMessage = (e as? WorkspaceImportException)?.logMessage ?: "Error importing folder:\n${e.stackTraceToString()}"
 
-                lspClient.notify(
-                    ShowMessageNotification,
-                    ShowMessageParams(MessageType.Error, "$message Check the log for details."),
-                )
+            lspClient.notify(
+                ShowMessageNotification,
+                ShowMessageParams(MessageType.Error, "$message Check the log for details."),
+            )
 
-                lspClient.notify(
-                    LogMessageNotification,
-                    LogMessageParams(MessageType.Error, logMessage)
-                )
-                LOG.error(e)
-                continue
-            }
-            if (unresolved.isNotEmpty()) {
-                lspClient.notify(
-                    ShowMessageNotification,
-                    ShowMessageParams(MessageType.Warning, unresolved.joinToString(", ", "Couldn't resolve some dependencies: ")),
-                )
-            }
-            storage.applyChangesFrom(imported)
-
-            break
+            lspClient.notify(
+                LogMessageNotification,
+                LogMessageParams(MessageType.Error, logMessage)
+            )
+            LOG.error(e)
+            continue
         }
+        if (unresolved.isNotEmpty()) {
+            lspClient.notify(
+                ShowMessageNotification,
+                ShowMessageParams(MessageType.Warning, unresolved.joinToString(", ", "Couldn't resolve some dependencies: ")),
+            )
+        }
+        storage.applyChangesFrom(imported)
+
+        break
     }
 }
 
