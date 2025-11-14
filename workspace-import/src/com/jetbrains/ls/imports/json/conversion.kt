@@ -331,6 +331,7 @@ private fun toEntity(
     entitySource = entitySource,
 ) {
     this.module = module
+    this.compilerArguments = kotlinSettingsData.compilerArguments
     if (kotlinSettingsData.additionalArguments != null
         && kotlinSettingsData.scriptTemplates != null
         && kotlinSettingsData.scriptTemplatesClasspath != null

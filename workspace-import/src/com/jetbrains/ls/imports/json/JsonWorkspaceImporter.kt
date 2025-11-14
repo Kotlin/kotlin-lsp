@@ -9,7 +9,9 @@ import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import org.jetbrains.annotations.TestOnly
 import java.nio.file.Path
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.io.path.div
 import kotlin.io.path.exists
 import kotlin.io.path.notExists
@@ -23,7 +25,7 @@ object JsonWorkspaceImporter : WorkspaceImporter {
         if (!isApplicableDirectory(projectDirectory)) return null
         try {
             val content = (projectDirectory / "workspace.json").toFile().readText()
-            val workspaceData = Json.decodeFromString<WorkspaceData>(content)
+            val workspaceData = WorkspaceModelProcessorForTests.process(Json.decodeFromString<WorkspaceData>(content))
             workspaceData.modules.forEach { module ->
                 module.dependencies
                     .filterIsInstance<DependencyData.Library>()
@@ -53,4 +55,50 @@ object JsonWorkspaceImporter : WorkspaceImporter {
     private fun isApplicableDirectory(projectDirectory: Path): Boolean =
         (projectDirectory / "workspace.json").exists()
 
+    interface WorkspaceModelProcessorForTests {
+        fun resolveMissingLibrary(libraryName: String): LibraryData?
+
+        fun processKotlinSettings(settings: KotlinSettingsData): KotlinSettingsData
+
+        companion object {
+            val current: AtomicReference<WorkspaceModelProcessorForTests?> = AtomicReference(null)
+
+            fun process(data: WorkspaceData): WorkspaceData {
+                val processor = current.get() ?: return data
+
+                return data.copy(
+                    libraries = data.libraries + processor.getAdditionalLibraries(data),
+                    kotlinSettings = data.kotlinSettings.map { processor.processKotlinSettings(it) }
+                )
+            }
+
+            private fun WorkspaceModelProcessorForTests.getAdditionalLibraries(data: WorkspaceData): List<LibraryData> {
+                val libraryNames = data.libraries.mapTo(mutableSetOf()) { it.name }
+                val missingLibraries = buildSet {
+                    for (module in data.modules) {
+                        for (dependency in module.dependencies) {
+                            if (dependency is DependencyData.Library && dependency.name !in libraryNames) {
+                                add(dependency.name)
+                            }
+                        }
+                    }
+                }
+                return missingLibraries.mapNotNull { resolveMissingLibrary(it) }
+            }
+
+            @TestOnly
+            inline fun <R> withProcessor(resolver: WorkspaceModelProcessorForTests, action: () -> R): R {
+                try {
+                    if (!current.compareAndSet(null, resolver)) {
+                        error("AdditionalLibrariesResolverForTests is already set")
+                    }
+                    return action()
+                } finally {
+                    if (!current.compareAndSet(resolver, null)) {
+                        error("AdditionalLibrariesResolverForTests is not set")
+                    }
+                }
+            }
+        }
+    }
 }
