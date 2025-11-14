@@ -28,8 +28,6 @@
             "contentRoots": [
                 {
                     "path": "<WORKSPACE>/api",
-                    "excludedPatterns": [],
-                    "excludedUrls": [],
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/api/src/main/java",
@@ -45,8 +43,7 @@
                         }
                     ]
                 }
-            ],
-            "facets": []
+            ]
         },
         {
             "name": "api.test",
@@ -81,8 +78,6 @@
             "contentRoots": [
                 {
                     "path": "<WORKSPACE>/api",
-                    "excludedPatterns": [],
-                    "excludedUrls": [],
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/api/src/test/java",
@@ -98,8 +93,7 @@
                         }
                     ]
                 }
-            ],
-            "facets": []
+            ]
         },
         {
             "name": "core.main",
@@ -124,8 +118,6 @@
             "contentRoots": [
                 {
                     "path": "<WORKSPACE>/core",
-                    "excludedPatterns": [],
-                    "excludedUrls": [],
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/core/src/main/java",
@@ -141,8 +133,7 @@
                         }
                     ]
                 }
-            ],
-            "facets": []
+            ]
         },
         {
             "name": "core.test",
@@ -172,8 +163,6 @@
             "contentRoots": [
                 {
                     "path": "<WORKSPACE>/core",
-                    "excludedPatterns": [],
-                    "excludedUrls": [],
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/core/src/test/java",
@@ -189,8 +178,7 @@
                         }
                     ]
                 }
-            ],
-            "facets": []
+            ]
         },
         {
             "name": "multi-project-example.main",
@@ -215,8 +203,6 @@
             "contentRoots": [
                 {
                     "path": "<WORKSPACE>/",
-                    "excludedPatterns": [],
-                    "excludedUrls": [],
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/src/main/java",
@@ -232,8 +218,7 @@
                         }
                     ]
                 }
-            ],
-            "facets": []
+            ]
         },
         {
             "name": "multi-project-example.test",
@@ -263,8 +248,6 @@
             "contentRoots": [
                 {
                     "path": "<WORKSPACE>/",
-                    "excludedPatterns": [],
-                    "excludedUrls": [],
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/src/test/java",
@@ -280,8 +263,7 @@
                         }
                     ]
                 }
-            ],
-            "facets": []
+            ]
         },
         {
             "name": "service.main",
@@ -321,8 +303,6 @@
             "contentRoots": [
                 {
                     "path": "<WORKSPACE>/service",
-                    "excludedPatterns": [],
-                    "excludedUrls": [],
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/service/src/main/java",
@@ -338,8 +318,7 @@
                         }
                     ]
                 }
-            ],
-            "facets": []
+            ]
         },
         {
             "name": "service.test",
@@ -389,8 +368,6 @@
             "contentRoots": [
                 {
                     "path": "<WORKSPACE>/service",
-                    "excludedPatterns": [],
-                    "excludedUrls": [],
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/service/src/test/java",
@@ -406,8 +383,7 @@
                         }
                     ]
                 }
-            ],
-            "facets": []
+            ]
         }
     ],
     "libraries": [
@@ -475,7 +451,6 @@
             }
         }
     ],
-    "sdks": [],
     "kotlinSettings": [
         {
             "name": "Kotlin",

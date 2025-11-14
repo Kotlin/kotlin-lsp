@@ -33,8 +33,6 @@
             "contentRoots": [
                 {
                     "path": "<WORKSPACE>/app",
-                    "excludedPatterns": [],
-                    "excludedUrls": [],
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/app/src/main/java",
@@ -50,8 +48,7 @@
                         }
                     ]
                 }
-            ],
-            "facets": []
+            ]
         },
         {
             "name": "app.test",
@@ -91,8 +88,6 @@
             "contentRoots": [
                 {
                     "path": "<WORKSPACE>/app",
-                    "excludedPatterns": [],
-                    "excludedUrls": [],
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/app/src/test/java",
@@ -108,8 +103,7 @@
                         }
                     ]
                 }
-            ],
-            "facets": []
+            ]
         },
         {
             "name": "lib.main",
@@ -134,8 +128,6 @@
             "contentRoots": [
                 {
                     "path": "<WORKSPACE>/lib",
-                    "excludedPatterns": [],
-                    "excludedUrls": [],
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/lib/src/main/java",
@@ -151,8 +143,7 @@
                         }
                     ]
                 }
-            ],
-            "facets": []
+            ]
         },
         {
             "name": "lib.test",
@@ -182,8 +173,6 @@
             "contentRoots": [
                 {
                     "path": "<WORKSPACE>/lib",
-                    "excludedPatterns": [],
-                    "excludedUrls": [],
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/lib/src/test/java",
@@ -199,8 +188,7 @@
                         }
                     ]
                 }
-            ],
-            "facets": []
+            ]
         },
         {
             "name": "multi-project-source-sets.main",
@@ -215,8 +203,6 @@
             "contentRoots": [
                 {
                     "path": "<WORKSPACE>/",
-                    "excludedPatterns": [],
-                    "excludedUrls": [],
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/src/main/java",
@@ -232,8 +218,7 @@
                         }
                     ]
                 }
-            ],
-            "facets": []
+            ]
         },
         {
             "name": "multi-project-source-sets.test",
@@ -253,8 +238,6 @@
             "contentRoots": [
                 {
                     "path": "<WORKSPACE>/",
-                    "excludedPatterns": [],
-                    "excludedUrls": [],
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/src/test/java",
@@ -270,8 +253,7 @@
                         }
                     ]
                 }
-            ],
-            "facets": []
+            ]
         }
     ],
     "libraries": [
@@ -339,7 +321,6 @@
             }
         }
     ],
-    "sdks": [],
     "kotlinSettings": [
         {
             "name": "Kotlin",

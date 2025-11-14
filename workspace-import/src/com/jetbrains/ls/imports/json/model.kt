@@ -6,19 +6,19 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class WorkspaceData(
-    val modules: List<ModuleData>,
-    val libraries: List<LibraryData>,
-    val sdks: List<SdkData>,
-    val kotlinSettings: List<KotlinSettingsData>,
+    val modules: List<ModuleData> = emptyList(),
+    val libraries: List<LibraryData> = emptyList(),
+    val sdks: List<SdkData> = emptyList(),
+    val kotlinSettings: List<KotlinSettingsData> = emptyList(),
 )
 
 @Serializable
 data class ModuleData(
     val name: String,
     val type: String? = "JAVA_MODULE",
-    val dependencies: List<DependencyData>,
-    val contentRoots: List<ContentRootData>,
-    val facets: List<FacetData>,
+    val dependencies: List<DependencyData> = emptyList(),
+    val contentRoots: List<ContentRootData> = emptyList(),
+    val facets: List<FacetData> = emptyList(),
 )
 
 @Serializable
@@ -57,9 +57,9 @@ sealed class DependencyData {
 @Serializable
 data class ContentRootData(
     val path: String,
-    val excludedPatterns: List<String>,
-    val excludedUrls: List<String>,
-    val sourceRoots: List<SourceRootData>
+    val excludedPatterns: List<String> = emptyList(),
+    val excludedUrls: List<String> = emptyList(),
+    val sourceRoots: List<SourceRootData> = emptyList()
 )
 
 @Serializable

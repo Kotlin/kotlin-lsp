@@ -103,8 +103,6 @@
             "contentRoots": [
                 {
                     "path": "<WORKSPACE>/",
-                    "excludedPatterns": [],
-                    "excludedUrls": [],
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/src/main/java",
@@ -120,8 +118,7 @@
                         }
                     ]
                 }
-            ],
-            "facets": []
+            ]
         },
         {
             "name": "kotlin-dependency-example.test",
@@ -341,8 +338,6 @@
             "contentRoots": [
                 {
                     "path": "<WORKSPACE>/",
-                    "excludedPatterns": [],
-                    "excludedUrls": [],
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/src/test/java",
@@ -358,8 +353,7 @@
                         }
                     ]
                 }
-            ],
-            "facets": []
+            ]
         }
     ],
     "libraries": [
@@ -1204,7 +1198,6 @@
             }
         }
     ],
-    "sdks": [],
     "kotlinSettings": [
         {
             "name": "Kotlin",
