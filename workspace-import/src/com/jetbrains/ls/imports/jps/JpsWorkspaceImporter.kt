@@ -2,6 +2,8 @@
 package com.jetbrains.ls.imports.jps
 
 import com.intellij.openapi.application.PathManager
+import com.intellij.openapi.components.ExpandMacroToPathMap
+import com.intellij.openapi.components.impl.ProjectWidePathMacroContributor
 import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.impl.JavaHomeFinder
@@ -33,13 +35,16 @@ import org.jetbrains.jps.model.module.JpsSdkDependency
 import org.jetbrains.jps.model.serialization.*
 import org.jetbrains.jps.model.serialization.impl.JpsPathVariablesConfigurationImpl
 import org.jetbrains.jps.util.JpsPathUtil
+import org.jetbrains.kotlin.cli.common.arguments.copyOf
 import org.jetbrains.kotlin.config.isHmpp
 import org.jetbrains.kotlin.idea.facet.KotlinFacetType
+import org.jetbrains.kotlin.idea.workspaceModel.CompilerArgumentsSerializer
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
 import org.jetbrains.kotlin.idea.workspaceModel.kotlinSettings
 import org.jetbrains.kotlin.idea.workspaceModel.toCompilerSettingsData
 import java.io.IOException
 import java.nio.file.Path
+import kotlin.io.path.absolutePathString
 import kotlin.io.path.div
 import kotlin.io.path.exists
 
@@ -63,6 +68,13 @@ object JpsWorkspaceImporter : WorkspaceImporter {
             val entitySource = WorkspaceEntitySource(projectDirectory.toIntellijUri(virtualFileUrlManager))
             val libs = mutableSetOf<String>()
             val sdks = mutableSetOf<String>()
+            val macroExpandMap = run {
+                val map = ExpandMacroToPathMap()
+                ProjectWidePathMacroContributor.getAllMacros((projectDirectory / ".idea" / "misc.xml").absolutePathString()).forEach { (name, value) ->
+                    map.addMacroExpand(name, value)
+                }
+                map
+            }
 
             model.project.modules.forEach { module ->
                 val kotlinFacetModuleExtension = module.container.getChild(JpsKotlinFacetModuleExtension.KIND)
@@ -196,6 +208,16 @@ object JpsWorkspaceImporter : WorkspaceImporter {
                                 flushNeeded = false,
                                 entitySource = entitySource
                             ) {
+                                this.compilerArguments = settings.compilerArguments?.let { args ->
+                                    val args = args.pluginClasspaths?.let { classpath ->
+                                        args.copyOf().apply {
+                                            pluginClasspaths = classpath.map {
+                                                macroExpandMap.substitute(it, true)
+                                            }.toTypedArray()
+                                        }
+                                    } ?: args
+                                    CompilerArgumentsSerializer.serializeToString(args)
+                                }
                                 this.compilerSettings = settings.compilerSettings.toCompilerSettingsData()
                                 this.targetPlatform = settings.targetPlatform.toString()
                             }
