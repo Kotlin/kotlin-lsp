@@ -48,6 +48,7 @@ for zip in "$ARTIFACT_DIR"/*.zip; do
       rm -rf -- "$EXTENSION_DIR"
     fi
     mkdir -p "$EXTENSION_DIR"
+    cp -R "$SCRIPT_DIR/../kotlin-vscode/.nvmrc" "$EXTENSION_DIR"
     cp -R "$SCRIPT_DIR/../kotlin-vscode/.vscodeignore" "$EXTENSION_DIR"
     cp -R "$SCRIPT_DIR/../kotlin-vscode/icons" "$EXTENSION_DIR"
     cp -R "$SCRIPT_DIR/../kotlin-vscode/"/*.js "$EXTENSION_DIR"
