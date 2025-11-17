@@ -26,6 +26,7 @@ sealed interface ModCommandData {
     @Serializable
     data class Navigate(val fileUrl: String, val selectionStart: Int, val selectionEnd: Int, val caret: Int) : ModCommandData
 
+    @Serializable
     data class CreateFile(val fileUrl: String, val content: Content) : ModCommandData {
         @Serializable
         sealed interface Content {

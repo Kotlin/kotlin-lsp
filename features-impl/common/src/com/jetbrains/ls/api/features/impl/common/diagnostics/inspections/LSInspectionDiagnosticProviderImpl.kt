@@ -17,8 +17,6 @@ import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
-import com.intellij.psi.PsiFile
-import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
@@ -37,30 +35,79 @@ import kotlin.reflect.KClass
 
 class LSInspectionDiagnosticProviderImpl(
     override val supportedLanguages: Set<LSLanguage>,
-): LSDiagnosticProvider {
+) : LSDiagnosticProvider {
     context(_: LSServer, _: LspHandlerContext)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
         if (!params.textDocument.isSource()) return@flow
         val onTheFly = false
         withAnalysisContext(params.textDocument.uri.uri) {
             runReadAction c@{
+                val diagnostics = mutableListOf<Diagnostic>()
+
                 val file = params.textDocument.findVirtualFile() ?: return@c emptyList()
+                val document = file.findDocument() ?: return@c emptyList()
                 val psiFile = file.findPsiFile(project) ?: return@c emptyList()
-                val inspections = getInspections(psiFile.language).ifEmpty { return@c emptyList() }
-                val holder = ProblemsHolder(InspectionManagerEx(project), psiFile, onTheFly)
-                val visitors = inspections.map { inspection ->
-                    InspectionWithVisitor(inspection, inspection.buildVisitor(holder, onTheFly))
+                val inspectionManager = InspectionManagerEx(project)
+                val problemsHolder = ProblemsHolder(inspectionManager, psiFile, onTheFly)
+
+                val localInspections = getLocalInspections(psiFile.language)
+                for (localInspection in localInspections) {
+                    val visitor = localInspection.buildVisitor(problemsHolder, onTheFly)
+
+                    fun collect(element: PsiElement) {
+                        runCatching {
+                            element.accept(visitor)
+                        }.getOrHandleException {
+                            if (LOG.isTraceEnabled) LOG.warn(it)
+                            else LOG.warn(it.toString())
+                        }
+                        diagnostics.addAll(problemsHolder.collectDiagnostics(file, project, localInspection))
+                        problemsHolder.clearResults()
+                    }
+
+                    psiFile.accept(object : PsiElementVisitor() {
+                        override fun visitElement(element: PsiElement) {
+                            collect(element)
+                            element.acceptChildren(this)
+                        }
+                    })
                 }
 
-                collectDiagnostics(holder, psiFile, file, visitors)
+                val globalInspectionContext = inspectionManager.createNewGlobalContext()
+                for (simpleGlobalInspection in getSimpleGlobalInspections(psiFile.language)) {
+                    val processor = object : ProblemDescriptionsProcessor {}
+                    runCatching {
+                        simpleGlobalInspection.checkFile(psiFile, inspectionManager, problemsHolder, globalInspectionContext, processor)
+                    }.getOrHandleException {
+                        if (LOG.isTraceEnabled) LOG.warn(it)
+                        else LOG.warn(it.toString())
+                    }
+                    for (problemDescriptor in problemsHolder.results) {
+                        val data = problemDescriptor.createDiagnosticData(project)
+                        val range = problemDescriptor.range()?.toLspRange(document) ?: continue
+                        diagnostics.add(
+                            Diagnostic(
+                                range = range,
+                                severity = problemDescriptor.highlightType.toLsp(),
+                                // todo handle markers from [com.intellij.codeInspection.CommonProblemDescriptor.getDescriptionTemplate]
+                                message = problemDescriptor.tooltipTemplate,
+                                code = StringOrInt.string(simpleGlobalInspection.shortName),
+                                tags = problemDescriptor.highlightType.toLspTags(),
+                                data = LSP.json.encodeToJsonElement<InspectionDiagnosticData>(data),
+                            ),
+                        )
+                    }
+                    problemsHolder.clearResults()
+                }
+
+                return@c diagnostics
             }
-        }.forEach { emit(it) }
+        }.forEach { diagnostic -> emit(diagnostic) }
     }
-
-
 
     // kotlin ones should be moved closer to the kotlin impl
     private val blacklist = BlackList(
+        // Kotlin local inspections
         BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.RemoveRedundantQualifierNameInspection", "slow"),
         BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.codeInsight.inspections.shared.KotlinUnusedImportInspection", "slow"),
         BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.diagnosticBased.UnusedVariableInspection", "slow"),
@@ -74,6 +121,30 @@ class LSInspectionDiagnosticProviderImpl(
 
         BlackListEntry.InspectionSuperClass("org.jetbrains.kotlin.idea.codeinsight.api.applicable.inspections.KotlinKtDiagnosticBasedInspectionBase", "they are slow as calling additional diagnostic collection"),
         BlackListEntry.InspectionSuperClass("org.jetbrains.kotlin.idea.codeinsight.api.applicable.inspections.KotlinPsiDiagnosticBasedInspectionBase", "they are slow as calling additional diagnostic collection"),
+
+        // Java local inspections
+        BlackListEntry.InspectionClass("com.siyeh.ig.bugs.WriteOnlyObjectInspection", "depends on ContractInferenceIndexKt which depends on GistManager"),
+        BlackListEntry.InspectionClass("com.siyeh.ig.bugs.MismatchedCollectionQueryUpdateInspection", "depends on ImplicitUsagesProvider"),
+        BlackListEntry.InspectionSuperClass("com.intellij.codeInspection.nullable.NullableStuffInspectionBase", "depends on NullableNotNullManager"),
+        BlackListEntry.InspectionClass("com.intellij.codeInspection.nullable.NotNullFieldNotInitializedInspection", "depends on NullableNotNullManager"),
+        BlackListEntry.InspectionClass("com.siyeh.ig.controlflow.IfStatementWithIdenticalBranchesInspection", "depends on NullableNotNullManager"),
+        BlackListEntry.InspectionClass("com.siyeh.ig.threading.DoubleCheckedLockingInspection", "depends on NullableNotNullManager"),
+        BlackListEntry.InspectionClass("com.siyeh.ig.controlflow.DuplicateConditionInspection", "depends on NullableNotNullManager"),
+        BlackListEntry.InspectionClass("com.siyeh.ig.migration.IfCanBeSwitchInspection", "depends on NullableNotNullManager"),
+        BlackListEntry.InspectionClass("com.siyeh.ig.controlflow.PointlessNullCheckInspection", "depends on NullableNotNullManager"),
+        BlackListEntry.InspectionClass("com.intellij.codeInspection.bulkOperation.UseBulkOperationInspection", "depends on BulkMethodInfoProvider"),
+        BlackListEntry.InspectionClass("com.intellij.codeInspection.UpdateInspectionOptionFix", "depends on PathMacrosImpl"),
+        BlackListEntry.InspectionClass("com.siyeh.ig.annotation.MetaAnnotationWithoutRuntimeRetentionInspection", "depends on UastLanguagePlugin"),
+        BlackListEntry.InspectionClass("com.siyeh.ig.bugs.IgnoreResultOfCallInspection", "depends on ProjectBytecodeAnalysis"),
+        BlackListEntry.InspectionClass("com.siyeh.ig.style.FieldMayBeFinalInspection", "Missing extension point com.intellij.canBeFinal"),
+        BlackListEntry.InspectionClass("com.siyeh.ig.controlflow.PointlessBooleanExpressionInspection", "Missing extension point: com.intellij.canBeFinal"),
+        BlackListEntry.InspectionClass("com.siyeh.ig.maturity.CommentedOutCodeInspection", "depends on JavaCodeFragmentFactory"),
+        BlackListEntry.InspectionClass("com.intellij.codeInspection.java18api.Java8MapApiInspection", "Missing extension point: com.intellij.deepestSuperMethodsSearch"),
+        BlackListEntry.InspectionClass("com.siyeh.ig.dataflow.UnnecessaryLocalVariableInspection", "depends on CommonJavaInlineUtil"),
+        BlackListEntry.InspectionClass("com.siyeh.ig.controlflow.ExcessiveRangeCheckInspection", "NoClassDefFoundError: could not initialize class com.intellij.psi.impl.JavaSimplePropertyGistKt"),
+
+        // Java global inspections
+        BlackListEntry.InspectionClass("com.intellij.codeInspection.IdempotentLoopBodyInspection", "depends on ProjectBytecodeAnalysis which is not available in LSP context"),
     )
 
     private class BlackList(
@@ -112,7 +183,7 @@ class LSInspectionDiagnosticProviderImpl(
         }
     }
 
-    private fun getInspections(language: Language): List<LocalInspectionTool> {
+    private fun getLocalInspections(language: Language): List<LocalInspectionTool> {
         return LocalInspectionEP.LOCAL_INSPECTION.extensionList
             .asSequence()
             .filter { it.language == language.id }
@@ -134,44 +205,27 @@ class LSInspectionDiagnosticProviderImpl(
             ?: emptyList()
     }
 
-    context(_: LSAnalysisContext)
-    private fun collectDiagnostics(
-        holder: ProblemsHolder,
-        psiFile: PsiFile,
-        file: VirtualFile,
-        visitors: List<InspectionWithVisitor>,
-    ): List<Diagnostic> {
-        val results = mutableListOf<Diagnostic>()
-
-        fun collect(element: PsiElement) {
-            for ((inspection, visitor) in visitors) {
+    private fun getSimpleGlobalInspections(language: Language): List<GlobalSimpleInspectionTool> {
+        return InspectionEP.GLOBAL_INSPECTION.extensionList
+            .asSequence()
+            .filter { it.language == language.id }
+            .filter { it.enabledByDefault }
+            .filter { HighlightDisplayLevel.find(it.level) != HighlightDisplayLevel.DO_NOT_SHOW }
+            .filterNot { blacklist.containsImplementation(it.implementationClass) }
+            .mapNotNull { inspection ->
                 runCatching {
-                    element.accept(visitor)
+                    inspection.instantiateTool()
                 }.getOrHandleException {
                     if (LOG.isTraceEnabled) LOG.warn(it)
                     else LOG.warn(it.toString())
                 }
-                if (holder.hasResults()) {
-                    results += holder.collectDiagnostics(file, project, inspection)
-                }
-                holder.clearResults()
             }
-        }
-
-        psiFile.accept(object : PsiElementVisitor() {
-            override fun visitElement(element: PsiElement) {
-                collect(element)
-                element.acceptChildren(this)
-            }
-        })
-
-        return results
+            .filterNot { blacklist.containsSuperClass(it) }
+            .filterIsInstance<GlobalSimpleInspectionTool>()
+            .toList()
+            .takeIf { it.isNotEmpty() }
+            ?: emptyList()
     }
-
-    private data class InspectionWithVisitor(
-        val inspection: LocalInspectionTool,
-        val visitor: PsiElementVisitor,
-    )
 
     private fun ProblemsHolder.collectDiagnostics(
         file: VirtualFile,
@@ -181,15 +235,15 @@ class LSInspectionDiagnosticProviderImpl(
         val document = file.findDocument() ?: return emptyList()
         return results
             .filter { it.highlightType != ProblemHighlightType.INFORMATION }
-            .mapNotNull { result ->
-                val data = result.createDiagnosticData(project)
+            .mapNotNull { problemDescriptor ->
+                val data = problemDescriptor.createDiagnosticData(project)
                 Diagnostic(
-                    range = result.range()?.toLspRange(document) ?: return@mapNotNull null,
-                    severity = result.highlightType.toLsp(),
+                    range = problemDescriptor.range()?.toLspRange(document) ?: return@mapNotNull null,
+                    severity = problemDescriptor.highlightType.toLsp(),
                     // todo handle markers from [com.intellij.codeInspection.CommonProblemDescriptor.getDescriptionTemplate]
-                    message = result.tooltipTemplate,
+                    message = problemDescriptor.tooltipTemplate,
                     code = StringOrInt.string(localInspectionTool.id),
-                    tags = result.highlightType.toLspTags(),
+                    tags = problemDescriptor.highlightType.toLspTags(),
                     data = LSP.json.encodeToJsonElement(data),
                 )
             }
@@ -202,7 +256,6 @@ class LSInspectionDiagnosticProviderImpl(
         textRangeInElement?.let { return it.shiftRight(elementRange.startOffset) }
         return elementRange
     }
-
 
     private fun ProblemDescriptor.createDiagnosticData(project: Project): InspectionDiagnosticData {
         return InspectionDiagnosticData(
@@ -226,9 +279,7 @@ private fun getModCommand(fix: QuickFix<*>, project: Project, problemDescriptor:
         }
     }
 
-
 private val LOG = logger<LSInspectionDiagnosticProviderImpl>()
-
 
 // TODO LSP-241 design, currently some random conversions
 private fun ProblemHighlightType.toLsp(): DiagnosticSeverity = when (this) {
