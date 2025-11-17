@@ -17,8 +17,10 @@ object LSDiagnostic {
         // support only partial results for related diagnostics, not for the diagnostics for the current document,
         // so we just collect results concurrently from all handlers
         val diagnostics = LSConcurrentResponseHandler.respondDirectlyWithResultsCollectedConcurrently(
-            entriesFor<LSDiagnosticProvider>(params.textDocument),
-        ) { it.getDiagnostics(params) }
+            providers = entriesFor<LSDiagnosticProvider>(params.textDocument),
+            getResults = { diagnosticsProvider -> diagnosticsProvider.getDiagnostics(params) },
+        )
+
         return DocumentDiagnosticReport(
             DocumentDiagnosticReportKind.Full,
             resultId = null,
