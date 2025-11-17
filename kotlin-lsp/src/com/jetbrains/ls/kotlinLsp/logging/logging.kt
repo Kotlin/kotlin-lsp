@@ -68,6 +68,7 @@ private class LSPLogger(private val category: String, private val writeToStdOut:
     }
 
     private fun log(level: LogLevel, message: String?, t: Throwable?, details: Array<out String?> = emptyArray()) {
+        if (!shouldLog(level)) return
         val messageRendered by lazy(LazyThreadSafetyMode.NONE) {
             buildString {
                 val currentMillis = System.currentTimeMillis()
