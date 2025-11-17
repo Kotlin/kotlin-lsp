@@ -11,8 +11,6 @@ import com.jetbrains.lsp.protocol.WorkspaceEdit
 object LSRename {
     context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
     suspend fun rename(params: RenameParams): WorkspaceEdit? {
-        return entriesFor<LSRenameProvider>(params.textDocument)
-            .asSequence()
-            .firstNotNullOfOrNull { it.rename(params) }
+        return entriesFor<LSRenameProvider>(params.textDocument).firstNotNullOfOrNull { it.rename(params) }
     }
 }
