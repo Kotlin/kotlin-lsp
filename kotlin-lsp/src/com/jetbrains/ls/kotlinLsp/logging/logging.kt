@@ -5,11 +5,13 @@ import com.intellij.openapi.diagnostic.DefaultLogger.attachmentsToString
 import com.intellij.openapi.diagnostic.IdeaLogRecordFormatter
 import com.intellij.openapi.diagnostic.LogLevel
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.diagnostic.logger
 import com.jetbrains.ls.kotlinLsp.connection.Client
 import com.jetbrains.lsp.protocol.*
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.util.concurrent.ConcurrentHashMap
 
 
 fun initKotlinLspLogger(writeToStdOut: Boolean) {
@@ -19,8 +21,26 @@ fun initKotlinLspLogger(writeToStdOut: Boolean) {
 }
 
 private class KotlinLspLoggerFactory(private val writeToStdOut: Boolean) : Logger.Factory {
+    private val levels = LoggingLevelsByCategory()
+
     override fun getLoggerInstance(category: String): Logger =
-        LSPLogger(category, writeToStdOut)
+        LSPLogger(category, writeToStdOut, levels)
+}
+
+private class LoggingLevelsByCategory {
+    // TODO PersistentHashMap may be faster as we have low write rate here and high read-rate
+    private val levels = ConcurrentHashMap<String, LogLevel>()
+
+    fun getLevel(category: String): LogLevel =
+        levels[category] ?: DEFAULT
+
+    fun setLevel(category: String, level: LogLevel) {
+        levels[category] = level
+    }
+
+    companion object {
+        val DEFAULT = LogLevel.INFO
+    }
 }
 
 /**
@@ -30,17 +50,17 @@ private class KotlinLspLoggerFactory(private val writeToStdOut: Boolean) : Logge
  * - Common level: logs to the console, affected by [LogLevel]
  */
 // TODO LSP-229 should store logs on disk
-private class LSPLogger(private val category: String, private val writeToStdOut: Boolean) : Logger() {
+private class LSPLogger(private val category: String, private val writeToStdOut: Boolean, private val levels: LoggingLevelsByCategory) : Logger() {
     private val logCreation: Long = System.currentTimeMillis()
     private val withDateTime: Boolean = true
     /**
      * [level] does not affect `$/logTrace` notifications,
      */
-    private var level: LogLevel = LogLevel.INFO
+    private val level: LogLevel
+        get() = levels.getLevel(category)
 
-    // TODO LSP-226 the level should affect all loggers with the same category
     override fun setLevel(level: LogLevel) {
-        this.level = level
+        levels.setLevel(category, level)
     }
 
     override fun isDebugEnabled(): Boolean {
