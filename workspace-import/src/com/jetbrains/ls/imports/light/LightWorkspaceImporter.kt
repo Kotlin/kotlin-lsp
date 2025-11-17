@@ -10,6 +10,7 @@ import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.PathUtil
 import com.jetbrains.ls.api.core.util.UriConverter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
+import com.jetbrains.ls.imports.utils.applyChangesWithDeduplication
 import org.jetbrains.kotlin.idea.base.plugin.artifacts.KotlinArtifacts
 import org.jetbrains.kotlin.idea.compiler.configuration.isRunningFromSources
 import java.nio.file.Path
@@ -27,8 +28,10 @@ object LightWorkspaceImporter : WorkspaceImporter {
     ): MutableEntityStorage =
         createLightWorkspace(projectDirectory, virtualFileUrlManager)
 
-    fun emptyWorkspace(virtualFileUrlManager: VirtualFileUrlManager): MutableEntityStorage =
-        createLightWorkspace(null, virtualFileUrlManager)
+    fun createEmptyWorkspace(virtualFileUrlManager: VirtualFileUrlManager, storage: MutableEntityStorage) {
+        val model = createLightWorkspace(null, virtualFileUrlManager)
+        applyChangesWithDeduplication(storage, model)
+    }
 
     private fun createLightWorkspace(
         projectDirectory: Path?,
@@ -89,7 +92,7 @@ object LightWorkspaceImporter : WorkspaceImporter {
                 librariesDir.listDirectoryEntries().filter { it.extension == "jar" }.forEach { jar ->
                     val jarUrl = UriConverter.localAbsolutePathToIntellijUri(jar.absolutePathString())
                     storage addEntity LibraryEntity(
-                        name = jar.nameWithoutExtension,
+                        name = jar.absolutePathString(),
                         tableId = LibraryTableId.ProjectLibraryTableId,
                         roots = listOf(
                             LibraryRoot(

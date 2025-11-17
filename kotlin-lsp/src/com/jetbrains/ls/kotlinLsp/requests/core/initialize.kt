@@ -10,6 +10,7 @@ import com.intellij.platform.workspace.storage.entities
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.createSdkEntity
+import com.jetbrains.ls.api.core.util.workspaceFolderPaths
 import com.jetbrains.ls.api.core.workspaceStructure
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.allCommandDescriptors
@@ -29,7 +30,6 @@ import com.jetbrains.ls.snapshot.api.impl.core.InitializeParamsEntity
 import com.jetbrains.ls.snapshot.api.impl.core.lspInitializationOptions
 import com.jetbrains.lsp.implementation.*
 import com.jetbrains.lsp.protocol.*
-import com.jetbrains.ls.api.core.util.workspaceFolderPaths
 import com.jetbrains.lsp.protocol.WorkDoneProgress.Report
 import fleet.kernel.change
 import kotlinx.coroutines.CancellationException
@@ -164,8 +164,7 @@ private suspend fun indexFolders(
                 }
             } else {
                 progress.report(Report(message = "Using light mode"))
-                val imported = LightWorkspaceImporter.emptyWorkspace(virtualFileUrlManager)
-                storage.applyChangesFrom(imported)
+                LightWorkspaceImporter.createEmptyWorkspace(virtualFileUrlManager, storage)
             }
 
             var defaultJdk = storage.entities(SdkEntity::class.java).firstOrNull { it.entitySource == DefaultJdkEntitySource }
@@ -213,11 +212,11 @@ private suspend fun initFolder(
     progress.report(Report(message = "Importing folder ${folder}"))
     for (importer in importers) {
         val unresolved = mutableSetOf<String>()
-        progress.report(Report(message = "Trying to import using ${importer.javaClass.simpleName}"))
+        LOG.info("Trying to import using ${importer.javaClass.simpleName}")
         val imported = try {
             withContext(Dispatchers.IO) {
-                importer.importWorkspace(folder, virtualFileUrlManager, unresolved::add)
-            } ?: continue
+                importer.importWorkspaceToStorage(storage, folder, virtualFileUrlManager, unresolved::add)
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
@@ -234,17 +233,19 @@ private suspend fun initFolder(
                 LogMessageParams(MessageType.Error, logMessage)
             )
             LOG.error(e)
-            continue
+            false
         }
-        if (unresolved.isNotEmpty()) {
-            lspClient.notify(
-                ShowMessageNotification,
-                ShowMessageParams(MessageType.Warning, unresolved.joinToString(", ", "Couldn't resolve some dependencies: ")),
-            )
-        }
-        storage.applyChangesFrom(imported)
 
-        break
+        if (imported) {
+            progress.report(Report(message = "Successfully imported folder ${folder}"))
+            if (unresolved.isNotEmpty()) {
+                lspClient.notify(
+                    ShowMessageNotification,
+                    ShowMessageParams(MessageType.Warning, unresolved.joinToString(", ", "Couldn't resolve some dependencies: ")),
+                )
+            }
+            break
+        }
     }
 }
 
