@@ -9,6 +9,9 @@ import com.jetbrains.lsp.protocol.CodeActionKind
 import com.jetbrains.lsp.protocol.CodeActionParams
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * Provides code actions (known as quick-fixes in IntelliJ).
+ */
 interface LSCodeActionProvider : LSLanguageSpecificConfigurationEntry {
     /**
      * Only code actions of these kinds will be provided. Cannot be empty.
