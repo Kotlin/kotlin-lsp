@@ -115,6 +115,7 @@ jvm_library(
     "@lib//:kotlinc-analysis-api",
     "@lib//:kotlinc-analysis-api-k2",
     "@community//java/java-impl:impl",
+    "@community//java/java-impl:impl_test_lib",
     "@community//java/openapi:java",
     "@community//plugins/kotlin/base/plugin",
     "@community//plugins/kotlin/base/plugin:plugin_test_lib",
