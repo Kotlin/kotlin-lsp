@@ -19,21 +19,28 @@ fun ijPluginByXml(
     val pluginRoot = PathManager.getResourceRoot(classForClasspath, "/$xmlResourcePath")
         ?.let { Paths.get(it) }
         ?: error("Resource not found: $xmlResourcePath")
+
     fun createFakePluginId(): PluginId = PluginId.getId(xmlResourcePath)
 
     return when {
         xmlResourcePath.startsWith(PluginManagerCore.META_INF) -> {
             // normal plugin xml
             loadForCoreEnv(
-                pluginRoot,
-                xmlResourcePath, relativeDir = "",
-                id = if (useFakePluginId) createFakePluginId() else null
+                pluginRoot = pluginRoot,
+                fileName = xmlResourcePath,
+                relativeDir = "",
+                id = if (useFakePluginId) createFakePluginId() else null,
             )
         }
 
         else -> {
             // v2 plugin xml
-            loadForCoreEnv(pluginRoot, xmlResourcePath, relativeDir = "", id = createFakePluginId())
+            loadForCoreEnv(
+                pluginRoot = pluginRoot,
+                fileName = xmlResourcePath,
+                relativeDir = "",
+                id = createFakePluginId(),
+            )
         }
     }
         ?: error("Failed to load plugin descriptor from $xmlResourcePath")
