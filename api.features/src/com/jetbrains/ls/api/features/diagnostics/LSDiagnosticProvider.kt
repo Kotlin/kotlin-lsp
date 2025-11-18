@@ -8,6 +8,9 @@ import com.jetbrains.lsp.protocol.Diagnostic
 import com.jetbrains.lsp.protocol.DocumentDiagnosticParams
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * Provides diagnostics (known as inspections in IntelliJ).
+ */
 interface LSDiagnosticProvider : LSLanguageSpecificConfigurationEntry {
     // TODO LSP-237 handle other parts of `DocumentDiagnosticReport`
     context(_: LSServer, _: LspHandlerContext)
