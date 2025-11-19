@@ -134,8 +134,7 @@ private fun initIdeaPaths(systemPath: Path?) {
 
         val nativeFileWatcherPath = downloadFileWatcherBinaries(PathManager.getHomeDir() / "community")
         FileWatcher.initLibraryFromSources(nativeFileWatcherPath)
-    }
-    else {
+    } else {
         val path = systemPath
             ?.createDirectories()
             ?.takeIf {
@@ -206,7 +205,8 @@ private fun getIJPathIfRunningFromSources(): String? {
     val jar = PathManager.getJarForClass(serverClass)?.absolutePathString() ?: return null
     val outSuffixes = arrayOf(
         "bazel-out/jvm-fastbuild/bin/language-server/community/kotlin-lsp/kotlin-lsp.jar",
-        "/out/classes/production/language-server.kotlin-lsp")
+        "/out/classes/production/language-server.kotlin-lsp"
+    )
     if (outSuffixes.any { jar.endsWith(FileUtilRt.toSystemDependentName(it)) }) {
         return Path("").absolutePathString()
     }
@@ -216,13 +216,13 @@ private fun getIJPathIfRunningFromSources(): String? {
 
 fun createConfiguration(isolatedDocumentsMode: Boolean = false): LSConfiguration {
     return LSConfiguration(
-        buildList {
+        languageConfigurations = buildList {
             add(LSCommonConfiguration)
             add(LSKotlinLanguageConfiguration)
             add(LSJavaBaseLanguageConfiguration)
             addAll(getAdditionalLanguageConfigurations())
             if (isolatedDocumentsMode) add(IsolatedDocumentsPlugin)
-        }
+        },
     )
 }
 
