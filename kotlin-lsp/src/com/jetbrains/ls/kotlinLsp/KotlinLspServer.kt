@@ -28,6 +28,7 @@ import com.jetbrains.ls.kotlinLsp.util.logSystemInfo
 import com.jetbrains.ls.snapshot.api.impl.core.createServerStarterAnalyzerImpl
 import com.jetbrains.lsp.implementation.*
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.kotlin.idea.base.plugin.artifacts.KotlinArtifacts
@@ -89,10 +90,12 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
 
                 is KotlinLspServerMode.Socket -> {
                     logSystemInfo()
-                    tcpConnection(
-                        mode.config,
-                    ) { connection ->
+                    val body: suspend CoroutineScope.(LspConnection) -> Unit = { connection ->
                         handleRequests(connection, runConfig, config)
+                    }
+                    when (mode.config) {
+                        is TcpConnectionConfig.Client -> tcpClient(mode.config, body = body)
+                        is TcpConnectionConfig.Server -> tcpServer(mode.config, server = body)
                     }
                 }
             }
