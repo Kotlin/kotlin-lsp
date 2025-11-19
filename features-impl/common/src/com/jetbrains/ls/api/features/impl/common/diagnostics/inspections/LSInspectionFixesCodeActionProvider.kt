@@ -27,32 +27,32 @@ class LSInspectionFixesCodeActionProvider(
     context(_: LSServer, _: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val diagnosticData = params.diagnosticData<InspectionDiagnosticData>().ifEmpty { return@flow }
-                diagnosticData.flatMap { data ->
-                    data.data.fixes.map { quickFix ->
-                        CodeAction(
-                            title = quickFix.name,
-                            kind = CodeActionKind.QuickFix,
-                            diagnostics = listOf(data.diagnostic),
-                            command = Command(
-                                commandDescriptor.title,
-                                commandDescriptor.name,
-                                arguments = listOf(
-                                    LSP.json.encodeToJsonElement(quickFix.modCommandData),
-                                ),
-                            ),
-                        )
-                    }
-            }.forEach { emit(it) }
+        diagnosticData.flatMap { data ->
+            data.data.fixes.map { quickFix ->
+                CodeAction(
+                    title = quickFix.name,
+                    kind = CodeActionKind.QuickFix,
+                    diagnostics = listOf(data.diagnostic),
+                    command = Command(
+                        commandDescriptor.title,
+                        commandDescriptor.name,
+                        arguments = listOf(
+                            LSP.json.encodeToJsonElement(quickFix.modCommandData),
+                        ),
+                    ),
+                )
+            }
+        }.forEach { codeAction -> emit(codeAction) }
     }
 
     private val commandDescriptor = LSCommandDescriptor(
-        "Inspection Apply Fix",
-        "inspection.applyFix",
-         { arguments ->
+        title = "Inspection Apply Fix",
+        name = "inspection.applyFix",
+        executor = { arguments ->
             val modCommandData = LSP.json.decodeFromJsonElement<ModCommandData>(arguments[0])
             executeCommand(modCommandData, lspClient)
             JsonPrimitive(true)
-        }
+        },
     )
 
     override val commandDescriptors: List<LSCommandDescriptor> = listOf(commandDescriptor)
