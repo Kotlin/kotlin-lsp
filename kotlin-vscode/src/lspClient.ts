@@ -279,4 +279,5 @@ const defaultJvmOptions = [
     "--add-opens", "jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED",
     "--enable-native-access=ALL-UNNAMED",
     "-Djdk.lang.Process.launchMechanism=FORK",
+    "-Djava.awt.headless=true",
 ]

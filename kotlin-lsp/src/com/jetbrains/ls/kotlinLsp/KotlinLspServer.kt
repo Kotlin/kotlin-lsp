@@ -35,7 +35,6 @@ import org.jetbrains.kotlin.idea.base.plugin.artifacts.KotlinArtifacts
 import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutMode
 import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutModeProvider
 import org.jetbrains.kotlin.idea.compiler.configuration.isRunningFromSources
-import java.awt.Toolkit
 import java.io.RandomAccessFile
 import java.lang.invoke.MethodHandles
 import java.net.URLDecoder
@@ -67,7 +66,6 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
     val mode = runConfig.mode
     initKotlinLspLogger(writeToStdOut = mode != KotlinLspServerMode.Stdio)
     initIdeaPaths(runConfig.systemPath)
-    initHeadlessToolkit()
     initExtraProperties()
 
     val config = createConfiguration(runConfig.isolatedDocumentsMode)
@@ -183,24 +181,6 @@ private fun initExtraProperties() {
     KotlinPluginLayoutModeProvider.setForcedKotlinPluginLayoutMode(KotlinPluginLayoutMode.LSP)
     // TrigramIndex.isEnabled() -> false:
     SystemProperties.setProperty("find.use.indexing.searcher.extensions", "false")
-}
-
-private fun initHeadlessToolkit() {
-    //System.setProperty("apple.awt.UIElement", "true")
-    val field = ClassLoader.getPlatformClassLoader().loadClass("java.awt.GraphicsEnvironment")
-        .declaredFields.find { it.name == "headless" }!!
-    field.setAccessible(true)
-    val prev = field.get(null) as Boolean?
-    field.set(null, true)
-    val current: Toolkit?
-    try {
-        current = Toolkit.getDefaultToolkit()
-        if (!current::class.java.name.endsWith("HeadlessToolkit")) {
-            throw AssertionError("Unexpected awt.Toolkit: ${current::class.java.name}")
-        }
-    } finally {
-        field.set(null, prev)
-    }
 }
 
 private fun getIJPathIfRunningFromSources(): String? {

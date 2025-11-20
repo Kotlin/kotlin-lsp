@@ -71,4 +71,5 @@ if not exist "%JAVA_BIN%" (
   --add-opens jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED ^
   --enable-native-access=ALL-UNNAMED ^
   -Djdk.lang.Process.launchMechanism=FORK ^
+  -Djava.awt.headless=true ^
   -cp "%DIR%\lib\*" com.jetbrains.ls.kotlinLsp.KotlinLspServerKt %*
