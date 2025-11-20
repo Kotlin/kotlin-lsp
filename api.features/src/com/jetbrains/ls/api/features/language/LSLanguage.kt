@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features.language
 
 import com.intellij.lang.Language
+import com.jetbrains.ls.api.core.util.fileExtension
 import com.jetbrains.lsp.protocol.DocumentUri
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 import com.jetbrains.lsp.protocol.URI

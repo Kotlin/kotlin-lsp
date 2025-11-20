@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features.impl.javaBase.configuration
 
 import com.intellij.psi.PsiElement
+import com.jetbrains.ls.api.core.util.scheme
 import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.features.impl.common.definitions.LSDefinitionProviderCommonImpl
 import com.jetbrains.ls.api.features.impl.common.utils.TargetKind

@@ -6,7 +6,6 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.PrintHelpMessage
 import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.path
-import com.jetbrains.lsp.implementation.TcpConnectionConfig
 import java.nio.file.Path
 
 data class KotlinLspServerRunConfig(

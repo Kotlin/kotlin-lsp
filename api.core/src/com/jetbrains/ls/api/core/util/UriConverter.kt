@@ -8,6 +8,8 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.extension
+import kotlin.io.path.name
+import kotlin.io.path.toPath
 import java.net.URI as JavaUri
 
 /**
@@ -135,3 +137,24 @@ fun Path.toLspUri(): URI {
     val uriString = UriConverter.localAbsolutePathToLspUri(path)
     return URI(uriString)
 }
+
+
+/**
+ * Returns the URI's scheme without scheme delimiter (`://`)
+ */
+val URI.scheme: String get() = JavaUri(uri).scheme
+
+/**
+ * Returns the file name
+ */
+val URI.fileName: String get() = JavaUri(uri).path.split("/").last()
+
+/**
+ * Returns the file extension (without dot) if present
+ */
+val URI.fileExtension: String?
+    get() {
+        val name = fileName
+        val dotIndex = name.lastIndexOf('.')
+        return if (dotIndex > 0) name.substring(dotIndex + 1) else null
+    }
