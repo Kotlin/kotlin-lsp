@@ -1,11 +1,12 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.kotlinLsp
 
+import com.intellij.openapi.diagnostic.logger
+import com.jetbrains.ls.api.core.util.retryWithBackOff
 import com.jetbrains.lsp.implementation.ByteReader
 import com.jetbrains.lsp.implementation.ByteWriter
 import com.jetbrains.lsp.implementation.LspClient
 import com.jetbrains.lsp.implementation.LspConnection
-import fleet.util.logging.logger
 import io.ktor.network.selector.SelectorManager
 import io.ktor.network.sockets.*
 import io.ktor.utils.io.ByteReadChannel
@@ -14,8 +15,8 @@ import io.ktor.utils.io.InternalAPI
 import kotlinx.coroutines.*
 import kotlinx.io.Sink
 import kotlinx.io.Source
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
+
+private val LOG = logger<LspClient>()
 
 suspend fun tcpServer(config: TcpConnectionConfig.Server, server: suspend CoroutineScope.(LspConnection) -> Unit) {
     SelectorManager(Dispatchers.IO).use { selectorManager ->
@@ -36,8 +37,7 @@ suspend fun tcpServer(config: TcpConnectionConfig.Server, server: suspend Corout
                             client.use { clientSocket ->
                                 coroutineScope { server(KtorSocketConnection(clientSocket)) }
                             }
-                        }
-                        finally {
+                        } finally {
                             LOG.info("Client disconnected ${clientAddress}")
                         }
                     }
@@ -50,37 +50,19 @@ suspend fun tcpServer(config: TcpConnectionConfig.Server, server: suspend Corout
 
 suspend fun tcpClient(
     config: TcpConnectionConfig.Client,
-    connectionTimeout: Duration = 30.seconds,
     body: suspend CoroutineScope.(LspConnection) -> Unit
 ) {
     SelectorManager(Dispatchers.IO).use { selectorManager ->
-        var backoff = 2.seconds
-        var timeLeft = connectionTimeout
-        while (true) {
-            try {
-                aSocket(selectorManager).tcp().connect(config.host, config.port).use { server ->
-                    LOG.info("Client is connected to server ${server.remoteAddress}")
-                    try {
-                        coroutineScope { body(KtorSocketConnection(server)) }
-                    }
-                    finally {
-                        LOG.info("Client disconnected from the server")
-                    }
+        retryWithBackOff(onError = { e, backoff ->
+            LOG.warn("Retrying ${config.host}:${config.port} in $backoff... (error: ${e.message})")
+        }) {
+            aSocket(selectorManager).tcp().connect(config.host, config.port).use { server ->
+                LOG.info("Client is connected to server ${server.remoteAddress}")
+                try {
+                    coroutineScope { body(KtorSocketConnection(server)) }
+                } finally {
+                    LOG.info("Client disconnected from the server")
                 }
-                return@use
-            }
-            catch (e: CancellationException) {
-                throw e
-            }
-            catch (e: Exception) {
-                if (timeLeft <= Duration.ZERO) throw e
-                LOG.warn {
-                    "Reconnecting to ${config.host}:${config.port} in $backoff... (error: ${e.message})"
-                }
-                val delayTime = backoff.coerceAtMost(timeLeft)
-                delay(delayTime)
-                timeLeft -= delayTime
-                backoff = (backoff * 2).coerceAtMost(connectionTimeout / 2)
             }
         }
     }
@@ -145,6 +127,3 @@ class KtorSocketConnection(private val socket: Socket) : LspConnection {
         return !socket.isClosed
     }
 }
-
-
-private val LOG = logger<LspClient>()

@@ -10,10 +10,12 @@ import com.intellij.platform.workspace.jps.entities.*
 import com.intellij.platform.workspace.jps.entities.LibraryTableId.ProjectLibraryTableId
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
+import com.jetbrains.ls.api.core.util.retryWithBackOff
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.utils.toIntellijUri
+import org.gradle.tooling.GradleConnectionException
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.ProjectConnection
 import org.gradle.tooling.model.DomainObjectSet
@@ -282,9 +284,13 @@ object GradleWorkspaceImporter : WorkspaceImporter {
      * Access to BuildEnvironment is safe because it does not trigger the compilation of build scripts and Gradle execution.
      * So, we could safely choose the correct JDK for Gradle daemon that will be used for Gradle-related operations.
      */
-    private fun getGradleJdks(projectDirectory: Path, connection: ProjectConnection): List<File> {
-        val buildEnvironment = connection.getModel(BuildEnvironment::class.java)
-            ?: throw IllegalStateException("Unable to resolve Gradle Build Environment")
+    private suspend fun getGradleJdks(projectDirectory: Path, connection: ProjectConnection): List<File> {
+        val buildEnvironment = retryWithBackOff(onError = { e, backoff ->
+            if (e !is GradleConnectionException) throw e
+            LOG.warn("Retrying gradle connection in $backoff... (error: ${e.message})")
+        }) {
+            connection.getModel(BuildEnvironment::class.java)
+        } ?: throw IllegalStateException("Unable to resolve Gradle Build Environment")
         val knownJdks = getFinder(projectDirectory.getEelDescriptor())
             .checkConfiguredJdks(false)
             .checkEmbeddedJava(false)
