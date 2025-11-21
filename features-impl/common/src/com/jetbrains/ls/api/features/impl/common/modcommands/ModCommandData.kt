@@ -10,22 +10,8 @@ import com.jetbrains.ls.api.core.util.intellijUriToLspUri
 import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
 import com.jetbrains.lsp.implementation.LspClient
+import com.jetbrains.lsp.protocol.*
 import com.jetbrains.lsp.protocol.ApplyEditRequests.ApplyEdit
-import com.jetbrains.lsp.protocol.ApplyWorkspaceEditParams
-import com.jetbrains.lsp.protocol.CreateFile
-import com.jetbrains.lsp.protocol.DeleteFile
-import com.jetbrains.lsp.protocol.DocumentUri
-import com.jetbrains.lsp.protocol.MessageType
-import com.jetbrains.lsp.protocol.Range
-import com.jetbrains.lsp.protocol.RenameFile
-import com.jetbrains.lsp.protocol.ShowDocument
-import com.jetbrains.lsp.protocol.ShowDocumentParams
-import com.jetbrains.lsp.protocol.ShowMessageRequestParams
-import com.jetbrains.lsp.protocol.TextDocumentEdit
-import com.jetbrains.lsp.protocol.TextDocumentIdentifier
-import com.jetbrains.lsp.protocol.TextEdit
-import com.jetbrains.lsp.protocol.Window
-import com.jetbrains.lsp.protocol.WorkspaceEdit
 import kotlinx.serialization.Serializable
 import java.util.*
 
@@ -86,6 +72,10 @@ sealed interface ModCommandData {
             is ModMoveFile -> MoveFile(command.file.url, command.targetFile.url.replace("mock://", "file://"))
             is ModUpdateFileText -> UpdateFileText(command.file.url, command.oldText, command.newText)
             is ModDisplayMessage -> DisplayMessage(command.messageText, command.kind)
+            // We can safely skip tab-out command
+            is ModRegisterTabOut -> Nothing
+            // Highlighting could be important but usually it's an additional helpful thing, not an essential one, so let's skip it for now
+            is ModHighlight -> Nothing
             else -> {
                 LOG.debug("Unsupported command $command")
                 null
