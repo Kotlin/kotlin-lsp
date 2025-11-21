@@ -62,7 +62,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
             InitializeParamsEntity.single().initializeParams.complete(initParams)
         }
 
-        if (initParams.lspInitializationOptions?.skipImport != "true") {
+        if (initParams.lspInitializationOptions?.skipImport != true) {
             indexFolders(folders, initParams)
         }
 

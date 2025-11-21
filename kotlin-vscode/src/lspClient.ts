@@ -180,7 +180,6 @@ async function createLspClient(): Promise<LanguageClient | null> {
         ],
         progressOnInitialization: true,
         initializationOptions: {
-            storageUri: getContext().storageUri?.toString(),
             defaultJdk: workspace.getConfiguration().get('kotlinLSP.jdkForSymbolResolution')
         },
     };
