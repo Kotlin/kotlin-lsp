@@ -3,7 +3,6 @@ package com.jetbrains.ls.api.features.impl.common.kotlin.completion.rekot
 
 import com.intellij.codeInsight.completion.AllClassesGetter
 import com.intellij.codeInsight.completion.PlainPrefixMatcher
-import com.intellij.codeInsight.completion.PrefixMatcher
 import com.intellij.codeInsight.completion.scope.JavaCompletionProcessor
 import com.intellij.codeInsight.lookup.LookupElementPresentation
 import com.intellij.openapi.diagnostic.fileLogger
@@ -126,7 +125,7 @@ internal object CompletionItemsProvider {
                 else -> return emptyList()
             }
 
-            else -> position.prefix?.let(::PlainPrefixMatcher) ?: PrefixMatcher.ALWAYS_TRUE
+            else -> position.prefix?.let(::PlainPrefixMatcher) ?: PlainPrefixMatcher.ALWAYS_TRUE
         }
         val result = mutableListOf<RekotCompletionItem.Keyword>()
         KeywordCompletion().complete(
