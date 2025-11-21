@@ -2,6 +2,18 @@
   <id>features/javaBase/apiImpl</id>
   <vendor>JetBrains</vendor>
 
+  <extensionPoints>
+    <extensionPoint qualifiedName="com.intellij.modcompletion.completionItemProvider"
+                    beanClass="com.intellij.lang.LanguageExtensionPoint" dynamic="true">
+      <with attribute="implementationClass" implements="com.intellij.modcompletion.ModCompletionItemProvider"/>
+    </extensionPoint>
+  </extensionPoints>
+  <extensions defaultExtensionNs="com.intellij">
+    <modcompletion.completionItemProvider language="JAVA" implementationClass="com.intellij.codeInsight.completion.modcompletion.KeywordCompletionItemProvider"/>
+    <modcompletion.completionItemProvider language="JAVA" implementationClass="com.intellij.codeInsight.completion.modcompletion.InstanceOfClassItemProvider"/>
+    <langCodeStyleSettingsProvider implementation="com.intellij.ide.JavaLanguageCodeStyleSettingsProvider"/>
+    <lang.formatter language="JAVA" implementationClass="com.intellij.lang.java.JavaFormattingModelBuilder"/>
+  </extensions>
   <extensions defaultExtensionNs="ls">
     <markdownDocProvider language="JAVA"
                          implementationClass="com.jetbrains.ls.api.features.impl.javaBase.documentation.LSMarkdownDocProviderJavaImpl"/>
