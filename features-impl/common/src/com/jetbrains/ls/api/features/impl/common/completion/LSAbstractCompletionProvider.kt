@@ -12,6 +12,7 @@ import com.intellij.openapi.application.invokeAndWaitIfNeeded
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
+import com.intellij.util.ObjectUtils
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
@@ -65,19 +66,10 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider, LSCommandDes
                                 lookup.renderElement(it)
                             }
 
-                            val sessionData = SessionDataEntity.single().map
-
-                            @Suppress("UNCHECKED_CAST")
-                            val completionCache = sessionData.getOrPut(COMPLETION_CACHE_KEY) {
-                                Caffeine.newBuilder()
-                                    .maximumSize(PER_CLIENT_COMPLETION_CACHE_SIZE)
-                                    .build<Long, CompletionData>()
-                            } as Cache<Long, CompletionData>
-
-                            val idGenerator = sessionData.getOrPut(COMPLETION_ID_GENERATOR_KEY) { AtomicLong(0L) } as AtomicLong
-                            val id = idGenerator.incrementAndGet()
                             val itemMatcher = completionProcess.arranger.itemMatcher(lookup)
-                            completionCache.put(id, CompletionData(params, lookup, itemMatcher))
+                            val data = CompletionData(params, lookup, itemMatcher)
+
+                            val id = cacheCompletionData(data)
 
                             CompletionItem(
                                 label = lookupPresentation.itemText ?: lookup.lookupString,
@@ -118,8 +110,8 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider, LSCommandDes
 
     companion object {
         private const val PER_CLIENT_COMPLETION_CACHE_SIZE = 1000L
-        private val COMPLETION_CACHE_KEY = Any()
-        private val COMPLETION_ID_GENERATOR_KEY = Any()
+        private val COMPLETION_CACHE_KEY = ObjectUtils.sentinel("COMPLETION_CACHE_KEY")
+        private val COMPLETION_ID_GENERATOR_KEY = ObjectUtils.sentinel("COMPLETION_ID_GENERATOR_KEY")
         private val EMPTY_COMPLETION_LIST = CompletionList(isIncomplete = false, items = emptyList())
 
         /**
@@ -133,9 +125,39 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider, LSCommandDes
 
         private const val MAX_INT_DIGITS_COUNT = Int.MAX_VALUE.toString().length
 
-        private fun emptyTextEdit(position: Position): CompletionItem.Edit {
+        fun emptyTextEdit(position: Position): CompletionItem.Edit {
             val range = Range(position, position)
             return CompletionItem.Edit.InsertReplace(InsertReplaceEdit("", range, range))
+        }
+
+        fun <T : Any> cacheCompletionData(data: T): Long {
+            val sessionData = SessionDataEntity.single().map
+
+            @Suppress("UNCHECKED_CAST")
+            val completionCache = sessionData.getOrPut(COMPLETION_CACHE_KEY) {
+                Caffeine.newBuilder()
+                    .maximumSize(PER_CLIENT_COMPLETION_CACHE_SIZE)
+                    .build<Long, T>()
+            } as Cache<Long, T>
+
+            val id = generateCacheId()
+            completionCache.put(id, data)
+            return id
+        }
+
+        fun <T : Any> getCompletionData(id: Long): T? {
+            val userData = SessionDataEntity.single().map
+
+            @Suppress("UNCHECKED_CAST")
+            val completionCache = userData[COMPLETION_CACHE_KEY] as Cache<Long, T>
+            val completionData = completionCache.getIfPresent(id)
+            return completionData
+        }
+
+        private fun generateCacheId(): Long {
+            val sessionData = SessionDataEntity.single().map
+            val idGenerator = sessionData.getOrPut(COMPLETION_ID_GENERATOR_KEY) { AtomicLong(0L) } as AtomicLong
+            return idGenerator.incrementAndGet()
         }
     }
 
@@ -153,11 +175,7 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider, LSCommandDes
                     require(arguments.size == 1) { "Expected 1 argument, got: ${arguments.size}" }
                     val id = (arguments[0] as? JsonPrimitive)?.content?.toLongOrNull()
                         ?: error("Invalid argument, expected a number, got: ${arguments[0]}")
-                    val userData = SessionDataEntity.single().map
-
-                    @Suppress("UNCHECKED_CAST")
-                    val completionCache = userData[COMPLETION_CACHE_KEY] as Cache<Long, CompletionData>
-                    val completionData = completionCache.getIfPresent(id)
+                    val completionData: CompletionData? = getCompletionData(id)
                     when (completionData) {
                         null -> lspClient.notify(
                             ShowMessageNotification,

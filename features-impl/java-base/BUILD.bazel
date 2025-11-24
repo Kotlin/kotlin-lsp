@@ -42,6 +42,7 @@ jvm_library(
     "@community//java/java-impl:impl",
     "//language-server/community/api.features",
     "@community//fleet/lsp.protocol",
+    "//language-server/api.impl.analyzer",
   ]
 )
 ### auto-generated section `build language-server.api.features.impl.java-base` end
