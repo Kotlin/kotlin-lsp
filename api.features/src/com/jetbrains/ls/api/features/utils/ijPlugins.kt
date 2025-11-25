@@ -22,7 +22,7 @@ fun ijPluginByXml(
 
     fun createFakePluginId(): PluginId = PluginId.getId(xmlResourcePath)
 
-    return when {
+    return requireNotNull(when {
         xmlResourcePath.startsWith(PluginManagerCore.META_INF) -> {
             // normal plugin xml
             loadForCoreEnv(
@@ -42,8 +42,9 @@ fun ijPluginByXml(
                 id = createFakePluginId(),
             )
         }
+    }) { "Failed to load plugin descriptor from $xmlResourcePath" }.also {
+        it.pluginClassLoader = classForClasspath.classLoader
     }
-        ?: error("Failed to load plugin descriptor from $xmlResourcePath")
 }
 
 private fun getPluginRoot(classForClasspath: Class<*>): Path {
