@@ -167,7 +167,7 @@ private suspend fun indexFolders(
                 LightWorkspaceImporter.createEmptyWorkspace(virtualFileUrlManager, storage)
             }
 
-            var defaultJdk = storage.entities(SdkEntity::class.java).firstOrNull { it.entitySource == DefaultJdkEntitySource }
+            var defaultJdk = storage.entities(SdkEntity::class.java).singleOrNull()
             storage.entities<ModuleEntity>().forEach { module ->
                 storage.modifyModuleEntity(module) {
                     dependencies = dependencies.map {
