@@ -190,9 +190,6 @@ fun workspaceModel(
     entitySource: EntitySource,
     virtualFileUrlManager: VirtualFileUrlManager
 ): MutableEntityStorage {
-
-
-
     val storage = MutableEntityStorage.create()
 
     for (sdkData in data.sdks) {
@@ -213,7 +210,7 @@ fun workspaceModel(
             entitySource = entitySource
         ) {
             version = sdkData.version
-            homePath = sdkData.homePath?.let { it.toIntellijUri(virtualFileUrlManager) }
+            homePath = sdkData.homePath?.toIntellijUri(virtualFileUrlManager)
         }
     }
 
