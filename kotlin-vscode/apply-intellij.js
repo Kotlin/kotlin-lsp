@@ -41,4 +41,5 @@ function applyPatch(targetPath, patchPath, outputPath) {
 
 
 applyPatch('package.json', '../../../../language-server/intellij-vscode/package-patch.json', 'package.json');
+applyPatch('package.json', '../../../../language-server/intellij-vscode/package-patch-sql.json', 'package.json');
 

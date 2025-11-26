@@ -177,6 +177,7 @@ async function createLspClient(): Promise<LanguageClient | null> {
         documentSelector: [
             {scheme: 'file', language: 'kotlin'}, {scheme: 'jar', language: 'kotlin'},
             {scheme: 'file', language: 'java'  }, {scheme: 'jar', language: 'java'  }, {scheme: 'jrt', language: 'java'},
+            {scheme: 'file', language: 'sql'  },
         ],
         progressOnInitialization: true,
         initializationOptions: {
