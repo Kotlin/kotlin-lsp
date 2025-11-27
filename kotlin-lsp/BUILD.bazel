@@ -105,6 +105,7 @@ jvm_library(
     "@community//platform/execution",
     "@community//platform/workspace/storage",
     "//language-server/analyzer.filewatcher",
+    "//language-server/analyzer.filewatcher:analyzer.filewatcher_test_lib",
     "//language-server/community/api.core",
     "//language-server/community/api.core:api.core_test_lib",
     "//language-server/api.impl.analyzer",
