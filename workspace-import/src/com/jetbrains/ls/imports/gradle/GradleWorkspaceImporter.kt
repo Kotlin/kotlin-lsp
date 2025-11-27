@@ -4,8 +4,7 @@
 package com.jetbrains.ls.imports.gradle
 
 import com.intellij.openapi.diagnostic.logger
-import com.intellij.openapi.projectRoots.impl.JavaHomeFinder.getFinder
-import com.intellij.platform.eel.provider.getEelDescriptor
+import com.intellij.openapi.project.Project
 import com.intellij.platform.workspace.jps.entities.*
 import com.intellij.platform.workspace.jps.entities.LibraryTableId.ProjectLibraryTableId
 import com.intellij.platform.workspace.storage.EntityStorage
@@ -15,6 +14,7 @@ import com.jetbrains.ls.api.core.util.retryWithBackOff
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImporter
+import com.jetbrains.ls.imports.api.findJdks
 import com.jetbrains.ls.imports.utils.toIntellijUri
 import org.gradle.tooling.GradleConnectionException
 import org.gradle.tooling.GradleConnector
@@ -32,7 +32,6 @@ import org.jetbrains.kotlin.idea.workspaceModel.kotlinSettings
 import org.jetbrains.plugins.gradle.jvmcompat.GradleJvmSupportMatrix.Companion.isSupported
 import org.jetbrains.plugins.gradle.jvmcompat.GradleJvmSupportMatrix.Companion.suggestLatestSupportedJavaVersion
 import java.io.ByteArrayOutputStream
-import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.div
 import kotlin.io.path.exists
@@ -51,6 +50,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
     private val LOG = logger<GradleWorkspaceImporter>()
 
     override suspend fun importWorkspace(
+        project: Project,
         projectDirectory: Path,
         virtualFileUrlManager: VirtualFileUrlManager,
         onUnresolvedDependency: (String) -> Unit,
@@ -68,7 +68,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                         LOG.info("Importing Gradle project using JDK $gradleJdk")
                         val ideaProject = connection.model(IdeaProject::class.java)
                             .withSystemProperties(IMPORTER_PROPERTIES)
-                            .setJavaHome(gradleJdk)
+                            .setJavaHome(gradleJdk.toFile())
                             .get()
                         val storage = MutableEntityStorage.create()
                         val entitySource = WorkspaceEntitySource(projectDirectory.toIntellijUri(virtualFileUrlManager))
@@ -200,7 +200,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                         }
                         val out = ByteArrayOutputStream()
                         connection.newBuild().forTasks("dependencies")
-                            .setJavaHome(gradleJdk)
+                            .setJavaHome(gradleJdk.toFile())
                             .withSystemProperties(IMPORTER_PROPERTIES)
                             .setStandardOutput(out)
                             .run()
@@ -285,30 +285,22 @@ object GradleWorkspaceImporter : WorkspaceImporter {
      * Access to BuildEnvironment is safe because it does not trigger the compilation of build scripts and Gradle execution.
      * So, we could safely choose the correct JDK for Gradle daemon that will be used for Gradle-related operations.
      */
-    private suspend fun getGradleJdks(projectDirectory: Path, connection: ProjectConnection): List<File> {
+    private suspend fun getGradleJdks(projectDirectory: Path, connection: ProjectConnection): List<Path> {
         val buildEnvironment = retryWithBackOff(onError = { e, backoff ->
             if (e !is GradleConnectionException) throw e
             LOG.warn("Retrying gradle connection in $backoff... (error: ${e.message})")
         }) {
             connection.getModel(BuildEnvironment::class.java)
         } ?: throw IllegalStateException("Unable to resolve Gradle Build Environment")
-        val knownJdks = getFinder(projectDirectory.getEelDescriptor())
-            .checkConfiguredJdks(false)
-            .checkEmbeddedJava(false)
-            .findExistingJdkEntries()
-        if (knownJdks.isEmpty()) {
-            throw WorkspaceImportException(
-                "Unable to find JDK for Gradle execution. No JDK's found on the machine!",
-                "There are no JDKs on the machine. Unable to run Gradle."
-            )
-        }
+        val knownJdks = findJdks(projectDirectory)
         val gradleVersion = buildEnvironment.getGradleVersion()
         return knownJdks
             .sorted() // Newest first
             .filter {
                 val version = it.versionInfo?.version ?: return@filter false
                 isSupported(gradleVersion, version)
-            }.map { File(it.path) }
+            }
+            .map { Path.of(it.path) }
             .takeIf { it.isNotEmpty() }
             ?: throw WorkspaceImportException(
                 """

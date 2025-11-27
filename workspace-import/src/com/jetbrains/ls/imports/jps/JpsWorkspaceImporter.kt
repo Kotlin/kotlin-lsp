@@ -5,12 +5,11 @@ import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.components.ExpandMacroToPathMap
 import com.intellij.openapi.components.impl.ProjectWidePathMacroContributor
 import com.intellij.openapi.diagnostic.fileLogger
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.JavaSdk
-import com.intellij.openapi.projectRoots.impl.JavaHomeFinder
 import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
 import com.intellij.openapi.roots.OrderRootType
 import com.intellij.openapi.util.io.FileUtilRt
-import com.intellij.platform.eel.provider.getEelDescriptor
 import com.intellij.platform.workspace.jps.entities.*
 import com.intellij.platform.workspace.jps.entities.LibraryTableId.ProjectLibraryTableId
 import com.intellij.platform.workspace.storage.EntityStorage
@@ -20,6 +19,7 @@ import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.customName
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImporter
+import com.jetbrains.ls.imports.api.findJdks
 import com.jetbrains.ls.imports.utils.toIntellijUri
 import org.jetbrains.jps.model.JpsElementFactory
 import org.jetbrains.jps.model.JpsModel
@@ -50,6 +50,7 @@ private val LOG = fileLogger()
 
 object JpsWorkspaceImporter : WorkspaceImporter {
     override suspend fun importWorkspace(
+        project: Project,
         projectDirectory: Path,
         virtualFileUrlManager: VirtualFileUrlManager,
         onUnresolvedDependency: (String) -> Unit,
@@ -281,7 +282,7 @@ object JpsWorkspaceImporter : WorkspaceImporter {
         virtualFileUrlManager: VirtualFileUrlManager,
         entitySource: WorkspaceEntitySource,
     ): List<SdkEntityBuilder> {
-        val detectedSdks = JavaHomeFinder.findJdks(projectDirectory.getEelDescriptor(), false)
+        val detectedSdks = findJdks(projectDirectory)
         if (detectedSdks.isEmpty()) return emptyList()
         return sdks.map { sdkName ->
             val sdk = detectedSdks.find {

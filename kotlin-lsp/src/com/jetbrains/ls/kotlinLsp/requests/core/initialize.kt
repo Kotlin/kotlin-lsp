@@ -8,6 +8,7 @@ import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.entities
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
+import com.jetbrains.analyzer.bootstrap.AnalyzerContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.createSdkEntity
 import com.jetbrains.ls.api.core.util.workspaceFolderPaths
@@ -207,13 +208,14 @@ private suspend fun initFolder(
     virtualFileUrlManager: VirtualFileUrlManager,
     storage: MutableEntityStorage,
 ) {
+    val project = AnalyzerContext.currentProject
     progress.report(Report(message = "Importing folder ${folder}"))
     for (importer in importers) {
         val unresolved = mutableSetOf<String>()
         LOG.info("Trying to import using ${importer.javaClass.simpleName}")
         val imported = try {
             withContext(Dispatchers.IO) {
-                importer.importWorkspaceToStorage(storage, folder, virtualFileUrlManager, unresolved::add)
+                importer.importWorkspaceToStorage(project.project, storage, folder, virtualFileUrlManager, unresolved::add)
             }
         } catch (e: CancellationException) {
             throw e

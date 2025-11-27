@@ -9,6 +9,7 @@ import com.jetbrains.analyzer.api.withAnalyzer
 import com.jetbrains.analyzer.bootstrap.AnalyzerProjectId
 import com.jetbrains.analyzer.bootstrap.WorkspaceModelSnapshot
 import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
+import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.json.WorkspaceData
 import com.jetbrains.ls.imports.json.toJson
 import com.jetbrains.ls.imports.json.workspaceData
@@ -21,56 +22,45 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import java.nio.file.Path
-import java.nio.file.Paths
 import kotlin.io.path.div
 import kotlin.io.path.exists
 
 class ProjectImportTest {
-    private val testdataDir = Paths.get(PathManager.getHomePath(), "language-server", "community", "workspace-import", "test", "testData", "gradle")
-    private val importer = GradleWorkspaceImporter
+    private val testDataDir = PathManager.getHomeDir() /
+            "language-server" / "community" / "workspace-import" / "test" / "testData"
 
     @Test
-    fun petClinic() {
-        doTest("PetClinic")
-    }
+    fun petClinic() = doGradleTest("PetClinic")
 
     @Test
-    fun multiProjectKotlinDSL() {
-        doTest("MultiProjectKotlinDSL")
-    }
+    fun multiProjectKotlinDSL() = doGradleTest("MultiProjectKotlinDSL")
 
     @Test
-    fun multiProjectGroovyDSL() {
-        doTest("MultiProjectGroovyDSL")
-    }
+    fun multiProjectGroovyDSL() = doGradleTest("MultiProjectGroovyDSL")
 
     @Test
-    fun customSourceSetts() {
-        doTest("CustomSourceSets")
-    }
+    fun customSourceSetts() = doGradleTest("CustomSourceSets")
 
     @Test
-    fun dependencies() {
-        doTest("Dependencies")
-    }
+    fun dependencies() = doGradleTest("Dependencies")
 
     @Test
-    fun empty() {
-        doTest("Empty")
-    }
+    fun empty() = doGradleTest("Empty")
 
     @Test
     fun nonExistentDependency() {
         // TODO: Check that missing dependencies are reported
-        doTest("NonExistentDependency")
+        doGradleTest("NonExistentDependency")
     }
 
+    private fun doGradleTest(project: String) =
+        doTest(project, GradleWorkspaceImporter, testDataDir / "gradle")
 
-    private fun doTest(project: String) {
-        val projectDir = testdataDir / project
-        require(projectDir.exists()) { "Project $project does not exist" }
+    private fun doTest(project: String, importer: WorkspaceImporter, testDataDir: Path) {
+        val projectDir = testDataDir / project
+        require(projectDir.exists()) { "Project $project not found at $projectDir" }
 
-        val storage = performImport(projectDir)
+        val storage = importer.performImport(projectDir)
 
         if (storage == null) {
             assertFalse((projectDir / "workspace.json").exists(), "Workspace import failed")
@@ -89,13 +79,17 @@ class ProjectImportTest {
     }
 
 
-    private fun performImport(projectDir: Path): EntityStorage? {
+    private fun WorkspaceImporter.performImport(projectDir: Path): EntityStorage? {
         return runBlocking(Dispatchers.Default) {
             withAnalyzer(isUnitTestMode = true) {  analyzer ->
                 val currentSnapshot = WorkspaceModelSnapshot.empty()
                 val virtualFileUrlManager = currentSnapshot.virtualFileUrlManager
-                analyzer.withProject(analyzerProjectConfigForImport(AnalyzerProjectId(), currentSnapshot.entityStore, virtualFileUrlManager)) {
-                    importer.importWorkspace(projectDir, virtualFileUrlManager, {})
+                analyzer.withProject(analyzerProjectConfigForImport(
+                    AnalyzerProjectId(),
+                    currentSnapshot.entityStore,
+                    virtualFileUrlManager)
+                ) {
+                    importWorkspace(it.project, projectDir, virtualFileUrlManager) {}
                 }
             }
         }
