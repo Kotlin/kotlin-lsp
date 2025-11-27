@@ -85,12 +85,14 @@ class LSInspectionDiagnosticProviderImpl(
                     for (problemDescriptor in problemsHolder.results) {
                         val data = problemDescriptor.createDiagnosticData(project)
                         val range = problemDescriptor.range()?.toLspRange(document) ?: continue
+                        val message = ProblemDescriptorUtil.renderDescriptor(
+                            problemDescriptor, problemDescriptor.psiElement, ProblemDescriptorUtil.NONE
+                        )
                         diagnostics.add(
                             Diagnostic(
                                 range = range,
                                 severity = problemDescriptor.highlightType.toLsp(),
-                                // todo handle markers from [com.intellij.codeInspection.CommonProblemDescriptor.getDescriptionTemplate]
-                                message = problemDescriptor.tooltipTemplate,
+                                message = message.description,
                                 code = StringOrInt.string(simpleGlobalInspection.shortName),
                                 tags = problemDescriptor.highlightType.toLspTags(),
                                 data = LSP.json.encodeToJsonElement<InspectionDiagnosticData>(data),
@@ -237,11 +239,13 @@ class LSInspectionDiagnosticProviderImpl(
             .filter { it.highlightType != ProblemHighlightType.INFORMATION }
             .mapNotNull { problemDescriptor ->
                 val data = problemDescriptor.createDiagnosticData(project)
+                val message = ProblemDescriptorUtil.renderDescriptor(
+                    problemDescriptor, problemDescriptor.psiElement, ProblemDescriptorUtil.NONE
+                )
                 Diagnostic(
                     range = problemDescriptor.range()?.toLspRange(document) ?: return@mapNotNull null,
                     severity = problemDescriptor.highlightType.toLsp(),
-                    // todo handle markers from [com.intellij.codeInspection.CommonProblemDescriptor.getDescriptionTemplate]
-                    message = problemDescriptor.tooltipTemplate,
+                    message = message.description,
                     code = StringOrInt.string(localInspectionTool.id),
                     tags = problemDescriptor.highlightType.toLspTags(),
                     data = LSP.json.encodeToJsonElement(data),
