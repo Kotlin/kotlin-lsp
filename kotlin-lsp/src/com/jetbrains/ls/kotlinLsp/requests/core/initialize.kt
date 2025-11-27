@@ -78,7 +78,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
                     workspaceDiagnostics = false,
                     workDoneProgress = false,
                 ),
-                semanticTokensProvider = SemanticTokensOptions(
+                semanticTokensProvider = SemanticTokensRegistrationOptions(
                     legend = run {
                         val registry = LSSemanticTokens.createRegistry()
                         SemanticTokensLegend(
@@ -97,7 +97,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
                     completionItem = null,
                 ),
                 codeActionProvider = OrBoolean.of(
-                    CodeActionOptions(
+                    CodeActionRegistrationOptions(
                         codeActionKinds = LSCodeActions.supportedCodeActionKinds(),
                         resolveProvider = false,
                         workDoneProgress = false,
@@ -110,7 +110,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
                 hoverProvider = OrBoolean(true),
                 documentSymbolProvider = OrBoolean(true),
                 workspaceSymbolProvider = OrBoolean.of(
-                    WorkspaceSymbolOptions(resolveProvider = false, workDoneProgress = true)
+                    WorkspaceSymbolRegistrationOptions(resolveProvider = false, workDoneProgress = true)
                 ),
                 workspace = ServerWorkspaceCapabilities(
                     workspaceFolders = WorkspaceFoldersServerCapabilities(
@@ -119,7 +119,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
                     )
                 ),
                 renameProvider = OrBoolean(true),
-                signatureHelpProvider = SignatureHelpOptions(
+                signatureHelpProvider = SignatureHelpRegistrationOptions(
                     triggerCharacters = listOf("(", ","),
                     retriggerCharacters = listOf(","),
                     workDoneProgress = false
