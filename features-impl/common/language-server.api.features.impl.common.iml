@@ -47,6 +47,7 @@
     <orderEntry type="module" module-name="language-server.analyzer" />
     <orderEntry type="module" module-name="fleet.lsp.protocol" />
     <orderEntry type="module" module-name="intellij.platform.codeStyle" />
+    <orderEntry type="module" module-name="intellij.platform.lang" />
     <orderEntry type="module" module-name="intellij.platform.lang.impl" />
     <orderEntry type="module" module-name="intellij.java.psi" />
     <orderEntry type="module" module-name="intellij.platform.indexing" />

@@ -43,6 +43,7 @@ jvm_library(
     "//language-server/analyzer",
     "@community//fleet/lsp.protocol",
     "@community//platform/code-style-api:codeStyle",
+    "@community//platform/lang-api:lang",
     "@community//platform/lang-impl",
     "@community//java/java-psi-api:psi",
     "@community//platform/indexing-api:indexing",
