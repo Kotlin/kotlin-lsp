@@ -97,7 +97,6 @@ internal fun LspHandlersBuilder.initializeRequest() {
                     completionItem = null,
                 ),
                 codeActionProvider = OrBoolean.of(
-                    CodeActionOptions.serializer(),
                     CodeActionOptions(
                         codeActionKinds = LSCodeActions.supportedCodeActionKinds(),
                         resolveProvider = false,
@@ -111,7 +110,6 @@ internal fun LspHandlersBuilder.initializeRequest() {
                 hoverProvider = OrBoolean(true),
                 documentSymbolProvider = OrBoolean(true),
                 workspaceSymbolProvider = OrBoolean.of(
-                    WorkspaceSymbolOptions.serializer(),
                     WorkspaceSymbolOptions(resolveProvider = false, workDoneProgress = true)
                 ),
                 workspace = ServerWorkspaceCapabilities(
@@ -128,7 +126,6 @@ internal fun LspHandlersBuilder.initializeRequest() {
                 ),
                 documentFormattingProvider = OrBoolean(true),
                 inlayHintProvider = OrBoolean.of(
-                    InlayHintRegistrationOptions.serializer(),
                     InlayHintRegistrationOptions(resolveProvider = true)
                 ),
             ),

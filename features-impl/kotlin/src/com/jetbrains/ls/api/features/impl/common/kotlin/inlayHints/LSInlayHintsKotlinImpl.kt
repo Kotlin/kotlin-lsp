@@ -9,11 +9,9 @@ import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
 import com.jetbrains.ls.api.features.impl.common.inlayHints.LSInlayHintsCommonImpl
-import com.jetbrains.ls.api.features.impl.common.inlayHints.LSInlayHintsCommonImpl.*
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
 import com.jetbrains.lsp.protocol.*
-import kotlinx.serialization.builtins.ListSerializer
 import org.jetbrains.kotlin.idea.codeInsight.hints.KotlinFqnDeclarativeInlayActionHandler
 import org.jetbrains.kotlin.idea.k2.codeinsight.hints.*
 
@@ -53,7 +51,7 @@ internal object LSInlayHintsKotlinImpl : LSInlayHintsCommonImpl(
             val labels = presentation.hints.map { hintToLabel(it, psiFile, resolve = false) }
             return InlayHint(
                 position = document.positionByOffset(position.offset),
-                label = OrString.of(ListSerializer(InlayHintLabelPart.serializer()), labels),
+                label = OrString.of(labels),
                 kind = kind,
                 textEdits = null,
                 tooltip = presentation.tooltip?.let { OrString(it) },
@@ -65,7 +63,7 @@ internal object LSInlayHintsKotlinImpl : LSInlayHintsCommonImpl(
 
         override fun resolveHint(hint: InlayHint, presentation: Presentation, psiFile: PsiFile, document: Document): InlayHint {
             val labels = presentation.hints.map { hintToLabel(it, psiFile, resolve = true) }
-            return hint.copy(label = OrString.of(ListSerializer(InlayHintLabelPart.serializer()), labels))
+            return hint.copy(label = OrString.of(labels))
         }
 
         private fun hintToLabel(hint: Hint, psiFile: PsiFile, resolve: Boolean): InlayHintLabelPart = when (hint) {
