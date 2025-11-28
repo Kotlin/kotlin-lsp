@@ -287,7 +287,7 @@ private val LOG = logger<LSInspectionDiagnosticProviderImpl>()
 
 // TODO LSP-241 design, currently some random conversions
 private fun ProblemHighlightType.toLsp(): DiagnosticSeverity = when (this) {
-    ProblemHighlightType.GENERIC_ERROR_OR_WARNING -> DiagnosticSeverity.Hint
+    ProblemHighlightType.GENERIC_ERROR_OR_WARNING -> DiagnosticSeverity.Warning
     ProblemHighlightType.LIKE_UNKNOWN_SYMBOL -> DiagnosticSeverity.Error
     ProblemHighlightType.LIKE_DEPRECATED -> DiagnosticSeverity.Warning
     ProblemHighlightType.LIKE_UNUSED_SYMBOL -> DiagnosticSeverity.Warning
