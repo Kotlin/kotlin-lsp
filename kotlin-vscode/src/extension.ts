@@ -3,6 +3,7 @@ import {commands, type ExtensionContext, Uri, window, workspace} from "vscode"
 import {registerDecompiler} from "./decompiler"
 import { initLspClient, startLspClient } from './lspClient';
 import { registerStatusBarItem } from './statusBar';
+import { registerDirectoryNavigator } from './directoryNavigator';
 
 
 export const extensionId = 'kotlin'
@@ -35,6 +36,7 @@ export async function activate(context: ExtensionContext) {
     _context = context
     registerDecompiler(context)
     registerExportWorkspaceToJsonCommand(context)
+    registerDirectoryNavigator(context)
     registerStatusBarItem()
     initLspClient()
     await startLspClient()
