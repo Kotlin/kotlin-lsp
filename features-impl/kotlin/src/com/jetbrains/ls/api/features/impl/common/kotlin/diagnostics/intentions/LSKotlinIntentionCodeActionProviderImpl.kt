@@ -131,13 +131,13 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
     }
 
     private val commandDescriptor = LSCommandDescriptor(
-        "Kotlin Intention Apply Fix",
-        "kotlinIntention.applyFix",
-        { arguments ->
+        title = "Kotlin Intention Apply Fix",
+        name = "kotlinIntention.applyFix",
+        executor = { arguments ->
             val modCommandData = LSP.json.decodeFromJsonElement<ModCommandData>(arguments[0])
             executeCommand(modCommandData, lspClient)
             JsonPrimitive(true)
-        }
+        },
     )
 
     override val commandDescriptors: List<LSCommandDescriptor> = listOf(commandDescriptor)

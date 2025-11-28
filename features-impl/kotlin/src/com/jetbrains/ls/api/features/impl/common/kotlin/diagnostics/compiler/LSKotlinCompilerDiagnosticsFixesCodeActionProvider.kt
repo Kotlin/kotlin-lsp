@@ -122,15 +122,15 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
     }
 
     private val commandDescriptor = LSCommandDescriptor(
-        "Kotlin Diagnostic Apply Fix",
-        "kotlinDiagnostic.applyFix",
-        { arguments ->
+        title = "Kotlin Diagnostic Apply Fix",
+        name = "kotlinDiagnostic.applyFix",
+        executor = { arguments ->
             val fix = LSP.json.decodeFromJsonElement<ModCommandData>(arguments[0])
             withAnalysisContext {
                 executeCommand(fix, lspClient)
             }
             JsonPrimitive(true)
-        }
+        },
     )
 
 

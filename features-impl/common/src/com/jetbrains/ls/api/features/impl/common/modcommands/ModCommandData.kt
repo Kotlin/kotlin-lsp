@@ -84,11 +84,7 @@ sealed interface ModCommandData {
     }
 }
 
-suspend fun executeCommand(command: ModCommandData, client: LspClient) {
-    executeCommand(command, client, mutableMapOf())
-}
-
-suspend fun executeCommand(command: ModCommandData, client: LspClient, changedFiles: MutableMap<String, String>) {
+suspend fun executeCommand(command: ModCommandData, client: LspClient, changedFiles: MutableMap<String, String> = mutableMapOf()) {
     when (command) {
         is ModCommandData.Nothing -> {}
 
