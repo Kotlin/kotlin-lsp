@@ -73,9 +73,8 @@ sealed interface ModCommandData {
             is ModMoveFile -> MoveFile(command.file.url, command.targetFile.url.replace("mock://", "file://"))
             is ModUpdateFileText -> UpdateFileText(command.file.url, command.oldText, command.newText)
             is ModDisplayMessage -> DisplayMessage(command.messageText, command.kind)
-            // We can safely skip tab-out command
-            is ModRegisterTabOut -> Nothing
-            // Highlighting could be important but usually it's an additional helpful thing, not an essential one, so let's skip it for now
+            is ModRegisterTabOut -> Nothing // We can safely skip the tab-out command
+            // Highlighting could be important, but usually it's an additional helpful thing, not an essential one, so let's skip it for now
             is ModHighlight -> Nothing
             else -> {
                 LOG.debug("Unsupported command $command")
@@ -93,72 +92,73 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient, changedFi
     when (command) {
         is ModCommandData.Nothing -> {}
 
-        is ModCommandData.CreateFile ->
+        is ModCommandData.CreateFile -> {
             when (command.content) {
                 is ModCommandData.CreateFile.Content.Text -> {
                     client.request(
-                        ApplyEdit,
-                        ApplyWorkspaceEditParams(
+                        requestType = ApplyEdit,
+                        params = ApplyWorkspaceEditParams(
                             label = "Create ${command.fileUrl}",
                             edit = WorkspaceEdit(
                                 documentChanges = listOf(
                                     CreateFile(DocumentUri(command.fileUrl.intellijUriToLspUri())),
                                     TextDocumentEdit(
                                         textDocument = TextDocumentIdentifier(DocumentUri(command.fileUrl.intellijUriToLspUri())),
-                                        edits = listOf(TextEdit(Range.BEGINNING, command.content.text))
-                                    )
+                                        edits = listOf(TextEdit(Range.BEGINNING, command.content.text)),
+                                    ),
                                 ),
-                            )
-                        )
+                            ),
+                        ),
                     )
                     changedFiles[command.fileUrl] = command.content.text
                 }
 
                 else -> error("Unsupported content ${command.content}")
             }
+        }
 
-
-        is ModCommandData.DeleteFile ->
+        is ModCommandData.DeleteFile -> {
             client.request(
-                ApplyEdit,
-                ApplyWorkspaceEditParams(
+                requestType = ApplyEdit,
+                params = ApplyWorkspaceEditParams(
                     label = "Delete ${command.fileUrl}",
                     edit = WorkspaceEdit(
                         documentChanges = listOf(DeleteFile(DocumentUri(command.fileUrl.intellijUriToLspUri()))),
-                    )
-                )
+                    ),
+                ),
             )
+        }
 
-        is ModCommandData.MoveFile ->
+        is ModCommandData.MoveFile -> {
             client.request(
-                ApplyEdit,
-                ApplyWorkspaceEditParams(
+                requestType = ApplyEdit,
+                params = ApplyWorkspaceEditParams(
                     label = "Move ${command.fileUrl} to ${command.targetUrl}",
                     edit = WorkspaceEdit(
                         documentChanges = listOf(
                             RenameFile(
-                                DocumentUri(command.fileUrl.intellijUriToLspUri()),
-                                DocumentUri(command.targetUrl.intellijUriToLspUri())
-                            )
+                                DocumentUri(command.fileUrl.intellijUriToLspUri()), DocumentUri(command.targetUrl.intellijUriToLspUri())
+                            ),
                         ),
-                    )
-                )
+                    ),
+                ),
             )
+        }
 
         is ModCommandData.UpdateFileText -> {
             client.request(
-                ApplyEdit,
-                ApplyWorkspaceEditParams(
+                requestType = ApplyEdit,
+                params = ApplyWorkspaceEditParams(
                     label = "Update ${command.fileUrl}",
                     edit = WorkspaceEdit(
                         changes = mapOf(
                             DocumentUri(command.fileUrl.intellijUriToLspUri()) to computeTextEdits(
-                                command.oldText,
-                                command.newText
-                            )
-                        )
-                    )
-                )
+                                oldText = command.oldText,
+                                newText = command.newText,
+                            ),
+                        ),
+                    ),
+                ),
             )
             changedFiles[command.fileUrl] = command.newText
         }
@@ -168,39 +168,40 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient, changedFi
             val selectionEnd = command.selectionEnd.takeIf { it != -1 } ?: command.caret
             var selection: Range? = null
             if (selectionStart != -1 && selectionEnd != -1) {
-                val doc = changedFiles.get(command.fileUrl)?.let { DocumentImpl(it) }
-                    ?: command.fileUrl.intellijUriToLspUri().findVirtualFile()?.findDocument()
+                val doc = changedFiles[command.fileUrl]?.let { DocumentImpl(it) } ?: command.fileUrl.intellijUriToLspUri().findVirtualFile()
+                    ?.findDocument()
 
                 if (doc != null) {
                     selection = Range(
-                        doc.positionByOffset(selectionStart),
-                        doc.positionByOffset(selectionEnd)
+                        start = doc.positionByOffset(selectionStart),
+                        end = doc.positionByOffset(selectionEnd),
                     )
                 }
             }
 
             client.request(
-                ShowDocument,
-                ShowDocumentParams(
+                requestType = ShowDocument,
+                params = ShowDocumentParams(
                     uri = command.fileUrl.intellijUriToLspUri(),
                     external = false,
                     takeFocus = selection != null,
                     selection = selection,
-                )
+                ),
             )
         }
 
         is ModCommandData.Composite -> command.commands.forEach { executeCommand(it, client, changedFiles) }
-        is ModCommandData.DisplayMessage ->
-            client.request(
-                Window.ShowMessageRequest, ShowMessageRequestParams(
-                    type = when (command.kind) {
-                        ModDisplayMessage.MessageKind.ERROR -> MessageType.Error
-                        ModDisplayMessage.MessageKind.INFORMATION -> MessageType.Info
-                    },
-                    message = command.message,
-                    actions = null
-                )
-            )
+
+        is ModCommandData.DisplayMessage -> client.request(
+            requestType = Window.ShowMessageRequest,
+            params = ShowMessageRequestParams(
+                type = when (command.kind) {
+                    ModDisplayMessage.MessageKind.ERROR -> MessageType.Error
+                    ModDisplayMessage.MessageKind.INFORMATION -> MessageType.Info
+                },
+                message = command.message,
+                actions = null,
+            ),
+        )
     }
 }
