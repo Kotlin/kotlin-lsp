@@ -3,6 +3,7 @@ package com.jetbrains.ls.api.features.impl.common.diagnostics.inspections
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
+import com.jetbrains.ls.api.features.impl.common.diagnostics.SimpleDiagnosticData
 import com.jetbrains.ls.api.features.impl.common.diagnostics.diagnosticData
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.lsp.implementation.LspHandlerContext
@@ -19,22 +20,24 @@ class LSInspectionFixesCodeActionProvider(
 
     context(_: LSServer, _: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
-        val diagnosticData = params.diagnosticData<InspectionDiagnosticData>().ifEmpty { return@flow }
-        diagnosticData.flatMap { data ->
-            data.data.fixes.map { quickFix ->
-                CodeAction(
-                    title = quickFix.name,
-                    kind = CodeActionKind.QuickFix,
-                    diagnostics = listOf(data.diagnostic),
-                    command = Command(
-                        title = LSInspectionQuickFixCommandDescriptorProvider.commandDescriptor.title,
-                        command = LSInspectionQuickFixCommandDescriptorProvider.commandDescriptor.name,
-                        arguments = listOf(
-                            LSP.json.encodeToJsonElement(quickFix.modCommandData),
+        params.diagnosticData<SimpleDiagnosticData>()
+            .filter { it.data.diagnosticSource == LSInspectionDiagnosticProviderImpl.diagnosticSource }
+            .flatMap { data ->
+                data.data.fixes.map { quickFix ->
+                    CodeAction(
+                        title = quickFix.name,
+                        kind = CodeActionKind.QuickFix,
+                        diagnostics = listOf(data.diagnostic),
+                        command = Command(
+                            title = LSInspectionQuickFixCommandDescriptorProvider.commandDescriptor.title,
+                            command = LSInspectionQuickFixCommandDescriptorProvider.commandDescriptor.name,
+                            arguments = listOf(
+                                LSP.json.encodeToJsonElement(quickFix.modCommandData),
+                            ),
                         ),
-                    ),
-                )
+                    )
+                }
             }
-        }.forEach { codeAction -> emit(codeAction) }
+            .forEach { codeAction -> emit(codeAction) }
     }
 }

@@ -11,6 +11,10 @@
       <with attribute="implementationClass" implements="com.intellij.psi.codeStyle.ReferenceAdjuster"/>
     </extensionPoint>
     <extensionPoint qualifiedName="com.intellij.importFilter" interface="com.intellij.codeInsight.ImportFilter" dynamic="true"/>
+    <extensionPoint qualifiedName="com.intellij.java.errorFixProvider" dynamic="true" 
+                    interface="com.intellij.codeInsight.daemon.impl.analysis.JavaErrorFixProvider"/>
+    <extensionPoint qualifiedName="com.intellij.codeInsight.changeVariableTypeQuickFixProvider" interface="com.intellij.codeInsight.quickfix.ChangeVariableTypeQuickFixProvider" dynamic="true"/>
+    <extensionPoint qualifiedName="com.intellij.lang.jvm.actions.jvmElementActionsFactory" interface="com.intellij.lang.jvm.actions.JvmElementActionsFactory" dynamic="true"/>
   </extensionPoints>
   <extensions defaultExtensionNs="com.intellij">
     <applicationService serviceInterface="com.intellij.psi.stubs.StubInconsistencyReporter"
@@ -20,6 +24,13 @@
     <langCodeStyleSettingsProvider implementation="com.intellij.ide.JavaLanguageCodeStyleSettingsProvider"/>
     <lang.formatter language="JAVA" implementationClass="com.intellij.lang.java.JavaFormattingModelBuilder"/>
     <codeStyle.ReferenceAdjuster language="JAVA" implementationClass="com.intellij.psi.impl.source.codeStyle.JavaReferenceAdjuster"/>
+    <java.errorFixProvider implementation="com.intellij.codeInsight.daemon.impl.analysis.DefaultJavaErrorFixProvider"/>
+    <applicationService serviceInterface="com.intellij.codeInsight.intention.QuickFixFactory"
+                        serviceImplementation="com.intellij.codeInsight.intention.impl.config.QuickFixFactoryImpl"/>
+    <codeInsight.changeVariableTypeQuickFixProvider
+      implementation="com.intellij.codeInsight.daemon.impl.quickfix.VariableTypeQuickFixProvider"/>
+    <codeInsight.changeVariableTypeQuickFixProvider
+        implementation="com.intellij.refactoring.typeMigration.TypeMigrationVariableTypeFixProvider"/>
   </extensions>
   <extensions defaultExtensionNs="ls">
     <markdownDocProvider language="JAVA"

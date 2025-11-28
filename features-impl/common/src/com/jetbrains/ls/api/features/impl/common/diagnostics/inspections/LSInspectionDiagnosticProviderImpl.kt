@@ -23,6 +23,9 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnosticProvider
+import com.jetbrains.ls.api.features.impl.common.diagnostics.DiagnosticSource
+import com.jetbrains.ls.api.features.impl.common.diagnostics.SimpleDiagnosticData
+import com.jetbrains.ls.api.features.impl.common.diagnostics.SimpleDiagnosticQuickfixData
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.utils.isSource
 import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
@@ -36,6 +39,10 @@ import kotlin.reflect.KClass
 class LSInspectionDiagnosticProviderImpl(
     override val supportedLanguages: Set<LSLanguage>,
 ) : LSDiagnosticProvider {
+    companion object {
+        val diagnosticSource: DiagnosticSource = DiagnosticSource("inspection")
+    }
+
     context(_: LSServer, _: LspHandlerContext)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
         if (!params.textDocument.isSource()) return@flow
@@ -95,7 +102,7 @@ class LSInspectionDiagnosticProviderImpl(
                                 message = message.description,
                                 code = StringOrInt.string(simpleGlobalInspection.shortName),
                                 tags = problemDescriptor.highlightType.toLspTags(),
-                                data = LSP.json.encodeToJsonElement<InspectionDiagnosticData>(data),
+                                data = LSP.json.encodeToJsonElement<SimpleDiagnosticData>(data),
                             ),
                         )
                     }
@@ -261,14 +268,14 @@ class LSInspectionDiagnosticProviderImpl(
         return elementRange
     }
 
-    private fun ProblemDescriptor.createDiagnosticData(project: Project): InspectionDiagnosticData {
-        return InspectionDiagnosticData(
-            fixes = fixes.orEmpty()
-                .mapNotNull { fix ->
+    private fun ProblemDescriptor.createDiagnosticData(project: Project): SimpleDiagnosticData {
+        return SimpleDiagnosticData(
+            diagnosticSource = diagnosticSource,
+            fixes = fixes.orEmpty().mapNotNull { fix ->
                     val modCommand = getModCommand(fix, project, this) ?: return@mapNotNull null
                     val modCommandData = ModCommandData.from(modCommand) ?: return@mapNotNull null
-                    InspectionQuickfixData(fix.name, modCommandData)
-                }
+                    SimpleDiagnosticQuickfixData(name = fix.name, modCommandData = modCommandData)
+                },
         )
     }
 }
