@@ -228,9 +228,7 @@ object JpsWorkspaceImporter : WorkspaceImporter {
             }
             if (model.global.libraryCollection.libraries.isEmpty()) {
                 detectJavaSdks(projectDirectory, sdks, virtualFileUrlManager, entitySource).forEach { builder ->
-                    val entity = storage addEntity builder
-                    // for KaLibrarySdkModuleImpl
-                    storage.mutableSdkMap.addMapping(entity, SdkBridgeImpl(builder, InternalEnvironmentName.Local))
+                    storage addEntity builder
                 }
             }
             model.global.libraryCollection.libraries.forEach { library ->
@@ -258,9 +256,7 @@ object JpsWorkspaceImporter : WorkspaceImporter {
                             additionalData = "",
                             entitySource = entitySource
                         )
-                        val entity = storage addEntity builder
-                        // for KaLibrarySdkModuleImpl
-                        storage.mutableSdkMap.addMapping(entity, SdkBridgeImpl(builder, InternalEnvironmentName.Local))
+                        storage addEntity builder
                     }
 
                     is JpsLibraryType -> {

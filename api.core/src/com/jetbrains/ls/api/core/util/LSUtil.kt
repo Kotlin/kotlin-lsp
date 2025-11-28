@@ -150,7 +150,6 @@ fun createSdkEntity(
         entitySource = source
     )
     val jdk = storage addEntity builder
-    storage.mutableSdkMap.addMapping(jdk, SdkBridgeImpl(builder, InternalEnvironmentName.Local))
     return jdk
 }
 
