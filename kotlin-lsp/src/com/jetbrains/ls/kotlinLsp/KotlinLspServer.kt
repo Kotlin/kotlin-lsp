@@ -129,8 +129,8 @@ private suspend fun handleRequests(
 private fun initIdeaPaths(systemPath: Path?) {
     if (isLspRunningFromSources()) {
         val homeDir = PathManager.getHomeDir()
-        systemProperty("idea.config.path", "$homeDir/out/lsp-server/config/idea", ifAbsent = true)
-        systemProperty("idea.system.path", "$homeDir/out/lsp-server/system/idea", ifAbsent = true)
+        systemProperty("idea.config.path", "$homeDir/out/lsp-server/out/lsp-server/config/idea", ifAbsent = true)
+        systemProperty("idea.system.path", "$homeDir/out/lsp-server/out/lsp-server/system/idea", ifAbsent = true)
         val nativeFileWatcherPath = downloadFileWatcherBinaries(homeDir / "community")
         FileWatcher.initLibraryFromSources(nativeFileWatcherPath)
     } else {
