@@ -13,16 +13,17 @@ interface WorkspaceImporter {
         onUnresolvedDependency: (String) -> Unit
     ): MutableEntityStorage?
 
-    suspend fun importWorkspaceToStorage(
-        storage: MutableEntityStorage,
-        projectDirectory: Path,
-        virtualFileUrlManager: VirtualFileUrlManager,
-        onUnresolvedDependency: (String) -> Unit
-    ): Boolean {
-        val diff = importWorkspace(projectDirectory, virtualFileUrlManager, onUnresolvedDependency) ?: return false
-        applyChangesWithDeduplication(storage, diff)
-        return true
-    }
+}
+
+suspend fun WorkspaceImporter.importWorkspaceToStorage(
+    storage: MutableEntityStorage,
+    projectDirectory: Path,
+    virtualFileUrlManager: VirtualFileUrlManager,
+    onUnresolvedDependency: (String) -> Unit
+): Boolean {
+    val diff = importWorkspace(projectDirectory, virtualFileUrlManager, onUnresolvedDependency) ?: return false
+    applyChangesWithDeduplication(storage, diff)
+    return true
 }
 
 class WorkspaceImportException(displayMessage: String, val logMessage: String?) : Exception(displayMessage)

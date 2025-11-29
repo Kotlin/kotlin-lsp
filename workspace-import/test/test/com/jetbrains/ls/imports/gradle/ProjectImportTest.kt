@@ -3,8 +3,11 @@ package com.jetbrains.ls.imports.gradle
 
 import com.intellij.openapi.application.PathManager
 import com.intellij.platform.workspace.storage.EntitySource
-import com.intellij.platform.workspace.storage.MutableEntityStorage
+import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.workspaceModel.ide.impl.IdeVirtualFileUrlManagerImpl
+import com.jetbrains.ls.api.core.withServer
+import com.jetbrains.ls.api.core.workspaceStructure
+import com.jetbrains.ls.imports.api.importWorkspaceToStorage
 import com.jetbrains.ls.imports.json.WorkspaceData
 import com.jetbrains.ls.imports.json.toJson
 import com.jetbrains.ls.imports.json.workspaceData
@@ -87,16 +90,19 @@ class ProjectImportTest {
     }
 
 
-    private fun performImport(projectDir: Path): MutableEntityStorage? {
-        val storageRef = AtomicReference<MutableEntityStorage?>(null)
+    private fun performImport(projectDir: Path): EntityStorage? {
+        var storageRef: EntityStorage? = null
         runBlocking(Dispatchers.Default) {
-            // to be able to access services registered in analyzer.xml during import
             createServerStarterAnalyzerImpl(emptyList(), isUnitTestMode = true).start {
-                storageRef.set(importer.importWorkspace(projectDir, IdeVirtualFileUrlManagerImpl(true), {}))
+                withServer {
+                    workspaceStructure.updateWorkspaceModelDirectly { urlManager, storage ->
+                        importer.importWorkspaceToStorage(storage, projectDir, urlManager, {})
+                    }
+                    storageRef = workspaceStructure.getEntityStorage()
+                }
             }
         }
-
-        return storageRef.get()
+        return storageRef!!
     }
 
     fun cropJarPaths(jsonString: String): String =
