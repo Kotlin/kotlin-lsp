@@ -127,13 +127,11 @@ private suspend fun handleRequests(
 }
 
 private fun initIdeaPaths(systemPath: Path?) {
-    val fromSources = getIJPathIfRunningFromSources()
-    if (fromSources != null) {
-        systemProperty("idea.home.path", fromSources)
-        systemProperty("idea.config.path", "$fromSources/config/idea", ifAbsent = true)
-        systemProperty("idea.system.path", "$fromSources/system/idea", ifAbsent = true)
-
-        val nativeFileWatcherPath = downloadFileWatcherBinaries(PathManager.getHomeDir() / "community")
+    if (isLspRunningFromSources()) {
+        val homeDir = PathManager.getHomeDir()
+        systemProperty("idea.config.path", "$homeDir/out/lsp-server/config/idea", ifAbsent = true)
+        systemProperty("idea.system.path", "$homeDir/out/lsp-server/system/idea", ifAbsent = true)
+        val nativeFileWatcherPath = downloadFileWatcherBinaries(homeDir / "community")
         FileWatcher.initLibraryFromSources(nativeFileWatcherPath)
     } else {
         val path = systemPath
@@ -183,17 +181,14 @@ private fun initExtraProperties() {
     SystemProperties.setProperty("find.use.indexing.searcher.extensions", "false")
 }
 
-private fun getIJPathIfRunningFromSources(): String? {
+private fun isLspRunningFromSources(): Boolean {
     val serverClass = Class.forName("com.jetbrains.ls.kotlinLsp.KotlinLspServerKt")
-    val jar = PathManager.getJarForClass(serverClass)?.absolutePathString() ?: return null
+    val jar = PathManager.getJarForClass(serverClass)?.absolutePathString() ?: return false
     val outSuffixes = arrayOf(
         "bazel-out/jvm-fastbuild/bin/language-server/community/kotlin-lsp/kotlin-lsp.jar",
         "/out/classes/production/language-server.kotlin-lsp"
     )
-    if (outSuffixes.any { jar.endsWith(FileUtilRt.toSystemDependentName(it)) }) {
-        return Path("").absolutePathString()
-    }
-    return null
+    return outSuffixes.any { jar.endsWith(FileUtilRt.toSystemDependentName(it)) }
 }
 
 
