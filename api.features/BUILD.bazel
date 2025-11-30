@@ -27,7 +27,7 @@ jvm_library(
   deps = [
     "@lib//:kotlin-stdlib",
     "@community//fleet/lsp.protocol",
-    "@lib//:kotlinx-coroutines-core",
+    "@community//libraries/kotlinx/coroutines/core",
     "@community//platform/core-api:core",
     "//language-server/community/api.core",
     "@community//platform/analysis-impl",

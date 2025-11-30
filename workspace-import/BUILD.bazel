@@ -35,7 +35,7 @@ jvm_library(
     "@community//platform/util",
     "@community//libraries/kotlinx/serialization/core",
     "@community//libraries/kotlinx/serialization/json",
-    "@lib//:kotlinx-coroutines-core",
+    "@community//libraries/kotlinx/coroutines/core",
     "@community//java/java-impl:impl",
     "@community//java/openapi:java",
     "@community//plugins/kotlin/base/facet",

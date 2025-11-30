@@ -34,22 +34,22 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="kotlin-stdlib" level="project" />
     <orderEntry type="library" scope="TEST" name="JUnit5" level="project" />
-    <orderEntry type="library" scope="TEST" name="kotlinx-coroutines-core" level="project" />
     <orderEntry type="module" module-name="intellij.libraries.gson" scope="TEST" />
+    <orderEntry type="module" module-name="intellij.platform.workspace.storage" scope="TEST" />
+    <orderEntry type="module" module-name="language-server.test-api" scope="TEST" />
+    <orderEntry type="module" module-name="intellij.platform.core" scope="TEST" />
+    <orderEntry type="module" module-name="intellij.platform.ide.core.impl" scope="TEST" />
+    <orderEntry type="module" module-name="intellij.platform.projectModel.impl" scope="TEST" />
+    <orderEntry type="module" module-name="intellij.platform.util" scope="TEST" />
+    <orderEntry type="module" module-name="language-server.project-import" scope="TEST" />
+    <orderEntry type="module" module-name="intellij.platform.workspace.jps" scope="TEST" />
+    <orderEntry type="module" module-name="language-server.api.impl.analyzer" scope="TEST" />
+    <orderEntry type="module" module-name="intellij.libraries.kotlinx.coroutines.core" scope="TEST" />
+    <orderEntry type="module" module-name="language-server.api.core" scope="TEST" />
+    <orderEntry type="module" module-name="intellij.kotlin.base.facet" scope="TEST" />
     <orderEntry type="module" module-name="intellij.libraries.kotlinx.serialization.json" scope="TEST" />
     <orderEntry type="module" module-name="intellij.libraries.kotlinx.serialization.core" scope="TEST" />
-    <orderEntry type="module" module-name="intellij.platform.util" scope="TEST" />
-    <orderEntry type="module" module-name="intellij.platform.ide.core.impl" scope="TEST" />
-    <orderEntry type="module" module-name="intellij.platform.core" scope="TEST" />
     <orderEntry type="module" module-name="intellij.platform.core.impl" scope="TEST" />
-    <orderEntry type="module" module-name="intellij.platform.workspace.storage" scope="TEST" />
-    <orderEntry type="module" module-name="intellij.platform.workspace.jps" scope="TEST" />
-    <orderEntry type="module" module-name="intellij.platform.projectModel.impl" scope="TEST" />
-    <orderEntry type="module" module-name="intellij.kotlin.base.facet" scope="TEST" />
-    <orderEntry type="module" module-name="language-server.project-import" scope="TEST" />
-    <orderEntry type="module" module-name="language-server.api.impl.analyzer" scope="TEST" />
-    <orderEntry type="module" module-name="language-server.test-api" scope="TEST" />
-    <orderEntry type="module" module-name="language-server.api.core" scope="TEST" />
     <orderEntry type="module" module-name="language-server.analyzer" scope="TEST" />
   </component>
 </module>

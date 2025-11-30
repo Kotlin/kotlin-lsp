@@ -30,7 +30,7 @@ jvm_library(
   kotlinc_opts = ":custom_java-base",
   deps = [
     "@lib//:kotlin-stdlib",
-    "@lib//:kotlinx-coroutines-core",
+    "@community//libraries/kotlinx/coroutines/core",
     "@community//libraries/kotlinx/serialization/json",
     "@community//libraries/kotlinx/serialization/core",
     "//language-server/community/api.core",

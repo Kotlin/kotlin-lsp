@@ -26,7 +26,7 @@ jvm_library(
   kotlinc_opts = ":custom_common",
   deps = [
     "@lib//:kotlin-stdlib",
-    "@lib//:kotlinx-coroutines-core",
+    "@community//libraries/kotlinx/coroutines/core",
     "@community//platform/analysis-api:analysis",
     "@community//platform/core-api:core",
     "@community//platform/workspace/storage",
