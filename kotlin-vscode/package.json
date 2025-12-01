@@ -68,6 +68,17 @@
             "type": "string",
             "default": null,
             "description": "Path of the JDK for symbol resolution"
+          },
+          "kotlinLSP.trace.server": {
+            "scope": "window",
+            "type": "string",
+            "enum": [
+              "off",
+              "messages",
+              "verbose"
+            ],
+            "default": "off",
+            "description": "Traces the communication between VS Code and the language server."
           }
         }
       },
