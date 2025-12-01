@@ -10,6 +10,7 @@ import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementPresentation
 import com.intellij.openapi.application.invokeAndWaitIfNeeded
 import com.intellij.openapi.application.readAction
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.util.ObjectUtils
@@ -23,18 +24,21 @@ import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider
 import com.jetbrains.ls.api.features.completion.LSCompletionProvider
 import com.jetbrains.ls.api.features.impl.common.hover.AbstractLSHoverProvider.LSMarkdownDocProvider.Companion.getMarkdownDoc
+import com.jetbrains.ls.api.features.resolve.ResolveDataWithConfigurationEntryId
 import com.jetbrains.ls.api.features.utils.isSource
 import com.jetbrains.ls.snapshot.api.impl.core.SessionDataEntity
 import com.jetbrains.lsp.implementation.LspHandlerContext
-import com.jetbrains.lsp.implementation.lspClient
+import com.jetbrains.lsp.implementation.throwLspError
 import com.jetbrains.lsp.protocol.*
-import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 import java.util.concurrent.atomic.AtomicLong
 
 abstract class LSAbstractCompletionProvider : LSCompletionProvider, LSCommandDescriptorProvider {
-    override val supportsResolveRequest: Boolean get() = false
+    override val supportsResolveRequest: Boolean get() = true
 
     context(_: LSServer, _: LspHandlerContext)
     override suspend fun provideCompletion(params: CompletionParams): CompletionList {
@@ -69,7 +73,7 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider, LSCommandDes
                             val itemMatcher = completionProcess.arranger.itemMatcher(lookup)
                             val data = CompletionData(params, lookup, itemMatcher)
 
-                            val id = cacheCompletionData(data)
+                            val completionDataKey = cacheCompletionData(data)
 
                             CompletionItem(
                                 label = lookupPresentation.itemText ?: lookup.lookupString,
@@ -78,16 +82,18 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider, LSCommandDes
                                     detail = lookupPresentation.tailText,
                                     description = lookupPresentation.typeText,
                                 ),
-                                documentation = computeDocumentation(lookup),
                                 kind = lookup.psiElement?.let { LSCompletionItemKindProvider.getKind(it) },
                                 textEdit = emptyTextEdit(params.position),
                                 command = Command(
                                     "Apply Completion",
                                     command = completionCommand,
                                     arguments = listOf(
-                                        LSP.json.encodeToJsonElement(id),
+                                        LSP.json.encodeToJsonElement(completionDataKey),
                                     )
                                 ),
+                                data = JsonObject(mapOf(
+                                    ResolveDataWithConfigurationEntryId::configurationEntryId.name to LSP.json.encodeToJsonElement(uniqueId)
+                                )),
                             )
                         }
                         CompletionList(
@@ -100,13 +106,25 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider, LSCommandDes
         }
     }
 
+    context(_: LSServer, _: LspHandlerContext)
+    override suspend fun resolveCompletion(completionItem: CompletionItem): CompletionItem? {
+        val completionDataKey =
+            completionItem.command?.arguments?.firstOrNull()?.jsonPrimitive?.longOrNull
+            ?: return completionItem
+        val completionData = getCompletionData<CompletionData>(completionDataKey)
+        return withAnalysisContext {
+            runReadAction {
+                completionItem.copy(
+                    documentation = computeDocumentation(completionData.lookup),
+                )
+            }
+        }
+    }
+
     private fun CompletionParams.computeInvocationCount(): Int {
         // todo should be based on CompletionParams.context.triggerKind
         return 1
     }
-
-
-    abstract fun createAdditionalData(lookupElement: LookupElement, itemMatcher: PrefixMatcher): JsonElement?
 
     companion object {
         private const val PER_CLIENT_COMPLETION_CACHE_SIZE = 1000L
@@ -145,13 +163,14 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider, LSCommandDes
             return id
         }
 
-        fun <T : Any> getCompletionData(id: Long): T? {
+        fun <T : Any> getCompletionData(id: Long): T {
             val userData = SessionDataEntity.single().map
 
             @Suppress("UNCHECKED_CAST")
             val completionCache = userData[COMPLETION_CACHE_KEY] as Cache<Long, T>
             val completionData = completionCache.getIfPresent(id)
             return completionData
+                ?: throwLspError(CompletionResolveRequestType, "Your completion session has expired, please try again", Unit, ErrorCodes.RequestFailed)
         }
 
         private fun generateCacheId(): Long {
@@ -173,16 +192,11 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider, LSCommandDes
                 name = completionCommand,
                 executor = { arguments ->
                     require(arguments.size == 1) { "Expected 1 argument, got: ${arguments.size}" }
-                    val id = (arguments[0] as? JsonPrimitive)?.content?.toLongOrNull()
+                    val id = (arguments[0] as? JsonPrimitive)?.longOrNull
                         ?: error("Invalid argument, expected a number, got: ${arguments[0]}")
-                    val completionData: CompletionData? = getCompletionData(id)
-                    when (completionData) {
-                        null -> lspClient.notify(
-                            ShowMessageNotification,
-                            ShowMessageParams(MessageType.Error, "Your completion session has expired, please try again"),
-                        )
-                        else -> applyCompletion(completionData)
-                    }
+                    val completionData = getCompletionData<CompletionData>(id)
+                    applyCompletion(completionData)
+
                     JsonPrimitive(true)
                 }
             )

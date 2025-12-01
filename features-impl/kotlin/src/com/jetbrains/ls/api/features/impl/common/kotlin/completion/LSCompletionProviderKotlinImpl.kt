@@ -1,11 +1,9 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.kotlin.completion
 
-import com.intellij.codeInsight.completion.PrefixMatcher
 import com.intellij.codeInsight.completion.createCompletionProcess
 import com.intellij.codeInsight.completion.impl.CamelHumpMatcher
 import com.intellij.codeInsight.completion.insertCompletion
-import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.openapi.application.invokeAndWaitIfNeeded
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.vfs.findPsiFile
@@ -25,36 +23,17 @@ import com.jetbrains.ls.api.features.textEdits.TextEditsComputer
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.protocol.*
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.modules.SerializersModule
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaDanglingFileResolutionMode
 import org.jetbrains.kotlin.analysis.api.projectStructure.withDanglingFileResolutionMode
-import org.jetbrains.kotlin.idea.completion.api.serialization.lookup.LookupModelConverter
-import org.jetbrains.kotlin.idea.completion.impl.k2.serializableInsertionHandlerSerializersModule
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtPsiFactory
 
 object LSCompletionProviderKotlinImpl : LSAbstractCompletionProvider() {
     override val uniqueId: LSUniqueConfigurationEntry.UniqueId = LSUniqueConfigurationEntry.UniqueId("KotlinCompletionProvider")
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
-
-
-    override fun createAdditionalData(
-        lookupElement: LookupElement,
-        itemMatcher: PrefixMatcher
-    ): JsonElement? {
-        val model = LookupModelConverter.serializeLookupElementForInsertion(lookupElement, lookupModelConverterConfig) ?: return null
-        val data = KotlinCompletionLookupItemData(itemMatcher.prefix, model)
-
-        return json.encodeToJsonElement(KotlinCompletionLookupItemData.serializer(), data)
-    }
-
     override val completionCommand: String
         get() = "jetbrains.kotlin.completion.apply"
-
-    private val lookupModelConverterConfig = LookupModelConverter.Config(safeMode = true)
 
 
     context(_: LspHandlerContext, _: LSServer)
@@ -118,13 +97,6 @@ object LSCompletionProviderKotlinImpl : LSAbstractCompletionProvider() {
 
         return withDanglingFileResolutionMode(fileForModification, KaDanglingFileResolutionMode.IGNORE_SELF) {
             action(fileForModification)
-        }
-    }
-
-    private val json = Json(LSP.json) {
-        serializersModule = SerializersModule {
-            include(LSP.json.serializersModule)
-            include(serializableInsertionHandlerSerializersModule)
         }
     }
 }
