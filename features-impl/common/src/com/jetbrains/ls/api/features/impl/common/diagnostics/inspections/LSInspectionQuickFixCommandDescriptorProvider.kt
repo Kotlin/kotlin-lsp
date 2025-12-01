@@ -11,10 +11,9 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
 
 object LSInspectionQuickFixCommandDescriptorProvider : LSCommandDescriptorProvider {
-    override val commandDescriptors: List<LSCommandDescriptor>
-        get() = listOf(applyQuickFixCommandDescriptor)
+    override val commandDescriptors: List<LSCommandDescriptor> get() = listOf(commandDescriptor)
 
-    val applyQuickFixCommandDescriptor: LSCommandDescriptor = LSCommandDescriptor(
+    val commandDescriptor: LSCommandDescriptor = LSCommandDescriptor(
         title = "Inspection Apply Fix",
         name = "inspection.applyFix",
         executor = { arguments ->
@@ -23,5 +22,4 @@ object LSInspectionQuickFixCommandDescriptorProvider : LSCommandDescriptorProvid
             JsonPrimitive(true)
         },
     )
-
 }

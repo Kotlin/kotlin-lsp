@@ -15,13 +15,21 @@ import kotlin.io.path.Path
 import kotlin.io.path.writeText
 
 object LSExportWorkspaceCommandDescriptorProvider : LSCommandDescriptorProvider {
-    override val commandDescriptors: List<LSCommandDescriptor> = listOf(
-        LSCommandDescriptor("Export Workspace", "exportWorkspace") { arguments ->
+    override val commandDescriptors: List<LSCommandDescriptor> get() = listOf(commandDescriptor)
+
+    private val commandDescriptor = LSCommandDescriptor(
+        title = "Export Workspace",
+        name = "exportWorkspace",
+        executor = { arguments ->
             if (arguments.size != 1) {
                 throwLspError(ExecuteCommand, "Expected 1 argument, got: ${arguments.size}", Unit, ErrorCodes.InvalidParams, null)
             }
-            val workspacePath = (arguments.first() as? JsonPrimitive)?.content?.let { Path(it) }
-                ?: throwLspError(ExecuteCommand, "Invalid argument, expected a string, got: ${arguments[0]}", Unit, ErrorCodes.InvalidParams, null)
+            val workspacePath = (arguments.first() as? JsonPrimitive)?.content?.let { Path(it) } ?: throwLspError(
+                requestType = ExecuteCommand,
+                message = "Invalid argument, expected a string, got: ${arguments[0]}",
+                data = Unit,
+                code = ErrorCodes.InvalidParams,
+            )
             val workspaceModelPath = workspacePath.resolve("workspace.json")
 
             withContext(Dispatchers.IO) {
@@ -31,6 +39,6 @@ object LSExportWorkspaceCommandDescriptorProvider : LSCommandDescriptorProvider 
             }
 
             JsonPrimitive(null)
-        }
+        },
     )
 }

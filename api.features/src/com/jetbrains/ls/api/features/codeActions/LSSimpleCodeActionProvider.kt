@@ -3,9 +3,9 @@ package com.jetbrains.ls.api.features.codeActions
 
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.vfs.VirtualFile
-import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
@@ -25,7 +25,7 @@ abstract class LSSimpleCodeActionProvider<P : Any> : LSCodeActionProvider, LSCom
     protected open val isPreferred: Boolean? = null
     protected open val commandName: String get() = title
 
-    final override val providesOnlyKinds: Set<CodeActionKind> get ()= setOf(kind)
+    final override val providesOnlyKinds: Set<CodeActionKind> get() = setOf(kind)
 
     abstract val dataSerializer: KSerializer<P>
 
@@ -66,8 +66,13 @@ abstract class LSSimpleCodeActionProvider<P : Any> : LSCodeActionProvider, LSCom
     @Serializable
     data object NoData
 
-    override val commandDescriptors: List<LSCommandDescriptor> =
-        listOf(LSCommandDescriptor(title, commandName, LSSimpleDocumentCommandExecutor()))
+    override val commandDescriptors: List<LSCommandDescriptor> get() = listOf(commandDescriptor)
+
+    private val commandDescriptor = LSCommandDescriptor(
+        title = title,
+        name = commandName,
+        executor = LSSimpleDocumentCommandExecutor(),
+    )
 
     internal inner class LSSimpleDocumentCommandExecutor : LSDocumentCommandExecutor {
         context(_: LspHandlerContext, _: LSServer)

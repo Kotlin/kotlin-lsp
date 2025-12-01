@@ -27,8 +27,8 @@ class LSInspectionFixesCodeActionProvider(
                     kind = CodeActionKind.QuickFix,
                     diagnostics = listOf(data.diagnostic),
                     command = Command(
-                        title = LSInspectionQuickFixCommandDescriptorProvider.applyQuickFixCommandDescriptor.title,
-                        command = LSInspectionQuickFixCommandDescriptorProvider.applyQuickFixCommandDescriptor.name,
+                        title = LSInspectionQuickFixCommandDescriptorProvider.commandDescriptor.title,
+                        command = LSInspectionQuickFixCommandDescriptorProvider.commandDescriptor.name,
                         arguments = listOf(
                             LSP.json.encodeToJsonElement(quickFix.modCommandData),
                         ),
