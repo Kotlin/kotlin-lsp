@@ -21,8 +21,8 @@
   ],
   "main": "./dist/extension",
   "activationEvents": [
-    "onLanguage:kotlin",
-    "onCommand:jetbrains.activateLsp"
+    "onCommand:jetbrains.activateLsp",
+    "onLanguage:kotlin"
   ],
   "contributes": {
     "languages": [
@@ -47,30 +47,30 @@
     ],
     "configuration": [
       {
-      "title": "LSP Server",
-      "properties": {
-        "kotlinLSP.dev.serverPort": {
-          "type": "number",
-          "default": -1,
-          "description": "Port for the locally started Kotlin Language Server to listen on. -1 to start the bundled LSP"
-        },
-        "kotlinLSP.jrePathToRunLsp": {
-          "type": "string",
-          "default": null,
-          "description": "Path of the JRE used to run the Kotlin LSP. Requires version 21 or higher. If unspecified, the bundled JetBrains Runtime is used."
-        },
-        "kotlinLSP.additionalJvmArgs": {
-          "type": "array",
-          "default": [],
-          "description": "Additional JVM arguments to pass to the LSP server"
-        },
-        "kotlinLSP.jdkForSymbolResolution": {
-          "type": "string",
-          "default": null,
-          "description": "Path of the JDK for symbol resolution"
+        "title": "LSP Server",
+        "properties": {
+          "kotlinLSP.dev.serverPort": {
+            "type": "number",
+            "default": -1,
+            "description": "Port for the locally started Kotlin Language Server to listen on. -1 to start the bundled LSP"
+          },
+          "kotlinLSP.jrePathToRunLsp": {
+            "type": "string",
+            "default": null,
+            "description": "Path of the JRE used to run the Kotlin LSP. Requires version 21 or higher. If unspecified, the bundled JetBrains Runtime is used."
+          },
+          "kotlinLSP.additionalJvmArgs": {
+            "type": "array",
+            "default": [],
+            "description": "Additional JVM arguments to pass to the LSP server"
+          },
+          "kotlinLSP.jdkForSymbolResolution": {
+            "type": "string",
+            "default": null,
+            "description": "Path of the JDK for symbol resolution"
+          }
         }
-      }
-    },
+      },
       {
         "title": "Inlay",
         "properties": {
