@@ -5,14 +5,14 @@ import com.intellij.openapi.application.PathManager
 import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.workspaceModel.ide.impl.IdeVirtualFileUrlManagerImpl
-import com.jetbrains.ls.api.core.withServer
-import com.jetbrains.ls.api.core.workspaceStructure
-import com.jetbrains.ls.imports.api.importWorkspaceToStorage
+import com.jetbrains.analyzer.api.withAnalyzer
+import com.jetbrains.analyzer.bootstrap.AnalyzerProjectId
+import com.jetbrains.analyzer.bootstrap.WorkspaceModelSnapshot
+import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
 import com.jetbrains.ls.imports.json.WorkspaceData
 import com.jetbrains.ls.imports.json.toJson
 import com.jetbrains.ls.imports.json.workspaceData
 import com.jetbrains.ls.imports.json.workspaceModel
-import com.jetbrains.ls.snapshot.api.impl.core.createServerStarterAnalyzerImpl
 import com.jetbrains.ls.test.api.utils.compareWithTestdata
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.concurrent.atomic.AtomicReference
 import kotlin.io.path.div
 import kotlin.io.path.exists
 
@@ -91,18 +90,15 @@ class ProjectImportTest {
 
 
     private fun performImport(projectDir: Path): EntityStorage? {
-        var storageRef: EntityStorage? = null
-        runBlocking(Dispatchers.Default) {
-            createServerStarterAnalyzerImpl(emptyList(), isUnitTestMode = true).start {
-                withServer {
-                    workspaceStructure.updateWorkspaceModelDirectly { urlManager, storage ->
-                        importer.importWorkspaceToStorage(storage, projectDir, urlManager, {})
-                    }
-                    storageRef = workspaceStructure.getEntityStorage()
+        return runBlocking(Dispatchers.Default) {
+            withAnalyzer(isUnitTestMode = true) {  analyzer ->
+                val currentSnapshot = WorkspaceModelSnapshot.empty()
+                val virtualFileUrlManager = currentSnapshot.virtualFileUrlManager
+                analyzer.withProject(analyzerProjectConfigForImport(AnalyzerProjectId(), currentSnapshot.entityStore, virtualFileUrlManager)) {
+                    importer.importWorkspace(projectDir, virtualFileUrlManager, {})
                 }
             }
         }
-        return storageRef!!
     }
 
     fun cropJarPaths(jsonString: String): String =
