@@ -10,13 +10,14 @@ import com.intellij.platform.workspace.jps.entities.ModuleId
 import com.intellij.platform.workspace.jps.entities.SdkEntity
 import com.intellij.platform.workspace.jps.entities.SourceRootEntity
 import com.intellij.platform.workspace.jps.entities.modifyModuleEntity
+import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.entities
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
 import org.jetbrains.kotlin.idea.workspaceModel.kotlinSettings
 import kotlin.collections.plus
 
-internal fun applyChangesWithDeduplication(target: MutableEntityStorage, diff: MutableEntityStorage) {
+internal fun applyChangesWithDeduplication(target: MutableEntityStorage, diff: EntityStorage) {
     for (lib in diff.entities<LibraryEntity>()) {
         if (lib.symbolicId !in target) {
             target.addEntity(

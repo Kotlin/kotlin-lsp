@@ -8,6 +8,7 @@ import com.intellij.openapi.projectRoots.impl.JavaHomeFinder.getFinder
 import com.intellij.platform.eel.provider.getEelDescriptor
 import com.intellij.platform.workspace.jps.entities.*
 import com.intellij.platform.workspace.jps.entities.LibraryTableId.ProjectLibraryTableId
+import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.jetbrains.ls.api.core.util.retryWithBackOff
@@ -53,7 +54,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         projectDirectory: Path,
         virtualFileUrlManager: VirtualFileUrlManager,
         onUnresolvedDependency: (String) -> Unit,
-    ): MutableEntityStorage? {
+    ): EntityStorage? {
         if (!isApplicableDirectory(projectDirectory)) return null
         try {
             val connector = GradleConnector.newConnector().forProjectDirectory(projectDirectory.toFile())

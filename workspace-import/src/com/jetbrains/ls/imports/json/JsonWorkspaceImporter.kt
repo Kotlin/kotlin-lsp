@@ -1,7 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.json
 
-import com.intellij.platform.workspace.storage.MutableEntityStorage
+import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
@@ -18,10 +18,10 @@ import kotlin.io.path.notExists
 
 object JsonWorkspaceImporter : WorkspaceImporter {
     override suspend fun importWorkspace(
-        projectDirectory: Path,
-        virtualFileUrlManager: VirtualFileUrlManager,
-        onUnresolvedDependency: (String) -> Unit
-    ): MutableEntityStorage? {
+      projectDirectory: Path,
+      virtualFileUrlManager: VirtualFileUrlManager,
+      onUnresolvedDependency: (String) -> Unit
+    ): EntityStorage? {
         if (!isApplicableDirectory(projectDirectory)) return null
         try {
             val content = (projectDirectory / "workspace.json").toFile().readText()

@@ -3,6 +3,7 @@ package com.jetbrains.ls.imports.light
 
 import com.intellij.platform.workspace.jps.entities.*
 import com.intellij.platform.workspace.storage.EntitySource
+import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.entities
 import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
@@ -25,7 +26,7 @@ object LightWorkspaceImporter : WorkspaceImporter {
         projectDirectory: Path,
         virtualFileUrlManager: VirtualFileUrlManager,
         onUnresolvedDependency: (String) -> Unit
-    ): MutableEntityStorage =
+    ): EntityStorage? =
         createLightWorkspace(projectDirectory, virtualFileUrlManager)
 
     fun createEmptyWorkspace(virtualFileUrlManager: VirtualFileUrlManager, storage: MutableEntityStorage) {

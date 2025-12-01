@@ -13,11 +13,9 @@ import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.platform.eel.provider.getEelDescriptor
 import com.intellij.platform.workspace.jps.entities.*
 import com.intellij.platform.workspace.jps.entities.LibraryTableId.ProjectLibraryTableId
-import com.intellij.platform.workspace.storage.InternalEnvironmentName
+import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
-import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.SdkBridgeImpl
-import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.SdkBridgeImpl.Companion.mutableSdkMap
 import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.customName
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
@@ -55,7 +53,7 @@ object JpsWorkspaceImporter : WorkspaceImporter {
         projectDirectory: Path,
         virtualFileUrlManager: VirtualFileUrlManager,
         onUnresolvedDependency: (String) -> Unit,
-    ): MutableEntityStorage? {
+    ): EntityStorage? {
         if (!isApplicableDirectory(projectDirectory)) return null
         return try {
             if (!isApplicableDirectory(projectDirectory)) return null

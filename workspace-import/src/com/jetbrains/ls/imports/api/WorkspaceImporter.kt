@@ -1,6 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.api
 
+import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.jetbrains.ls.imports.utils.applyChangesWithDeduplication
@@ -11,8 +12,7 @@ interface WorkspaceImporter {
         projectDirectory: Path,
         virtualFileUrlManager: VirtualFileUrlManager,
         onUnresolvedDependency: (String) -> Unit
-    ): MutableEntityStorage?
-
+    ): EntityStorage?
 }
 
 suspend fun WorkspaceImporter.importWorkspaceToStorage(
