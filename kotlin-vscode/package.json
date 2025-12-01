@@ -47,7 +47,7 @@
     ],
     "configuration": [
       {
-        "title": "LSP Server",
+        "title": "Kotlin by JetBrains",
         "properties": {
           "kotlinLSP.dev.serverPort": {
             "type": "number",
