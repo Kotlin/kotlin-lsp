@@ -5,6 +5,7 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.SimpleDiagnosticData
 import com.jetbrains.ls.api.features.impl.common.diagnostics.diagnosticData
+import com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDescriptorProvider
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.*
@@ -29,8 +30,8 @@ class LSInspectionFixesCodeActionProvider(
                         kind = CodeActionKind.QuickFix,
                         diagnostics = listOf(data.diagnostic),
                         command = Command(
-                            title = LSInspectionQuickFixCommandDescriptorProvider.commandDescriptor.title,
-                            command = LSInspectionQuickFixCommandDescriptorProvider.commandDescriptor.name,
+                            title = LSApplyFixCommandDescriptorProvider.commandDescriptor.title,
+                            command = LSApplyFixCommandDescriptorProvider.commandDescriptor.name,
                             arguments = listOf(
                                 LSP.json.encodeToJsonElement(quickFix.modCommandData),
                             ),

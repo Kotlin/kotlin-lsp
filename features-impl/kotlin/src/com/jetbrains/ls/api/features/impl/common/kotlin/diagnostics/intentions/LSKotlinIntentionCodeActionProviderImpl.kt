@@ -26,20 +26,15 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
-import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
-import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
+import com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.utils.createEditorWithCaret
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
-import com.jetbrains.ls.kotlinLsp.requests.core.executeCommand
 import com.jetbrains.lsp.implementation.LspHandlerContext
-import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.protocol.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.idea.codeinsight.api.applicable.intentions.KotlinApplicableModCommandAction
@@ -48,7 +43,7 @@ import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtFile
 import java.util.function.Function
 
-internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, LSCommandDescriptorProvider {
+internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSKotlinLanguage)
     override val providesOnlyKinds: Set<CodeActionKind> = setOf(CodeActionKind.QuickFix)
 
@@ -57,7 +52,6 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
             MovePropertyToConstructorIntention(),
         )
     }
-
 
     context(_: LSServer, _: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
@@ -120,8 +114,8 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
                 kind = CodeActionKind.QuickFix,
                 diagnostics = null,
                 command = Command(
-                    commandDescriptor.title,
-                    commandDescriptor.name,
+                    title = LSApplyFixCommandDescriptorProvider.commandDescriptor.title,
+                    command = LSApplyFixCommandDescriptorProvider.commandDescriptor.name,
                     arguments = listOf(
                         LSP.json.encodeToJsonElement(modCommandData),
                     ),
@@ -129,18 +123,6 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
             )
         }
     }
-
-    private val commandDescriptor = LSCommandDescriptor(
-        title = "Kotlin Intention Apply Fix",
-        name = "kotlinIntention.applyFix",
-        executor = { arguments ->
-            val modCommandData = LSP.json.decodeFromJsonElement<ModCommandData>(arguments[0])
-            executeCommand(modCommandData, lspClient)
-            JsonPrimitive(true)
-        },
-    )
-
-    override val commandDescriptors: List<LSCommandDescriptor> = listOf(commandDescriptor)
 }
 
 private val LOG = fileLogger()

@@ -16,20 +16,16 @@ import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.core.withWritableFile
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
-import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.diagnosticData
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
+import com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.utils.createEditorWithCaret
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
-import com.jetbrains.ls.kotlinLsp.requests.core.executeCommand
 import com.jetbrains.lsp.implementation.LspHandlerContext
-import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.protocol.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.analysis.api.analyze
@@ -38,7 +34,7 @@ import org.jetbrains.kotlin.analysis.api.diagnostics.KaDiagnosticWithPsi
 import org.jetbrains.kotlin.idea.codeinsight.api.applicators.fixes.KotlinQuickFixService
 import org.jetbrains.kotlin.psi.KtFile
 
-internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActionProvider, LSCommandDescriptorProvider {
+internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActionProvider {
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
     override val providesOnlyKinds: Set<CodeActionKind> = setOf(CodeActionKind.QuickFix)
 
@@ -110,8 +106,8 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
                     CodeActionKind.QuickFix,
                     diagnostics = listOf(lspDiagnostic),
                     command = Command(
-                        commandDescriptor.title,
-                        commandDescriptor.name,
+                        LSApplyFixCommandDescriptorProvider.commandDescriptor.title,
+                        LSApplyFixCommandDescriptorProvider.commandDescriptor.name,
                         arguments = listOf(
                             LSP.json.encodeToJsonElement(modCommandData),
                         ),
@@ -120,22 +116,6 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
             }
             .toList()
     }
-
-    private val commandDescriptor = LSCommandDescriptor(
-        title = "Kotlin Diagnostic Apply Fix",
-        name = "kotlinDiagnostic.applyFix",
-        executor = { arguments ->
-            val fix = LSP.json.decodeFromJsonElement<ModCommandData>(arguments[0])
-            withAnalysisContext {
-                executeCommand(fix, lspClient)
-            }
-            JsonPrimitive(true)
-        },
-    )
-
-
-    override val commandDescriptors: List<LSCommandDescriptor> = listOf(commandDescriptor)
 }
-
 
 private val LOG = logger<LSKotlinCompilerDiagnosticsFixesCodeActionProvider>()
