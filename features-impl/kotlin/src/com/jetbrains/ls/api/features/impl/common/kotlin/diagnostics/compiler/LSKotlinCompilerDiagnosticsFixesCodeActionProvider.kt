@@ -2,7 +2,7 @@
 package com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.compiler
 
 import com.intellij.modcommand.ActionContext
-import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Editor
@@ -49,11 +49,11 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
         val uri = params.textDocument.uri.uri
         withWritableFile(uri) {
             withAnalysisContext {
-                runReadAction {
-                    val file = params.textDocument.findVirtualFile() ?: return@runReadAction emptyList()
+                readAction {
+                    val file = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
                     val quickFixService = KotlinQuickFixService.getInstance()
-                    val ktFile = file.findPsiFile(project) as? KtFile ?: return@runReadAction emptyList()
-                    val document = file.findDocument() ?: return@runReadAction emptyList()
+                    val ktFile = file.findPsiFile(project) as? KtFile ?: return@readAction emptyList()
+                    val document = file.findDocument() ?: return@readAction emptyList()
                     analyze(ktFile) {
                         val kaDiagnostics = ktFile.collectDiagnostics(filter = KaDiagnosticCheckerFilter.ONLY_COMMON_CHECKERS)
                         if (kaDiagnostics.isEmpty()) return@analyze emptyList()

@@ -5,7 +5,7 @@ import com.intellij.model.psi.PsiSymbolService
 import com.intellij.model.psi.impl.targetSymbols
 import com.intellij.openapi.application.ex.ApplicationUtil
 import com.intellij.openapi.application.invokeAndWaitIfNeeded
-import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.application.writeIntentReadAction
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.diagnostic.LogLevel
@@ -45,7 +45,7 @@ class LSRenameProviderCommonImpl(
         val originals = mutableMapOf<PsiFile, String>()
         val renames = mutableListOf<RenameFile>()
         val edits: List<TextDocumentEdit> = withWriteAnalysisContext {
-            val processor = runReadAction a@{
+            val processor = readAction a@{
                 val file = params.findVirtualFile() ?: return@a null
                 val psiFile = file.findPsiFile(project) ?: return@a null
                 val document = file.findDocument() ?: return@a null
@@ -60,7 +60,7 @@ class LSRenameProviderCommonImpl(
                 Renamer(project, element, params.newName, true, false)
             } ?: return@withWriteAnalysisContext emptyList()
 
-            runReadAction { processor.foundUsages }
+            readAction { processor.foundUsages }
                 .map { it.file }
                 .distinct()
                 .filterNotNull()
@@ -100,7 +100,7 @@ class LSRenameProviderCommonImpl(
                 }
             }
 
-            runReadAction {
+            readAction {
                 originals.map { (file, original) ->
                     val uri = DocumentUri(file.virtualFile.uri)
                     val version = documents.getVersion(uri.uri)

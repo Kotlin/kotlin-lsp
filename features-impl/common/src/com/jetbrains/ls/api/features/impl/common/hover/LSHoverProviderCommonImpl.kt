@@ -4,7 +4,7 @@ package com.jetbrains.ls.api.features.impl.common.hover
 import com.intellij.codeInsight.TargetElementUtilBase
 import com.intellij.lang.Language
 import com.intellij.lang.LanguageExtension
-import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
@@ -37,7 +37,7 @@ abstract class AbstractLSHoverProvider(
     context(_: LSServer, _: LspHandlerContext)
     override suspend fun getHover(params: HoverParams): Hover? {
         return withAnalysisContext {
-            runReadAction a@{
+            readAction a@{
                 val file = params.findVirtualFile() ?: return@a null
                 val psiFile = file.findPsiFile(project) ?: return@a null
                 val document = file.findDocument() ?: return@a null
@@ -52,7 +52,7 @@ abstract class AbstractLSHoverProvider(
                 }.joinToString("\n---\n")
 
                 Hover(
-                    Hover.Content.Markup(MarkupContent(MarkupKindType.Markdown, markdown)),
+                    contents = Hover.Content.Markup(MarkupContent(MarkupKindType.Markdown, markdown)),
                     range = findRange(psiFile, document, params.position),
                 )
             }

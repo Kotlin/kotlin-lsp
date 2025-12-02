@@ -1,7 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.codeActions
 
-import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.vfs.VirtualFile
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
@@ -39,8 +39,8 @@ abstract class LSSimpleCodeActionProvider<P : Any> : LSCodeActionProvider, LSCom
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val documentUri = params.textDocument.uri
         val params = withAnalysisContext {
-            runReadAction {
-                val file = documentUri.findVirtualFile() ?: return@runReadAction null
+            readAction {
+                val file = documentUri.findVirtualFile() ?: return@readAction null
                 getData(file, params)
             }
         } ?: return@flow
@@ -81,8 +81,8 @@ abstract class LSSimpleCodeActionProvider<P : Any> : LSCodeActionProvider, LSCom
             otherArgs: List<JsonElement>,
         ): List<TextEdit> {
             return withAnalysisContext {
-                runReadAction {
-                    val file = documentUri.findVirtualFile() ?: return@runReadAction emptyList()
+                readAction {
+                    val file = documentUri.findVirtualFile() ?: return@readAction emptyList()
                     val argument = otherArgs.firstOrNull()?.let { LSP.json.decodeFromJsonElement(dataSerializer, it) } ?: (NoData as P)
                     execute(file, argument)
                 }

@@ -1,7 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.kotlin.signatureHelp
 
-import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.vfs.findDocument
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.findPsiFile
@@ -37,7 +37,7 @@ object LSSignatureHelpKotlinImpl : LSSignatureHelpProvider {
     context(_: LSServer, _: LspHandlerContext)
     override suspend fun getSignatureHelp(params: SignatureHelpParams): SignatureHelp? {
         return withAnalysisContext {
-            runReadAction r@{
+            readAction r@{
                 val file = params.findVirtualFile() ?: return@r null
                 val ktFile = file.findPsiFile() as? KtFile ?: return@r null
                 val document = file.findDocument() ?: return@r null

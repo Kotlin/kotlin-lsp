@@ -1,7 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.kotlin.completion.rekot
 
-import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
@@ -46,10 +46,10 @@ internal object LSRekotBasedKotlinCompletionProviderImpl : LSCompletionProvider 
     override suspend fun provideCompletion(params: CompletionParams): CompletionList {
         if (!params.textDocument.isSource()) return CompletionList.EMPTY_COMPLETE
         return withAnalysisContext {
-            runReadAction {
-                val file = params.textDocument.findVirtualFile() ?: return@runReadAction EMPTY_COMPLETION_LIST
-                val psiFile = file.findPsiFile(project) as? KtFile ?: return@runReadAction EMPTY_COMPLETION_LIST
-                val document = file.findDocument() ?: return@runReadAction EMPTY_COMPLETION_LIST
+            readAction {
+                val file = params.textDocument.findVirtualFile() ?: return@readAction EMPTY_COMPLETION_LIST
+                val psiFile = file.findPsiFile(project) as? KtFile ?: return@readAction EMPTY_COMPLETION_LIST
+                val document = file.findDocument() ?: return@readAction EMPTY_COMPLETION_LIST
                 val offset = document.offsetByPosition(params.position)
                 val fileForCompletion = createFileForCompletion(psiFile, offset)
                 CompletionList(isIncomplete = true, items = createItems(fileForCompletion, document, psiFile, offset))

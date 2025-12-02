@@ -4,7 +4,7 @@ package com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.intentions
 import com.intellij.codeInsight.intention.CommonIntentionAction
 import com.intellij.codeInsight.template.Expression
 import com.intellij.modcommand.*
-import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.editor.Document
@@ -63,10 +63,10 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider, 
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val uri = params.textDocument.uri.uri
         withAnalysisContext {
-            runReadAction {
-                val file = uri.findVirtualFile() ?: return@runReadAction emptyList()
-                val ktFile = file.findPsiFile(project) as? KtFile ?: return@runReadAction emptyList()
-                val document = file.findDocument() ?: return@runReadAction emptyList()
+            readAction {
+                val file = uri.findVirtualFile() ?: return@readAction emptyList()
+                val ktFile = file.findPsiFile(project) as? KtFile ?: return@readAction emptyList()
+                val document = file.findDocument() ?: return@readAction emptyList()
                 val actions = createActions()
                 analyze(ktFile) {
                     val result = mutableListOf<CodeAction>()

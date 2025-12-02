@@ -4,7 +4,7 @@ package com.jetbrains.ls.api.features.impl.common.references
 import com.intellij.find.findUsages.FindUsagesManager
 import com.intellij.model.psi.PsiSymbolService
 import com.intellij.model.psi.impl.targetSymbols
-import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.progress.runBlockingCancellable
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
@@ -31,7 +31,7 @@ class LSReferencesProviderCommonImpl(
     context(_: LSServer, _: LspHandlerContext)
     override fun getReferences(params: ReferenceParams): Flow<Location> = channelFlow {
         withAnalysisContext {
-            runReadAction a@{
+            readAction a@{
                 val file = params.findVirtualFile() ?: return@a
                 val psiFile = file.findPsiFile(project) ?: return@a
                 val document = file.findDocument() ?: return@a

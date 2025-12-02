@@ -1,7 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.kotlin.definitions
 
-import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiPackage
@@ -33,13 +33,13 @@ internal object LSKotlinPackageDefinitionProvider : LSDefinitionProvider {
     override fun provideDefinitions(params: DefinitionParams): Flow<Location> = flow {
         val uri = params.textDocument.uri.uri
         withAnalysisContext {
-            runReadAction {
-                val file = uri.findVirtualFile() ?: return@runReadAction emptyList()
-                val psiFile = file.findPsiFile(project) ?: return@runReadAction emptyList()
-                val document = file.findDocument() ?: return@runReadAction emptyList()
+            readAction {
+                val file = uri.findVirtualFile() ?: return@readAction emptyList()
+                val psiFile = file.findPsiFile(project) ?: return@readAction emptyList()
+                val document = file.findDocument() ?: return@readAction emptyList()
                 val offset = document.offsetByPosition(params.position)
-                val reference = psiFile.findReferenceAt(offset) ?: return@runReadAction emptyList()
-                val psiPackage = (reference.resolve() as? PsiPackage) ?: return@runReadAction emptyList()
+                val reference = psiFile.findReferenceAt(offset) ?: return@readAction emptyList()
+                val psiPackage = (reference.resolve() as? PsiPackage) ?: return@readAction emptyList()
 
                 // A hackish replacement for PsiPackage.directories which is not working because of the missing logic in FakePackageIndexImpl.
                 StubIndex.getInstance()

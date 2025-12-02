@@ -7,7 +7,7 @@ import com.intellij.codeInspection.ex.InspectionManagerEx
 import com.intellij.lang.Language
 import com.intellij.modcommand.ModCommand
 import com.intellij.modcommand.ModCommandQuickFix
-import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
@@ -41,7 +41,7 @@ class LSInspectionDiagnosticProviderImpl(
         if (!params.textDocument.isSource()) return@flow
         val onTheFly = false
         withAnalysisContext(params.textDocument.uri.uri) {
-            runReadAction c@{
+            readAction c@{
                 val diagnostics = mutableListOf<Diagnostic>()
 
                 val file = params.textDocument.findVirtualFile() ?: return@c emptyList()

@@ -2,7 +2,7 @@
 package com.jetbrains.ls.api.features.impl.common.inlayHints
 
 import com.intellij.codeInsight.hints.declarative.*
-import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.impl.ImaginaryEditor
 import com.intellij.openapi.project.Project
@@ -58,10 +58,10 @@ abstract class LSInlayHintsCommonImpl(
         val options = requestEnabledInlayOptions(params.textDocument)
 
         withAnalysisContext {
-            runReadAction a@{
-                val file = params.textDocument.findVirtualFile() ?: return@a
-                val psiFile = file.findPsiFile(project) ?: return@a
-                val document = file.findDocument() ?: return@a
+            readAction {
+                val file = params.textDocument.findVirtualFile() ?: return@readAction
+                val psiFile = file.findPsiFile(project) ?: return@readAction
+                val document = file.findDocument() ?: return@readAction
                 val textRange = params.range.toTextRange(document)
                 val editor = ImaginaryEditor(project, document)
 
@@ -99,7 +99,7 @@ abstract class LSInlayHintsCommonImpl(
         val dataJson = hint.data ?: return null
         val data = LSP.json.decodeFromJsonElement(InlayHintResolveData.serializer(), dataJson)
         return withAnalysisContext {
-            runReadAction a@{
+            readAction a@{
                 val file = data.params.textDocument.findVirtualFile() ?: return@a null
                 val psiFile = file.findPsiFile(project) ?: return@a null
                 val document = file.findDocument() ?: return@a null
