@@ -12,8 +12,10 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.LSServerContext
 import com.jetbrains.ls.api.core.withServer
 import com.jetbrains.ls.api.features.LSConfiguration
+import com.jetbrains.ls.api.features.impl.common.configuration.DACommonConfiguration
 import com.jetbrains.ls.api.features.impl.common.configuration.LSCommonConfiguration
 import com.jetbrains.ls.api.features.impl.common.kotlin.configuration.LSKotlinLanguageConfiguration
+import com.jetbrains.ls.api.features.impl.common.kotlin.debug.DAJvmConfiguration
 import com.jetbrains.ls.api.features.impl.javaBase.LSJavaBaseLanguageConfiguration
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.kotlinLsp.connection.Client
@@ -198,6 +200,8 @@ fun createConfiguration(isolatedDocumentsMode: Boolean = false): LSConfiguration
             add(LSJavaBaseLanguageConfiguration)
             addAll(getAdditionalLanguageConfigurations())
             if (isolatedDocumentsMode) add(IsolatedDocumentsPlugin)
+            add(DACommonConfiguration)
+            add(DAJvmConfiguration)
         },
     )
 }
