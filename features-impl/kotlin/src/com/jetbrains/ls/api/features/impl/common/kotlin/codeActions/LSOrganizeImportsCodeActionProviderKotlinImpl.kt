@@ -25,6 +25,7 @@ internal object LSOrganizeImportsCodeActionProviderKotlinImpl : LSSimpleCodeActi
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSKotlinLanguage)
 
     override val title: String get() = "Organize Imports"
+    override val commandName: String get() = "kotlin.organize.imports"
     override val kind: CodeActionKind get() = CodeActionKind.SourceOrganizeImports
     override val dataSerializer: KSerializer<NoData> get() = NoData.serializer()
 
