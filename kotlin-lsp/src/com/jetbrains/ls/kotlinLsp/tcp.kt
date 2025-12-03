@@ -32,7 +32,10 @@ suspend fun tcpServer(config: TcpConnectionConfig.Server, server: suspend Corout
                     val clientAddress = client.remoteAddress
                     hadClient = true
                     LOG.info("A new client connected at ${clientAddress}")
-                    launch(start = CoroutineStart.ATOMIC) {
+                    launch(
+                        context = CoroutineName("client at ${clientAddress}"),
+                        start = CoroutineStart.ATOMIC,
+                    ) {
                         try {
                             client.use { clientSocket ->
                                 coroutineScope { server(KtorSocketConnection(clientSocket)) }

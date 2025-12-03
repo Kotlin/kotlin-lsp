@@ -28,6 +28,7 @@ import com.jetbrains.ls.kotlinLsp.util.logSystemInfo
 import com.jetbrains.ls.snapshot.api.impl.core.createServerStarterAnalyzerImpl
 import com.jetbrains.lsp.implementation.*
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -74,7 +75,7 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
         createServerStarterAnalyzerImpl(config.plugins, isUnitTestMode = false, isolatedDocumentsMode = runConfig.isolatedDocumentsMode)
 
     @Suppress("RAW_RUN_BLOCKING")
-    runBlocking(Dispatchers.Default) {
+    runBlocking(CoroutineName("root") + Dispatchers.Default) {
         starter.start {
             preloadKotlinStdlibWhenRunningFromSources()
             when (mode) {
