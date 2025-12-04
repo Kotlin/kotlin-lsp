@@ -17,6 +17,7 @@ import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
+import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
@@ -57,7 +58,7 @@ class LSInspectionDiagnosticProviderImpl(
                 val inspectionManager = InspectionManagerEx(project)
                 val problemsHolder = ProblemsHolder(inspectionManager, psiFile, onTheFly)
 
-                val localInspections = getLocalInspections(psiFile.language)
+                val localInspections = getLocalInspections(psiFile)
                 for (localInspection in localInspections) {
                     val visitor = localInspection.buildVisitor(problemsHolder, onTheFly)
 
@@ -192,10 +193,10 @@ class LSInspectionDiagnosticProviderImpl(
         }
     }
 
-    private fun getLocalInspections(language: Language): List<LocalInspectionTool> {
+    private fun getLocalInspections(psiFile: PsiFile): List<LocalInspectionTool> {
         return LocalInspectionEP.LOCAL_INSPECTION.extensionList
             .asSequence()
-            .filter { it.language == language.id }
+            .filter { it.language == psiFile.language.id }
             .filter { it.enabledByDefault }
             .filter { HighlightDisplayLevel.find(it.level) != HighlightDisplayLevel.DO_NOT_SHOW }
             .filterNot { blacklist.containsImplementation(it.implementationClass) }
@@ -209,9 +210,8 @@ class LSInspectionDiagnosticProviderImpl(
             }
             .filterNot { blacklist.containsSuperClass(it) }
             .filterIsInstance<LocalInspectionTool>()
+            .filter { localInspection -> localInspection.isAvailableForFile(psiFile) }
             .toList()
-            .takeIf { it.isNotEmpty() }
-            ?: emptyList()
     }
 
     private fun getSimpleGlobalInspections(language: Language): List<GlobalSimpleInspectionTool> {
@@ -232,8 +232,6 @@ class LSInspectionDiagnosticProviderImpl(
             .filterNot { blacklist.containsSuperClass(it) }
             .filterIsInstance<GlobalSimpleInspectionTool>()
             .toList()
-            .takeIf { it.isNotEmpty() }
-            ?: emptyList()
     }
 
     private fun ProblemsHolder.collectDiagnostics(
