@@ -18,7 +18,7 @@ object LSDiagnostic {
         // so we just collect results concurrently from all handlers
         val diagnostics = LSConcurrentResponseHandler.respondDirectlyWithResultsCollectedConcurrently(
             providers = entriesFor<LSDiagnosticProvider>(params.textDocument),
-            getResults = { diagnosticsProvider -> diagnosticsProvider.getDiagnostics(params) },
+            getResults = { diagnosticProvider -> diagnosticProvider.getDiagnostics(params) },
         )
 
         return DocumentDiagnosticReport(

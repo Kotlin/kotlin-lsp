@@ -3,11 +3,10 @@ package com.jetbrains.ls.api.features.inlayHints
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSConfiguration
-import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
 import com.jetbrains.ls.api.features.entriesFor
+import com.jetbrains.ls.api.features.entryById
 import com.jetbrains.ls.api.features.partialResults.LSConcurrentResponseHandler
 import com.jetbrains.ls.api.features.resolve.getConfigurationEntryId
-import com.jetbrains.ls.api.features.entryById
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.InlayHint
 import com.jetbrains.lsp.protocol.InlayHintParams
@@ -16,11 +15,11 @@ object LSInlayHints {
     context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
     suspend fun inlayHints(params: InlayHintParams): List<InlayHint> {
         return LSConcurrentResponseHandler.respondDirectlyWithResultsCollectedConcurrently(
-            entriesFor<LSInlayHintsProvider>(params.textDocument),
-        ) {
-            it.getInlayHints(params)
-        }
+            providers = entriesFor<LSInlayHintsProvider>(params.textDocument),
+            getResults = { inlayHintsProvider -> inlayHintsProvider.getInlayHints(params) },
+        )
     }
+
     context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
     suspend fun resolveInlayHint(hint: InlayHint): InlayHint {
         val uniqueId = getConfigurationEntryId(hint.data) ?: return hint
