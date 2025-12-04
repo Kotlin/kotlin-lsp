@@ -28,7 +28,7 @@ import com.jetbrains.ls.api.features.resolve.ResolveDataWithConfigurationEntryId
 import com.jetbrains.ls.api.features.utils.isSource
 import com.jetbrains.ls.snapshot.api.impl.core.SessionDataEntity
 import com.jetbrains.lsp.implementation.LspHandlerContext
-import com.jetbrains.lsp.implementation.throwLspError
+import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.protocol.*
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -111,12 +111,13 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider, LSCommandDes
         val completionDataKey =
             completionItem.command?.arguments?.firstOrNull()?.jsonPrimitive?.longOrNull
             ?: return completionItem
-        val completionData = getCompletionData<CompletionData>(completionDataKey)
-        return withAnalysisContext {
-            runReadAction {
-                completionItem.copy(
-                    documentation = computeDocumentation(completionData.lookup),
-                )
+        return getCompletionData<CompletionData>(completionDataKey)?.let { completionData ->
+            withAnalysisContext {
+                runReadAction {
+                    completionItem.copy(
+                        documentation = computeDocumentation(completionData.lookup),
+                    )
+                }
             }
         }
     }
@@ -163,14 +164,13 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider, LSCommandDes
             return id
         }
 
-        fun <T : Any> getCompletionData(id: Long): T {
+        fun <T : Any> getCompletionData(id: Long): T? {
             val userData = SessionDataEntity.single().map
 
             @Suppress("UNCHECKED_CAST")
             val completionCache = userData[COMPLETION_CACHE_KEY] as Cache<Long, T>
             val completionData = completionCache.getIfPresent(id)
             return completionData
-                ?: throwLspError(CompletionResolveRequestType, "Your completion session has expired, please try again", Unit, ErrorCodes.RequestFailed)
         }
 
         private fun generateCacheId(): Long {
@@ -195,7 +195,14 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider, LSCommandDes
                     val id = (arguments[0] as? JsonPrimitive)?.longOrNull
                         ?: error("Invalid argument, expected a number, got: ${arguments[0]}")
                     val completionData = getCompletionData<CompletionData>(id)
-                    applyCompletion(completionData)
+                    when (completionData) {
+                        null -> lspClient.notify(
+                            ShowMessageNotification,
+                            ShowMessageParams(MessageType.Error, "Your completion session has expired, please try again"),
+                        )
+
+                        else -> applyCompletion(completionData)
+                    }
 
                     JsonPrimitive(true)
                 }
