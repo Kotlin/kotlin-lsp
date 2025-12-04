@@ -50,7 +50,7 @@ private class Parser : CliktCommand(name = "kotlin-lsp") {
     val systemPath: Path? by option().path()
         .help("Path for Kotlin LSP caches and indexes")
     val multiClient: Boolean by option().flag()
-        .help("Whether the Kotlin LSP server is used in multiclient mode. If not set, server will be shut down after the first client disconnects.`")
+        .help("Whether the Kotlin LSP server is used in multiclient mode. If not set, server will be shut down after the first client disconnects.")
         .validate {
             if (it && stdio) fail("Stdio mode doesn't support multiclient mode")
             if (it && client) fail("Client mode doesn't support multiclient mode")
@@ -63,10 +63,20 @@ private class Parser : CliktCommand(name = "kotlin-lsp") {
     fun createRunConfig(): KotlinLspServerRunConfig {
         val mode = when {
             stdio -> KotlinLspServerMode.Stdio
-            client -> KotlinLspServerMode.Socket(TcpConnectionConfig.Client(
-                host = socket.host, port = socket.port))
-            else -> KotlinLspServerMode.Socket(TcpConnectionConfig.Server(
-                host = socket.host, port = socket.port, isMultiClient = multiClient))
+            client -> KotlinLspServerMode.Socket(
+                TcpConnectionConfig.Client(
+                    host = socket.host,
+                    port = socket.port,
+                ),
+            )
+
+            else -> KotlinLspServerMode.Socket(
+                TcpConnectionConfig.Server(
+                    host = socket.host,
+                    port = socket.port,
+                    isMultiClient = multiClient,
+                ),
+            )
         }
         return KotlinLspServerRunConfig(mode, systemPath, isolatedDocuments)
     }
@@ -93,7 +103,7 @@ fun KotlinLspServerRunConfig.toArguments(): List<String> = buildList {
                 add("--socket=${tcpConfig.host}:${tcpConfig.port}")
             }
 
-            is TcpConnectionConfig.Server ->  {
+            is TcpConnectionConfig.Server -> {
                 add("--socket=${tcpConfig.host}:${tcpConfig.port}")
                 if (tcpConfig.isMultiClient) add("--multi-client")
             }
