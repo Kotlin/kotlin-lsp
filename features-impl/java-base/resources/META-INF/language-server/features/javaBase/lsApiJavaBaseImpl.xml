@@ -1,6 +1,8 @@
-<idea-plugin>
+<idea-plugin xmlns:xi="http://www.w3.org/2001/XInclude">
   <id>features/javaBase/apiImpl</id>
   <vendor>JetBrains</vendor>
+
+  <xi:include href="/META-INF/RegistryKeys.xml"/>
 
   <extensionPoints>
     <extensionPoint qualifiedName="com.intellij.modcompletion.completionItemProvider"
@@ -31,6 +33,8 @@
       implementation="com.intellij.codeInsight.daemon.impl.quickfix.VariableTypeQuickFixProvider"/>
     <codeInsight.changeVariableTypeQuickFixProvider
         implementation="com.intellij.refactoring.typeMigration.TypeMigrationVariableTypeFixProvider"/>
+    <lang.documentationProvider language="JAVA" implementationClass="com.intellij.lang.java.JavaDocumentationProvider"/>
+    <lang.commenter language="JAVA" implementationClass="com.intellij.lang.java.JavaCommenter"/>
   </extensions>
   <extensions defaultExtensionNs="ls">
     <markdownDocProvider language="JAVA"
