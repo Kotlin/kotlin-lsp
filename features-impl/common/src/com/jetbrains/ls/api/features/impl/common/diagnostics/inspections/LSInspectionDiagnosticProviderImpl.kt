@@ -24,6 +24,7 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnosticProvider
+import com.jetbrains.ls.api.features.impl.common.diagnostics.Blacklist
 import com.jetbrains.ls.api.features.impl.common.diagnostics.DiagnosticSource
 import com.jetbrains.ls.api.features.impl.common.diagnostics.SimpleDiagnosticData
 import com.jetbrains.ls.api.features.impl.common.diagnostics.SimpleDiagnosticQuickfixData
@@ -35,10 +36,10 @@ import com.jetbrains.lsp.protocol.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.encodeToJsonElement
-import kotlin.reflect.KClass
 
 class LSInspectionDiagnosticProviderImpl(
     override val supportedLanguages: Set<LSLanguage>,
+    private val blacklist: Blacklist = Blacklist(),
 ) : LSDiagnosticProvider {
     companion object {
         val diagnosticSource: DiagnosticSource = DiagnosticSource("inspection")
@@ -113,84 +114,6 @@ class LSInspectionDiagnosticProviderImpl(
                 return@c diagnostics
             }
         }.forEach { diagnostic -> emit(diagnostic) }
-    }
-
-    // kotlin ones should be moved closer to the kotlin impl
-    private val blacklist = BlackList(
-        // Kotlin local inspections
-        BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.RemoveRedundantQualifierNameInspection", "slow"),
-        BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.codeInsight.inspections.shared.KotlinUnusedImportInspection", "slow"),
-        BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.diagnosticBased.UnusedVariableInspection", "slow"),
-        BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.diagnosticBased.KotlinUnreachableCodeInspection", "slow"),
-        BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.RemoveExplicitTypeArgumentsInspection", "slow"),
-        BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.K2MemberVisibilityCanBePrivateInspection", "slow, performs find usages"),
-        BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.diagnosticBased.VariableNeverReadInspection", "very slow, uses extended checkers"),
-        BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.diagnosticBased.AssignedValueIsNeverReadInspection", "very slow, uses extended checkers"),
-
-        BlackListEntry.InspectionClass("org.jetbrains.kotlin.idea.k2.codeinsight.inspections.PublicApiImplicitTypeInspection", "too noisy https://github.com/Kotlin/kotlin-lsp/issues/4"),
-
-        BlackListEntry.InspectionSuperClass("org.jetbrains.kotlin.idea.codeinsight.api.applicable.inspections.KotlinKtDiagnosticBasedInspectionBase", "they are slow as calling additional diagnostic collection"),
-        BlackListEntry.InspectionSuperClass("org.jetbrains.kotlin.idea.codeinsight.api.applicable.inspections.KotlinPsiDiagnosticBasedInspectionBase", "they are slow as calling additional diagnostic collection"),
-
-        // Java local inspections
-        BlackListEntry.InspectionClass("com.siyeh.ig.bugs.WriteOnlyObjectInspection", "depends on ContractInferenceIndexKt which depends on GistManager"),
-        BlackListEntry.InspectionClass("com.siyeh.ig.bugs.MismatchedCollectionQueryUpdateInspection", "depends on ImplicitUsagesProvider"),
-        BlackListEntry.InspectionSuperClass("com.intellij.codeInspection.nullable.NullableStuffInspectionBase", "depends on NullableNotNullManager"),
-        BlackListEntry.InspectionClass("com.intellij.codeInspection.nullable.NotNullFieldNotInitializedInspection", "depends on NullableNotNullManager"),
-        BlackListEntry.InspectionClass("com.siyeh.ig.controlflow.IfStatementWithIdenticalBranchesInspection", "depends on NullableNotNullManager"),
-        BlackListEntry.InspectionClass("com.siyeh.ig.threading.DoubleCheckedLockingInspection", "depends on NullableNotNullManager"),
-        BlackListEntry.InspectionClass("com.siyeh.ig.controlflow.DuplicateConditionInspection", "depends on NullableNotNullManager"),
-        BlackListEntry.InspectionClass("com.siyeh.ig.migration.IfCanBeSwitchInspection", "depends on NullableNotNullManager"),
-        BlackListEntry.InspectionClass("com.siyeh.ig.controlflow.PointlessNullCheckInspection", "depends on NullableNotNullManager"),
-        BlackListEntry.InspectionClass("com.intellij.codeInspection.bulkOperation.UseBulkOperationInspection", "depends on BulkMethodInfoProvider"),
-        BlackListEntry.InspectionClass("com.intellij.codeInspection.UpdateInspectionOptionFix", "depends on PathMacrosImpl"),
-        BlackListEntry.InspectionClass("com.siyeh.ig.annotation.MetaAnnotationWithoutRuntimeRetentionInspection", "depends on UastLanguagePlugin"),
-        BlackListEntry.InspectionClass("com.siyeh.ig.bugs.IgnoreResultOfCallInspection", "depends on ProjectBytecodeAnalysis"),
-        BlackListEntry.InspectionClass("com.siyeh.ig.style.FieldMayBeFinalInspection", "Missing extension point com.intellij.canBeFinal"),
-        BlackListEntry.InspectionClass("com.siyeh.ig.controlflow.PointlessBooleanExpressionInspection", "Missing extension point: com.intellij.canBeFinal"),
-        BlackListEntry.InspectionClass("com.siyeh.ig.maturity.CommentedOutCodeInspection", "depends on JavaCodeFragmentFactory"),
-        BlackListEntry.InspectionClass("com.intellij.codeInspection.java18api.Java8MapApiInspection", "Missing extension point: com.intellij.deepestSuperMethodsSearch"),
-        BlackListEntry.InspectionClass("com.siyeh.ig.dataflow.UnnecessaryLocalVariableInspection", "depends on CommonJavaInlineUtil"),
-        BlackListEntry.InspectionClass("com.siyeh.ig.controlflow.ExcessiveRangeCheckInspection", "NoClassDefFoundError: could not initialize class com.intellij.psi.impl.JavaSimplePropertyGistKt"),
-
-        // Java global inspections
-        BlackListEntry.InspectionClass("com.intellij.codeInspection.IdempotentLoopBodyInspection", "depends on ProjectBytecodeAnalysis which is not available in LSP context"),
-    )
-
-    private class BlackList(
-        entries: List<BlackListEntry>,
-    ) {
-        constructor(vararg entries: BlackListEntry) : this(entries.toList())
-
-        private val implementationClasses = entries.mapTo(mutableSetOf()) { (it as? BlackListEntry.InspectionClass)?.inspectionClass }
-        private val superClasses = entries.mapTo(mutableSetOf()) { (it as? BlackListEntry.InspectionSuperClass)?.superClass }
-
-        fun containsImplementation(inspectionClass: String): Boolean {
-            return inspectionClass in implementationClasses
-        }
-
-        fun containsSuperClass(inspectionInstance: Any): Boolean {
-            return inspectionInstance::class.supertypes.any { (it.classifier as? KClass<*>)?.java?.name in superClasses }
-        }
-    }
-
-    private sealed class BlackListEntry{
-        abstract val reason: String
-
-        protected fun ensureReason() {
-            require(reason.isNotBlank()) { "inspectionClass must not be blank" }
-        }
-
-        data class InspectionClass(val inspectionClass: String, override val reason: String): BlackListEntry() {
-            init {
-                ensureReason()
-            }
-        }
-        data class InspectionSuperClass(val superClass: String, override val reason: String): BlackListEntry() {
-            init {
-                ensureReason()
-            }
-        }
     }
 
     private fun getLocalInspections(psiFile: PsiFile): List<LocalInspectionTool> {
