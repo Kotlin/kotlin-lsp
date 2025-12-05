@@ -9,6 +9,7 @@ import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.colors.TextAttributesKey
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.NlsContexts
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.findDocument
@@ -242,5 +243,13 @@ private class FakeModPsiUpdater(
 
     override fun getDocument(): Document {
         return psiElement.containingFile.fileDocument
+    }
+
+    override fun getPsiFile(): PsiFile {
+        return psiElement.containingFile
+    }
+
+    override fun getProject(): Project {
+        return psiElement.project
     }
 }
