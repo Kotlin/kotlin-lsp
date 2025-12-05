@@ -12,20 +12,16 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.platform.workspace.jps.entities.*
 import com.intellij.platform.workspace.storage.EntitySource
-import com.intellij.platform.workspace.storage.InternalEnvironmentName
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.entities
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.psi.PsiFile
-import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.SdkBridgeImpl
-import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.SdkBridgeImpl.Companion.mutableSdkMap
 import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.customName
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.lsp.protocol.*
 import java.nio.file.Path
 import kotlin.io.path.exists
-import kotlin.io.path.toPath
 
 val VirtualFile.uri: URI
     get() = url.intellijUriToLspUri()
@@ -155,8 +151,8 @@ fun createSdkEntity(
 
 @Suppress("DEPRECATION")
 fun workspaceFolderPaths(params: InitializeParams): List<Path> =
-    params.workspaceFolders?.map { it.uri.asJavaUri().toPath() }
-        ?: params.rootUri?.let { listOf(it.uri.asJavaUri().toPath()) }
+    params.workspaceFolders?.mapNotNull { it.uri.toPath() }
+        ?: params.rootUri?.let { listOfNotNull(it.uri.toPath()) }
         ?: params.rootPath?.let { listOf(Path.of(it)) }
         ?: emptyList()
 

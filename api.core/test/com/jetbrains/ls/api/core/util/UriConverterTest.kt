@@ -120,12 +120,12 @@ class UriConverterTest {
     fun `should convert IntelliJ URI to LSP URI for Windows paths`() {
         onlyOnWindows {
             testIntellijToLsp(
-                "file:///C%3A/Users/test/file.txt",
-                "file://c:/Users/test/file.txt"
+                "file:///c%3A/Users/test/file.txt",
+                "file://C:/Users/test/file.txt"
             )
 
             testIntellijToLsp(
-                "file:///D%3A/Program%20Files/App/config.xml",
+                "file:///d%3A/Program%20Files/App/config.xml",
                 "file://d:/Program Files/App/config.xml"
             )
         }
@@ -135,7 +135,7 @@ class UriConverterTest {
     fun `should convert IntelliJ URI to LSP URI for JAR files`() {
         onlyOnWindows {
             testIntellijToLsp(
-                "jar:///C%3A/libs/app.jar!/com/example/Main.class",
+                "jar:///c%3A/libs/app.jar!/com/example/Main.class",
                 "jar://C:/libs/app.jar!/com/example/Main.class"
             )
         }
@@ -163,12 +163,12 @@ class UriConverterTest {
 
         onlyOnWindows {
             testIntellijToLsp(
-                "file:///C%3A/path/with%20spaces/file.txt",
+                "file:///c%3A/path/with%20spaces/file.txt",
                 "file://c:/path/with spaces/file.txt"
             )
 
             testIntellijToLsp(
-                "file:///C%3A/path/with%23hash/file.txt",
+                "file:///c%3A/path/with%23hash/file.txt",
                 "file://c:/path/with#hash/file.txt"
             )
         }
@@ -340,12 +340,12 @@ class UriConverterTest {
         onlyOnWindows {
             run {
                 val path = Path.of("c:\\path\\to\\jar.jar")
-                assertEquals("jar:///C%3A/path/to/jar.jar!/", path.toLspUri().uri)
+                assertEquals("jar:///c%3A/path/to/jar.jar!/", path.toLspUri().uri)
             }
 
             run {
                 val path = Path.of("d:\\path\\to\\nonJar.txt")
-                assertEquals("file:///D%3A/path/to/nonJar.txt", path.toLspUri().uri)
+                assertEquals("file:///d%3A/path/to/nonJar.txt", path.toLspUri().uri)
             }
         }
     }

@@ -3,13 +3,12 @@ package com.jetbrains.ls.api.core.util
 
 import com.intellij.openapi.util.SystemInfoRt
 import com.intellij.openapi.util.io.FileUtilRt
+import com.intellij.openapi.vfs.VfsUtilCore
 import com.jetbrains.lsp.protocol.URI
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.extension
-import kotlin.io.path.name
-import kotlin.io.path.toPath
 import java.net.URI as JavaUri
 
 /**
@@ -121,7 +120,7 @@ object UriConverter {
         path = path.removePrefix("/")
         if (SystemInfoRt.isWindows && path.length > 2 && path[1] == ':') {
             // encode `:` with `%3A` as vscode does this to have consistent uris
-           path = path[0].uppercase() + "%3A" + path.substring(2)
+            path = path[0].lowercase() + "%3A" + path.substring(2)
         }
         path = "/$path"
         return path
@@ -138,6 +137,10 @@ fun Path.toLspUri(): URI {
     return URI(uriString)
 }
 
+fun URI.toPath(): Path? {
+    val url = UriConverter.lspUriToIntellijUri(uri) ?: return null
+    return Path.of(FileUtilRt.toSystemDependentName(VfsUtilCore.urlToPath(url)))
+}
 
 /**
  * Returns the URI's scheme without scheme delimiter (`://`)
