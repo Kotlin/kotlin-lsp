@@ -51,7 +51,7 @@ sealed interface ModCommandData {
     data class UpdateFileText(val fileUrl: String, val oldText: String, val newText: String) : ModCommandData
 
     @Serializable
-    data class DisplayMessage(val message: String, val kind: ModDisplayMessage.MessageKind) : ModCommandData
+    data class DisplayMessage(val message: String, val messageKind: ModDisplayMessage.MessageKind) : ModCommandData
 
 
     companion object {
@@ -191,7 +191,7 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient, changedFi
         is ModCommandData.DisplayMessage -> client.request(
             requestType = Window.ShowMessageRequest,
             params = ShowMessageRequestParams(
-                type = when (command.kind) {
+                type = when (command.messageKind) {
                     ModDisplayMessage.MessageKind.ERROR -> MessageType.Error
                     ModDisplayMessage.MessageKind.INFORMATION -> MessageType.Info
                 },
