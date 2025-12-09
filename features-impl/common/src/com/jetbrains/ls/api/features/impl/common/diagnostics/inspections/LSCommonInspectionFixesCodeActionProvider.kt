@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.encodeToJsonElement
 
-class LSInspectionFixesCodeActionProvider(
+class LSCommonInspectionFixesCodeActionProvider(
     override val supportedLanguages: Set<LSLanguage>,
 ) : LSCodeActionProvider {
 

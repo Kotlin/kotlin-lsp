@@ -4,7 +4,7 @@ package com.jetbrains.ls.api.features.impl.common.kotlin.configuration
 import com.jetbrains.ls.api.features.impl.common.definitions.LSCommonDefinitionProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSSyntaxErrorDiagnosticProviderImpl
 import com.jetbrains.ls.api.features.impl.common.diagnostics.inspections.LSCommonInspectionDiagnosticProvider
-import com.jetbrains.ls.api.features.impl.common.diagnostics.inspections.LSInspectionFixesCodeActionProvider
+import com.jetbrains.ls.api.features.impl.common.diagnostics.inspections.LSCommonInspectionFixesCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.formatting.LSFormattingProviderCommonImpl
 import com.jetbrains.ls.api.features.impl.common.kotlin.apiImpl.lsApiKotlinImpl
 import com.jetbrains.ls.api.features.impl.common.kotlin.codeActions.LSKotlinOrganizeImportsCodeActionProvider
@@ -42,7 +42,7 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSKotlinSemanticTokensProvider,
         LSCommonReferencesProvider(setOf(LSKotlinLanguage), TargetKind.ALL),
         LSCommonInspectionDiagnosticProvider(setOf(LSKotlinLanguage), blacklist = kotlinInspectionBlacklist),
-        LSInspectionFixesCodeActionProvider(setOf(LSKotlinLanguage)),
+        LSCommonInspectionFixesCodeActionProvider(setOf(LSKotlinLanguage)),
         LSSyntaxErrorDiagnosticProviderImpl(setOf(LSKotlinLanguage)),
         LSKotlinCompilerDiagnosticsProvider,
         LSKotlinCompilerDiagnosticsFixesCodeActionProvider,

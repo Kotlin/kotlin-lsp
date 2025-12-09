@@ -26,7 +26,7 @@ import kotlinx.serialization.json.encodeToJsonElement
 
 private val LOG = fileLogger()
 
-class LSIntentionFixesCodeActionProvider(
+class LSCommonIntentionFixesCodeActionProvider(
     override val supportedLanguages: Set<LSLanguage>,
     private val blacklist: Blacklist = Blacklist(),
 ) : LSCodeActionProvider {
