@@ -1,7 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.kotlin.configuration
 
-import com.jetbrains.ls.api.features.impl.common.definitions.LSDefinitionProviderCommonImpl
+import com.jetbrains.ls.api.features.impl.common.definitions.LSCommonDefinitionProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSSyntaxErrorDiagnosticProviderImpl
 import com.jetbrains.ls.api.features.impl.common.diagnostics.inspections.LSCommonInspectionDiagnosticProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.inspections.LSInspectionFixesCodeActionProvider
@@ -36,7 +36,7 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
     entries = listOf(
         LSKotlinOrganizeImportsCodeActionProvider,
         LSKotlinCompletionProvider,
-        LSDefinitionProviderCommonImpl(setOf(LSKotlinLanguage), TargetKind.ALL),
+        LSCommonDefinitionProvider(setOf(LSKotlinLanguage), TargetKind.ALL),
         LSKotlinHoverProvider,
         LSKotlinPackageDefinitionProvider,
         LSKotlinSemanticTokensProvider,

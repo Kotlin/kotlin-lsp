@@ -4,7 +4,7 @@ package com.jetbrains.ls.api.features.impl.javaBase.configuration
 import com.intellij.psi.PsiElement
 import com.jetbrains.ls.api.core.util.scheme
 import com.jetbrains.ls.api.core.util.uri
-import com.jetbrains.ls.api.features.impl.common.definitions.LSDefinitionProviderCommonImpl
+import com.jetbrains.ls.api.features.impl.common.definitions.LSCommonDefinitionProvider
 import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
 import com.jetbrains.ls.api.features.impl.javaBase.hover.LSJavaHoverProvider
 import com.jetbrains.ls.api.features.impl.javaBase.language.LSJavaLanguage
@@ -17,7 +17,7 @@ val LSJavaBaseLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece
     entries = listOf(
         // entries Kotlin for inlay hints to work
         // they require hover and definition requests to work on the declaration site to have some interactivity on inlays with classes from java
-        LSDefinitionProviderCommonImpl(setOf(LSJavaLanguage), setOf(TargetKind.DECLARATION)),
+        LSCommonDefinitionProvider(setOf(LSJavaLanguage), setOf(TargetKind.DECLARATION)),
         object : LSJavaHoverProvider(setOf(TargetKind.DECLARATION)) {
             override fun acceptTarget(target: PsiElement): Boolean {
                 // if a user has some java support installed, then the hover results will be duplicated

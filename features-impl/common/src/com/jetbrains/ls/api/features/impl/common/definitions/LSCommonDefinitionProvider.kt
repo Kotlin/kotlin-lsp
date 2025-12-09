@@ -28,7 +28,7 @@ import com.jetbrains.lsp.protocol.Range
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-class LSDefinitionProviderCommonImpl(
+class LSCommonDefinitionProvider(
     override val supportedLanguages: Set<LSLanguage>,
     private val targetKinds: Set<TargetKind>
 ) : LSDefinitionProvider {
