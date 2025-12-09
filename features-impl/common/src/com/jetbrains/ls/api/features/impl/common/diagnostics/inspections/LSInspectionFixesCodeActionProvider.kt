@@ -22,7 +22,7 @@ class LSInspectionFixesCodeActionProvider(
     context(_: LSServer, _: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         params.diagnosticData<SimpleDiagnosticData>()
-            .filter { it.data.diagnosticSource == LSInspectionDiagnosticProviderImpl.diagnosticSource }
+            .filter { it.data.diagnosticSource == LSCommonInspectionDiagnosticProvider.diagnosticSource }
             .flatMap { data ->
                 data.data.fixes.map { quickFix ->
                     CodeAction(

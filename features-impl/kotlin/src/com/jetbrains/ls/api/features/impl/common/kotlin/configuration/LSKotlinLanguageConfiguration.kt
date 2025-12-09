@@ -3,7 +3,7 @@ package com.jetbrains.ls.api.features.impl.common.kotlin.configuration
 
 import com.jetbrains.ls.api.features.impl.common.definitions.LSDefinitionProviderCommonImpl
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSSyntaxErrorDiagnosticProviderImpl
-import com.jetbrains.ls.api.features.impl.common.diagnostics.inspections.LSInspectionDiagnosticProviderImpl
+import com.jetbrains.ls.api.features.impl.common.diagnostics.inspections.LSCommonInspectionDiagnosticProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.inspections.LSInspectionFixesCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.formatting.LSFormattingProviderCommonImpl
 import com.jetbrains.ls.api.features.impl.common.kotlin.apiImpl.lsApiKotlinImpl
@@ -41,7 +41,7 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSKotlinPackageDefinitionProvider,
         LSKotlinSemanticTokensProvider,
         LSReferencesProviderCommonImpl(setOf(LSKotlinLanguage), TargetKind.ALL),
-        LSInspectionDiagnosticProviderImpl(setOf(LSKotlinLanguage), blacklist = kotlinInspectionBlacklist),
+        LSCommonInspectionDiagnosticProvider(setOf(LSKotlinLanguage), blacklist = kotlinInspectionBlacklist),
         LSInspectionFixesCodeActionProvider(setOf(LSKotlinLanguage)),
         LSSyntaxErrorDiagnosticProviderImpl(setOf(LSKotlinLanguage)),
         LSKotlinCompilerDiagnosticsProvider,

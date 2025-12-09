@@ -37,7 +37,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.encodeToJsonElement
 
-class LSInspectionDiagnosticProviderImpl(
+class LSCommonInspectionDiagnosticProvider(
     override val supportedLanguages: Set<LSLanguage>,
     private val blacklist: Blacklist = Blacklist(),
 ) : LSDiagnosticProvider {
@@ -211,7 +211,7 @@ private fun getModCommand(fix: QuickFix<*>, project: Project, problemDescriptor:
         }
     }
 
-private val LOG = logger<LSInspectionDiagnosticProviderImpl>()
+private val LOG = logger<LSCommonInspectionDiagnosticProvider>()
 
 // TODO LSP-241 design, currently some random conversions
 private fun ProblemHighlightType.toLsp(): DiagnosticSeverity = when (this) {
