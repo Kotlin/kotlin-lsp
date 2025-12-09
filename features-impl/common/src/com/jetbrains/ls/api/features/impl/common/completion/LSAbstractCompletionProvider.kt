@@ -10,7 +10,6 @@ import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementPresentation
 import com.intellij.openapi.application.invokeAndWaitIfNeeded
 import com.intellij.openapi.application.readAction
-import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.util.ObjectUtils
@@ -30,11 +29,7 @@ import com.jetbrains.ls.snapshot.api.impl.core.SessionDataEntity
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.protocol.*
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.encodeToJsonElement
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.json.*
 import java.util.concurrent.atomic.AtomicLong
 
 abstract class LSAbstractCompletionProvider : LSCompletionProvider, LSCommandDescriptorProvider {
@@ -113,7 +108,7 @@ abstract class LSAbstractCompletionProvider : LSCompletionProvider, LSCommandDes
             ?: return completionItem
         return getCompletionData<CompletionData>(completionDataKey)?.let { completionData ->
             withAnalysisContext {
-                runReadAction {
+                readAction {
                     completionItem.copy(
                         documentation = computeDocumentation(completionData.lookup),
                     )
