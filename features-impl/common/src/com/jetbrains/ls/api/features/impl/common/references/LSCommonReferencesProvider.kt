@@ -2,8 +2,6 @@
 package com.jetbrains.ls.api.features.impl.common.references
 
 import com.intellij.find.findUsages.FindUsagesManager
-import com.intellij.model.psi.PsiSymbolService
-import com.intellij.model.psi.impl.targetSymbols
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.progress.runBlockingCancellable
 import com.intellij.openapi.vfs.findDocument
@@ -11,7 +9,6 @@ import com.intellij.openapi.vfs.findPsiFile
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
-import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
 import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
@@ -24,7 +21,7 @@ import com.jetbrains.lsp.protocol.ReferenceParams
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 
-class LSReferencesProviderCommonImpl(
+class LSCommonReferencesProvider(
     override val supportedLanguages: Set<LSLanguage>,
     private val targetKinds: Set<TargetKind>
 ) : LSReferencesProvider {
