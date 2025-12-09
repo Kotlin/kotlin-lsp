@@ -15,7 +15,7 @@ import com.jetbrains.lsp.protocol.*
 import org.jetbrains.kotlin.idea.codeInsight.hints.KotlinFqnDeclarativeInlayActionHandler
 import org.jetbrains.kotlin.idea.k2.codeinsight.hints.*
 
-internal object LSInlayHintsKotlinImpl : LSInlayHintsCommonImpl(
+internal object LSKotlinInlayHintsProvider : LSInlayHintsCommonImpl(
     supportedLanguages = setOf(LSKotlinLanguage),
     uniqueId = LSUniqueConfigurationEntry.UniqueId("kotlin-inlay-hints")
 ) {
