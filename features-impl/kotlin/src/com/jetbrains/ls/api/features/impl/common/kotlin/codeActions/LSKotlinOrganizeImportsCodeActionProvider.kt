@@ -21,7 +21,7 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.resolve.ImportPath
 
-internal object LSOrganizeImportsCodeActionProviderKotlinImpl : LSSimpleCodeActionProvider<NoData>() {
+internal object LSKotlinOrganizeImportsCodeActionProvider : LSSimpleCodeActionProvider<NoData>() {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSKotlinLanguage)
 
     override val title: String get() = "Organize Imports"
