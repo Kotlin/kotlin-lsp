@@ -1,6 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.rename
 
+import com.intellij.CommonBundle
 import com.intellij.model.psi.PsiSymbolService
 import com.intellij.model.psi.impl.targetSymbols
 import com.intellij.openapi.application.ex.ApplicationUtil
@@ -28,7 +29,7 @@ import com.jetbrains.lsp.implementation.throwLspError
 import com.jetbrains.lsp.protocol.*
 import java.util.concurrent.atomic.AtomicReference
 
-class LSRenameProviderCommonImpl(
+class LSCommonRenameProvider(
     override val supportedLanguages: Set<LSLanguage>,
 ) : LSRenameProvider {
     companion object {
@@ -37,11 +38,11 @@ class LSRenameProviderCommonImpl(
             ApplicationUtil.LOG.setLevel(LogLevel.OFF)
         }
 
-        private val LOG = logger<LSRenameProviderCommonImpl>()
+        private val LOG = logger<LSCommonRenameProvider>()
     }
 
     context(_: LSServer, _: LspHandlerContext)
-    override suspend fun rename(params: RenameParams): WorkspaceEdit? {
+    override suspend fun rename(params: RenameParams): WorkspaceEdit {
         val originals = mutableMapOf<PsiFile, String>()
         val renames = mutableListOf<RenameFile>()
         val edits: List<TextDocumentEdit> = withWriteAnalysisContext {
@@ -83,7 +84,7 @@ class LSRenameProviderCommonImpl(
                     } catch (e: Throwable) {
                         err.set(e)
                     }
-                }, "Rename", null)
+                }, CommonBundle.message("action.text.rename"), null)
             }
 
             err.get()?.let {
