@@ -7,13 +7,10 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiWhiteSpace
-import com.intellij.psi.util.descendantsOfType
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
-import com.jetbrains.ls.api.core.util.toTextRange
 import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
@@ -24,7 +21,6 @@ import com.jetbrains.lsp.protocol.Range
 import com.jetbrains.lsp.protocol.SemanticTokensParams
 import com.jetbrains.lsp.protocol.SemanticTokensRangeParams
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
-import com.jetbrains.lsp.protocol.intersects
 import kotlinx.coroutines.CancellationException
 import org.jetbrains.annotations.ApiStatus
 import org.jetbrains.kotlin.analysis.api.KaSession
@@ -37,12 +33,11 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtSimpleNameExpression
-import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
 
-private val LOG = logger<LSSemanticTokensProviderKotlinImpl>()
+private val LOG = logger<LSKotlinSemanticTokensProvider>()
 
 @ApiStatus.Internal
-object LSSemanticTokensProviderKotlinImpl : LSSemanticTokensProvider {
+object LSKotlinSemanticTokensProvider : LSSemanticTokensProvider {
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
 
     override fun createRegistry(): LSSemanticTokenRegistry {
