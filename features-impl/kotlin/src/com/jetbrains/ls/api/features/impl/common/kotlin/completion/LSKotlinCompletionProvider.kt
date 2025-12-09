@@ -29,7 +29,7 @@ import org.jetbrains.kotlin.analysis.api.projectStructure.withDanglingFileResolu
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtPsiFactory
 
-object LSKotlinCompletionProvider : LSAbstractCompletionProvider() {
+internal object LSKotlinCompletionProvider : LSAbstractCompletionProvider() {
     override val uniqueId: LSUniqueConfigurationEntry.UniqueId = LSUniqueConfigurationEntry.UniqueId("KotlinCompletionProvider")
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
     override val completionCommand: String

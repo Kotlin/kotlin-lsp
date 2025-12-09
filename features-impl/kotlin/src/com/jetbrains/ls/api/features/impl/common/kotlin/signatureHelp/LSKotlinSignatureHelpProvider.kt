@@ -24,7 +24,7 @@ import org.jetbrains.kotlin.idea.parameterInfo.KotlinHighLevelParameterInfoWithC
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtFile
 
-object LSKotlinSignatureHelpProvider : LSSignatureHelpProvider {
+internal object LSKotlinSignatureHelpProvider : LSSignatureHelpProvider {
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
 
     @Suppress("UNCHECKED_CAST")

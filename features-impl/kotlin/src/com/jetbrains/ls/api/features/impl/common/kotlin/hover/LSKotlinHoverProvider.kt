@@ -28,7 +28,7 @@ import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.renderer.render
 
-object LSKotlinHoverProvider : AbstractLSHoverProvider(TargetKind.ALL) {
+internal object LSKotlinHoverProvider : AbstractLSHoverProvider(TargetKind.ALL) {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSKotlinLanguage)
 
     context(_: LSServer, _: LSAnalysisContext)
