@@ -22,7 +22,7 @@ import com.jetbrains.ls.api.features.impl.common.kotlin.inlayHints.LSKotlinInlay
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.impl.common.kotlin.semanticTokens.LSKotlinSemanticTokensProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.signatureHelp.LSKotlinSignatureHelpProvider
-import com.jetbrains.ls.api.features.impl.common.kotlin.symbols.LSDocumentSymbolProviderKotlin
+import com.jetbrains.ls.api.features.impl.common.kotlin.symbols.LSKotlinDocumentSymbolProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.symbols.LSKotlinWorkspaceSymbolProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.usages.kotlinUsagesIjPlugins
 import com.jetbrains.ls.api.features.impl.common.references.LSReferencesProviderCommonImpl
@@ -47,7 +47,7 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSKotlinCompilerDiagnosticsProvider,
         LSKotlinCompilerDiagnosticsFixesCodeActionProvider,
         LSKotlinWorkspaceSymbolProvider,
-        LSDocumentSymbolProviderKotlin,
+        LSKotlinDocumentSymbolProvider,
         LSKotlinIntentionCodeActionProviderImpl,
         LSKotlinSignatureHelpProvider,
         LSRenameProviderCommonImpl(setOf(LSKotlinLanguage)),

@@ -13,7 +13,7 @@ import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPropertyAccessor
 
-object LSDocumentSymbolProviderKotlin: AbstractLSDocumentSymbolProvider() {
+object LSKotlinDocumentSymbolProvider: AbstractLSDocumentSymbolProvider() {
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
 
     override fun getName(element: PsiElement): String? =
