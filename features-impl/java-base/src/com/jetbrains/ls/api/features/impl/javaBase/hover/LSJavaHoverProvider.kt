@@ -12,15 +12,13 @@ import com.intellij.psi.util.PsiFormatUtil
 import com.intellij.psi.util.PsiFormatUtilBase
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.features.impl.common.hover.AbstractLSHoverProvider
 import com.jetbrains.ls.api.features.impl.common.hover.markdownMultilineCode
 import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
 import com.jetbrains.ls.api.features.impl.javaBase.language.LSJavaLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
-import com.jetbrains.lsp.protocol.URI
 
-open class LSHoverProviderJavaImpl(targetKinds: Set<TargetKind>) : AbstractLSHoverProvider(targetKinds) {
+open class LSJavaHoverProvider(targetKinds: Set<TargetKind>) : AbstractLSHoverProvider(targetKinds) {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSJavaLanguage)
 
 

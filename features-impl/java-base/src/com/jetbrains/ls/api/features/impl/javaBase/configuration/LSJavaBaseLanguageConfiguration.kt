@@ -6,7 +6,7 @@ import com.jetbrains.ls.api.core.util.scheme
 import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.features.impl.common.definitions.LSDefinitionProviderCommonImpl
 import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
-import com.jetbrains.ls.api.features.impl.javaBase.hover.LSHoverProviderJavaImpl
+import com.jetbrains.ls.api.features.impl.javaBase.hover.LSJavaHoverProvider
 import com.jetbrains.ls.api.features.impl.javaBase.language.LSJavaLanguage
 
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
@@ -19,7 +19,7 @@ val LSJavaBaseLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece
         // they require hover and definition requests to work on the declaration site to have some interactivity on inlays with classes from java
         add(LSDefinitionProviderCommonImpl(setOf(LSJavaLanguage), setOf(TargetKind.DECLARATION)))
         add(
-            object : LSHoverProviderJavaImpl(setOf(TargetKind.DECLARATION)) {
+            object : LSJavaHoverProvider(setOf(TargetKind.DECLARATION)) {
                 override fun acceptTarget(target: PsiElement): Boolean {
                     // if a user has some java support installed, then the hover results will be duplicated
                     // we can and should show for libraries as Kotlin LSP vscode extension
