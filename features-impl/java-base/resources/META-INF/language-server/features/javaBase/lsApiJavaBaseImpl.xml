@@ -49,11 +49,6 @@
     <langCodeStyleSettingsProvider implementation="com.intellij.ide.JavaLanguageCodeStyleSettingsProvider"/>
     <lang.formatter language="JAVA" implementationClass="com.intellij.lang.java.JavaFormattingModelBuilder"/>
     <codeStyle.ReferenceAdjuster language="JAVA" implementationClass="com.intellij.psi.impl.source.codeStyle.JavaReferenceAdjuster"/>
-    <java.errorFixProvider implementation="com.intellij.codeInsight.daemon.impl.analysis.DefaultJavaErrorFixProvider"/>
-    <applicationService serviceInterface="com.intellij.codeInsight.intention.QuickFixFactory"
-                        serviceImplementation="com.intellij.codeInsight.intention.impl.config.QuickFixFactoryImpl"/>
-    <lang.documentationProvider language="JAVA" implementationClass="com.intellij.lang.java.JavaDocumentationProvider"/>
-    <lang.commenter language="JAVA" implementationClass="com.intellij.lang.java.JavaCommenter"/>
   </extensions>
   <extensions defaultExtensionNs="ls">
     <markdownDocProvider language="JAVA"
