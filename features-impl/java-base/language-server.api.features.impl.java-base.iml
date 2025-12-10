@@ -40,7 +40,6 @@
     <orderEntry type="module" module-name="intellij.platform.analysis" />
     <orderEntry type="module" module-name="intellij.platform.lang" />
     <orderEntry type="module" module-name="intellij.java.impl" />
-    <orderEntry type="module" module-name="intellij.java.typeMigration" />
     <orderEntry type="module" module-name="language-server.api.features" />
     <orderEntry type="module" module-name="fleet.lsp.protocol" />
   </component>
