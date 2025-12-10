@@ -1,14 +1,12 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.rename
 
-import com.intellij.openapi.application.ReadAction
-import com.intellij.openapi.application.ex.ApplicationManagerEx
+import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.ThrowableComputable
 import com.intellij.psi.*
 import com.intellij.psi.impl.light.LightElement
 import com.intellij.psi.search.GlobalSearchScope
@@ -34,7 +32,6 @@ import com.intellij.refactoring.util.RelatedUsageInfo
 import com.intellij.usageView.UsageInfo
 import com.intellij.usageView.UsageViewUtil
 import com.intellij.util.containers.MultiMap
-import org.jetbrains.annotations.ApiStatus
 
 internal class Renamer(
     private val project: Project,
@@ -49,14 +46,13 @@ internal class Renamer(
     private val renamers = mutableListOf<AutomaticRenamer>()
     private val skippedUsages = mutableListOf<UnresolvableCollisionUsageInfo>()
     private val refactoringScope: SearchScope = GlobalSearchScope.projectScope(project)
-    private var transaction: RefactoringTransaction? = null
     private val file: PsiFile
         get() = primaryElement.containingFile ?: throw IllegalStateException("Primary element must have containing file")
 
     init {
         RenameUtil.assertNonCompileElement(primaryElement)
 
-        allRenames.put(primaryElement, newName)
+        allRenames[primaryElement] = newName
 
         for (factory in AutomaticRenamerFactory.EP_NAME.extensionList) {
             if (factory.isApplicable(primaryElement) && factory.optionName != null && factory.isEnabled) {
@@ -87,12 +83,12 @@ internal class Renamer(
             throw IllegalStateException(conflicts.values().joinToString(separator = "\n"))
         }
 
-        val variableUsages: MutableList<UsageInfo> = ArrayList<UsageInfo>()
+        val variableUsages: MutableList<UsageInfo> = ArrayList()
         if (!renamers.isEmpty()) {
             findRenamedVariables(variableUsages)
             val renames = linkedMapOf<PsiElement, String>()
             for (renamer in renamers) {
-                val variables = renamer.getElements()
+                val variables = renamer.elements
                 for (variable in variables) {
                     val newName = renamer.getNewName(variable)
                     if (newName != null) {
@@ -108,13 +104,9 @@ internal class Renamer(
                 allRenames.putAll(renames)
 
                 for (entry in renames.entries) {
-                    val usages =
-                        ReadAction.compute<Array<UsageInfo>, RuntimeException>(ThrowableComputable {
-                            RenameUtil.findUsages(
+                    val usages = RenameUtil.findUsages(
                                 entry.key, entry.value, refactoringScope,
-                                searchInComments, searchTextOccurrences, allRenames
-                            )
-                        })
+                                searchInComments, searchTextOccurrences, allRenames)
                     variableUsages.addAll(listOf(*usages))
                 }
             }
@@ -168,7 +160,7 @@ internal class Renamer(
 
     private fun findRenamedVariables(variableUsages: MutableList<UsageInfo>?) {
         for (automaticVariableRenamer in renamers) {
-            for (element in automaticVariableRenamer.getElements()) {
+            for (element in automaticVariableRenamer.elements) {
                 automaticVariableRenamer.setRename(element, automaticVariableRenamer.getNewName(element))
             }
         }
@@ -180,7 +172,7 @@ internal class Renamer(
 
     private fun addElement(element: PsiElement, newName: String) {
         RenameUtil.assertNonCompileElement(element)
-        allRenames.put(element, newName)
+        allRenames[element] = newName
     }
 
     val foundUsages: Array<UsageInfo> by lazy {
@@ -194,7 +186,7 @@ internal class Renamer(
                     continue
                 }
 
-                val newName = allRenames.get(element)
+                val newName = allRenames[element]
                 val usages = RenameUtil.findUsages(
                     element, newName, refactoringScope,
                     searchInComments, searchTextOccurrences, allRenames
@@ -219,14 +211,14 @@ internal class Renamer(
         }
     }
 
-    private val beforeData: RefactoringEventData?
+    private val beforeData: RefactoringEventData
         get() {
             val data = RefactoringEventData()
             data.addElement(primaryElement)
             return data
         }
 
-    private fun performRefactoring(usages: Array<UsageInfo>) {
+    private fun performRefactoring(usages: Array<UsageInfo>, transaction: RefactoringTransaction) {
         val postRenameCallbacks = mutableListOf<() -> Unit>()
 
         val renameEvents = MultiMap.createLinked<RefactoringElementListener?, SmartPsiElementPointer<PsiElement?>?>()
@@ -235,13 +227,13 @@ internal class Renamer(
         val classified: MultiMap<PsiElement, UsageInfo> = classifyUsages(allRenames.keys, usagesList)
 
         for (element in allRenames.keys) {
-            if (!element!!.isValid()) {
+            if (!element.isValid()) {
                 LOG.error(PsiInvalidElementAccessException(element))
                 continue
             }
-            val newName: String = allRenames.get(element)!!
+            val newName: String = allRenames[element]!!
 
-            val elementListener = transaction!!.getElementListener(element)
+            val elementListener = transaction.getElementListener(element)
             val infos: Collection<UsageInfo> = classified.get(element)
             val renamePsiElementProcessor = RenamePsiElementProcessor.forElement(element)
             val postRenameCallback: (() -> Unit)? =
@@ -300,13 +292,10 @@ internal class Renamer(
         RenameUtil.renameNonCodeUsages(project, nonCodeUsages)
     }
 
-    @ApiStatus.OverrideOnly
     private fun execute(usages: Array<UsageInfo>) {
-        CommandProcessor.getInstance().executeCommand(project, Runnable {
-            val usageInfos: MutableCollection<UsageInfo> = linkedSetOf(*usages)
-            doRefactoring(usageInfos)
-            SuggestedRefactoringProvider.getInstance(project).reset()
-        }, "Rename", null)
+        val usageInfos: MutableCollection<UsageInfo> = linkedSetOf(*usages)
+        doRefactoring(usageInfos)
+        SuggestedRefactoringProvider.getInstance(project).reset()
     }
 
     private fun doRefactoring(usageInfoSet: MutableCollection<UsageInfo>) {
@@ -322,54 +311,44 @@ internal class Renamer(
 
         val writableUsageInfos: Array<UsageInfo> = usageInfoSet.toTypedArray<UsageInfo>()
         val eventData = this.beforeData
-        eventData?.addUsages(listOf(*writableUsageInfos))
+        eventData.addUsages(listOf(*writableUsageInfos))
 
         PsiDocumentManager.getInstance(project).commitAllDocuments()
         val listenerManager =
             RefactoringListenerManager.getInstance(project) as RefactoringListenerManagerImpl
-        transaction = listenerManager.startTransaction()
+        val transaction = listenerManager.startTransaction()
         val preparedData = linkedMapOf<RefactoringHelper<*>?, Any?>()
 
-        val data = ReadAction.compute<RefactoringEventData?, RuntimeException?>(ThrowableComputable { this.beforeData })
-        val elements = data?.getUserData(RefactoringEventData.PSI_ELEMENT_ARRAY_KEY)
-        val primaryElement = data?.getUserData(RefactoringEventData.PSI_ELEMENT_KEY)
+        val data = this.beforeData
+        val elements = data.getUserData(RefactoringEventData.PSI_ELEMENT_ARRAY_KEY)
+        val primaryElement = data.getUserData(RefactoringEventData.PSI_ELEMENT_KEY)
         val allElements = when (elements) {
-                null -> arrayOf(primaryElement)
-                else -> elements + primaryElement
-            }
+            null -> arrayOf(primaryElement)
+            else -> elements + primaryElement
+        }
 
         for (helper in RefactoringHelper.EP_NAME.extensionList) {
-            val operation: Any? = ReadAction.compute<Any?, Throwable> {
-                helper.prepareOperation(
-                    writableUsageInfos, allElements.filterNotNull()
-                )
-            }
-            preparedData.put(helper, operation)
+            val operation: Any? = helper.prepareOperation(writableUsageInfos, allElements.filterNotNull())
+            preparedData[helper] = operation
         }
 
+        CommandProcessor.getInstance().executeCommand(project, Runnable {
+            WriteAction.run<Throwable> {
+                performRefactoring(writableUsageInfos, transaction)
 
-        val app = ApplicationManagerEx.getApplicationEx()
-        if (!app.runWriteActionWithCancellableProgressInDispatchThread(
-                "Renaming", project, null) {
-                    performRefactoring(writableUsageInfos)
+                DumbService.getInstance(project).completeJustSubmittedTasks()
+
+                for (e in preparedData.entries) {
+                    @Suppress("UNCHECKED_CAST")
+                    val refactoringHelper = e.key as RefactoringHelper<Any>
+                    val operation = e.value
+                    refactoringHelper.performOperation(project, operation)
                 }
-        ) {
-            return
-        }
+                transaction.commit()
+                performPsiSpoilingRefactoring()
+            }
+        }, null, null)
 
-        DumbService.getInstance(project).completeJustSubmittedTasks()
-
-        for (e in preparedData.entries) {
-            @Suppress("UNCHECKED_CAST")
-            val refactoringHelper = e.key as RefactoringHelper<Any>
-            val operation = e.value
-            refactoringHelper.performOperation(project, operation)
-        }
-        transaction?.commit()
-        app.runWriteActionWithCancellableProgressInDispatchThread(
-            "rename", project, null) {
-            performPsiSpoilingRefactoring()
-        }
     }
 
     companion object {

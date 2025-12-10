@@ -1,14 +1,12 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.rename
 
-import com.intellij.CommonBundle
 import com.intellij.model.psi.PsiSymbolService
 import com.intellij.model.psi.impl.targetSymbols
 import com.intellij.openapi.application.ex.ApplicationUtil
 import com.intellij.openapi.application.invokeAndWaitIfNeeded
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.application.writeIntentReadAction
-import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.diagnostic.LogLevel
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.progress.runBlockingCancellable
@@ -27,7 +25,6 @@ import com.jetbrains.lsp.implementation.LspException
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.throwLspError
 import com.jetbrains.lsp.protocol.*
-import java.util.concurrent.atomic.AtomicReference
 
 class LSCommonRenameProvider(
     override val supportedLanguages: Set<LSLanguage>,
@@ -67,39 +64,38 @@ class LSCommonRenameProvider(
                 .filterNotNull()
                 .forEach { originals[it] = it.text }
 
-            val err = AtomicReference<Throwable?>(null)
             invokeAndWaitIfNeeded {
-                CommandProcessor.getInstance().executeCommand(project, {
-                    try {
-                        runBlockingCancellable {
-                            withRenamesEnabled {
-                                writeIntentReadAction {
-                                    processor.rename()
-                                }
+                try {
+                    runBlockingCancellable {
+                        withRenamesEnabled {
+                            writeIntentReadAction {
+                                processor.rename()
                             }
-                                .forEach { (oldUri, newUri) ->
-                                    renames.add(RenameFile(DocumentUri(oldUri), DocumentUri(newUri)))
-                                }
+                        }.forEach { (oldUri, newUri) ->
+                            renames.add(RenameFile(DocumentUri(oldUri), DocumentUri(newUri)))
                         }
-                    } catch (e: Throwable) {
-                        err.set(e)
                     }
-                }, CommonBundle.message("action.text.rename"), null)
-            }
+                } catch (ex: Throwable) {
+                    LOG.warn("Error renaming element", ex)
+                    when (ex) {
+                        is LspException -> throw ex
+                        else -> {
+                            val cause = generateSequence(ex) { it.cause?.takeIf { c -> c != it } }
+                                .filterIsInstance<IncorrectOperationException>()
+                                .firstOrNull() ?: ex
 
-            err.get()?.let {
-                LOG.warn("Error renaming element", it)
-                when (it) {
-                    is LspException -> throw it
-                    else -> {
-                        val cause = generateSequence(it) { e -> e.cause?.takeIf { c -> c != e } }
-                            .filterIsInstance<IncorrectOperationException>()
-                            .firstOrNull() ?: it
-
-                        throwLspError(RenameRequestType, cause.message ?: "Error renaming element", Unit, ErrorCodes.InvalidParams, cause)
+                            throwLspError(
+                                RenameRequestType,
+                                cause.message ?: "Error renaming element",
+                                Unit,
+                                ErrorCodes.InvalidParams,
+                                cause
+                            )
+                        }
                     }
                 }
             }
+
 
             readAction {
                 originals.map { (file, original) ->
