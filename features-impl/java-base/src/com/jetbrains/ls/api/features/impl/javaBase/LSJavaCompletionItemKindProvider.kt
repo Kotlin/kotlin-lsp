@@ -25,7 +25,6 @@ internal class LSJavaCompletionItemKindProvider : LSCompletionItemKindProvider {
             else -> CompletionItemKind.Class
         }
 
-        is PsiPrimitiveType -> CompletionItemKind.Keyword
         is PsiKeyword -> CompletionItemKind.Keyword
 
         else -> null
