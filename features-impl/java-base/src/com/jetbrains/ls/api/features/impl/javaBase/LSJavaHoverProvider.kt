@@ -1,5 +1,5 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
-package com.jetbrains.ls.api.features.impl.javaBase.hover
+package com.jetbrains.ls.api.features.impl.javaBase
 
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
@@ -15,7 +15,6 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.impl.common.hover.AbstractLSHoverProvider
 import com.jetbrains.ls.api.features.impl.common.hover.markdownMultilineCode
 import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
-import com.jetbrains.ls.api.features.impl.javaBase.language.LSJavaLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
 
 open class LSJavaHoverProvider(targetKinds: Set<TargetKind>) : AbstractLSHoverProvider(targetKinds) {

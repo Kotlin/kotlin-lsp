@@ -61,9 +61,9 @@
   </extensions>
   <extensions defaultExtensionNs="ls">
     <markdownDocProvider language="JAVA"
-                         implementationClass="com.jetbrains.ls.api.features.impl.javaBase.documentation.LSJavaMarkdownDocProvider"/>
+                         implementationClass="com.jetbrains.ls.api.features.impl.javaBase.LSJavaMarkdownDocProvider"/>
 
     <completionItemKindProvider language="JAVA"
-                         implementationClass="com.jetbrains.ls.api.features.impl.javaBase.completion.LSJavaCompletionItemKindProvider"/>
+                                implementationClass="com.jetbrains.ls.api.features.impl.javaBase.LSJavaCompletionItemKindProvider"/>
   </extensions>
 </idea-plugin>

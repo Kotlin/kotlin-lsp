@@ -1,13 +1,11 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
-package com.jetbrains.ls.api.features.impl.javaBase.configuration
+package com.jetbrains.ls.api.features.impl.javaBase
 
 import com.intellij.psi.PsiElement
 import com.jetbrains.ls.api.core.util.scheme
 import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.features.impl.common.definitions.LSCommonDefinitionProvider
 import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
-import com.jetbrains.ls.api.features.impl.javaBase.hover.LSJavaHoverProvider
-import com.jetbrains.ls.api.features.impl.javaBase.language.LSJavaLanguage
 
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.api.features.utils.ijPluginByXml
