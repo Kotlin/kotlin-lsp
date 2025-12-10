@@ -64,6 +64,6 @@
                          implementationClass="com.jetbrains.ls.api.features.impl.javaBase.documentation.LSMarkdownDocProviderJavaImpl"/>
 
     <completionItemKindProvider language="JAVA"
-                         implementationClass="com.jetbrains.ls.api.features.impl.javaBase.completion.LSCompletionItemKindProviderJavaImpl"/>
+                         implementationClass="com.jetbrains.ls.api.features.impl.javaBase.completion.LSJavaCompletionItemKindProvider"/>
   </extensions>
 </idea-plugin>

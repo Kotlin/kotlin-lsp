@@ -5,13 +5,14 @@ import com.intellij.psi.*
 import com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider
 import com.jetbrains.lsp.protocol.CompletionItemKind
 
-internal class LSCompletionItemKindProviderJavaImpl : LSCompletionItemKindProvider {
+internal class LSJavaCompletionItemKindProvider : LSCompletionItemKindProvider {
     override fun getKind(element: PsiElement): CompletionItemKind? = when (element) {
         is PsiEnumConstant -> CompletionItemKind.EnumMember
         is PsiMethod -> when {
             element.isConstructor -> CompletionItemKind.Constructor
             else -> CompletionItemKind.Method
         }
+
         is PsiParameter -> CompletionItemKind.Variable
         is PsiLocalVariable -> CompletionItemKind.Variable
         is PsiPackage -> CompletionItemKind.Module
@@ -23,6 +24,7 @@ internal class LSCompletionItemKindProviderJavaImpl : LSCompletionItemKindProvid
             element.isEnum -> CompletionItemKind.Enum
             else -> CompletionItemKind.Class
         }
+
         is PsiPrimitiveType -> CompletionItemKind.Keyword
         is PsiKeyword -> CompletionItemKind.Keyword
 
