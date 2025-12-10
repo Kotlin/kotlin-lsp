@@ -36,7 +36,6 @@ jvm_library(
     "//language-server/community/api.core",
     "//language-server/community/features-impl/common",
     "@community//platform/core-api:core",
-    "@community//platform/core-impl",
     "@community//platform/analysis-api:analysis",
     "@community//platform/lang-api:lang",
     "@community//java/java-impl:impl",
