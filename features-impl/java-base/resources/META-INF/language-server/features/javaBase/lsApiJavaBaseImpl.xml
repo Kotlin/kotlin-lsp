@@ -61,7 +61,7 @@
   </extensions>
   <extensions defaultExtensionNs="ls">
     <markdownDocProvider language="JAVA"
-                         implementationClass="com.jetbrains.ls.api.features.impl.javaBase.documentation.LSMarkdownDocProviderJavaImpl"/>
+                         implementationClass="com.jetbrains.ls.api.features.impl.javaBase.documentation.LSJavaMarkdownDocProvider"/>
 
     <completionItemKindProvider language="JAVA"
                          implementationClass="com.jetbrains.ls.api.features.impl.javaBase.completion.LSJavaCompletionItemKindProvider"/>
