@@ -1,11 +1,17 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.kotlin.completion
 
+import com.intellij.codeInsight.completion.PrefixMatcher
 import com.intellij.codeInsight.completion.createCompletionProcess
 import com.intellij.codeInsight.completion.impl.CamelHumpMatcher
 import com.intellij.codeInsight.completion.insertCompletion
+import com.intellij.codeInsight.completion.performCompletion
+import com.intellij.codeInsight.lookup.LookupElement
+import com.intellij.codeInsight.lookup.LookupElementPresentation
 import com.intellij.openapi.application.invokeAndWaitIfNeeded
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.application.runWriteAction
+import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.LSAnalysisContext
@@ -15,29 +21,162 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.core.withAnalysisContext
+import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
+import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
+import com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider
+import com.jetbrains.ls.api.features.completion.LSCompletionProvider
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
 import com.jetbrains.ls.api.features.impl.common.completion.LSAbstractCompletionProvider
+import com.jetbrains.ls.api.features.impl.common.hover.AbstractLSHoverProvider.LSMarkdownDocProvider.Companion.getMarkdownDoc
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
+import com.jetbrains.ls.api.features.resolve.ResolveDataWithConfigurationEntryId
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer
+import com.jetbrains.ls.api.features.utils.isSource
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.protocol.*
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaDanglingFileResolutionMode
 import org.jetbrains.kotlin.analysis.api.projectStructure.withDanglingFileResolutionMode
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtPsiFactory
 
-internal object LSKotlinCompletionProvider : LSAbstractCompletionProvider() {
+internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDescriptorProvider {
+    override val supportsResolveRequest: Boolean get() = true
+
+    context(_: LSServer, _: LspHandlerContext)
+    override suspend fun provideCompletion(params: CompletionParams): CompletionList {
+        return if (!params.textDocument.isSource()) {
+            CompletionList.EMPTY_COMPLETE
+        } else {
+            withAnalysisContext(params.textDocument.uri.uri) {
+                readAction {
+                    params.textDocument.findVirtualFile()?.let { file ->
+                        file.findPsiFile(project)?.let { psiFile ->
+                            file.findDocument()?.offsetByPosition(params.position)?.let { offset ->
+                                psiFile to offset
+                            }
+                        }
+                    }
+                }?.let { (psiFile, offset) ->
+                    val completionProcess = invokeAndWaitIfNeeded {
+                        createCompletionProcess(
+                            project = project,
+                            file = psiFile,
+                            offset = offset,
+                            invocationCount = params.computeInvocationCount()
+                        )
+                    }
+                    readAction {
+                        val lookupElements = performCompletion(completionProcess)
+                        val completionItems = lookupElements.mapIndexed { i, lookup ->
+                            val lookupPresentation = LookupElementPresentation().also {
+                                lookup.renderElement(it)
+                            }
+
+                            val itemMatcher = completionProcess.arranger.itemMatcher(lookup)
+                            val data = CompletionData(params, lookup, itemMatcher)
+
+                            val completionDataKey = LSAbstractCompletionProvider.cacheCompletionData(data)
+
+                            CompletionItem(
+                                label = lookupPresentation.itemText ?: lookup.lookupString,
+                                sortText = LSAbstractCompletionProvider.getSortedFieldByIndex(i),
+                                labelDetails = CompletionItemLabelDetails(
+                                    detail = lookupPresentation.tailText,
+                                    description = lookupPresentation.typeText,
+                                ),
+                                kind = lookup.psiElement?.let { LSCompletionItemKindProvider.getKind(it) },
+                                textEdit = LSAbstractCompletionProvider.emptyTextEdit(params.position),
+                                command = Command(
+                                    "Apply Completion",
+                                    command = completionCommand,
+                                    arguments = listOf(
+                                        LSP.json.encodeToJsonElement(completionDataKey),
+                                    )
+                                ),
+                                data = JsonObject(mapOf(
+                                    ResolveDataWithConfigurationEntryId::configurationEntryId.name to LSP.json.encodeToJsonElement(uniqueId)
+                                )),
+                            )
+                        }
+                        CompletionList(
+                            isIncomplete = true,
+                            items = completionItems,
+                        )
+                    }
+                } ?: LSAbstractCompletionProvider.EMPTY_COMPLETION_LIST
+            }
+        }
+    }
+
+    context(_: LSServer, _: LspHandlerContext)
+    override suspend fun resolveCompletion(completionItem: CompletionItem): CompletionItem? {
+        val completionDataKey =
+            completionItem.command?.arguments?.firstOrNull()?.jsonPrimitive?.longOrNull
+                ?: return completionItem
+        return LSAbstractCompletionProvider.getCompletionData<CompletionData>(completionDataKey)?.let { completionData ->
+            withAnalysisContext {
+                readAction {
+                    completionItem.copy(
+                        documentation = computeDocumentation(completionData.lookup),
+                    )
+                }
+            }
+        }
+    }
+
+    private fun CompletionParams.computeInvocationCount(): Int {
+        // todo should be based on CompletionParams.context.triggerKind
+        return 1
+    }
+
+    override val commandDescriptors: List<LSCommandDescriptor>
+        get() = listOf(
+            LSCommandDescriptor(
+                title = "Apply Completion Item",
+                name = completionCommand,
+                executor = { arguments ->
+                    require(arguments.size == 1) { "Expected 1 argument, got: ${arguments.size}" }
+                    val id = (arguments[0] as? JsonPrimitive)?.longOrNull
+                        ?: error("Invalid argument, expected a number, got: ${arguments[0]}")
+                    val completionData = LSAbstractCompletionProvider.getCompletionData<CompletionData>(id)
+                    when (completionData) {
+                        null -> lspClient.notify(
+                            ShowMessageNotification,
+                            ShowMessageParams(MessageType.Error, "Your completion session has expired, please try again"),
+                        )
+
+                        else -> applyCompletion(completionData)
+                    }
+
+                    JsonPrimitive(true)
+                }
+            )
+        )
+
+    fun computeDocumentation(lookup: LookupElement): StringOrMarkupContent? {
+        return lookup.psiElement
+            ?.let { getMarkdownDoc(it) }
+            ?.let { StringOrMarkupContent(MarkupContent(MarkupKindType.Markdown, it)) }
+    }
+
+    data class CompletionData(val params: CompletionParams, val lookup: LookupElement, val itemMatcher: PrefixMatcher)
+
     override val uniqueId: LSUniqueConfigurationEntry.UniqueId = LSUniqueConfigurationEntry.UniqueId("KotlinCompletionProvider")
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
-    override val completionCommand: String
+    val completionCommand: String
         get() = "jetbrains.kotlin.completion.apply"
 
 
     context(_: LspHandlerContext, _: LSServer)
-    override suspend fun applyCompletion(completionData: CompletionData) {
+    suspend fun applyCompletion(completionData: CompletionData) {
         val (edits, position) = withAnalysisContext {
             invokeAndWaitIfNeeded {
                 runWriteAction {
