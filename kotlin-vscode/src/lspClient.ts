@@ -185,7 +185,8 @@ async function createLspClient(): Promise<LanguageClient | null> {
     };
     let serverOptions = await createServerOptions()
     if (!serverOptions) return null
-    return new LanguageClient('kotlinLSP', 'Kotlin LSP', serverOptions, clientOptions);
+    const displayName = vscode.extensions.getExtension(getContext().extension.id)?.packageJSON?.displayName ?? 'Kotlin LSP (fallback)'
+    return new LanguageClient('kotlinLSP', displayName, serverOptions, clientOptions);
 }
 
 
