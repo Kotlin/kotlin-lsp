@@ -50,12 +50,13 @@ class LSCommonRenameProvider(
                 val offset = document.offsetByPosition(params.position)
                 val psiSymbolService = PsiSymbolService.getInstance()
                 val targets = targetSymbols(psiFile, offset).mapNotNull { psiSymbolService.extractElementFromSymbol(it) }
-                val element = targets.firstOrNull()
+                val target = targets.firstOrNull()
                     ?: throwLspError(RenameRequestType, "This element cannot be renamed", Unit, ErrorCodes.InvalidParams, null)
-                element.containingFile?.let {
+                target.containingFile?.let {
                     originals[it] = it.text
                 }
-                Renamer(project, element, params.newName, true, false)
+
+                Renamer(project, target, params.newName, true, false)
             } ?: return@withWriteAnalysisContext emptyList()
 
             readAction { processor.foundUsages }

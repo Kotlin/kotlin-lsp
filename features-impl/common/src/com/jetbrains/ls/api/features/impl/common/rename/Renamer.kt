@@ -2,7 +2,6 @@
 package com.jetbrains.ls.api.features.impl.common.rename
 
 import com.intellij.openapi.application.WriteAction
-import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.DumbService
@@ -35,14 +34,14 @@ import com.intellij.util.containers.MultiMap
 
 internal class Renamer(
     private val project: Project,
-    private val primaryElement: PsiElement,
+    target: PsiElement,
     private val newName: String,
     private val searchInComments: Boolean,
     private val searchTextOccurrences: Boolean
 ) {
+    private val primaryElement : PsiElement = target
     private val allRenames = linkedMapOf<PsiElement, String>()
     private var nonCodeUsages = emptyArray<NonCodeUsageInfo>()
-    private val renamerFactories = ArrayList<AutomaticRenamerFactory>()
     private val renamers = mutableListOf<AutomaticRenamer>()
     private val skippedUsages = mutableListOf<UnresolvableCollisionUsageInfo>()
     private val refactoringScope: SearchScope = GlobalSearchScope.projectScope(project)
@@ -54,16 +53,39 @@ internal class Renamer(
 
         allRenames[primaryElement] = newName
 
-        for (factory in AutomaticRenamerFactory.EP_NAME.extensionList) {
-            if (factory.isApplicable(primaryElement) && factory.optionName != null && factory.isEnabled) {
-                renamerFactories.add(factory)
+        prepareRenaming(primaryElement, newName, allRenames)
+    }
+
+    val foundUsages: Array<UsageInfo> by lazy {
+        renamers.clear()
+        val result = mutableListOf<UsageInfo>()
+
+        for (element in ArrayList(allRenames.keys)) {
+            if (element == null) {
+                LOG.error("primary: $primaryElement; renamers: $renamers")
+                continue
+            }
+
+            val newName = allRenames[element]
+            val usages = RenameUtil.findUsages(
+                element, newName, refactoringScope,
+                searchInComments, searchTextOccurrences, allRenames
+            )
+            val usagesList = listOf(*usages)
+            result.addAll(usagesList)
+
+            for (factory in AutomaticRenamerFactory.EP_NAME.extensionList) {
+                if (factory.getOptionName() == null && factory.isApplicable(element)) {
+                    renamers.add(factory.createRenamer(element, newName, usagesList))
+                }
             }
         }
+
+        UsageViewUtil.removeDuplicatedUsages(result.toTypedArray<UsageInfo>())
     }
 
     internal fun rename() {
         if (!primaryElement.isValid()) return
-        prepareRenaming(primaryElement, newName, allRenames)
 
         if (!PsiDocumentManager.getInstance(project).commitAllDocumentsUnderProgress()) {
             return
@@ -170,77 +192,35 @@ internal class Renamer(
         }
     }
 
+    private fun createEventData(): RefactoringEventData {
+        val data = RefactoringEventData()
+        data.addElement(primaryElement)
+        return data
+    }
+
     private fun addElement(element: PsiElement, newName: String) {
         RenameUtil.assertNonCompileElement(element)
         allRenames[element] = newName
     }
 
-    val foundUsages: Array<UsageInfo> by lazy {
-        runReadAction {
-            renamers.clear()
-            val result = mutableListOf<UsageInfo>()
-
-            for (element in ArrayList(allRenames.keys)) {
-                if (element == null) {
-                    LOG.error("primary: $primaryElement; renamers: $renamers")
-                    continue
-                }
-
-                val newName = allRenames[element]
-                val usages = RenameUtil.findUsages(
-                    element, newName, refactoringScope,
-                    searchInComments, searchTextOccurrences, allRenames
-                )
-                val usagesList = listOf(*usages)
-                result.addAll(usagesList)
-
-                for (factory in renamerFactories) {
-                    if (factory.isApplicable(element)) {
-                        renamers.add(factory.createRenamer(element, newName, usagesList))
-                    }
-                }
-
-                for (factory in AutomaticRenamerFactory.EP_NAME.extensionList) {
-                    if (factory.getOptionName() == null && factory.isApplicable(element)) {
-                        renamers.add(factory.createRenamer(element, newName, usagesList))
-                    }
-                }
-            }
-
-            UsageViewUtil.removeDuplicatedUsages(result.toTypedArray<UsageInfo>())
-        }
-    }
-
-    private val beforeData: RefactoringEventData
-        get() {
-            val data = RefactoringEventData()
-            data.addElement(primaryElement)
-            return data
-        }
-
     private fun performRefactoring(usages: Array<UsageInfo>, transaction: RefactoringTransaction) {
-        val postRenameCallbacks = mutableListOf<() -> Unit>()
+        val postRenameCallbacks = mutableListOf<Runnable>()
 
-        val renameEvents = MultiMap.createLinked<RefactoringElementListener?, SmartPsiElementPointer<PsiElement?>?>()
+        val renameEvents = MultiMap.createLinked<RefactoringElementListener, SmartPsiElementPointer<PsiElement>>()
 
         val usagesList = listOf(*usages)
         val classified: MultiMap<PsiElement, UsageInfo> = classifyUsages(allRenames.keys, usagesList)
 
-        for (element in allRenames.keys) {
+        for ((element, newName) in allRenames) {
             if (!element.isValid()) {
                 LOG.error(PsiInvalidElementAccessException(element))
                 continue
             }
-            val newName: String = allRenames[element]!!
 
             val elementListener = transaction.getElementListener(element)
             val infos: Collection<UsageInfo> = classified.get(element)
             val renamePsiElementProcessor = RenamePsiElementProcessor.forElement(element)
-            val postRenameCallback: (() -> Unit)? =
-                renamePsiElementProcessor.getPostRenameCallback(element, newName, infos, allRenames, elementListener)
-                    ?.let {
-                        { it.run() }
-                    }
+            val postRenameCallback: Runnable? = renamePsiElementProcessor.getPostRenameCallback(element, newName, infos, allRenames, elementListener)
 
             renamePsiElementProcessor.renameElement(
                 element, newName, infos.toTypedArray<UsageInfo>(),
@@ -253,14 +233,12 @@ internal class Renamer(
                         if (!newElement.isValid()) return
                         renameEvents.putValue(
                             elementListener,
-                            SmartPointerManager.createPointer<PsiElement?>(newElement)
+                            SmartPointerManager.createPointer<PsiElement>(newElement)
                         )
                     }
                 })
 
-            if (postRenameCallback != null) {
-                postRenameCallbacks.add(postRenameCallback)
-            }
+            postRenameCallback?.let { postRenameCallbacks.add(it) }
         }
 
         nonCodeUsages = usagesList.filterIsInstance<NonCodeUsageInfo>()
@@ -270,21 +248,21 @@ internal class Renamer(
     }
 
     private fun afterRename(
-        postRenameCallbacks: List<() -> Unit>,
-        renameEvents: MultiMap<RefactoringElementListener?, SmartPsiElementPointer<PsiElement?>?>
+        postRenameCallbacks: List<Runnable>,
+        renameEvents: MultiMap<RefactoringElementListener, SmartPsiElementPointer<PsiElement>>
     ) {
         PsiDocumentManager.getInstance(project).commitAllDocuments()
         for (entry in renameEvents.entrySet()) {
             for (pointer in entry.value) {
-                val element = pointer!!.getElement()
+                val element = pointer.getElement()
                 if (element != null) {
-                    entry.key!!.elementRenamed(element)
+                    entry.key.elementRenamed(element)
                 }
             }
         }
 
         for (runnable in postRenameCallbacks) {
-            runnable()
+            runnable.run()
         }
     }
 
@@ -299,19 +277,9 @@ internal class Renamer(
     }
 
     private fun doRefactoring(usageInfoSet: MutableCollection<UsageInfo>) {
-        val iterator: MutableIterator<UsageInfo> = usageInfoSet.iterator()
-        while (iterator.hasNext()) {
-            val usageInfo = iterator.next()
-            val element = usageInfo.element
-            if (element == null || !usageInfo.isWritable) {
-                iterator.remove()
-            }
-        }
-
-
-        val writableUsageInfos: Array<UsageInfo> = usageInfoSet.toTypedArray<UsageInfo>()
-        val eventData = this.beforeData
-        eventData.addUsages(listOf(*writableUsageInfos))
+        val writableUsageInfos = removeNonWritableUsages(usageInfoSet)
+        val data = createEventData()
+        data.addUsages(listOf(*writableUsageInfos))
 
         PsiDocumentManager.getInstance(project).commitAllDocuments()
         val listenerManager =
@@ -319,7 +287,6 @@ internal class Renamer(
         val transaction = listenerManager.startTransaction()
         val preparedData = linkedMapOf<RefactoringHelper<*>?, Any?>()
 
-        val data = this.beforeData
         val elements = data.getUserData(RefactoringEventData.PSI_ELEMENT_ARRAY_KEY)
         val primaryElement = data.getUserData(RefactoringEventData.PSI_ELEMENT_KEY)
         val allElements = when (elements) {
@@ -349,6 +316,18 @@ internal class Renamer(
             }
         }, null, null)
 
+    }
+
+    private fun removeNonWritableUsages(usageInfoSet: MutableCollection<UsageInfo>): Array<UsageInfo> {
+        val iterator: MutableIterator<UsageInfo> = usageInfoSet.iterator()
+        while (iterator.hasNext()) {
+            val usageInfo = iterator.next()
+            val element = usageInfo.element
+            if (element == null || !usageInfo.isWritable) {
+                iterator.remove()
+            }
+        }
+        return usageInfoSet.toTypedArray<UsageInfo>()
     }
 
     companion object {
