@@ -28,11 +28,16 @@ import com.jetbrains.ls.api.features.impl.common.diagnostics.Blacklist
 import com.jetbrains.ls.api.features.impl.common.diagnostics.DiagnosticSource
 import com.jetbrains.ls.api.features.impl.common.diagnostics.SimpleDiagnosticData
 import com.jetbrains.ls.api.features.impl.common.diagnostics.SimpleDiagnosticQuickfixData
+import com.jetbrains.ls.api.features.impl.common.utils.toLspSeverity
+import com.jetbrains.ls.api.features.impl.common.utils.toLspTags
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.utils.isSource
 import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
 import com.jetbrains.lsp.implementation.LspHandlerContext
-import com.jetbrains.lsp.protocol.*
+import com.jetbrains.lsp.protocol.Diagnostic
+import com.jetbrains.lsp.protocol.DocumentDiagnosticParams
+import com.jetbrains.lsp.protocol.LSP
+import com.jetbrains.lsp.protocol.StringOrInt
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.encodeToJsonElement
@@ -100,7 +105,7 @@ class LSCommonInspectionDiagnosticProvider(
                         diagnostics.add(
                             Diagnostic(
                                 range = range,
-                                severity = problemDescriptor.highlightType.toLsp(),
+                                severity = problemDescriptor.highlightType.toLspSeverity(),
                                 message = message.description,
                                 code = StringOrInt.string(simpleGlobalInspection.shortName),
                                 tags = problemDescriptor.highlightType.toLspTags(),
@@ -172,7 +177,7 @@ class LSCommonInspectionDiagnosticProvider(
                 )
                 Diagnostic(
                     range = problemDescriptor.range()?.toLspRange(document) ?: return@mapNotNull null,
-                    severity = problemDescriptor.highlightType.toLsp(),
+                    severity = problemDescriptor.highlightType.toLspSeverity(),
                     message = message.description,
                     code = StringOrInt.string(localInspectionTool.id),
                     tags = problemDescriptor.highlightType.toLspTags(),
@@ -212,35 +217,3 @@ private fun getModCommand(fix: QuickFix<*>, project: Project, problemDescriptor:
     }
 
 private val LOG = logger<LSCommonInspectionDiagnosticProvider>()
-
-// TODO LSP-241 design, currently some random conversions
-private fun ProblemHighlightType.toLsp(): DiagnosticSeverity = when (this) {
-    ProblemHighlightType.GENERIC_ERROR_OR_WARNING -> DiagnosticSeverity.Warning
-    ProblemHighlightType.LIKE_UNKNOWN_SYMBOL -> DiagnosticSeverity.Error
-    ProblemHighlightType.LIKE_DEPRECATED -> DiagnosticSeverity.Warning
-    ProblemHighlightType.LIKE_UNUSED_SYMBOL -> DiagnosticSeverity.Warning
-    ProblemHighlightType.ERROR -> DiagnosticSeverity.Error
-    ProblemHighlightType.WARNING -> DiagnosticSeverity.Warning
-    ProblemHighlightType.GENERIC_ERROR -> DiagnosticSeverity.Error
-    ProblemHighlightType.INFO -> DiagnosticSeverity.Information
-    ProblemHighlightType.WEAK_WARNING -> DiagnosticSeverity.Warning
-    ProblemHighlightType.INFORMATION -> DiagnosticSeverity.Hint
-    ProblemHighlightType.LIKE_MARKED_FOR_REMOVAL -> DiagnosticSeverity.Information
-    ProblemHighlightType.POSSIBLE_PROBLEM -> DiagnosticSeverity.Warning
-}
-
-// TODO LSP-241 design, currently some random conversions
-private fun ProblemHighlightType.toLspTags(): List<DiagnosticTag>? = when (this) {
-    ProblemHighlightType.GENERIC_ERROR_OR_WARNING -> null
-    ProblemHighlightType.LIKE_UNKNOWN_SYMBOL -> null
-    ProblemHighlightType.LIKE_DEPRECATED -> listOf(DiagnosticTag.Deprecated)
-    ProblemHighlightType.LIKE_UNUSED_SYMBOL -> listOf(DiagnosticTag.Unnecessary)
-    ProblemHighlightType.ERROR -> null
-    ProblemHighlightType.WARNING -> null
-    ProblemHighlightType.GENERIC_ERROR -> null
-    ProblemHighlightType.INFO -> null
-    ProblemHighlightType.WEAK_WARNING -> null
-    ProblemHighlightType.INFORMATION -> null
-    ProblemHighlightType.LIKE_MARKED_FOR_REMOVAL -> listOf(DiagnosticTag.Deprecated)
-    ProblemHighlightType.POSSIBLE_PROBLEM -> null
-}
