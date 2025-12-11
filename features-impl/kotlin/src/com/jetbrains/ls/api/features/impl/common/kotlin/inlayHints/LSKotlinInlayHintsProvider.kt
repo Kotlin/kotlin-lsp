@@ -22,7 +22,9 @@ internal object LSKotlinInlayHintsProvider : LSInlayHintsProviderBase(
                 add(Provider(KtParameterHintsProvider(), KotlinHintFactory(paddingRight = true, kind = InlayHintKind.Parameter)))
             }
             add(Provider(KtDefaultParameterInlayHintsProvider(), KotlinHintFactory(paddingRight = true, kind = InlayHintKind.Parameter)))
-            add(Provider(KtCallChainHintsProvider(), KotlinHintFactory()))
+            if (options.isEnabled("hints.call.chains")) {
+                add(Provider(KtCallChainHintsProvider(), KotlinHintFactory()))
+            }
             add(Provider(KtValuesHintsProvider(), KotlinHintFactory(paddingLeft = true, paddingRight = true)))
         }
     }

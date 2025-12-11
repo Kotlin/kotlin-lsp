@@ -154,6 +154,11 @@
             "type": "boolean",
             "default": false,
             "description": "Show excluded parameter names"
+          },
+          "jetbrains.kotlin.hints.call.chains": {
+            "type": "boolean",
+            "default": false,
+            "description": "Function return type in call chains"
           }
         }
       }
