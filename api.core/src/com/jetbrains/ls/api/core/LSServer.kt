@@ -90,10 +90,6 @@ interface LSAnalysisContext {
 context(context: LSAnalysisContext)
 val project: Project get() = context.project
 
-interface LSServerStarter {
-    suspend fun start(action: suspend context(LSServerContext) CoroutineScope.() -> Unit)
-}
-
 interface LSServerContext {
     suspend fun withServer(action: suspend context(LSServer) CoroutineScope.() -> Unit)
 }

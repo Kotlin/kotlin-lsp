@@ -25,7 +25,7 @@ import com.jetbrains.ls.kotlinLsp.requests.core.shutdownRequest
 import com.jetbrains.ls.kotlinLsp.requests.features
 import com.jetbrains.ls.kotlinLsp.util.configuration.IsolatedDocumentsPlugin
 import com.jetbrains.ls.kotlinLsp.util.logSystemInfo
-import com.jetbrains.ls.snapshot.api.impl.core.createServerStarterAnalyzerImpl
+import com.jetbrains.ls.snapshot.api.impl.core.withLspServer
 import com.jetbrains.lsp.implementation.*
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineName
@@ -71,12 +71,9 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
 
     val config = createConfiguration(runConfig.isolatedDocumentsMode)
 
-    val starter =
-        createServerStarterAnalyzerImpl(config.plugins, isUnitTestMode = false, isolatedDocumentsMode = runConfig.isolatedDocumentsMode)
-
     @Suppress("RAW_RUN_BLOCKING")
     runBlocking(CoroutineName("root") + Dispatchers.Default) {
-        starter.start {
+        withLspServer(config.plugins, isUnitTestMode = false, isolatedDocumentsMode = runConfig.isolatedDocumentsMode) {
             preloadKotlinStdlibWhenRunningFromSources()
             when (mode) {
                 KotlinLspServerMode.Stdio -> {
