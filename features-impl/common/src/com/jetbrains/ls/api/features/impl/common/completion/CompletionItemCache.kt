@@ -8,7 +8,7 @@ import com.jetbrains.ls.snapshot.api.impl.core.SessionDataEntity
 import com.jetbrains.lsp.protocol.*
 import java.util.concurrent.atomic.AtomicLong
 
-object LSAbstractCompletionProvider {
+object CompletionItemCache {
     private const val PER_CLIENT_COMPLETION_CACHE_SIZE = 1000L
     private val COMPLETION_CACHE_KEY = ObjectUtils.sentinel("COMPLETION_CACHE_KEY")
     private val COMPLETION_ID_GENERATOR_KEY = ObjectUtils.sentinel("COMPLETION_ID_GENERATOR_KEY")

@@ -26,7 +26,7 @@ import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider
 import com.jetbrains.ls.api.features.completion.LSCompletionProvider
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
-import com.jetbrains.ls.api.features.impl.common.completion.LSAbstractCompletionProvider
+import com.jetbrains.ls.api.features.impl.common.completion.CompletionItemCache
 import com.jetbrains.ls.api.features.impl.common.hover.AbstractLSHoverProvider.LSMarkdownDocProvider.Companion.getMarkdownDoc
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
@@ -83,17 +83,17 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
                             val itemMatcher = completionProcess.arranger.itemMatcher(lookup)
                             val data = CompletionData(params, lookup, itemMatcher)
 
-                            val completionDataKey = LSAbstractCompletionProvider.cacheCompletionData(data)
+                            val completionDataKey = CompletionItemCache.cacheCompletionData(data)
 
                             CompletionItem(
                                 label = lookupPresentation.itemText ?: lookup.lookupString,
-                                sortText = LSAbstractCompletionProvider.getSortedFieldByIndex(i),
+                                sortText = CompletionItemCache.getSortedFieldByIndex(i),
                                 labelDetails = CompletionItemLabelDetails(
                                     detail = lookupPresentation.tailText,
                                     description = lookupPresentation.typeText,
                                 ),
                                 kind = lookup.psiElement?.let { LSCompletionItemKindProvider.getKind(it) },
-                                textEdit = LSAbstractCompletionProvider.emptyTextEdit(params.position),
+                                textEdit = CompletionItemCache.emptyTextEdit(params.position),
                                 command = Command(
                                     "Apply Completion",
                                     command = completionCommand,
@@ -111,7 +111,7 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
                             items = completionItems,
                         )
                     }
-                } ?: LSAbstractCompletionProvider.EMPTY_COMPLETION_LIST
+                } ?: CompletionItemCache.EMPTY_COMPLETION_LIST
             }
         }
     }
@@ -121,7 +121,7 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
         val completionDataKey =
             completionItem.command?.arguments?.firstOrNull()?.jsonPrimitive?.longOrNull
                 ?: return completionItem
-        return LSAbstractCompletionProvider.getCompletionData<CompletionData>(completionDataKey)?.let { completionData ->
+        return CompletionItemCache.getCompletionData<CompletionData>(completionDataKey)?.let { completionData ->
             withAnalysisContext {
                 readAction {
                     completionItem.copy(
@@ -146,7 +146,7 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
                     require(arguments.size == 1) { "Expected 1 argument, got: ${arguments.size}" }
                     val id = (arguments[0] as? JsonPrimitive)?.longOrNull
                         ?: error("Invalid argument, expected a number, got: ${arguments[0]}")
-                    val completionData = LSAbstractCompletionProvider.getCompletionData<CompletionData>(id)
+                    val completionData = CompletionItemCache.getCompletionData<CompletionData>(id)
                     when (completionData) {
                         null -> lspClient.notify(
                             ShowMessageNotification,
