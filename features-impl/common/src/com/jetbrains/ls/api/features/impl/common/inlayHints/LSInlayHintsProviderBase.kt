@@ -119,22 +119,28 @@ abstract class LSInlayHintsProviderBase(
     protected abstract class HintFactoryBase(
         private val paddingLeft: Boolean?,
         private val paddingRight: Boolean?,
+        private val extraLeftPaddingViaSpace: Boolean,
         private val kind: InlayHintKind?,
     ) {
         fun createHint(presentation: Presentation, psiFile: PsiFile, document: Document, data: InlayHintResolveData): InlayHint {
             val position = presentation.position.toOriginal() as? InlineInlayPosition ?: error("Only inline hints are supported")
             val lspPosition = document.positionByOffset(position.offset)
             val documentUri = DocumentUri(psiFile.virtualFile.uri)
-            val labels = presentation.hints.flatMap {
-                hintToLabel(
-                    it,
-                    psiFile,
-                    documentUri,
-                    data.options,
-                    lspPosition,
-                    position.offset,
-                    resolve = false
-                )
+            val labels = buildList {
+                if (extraLeftPaddingViaSpace) {
+                    add(InlayHintLabelPart(" ", tooltip = null, location = null, command = null))
+                }
+                presentation.hints.flatMapTo(this) {
+                    hintToLabel(
+                        it,
+                        psiFile,
+                        documentUri,
+                        data.options,
+                        lspPosition,
+                        position.offset,
+                        resolve = false
+                    )
+                }
             }
             return InlayHint(
                 position = lspPosition,

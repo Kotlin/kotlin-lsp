@@ -23,7 +23,7 @@ internal object LSKotlinInlayHintsProvider : LSInlayHintsProviderBase(
             }
             add(Provider(KtDefaultParameterInlayHintsProvider(), KotlinHintFactory(paddingRight = true, kind = InlayHintKind.Parameter)))
             if (options.isEnabled("hints.call.chains")) {
-                add(Provider(KtCallChainHintsProvider(), KotlinHintFactory()))
+                add(Provider(KtCallChainHintsProvider(), KotlinHintFactory(paddingLeft = true, extraLeftPaddingViaSpace = true)))
             }
             add(Provider(KtValuesHintsProvider(), KotlinHintFactory(paddingLeft = true, paddingRight = true)))
         }
@@ -35,7 +35,8 @@ internal object LSKotlinInlayHintsProvider : LSInlayHintsProviderBase(
         paddingLeft: Boolean? = null,
         paddingRight: Boolean? = null,
         kind: InlayHintKind? = null,
-    ) : HintFactoryBase(paddingLeft, paddingRight, kind) {
+        extraLeftPaddingViaSpace: Boolean = false,
+    ) : HintFactoryBase(paddingLeft, paddingRight, extraLeftPaddingViaSpace ,kind) {
 
         override fun getLocationTarget(
             actionData: InlayActionDataSerializable?,
