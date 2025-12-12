@@ -78,6 +78,7 @@ jvm_library(
     "@community//plugins/kotlin/fir",
     "@community//plugins/kotlin/navigation",
     "@community//plugins/kotlin/code-insight/impl-base:kotlin-codeInsight-shared",
+    "//language-server/api.impl.analyzer",
   ]
 )
 ### auto-generated section `build language-server.api.features.impl.kotlin` end

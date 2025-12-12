@@ -33,14 +33,24 @@ import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.resolve.ResolveDataWithConfigurationEntryId
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer
 import com.jetbrains.ls.api.features.utils.isSource
+import com.jetbrains.ls.snapshot.api.impl.core.InitializeParamsEntity
+import com.jetbrains.ls.snapshot.api.impl.core.initializeParams
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.protocol.*
+import com.jetbrains.lsp.protocol.ApplyEditRequests
+import com.jetbrains.lsp.protocol.ApplyWorkspaceEditParams
+import com.jetbrains.lsp.protocol.Range
+import com.jetbrains.lsp.protocol.ShowDocument
+import com.jetbrains.lsp.protocol.ShowDocumentParams
+import com.jetbrains.lsp.protocol.WorkspaceEdit
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.json.put
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaDanglingFileResolutionMode
 import org.jetbrains.kotlin.analysis.api.projectStructure.withDanglingFileResolutionMode
@@ -96,14 +106,18 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
                                 textEdit = CompletionItemCache.emptyTextEdit(params.position),
                                 command = Command(
                                     "Apply Completion",
-                                    command = completionCommand,
+                                    command = APPLY_COMPLETION_COMMAND,
                                     arguments = listOf(
                                         LSP.json.encodeToJsonElement(completionDataKey),
                                     )
                                 ),
-                                data = JsonObject(mapOf(
-                                    ResolveDataWithConfigurationEntryId::configurationEntryId.name to LSP.json.encodeToJsonElement(uniqueId)
-                                )),
+                                data = JsonObject(
+                                    mapOf(
+                                        ResolveDataWithConfigurationEntryId::configurationEntryId.name to LSP.json.encodeToJsonElement(
+                                            uniqueId
+                                        )
+                                    )
+                                ),
                             )
                         }
                         CompletionList(
@@ -123,10 +137,28 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
                 ?: return completionItem
         return CompletionItemCache.getCompletionData<CompletionData>(completionDataKey)?.let { completionData ->
             withAnalysisContext {
-                readAction {
+                val completionItem = completionItem.copy(
+                    documentation = readAction { computeDocumentation(completionData.lookup) },
+                )
+                // https://youtrack.jetbrains.com/issue/LSP-319/Fix-completion-in-Air
+                val isAir = initializeParams().clientInfo?.name?.equals("JetBrains Air") ?: false
+                if (isAir) {
+                    val insRes = applyCompletion(completionData)
                     completionItem.copy(
-                        documentation = computeDocumentation(completionData.lookup),
+                        additionalTextEdits = insRes.edits,
+                        command = Command(
+                            title = "Move cursor",
+                            command = "cursorMove",
+                            arguments = listOf(
+                                buildJsonObject {
+                                    put("to", "offset")
+                                    put("value", insRes.caretOffset)
+                                }
+                            )
+                        )
                     )
+                } else {
+                    completionItem
                 }
             }
         }
@@ -137,11 +169,13 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
         return 1
     }
 
+    const val APPLY_COMPLETION_COMMAND: String = "jetbrains.kotlin.completion.apply"
+
     override val commandDescriptors: List<LSCommandDescriptor>
         get() = listOf(
             LSCommandDescriptor(
                 title = "Apply Completion Item",
-                name = completionCommand,
+                name = APPLY_COMPLETION_COMMAND,
                 executor = { arguments ->
                     require(arguments.size == 1) { "Expected 1 argument, got: ${arguments.size}" }
                     val id = (arguments[0] as? JsonPrimitive)?.longOrNull
@@ -153,7 +187,29 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
                             ShowMessageParams(MessageType.Error, "Your completion session has expired, please try again"),
                         )
 
-                        else -> applyCompletion(completionData)
+                        else -> {
+                            val insertionResult = withAnalysisContext {
+                                applyCompletion(completionData)
+                            }
+                            lspClient.request(
+                                ApplyEditRequests.ApplyEdit,
+                                ApplyWorkspaceEditParams(
+                                    label = null,
+                                    edit = WorkspaceEdit(
+                                        changes = mapOf(completionData.params.textDocument.uri to insertionResult.edits)
+                                    )
+                                )
+                            )
+                            lspClient.request(
+                                ShowDocument,
+                                ShowDocumentParams(
+                                    uri = completionData.params.textDocument.uri.uri,
+                                    external = false,
+                                    takeFocus = true,
+                                    selection = Range(insertionResult.caretPosition, insertionResult.caretPosition)
+                                )
+                            )
+                        }
                     }
 
                     JsonPrimitive(true)
@@ -171,56 +227,39 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
 
     override val uniqueId: LSUniqueConfigurationEntry.UniqueId = LSUniqueConfigurationEntry.UniqueId("KotlinCompletionProvider")
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
-    val completionCommand: String
-        get() = "jetbrains.kotlin.completion.apply"
 
+    private data class CompletionInsertionResult(val edits: List<TextEdit>, val caretPosition: Position, val caretOffset: Int)
 
-    context(_: LspHandlerContext, _: LSServer)
-    suspend fun applyCompletion(completionData: CompletionData) {
-        val (edits, position) = withAnalysisContext {
-            invokeAndWaitIfNeeded {
-                runWriteAction {
-                    val physicalVirtualFile = completionData.params.textDocument.findVirtualFile() ?: return@runWriteAction null
-                    val physicalPsiFile = physicalVirtualFile.findPsiFile(project) ?: return@runWriteAction null
-                    val initialText = physicalPsiFile.text
+    context(_: LSAnalysisContext)
+    private fun applyCompletion(completionData: CompletionData): CompletionInsertionResult =
+        invokeAndWaitIfNeeded {
+            runWriteAction {
+                val physicalVirtualFile = requireNotNull(completionData.params.textDocument.findVirtualFile()) {
+                    "virtual file not found for ${completionData.params.textDocument}"
+                }
+                val physicalPsiFile = requireNotNull(physicalVirtualFile.findPsiFile(project)) {
+                    "psi file not found for $physicalVirtualFile"
+                }
+                val initialText = physicalPsiFile.text
 
-                    withFileForModification(
-                        physicalPsiFile,
-                    ) { fileForModification ->
-                        val document = fileForModification.fileDocument
-                        val caretBefore = document.offsetByPosition(completionData.params.position)
-                        val completionProcess = createCompletionProcess(project, fileForModification, caretBefore)
-                        completionProcess.arranger.registerMatcher(completionData.lookup, CamelHumpMatcher(completionData.itemMatcher.prefix))
-                        insertCompletion(project, fileForModification, completionData.lookup, completionProcess.parameters!!)
-
-                        val edits = TextEditsComputer.computeTextEdits(initialText, fileForModification.text)
-
-                        edits to document.positionByOffset(completionProcess.caret.offset)
-                    }
+                withFileForModification(
+                    physicalPsiFile,
+                ) { fileForModification ->
+                    val document = fileForModification.fileDocument
+                    val caretBefore = document.offsetByPosition(completionData.params.position)
+                    val completionProcess = createCompletionProcess(project, fileForModification, caretBefore)
+                    completionProcess.arranger.registerMatcher(
+                        completionData.lookup,
+                        CamelHumpMatcher(completionData.itemMatcher.prefix)
+                    )
+                    insertCompletion(project, fileForModification, completionData.lookup, completionProcess.parameters!!)
+                    val edits = TextEditsComputer.computeTextEdits(initialText, fileForModification.text)
+                    val caretAfter = completionProcess.caret.offset
+                    CompletionInsertionResult(edits, document.positionByOffset(caretAfter), caretAfter)
                 }
             }
-        } ?: error("Unable to apply completion")
+        }
 
-        lspClient.request(
-            ApplyEditRequests.ApplyEdit,
-            ApplyWorkspaceEditParams(
-                label = null,
-                edit = WorkspaceEdit(
-                    changes = mapOf(completionData.params.textDocument.uri to edits)
-                )
-            )
-        )
-
-        lspClient.request(
-            ShowDocument,
-            ShowDocumentParams(
-                uri = completionData.params.textDocument.uri.uri,
-                external = false,
-                takeFocus = true,
-                selection = Range(position, position)
-            )
-        )
-    }
 
     @OptIn(KaImplementationDetail::class)
     context(_: LSAnalysisContext)
