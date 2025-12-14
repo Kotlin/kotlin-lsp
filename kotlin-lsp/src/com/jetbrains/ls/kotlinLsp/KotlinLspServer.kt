@@ -77,23 +77,22 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
     runBlocking(CoroutineName("root") + Dispatchers.Default) {
         withLspServer(config.plugins, isUnitTestMode = false, isolatedDocumentsMode = runConfig.isolatedDocumentsMode) {
             preloadKotlinStdlibWhenRunningFromSources()
+            val body: suspend CoroutineScope.(LspConnection) -> Unit = { connection ->
+                handleRequests(connection, runConfig, config)
+            }
             when (mode) {
                 KotlinLspServerMode.Stdio -> {
                     val stdout = System.out
                     System.setOut(System.err)
-                    stdioConnection(System.`in`, stdout) { connection ->
-                        handleRequests(connection, runConfig, config)
-                    }
+                    stdioConnection(System.`in`, stdout, body)
                 }
 
                 is KotlinLspServerMode.Socket -> {
                     logSystemInfo()
-                    val body: suspend CoroutineScope.(LspConnection) -> Unit = { connection ->
-                        handleRequests(connection, runConfig, config)
-                    }
+
                     when (mode.config) {
-                        is TcpConnectionConfig.Client -> tcpClient(mode.config, body = body)
-                        is TcpConnectionConfig.Server -> tcpServer(mode.config, server = body)
+                        is TcpConnectionConfig.Client -> tcpClient(mode.config, body)
+                        is TcpConnectionConfig.Server -> tcpServer(mode.config, body)
                     }
                 }
             }
