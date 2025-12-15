@@ -8,5 +8,8 @@
                             implementationClass="org.jetbrains.kotlin.idea.search.ideaExtensions.FirKotlinTargetElementEvaluator"/>
     <targetElementUtilExtender implementation="org.jetbrains.kotlin.idea.search.ideaExtensions.FirKotlinTargetElementEvaluator"/>
     <usageTargetProvider implementation="org.jetbrains.kotlin.idea.search.ideaExtensions.FirKotlinUsageTargetProvider"/>
+
+    <projectService serviceInterface="org.jetbrains.kotlin.psi.KtFileClassProvider"
+                    serviceImplementation="org.jetbrains.kotlin.idea.caches.resolve.KtFileClassProviderImpl"/>
   </extensions>
 </idea-plugin>

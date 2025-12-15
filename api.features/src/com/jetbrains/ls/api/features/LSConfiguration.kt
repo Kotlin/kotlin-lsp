@@ -5,10 +5,11 @@ import com.intellij.ide.plugins.PluginMainDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
-import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
+import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.language.matches
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
+import com.jetbrains.lsp.protocol.URI
 
 class LSConfiguration(
     val entries: List<LSConfigurationEntry>,
@@ -54,6 +55,14 @@ class LSConfiguration(
     }
 
     inline fun <reified E : LSLanguageSpecificConfigurationEntry> entriesFor(
+        uri: URI,
+    ): List<E> {
+        val language = languageFor(uri) ?: return emptyList()
+        return entriesFor(language)
+    }
+
+
+    inline fun <reified E : LSLanguageSpecificConfigurationEntry> entriesFor(
         language: LSLanguage,
     ): List<E> {
         return entriesByLanguage[language]?.filterIsInstance<E>() ?: emptyList()
@@ -69,6 +78,10 @@ class LSConfiguration(
     fun languageFor(document: TextDocumentIdentifier): LSLanguage? {
         return languages.firstOrNull { it.matches(document) }
     }
+
+    fun languageFor(uri: URI): LSLanguage? {
+        return languages.firstOrNull { it.matches(uri) }
+    }
 }
 
 context(configuration: LSConfiguration)
@@ -82,6 +95,10 @@ inline fun <reified E : LSLanguageSpecificConfigurationEntry> entriesFor(documen
 context(configuration: LSConfiguration)
 inline fun <reified E : LSLanguageSpecificConfigurationEntry> entriesFor(language: LSLanguage): List<E> =
     configuration.entriesFor(language)
+
+context(configuration: LSConfiguration)
+inline fun <reified E : LSLanguageSpecificConfigurationEntry> entriesFor(uri: URI): List<E> =
+    configuration.entriesFor(uri)
 
 context(configuration: LSConfiguration)
 inline fun <reified E : LSUniqueConfigurationEntry> entryById(id: LSUniqueConfigurationEntry.UniqueId): E? =

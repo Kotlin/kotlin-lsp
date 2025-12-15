@@ -1,6 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.textEdits
 
+import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.DiffGranularity
 import com.jetbrains.ls.test.api.utils.injector.TextEditsApplier
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -113,16 +114,50 @@ class TextEditsComputerTest {
         )
     }
 
-
-
-
-    private fun doTest(text1: String, text2: String) {
-        doTestSingleWay(text1, text2)
-        doTestSingleWay(text2, text1)
+    @Test
+    fun wordDiffPackage() {
+        doTest("import pkg.GoodByeWorld;", "import pkg.HelloWorld;")
     }
 
-    private fun doTestSingleWay(oldText: String, newText: String) {
-        val edits = TextEditsComputer.computeTextEdits(oldText, newText)
+    @Test
+    fun wordDiffNewClass() {
+        doTest("new GoodByeWorld();", "new HelloWorld();")
+    }
+
+    @Test
+    fun wordDiffSymbolChanges() {
+        doTest("a.b", "a::b")
+    }
+
+    @Test
+    fun wordDiffWithNewLine() {
+        doTest("a.b\n", "a::b\n")
+    }
+
+    @Test
+    fun newLinesAndSpaces() {
+        doTest(
+            """   
+                import a.b;
+                import c.d;
+            """.trimIndent(), """   
+            import a.b;
+            
+                
+            import f.f;
+        """.trimIndent()
+        )
+    }
+
+    private fun doTest(text1: String, text2: String) {
+        for (granularity in DiffGranularity.entries) {
+            doTestSingleWay(text1, text2, granularity)
+            doTestSingleWay(text2, text1, granularity)
+        }
+    }
+
+    private fun doTestSingleWay(oldText: String, newText: String, granularity: DiffGranularity) {
+        val edits = TextEditsComputer.computeTextEdits(oldText, newText, granularity)
         val textAfterApplyingEdits = TextEditsApplier.applyTextEdits(oldText, edits)
         assertEquals(
             newText,

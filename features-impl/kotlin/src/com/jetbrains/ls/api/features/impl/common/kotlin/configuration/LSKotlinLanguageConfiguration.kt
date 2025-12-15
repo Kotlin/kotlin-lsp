@@ -20,13 +20,13 @@ import com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.kotlinInspec
 import com.jetbrains.ls.api.features.impl.common.kotlin.hover.LSKotlinHoverProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.inlayHints.LSKotlinInlayHintsProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
+import com.jetbrains.ls.api.features.impl.common.kotlin.rename.LSKotlinRenameProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.semanticTokens.LSKotlinSemanticTokensProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.signatureHelp.LSKotlinSignatureHelpProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.symbols.LSKotlinDocumentSymbolProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.symbols.LSKotlinWorkspaceSymbolProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.usages.kotlinUsagesIjPlugins
 import com.jetbrains.ls.api.features.impl.common.references.LSCommonReferencesProvider
-import com.jetbrains.ls.api.features.impl.common.rename.LSCommonRenameProvider
 import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.api.features.utils.ijPluginByXml
@@ -50,7 +50,7 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSKotlinDocumentSymbolProvider,
         LSKotlinIntentionCodeActionProvider,
         LSKotlinSignatureHelpProvider,
-        LSCommonRenameProvider(setOf(LSKotlinLanguage)),
+        LSKotlinRenameProvider,
         LSCommonFormattingProvider(setOf(LSKotlinLanguage)),
         LSKotlinInlayHintsProvider,
     ),

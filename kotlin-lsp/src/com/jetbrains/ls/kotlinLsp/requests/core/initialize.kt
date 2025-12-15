@@ -118,6 +118,17 @@ internal fun LspHandlersBuilder.initializeRequest() {
                     workspaceFolders = WorkspaceFoldersServerCapabilities(
                         supported = true,
                         changeNotifications = JsonPrimitive(true),
+                    ),
+                    fileOperations = FileOperations(
+                        willRename = FileOperationRegistrationOptions(
+                            filters = listOf(
+                                FileOperationFilter(
+                                    pattern = FileOperationPattern(
+                                        "**/*"
+                                    ),
+                                )
+                            )
+                        )
                     )
                 ),
                 renameProvider = OrBoolean(true),

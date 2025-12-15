@@ -44,6 +44,7 @@ internal fun LspHandlersBuilder.features() {
     request(DocumentSymbolRequest) { LSDocumentSymbols.getSymbols(it) }
     request(SignatureHelpRequest) { LSSignatureHelp.getSignatureHelp(it) }
     request(RenameRequestType) { LSRename.rename(it) }
+    request(Workspace.WillRenameFiles) { LSRename.renameFile(it) }
     request(FormattingRequestType) { LSDocumentFormatting.formatting(it) }
     request(RangeFormattingRequestType) { LSDocumentFormatting.rangeFormatting(it) }
     request(InlayHintRequestType) { LSInlayHints.inlayHints(it) }

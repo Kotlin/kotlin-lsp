@@ -47,41 +47,33 @@ internal class Renamer(
     private val refactoringScope: SearchScope = GlobalSearchScope.projectScope(project)
     private val file: PsiFile
         get() = primaryElement.containingFile ?: throw IllegalStateException("Primary element must have containing file")
+    val usages: Array<UsageInfo>
 
     init {
         RenameUtil.assertNonCompileElement(primaryElement)
 
         allRenames[primaryElement] = newName
-
         prepareRenaming(primaryElement, newName, allRenames)
+
+        usages = initUsagesAndRenamers()
     }
 
-    val foundUsages: Array<UsageInfo> by lazy {
-        renamers.clear()
+    private fun initUsagesAndRenamers(): Array<UsageInfo> {
         val result = mutableListOf<UsageInfo>()
+        val usages = RenameUtil.findUsages(
+            primaryElement, newName, refactoringScope,
+            searchInComments, searchTextOccurrences, allRenames
+        )
+        val usagesList = listOf(*usages)
+        result.addAll(usagesList)
 
-        for (element in ArrayList(allRenames.keys)) {
-            if (element == null) {
-                LOG.error("primary: $primaryElement; renamers: $renamers")
-                continue
-            }
-
-            val newName = allRenames[element]
-            val usages = RenameUtil.findUsages(
-                element, newName, refactoringScope,
-                searchInComments, searchTextOccurrences, allRenames
-            )
-            val usagesList = listOf(*usages)
-            result.addAll(usagesList)
-
-            for (factory in AutomaticRenamerFactory.EP_NAME.extensionList) {
-                if (factory.getOptionName() == null && factory.isApplicable(element)) {
-                    renamers.add(factory.createRenamer(element, newName, usagesList))
-                }
+        for (factory in AutomaticRenamerFactory.EP_NAME.extensionList) {
+            if (factory.getOptionName() == null && factory.isApplicable(primaryElement)) {
+                renamers.add(factory.createRenamer(primaryElement, newName, usagesList))
             }
         }
 
-        UsageViewUtil.removeDuplicatedUsages(result.toTypedArray<UsageInfo>())
+        return UsageViewUtil.removeDuplicatedUsages(result.toTypedArray<UsageInfo>())
     }
 
     internal fun rename() {
@@ -93,7 +85,7 @@ internal class Renamer(
 
         DumbService.getInstance(project).completeJustSubmittedTasks()
 
-        var usagesIn = foundUsages
+        var usagesIn = usages
         val conflicts = MultiMap<PsiElement?, String?>()
 
         RenameUtil.addConflictDescriptions(usagesIn, conflicts)
