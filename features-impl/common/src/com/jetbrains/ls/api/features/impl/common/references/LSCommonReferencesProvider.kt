@@ -6,6 +6,7 @@ import com.intellij.openapi.application.readAction
 import com.intellij.openapi.progress.runBlockingCancellable
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
+import com.intellij.util.CommonProcessors
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
@@ -49,14 +50,14 @@ class LSCommonReferencesProvider(
                     }
                 }
                 handler.processElementUsages(
-                    target, { result ->
-                        val location = result.element?.getLspLocationForDefinition() ?: return@processElementUsages true
+                    target, CommonProcessors.UniqueProcessor({ result ->
+                        val location = result.element?.getLspLocationForDefinition() ?: return@UniqueProcessor true
 
                         runBlockingCancellable {
                             channel.send(location)
                         }
                         true
-                    },
+                    }),
                     handler.findUsagesOptions
                 )
             }
