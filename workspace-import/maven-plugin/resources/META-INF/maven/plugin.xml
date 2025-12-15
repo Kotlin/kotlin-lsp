@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin>
+  <name>info-maven3-plugin</name>
+  <description>Adds info command that dumps a project model in the workspace.json format</description>
+  <groupId>com.jetbrains.ls</groupId>
+  <artifactId>imports-maven-plugin</artifactId>
+  <version>0.99</version>
+  <requiredMavenVersion>3.2.3</requiredMavenVersion>
+  <mojos>
+    <mojo>
+      <goal>info</goal>
+      <requiresDirectInvocation>true</requiresDirectInvocation>
+      <requiresProject>false</requiresProject>
+      <aggregator>false</aggregator>
+      <requiresOnline>false</requiresOnline>
+      <implementation>com.jetbrains.ls.imports.maven.InfoMojo</implementation>
+      <instantiationStrategy>per-lookup</instantiationStrategy>
+      <executionStrategy>once-per-session</executionStrategy>
+      <threadSafe>false</threadSafe>
+      <parameters>
+        <parameter>
+          <name>outputFile</name>
+          <type>java.lang.String</type>
+          <required>false</required>
+          <editable>true</editable>
+        </parameter>
+        <parameter>
+          <name>repositorySystemSession</name>
+          <type>org.eclipse.aether.RepositorySystemSession</type>
+          <required>true</required>
+          <editable>false</editable>
+        </parameter>
+        <parameter>
+          <name>project</name>
+          <type>org.apache.maven.project.MavenProject</type>
+          <required>true</required>
+          <editable>false</editable>
+        </parameter>
+      </parameters>
+      <configuration>
+        <outputFile implementation="java.lang.String">${outputFile}</outputFile>
+        <repositorySystemSession implementation="org.eclipse.aether.RepositorySystemSession" default-value="${repositorySystemSession}"/>
+        <project implementation="org.apache.maven.project.MavenProject" default-value="${project}"/>
+      </configuration>
+      <requirements>
+        <requirement>
+          <role>org.eclipse.aether.RepositorySystem</role>
+          <field-name>repositorySystem</field-name>
+        </requirement>
+      </requirements>
+    </mojo>
+  </mojos>
+</plugin>

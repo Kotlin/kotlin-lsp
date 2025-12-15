@@ -78,5 +78,6 @@
     <orderEntry type="module" module-name="intellij.libraries.ktor.io" />
     <orderEntry type="library" name="kotlinc.analysis-api-platform-interface" level="project" />
     <orderEntry type="module" module-name="intellij.kotlin.projectStructure" />
+    <orderEntry type="module" module-name="language-server.project-import.maven-plugin" />
   </component>
 </module>

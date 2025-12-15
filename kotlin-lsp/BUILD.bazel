@@ -85,6 +85,7 @@ jvm_library(
     "@community//libraries/ktor/io",
     "@lib//:kotlinc-analysis-api-platform-interface",
     "@community//plugins/kotlin/base/fir/project-structure",
+    "//language-server/community/workspace-import/maven-plugin",
   ]
 )
 
@@ -151,6 +152,7 @@ jvm_library(
     "@lib//:kotlinc-analysis-api-platform-interface",
     "@community//plugins/kotlin/base/fir/project-structure",
     "@community//plugins/kotlin/base/fir/project-structure:project-structure_test_lib",
+    "//language-server/community/workspace-import/maven-plugin",
   ]
 )
 ### auto-generated section `build language-server.kotlin-lsp` end

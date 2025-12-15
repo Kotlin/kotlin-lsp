@@ -1,0 +1,41 @@
+### auto-generated section `build language-server.project-import.maven-plugin` start
+load("@community//build:compiler-options.bzl", "create_kotlinc_options")
+load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_provided_library", "resourcegroup")
+
+create_kotlinc_options(
+  name = "custom_maven-plugin",
+  x_context_parameters = True
+)
+
+resourcegroup(
+  name = "maven-plugin_resources",
+  srcs = glob(["resources/**/*"]),
+  strip_prefix = "resources"
+)
+
+jvm_provided_library(
+  name = "community_libraries_kotlinx_serialization_core_provided",
+  lib = "@community//libraries/kotlinx/serialization/core"
+)
+
+jvm_provided_library(
+  name = "community_libraries_kotlinx_serialization_json_provided",
+  lib = "@community//libraries/kotlinx/serialization/json"
+)
+
+jvm_library(
+  name = "maven-plugin",
+  module_name = "language-server.project-import.maven-plugin",
+  visibility = ["//visibility:public"],
+  srcs = glob(["src/**/*.kt", "src/**/*.java", "src/**/*.form"], allow_empty = True),
+  resources = [":maven-plugin_resources"],
+  kotlinc_opts = ":custom_maven-plugin",
+  deps = [
+    "@lib//:kotlin-stdlib",
+    "@ultimate_lib//:apache-maven-plugin-api-provided",
+    "@ultimate_lib//:apache-maven-core-provided",
+    ":community_libraries_kotlinx_serialization_core_provided",
+    ":community_libraries_kotlinx_serialization_json_provided",
+  ]
+)
+### auto-generated section `build language-server.project-import.maven-plugin` end
