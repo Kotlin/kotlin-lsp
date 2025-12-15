@@ -41,6 +41,7 @@ jvm_library(
     "@community//platform/core-impl",
     "//language-server/analyzer",
     "//language-server/analyzer:analyzer_test_lib",
+    "@community//platform/build-scripts/downloader",
   ]
 )
 ### auto-generated section `build language-server.project-import.test` end

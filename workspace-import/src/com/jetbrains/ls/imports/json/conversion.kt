@@ -16,6 +16,7 @@ import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.descriptors.ConfigFileItem
 import com.jetbrains.ls.imports.utils.toIntellijUri
 import kotlinx.serialization.json.Json
+import org.jetbrains.jps.model.serialization.JpsMavenSettings
 import org.jetbrains.kotlin.config.KotlinModuleKind
 import org.jetbrains.kotlin.idea.workspaceModel.CompilerSettingsData
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
@@ -39,7 +40,7 @@ fun workspaceData(storage: EntityStorage, workspacePath: Path): WorkspaceData =
             .map { toDataClass(it, workspacePath) }
             .sortedBy { it.name }.toList(),
         kotlinSettings = storage.entities<KotlinSettingsEntity>()
-            .map { toDataClass(it) }
+            .map { toDataClass(it, workspacePath) }
             .sortedBy { it.module }
             .toList(),
     )
@@ -69,12 +70,12 @@ private fun toDataClass(
     contentRoot: ContentRootEntity,
     workspacePath: Path
 ): ContentRootData = ContentRootData(
-    path = toPath(contentRoot.url, workspacePath),
+    path = toRelativePath(contentRoot.url, workspacePath),
     excludedPatterns = contentRoot.excludedPatterns,
     excludedUrls = listOf(),
     sourceRoots = contentRoot.sourceRoots.map { sourceRoot ->
         SourceRootData(
-            path = toPath(sourceRoot.url, workspacePath),
+            path = toRelativePath(sourceRoot.url, workspacePath),
             type = sourceRoot.rootTypeId.name,
         )
     }
@@ -114,12 +115,12 @@ private fun toDataClass(entity: LibraryEntity, workspacePath: Path): LibraryData
         module = (entity.tableId as? ModuleLibraryTableId)?.moduleId?.name,
         roots = entity.roots.map { root ->
             LibraryRootData(
-                path = toPath(root.url, workspacePath),
+                path = toRelativePath(root.url, workspacePath),
                 type = root.type.name,
                 inclusionOptions = InclusionOptions.valueOf(root.inclusionOptions.name),
             )
         },
-        excludedRoots = entity.excludedRoots.map { toPath(it.url, workspacePath) },
+        excludedRoots = entity.excludedRoots.map { toRelativePath(it.url, workspacePath) },
         properties = entity.libraryProperties?.propertiesXmlTag?.let { parseXml(it).copy(tag = "") },
     )
 
@@ -128,7 +129,7 @@ private fun toDataClass(entity: SdkEntity, workspacePath: Path): SdkData =
         name = entity.name,
         type = entity.type,
         version = entity.version,
-        homePath = entity.homePath?.let { toPath(it, workspacePath) },
+        homePath = entity.homePath?.let { toRelativePath(it, workspacePath) },
         roots = when {
             entity.homePath != null && entity.type == "JavaSDK" -> null // Let's calculate them on restore
             else -> entity.roots.map { SdkRootData(it.url.url, it.type.name) }
@@ -138,10 +139,15 @@ private fun toDataClass(entity: SdkEntity, workspacePath: Path): SdkData =
 
 // TODO: Store relative paths where possible
 @Suppress("DEPRECATION")
-private fun toDataClass(entity: KotlinSettingsEntity): KotlinSettingsData =
+private fun toDataClass(
+    entity: KotlinSettingsEntity,
+    workspacePath: Path
+): KotlinSettingsData =
     KotlinSettingsData(
         name = entity.name,
-        sourceRoots = entity.sourceRoots,
+        sourceRoots = entity.sourceRoots.map {
+            toRelativePath(Path.of(it), workspacePath)
+        },
         configFileItems = entity.configFileItems.map { ConfigFileItemData(it.id, it.url) },
         module = entity.module.name,
         useProjectSettings = entity.useProjectSettings,
@@ -154,9 +160,12 @@ private fun toDataClass(entity: KotlinSettingsEntity): KotlinSettingsData =
         isTestModule = entity.isTestModule,
         externalProjectId = entity.externalProjectId,
         isHmppEnabled = entity.isHmppEnabled,
-        pureKotlinSourceFolders = entity.pureKotlinSourceFolders,
+        pureKotlinSourceFolders = entity.pureKotlinSourceFolders.map {
+            toRelativePath(Path.of(it), workspacePath)
+        },
         kind = KotlinSettingsData.KotlinModuleKind.valueOf(entity.kind.name),
-        compilerArguments = entity.compilerArguments,
+        compilerArguments = entity.compilerArguments
+            ?.replace("${m2Repo.toAbsolutePath()}/", MAVEN_PREFIX),
         additionalArguments = entity.compilerSettings?.additionalArguments,
         scriptTemplates = entity.compilerSettings?.scriptTemplates,
         scriptTemplatesClasspath = entity.compilerSettings?.scriptTemplatesClasspath,
@@ -170,12 +179,18 @@ private fun toDataClass(entity: KotlinSettingsEntity): KotlinSettingsData =
 
 private const val USER_HOME_PREFIX = "<HOME>/"
 private const val WORKSPACE_PREFIX = "<WORKSPACE>/"
+private const val MAVEN_PREFIX = "<MAVEN_REPO>/"
 private val userHome = Path.of(System.getProperty("user.home"))
+private val m2Repo = Path.of(JpsMavenSettings.getMavenRepositoryPath())
 
-private fun toPath(url: VirtualFileUrl, workspacePath: Path): String {
-    val path = url.toPath()
+private fun toRelativePath(url: VirtualFileUrl, workspacePath: Path): String {
+    return toRelativePath(url.toPath(), workspacePath)
+}
+
+private fun toRelativePath(path: Path, workspacePath: Path): String {
     var pathString = when {
         path.startsWith(workspacePath) -> WORKSPACE_PREFIX + workspacePath.relativize(path)
+        path.startsWith(m2Repo) -> MAVEN_PREFIX + m2Repo.relativize(path)
         path.startsWith(userHome) -> USER_HOME_PREFIX + userHome.relativize(path)
         else -> path.absolutePathString()
     }
@@ -288,7 +303,7 @@ fun workspaceModel(
     }
 
     for (kotlinSettingsData in data.kotlinSettings) {
-        storage addEntity toEntity(kotlinSettingsData, entitySource, moduleBuilders[kotlinSettingsData.module]!!)
+        storage addEntity toEntity(kotlinSettingsData, entitySource, moduleBuilders[kotlinSettingsData.module]!!, workspacePath)
     }
 
     data.modules.forEach { moduleData ->
@@ -306,11 +321,14 @@ fun workspaceModel(
 private fun toEntity(
     kotlinSettingsData: KotlinSettingsData,
     entitySource: EntitySource,
-    module: ModuleEntityBuilder
+    module: ModuleEntityBuilder,
+    workspacePath: Path
 ): KotlinSettingsEntityBuilder = KotlinSettingsEntity(
     name = kotlinSettingsData.name,
     moduleId = ModuleId(kotlinSettingsData.module),
-    sourceRoots = kotlinSettingsData.sourceRoots,
+    sourceRoots = kotlinSettingsData.sourceRoots.map {
+        toAbsolutePath(it, workspacePath).toString()
+    },
     configFileItems = kotlinSettingsData.configFileItems.map { ConfigFileItem(it.id, it.url) },
     useProjectSettings = kotlinSettingsData.useProjectSettings,
     implementedModuleNames = kotlinSettingsData.implementedModuleNames,
@@ -320,7 +338,9 @@ private fun toEntity(
     isTestModule = kotlinSettingsData.isTestModule,
     externalProjectId = kotlinSettingsData.externalProjectId,
     isHmppEnabled = kotlinSettingsData.isHmppEnabled,
-    pureKotlinSourceFolders = kotlinSettingsData.pureKotlinSourceFolders,
+    pureKotlinSourceFolders = kotlinSettingsData.pureKotlinSourceFolders.map {
+        toAbsolutePath(it, workspacePath).toString()
+    },
     kind = KotlinModuleKind.valueOf(kotlinSettingsData.kind.name),
     externalSystemRunTasks = kotlinSettingsData.externalSystemRunTasks,
     version = kotlinSettingsData.version,
@@ -329,6 +349,7 @@ private fun toEntity(
 ) {
     this.module = module
     this.compilerArguments = kotlinSettingsData.compilerArguments
+        ?.replace(MAVEN_PREFIX, "${m2Repo.toAbsolutePath()}/")
     if (kotlinSettingsData.additionalArguments != null
         && kotlinSettingsData.scriptTemplates != null
         && kotlinSettingsData.scriptTemplatesClasspath != null
@@ -360,15 +381,22 @@ private fun addFacetRecursive(
         this.module = moduleEntity
     }
 
-internal fun toAbsolutePath(path: String, workspacePath: Path,): Path =
+internal fun toAbsolutePath(path: String, workspacePath: Path): Path =
     when {
         path.startsWith(WORKSPACE_PREFIX) -> {
             val relativePath = path.removePrefix(WORKSPACE_PREFIX)
             if (relativePath.isEmpty()) workspacePath else workspacePath.resolve(relativePath)
         }
+
+        path.startsWith(MAVEN_PREFIX) -> {
+            val relativePath = path.removePrefix(MAVEN_PREFIX)
+            if (relativePath.isEmpty()) m2Repo else m2Repo.resolve(relativePath)
+        }
+
         path.startsWith(USER_HOME_PREFIX) -> {
             val relativePath = path.removePrefix(USER_HOME_PREFIX)
             if (relativePath.isEmpty()) userHome else userHome.resolve(relativePath)
         }
+
         else -> Path.of(path)
     }

@@ -16,6 +16,7 @@ import com.jetbrains.ls.imports.json.WorkspaceData
 import com.jetbrains.ls.imports.json.toJson
 import com.jetbrains.ls.imports.json.workspaceData
 import com.jetbrains.ls.imports.json.workspaceModel
+import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
 import com.jetbrains.ls.test.api.utils.compareWithTestdata
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -55,8 +56,18 @@ class ProjectImportTest {
         doGradleTest("NonExistentDependency")
     }
 
+    @Test
+    fun simpleMaven() = doMavenTest("SimpleMaven")
+
     private fun doGradleTest(project: String) =
         doTest(project, GradleWorkspaceImporter, testDataDir / "gradle")
+
+    private fun doMavenTest(project: String) {
+        downloadMavenBinaries(Path.of(PathManager.getCommunityHomePath())).let { path ->
+            MavenWorkspaceImporter.useMavenHome(path)
+        }
+        doTest(project, MavenWorkspaceImporter, testDataDir / "maven")
+    }
 
     private fun doTest(project: String, importer: WorkspaceImporter, testDataDir: Path) {
         val projectDir = testDataDir / project

@@ -3,55 +3,74 @@ package com.jetbrains.ls.imports.json
 
 import com.intellij.openapi.project.Project
 import com.intellij.platform.workspace.storage.EntityStorage
+import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImporter
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromStream
 import org.jetbrains.annotations.TestOnly
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.io.path.div
 import kotlin.io.path.exists
+import kotlin.io.path.inputStream
 import kotlin.io.path.notExists
 
 object JsonWorkspaceImporter : WorkspaceImporter {
     override suspend fun importWorkspace(
-      project: Project,
-      projectDirectory: Path,
-      virtualFileUrlManager: VirtualFileUrlManager,
-      onUnresolvedDependency: (String) -> Unit
+        project: Project,
+        projectDirectory: Path,
+        virtualFileUrlManager: VirtualFileUrlManager,
+        onUnresolvedDependency: (String) -> Unit
     ): EntityStorage? {
         if (!isApplicableDirectory(projectDirectory)) return null
-        try {
-            val content = (projectDirectory / "workspace.json").toFile().readText()
-            val workspaceData = WorkspaceModelProcessorForTests.process(Json.decodeFromString<WorkspaceData>(content))
-            workspaceData.modules.forEach { module ->
-                module.dependencies
-                    .filterIsInstance<DependencyData.Library>()
-                    .filter { it.name != "JDK" }
-                    .filter { dependency -> workspaceData.libraries.none { it.name == dependency.name } }
-                    .forEach { onUnresolvedDependency(it.name.removePrefix("Gradle: ")) }
+        val jsonPath = projectDirectory / "workspace.json"
+        return importWorkspaceJson(
+            jsonPath, projectDirectory, onUnresolvedDependency, virtualFileUrlManager)
+    }
+
+    fun importWorkspaceJson(
+        file: Path,
+        projectDirectory: Path,
+        onUnresolvedDependency: (String) -> Unit,
+        virtualFileUrlManager: VirtualFileUrlManager
+    ): MutableEntityStorage {
+        val workspaceJson: WorkspaceData = try {
+            file.inputStream().use { stream ->
+                @OptIn(ExperimentalSerializationApi::class)
+                Json.decodeFromStream(stream)
             }
-            workspaceData.libraries.forEach { library ->
-                if (library.roots.any { toAbsolutePath(it.path, projectDirectory).notExists()}) {
-                    onUnresolvedDependency(library.name.removePrefix("Gradle: "))
-                }
-            }
-            return workspaceModel(
-                workspaceData,
-                projectDirectory,
-                WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager)),
-                virtualFileUrlManager
-            )
         } catch (e: SerializationException) {
             throw WorkspaceImportException(
                 "Error parsing workspace.json",
-                "Error parsing workspace.json:\n ${e.message ?: e.stackTraceToString()}"
+                "Error parsing workspace.json:\n ${e.message ?: e.stackTraceToString()}",
+                e
             )
         }
+        val workspaceData = WorkspaceModelProcessorForTests.process(workspaceJson)
+        workspaceData.modules.forEach { module ->
+            module.dependencies
+                .filterIsInstance<DependencyData.Library>()
+                .filter { it.name != "JDK" }
+                .filter { dependency -> workspaceData.libraries.none { it.name == dependency.name } }
+                .forEach { onUnresolvedDependency(it.name.removePrefix("Gradle: ")) }
+        }
+        workspaceData.libraries.forEach { library ->
+            if (library.roots.any { toAbsolutePath(it.path, projectDirectory).notExists() }) {
+                onUnresolvedDependency(library.name.removePrefix("Gradle: "))
+            }
+        }
+        return workspaceModel(
+            workspaceData,
+            projectDirectory,
+            WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager)),
+            virtualFileUrlManager
+        )
     }
 
     private fun isApplicableDirectory(projectDirectory: Path): Boolean =

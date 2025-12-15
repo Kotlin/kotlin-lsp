@@ -25,6 +25,7 @@ import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
 import com.jetbrains.ls.imports.jps.JpsWorkspaceImporter
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
 import com.jetbrains.ls.imports.light.LightWorkspaceImporter
+import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
 import com.jetbrains.ls.kotlinLsp.connection.Client
 import com.jetbrains.ls.kotlinLsp.util.jdkRoots
 import com.jetbrains.ls.kotlinLsp.util.sendSystemInfoToClient
@@ -210,7 +211,13 @@ private suspend fun indexFolders(
     }
 }
 
-private val importers = listOf(JsonWorkspaceImporter, GradleWorkspaceImporter, JpsWorkspaceImporter, LightWorkspaceImporter)
+private val importers = listOf(
+    JsonWorkspaceImporter,
+    MavenWorkspaceImporter,
+    GradleWorkspaceImporter,
+    JpsWorkspaceImporter,
+    LightWorkspaceImporter
+)
 
 context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
 private suspend fun initFolder(
