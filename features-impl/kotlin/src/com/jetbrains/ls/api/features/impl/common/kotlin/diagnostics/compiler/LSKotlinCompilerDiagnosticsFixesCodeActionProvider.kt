@@ -6,6 +6,7 @@ import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.impl.ImaginaryEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
@@ -15,11 +16,9 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.core.withWritableFile
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
-import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.impl.common.diagnostics.diagnosticData
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDescriptorProvider
-import com.jetbrains.ls.api.features.impl.common.utils.createEditorWithCaret
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
 import com.jetbrains.lsp.implementation.LspHandlerContext
@@ -53,7 +52,9 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
                     analyze(ktFile) {
                         val kaDiagnostics = ktFile.collectDiagnostics(filter = KaDiagnosticCheckerFilter.ONLY_COMMON_CHECKERS)
                         if (kaDiagnostics.isEmpty()) return@analyze emptyList()
-                        val editor = createEditorWithCaret(document, caretOffset = 0)
+                        val editor = ImaginaryEditor(project, document).apply {
+                            caretModel.primaryCaret.moveToOffset(0)
+                        }
                         val result = mutableListOf<CodeAction>()
                         for (data in diagnosticData) {
                             val kaDiagnostic = kaDiagnostics.firstOrNull { data.data.matches(it) } ?: continue
