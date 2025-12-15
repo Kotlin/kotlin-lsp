@@ -5,6 +5,7 @@ import com.intellij.openapi.application.PathManager
 import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.workspaceModel.ide.impl.IdeVirtualFileUrlManagerImpl
+import com.jetbrains.analyzer.api.defaultPluginSet
 import com.jetbrains.analyzer.api.withAnalyzer
 import com.jetbrains.analyzer.bootstrap.AnalyzerProjectId
 import com.jetbrains.analyzer.bootstrap.WorkspaceModelSnapshot
@@ -73,7 +74,7 @@ class ProjectImportTest {
         val restoredData = Json.decodeFromString<WorkspaceData>(workspaceJson)
         val restoredJson = toJson(restoredData)
         assertEquals(cropJarPaths(workspaceJson), cropJarPaths(restoredJson))
-        val restoredStorage = workspaceModel(restoredData, projectDir, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(true))
+        val restoredStorage = workspaceModel(restoredData, projectDir, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(true), defaultPluginSet())
         val distilledData = workspaceData(restoredStorage, projectDir)
         assertEquals(data, distilledData)
     }
@@ -81,13 +82,16 @@ class ProjectImportTest {
 
     private fun WorkspaceImporter.performImport(projectDir: Path): EntityStorage? {
         return runBlocking(Dispatchers.Default) {
-            withAnalyzer(isUnitTestMode = true) {  analyzer ->
+            withAnalyzer(isUnitTestMode = true) { analyzer ->
                 val currentSnapshot = WorkspaceModelSnapshot.empty()
                 val virtualFileUrlManager = currentSnapshot.virtualFileUrlManager
-                analyzer.withProject(analyzerProjectConfigForImport(
-                    AnalyzerProjectId(),
-                    currentSnapshot.entityStore,
-                    virtualFileUrlManager)
+                analyzer.withProject(
+                    analyzerProjectConfigForImport(
+                        AnalyzerProjectId(),
+                        currentSnapshot.entityStore,
+                        virtualFileUrlManager,
+                        plugin
+                    )
                 ) {
                     importWorkspace(it.project, projectDir, virtualFileUrlManager) {}
                 }
