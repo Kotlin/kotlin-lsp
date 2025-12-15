@@ -29,7 +29,6 @@ import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDescriptorProvider
-import com.jetbrains.ls.api.features.impl.common.utils.createEditorWithCaret
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
 import com.jetbrains.lsp.implementation.LspHandlerContext
@@ -90,7 +89,6 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider {
         element,
     )
 
-    context(_: LSAnalysisContext, _: LSServer)
     private fun toCodeAction(
         action: KotlinApplicableModCommandAction<*, *>,
         actionContext: ActionContext,
@@ -104,11 +102,14 @@ internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider {
         @Suppress("UNCHECKED_CAST")
         if (!(action as KotlinApplicableModCommandAction<KtElement, *>).isApplicableByPsi(child)) return null
         val presentation = action.getPresentation(actionContext) ?: return null
-        val file = child.containingKtFile
-        val document = file.virtualFile.findDocument() ?: return null
-        analyze(file) {
-            val editor = createEditorWithCaret(document, caretOffset = child.startOffset)
-            val modCommand = modCodeAction.perform(ActionContext.from(editor, child.containingKtFile))
+        val ktPsiFile = child.containingKtFile
+        analyze(ktPsiFile) {
+            val actionContext = run {
+                val offset = child.startOffset
+                val selection = TextRange(offset, offset) // empty selection
+                ActionContext(child.project, ktPsiFile, offset, selection, null)
+            }
+            val modCommand = modCodeAction.perform(actionContext)
             val modCommandData = ModCommandData.from(modCommand) ?: return null
             return CodeAction(
                 title = presentation.name,
