@@ -5,7 +5,7 @@ import com.intellij.codeInsight.intention.IntentionManager
 import com.intellij.modcommand.ActionContext
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.fileLogger
-import com.intellij.openapi.editor.impl.ImaginaryEditor
+import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.jetbrains.ls.api.core.LSServer
@@ -42,11 +42,11 @@ class LSCommonIntentionFixesCodeActionProvider(
                 val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
                 val document = virtualFile.findDocument() ?: return@readAction emptyList()
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
-
-                val imaginaryEditor = ImaginaryEditor(project, document).apply {
-                    caretModel.primaryCaret.moveToOffset(params.range.toTextRange(document).startOffset)
+                val actionContext = run {
+                    val offset = params.range.toTextRange(document).startOffset
+                    val selection = TextRange(offset, offset) // empty selection
+                    ActionContext(project, psiFile, offset, selection, null)
                 }
-                val actionContext = ActionContext.from(imaginaryEditor, psiFile)
 
                 val codeActions = IntentionManager.getInstance()
                     .getAvailableIntentions(languageIds)
@@ -57,14 +57,18 @@ class LSCommonIntentionFixesCodeActionProvider(
                         val presentation = try {
                             modCommandAction.getPresentation(actionContext)
                         } catch (e: Throwable) {
-                            LOG.warn("Failed to get presentation from mod command action $modCommandAction", e)
+                            // If some ModCommand is not available, calling getPresentation() in such case should return null, not throw.
+                            // We want to know if getPresentation() throws, since it may point to missing registration of some extensions in the LSP.
+                            LOG.warn("Failed to presentation from mod command action $modCommandAction", e)
                             return@mapNotNull null
                         }
                         if (presentation == null) {
                             // This case is equivalent to getting false from IntentionAction#isAvailable
                             return@mapNotNull null
                         }
-
+                        return@mapNotNull Pair(modCommandAction, presentation)
+                    }
+                    .mapNotNull { (modCommandAction, presentation) ->
                         val modCommand = try {
                             modCommandAction.perform(actionContext)
                         } catch (e: Throwable) {
