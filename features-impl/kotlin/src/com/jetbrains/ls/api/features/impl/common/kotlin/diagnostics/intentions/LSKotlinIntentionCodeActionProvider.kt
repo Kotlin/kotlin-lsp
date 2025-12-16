@@ -43,7 +43,7 @@ import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtFile
 import java.util.function.Function
 
-internal object LSKotlinIntentionCodeActionProviderImpl : LSCodeActionProvider {
+internal object LSKotlinIntentionCodeActionProvider : LSCodeActionProvider {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSKotlinLanguage)
     override val providesOnlyKinds: Set<CodeActionKind> = setOf(CodeActionKind.QuickFix)
 

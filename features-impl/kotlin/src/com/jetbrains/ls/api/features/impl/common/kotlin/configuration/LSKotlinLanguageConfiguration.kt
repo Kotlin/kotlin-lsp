@@ -15,7 +15,7 @@ import com.jetbrains.ls.api.features.impl.common.kotlin.completion.kotlinComplet
 import com.jetbrains.ls.api.features.impl.common.kotlin.definitions.LSKotlinPackageDefinitionProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.compiler.LSKotlinCompilerDiagnosticsFixesCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.compiler.LSKotlinCompilerDiagnosticsProvider
-import com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.intentions.LSKotlinIntentionCodeActionProviderImpl
+import com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.intentions.LSKotlinIntentionCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.kotlinInspectionBlacklist
 import com.jetbrains.ls.api.features.impl.common.kotlin.hover.LSKotlinHoverProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.inlayHints.LSKotlinInlayHintsProvider
@@ -48,7 +48,7 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSKotlinCompilerDiagnosticsFixesCodeActionProvider,
         LSKotlinWorkspaceSymbolProvider,
         LSKotlinDocumentSymbolProvider,
-        LSKotlinIntentionCodeActionProviderImpl,
+        LSKotlinIntentionCodeActionProvider,
         LSKotlinSignatureHelpProvider,
         LSCommonRenameProvider(setOf(LSKotlinLanguage)),
         LSCommonFormattingProvider(setOf(LSKotlinLanguage)),
