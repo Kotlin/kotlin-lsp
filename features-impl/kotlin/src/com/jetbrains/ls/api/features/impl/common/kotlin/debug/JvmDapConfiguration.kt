@@ -2,7 +2,7 @@
 package com.jetbrains.ls.api.features.impl.common.kotlin.debug
 
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
-import com.jetbrains.ls.dap.jvm.jvmDapPlugin
+import com.jetbrains.dap.jvm.jvmDapPlugin
 
 val DAJvmConfiguration: LSConfigurationPiece = LSConfigurationPiece(
     entries = emptyList(),

@@ -7,7 +7,7 @@ import com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDe
 import com.jetbrains.ls.api.features.impl.common.workspace.LSExportWorkspaceCommandDescriptorProvider
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.api.features.lsApiPlugin
-import com.jetbrains.ls.dap.dapPlugin
+import com.jetbrains.dap.platform.dapPlugin
 
 val LSCommonConfiguration: LSConfigurationPiece = LSConfigurationPiece(
     entries = listOf(
