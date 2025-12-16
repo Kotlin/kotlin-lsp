@@ -5,7 +5,7 @@ import com.jetbrains.ls.api.features.impl.common.definitions.LSCommonDefinitionP
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSSyntaxErrorDiagnosticProviderImpl
 import com.jetbrains.ls.api.features.impl.common.diagnostics.inspections.LSCommonInspectionDiagnosticProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.inspections.LSCommonInspectionFixesCodeActionProvider
-import com.jetbrains.ls.api.features.impl.common.formatting.LSFormattingProviderCommonImpl
+import com.jetbrains.ls.api.features.impl.common.formatting.LSCommonFormattingProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.apiImpl.lsApiKotlinImpl
 import com.jetbrains.ls.api.features.impl.common.kotlin.codeActions.LSKotlinOrganizeImportsCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.codeActions.kotlinCodeActionsPlugins
@@ -51,7 +51,7 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSKotlinIntentionCodeActionProviderImpl,
         LSKotlinSignatureHelpProvider,
         LSCommonRenameProvider(setOf(LSKotlinLanguage)),
-        LSFormattingProviderCommonImpl(setOf(LSKotlinLanguage)),
+        LSCommonFormattingProvider(setOf(LSKotlinLanguage)),
         LSKotlinInlayHintsProvider,
     ),
     plugins = listOf(

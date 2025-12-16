@@ -21,7 +21,7 @@ import com.jetbrains.ls.api.features.textEdits.PsiFileTextEditsCollector
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.*
 
-class LSFormattingProviderCommonImpl(
+class LSCommonFormattingProvider(
     override val supportedLanguages: Set<LSLanguage>
 ) : LSFormattingProvider {
     context(_: LSServer, _: LspHandlerContext)
