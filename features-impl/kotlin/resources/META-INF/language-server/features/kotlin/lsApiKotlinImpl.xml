@@ -10,7 +10,7 @@
                          implementationClass="com.jetbrains.ls.api.features.impl.common.kotlin.hover.LSMarkdownDocProviderKotlinImpl"/>
 
     <completionItemKindProvider language="kotlin"
-                                implementationClass="com.jetbrains.ls.api.features.impl.common.kotlin.completion.LSCompletionItemKindProviderKotlinImpl"/>
+                                implementationClass="com.jetbrains.ls.api.features.impl.common.kotlin.completion.LSKotlinCompletionItemKindProvider"/>
 
   </extensions>
 </idea-plugin>

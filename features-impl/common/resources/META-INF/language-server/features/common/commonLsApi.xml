@@ -13,6 +13,6 @@
 
   <extensions defaultExtensionNs="ls">
     <completionItemKindProvider language=""
-                                implementationClass="com.jetbrains.ls.api.features.impl.common.completion.LSCompletionItemKindProviderAnyImpl"/>
+                                implementationClass="com.jetbrains.ls.api.features.impl.common.completion.LSAnyCompletionItemKindProvider"/>
   </extensions>
 </idea-plugin>

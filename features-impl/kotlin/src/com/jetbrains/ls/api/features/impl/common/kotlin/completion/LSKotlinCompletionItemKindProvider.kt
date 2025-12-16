@@ -9,7 +9,7 @@ import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 
-internal class LSCompletionItemKindProviderKotlinImpl : LSCompletionItemKindProvider {
+internal class LSKotlinCompletionItemKindProvider : LSCompletionItemKindProvider {
   override fun getKind(psi: PsiElement): CompletionItemKind? =
     when (val psi = psi.unwrapped) {
       is KtConstructor<*> -> CompletionItemKind.Constructor
