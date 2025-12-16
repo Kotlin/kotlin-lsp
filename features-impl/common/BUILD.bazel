@@ -60,7 +60,7 @@ jvm_library(
     "@lib//:caffeine",
     "//language-server/api.impl.analyzer",
     "@community//fleet/rhizomedb",
-    "//language-server/language-server.dap:dap",
+    "//language-server/dap",
   ]
 )
 ### auto-generated section `build language-server.api.features.impl.common` end
