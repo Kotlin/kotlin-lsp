@@ -64,6 +64,6 @@
     <orderEntry type="library" name="caffeine" level="project" />
     <orderEntry type="module" module-name="language-server.api.impl.analyzer" />
     <orderEntry type="module" module-name="fleet.rhizomedb" />
-    <orderEntry type="module" module-name="language-server.dap" />
+    <orderEntry type="module" module-name="language-server.dap.platform" />
   </component>
 </module>
