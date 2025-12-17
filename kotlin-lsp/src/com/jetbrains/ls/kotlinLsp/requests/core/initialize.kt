@@ -142,6 +142,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
                 inlayHintProvider = OrBoolean.of(
                     InlayHintRegistrationOptions(resolveProvider = true)
                 ),
+                typeHierarchyProvider = OrBoolean(true),
             ),
             serverInfo = InitializeResult.ServerInfo(
                 name = "Kotlin LSP by JetBrains",

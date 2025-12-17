@@ -17,6 +17,7 @@ import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokens
 import com.jetbrains.ls.api.features.signatureHelp.LSSignatureHelp
 import com.jetbrains.ls.api.features.symbols.LSDocumentSymbols
 import com.jetbrains.ls.api.features.symbols.LSWorkspaceSymbols
+import com.jetbrains.ls.api.features.typeHierarchy.LSTypeHierarchy
 import com.jetbrains.lsp.implementation.LspHandlersBuilder
 import com.jetbrains.lsp.protocol.*
 import com.jetbrains.lsp.protocol.CodeActions.CodeActionRequest
@@ -26,6 +27,9 @@ import com.jetbrains.lsp.protocol.InlayHints.InlayHintRequestType
 import com.jetbrains.lsp.protocol.InlayHints.ResolveInlayHint
 import com.jetbrains.lsp.protocol.SemanticTokensRequests.SemanticTokensFullRequest
 import com.jetbrains.lsp.protocol.SemanticTokensRequests.SemanticTokensRangeRequest
+import com.jetbrains.lsp.protocol.TypeHierarchyRequests.PrepareTypeHierarchyRequestType
+import com.jetbrains.lsp.protocol.TypeHierarchyRequests.SubtypesRequestType
+import com.jetbrains.lsp.protocol.TypeHierarchyRequests.SupertypesRequestType
 import com.jetbrains.lsp.protocol.WorkspaceSymbolRequests.WorkspaceSymbolRequest
 
 context(_: LSServer, _: LSConfiguration)
@@ -49,4 +53,7 @@ internal fun LspHandlersBuilder.features() {
     request(RangeFormattingRequestType) { LSDocumentFormatting.rangeFormatting(it) }
     request(InlayHintRequestType) { LSInlayHints.inlayHints(it) }
     request(ResolveInlayHint) { LSInlayHints.resolveInlayHint(it) }
+    request(PrepareTypeHierarchyRequestType) { LSTypeHierarchy.prepareTypeHierarchy(it) }
+    request(SupertypesRequestType) { LSTypeHierarchy.supertypes(it) }
+    request(SubtypesRequestType) { LSTypeHierarchy.subtypes(it) }
 }
