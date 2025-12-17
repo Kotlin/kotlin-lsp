@@ -19,7 +19,7 @@ object LSDiagnostic {
         val diagnostics = LSConcurrentResponseHandler.respondDirectlyWithResultsCollectedConcurrently(
             providers = entriesFor<LSDiagnosticProvider>(params.textDocument),
             getResults = { diagnosticProvider -> diagnosticProvider.getDiagnostics(params) },
-        )
+        ).sortedBy { it.range.start.line }
 
         return DocumentDiagnosticReport(
             DocumentDiagnosticReportKind.Full,
