@@ -4,7 +4,18 @@ load("@rules_jvm//:jvm.bzl", "jvm_library")
 jvm_library(
   name = "test",
   visibility = ["//visibility:public"],
-  srcs = glob([], allow_empty = True)
+  srcs = glob([], allow_empty = True),
+  runtime_deps = [
+    "@lib//:kotlin-stdlib",
+    "@community//fleet/lsp.protocol",
+    "@community//libraries/kotlinx/coroutines/core",
+    "//language-server/community/api.core",
+    "@community//platform/analysis-impl",
+    "@community//platform/util",
+    "@community//libraries/kotlinx/serialization/json",
+    "@community//libraries/kotlinx/serialization/core",
+    "@ultimate_lib//:java-diff-utils",
+  ]
 )
 
 jvm_library(
@@ -27,7 +38,8 @@ jvm_library(
     "@lib//:junit5Jupiter",
     "//language-server/test-api:test-api_test_lib",
     "//language-server/community/api.features",
-  ]
+  ],
+  runtime_deps = [":test"]
 )
 ### auto-generated section `build language-server.api.features.test` end
 

@@ -10,7 +10,8 @@ create_kotlinc_options(
 jvm_library(
   name = "test",
   visibility = ["//visibility:public"],
-  srcs = glob([], allow_empty = True)
+  srcs = glob([], allow_empty = True),
+  runtime_deps = ["@lib//:kotlin-stdlib"]
 )
 
 jvm_library(
@@ -42,7 +43,8 @@ jvm_library(
     "//language-server/analyzer",
     "//language-server/analyzer:analyzer_test_lib",
     "@community//platform/build-scripts/downloader",
-  ]
+  ],
+  runtime_deps = [":test"]
 )
 ### auto-generated section `build language-server.project-import.test` end
 
