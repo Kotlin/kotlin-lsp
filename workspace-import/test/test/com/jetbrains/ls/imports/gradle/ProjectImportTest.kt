@@ -3,8 +3,8 @@ package com.jetbrains.ls.imports.gradle
 
 import com.intellij.openapi.application.PathManager
 import com.intellij.platform.workspace.storage.EntitySource
-import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.workspaceModel.ide.impl.IdeVirtualFileUrlManagerImpl
+import com.jetbrains.analyzer.api.AnalyzerFileSystems
 import com.jetbrains.analyzer.api.defaultPluginSet
 import com.jetbrains.analyzer.api.withAnalyzer
 import com.jetbrains.analyzer.bootstrap.AnalyzerProjectId
@@ -61,7 +61,23 @@ class ProjectImportTest {
         val projectDir = testDataDir / project
         require(projectDir.exists()) { "Project $project not found at $projectDir" }
 
-        val storage = importer.performImport(projectDir)
+        val storage = runBlocking(Dispatchers.Default) {
+            withAnalyzer(isUnitTestMode = true) { analyzer ->
+                val currentSnapshot = WorkspaceModelSnapshot.empty()
+                val virtualFileUrlManager = currentSnapshot.virtualFileUrlManager
+                analyzer.withProject(
+                    analyzerProjectConfigForImport(
+                        fileSystems = AnalyzerFileSystems.default(),
+                        projectId = AnalyzerProjectId(),
+                        entities = currentSnapshot.entityStore,
+                        urlManager = virtualFileUrlManager,
+                        pluginSet = defaultPluginSet()
+                    )
+                ) {
+                    importer.importWorkspace(it.project, projectDir, virtualFileUrlManager) {}
+                }
+            }
+        }
 
         if (storage == null) {
             assertFalse((projectDir / "workspace.json").exists(), "Workspace import failed")
@@ -74,29 +90,9 @@ class ProjectImportTest {
         val restoredData = Json.decodeFromString<WorkspaceData>(workspaceJson)
         val restoredJson = toJson(restoredData)
         assertEquals(cropJarPaths(workspaceJson), cropJarPaths(restoredJson))
-        val restoredStorage = workspaceModel(restoredData, projectDir, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(true), defaultPluginSet())
+        val restoredStorage = workspaceModel(restoredData, projectDir, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(true))
         val distilledData = workspaceData(restoredStorage, projectDir)
         assertEquals(data, distilledData)
-    }
-
-
-    private fun WorkspaceImporter.performImport(projectDir: Path): EntityStorage? {
-        return runBlocking(Dispatchers.Default) {
-            withAnalyzer(isUnitTestMode = true) { analyzer ->
-                val currentSnapshot = WorkspaceModelSnapshot.empty()
-                val virtualFileUrlManager = currentSnapshot.virtualFileUrlManager
-                analyzer.withProject(
-                    analyzerProjectConfigForImport(
-                        AnalyzerProjectId(),
-                        currentSnapshot.entityStore,
-                        virtualFileUrlManager,
-                        plugin
-                    )
-                ) {
-                    importWorkspace(it.project, projectDir, virtualFileUrlManager) {}
-                }
-            }
-        }
     }
 
     fun cropJarPaths(jsonString: String): String =
