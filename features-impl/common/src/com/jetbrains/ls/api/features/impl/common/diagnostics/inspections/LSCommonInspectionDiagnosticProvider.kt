@@ -28,6 +28,7 @@ import com.jetbrains.ls.api.features.impl.common.diagnostics.Blacklist
 import com.jetbrains.ls.api.features.impl.common.diagnostics.DiagnosticSource
 import com.jetbrains.ls.api.features.impl.common.diagnostics.SimpleDiagnosticData
 import com.jetbrains.ls.api.features.impl.common.diagnostics.SimpleDiagnosticQuickfixData
+import com.jetbrains.ls.api.features.impl.common.diagnostics.inspections.LSCommonInspectionDiagnosticProvider.Companion.diagnosticSource
 import com.jetbrains.ls.api.features.impl.common.utils.toLspSeverity
 import com.jetbrains.ls.api.features.impl.common.utils.toLspTags
 import com.jetbrains.ls.api.features.language.LSLanguage
@@ -41,6 +42,8 @@ import com.jetbrains.lsp.protocol.StringOrInt
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.encodeToJsonElement
+
+private val LOG = logger<LSCommonInspectionDiagnosticProvider>()
 
 class LSCommonInspectionDiagnosticProvider(
     override val supportedLanguages: Set<LSLanguage>,
@@ -157,55 +160,55 @@ class LSCommonInspectionDiagnosticProvider(
             .filterIsInstance<GlobalSimpleInspectionTool>()
             .toList()
     }
+}
 
-    private fun ProblemsHolder.collectDiagnostics(
-        file: VirtualFile,
-        project: Project,
-        localInspectionTool: LocalInspectionTool
-    ): List<Diagnostic> {
-        val document = file.findDocument() ?: return emptyList()
-        return results
-            .filter { it.highlightType != ProblemHighlightType.INFORMATION }
-            .mapNotNull { problemDescriptor ->
-                val data = problemDescriptor.createDiagnosticData(project)
-                val message = ProblemDescriptorUtil.renderDescriptor(
-                    problemDescriptor, problemDescriptor.psiElement, ProblemDescriptorUtil.NONE
-                )
-                Diagnostic(
-                    range = problemDescriptor.range()?.toLspRange(document) ?: return@mapNotNull null,
-                    severity = problemDescriptor.highlightType.toLspSeverity(),
-                    message = message.description,
-                    code = StringOrInt.string(localInspectionTool.id),
-                    tags = problemDescriptor.highlightType.toLspTags(),
-                    data = LSP.json.encodeToJsonElement(data),
-                )
-            }
-    }
+private fun ProblemsHolder.collectDiagnostics(
+    file: VirtualFile,
+    project: Project,
+    localInspectionTool: LocalInspectionTool
+): List<Diagnostic> {
+    val document = file.findDocument() ?: return emptyList()
+    return results
+        .filter { it.highlightType != ProblemHighlightType.INFORMATION }
+        .mapNotNull { problemDescriptor ->
+            val data = problemDescriptor.createDiagnosticData(project)
+            val message = ProblemDescriptorUtil.renderDescriptor(
+                problemDescriptor, problemDescriptor.psiElement, ProblemDescriptorUtil.NONE
+            )
+            Diagnostic(
+                range = problemDescriptor.range()?.toLspRange(document) ?: return@mapNotNull null,
+                severity = problemDescriptor.highlightType.toLspSeverity(),
+                message = message.description,
+                code = StringOrInt.string(localInspectionTool.id),
+                tags = problemDescriptor.highlightType.toLspTags(),
+                data = LSP.json.encodeToJsonElement(data),
+            )
+        }
+}
 
-    private fun ProblemDescriptor.range(): TextRange? {
-        val element = psiElement ?: return null
-        val elementRange = element.textRange ?: return null
-        // relative range -> absolute range
-        textRangeInElement?.let { return it.shiftRight(elementRange.startOffset) }
-        return elementRange
-    }
+private fun ProblemDescriptor.range(): TextRange? {
+    val element = psiElement ?: return null
+    val elementRange = element.textRange ?: return null
+    // relative range -> absolute range
+    textRangeInElement?.let { return it.shiftRight(elementRange.startOffset) }
+    return elementRange
+}
 
-    private fun ProblemDescriptor.createDiagnosticData(project: Project): SimpleDiagnosticData {
-        return SimpleDiagnosticData(
-            diagnosticSource = diagnosticSource,
-            fixes = fixes.orEmpty().mapNotNull { fix ->
-                    val modCommand = getModCommand(fix, project, this) ?: return@mapNotNull null
-                    val modCommandData = ModCommandData.from(modCommand) ?: return@mapNotNull null
-                    SimpleDiagnosticQuickfixData(name = fix.name, modCommandData = modCommandData)
-                },
-        )
-    }
+private fun ProblemDescriptor.createDiagnosticData(project: Project): SimpleDiagnosticData {
+    return SimpleDiagnosticData(
+        diagnosticSource = diagnosticSource,
+        fixes = fixes.orEmpty().mapNotNull { fix ->
+            val modCommand = getModCommand(fix, project, this) ?: return@mapNotNull null
+            val modCommandData = ModCommandData.from(modCommand) ?: return@mapNotNull null
+            SimpleDiagnosticQuickfixData(name = fix.name, modCommandData = modCommandData)
+        },
+    )
 }
 
 private fun getModCommand(fix: QuickFix<*>, project: Project, problemDescriptor: ProblemDescriptor): ModCommand? =
     when (fix) {
-        is ModCommandQuickFix ->
-            fix.perform(project, problemDescriptor)
+        is ModCommandQuickFix -> fix.perform(project, problemDescriptor)
+
         else -> {
             LOG.debug("Unknown quick fix type: ${fix::class.java}")
             null
@@ -219,5 +222,3 @@ private fun handleError(throwable: Throwable) {
         else -> LOG.warn(throwable.toString())
     }
 }
-
-private val LOG = logger<LSCommonInspectionDiagnosticProvider>()
