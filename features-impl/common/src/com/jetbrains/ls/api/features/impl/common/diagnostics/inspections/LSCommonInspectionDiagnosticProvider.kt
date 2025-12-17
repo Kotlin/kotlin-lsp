@@ -72,8 +72,7 @@ class LSCommonInspectionDiagnosticProvider(
                         runCatching {
                             element.accept(visitor)
                         }.getOrHandleException {
-                            if (LOG.isTraceEnabled) LOG.warn(it)
-                            else LOG.warn(it.toString())
+                            handleError(it)
                         }
                         diagnostics.addAll(problemsHolder.collectDiagnostics(file, project, localInspection))
                         problemsHolder.clearResults()
@@ -93,8 +92,7 @@ class LSCommonInspectionDiagnosticProvider(
                     runCatching {
                         simpleGlobalInspection.checkFile(psiFile, inspectionManager, problemsHolder, globalInspectionContext, processor)
                     }.getOrHandleException {
-                        if (LOG.isTraceEnabled) LOG.warn(it)
-                        else LOG.warn(it.toString())
+                        handleError(it)
                     }
                     for (problemDescriptor in problemsHolder.results) {
                         val data = problemDescriptor.createDiagnosticData(project)
@@ -132,8 +130,7 @@ class LSCommonInspectionDiagnosticProvider(
                 runCatching {
                     inspection.instantiateTool()
                 }.getOrHandleException {
-                    if (LOG.isTraceEnabled) LOG.warn(it)
-                    else LOG.warn(it.toString())
+                    handleError(it)
                 }
             }
             .filterNot { blacklist.containsSuperClass(it) }
@@ -153,8 +150,7 @@ class LSCommonInspectionDiagnosticProvider(
                 runCatching {
                     inspection.instantiateTool()
                 }.getOrHandleException {
-                    if (LOG.isTraceEnabled) LOG.warn(it)
-                    else LOG.warn(it.toString())
+                    handleError(it)
                 }
             }
             .filterNot { blacklist.containsSuperClass(it) }
@@ -215,5 +211,13 @@ private fun getModCommand(fix: QuickFix<*>, project: Project, problemDescriptor:
             null
         }
     }
+
+private fun handleError(throwable: Throwable) {
+    when {
+        throwable is LinkageError -> LOG.error(throwable)
+        LOG.isTraceEnabled -> LOG.warn(throwable)
+        else -> LOG.warn(throwable.toString())
+    }
+}
 
 private val LOG = logger<LSCommonInspectionDiagnosticProvider>()
