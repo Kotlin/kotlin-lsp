@@ -16,13 +16,15 @@ object LSCodeActions {
     context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
     suspend fun getCodeActions(params: CodeActionParams): List<CodeAction> {
         return LSConcurrentResponseHandler.streamResultsIfPossibleOrRespondDirectly(
-            params.partialResultToken,
-            CodeAction.serializer(),
-            getProviders(params),
-        ) { provider ->
-            provider.getCodeActions(params)
-                .onEach { it.ensureCanBeProvidedBy(provider) }
-        }
+            partialResultToken = params.partialResultToken,
+            resultSerializer = CodeAction.serializer(),
+            providers = getProviders(params),
+            getResults = { codeActionProvider ->
+                codeActionProvider.getCodeActions(params).onEach { codeAction ->
+                    codeAction.ensureCanBeProvidedBy(codeActionProvider)
+                }
+            },
+        )
     }
 
     context(_: LSConfiguration)

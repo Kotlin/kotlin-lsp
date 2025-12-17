@@ -13,11 +13,10 @@ object LSDefinition {
     context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
     suspend fun getDefinition(params: DefinitionParams): List<Location> {
         return LSConcurrentResponseHandler.streamResultsIfPossibleOrRespondDirectly(
-            params.partialResultToken,
-            Location.serializer(),
-            entriesFor<LSDefinitionProvider>(params.textDocument),
-        ) {
-            it.provideDefinitions(params)
-        }
+            partialResultToken = params.partialResultToken,
+            resultSerializer = Location.serializer(),
+            providers = entriesFor<LSDefinitionProvider>(params.textDocument),
+            getResults = { definitionProvider -> definitionProvider.provideDefinitions(params) },
+        )
     }
 }

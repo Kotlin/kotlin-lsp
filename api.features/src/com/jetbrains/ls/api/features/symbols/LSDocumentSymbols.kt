@@ -13,10 +13,9 @@ object LSDocumentSymbols {
     context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
     suspend fun getSymbols(params: DocumentSymbolParams): List<DocumentSymbol> =
         LSConcurrentResponseHandler.streamResultsIfPossibleOrRespondDirectly(
-            params.partialResultToken,
-            DocumentSymbol.serializer(),
-            entriesFor<LSDocumentSymbolProvider>(params.textDocument),
-        ) {
-            it.getDocumentSymbols(params)
-        }
+            partialResultToken = params.partialResultToken,
+            resultSerializer = DocumentSymbol.serializer(),
+            providers = entriesFor<LSDocumentSymbolProvider>(params.textDocument),
+            getResults = { documentSymbolProvider -> documentSymbolProvider.getDocumentSymbols(params) },
+        )
 }

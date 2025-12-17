@@ -13,11 +13,10 @@ object LSWorkspaceSymbols {
     context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
     suspend fun getSymbols(params: WorkspaceSymbolParams): List<WorkspaceSymbol> {
         return LSConcurrentResponseHandler.streamResultsIfPossibleOrRespondDirectly(
-            params.partialResultToken,
-            WorkspaceSymbol.serializer(),
-            entries<LSWorkspaceSymbolProvider>(),
-        ) {
-            it.getWorkspaceSymbols(params)
-        }
+            partialResultToken = params.partialResultToken,
+            resultSerializer = WorkspaceSymbol.serializer(),
+            providers = entries<LSWorkspaceSymbolProvider>(),
+            getResults = { workspaceSymbolProvider -> workspaceSymbolProvider.getWorkspaceSymbols(params) },
+        )
     }
 }

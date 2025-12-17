@@ -13,11 +13,10 @@ object LSReferences {
     context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
     suspend fun getReferences(params: ReferenceParams): List<Location> {
         return LSConcurrentResponseHandler.streamResultsIfPossibleOrRespondDirectly(
-            params.partialResultToken,
-            Location.serializer(),
-            entriesFor<LSReferencesProvider>(params.textDocument),
-        ) {
-            it.getReferences(params)
-        }
+            partialResultToken = params.partialResultToken,
+            resultSerializer = Location.serializer(),
+            providers = entriesFor<LSReferencesProvider>(params.textDocument),
+            getResults = { referencesProvider -> referencesProvider.getReferences(params) },
+        )
     }
 }
