@@ -32,6 +32,20 @@ import com.intellij.usageView.UsageInfo
 import com.intellij.usageView.UsageViewUtil
 import com.intellij.util.containers.MultiMap
 
+import com.intellij.refactoring.BaseRefactoringProcessor
+
+/**
+ * A re-implementation of [BaseRefactoringProcessor] without UI dependencies*.
+ *
+ * It doesn't show any dialogs and always chooses some preferred path in situations
+ * where [BaseRefactoringProcessor] would show a dialog and ask the user to choose something.
+ *
+ * Apart from this, the logic and code structure is kept as close as possible to [BaseRefactoringProcessor].
+ *
+ * *it still has at least one, but it should be possible to get rid of it.
+ *
+ * @see <a href="https://youtrack.jetbrains.com/issue/LSP-343/We-have-a-reimplementation-of-BaseRefactoringProcessor">LSP-343</a>
+ */
 internal class Renamer(
     private val project: Project,
     target: PsiElement,
