@@ -267,7 +267,8 @@ object JpsWorkspaceImporter : WorkspaceImporter {
         } catch (e: IOException) {
             throw WorkspaceImportException(
                 "Error parsing workspace.json",
-                "Error parsing workspace.json:\n ${e.message ?: e.stackTraceToString()}"
+                "Error parsing workspace.json:\n ${e.message ?: e.stackTraceToString()}",
+                e
             )
         }
     }

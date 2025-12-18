@@ -46,4 +46,8 @@ fun findJdks(projectPath: Path): Set<JavaHomeFinder.JdkEntry> {
     return knownJdks
 }
 
-class WorkspaceImportException(displayMessage: String, val logMessage: String?) : Exception(displayMessage)
+class WorkspaceImportException(
+    displayMessage: String,
+    val logMessage: String?,
+    cause: Throwable? = null
+) : Exception(displayMessage, cause)

@@ -274,7 +274,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                 } catch (_: Exception) {
                     break
                 }
-                throw WorkspaceImportException(message, "Gradle import failed:\n${err.message}")
+                throw WorkspaceImportException(message, "Gradle import failed:\n${err.message}", err)
             }
             err = err.cause
         }
