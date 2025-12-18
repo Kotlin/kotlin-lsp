@@ -8,14 +8,14 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
-import com.jetbrains.ls.api.features.impl.common.inlayHints.LSInlayHintsCommonImpl
+import com.jetbrains.ls.api.features.impl.common.inlayHints.LSInlayHintsProviderBase
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
 import com.jetbrains.lsp.protocol.*
 import org.jetbrains.kotlin.idea.codeInsight.hints.KotlinFqnDeclarativeInlayActionHandler
 import org.jetbrains.kotlin.idea.k2.codeinsight.hints.*
 
-internal object LSKotlinInlayHintsProvider : LSInlayHintsCommonImpl(
+internal object LSKotlinInlayHintsProvider : LSInlayHintsProviderBase(
     supportedLanguages = setOf(LSKotlinLanguage),
     uniqueId = LSUniqueConfigurationEntry.UniqueId("kotlin-inlay-hints")
 ) {

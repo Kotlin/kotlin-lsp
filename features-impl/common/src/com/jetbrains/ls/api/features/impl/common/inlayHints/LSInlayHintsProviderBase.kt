@@ -35,7 +35,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 
-abstract class LSInlayHintsCommonImpl(
+abstract class LSInlayHintsProviderBase(
     override val supportedLanguages: Set<LSLanguage>,
     override val uniqueId: LSUniqueConfigurationEntry.UniqueId
 ) : LSInlayHintsProvider {

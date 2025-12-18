@@ -4,7 +4,7 @@
 
   <extensionPoints>
     <extensionPoint qualifiedName="ls.markdownDocProvider" beanClass="com.intellij.lang.LanguageExtensionPoint" dynamic="true">
-      <with attribute="implementationClass" implements="com.jetbrains.ls.api.features.impl.common.hover.AbstractLSHoverProvider$LSMarkdownDocProvider"/>
+      <with attribute="implementationClass" implements="com.jetbrains.ls.api.features.impl.common.hover.LSHoverProviderBase$LSMarkdownDocProvider"/>
     </extensionPoint>
     <extensionPoint qualifiedName="ls.completionItemKindProvider" beanClass="com.intellij.lang.LanguageExtensionPoint" dynamic="true">
       <with attribute="implementationClass" implements="com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider"/>

@@ -22,7 +22,7 @@ import com.jetbrains.ls.api.features.impl.common.utils.getTargetsAtPosition
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.*
 
-abstract class AbstractLSHoverProvider(
+abstract class LSHoverProviderBase(
     private val targetKinds: Set<TargetKind>
 ) : LSHoverProvider {
     protected open fun acceptTarget(target: PsiElement): Boolean = true

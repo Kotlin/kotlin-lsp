@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.launch
 
-abstract class AbstractLSWorkspaceSymbolProvider : LSWorkspaceSymbolProvider {
+abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
     abstract fun getContributors(): List<ChooseByNameContributor>
 
     context(_: LSServer, _: LSAnalysisContext)

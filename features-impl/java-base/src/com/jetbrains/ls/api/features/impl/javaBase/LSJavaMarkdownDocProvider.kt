@@ -4,10 +4,10 @@ package com.jetbrains.ls.api.features.impl.javaBase
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaDocumentedElement
 import com.jetbrains.ls.api.features.impl.common.documentaiton.formatDocComment
-import com.jetbrains.ls.api.features.impl.common.hover.AbstractLSHoverProvider
+import com.jetbrains.ls.api.features.impl.common.hover.LSHoverProviderBase
 import com.jetbrains.ls.api.features.impl.common.hover.markdownMultilineCode
 
-internal class LSJavaMarkdownDocProvider : AbstractLSHoverProvider.LSMarkdownDocProvider {
+internal class LSJavaMarkdownDocProvider : LSHoverProviderBase.LSMarkdownDocProvider {
     override fun getMarkdownDoc(element: PsiElement): String? {
         if (element !is PsiJavaDocumentedElement) return null
         val javadocText = element.docComment?.text ?: return null

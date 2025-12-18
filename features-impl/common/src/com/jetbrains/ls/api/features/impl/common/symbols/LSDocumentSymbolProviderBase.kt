@@ -21,7 +21,7 @@ import com.jetbrains.lsp.protocol.SymbolTag
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-abstract class AbstractLSDocumentSymbolProvider : LSDocumentSymbolProvider {
+abstract class LSDocumentSymbolProviderBase : LSDocumentSymbolProvider {
     context(_: LSServer, _: LspHandlerContext)
     override fun getDocumentSymbols(params: DocumentSymbolParams): Flow<DocumentSymbol> = flow {
         val uri = params.textDocument.uri.uri
