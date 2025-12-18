@@ -137,6 +137,7 @@ abstract class LSRenameProviderBase(
 
     context(_: LSServer)
     private fun renameAndGetChangedFiles(processor: Renamer): Map<URI, URI> {
+        // FIXME(Georgii Ustinov): LSP-342
         return invokeAndWaitIfNeeded {
             runBlockingCancellable {
                 withRenamesEnabled {
@@ -167,6 +168,15 @@ abstract class LSRenameProviderBase(
 
     private fun String.getPureName(extension: String) = removeSuffix(extension).trimEnd { it == '.' }
 
-    private class NameChange(val oldName: String, val newName: String)
-    private class Context(val target: PsiElement, val newName: String, val granularity: DiffGranularity, val uriToSkip : URI? = null)
+    private class NameChange(
+        val oldName: String,
+        val newName: String
+    )
+
+    private class Context(
+        val target: PsiElement,
+        val newName: String,
+        val granularity: DiffGranularity,
+        val uriToSkip : URI? = null
+    )
 }

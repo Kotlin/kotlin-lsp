@@ -12,5 +12,4 @@ internal object LSKotlinRenameProvider : LSRenameProviderBase(setOf(LSKotlinLang
         if (psiFile !is KtFile) return null
         return psiFile.classes.firstOrNull { it.name == name }
     }
-
 }

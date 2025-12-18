@@ -136,7 +136,7 @@ object TextEditsComputer {
     }
 
     /**
-     * Splits initial text on tokens. A token is a non-whitespace sequence of letters, digits or underscore characters.
+     * Splits string `s` into [Token]s.
      */
     private fun tokenize(s: String): List<Token> {
         if (s.isEmpty()) return emptyList()
@@ -163,5 +163,8 @@ object TextEditsComputer {
 
     private fun isWordChar(c: Char): Boolean = c.isLetterOrDigit() || c == '_'
 
+    /**
+     * A non-whitespace sequence of letters, digits or underscore characters.
+     */
     private class Token(val text: String, val start: Int, val end: Int)
 }

@@ -127,10 +127,10 @@ internal fun LspHandlersBuilder.initializeRequest() {
                                     pattern = FileOperationPattern(
                                         "**/*"
                                     ),
-                                )
-                            )
-                        )
-                    )
+                                ),
+                            ),
+                        ),
+                    ),
                 ),
                 renameProvider = OrBoolean(true),
                 signatureHelpProvider = SignatureHelpRegistrationOptions(

@@ -96,9 +96,6 @@ context(configuration: LSConfiguration)
 inline fun <reified E : LSLanguageSpecificConfigurationEntry> entriesFor(language: LSLanguage): List<E> =
     configuration.entriesFor(language)
 
-context(configuration: LSConfiguration)
-inline fun <reified E : LSLanguageSpecificConfigurationEntry> entriesFor(uri: URI): List<E> =
-    configuration.entriesFor(uri)
 
 context(configuration: LSConfiguration)
 inline fun <reified E : LSUniqueConfigurationEntry> entryById(id: LSUniqueConfigurationEntry.UniqueId): E? =
