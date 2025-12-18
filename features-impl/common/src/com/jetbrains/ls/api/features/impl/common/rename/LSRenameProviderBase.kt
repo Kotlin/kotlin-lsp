@@ -67,11 +67,11 @@ abstract class LSRenameProviderBase(
                 // check that a file was already renamed on the previous step
                 if (params.newUri.findVirtualFile() != null) return@a null
 
-                val newName = newFileNameIfPureRename(params.oldUri, params.newUri) ?: return@a null
+                val nameChange = computeNameChange(params.oldUri, params.newUri) ?: return@a null
                 val file = params.oldUri.findVirtualFile() ?: return@a null
                 val psiFile = file.findPsiFile(project) ?: return@a null
-                val target = getTargetClass(psiFile) ?: return@a null
-                Context(target, newName, DiffGranularity.WORD, params.oldUri)
+                val target = getTargetClass(psiFile, nameChange.oldName) ?: return@a null
+                Context(target, nameChange.newName, DiffGranularity.WORD, params.oldUri)
             } ?: return@withWriteAnalysisContext null
 
             doRename(context)
@@ -148,20 +148,25 @@ abstract class LSRenameProviderBase(
         }
     }
 
-    protected abstract fun getTargetClass(psiFile: PsiFile): PsiElement?
+    protected abstract fun getTargetClass(psiFile: PsiFile, name: String): PsiElement?
 
-    private fun newFileNameIfPureRename(old: URI, new: URI): String? {
+    private fun computeNameChange(old: URI, new: URI): NameChange? {
         val newExtension = new.fileExtension
         val oldExtension = old.fileExtension
         if (oldExtension == null || newExtension == null || newExtension != oldExtension) return null
         if (old.scheme != new.scheme) return null
 
-
         val oldName = old.fileName
         val newName = new.fileName
         if (oldName == newName) return null
-        return newName.removeSuffix(newExtension).trimEnd { it == '.' }
+        return NameChange(
+            oldName.getPureName(oldExtension),
+            newName.getPureName(newExtension)
+        )
     }
 
+    private fun String.getPureName(extension: String) = removeSuffix(extension).trimEnd { it == '.' }
+
+    private class NameChange(val oldName: String, val newName: String)
     private class Context(val target: PsiElement, val newName: String, val granularity: DiffGranularity, val uriToSkip : URI? = null)
 }

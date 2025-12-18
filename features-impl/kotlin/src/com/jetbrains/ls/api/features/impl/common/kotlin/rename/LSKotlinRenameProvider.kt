@@ -8,9 +8,9 @@ import com.jetbrains.ls.api.features.impl.common.rename.LSRenameProviderBase
 import org.jetbrains.kotlin.psi.KtFile
 
 internal object LSKotlinRenameProvider : LSRenameProviderBase(setOf(LSKotlinLanguage)) {
-    override fun getTargetClass(psiFile: PsiFile): PsiElement? {
+    override fun getTargetClass(psiFile: PsiFile, name: String): PsiElement? {
         if (psiFile !is KtFile) return null
-        return psiFile.classes.singleOrNull()
+        return psiFile.classes.firstOrNull { it.name == name }
     }
 
 }
