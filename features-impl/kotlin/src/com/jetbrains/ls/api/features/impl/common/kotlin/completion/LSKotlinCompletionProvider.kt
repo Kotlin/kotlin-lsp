@@ -8,6 +8,7 @@ import com.intellij.codeInsight.completion.insertCompletion
 import com.intellij.codeInsight.completion.performCompletion
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementPresentation
+import com.intellij.openapi.application.edtWriteAction
 import com.intellij.openapi.application.invokeAndWaitIfNeeded
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.application.runWriteAction
@@ -62,7 +63,7 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
                         }
                     }
                 }?.let { (psiFile, offset) ->
-                    val completionProcess = invokeAndWaitIfNeeded {
+                    val completionProcess = edtWriteAction {
                         createCompletionProcess(
                             project = project,
                             file = psiFile,
