@@ -14,12 +14,17 @@ internal object MetadataStorageImpl : MetadataStorageBase() {
 
     var typeMetadata: StorageTypeMetadata
 
-    typeMetadata = FinalClassMetadata.ClassMetadata(fqName = "com.jetbrains.ls.imports.api.WorkspaceEntitySource", properties = listOf(
-      OwnPropertyMetadata(isComputable = false, isKey = false, isOpen = false, name = "virtualFileUrl",
-                          valueType = ValueTypeMetadata.SimpleType.CustomType(isNullable = false,
-                                                                              typeMetadata = FinalClassMetadata.KnownClass(
-                                                                                fqName = "com.intellij.platform.workspace.storage.url.VirtualFileUrl")),
-                          withDefault = false)), supertypes = listOf("com.intellij.platform.workspace.storage.EntitySource"))
+    typeMetadata = FinalClassMetadata.ClassMetadata(fqName = "com.jetbrains.ls.imports.api.WorkspaceEntitySource",
+                                                    properties = listOf(OwnPropertyMetadata(isComputable = false,
+                                                                                            isKey = false,
+                                                                                            isOpen = false,
+                                                                                            name = "virtualFileUrl",
+                                                                                            valueType = ValueTypeMetadata.SimpleType.CustomType(
+                                                                                              isNullable = false,
+                                                                                              typeMetadata = FinalClassMetadata.KnownClass(
+                                                                                                fqName = "com.intellij.platform.workspace.storage.url.VirtualFileUrl")),
+                                                                                            withDefault = false)),
+                                                    supertypes = listOf("com.intellij.platform.workspace.storage.EntitySource"))
 
     addMetadata(typeMetadata)
   }
@@ -28,5 +33,4 @@ internal object MetadataStorageImpl : MetadataStorageBase() {
     addMetadataHash(typeFqn = "com.intellij.platform.workspace.storage.EntitySource", metadataHash = -1916480691)
     addMetadataHash(typeFqn = "com.jetbrains.ls.imports.api.WorkspaceEntitySource", metadataHash = 20366397)
   }
-
 }
