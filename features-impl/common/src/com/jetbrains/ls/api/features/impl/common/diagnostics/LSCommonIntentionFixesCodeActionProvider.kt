@@ -20,6 +20,7 @@ import com.jetbrains.ls.api.features.utils.isSource
 import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.*
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.encodeToJsonElement
@@ -56,7 +57,9 @@ class LSCommonIntentionFixesCodeActionProvider(
                     .mapNotNull { modCommandAction ->
                         val presentation = try {
                             modCommandAction.getPresentation(actionContext)
-                        } catch (e: Throwable) {
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
                             // If some ModCommand is not available, calling getPresentation() in such case should return null, not throw.
                             // We want to know if getPresentation() throws, since it may point to missing registration of some extensions in the LSP.
                             LOG.warn("Failed to presentation from mod command action $modCommandAction", e)
