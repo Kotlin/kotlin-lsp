@@ -62,16 +62,15 @@ class LSCommonIntentionFixesCodeActionProvider(
                         } catch (e: Exception) {
                             // If some ModCommand is not available, calling getPresentation() in such case should return null, not throw.
                             // We want to know if getPresentation() throws, since it may point to missing registration of some extensions in the LSP.
-                            LOG.warn("Failed to presentation from mod command action $modCommandAction", e)
-                            return@mapNotNull null
+                            LOG.warn("Failed to get presentation from mod command action $modCommandAction", e)
+                            null
                         }
+
                         if (presentation == null) {
                             // This case is equivalent to getting false from IntentionAction#isAvailable
                             return@mapNotNull null
                         }
-                        return@mapNotNull Pair(modCommandAction, presentation)
-                    }
-                    .mapNotNull { (modCommandAction, presentation) ->
+
                         val modCommand = try {
                             modCommandAction.perform(actionContext)
                         } catch (e: Throwable) {
