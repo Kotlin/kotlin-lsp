@@ -9,14 +9,17 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.SyntaxTraverser
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
+import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.core.util.toTextRange
 import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
+import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
 import com.jetbrains.ls.api.features.inlayHints.LSInlayHintsProvider
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.resolve.ResolveDataWithConfigurationEntryId
@@ -45,11 +48,14 @@ abstract class LSInlayHintsProviderBase(
      */
     protected abstract fun createProviders(options: InlayOptions): List<Provider>
 
+    /**
+     * Prefix of all options that are used for inlay hints. It should be language specific.
+     */
     protected abstract val lspConfigurationParamsSection: String?
 
     protected class Provider(
         val intellijProvider: InlayHintsProvider,
-        val factory: HintFactory
+        val factory: HintFactoryBase
     )
 
     context(_: LSServer, _: LspHandlerContext)
@@ -73,7 +79,7 @@ abstract class LSInlayHintsProviderBase(
                             psiFile,
                             document,
                             InlayHintResolveData(params, presentation, providerIndex, options,uniqueId),
-                        ) ?: continue
+                        )
                     }
                 }
             }
@@ -109,10 +115,60 @@ abstract class LSInlayHintsProviderBase(
         }
     }
 
-    protected interface HintFactory {
-        fun createHint(presentation: Presentation, psiFile: PsiFile, document: Document, data: InlayHintResolveData): InlayHint?
+    protected open class HintFactoryBase(
+        private val paddingLeft: Boolean?,
+        private val paddingRight: Boolean?,
+        private val kind: InlayHintKind?,
+    ) {
+        fun createHint(presentation: Presentation, psiFile: PsiFile, document: Document, data: InlayHintResolveData): InlayHint {
+            val position = presentation.position.toOriginal() as? InlineInlayPosition ?: error("Only inline hints are supported")
+            val labels = presentation.hints.flatMap { hintToLabel(it, psiFile, resolve = false) }
+            return InlayHint(
+                position = document.positionByOffset(position.offset),
+                label = OrString.of(labels),
+                kind = kind,
+                textEdits = null,
+                tooltip = presentation.tooltip?.let { OrString(it) },
+                paddingLeft = paddingLeft,
+                paddingRight = paddingRight,
+                data = LSP.json.encodeToJsonElement(InlayHintResolveData.serializer(), data),
+            )
+        }
 
-        fun resolveHint(hint: InlayHint, presentation: Presentation, psiFile: PsiFile, document: Document): InlayHint? = null
+        private fun hintToLabel(hint: Hint, psiFile: PsiFile, resolve: Boolean): List<InlayHintLabelPart> = when (hint) {
+            is Hint.TextHint -> {
+                listOf(
+                    InlayHintLabelPart(
+                        hint.text,
+                        tooltip = null,
+                        location = when {
+                            resolve -> getLocationTarget(hint.actionData, psiFile)?.getLspLocationForDefinition()
+                            else -> null
+                        },
+                        command = null
+                    )
+                )
+            }
+            is Hint.ListHint -> {
+              hint.hints.flatMap { hintToLabel(it, psiFile, resolve) }
+            }
+        }
+
+        internal fun resolveHint(hint: InlayHint, presentation: Presentation, psiFile: PsiFile, document: Document): InlayHint {
+            val labels = presentation.hints.flatMap { hintToLabel(it, psiFile, resolve = true) }
+            return hint.copy(label = OrString.of(labels))
+        }
+
+        protected open fun getLocationTarget(
+            actionData: InlayActionDataSerializable?,
+            psiFile: PsiFile,
+        ): PsiElement? = when(actionData?.handlerId) {
+            PsiPointerInlayActionNavigationHandler.HANDLER_ID -> {
+                val payload = actionData.payload as InlayActionPayloadDataSerializable.PsiPointerInlayActionPayloadSerializable
+                payload.pointer.restore(psiFile.project)
+            }
+            else -> null
+        }
     }
 
     private fun collectHints(
@@ -200,7 +256,7 @@ abstract class LSInlayHintsProviderBase(
         }
     }
 
-    private class LSCommonTreeBuilder() : PresentationTreeBuilder {
+    private class LSCommonTreeBuilder : CollapsiblePresentationTreeBuilder {
         private val _hints: MutableList<Hint> = mutableListOf()
 
         val hints: List<Hint> get() = _hints
@@ -214,7 +270,14 @@ abstract class LSInlayHintsProviderBase(
             expandedState: CollapsiblePresentationTreeBuilder.() -> Unit,
             collapsedState: CollapsiblePresentationTreeBuilder.() -> Unit
         ) {
-            error("Unsupported for LSP for now")
+            // Collapsed view is not supported for now, so instead we show inlay hint in the expanded state
+            _hints += Hint.ListHint(LSCommonTreeBuilder().apply(expandedState)._hints)
+        }
+
+        override fun toggleButton(builder: PresentationTreeBuilder.() -> Unit) {
+            LSCommonTreeBuilder().apply(builder)._hints.let {
+                _hints += it
+            }
         }
 
         override fun text(text: String, actionData: InlayActionData?) {
