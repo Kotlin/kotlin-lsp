@@ -32,9 +32,12 @@ import org.jetbrains.kotlin.idea.workspaceModel.kotlinSettings
 import org.jetbrains.plugins.gradle.jvmcompat.GradleJvmSupportMatrix.Companion.isSupported
 import org.jetbrains.plugins.gradle.jvmcompat.GradleJvmSupportMatrix.Companion.suggestLatestSupportedJavaVersion
 import java.io.ByteArrayOutputStream
+import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.div
 import kotlin.io.path.exists
+import kotlin.io.path.isDirectory
+import kotlin.io.path.listDirectoryEntries
 
 object GradleWorkspaceImporter : WorkspaceImporter {
     private const val IDEA_SYNC_ACTIVE_PROPERTY = "idea.sync.active"
@@ -160,28 +163,45 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                                             listOf(),
                                             entitySource
                                         ) {
-                                            fun sourceRoots(
+                                            fun sourceRootsFromIdeaModel(
                                                 rootType: String,
-                                                directories: DomainObjectSet<out IdeaSourceDirectory>
-                                            ): List<SourceRootEntityBuilder> =
+                                                directories: DomainObjectSet<out IdeaSourceDirectory>,
+                                            ): List<Pair<Path, String>> =
                                                 directories.mapNotNull { sourceDirectory ->
                                                     val sourceRoot = sourceDirectory.directory.toPath()
                                                     if (!sourceRoot.exists()) return@mapNotNull null
-                                                    SourceRootEntity(
-                                                        url = sourceRoot.toIntellijUri(virtualFileUrlManager),
-                                                        rootTypeId = SourceRootTypeId(rootType),
-                                                        entitySource = entitySource
-                                                    ) {
-                                                        this.contentRoot = this@ContentRootEntity
-                                                    }
+                                                    sourceRoot to rootType
                                                 }
 
-                                            this.sourceRoots = if (isMain)
-                                                sourceRoots("java-source", root.sourceDirectories) +
-                                                        sourceRoots("java-resource", root.resourceDirectories)
-                                            else
-                                                sourceRoots("java-test", root.testDirectories) +
-                                                        sourceRoots("java-test-resource", root.testResourceDirectories)
+                                            fun sourceRootBuilders(sourceRoots: List<Pair<Path, String>>): List<SourceRootEntityBuilder> =
+                                                sourceRoots
+                                                    .distinct()
+                                                    .mapNotNull { (sourceRoot, rootType) ->
+                                                        if (!sourceRoot.exists()) return@mapNotNull null
+                                                        SourceRootEntity(
+                                                            url = sourceRoot.toIntellijUri(virtualFileUrlManager),
+                                                            rootTypeId = SourceRootTypeId(rootType),
+                                                            entitySource = entitySource,
+                                                        ) {
+                                                            this.contentRoot = this@ContentRootEntity
+                                                        }
+                                                    }
+
+                                            val rootsFromIdea = if (isMain) {
+                                                sourceRootsFromIdeaModel("java-source", root.sourceDirectories) +
+                                                        sourceRootsFromIdeaModel("java-resource", root.resourceDirectories)
+                                            } else {
+                                                sourceRootsFromIdeaModel("java-test", root.testDirectories) +
+                                                        sourceRootsFromIdeaModel("java-test-resource", root.testResourceDirectories)
+                                            }
+
+                                            val rootsFromKmp = discoverKmpSourceRoots(rootPath, isMain)
+                                                .map { it.path to it.rootType }
+
+                                            val rootsFromGenerated = discoverGeneratedSourceRoots(rootPath, isMain)
+                                                .map { it.path to it.rootType }
+
+                                            this.sourceRoots = sourceRootBuilders(rootsFromIdea + rootsFromKmp + rootsFromGenerated)
 
                                             this.excludedUrls = root.excludeDirectories.map {
                                                 ExcludeUrlEntity(
@@ -199,17 +219,21 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                             }
                         }
                         val out = ByteArrayOutputStream()
-                        connection.newBuild().forTasks("dependencies")
-                            .setJavaHome(gradleJdk.toFile())
-                            .withSystemProperties(IMPORTER_PROPERTIES)
-                            .setStandardOutput(out)
-                            .run()
-                        val output = out.toString()
-                        output.lines()
-                            .filter { it.endsWith(" FAILED") }
-                            .distinct()
-                            .map { it.removeSuffix(" FAILED").substringAfterLast(' ') }
-                            .forEach { onUnresolvedDependency(it) }
+                        try {
+                            connection.newBuild().forTasks("dependencies")
+                                .setJavaHome(gradleJdk.toFile())
+                                .withSystemProperties(IMPORTER_PROPERTIES)
+                                .setStandardOutput(out)
+                                .run()
+                            val output = out.toString()
+                            output.lines()
+                                .filter { it.endsWith(" FAILED") }
+                                .distinct()
+                                .map { it.removeSuffix(" FAILED").substringAfterLast(' ') }
+                                .forEach { onUnresolvedDependency(it) }
+                        } catch (e: Throwable) {
+                            LOG.warn("Gradle `dependencies` task failed during import; continuing without unresolved-deps reporting", e)
+                        }
 
                         return storage
                     } catch (e: Throwable) {
@@ -238,7 +262,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                 }
             },
             sourceSetNames = emptyList(),
-            isTestModule = true,
+            isTestModule = !isMain,
             externalProjectId = "",
             isHmppEnabled = true, // always enabled
             pureKotlinSourceFolders = emptyList(),
@@ -252,6 +276,123 @@ object GradleWorkspaceImporter : WorkspaceImporter {
 
     private fun IdeaModule.moduleName(isMain: Boolean): String {
         return if (isMain) "${this.name}.main" else "${this.name}.test"
+    }
+
+    private data class DiscoveredSourceRoot(val path: Path, val rootType: String)
+
+    /**
+     * The Gradle Tooling API [IdeaProject] model does not represent Kotlin Multiplatform source sets, so we augment
+     * source roots by detecting the conventional KMP layout on disk.
+     *
+     * This intentionally only includes JVM-like source sets (common/android/jvm/desktop) and skips native/js/wasm ones,
+     * because those require non-JVM classpath and platform setup that the current importer doesn't model.
+     */
+    private fun discoverKmpSourceRoots(moduleRoot: Path, isMain: Boolean): List<DiscoveredSourceRoot> {
+        val srcDir = moduleRoot / "src"
+        if (!srcDir.isDirectory()) return emptyList()
+
+        val hasMultiplatformLikeSourceSets = srcDir.listDirectoryEntries()
+            .asSequence()
+            .filter { it.isDirectory() }
+            .map { it.fileName.toString() }
+            .any { name ->
+                name != "main" && name != "test" && (name.endsWith("Main") || name.endsWith("Test"))
+            }
+        if (!hasMultiplatformLikeSourceSets) return emptyList()
+
+        val expectedSuffix = if (isMain) "Main" else "Test"
+        val sourceType = if (isMain) "java-source" else "java-test"
+        val resourceType = if (isMain) "java-resource" else "java-test-resource"
+
+        return srcDir.listDirectoryEntries()
+            .asSequence()
+            .filter { it.isDirectory() }
+            .filter { it.fileName.toString().endsWith(expectedSuffix) }
+            .filter { isSupportedKmpSourceSetName(it.fileName.toString()) }
+            .flatMap { sourceSetDir ->
+                sequenceOf(
+                    DiscoveredSourceRoot(sourceSetDir / "kotlin", sourceType),
+                    DiscoveredSourceRoot(sourceSetDir / "java", sourceType),
+                    DiscoveredSourceRoot(sourceSetDir / "resources", resourceType),
+                    DiscoveredSourceRoot(sourceSetDir / "composeResources", resourceType),
+                )
+            }
+            .filter { it.path.isDirectory() }
+            .toList()
+    }
+
+    private fun isSupportedKmpSourceSetName(sourceSetName: String): Boolean {
+        return sourceSetName.startsWith("common") ||
+                sourceSetName.startsWith("android") ||
+                sourceSetName.startsWith("jvm") ||
+                sourceSetName.startsWith("desktop")
+    }
+
+    private fun discoverGeneratedSourceRoots(moduleRoot: Path, isMain: Boolean): List<DiscoveredSourceRoot> {
+        val generatedDir = moduleRoot / "build" / "generated"
+        if (!generatedDir.isDirectory()) return emptyList()
+
+        val sourceType = if (isMain) "java-source" else "java-test"
+
+        fun matchesMainOrTest(path: Path): Boolean =
+            isMain != looksLikeTest(path)
+
+        val roots = linkedSetOf<Path>()
+
+        val mokoResources = generatedDir / "moko-resources"
+        if (mokoResources.isDirectory()) {
+            mokoResources.listDirectoryEntries()
+                .asSequence()
+                .filter { it.isDirectory() }
+                .mapNotNull { it / "src" }
+                .filter { it.isDirectory() && matchesMainOrTest(it) }
+                .forEach { roots.add(it) }
+        }
+
+        val generatedKotlin = generatedDir / "kotlin"
+        if (generatedKotlin.isDirectory()) {
+            generatedKotlin.listDirectoryEntries()
+                .asSequence()
+                .filter { it.isDirectory() && matchesMainOrTest(it) }
+                .forEach { roots.add(it) }
+        }
+
+        val kspDir = generatedDir / "ksp"
+        if (kspDir.isDirectory()) {
+            try {
+                Files.walk(kspDir, 6).use { stream ->
+                    stream
+                        .filter { it.fileName.toString() == "kotlin" }
+                        .filter { Files.isDirectory(it) }
+                        .filter { matchesMainOrTest(it) }
+                        .forEach { roots.add(it) }
+                }
+            } catch (e: Throwable) {
+                LOG.warn("Failed to discover KSP generated sources under $kspDir", e)
+            }
+        }
+
+        val kaptDir = generatedDir / "source" / "kapt"
+        if (kaptDir.isDirectory()) {
+            try {
+                Files.walk(kaptDir, 6).use { stream ->
+                    stream
+                        .filter { it.fileName.toString() == "kotlin" }
+                        .filter { Files.isDirectory(it) }
+                        .filter { matchesMainOrTest(it) }
+                        .forEach { roots.add(it) }
+                }
+            } catch (e: Throwable) {
+                LOG.warn("Failed to discover KAPT generated sources under $kaptDir", e)
+            }
+        }
+
+        return roots.map { DiscoveredSourceRoot(it, sourceType) }
+    }
+
+    private fun looksLikeTest(path: Path): Boolean {
+        val s = path.toString()
+        return s.contains("test", ignoreCase = true)
     }
 
     private fun isApplicableDirectory(projectDirectory: Path): Boolean {
