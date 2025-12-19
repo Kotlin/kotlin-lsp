@@ -28,6 +28,7 @@
                     interface="com.intellij.codeInsight.generation.OverrideImplementsAnnotationsHandler" dynamic="true"/>
     <extensionPoint qualifiedName="com.intellij.lang.jvm.bytecodeAnalysisSuppressor"
                     interface="com.intellij.codeInspection.bytecodeAnalysis.BytecodeAnalysisSuppressor" dynamic="true"/>
+    <extensionPoint qualifiedName="com.intellij.lang.inferredAnnotationProvider" interface="com.intellij.codeInsight.InferredAnnotationProvider" area="IDEA_PROJECT" dynamic="true"/>
   </extensionPoints>
   <extensions defaultExtensionNs="com.intellij">
     <treeCopyHandler implementation="com.intellij.psi.impl.source.tree.JavaTreeCopyHandler"/>
@@ -55,6 +56,10 @@
     <projectService serviceImplementation="com.intellij.codeInspection.bytecodeAnalysis.ProjectBytecodeAnalysis"/>
     <projectService serviceInterface="com.intellij.codeInsight.guess.GuessManager"
                     serviceImplementation="com.intellij.codeInsight.guess.impl.GuessManagerImpl"/>
+    <orderRootType implementation="com.intellij.openapi.roots.AnnotationOrderRootType"/>
+    <orderRootType implementation="com.intellij.openapi.roots.JavadocOrderRootType"/>
+    <lang.inferredAnnotationProvider implementation="com.intellij.codeInsight.DefaultInferredAnnotationProvider"/>
+    <lang.inferredAnnotationProvider implementation="com.intellij.codeInsight.ProtobufInferredAnnotationProvider"/>
   </extensions>
   <extensions defaultExtensionNs="ls">
     <markdownDocProvider language="JAVA"
