@@ -25,7 +25,6 @@ import com.jetbrains.ls.kotlinLsp.requests.core.initializeRequest
 import com.jetbrains.ls.kotlinLsp.requests.core.setTraceNotification
 import com.jetbrains.ls.kotlinLsp.requests.core.shutdownRequest
 import com.jetbrains.ls.kotlinLsp.requests.features
-import com.jetbrains.ls.kotlinLsp.util.configuration.IsolatedDocumentsPlugin
 import com.jetbrains.ls.kotlinLsp.util.logSystemInfo
 import com.jetbrains.ls.snapshot.api.impl.core.withLspServer
 import com.jetbrains.lsp.implementation.*
@@ -71,11 +70,11 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
     initIdeaPaths(runConfig.systemPath)
     initExtraProperties()
 
-    val config = createConfiguration(runConfig.isolatedDocumentsMode)
+    val config = createConfiguration()
 
     @Suppress("RAW_RUN_BLOCKING")
     runBlocking(CoroutineName("root") + Dispatchers.Default) {
-        withLspServer(config.plugins, isUnitTestMode = false, isolatedDocumentsMode = runConfig.isolatedDocumentsMode) {
+        withLspServer(config.plugins, isUnitTestMode = false) {
             preloadKotlinStdlibWhenRunningFromSources()
             val body: suspend CoroutineScope.(LspConnection) -> Unit = { connection ->
                 handleRequests(connection, runConfig, config)
@@ -191,14 +190,13 @@ private fun isLspRunningFromSources(): Boolean {
 }
 
 
-fun createConfiguration(isolatedDocumentsMode: Boolean = false): LSConfiguration {
+fun createConfiguration(): LSConfiguration {
     return LSConfiguration(
         languageConfigurations = buildList {
             add(LSCommonConfiguration)
             add(LSKotlinLanguageConfiguration)
             add(LSJavaBaseLanguageConfiguration)
             addAll(getAdditionalLanguageConfigurations())
-            if (isolatedDocumentsMode) add(IsolatedDocumentsPlugin)
             add(DACommonConfiguration)
             add(DAJvmConfiguration)
         },

@@ -11,7 +11,6 @@ import java.nio.file.Path
 data class KotlinLspServerRunConfig(
     val mode: KotlinLspServerMode,
     val systemPath: Path?,
-    val isolatedDocumentsMode: Boolean = false,
 )
 
 sealed interface KotlinLspServerMode {
@@ -55,8 +54,6 @@ private class Parser : CliktCommand(name = "kotlin-lsp") {
             if (it && stdio) fail("Stdio mode doesn't support multiclient mode")
             if (it && client) fail("Client mode doesn't support multiclient mode")
         }
-    val isolatedDocuments: Boolean by option().flag()
-        .help("Whether the Kotlin LSP server is used in isolated documents mode, meaning that a workspace is isolated for each document (hence, each document has its own scope)")
 
     // TODO also parse --version flag, see LSP-225
 
@@ -78,7 +75,7 @@ private class Parser : CliktCommand(name = "kotlin-lsp") {
                 ),
             )
         }
-        return KotlinLspServerRunConfig(mode, systemPath, isolatedDocuments)
+        return KotlinLspServerRunConfig(mode, systemPath)
     }
 
     override fun run() {}
@@ -110,5 +107,4 @@ fun KotlinLspServerRunConfig.toArguments(): List<String> = buildList {
         }
     }
     if (systemPath != null) add("--system-path=$systemPath")
-    if (isolatedDocumentsMode) add("--isolated-documents")
 }

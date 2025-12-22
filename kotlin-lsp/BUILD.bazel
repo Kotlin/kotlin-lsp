@@ -15,7 +15,7 @@ java_binary(
 
 ### auto-generated section `build language-server.kotlin-lsp` start
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
-load("@rules_jvm//:jvm.bzl", "jvm_library", "resourcegroup")
+load("@rules_jvm//:jvm.bzl", "jvm_library")
 
 create_kotlinc_options(
   name = "custom_kotlin-lsp",
@@ -27,18 +27,11 @@ create_kotlinc_options(
   x_when_guards = True
 )
 
-resourcegroup(
-  name = "kotlin-lsp_resources",
-  srcs = glob(["resources/**/*"]),
-  strip_prefix = "resources"
-)
-
 jvm_library(
   name = "kotlin-lsp",
   module_name = "language-server.kotlin-lsp",
   visibility = ["//visibility:public"],
   srcs = glob(["src/**/*.kt", "src/**/*.java", "src/**/*.form", "gen/**/*.kt", "gen/**/*.java"], allow_empty = True),
-  resources = [":kotlin-lsp_resources"],
   kotlinc_opts = ":custom_kotlin-lsp",
   deps = [
     "@lib//:kotlin-stdlib",
