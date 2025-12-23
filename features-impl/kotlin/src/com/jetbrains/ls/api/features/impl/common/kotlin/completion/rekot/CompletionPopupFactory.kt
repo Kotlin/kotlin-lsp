@@ -248,7 +248,7 @@ internal object CompletionItemsProvider {
     }
 
     context(kaSession: KaSession)
-    private fun CompletionItemsCollector.completeNestedType(position: CompletionPosition.NestedType) = with(kaSession) {
+    private fun CompletionItemsCollector.completeNestedType(position: CompletionPosition.NestedType): Unit = with(kaSession) {
         val classifiers =
             when (val symbol = position.receiver.referenceExpression?.mainReference?.resolveToSymbol()) {
                 is KaTypeAliasSymbol -> symbol.expandedType.scope?.getClassifierSymbols(nameFilter)

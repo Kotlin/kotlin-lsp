@@ -15,6 +15,11 @@ resourcegroup(
 )
 
 jvm_provided_library(
+  name = "community_libraries_jspecify_provided",
+  lib = "@community//libraries/jspecify"
+)
+
+jvm_provided_library(
   name = "community_libraries_kotlinx_serialization_core_provided",
   lib = "@community//libraries/kotlinx/serialization/core"
 )
@@ -34,6 +39,7 @@ jvm_library(
   deps = [
     "@lib//:kotlin-stdlib",
     "@ultimate_lib//:gradle-provided",
+    ":community_libraries_jspecify_provided",
     ":community_libraries_kotlinx_serialization_core_provided",
     ":community_libraries_kotlinx_serialization_json_provided",
   ]
