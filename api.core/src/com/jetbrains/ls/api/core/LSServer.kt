@@ -97,6 +97,9 @@ interface DapContext {
     val project: Project
 }
 
+context(context: DapContext)
+val project: Project get() = context.project
+
 interface LSAnalysisContext {
     val project: Project
 }
