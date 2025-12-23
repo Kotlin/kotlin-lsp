@@ -9,8 +9,10 @@ interface LSDocuments {
     suspend fun didOpen(uri: URI, fileText: String, version: Int, languageId: String)
     
     suspend fun didClose(uri: URI)
-    
+
     suspend fun didChange(uri: URI, changes: List<TextDocumentContentChangeEvent>)
+
+    suspend fun invalidate(uriSeq: Sequence<URI>)
 
     fun getVersion(uri: URI): Int?
 }
