@@ -12,10 +12,10 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.LSServerContext
 import com.jetbrains.ls.api.core.withServer
 import com.jetbrains.ls.api.features.LSConfiguration
-import com.jetbrains.ls.api.features.impl.common.configuration.DACommonConfiguration
+import com.jetbrains.ls.api.features.impl.common.configuration.DapCommonConfiguration
 import com.jetbrains.ls.api.features.impl.common.configuration.LSCommonConfiguration
 import com.jetbrains.ls.api.features.impl.common.kotlin.configuration.LSKotlinLanguageConfiguration
-import com.jetbrains.ls.api.features.impl.common.kotlin.debug.DAJvmConfiguration
+import com.jetbrains.ls.api.features.impl.common.kotlin.debug.DapJvmConfiguration
 import com.jetbrains.ls.api.features.impl.javaBase.LSJavaBaseLanguageConfiguration
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.kotlinLsp.connection.Client
@@ -74,7 +74,11 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
 
     @Suppress("RAW_RUN_BLOCKING")
     runBlocking(CoroutineName("root") + Dispatchers.Default) {
-        withLspServer(config.plugins, isUnitTestMode = false) {
+        withLspServer(
+            plugins = config.plugins,
+            dapPlugins = config.dapPlugins,
+            isUnitTestMode = false
+        ) {
             preloadKotlinStdlibWhenRunningFromSources()
             val body: suspend CoroutineScope.(LspConnection) -> Unit = { connection ->
                 handleRequests(connection, runConfig, config)
@@ -197,9 +201,11 @@ fun createConfiguration(): LSConfiguration {
             add(LSKotlinLanguageConfiguration)
             add(LSJavaBaseLanguageConfiguration)
             addAll(getAdditionalLanguageConfigurations())
-            add(DACommonConfiguration)
-            add(DAJvmConfiguration)
         },
+        dapConfiguration = listOf(
+            DapCommonConfiguration,
+            DapJvmConfiguration
+        ),
     )
 }
 

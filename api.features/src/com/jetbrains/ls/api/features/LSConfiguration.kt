@@ -5,6 +5,7 @@ import com.intellij.ide.plugins.PluginMainDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
+import com.jetbrains.ls.api.features.dap.DapConfigurationPiece
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.language.matches
@@ -14,6 +15,7 @@ import com.jetbrains.lsp.protocol.URI
 class LSConfiguration(
     val entries: List<LSConfigurationEntry>,
     val plugins: List<PluginMainDescriptor>,
+    val dapPlugins: List<PluginMainDescriptor>,
     val languages: List<LSLanguage>,
 ) {
     val allCommandDescriptors: List<LSCommandDescriptor> = entries<LSCommandDescriptorProvider>().flatMap { it.commandDescriptors }
@@ -114,18 +116,14 @@ inline val allCommandDescriptors: List<LSCommandDescriptor> get() = configuratio
 
 fun LSConfiguration(
     languageConfigurations: List<LSConfigurationPiece>,
+    dapConfiguration: List<DapConfigurationPiece>,
 ): LSConfiguration {
     return LSConfiguration(
-        entries = languageConfigurations.flatMap { it.entries },
+        entries = languageConfigurations.flatMap { it.entries } + dapConfiguration.flatMap { it.commands },
         plugins = languageConfigurations.flatMap { it.plugins },
+        dapPlugins = dapConfiguration.flatMap { it.plugins },
         languages = languageConfigurations.flatMap { it.languages },
     )
-}
-
-fun LSConfiguration(
-    vararg languageConfigurations: LSConfigurationPiece,
-): LSConfiguration {
-    return LSConfiguration(languageConfigurations.toList())
 }
 
 private fun <E, D> Collection<E>.requireNoDuplicatesBy(keySelector: (E) -> D) {

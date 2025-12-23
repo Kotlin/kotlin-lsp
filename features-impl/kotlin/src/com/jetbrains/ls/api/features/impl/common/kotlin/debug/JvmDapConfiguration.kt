@@ -2,13 +2,11 @@
 package com.jetbrains.ls.api.features.impl.common.kotlin.debug
 
 import com.jetbrains.dap.jvm.javaBackendDebuggerModule
-import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.dap.jvm.javaDebuggerModule
 import com.jetbrains.dap.jvm.javaSharedDebuggerModule
 import com.jetbrains.dap.jvm.jvmDapPlugin
+import com.jetbrains.ls.api.features.dap.DapConfigurationPiece
 
-val DAJvmConfiguration: LSConfigurationPiece = LSConfigurationPiece(
-    entries = emptyList(),
+val DapJvmConfiguration: DapConfigurationPiece = DapConfigurationPiece(
     plugins = listOf(javaSharedDebuggerModule, javaDebuggerModule, javaBackendDebuggerModule, jvmDapPlugin),
-    languages = emptyList(),
 )
