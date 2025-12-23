@@ -52,6 +52,16 @@ interface LSServer { // workspace?
 
     suspend fun withRenamesEnabled(action: suspend CoroutineScope.() -> Unit): Map<URI, URI>
 
+    /**
+     * Runs the given action inside a debugger context that is bound to the current project.
+     *
+     * @param action The action to run inside the project's debugger context.
+     * @return The result of the action.
+     */
+    suspend fun <R> withDebugContext(
+        action: suspend context(DapContext) CoroutineScope.() -> R,
+    ): R
+
     val documents: LSDocuments
 
     val workspaceStructure: LSWorkspaceStructure
@@ -82,6 +92,10 @@ suspend fun <R> withWritableFile(useSiteFileUri: URI, action: suspend CoroutineS
 context(server: LSServer)
 suspend fun withRenamesEnabled( action: suspend CoroutineScope.() -> Unit): Map<URI, URI> =
     server.withRenamesEnabled(action)
+
+interface DapContext {
+    val project: Project
+}
 
 interface LSAnalysisContext {
     val project: Project
