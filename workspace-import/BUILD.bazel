@@ -46,6 +46,7 @@ jvm_library(
     "@community//platform/external-system-impl:externalSystem-impl",
     "@community//platform/core-api:core",
     "@community//plugins/kotlin/base/plugin",
+    "@community//libraries/jspecify",
   ]
 )
 ### auto-generated section `build language-server.project-import` end
