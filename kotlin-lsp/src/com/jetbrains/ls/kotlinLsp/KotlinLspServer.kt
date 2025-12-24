@@ -75,8 +75,8 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
     @Suppress("RAW_RUN_BLOCKING")
     runBlocking(CoroutineName("root") + Dispatchers.Default) {
         withLspServer(
-            plugins = config.plugins,
-            dapPlugins = config.dapPlugins,
+            analysisPlugins = config.plugins,
+            config.plugins + config.dapPlugins,
             isUnitTestMode = false
         ) {
             preloadKotlinStdlibWhenRunningFromSources()
