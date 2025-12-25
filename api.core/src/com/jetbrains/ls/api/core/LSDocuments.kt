@@ -12,7 +12,5 @@ interface LSDocuments {
 
     suspend fun didChange(uri: URI, changes: List<TextDocumentContentChangeEvent>)
 
-    suspend fun invalidate(uriSeq: Sequence<URI>)
-
     fun getVersion(uri: URI): Int?
 }
