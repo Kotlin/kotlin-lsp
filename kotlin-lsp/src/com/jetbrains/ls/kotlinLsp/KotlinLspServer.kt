@@ -9,7 +9,7 @@ import com.intellij.util.SystemProperties
 import com.jetbrains.analyzer.filewatcher.FileWatcher
 import com.jetbrains.analyzer.filewatcher.downloadFileWatcherBinaries
 import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.core.LSServerContext
+import com.jetbrains.ls.api.core.LSServerStarter
 import com.jetbrains.ls.api.core.withServer
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.impl.common.configuration.DapCommonConfiguration
@@ -26,7 +26,7 @@ import com.jetbrains.ls.kotlinLsp.requests.core.setTraceNotification
 import com.jetbrains.ls.kotlinLsp.requests.core.shutdownRequest
 import com.jetbrains.ls.kotlinLsp.requests.features
 import com.jetbrains.ls.kotlinLsp.util.logSystemInfo
-import com.jetbrains.ls.snapshot.api.impl.core.withLspServer
+import com.jetbrains.ls.snapshot.api.impl.core.withLSServerStarter
 import com.jetbrains.lsp.implementation.*
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineName
@@ -74,7 +74,7 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
 
     @Suppress("RAW_RUN_BLOCKING")
     runBlocking(CoroutineName("root") + Dispatchers.Default) {
-        withLspServer(
+        withLSServerStarter(
             analysisPlugins = config.plugins,
             config.plugins + config.dapPlugins,
             isUnitTestMode = false
@@ -103,7 +103,7 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
     }
 }
 
-context(_: LSServerContext)
+context(_: LSServerStarter)
 private suspend fun handleRequests(
     connection: LspConnection,
     runConfig: KotlinLspServerRunConfig,
