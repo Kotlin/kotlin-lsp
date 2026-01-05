@@ -22,11 +22,13 @@ import kotlin.io.path.*
 private val LOG = logger<MavenWorkspaceImporter>()
 
 private const val JB_MAVEN_HOME: String = "JB_MAVEN_HOME"
+private const val JB_MAVEN_JAVA_HOME: String = "JB_MAVEN_JAVA_HOME"
 
 object MavenWorkspaceImporter : WorkspaceImporter {
 
-    fun useMavenHome(mavenHome: Path) {
+    fun useMavenAndJava(mavenHome: Path, javaHome: Path) {
         System.setProperty(JB_MAVEN_HOME, mavenHome.toString())
+        System.setProperty(JB_MAVEN_JAVA_HOME, javaHome.toString())
     }
 
     private fun isApplicableDirectory(projectDirectory: Path): Boolean {
@@ -43,13 +45,15 @@ object MavenWorkspaceImporter : WorkspaceImporter {
 
         LOG.info("Importing Maven project from: $projectDirectory")
         val wrapper = projectDirectory / (if (OS.CURRENT == OS.Windows) "mvnw.cmd" else "mvnw")
-        val mavenHome = System.getProperty(JB_MAVEN_HOME)?.let { Path.of(it) }?.takeIf { it.isDirectory() }
+        val mavenHome = System.getProperty(JB_MAVEN_HOME)?.let { Path.of(it) }
+        val javaHome = System.getProperty(JB_MAVEN_JAVA_HOME)
+            ?: if (System.getenv()["JAVA_HOME"] == null) System.getProperty("java.home") else null
         val command = when {
-            wrapper.exists() -> "./${wrapper.name}"
-            mavenHome != null -> "$mavenHome/bin/${if (OS.CURRENT == OS.Windows) "mvn.cmd" else "mvn"}"
+            wrapper.exists() -> (Path.of(".") / wrapper.name).toString()
+            mavenHome != null -> (mavenHome / "bin" / if (OS.CURRENT == OS.Windows) "mvn.cmd" else "mvn").toString()
             else -> "mvn"
         }
-        LOG.info("Using command: $command")
+        LOG.info("Using Maven: $command (JAVA_HOME=${javaHome ?: "unspecified"})")
 
         val pomResourcePath = "/META-INF/maven/com.jetbrains.ls/imports.maven.plugin/pom.xml"
 
@@ -73,8 +77,8 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                 "-Dpackaging=maven-plugin"
             )
                 .apply {
-                    if (System.getenv()["JAVA_HOME"] == null) {
-                        environment()["JAVA_HOME"] = System.getProperty("java.home")
+                    javaHome?.let {
+                        environment()["JAVA_HOME"] = it
                     }
                 }
                 .directory(projectDirectory.toFile())
@@ -94,8 +98,8 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                 "-DoutputFile=${workspaceJsonFile.toAbsolutePath()}"
             )
                 .apply {
-                    if (System.getenv()["JAVA_HOME"] == null) {
-                        environment()["JAVA_HOME"] = System.getProperty("java.home")
+                    javaHome?.let {
+                        environment()["JAVA_HOME"] = it
                     }
 //                    environment()["MAVEN_OPTS"] = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"
                 }

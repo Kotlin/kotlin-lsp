@@ -2,6 +2,7 @@
 package com.jetbrains.ls.imports.json
 
 
+import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
 import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.platform.workspace.jps.entities.*
@@ -14,6 +15,7 @@ import com.intellij.platform.workspace.storage.entities
 import com.intellij.platform.workspace.storage.url.VirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.descriptors.ConfigFileItem
+import com.intellij.util.system.OS
 import com.jetbrains.ls.imports.utils.toIntellijUri
 import kotlinx.serialization.json.Json
 import org.jetbrains.jps.model.serialization.JpsMavenSettings
@@ -24,6 +26,7 @@ import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntityBuilder
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 
+private val LOG = fileLogger()
 
 fun workspaceData(storage: EntityStorage, workspacePath: Path): WorkspaceData =
     WorkspaceData(
@@ -164,8 +167,9 @@ private fun toDataClass(
             toRelativePath(Path.of(it), workspacePath)
         },
         kind = KotlinSettingsData.KotlinModuleKind.valueOf(entity.kind.name),
-        compilerArguments = entity.compilerArguments
-            ?.replace("${m2Repo.toAbsolutePath()}/", MAVEN_PREFIX),
+        compilerArguments = entity.compilerArguments?.let {
+            toRelativeKotlinCompilerArguments(it)
+        },
         additionalArguments = entity.compilerSettings?.additionalArguments,
         scriptTemplates = entity.compilerSettings?.scriptTemplates,
         scriptTemplatesClasspath = entity.compilerSettings?.scriptTemplatesClasspath,
@@ -182,6 +186,9 @@ private const val WORKSPACE_PREFIX = "<WORKSPACE>/"
 private const val MAVEN_PREFIX = "<MAVEN_REPO>/"
 private val userHome = Path.of(System.getProperty("user.home"))
 private val m2Repo = Path.of(JpsMavenSettings.getMavenRepositoryPath())
+    .also {
+        LOG.info("Detected Maven repo: $it")
+    }
 
 private fun toRelativePath(url: VirtualFileUrl, workspacePath: Path): String {
     return toRelativePath(url.toPath(), workspacePath)
@@ -348,8 +355,9 @@ private fun toEntity(
     entitySource = entitySource,
 ) {
     this.module = module
-    this.compilerArguments = kotlinSettingsData.compilerArguments
-        ?.replace(MAVEN_PREFIX, "${m2Repo.toAbsolutePath()}/")
+    this.compilerArguments = kotlinSettingsData.compilerArguments?.let {
+        toAbsoluteKotlinCompilerArguments(it)
+    }
     if (kotlinSettingsData.additionalArguments != null
         && kotlinSettingsData.scriptTemplates != null
         && kotlinSettingsData.scriptTemplatesClasspath != null
@@ -380,6 +388,16 @@ private fun addFacetRecursive(
         }
         this.module = moduleEntity
     }
+
+private fun toRelativeKotlinCompilerArguments(json: String): String = when (OS.CURRENT) {
+    OS.Windows if json.contains("\\\\") -> json.replace("${m2Repo.toAbsolutePath()}\\".replace("\\", "\\\\"), MAVEN_PREFIX.replace("/", "\\\\"))
+    else -> json.replace("${m2Repo.toAbsolutePath()}/", MAVEN_PREFIX)
+}
+
+private fun toAbsoluteKotlinCompilerArguments(json: String): String = when (OS.CURRENT) {
+    OS.Windows if json.contains("\\\\") -> json.replace(MAVEN_PREFIX.replace("/", "\\\\"), "${m2Repo.toAbsolutePath()}\\".replace("\\", "\\\\"))
+    else -> json.replace(MAVEN_PREFIX, "${m2Repo.toAbsolutePath()}/")
+}
 
 internal fun toAbsolutePath(path: String, workspacePath: Path): Path =
     when {

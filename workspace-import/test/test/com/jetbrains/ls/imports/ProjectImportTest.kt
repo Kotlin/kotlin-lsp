@@ -64,7 +64,7 @@ class ProjectImportTest {
 
     private fun doMavenTest(project: String) {
         downloadMavenBinaries(Path.of(PathManager.getCommunityHomePath())).let { path ->
-            MavenWorkspaceImporter.useMavenHome(path)
+            MavenWorkspaceImporter.useMavenAndJava(path, Path.of(System.getProperty("java.home")))
         }
         doTest(project, MavenWorkspaceImporter, testDataDir / "maven")
     }
@@ -99,15 +99,17 @@ class ProjectImportTest {
         val data = workspaceData(storage, projectDir)
         val workspaceJson = toJson(data)
         compareWithTestdata(projectDir / "workspace.json", cropJarPaths(workspaceJson))
-        val restoredData = Json.decodeFromString<WorkspaceData>(workspaceJson)
-        val restoredJson = toJson(restoredData)
-        assertEquals(cropJarPaths(workspaceJson), cropJarPaths(restoredJson))
-        val restoredStorage = workspaceModel(restoredData, projectDir, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(true))
-        val distilledData = workspaceData(restoredStorage, projectDir)
-        assertEquals(data, distilledData)
+
+        assertEquals(data, Json.decodeFromString<WorkspaceData>(workspaceJson))
+
+        val storageFromData = workspaceModel(data, projectDir, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(true))
+        assertEquals(data, workspaceData(storageFromData, projectDir))
     }
 
+    // 1. ~/.gradle/ paths contain random hashes
+    // 2. on Windows kotlin compiler arguments contain double-escaped '\' (i.e. '\\\\')
     fun cropJarPaths(jsonString: String): String =
         """"([^"]*?)/([^/"]*\.jar)"""".toRegex()
             .replace(jsonString) { """"${it.groupValues[2]}"""" }
+            .replace("\\\\\\\\", "/")
 }

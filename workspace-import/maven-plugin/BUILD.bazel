@@ -4,6 +4,7 @@ load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_provided_library", "resourcegro
 
 create_kotlinc_options(
   name = "custom_maven-plugin",
+  jvm_target = "8",
   x_context_parameters = True
 )
 
