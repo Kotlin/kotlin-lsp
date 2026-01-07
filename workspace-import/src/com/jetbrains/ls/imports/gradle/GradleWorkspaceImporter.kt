@@ -59,12 +59,12 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         if (!isApplicableDirectory(projectDirectory)) return null
 
         LOG.info("Importing Gradle project from: $projectDirectory")
-        val wrapper = projectDirectory / (if (OS.CURRENT == OS.Windows) "gradlew.bat" else "gradlew")
+//        val wrapper = projectDirectory / (if (OS.CURRENT == OS.Windows) "gradlew.bat" else "gradlew")
         val gradleHome = System.getProperty(JB_GRADLE_HOME)?.let { Path.of(it) }
         val javaHome = System.getProperty(JB_GRADLE_JAVA_HOME)
             ?: if (System.getenv()["JAVA_HOME"] == null) System.getProperty("java.home") else null
         val execPath = when {
-            wrapper.exists() -> wrapper
+//            wrapper.exists() -> wrapper
             gradleHome != null -> gradleHome / "bin" / if (OS.CURRENT == OS.Windows) "gradle.bat" else "gradle"
             else -> Path(if (OS.CURRENT == OS.Windows) "gradle.bat" else "gradle")
         }

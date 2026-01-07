@@ -1,0 +1,38 @@
+<idea-plugin>
+  <id>com.jetbrains.fleet.analyzer.test-import</id>
+  <vendor>JetBrains</vendor>
+
+  <extensionPoints>
+    <extensionPoint qualifiedName="org.jetbrains.idea.maven.versionAwareMavenSupport" interface="org.jetbrains.idea.maven.MavenVersionAwareSupportExtension" dynamic="true"/>
+    <extensionPoint qualifiedName="com.intellij.projectStorePathCustomizer"
+                    interface="com.intellij.configurationStore.ProjectStorePathCustomizer"
+                    dynamic="true"/>
+    <extensionPoint qualifiedName="com.intellij.experimentalFeature" beanClass="com.intellij.openapi.application.ExperimentalFeatureImpl" dynamic="true" />
+    <extensionPoint qualifiedName="com.intellij.externalExecutionAware" beanClass="com.intellij.util.KeyedLazyInstanceEP" dynamic="true">
+      <with attribute="implementationClass"
+            implements="com.intellij.openapi.externalSystem.service.execution.ExternalSystemExecutionAware"/>
+    </extensionPoint>
+  </extensionPoints>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <projectService serviceImplementation="org.jetbrains.idea.maven.project.MavenWorkspaceSettingsComponent"/>
+    <applicationService serviceInterface="com.intellij.openapi.externalSystem.util.environment.Environment"
+                        serviceImplementation="com.intellij.openapi.externalSystem.util.environment.SystemEnvironment"/>
+
+    <applicationService serviceInterface="com.intellij.openapi.project.impl.ProjectStoreFactory"
+                        serviceImplementation="com.intellij.configurationStore.PlatformProjectStoreFactory"/>
+    <applicationService serviceInterface="com.intellij.configurationStore.ProjectStorePathManager"
+                        serviceImplementation="com.intellij.configurationStore.NestedProjectStorePathManager"/>
+    <projectService serviceInterface="com.intellij.configurationStore.ProjectIdManager"
+                    serviceImplementation="com.intellij.configurationStore.ProjectIdManagerImpl"/>
+    <applicationService serviceImplementation="org.jetbrains.plugins.gradle.service.GradleInstallationManager"/>
+    <projectService serviceImplementation="org.jetbrains.plugins.gradle.settings.GradleSettings"/>
+    <externalExecutionAware id="gradle" key="GRADLE" implementationClass="org.jetbrains.plugins.gradle.service.execution.LocalGradleExecutionAware"/>
+    <externalExecutionAware  id="gradleOnEel" key="GRADLE" implementationClass="org.jetbrains.plugins.gradle.service.execution.eel.EelGradleExecutionAware"/>
+  </extensions>
+
+  <extensions defaultExtensionNs="org.jetbrains.idea.maven">
+    <versionAwareMavenSupport implementation="org.jetbrains.idea.maven.maven3.Maven3Support"/>
+    <versionAwareMavenSupport implementation="org.jetbrains.idea.maven.maven4.Maven4Support"/>
+  </extensions>
+</idea-plugin>

@@ -64,14 +64,14 @@ class ProjectImportTest {
     fun simpleMaven() = doMavenTest("SimpleMaven")
 
     private fun doGradleTest(project: String) {
-        downloadGradleBinaries(Path.of(PathManager.getCommunityHomePath())).let { path ->
+        downloadGradleBinaries().let { path ->
             GradleWorkspaceImporter.useGradleAndJava(path, Path.of(System.getProperty("java.home")))
         }
         doTest(project, GradleWorkspaceImporter, testDataDir / "gradle")
     }
 
     private fun doMavenTest(project: String) {
-        downloadMavenBinaries(Path.of(PathManager.getCommunityHomePath())).let { path ->
+        downloadMavenBinaries().let { path ->
             MavenWorkspaceImporter.useMavenAndJava(path, Path.of(System.getProperty("java.home")))
         }
         doTest(project, MavenWorkspaceImporter, testDataDir / "maven")

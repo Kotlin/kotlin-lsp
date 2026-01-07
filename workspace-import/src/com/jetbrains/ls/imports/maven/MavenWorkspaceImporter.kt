@@ -49,7 +49,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         val javaHome = System.getProperty(JB_MAVEN_JAVA_HOME)
             ?: if (System.getenv()["JAVA_HOME"] == null) System.getProperty("java.home") else null
         val execPath = when {
-            wrapper.exists() -> wrapper.name
+            wrapper.exists() -> wrapper
             mavenHome != null -> mavenHome / "bin" / if (OS.CURRENT == OS.Windows) "mvn.cmd" else "mvn"
             else -> Path.of(if (OS.CURRENT == OS.Windows) "mvn.cmd" else "mvn")
         }

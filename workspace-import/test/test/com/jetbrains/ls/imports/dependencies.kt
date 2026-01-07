@@ -2,21 +2,31 @@
 @file:Suppress("RAW_RUN_BLOCKING")
 package com.jetbrains.ls.imports
 
+import com.intellij.openapi.application.PathManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.jetbrains.intellij.build.dependencies.BuildDependenciesCommunityRoot
 import org.jetbrains.intellij.build.dependencies.BuildDependenciesConstants
 import org.jetbrains.intellij.build.dependencies.BuildDependenciesDownloader
 import org.jetbrains.intellij.build.downloadFileToCacheLocation
+import java.io.IOException
+import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.attribute.FileTime
+import java.time.Instant
+import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 import kotlin.io.path.name
 
 private const val MAVEN_VERSION = "3.9.11" // 4.0.0-rc-5 (ok), 3.8.9 (ok), 3.6.3 (ok)
 private const val GRADLE_VERSION = "9.2.0" // 8.14.3 (ok), 7.6.6 (fails)
 
-fun downloadMavenBinaries(communityPath: Path): Path = runBlocking(Dispatchers.IO) {
-    val communityRoot = BuildDependenciesCommunityRoot(communityPath)
+private val mavenUnzipMutex = Mutex()
+private val gradleUnzipMutex = Mutex()
+
+fun downloadMavenBinaries(): Path {
     val uri = BuildDependenciesDownloader.getUriForMavenArtifact(
         mavenRepository = BuildDependenciesConstants.MAVEN_CENTRAL_URL,
         groupId = "org.apache.maven",
@@ -25,21 +35,38 @@ fun downloadMavenBinaries(communityPath: Path): Path = runBlocking(Dispatchers.I
         classifier = "bin",
         packaging = "zip"
     )
-    val path = downloadFileToCacheLocation(uri.toString(), communityRoot)
-    val targetDir = path.parent.resolve(path.name.removeSuffix(".zip"))
-    BuildDependenciesDownloader.extractFile(path, targetDir, communityRoot)
-    val mavenHome = targetDir.resolve("apache-maven-$MAVEN_VERSION")
-    require(mavenHome.isDirectory()) { "Expecting a directory: $mavenHome" }
-    mavenHome
+
+    val targetDir = downloadAndUnzip(uri.toString(), mavenUnzipMutex)
+    return targetDir.resolve("apache-maven-$MAVEN_VERSION").also {
+        require(it.isDirectory()) { "Expecting a directory: $it" }
+    }
 }
 
-fun downloadGradleBinaries(communityPath: Path): Path = runBlocking(Dispatchers.IO) {
-    val communityRoot = BuildDependenciesCommunityRoot(communityPath)
+fun downloadGradleBinaries(): Path {
     val uri = "https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip"
-    val path = downloadFileToCacheLocation(uri, communityRoot)
-    val targetDir = path.parent.resolve(path.name.removeSuffix(".zip"))
-    BuildDependenciesDownloader.extractFile(path, targetDir, communityRoot)
-    val gradleHome = targetDir.resolve("gradle-$GRADLE_VERSION")
-    require(gradleHome.isDirectory()) { "Expecting a directory: $gradleHome" }
-    gradleHome
+    val targetDir = downloadAndUnzip(uri, gradleUnzipMutex)
+    return targetDir.resolve("gradle-$GRADLE_VERSION").also {
+        require(it.isDirectory()) { "Expecting a directory: $it" }
+    }
 }
+
+private fun downloadAndUnzip(uri: String, unzipMutex: Mutex): Path =
+    runBlocking(Dispatchers.IO) {
+        val communityPath = Path.of(PathManager.getCommunityHomePath())
+        val communityRoot = BuildDependenciesCommunityRoot(communityPath)
+        val path = downloadFileToCacheLocation(uri, communityRoot)
+        val targetDir = path.parent.resolve(path.name.removeSuffix(".zip"))
+        unzipMutex.withLock {
+            if (targetDir.exists()) {
+                try {
+                    // update file modification time to maintain FIFO caches, i.e., in a persistent cache dir on TeamCity agent
+                    Files.setLastModifiedTime(targetDir, FileTime.from(Instant.now()))
+                }
+                catch (_: IOException) {
+                }
+            } else {
+                BuildDependenciesDownloader.extractFile(path, targetDir, communityRoot)
+            }
+        }
+        targetDir
+    }

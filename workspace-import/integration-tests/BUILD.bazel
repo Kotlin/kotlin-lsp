@@ -1,0 +1,75 @@
+### auto-generated section `build language-server.project-import.integration-tests` start
+load("@community//build:compiler-options.bzl", "create_kotlinc_options")
+load("@rules_jvm//:jvm.bzl", "jvm_library", "resourcegroup")
+
+create_kotlinc_options(
+  name = "custom_integration-tests",
+  x_context_parameters = True
+)
+
+resourcegroup(
+  name = "integration-tests_test_resources",
+  srcs = glob(["testResources/**/*"]),
+  strip_prefix = "testResources"
+)
+
+jvm_library(
+  name = "integration-tests",
+  visibility = ["//visibility:public"],
+  srcs = glob([], allow_empty = True),
+  runtime_deps = ["@lib//:kotlin-stdlib"]
+)
+
+jvm_library(
+  name = "integration-tests_test_lib",
+  module_name = "language-server.project-import.integration-tests",
+  visibility = ["//visibility:public"],
+  srcs = glob(["test/**/*.kt", "test/**/*.java", "test/**/*.form"], allow_empty = True),
+  resources = [":integration-tests_test_resources"],
+  kotlinc_opts = ":custom_integration-tests",
+  deps = [
+    "@lib//:kotlin-stdlib",
+    "@lib//:junit5",
+    "@community//libraries/gson",
+    "@community//platform/workspace/storage",
+    "//language-server/test-api:test-api_test_lib",
+    "@community//platform/core-api:core",
+    "@community//platform/ide-core-impl",
+    "@community//platform/projectModel-impl",
+    "@community//platform/util",
+    "//language-server/community/workspace-import:language-server-project-import",
+    "@community//platform/workspace/jps",
+    "//language-server/api.impl.analyzer",
+    "@community//libraries/kotlinx/coroutines/core",
+    "//language-server/community/api.core",
+    "//language-server/community/api.core:api.core_test_lib",
+    "@community//plugins/kotlin/base/facet",
+    "@community//libraries/kotlinx/serialization/json",
+    "@community//libraries/kotlinx/serialization/core",
+    "@community//platform/core-impl",
+    "//language-server/analyzer",
+    "//language-server/analyzer:analyzer_test_lib",
+    "@community//platform/build-scripts/downloader",
+    "//tests/intellij.ide.starter.extended:ide-starter-extended",
+    "//tests/intellij.ide.starter.extended:ide-starter-extended_test_lib",
+    "@community//tools/intellij.tools.ide.starter:ide-starter",
+    "//tests/workspaceModel/intellij.workspaceModel.integrationTests:integrationTests_test_lib",
+    "//tests/workspaceModel/intellij.workspaceModel.performanceTesting:performanceTesting",
+    "@community//platform/projectModel-api:projectModel",
+    "@community//platform/backend/workspace",
+    "@community//platform/platform-impl:ide-impl",
+    "@community//platform/platform-impl:ide-impl_test_lib",
+    "//language-server/community/workspace-import/test:test_test_lib",
+  ],
+  runtime_deps = [":integration-tests"]
+)
+### auto-generated section `build language-server.project-import.integration-tests` end
+
+### auto-generated section `test language-server.project-import.integration-tests` start
+load("@community//build:tests-options.bzl", "jps_test")
+
+jps_test(
+  name = "integration-tests_test",
+  runtime_deps = [":integration-tests_test_lib"]
+)
+### auto-generated section `test language-server.project-import.integration-tests` end
