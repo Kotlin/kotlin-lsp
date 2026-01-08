@@ -10,6 +10,7 @@ import com.jetbrains.ls.api.features.definition.LSDefinition
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnostic
 import com.jetbrains.ls.api.features.formatting.LSDocumentFormatting
 import com.jetbrains.ls.api.features.hover.LSHover
+import com.jetbrains.ls.api.features.implementation.LSImplementation
 import com.jetbrains.ls.api.features.inlayHints.LSInlayHints
 import com.jetbrains.ls.api.features.references.LSReferences
 import com.jetbrains.ls.api.features.rename.LSRename
@@ -39,6 +40,7 @@ internal fun LspHandlersBuilder.features() {
     request(CompletionRequestType) { LSCompletion.getCompletion(it).let { CompletionResult.MaybeIncomplete(it) } }
     request(CompletionResolveRequestType) { LSCompletion.resolveCompletion(it) }
     request(DefinitionRequestType) { LSDefinition.getDefinition(it) }
+    request(Implementation.ImplementationRequest) { LSImplementation.getImplementation(it) }
     request(DocumentDiagnosticRequestType) { LSDiagnostic.getDiagnostics(it) }
     request(HoverRequestType) { LSHover.getHover(it) }
     request(ReferenceRequestType) { LSReferences.getReferences(it) }
