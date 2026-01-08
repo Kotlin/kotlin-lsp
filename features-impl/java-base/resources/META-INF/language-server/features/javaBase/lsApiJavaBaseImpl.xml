@@ -60,6 +60,7 @@
     <orderRootType implementation="com.intellij.openapi.roots.JavadocOrderRootType"/>
     <lang.inferredAnnotationProvider implementation="com.intellij.codeInsight.DefaultInferredAnnotationProvider"/>
     <lang.inferredAnnotationProvider implementation="com.intellij.codeInsight.ProtobufInferredAnnotationProvider"/>
+    <lang.psiAugmentProvider implementation="com.intellij.psi.impl.RecordAugmentProvider"/>
   </extensions>
   <extensions defaultExtensionNs="ls">
     <markdownDocProvider language="JAVA"
