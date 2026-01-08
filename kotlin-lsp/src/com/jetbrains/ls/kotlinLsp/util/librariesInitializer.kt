@@ -50,8 +50,8 @@ fun getKotlinStdlibSourcesPath(): Path? {
 
 @OptIn(ExperimentalCoroutinesApi::class)
 fun javaHome(): String {
-    val initializeParams = InitializeParamsEntity.single().initializeParams.takeIf { it.isCompleted }?.getCompleted()
-    val defaultJdkPath = initializeParams?.initializationOptions
+    val initializeParams = InitializeParamsEntity.single().initializeParams
+    val defaultJdkPath = initializeParams.initializationOptions
         ?.let { it as? JsonObject }
         ?.get("defaultJdk")
         ?.let { it as? JsonPrimitive }

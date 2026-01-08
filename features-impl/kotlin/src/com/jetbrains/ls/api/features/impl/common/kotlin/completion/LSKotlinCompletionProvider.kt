@@ -129,7 +129,7 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
                     documentation = readAction { computeDocumentation(completionData.lookup) },
                 )
                 // https://youtrack.jetbrains.com/issue/LSP-319/Fix-completion-in-Air
-                val isAir = initializeParams().clientInfo?.name?.equals("JetBrains Air") ?: false
+                val isAir = checkNotNull(initializeParams()).clientInfo?.name?.equals("JetBrains Air") ?: false
                 if (isAir) {
                     val insRes = applyCompletion(completionData)
                     completionItem.copy(

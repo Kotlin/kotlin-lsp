@@ -62,7 +62,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
         val folders = workspaceFolderPaths(initParams)
 
         change {
-            InitializeParamsEntity.single().initializeParams.complete(initParams)
+            InitializeParamsEntity.new(initParams)
         }
 
         if (initParams.lspInitializationOptions?.skipImport != true) {
