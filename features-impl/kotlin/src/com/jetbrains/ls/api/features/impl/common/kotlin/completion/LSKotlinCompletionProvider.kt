@@ -38,6 +38,7 @@ import com.jetbrains.ls.snapshot.api.impl.core.initializeParams
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.protocol.*
+import com.jetbrains.lsp.protocol.CompletionItem
 import kotlinx.serialization.json.*
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaDanglingFileResolutionMode
@@ -91,7 +92,7 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
                                     description = lookupPresentation.typeText,
                                 ),
                                 kind = lookup.psiElement?.let { LSCompletionItemKindProvider.getKind(it) },
-                                textEdit = CompletionItemCache.emptyTextEdit(params.position),
+                                textEdit = CompletionItem.Edit.emptyAtPosition(params.position),
                                 command = Command(
                                     "Apply Completion",
                                     command = APPLY_COMPLETION_COMMAND,

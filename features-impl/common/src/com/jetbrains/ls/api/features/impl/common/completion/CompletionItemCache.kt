@@ -25,11 +25,6 @@ object CompletionItemCache {
 
     private const val MAX_INT_DIGITS_COUNT = Int.MAX_VALUE.toString().length
 
-    fun emptyTextEdit(position: Position): CompletionItem.Edit {
-        val range = Range(position, position)
-        return CompletionItem.Edit.InsertReplace(InsertReplaceEdit("", range, range))
-    }
-
     fun <T : Any> cacheCompletionData(data: T): Long {
         val sessionData = SessionDataEntity.single().map
 
