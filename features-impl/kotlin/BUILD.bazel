@@ -80,6 +80,8 @@ jvm_library(
     "@community//plugins/kotlin/code-insight/impl-base:kotlin-codeInsight-shared",
     "//language-server/dap/jvm",
     "//language-server/api.impl.analyzer",
+    "@community//fleet/rhizomedb",
+    "@community//fleet/kernel",
   ]
 )
 ### auto-generated section `build language-server.api.features.impl.kotlin` end

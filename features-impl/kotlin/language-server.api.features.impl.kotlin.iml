@@ -80,5 +80,7 @@
     <orderEntry type="module" module-name="intellij.kotlin.codeInsight.shared" />
     <orderEntry type="module" module-name="language-server.dap.jvm" />
     <orderEntry type="module" module-name="language-server.api.impl.analyzer" />
+    <orderEntry type="module" module-name="fleet.rhizomedb" />
+    <orderEntry type="module" module-name="fleet.kernel" />
   </component>
 </module>

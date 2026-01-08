@@ -26,7 +26,7 @@ object LSCompletion {
     }
 
     private fun List<CompletionList>.combined(): CompletionList {
-        if (isEmpty()) return CompletionList.EMPTY_COMPLETE
+        if (isEmpty()) return CompletionList.EMPTY
         if (size == 1) return first()
 
         require(none { it.isIncomplete }) { "Combining incomplete results is not yet supported" }

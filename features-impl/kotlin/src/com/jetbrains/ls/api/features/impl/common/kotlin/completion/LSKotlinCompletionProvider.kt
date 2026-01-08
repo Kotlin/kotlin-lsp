@@ -27,18 +27,23 @@ import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider
 import com.jetbrains.ls.api.features.completion.LSCompletionProvider
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
-import com.jetbrains.ls.api.features.impl.common.completion.CompletionItemCache
+import com.jetbrains.ls.api.features.impl.common.completion.getSortedFieldByIndex
 import com.jetbrains.ls.api.features.impl.common.hover.LSHoverProviderBase.LSMarkdownDocProvider.Companion.getMarkdownDoc
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.resolve.ResolveDataWithConfigurationEntryId
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer
 import com.jetbrains.ls.api.features.utils.isSource
+import com.jetbrains.ls.snapshot.api.impl.core.CompletionItemId
+import com.jetbrains.ls.snapshot.api.impl.core.CompletionItemWithObject
+import com.jetbrains.ls.snapshot.api.impl.core.LatestCompletionSessionEntity
 import com.jetbrains.ls.snapshot.api.impl.core.initializeParams
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.protocol.*
 import com.jetbrains.lsp.protocol.CompletionItem
+import fleet.kernel.change
+import fleet.util.UID
 import kotlinx.serialization.json.*
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaDanglingFileResolutionMode
@@ -47,14 +52,15 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtPsiFactory
 
 internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDescriptorProvider {
-    override val supportsResolveRequest: Boolean get() = true
+    override val supportsResolveRequest: Boolean
+        get() = true
 
     context(_: LSServer, _: LspHandlerContext)
     override suspend fun provideCompletion(params: CompletionParams): CompletionList {
         return if (!params.textDocument.isSource()) {
-            CompletionList.EMPTY_COMPLETE
+            CompletionList.EMPTY
         } else {
-            withAnalysisContext(params.textDocument.uri.uri) {
+            val itemsWithObjects = withAnalysisContext(params.textDocument.uri.uri) {
                 readAction {
                     params.textDocument.findVirtualFile()?.let { file ->
                         file.findPsiFile(project)?.let { psiFile ->
@@ -74,57 +80,58 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
                     }
                     readAction {
                         val lookupElements = performCompletion(completionProcess)
-                        val completionItems = lookupElements.mapIndexed { i, lookup ->
+                        lookupElements.mapIndexed { i, lookup ->
                             val lookupPresentation = LookupElementPresentation().also {
                                 lookup.renderElement(it)
                             }
 
                             val itemMatcher = completionProcess.arranger.itemMatcher(lookup)
-                            val data = CompletionData(params, lookup, itemMatcher)
+                            val obj = CompletionData(params, lookup, itemMatcher)
 
-                            val completionDataKey = CompletionItemCache.cacheCompletionData(data)
-
-                            CompletionItem(
-                                label = lookupPresentation.itemText ?: lookup.lookupString,
-                                sortText = CompletionItemCache.getSortedFieldByIndex(i),
-                                labelDetails = CompletionItemLabelDetails(
-                                    detail = lookupPresentation.tailText,
-                                    description = lookupPresentation.typeText,
-                                ),
-                                kind = lookup.psiElement?.let { LSCompletionItemKindProvider.getKind(it) },
-                                textEdit = CompletionItem.Edit.emptyAtPosition(params.position),
-                                command = Command(
-                                    "Apply Completion",
-                                    command = APPLY_COMPLETION_COMMAND,
-                                    arguments = listOf(
-                                        LSP.json.encodeToJsonElement(completionDataKey),
-                                    )
-                                ),
-                                data = JsonObject(
-                                    mapOf(
-                                        ResolveDataWithConfigurationEntryId::configurationEntryId.name to LSP.json.encodeToJsonElement(
-                                            uniqueId
+                            val key = LatestCompletionSessionEntity.nextId()
+                            CompletionItemWithObject(
+                                item = CompletionItem(
+                                    label = lookupPresentation.itemText ?: lookup.lookupString,
+                                    sortText = getSortedFieldByIndex(i),
+                                    labelDetails = CompletionItemLabelDetails(
+                                        detail = lookupPresentation.tailText,
+                                        description = lookupPresentation.typeText,
+                                    ),
+                                    kind = lookup.psiElement?.let { LSCompletionItemKindProvider.getKind(it) },
+                                    textEdit = CompletionItem.Edit.emptyAtPosition(params.position),
+                                    command = Command(
+                                        "Apply Completion",
+                                        command = APPLY_COMPLETION_COMMAND,
+                                        arguments = listOf(key.toJson())
+                                    ),
+                                    data = JsonObject(
+                                        mapOf(
+                                            "KotlinCompletionItemKey" to key.toJson(),
+                                            ResolveDataWithConfigurationEntryId::configurationEntryId.name to LSP.json.encodeToJsonElement(
+                                                uniqueId
+                                            )
                                         )
-                                    )
+                                    ),
                                 ),
+                                key = key,
+                                obj = obj
                             )
                         }
-                        CompletionList(
-                            isIncomplete = true,
-                            items = completionItems,
-                        )
                     }
-                } ?: CompletionItemCache.EMPTY_COMPLETION_LIST
+                } ?: emptyList()
             }
+            change {
+                LatestCompletionSessionEntity.replace(itemsWithObjects)
+            }
+            CompletionList(isIncomplete = true, items = itemsWithObjects.map { it.item })
         }
     }
 
     context(_: LSServer, _: LspHandlerContext)
     override suspend fun resolveCompletion(completionItem: CompletionItem): CompletionItem? {
-        val completionDataKey =
-            completionItem.command?.arguments?.firstOrNull()?.jsonPrimitive?.longOrNull
-                ?: return completionItem
-        return CompletionItemCache.getCompletionData<CompletionData>(completionDataKey)?.let { completionData ->
+        val completionDataKey = completionItem.data?.jsonObject?.get("KotlinCompletionItemKey") ?: return completionItem
+
+        return (LatestCompletionSessionEntity.obj(CompletionItemId.fromJson(completionDataKey)) as CompletionData?)?.let { completionData ->
             withAnalysisContext {
                 val completionItem = completionItem.copy(
                     documentation = readAction { computeDocumentation(completionData.lookup) },
@@ -167,14 +174,15 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
                 name = APPLY_COMPLETION_COMMAND,
                 executor = { arguments ->
                     require(arguments.size == 1) { "Expected 1 argument, got: ${arguments.size}" }
-                    val id = (arguments[0] as? JsonPrimitive)?.longOrNull
-                        ?: error("Invalid argument, expected a number, got: ${arguments[0]}")
-                    val completionData = CompletionItemCache.getCompletionData<CompletionData>(id)
+                    val id = arguments[0]
+                    val completionData = LatestCompletionSessionEntity.obj(CompletionItemId.fromJson(id)) as CompletionData?
                     when (completionData) {
-                        null -> lspClient.notify(
-                            ShowMessageNotification,
-                            ShowMessageParams(MessageType.Error, "Your completion session has expired, please try again"),
-                        )
+                        null -> {
+                            lspClient.notify(
+                                ShowMessageNotification,
+                                ShowMessageParams(MessageType.Error, "Your completion session has expired, please try again"),
+                            )
+                        }
 
                         else -> {
                             val insertionResult = withAnalysisContext {

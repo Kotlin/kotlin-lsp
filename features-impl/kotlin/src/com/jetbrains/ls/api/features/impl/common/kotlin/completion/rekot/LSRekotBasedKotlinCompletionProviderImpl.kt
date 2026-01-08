@@ -22,7 +22,6 @@ import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.*
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.analysis.api.projectStructure.contextModule
 import org.jetbrains.kotlin.idea.base.projectStructure.getKaModule
 import org.jetbrains.kotlin.idea.base.util.isImported
@@ -44,7 +43,7 @@ internal object LSRekotBasedKotlinCompletionProviderImpl : LSCompletionProvider 
 
     context(_: LSServer, _: LspHandlerContext)
     override suspend fun provideCompletion(params: CompletionParams): CompletionList {
-        if (!params.textDocument.isSource()) return CompletionList.EMPTY_COMPLETE
+        if (!params.textDocument.isSource()) return CompletionList.EMPTY
         return withAnalysisContext {
             readAction {
                 val file = params.textDocument.findVirtualFile() ?: return@readAction EMPTY_COMPLETION_LIST
