@@ -47,8 +47,7 @@ abstract class LSRenameProviderBase(
                 val document = file.findDocument() ?: return@readAction null
                 val offset = document.offsetByPosition(params.position)
                 val psiFile = file.findPsiFile(project) ?: return@readAction null
-                val psiSymbolService = PsiSymbolService.getInstance()
-                val targets = targetSymbols(psiFile, offset).mapNotNull { psiSymbolService.extractElementFromSymbol(it) }
+                val targets = extractTargets(psiFile, offset)
                 val target = targets.firstOrNull()
                     ?: throwLspError(RenameRequestType, "This element cannot be renamed", Unit, ErrorCodes.InvalidParams, null)
 
@@ -59,6 +58,11 @@ abstract class LSRenameProviderBase(
         }
 
         return WorkspaceEdit(documentChanges = changes)
+    }
+
+    open fun extractTargets(psiFile: PsiFile, offset: Int): List<PsiElement> {
+        val psiSymbolService = PsiSymbolService.getInstance()
+        return targetSymbols(psiFile, offset).mapNotNull { psiSymbolService.extractElementFromSymbol(it) }
     }
 
     context(server: LSServer, _: LspHandlerContext)
