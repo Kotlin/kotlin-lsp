@@ -1,8 +1,8 @@
 import * as path from 'path';
 import {commands, type ExtensionContext, Uri, window, workspace} from "vscode"
-import {registerDecompiler} from "./decompiler"
-import { initLspClient, startLspClient } from './lspClient';
-import { registerStatusBarItem } from './statusBar';
+import {registerDecompiler, registerOpeningJars} from "./decompiler"
+import {initLspClient, startLspClient} from './lspClient';
+import {registerStatusBarItem} from './statusBar';
 import {registerDapServer} from "./dap"
 
 
@@ -35,6 +35,7 @@ function registerExportWorkspaceToJsonCommand(context: ExtensionContext) {
 export async function activate(context: ExtensionContext) {
     _context = context
     registerDecompiler(context)
+    registerOpeningJars()
     registerDapServer(context);
     registerExportWorkspaceToJsonCommand(context)
     registerStatusBarItem()

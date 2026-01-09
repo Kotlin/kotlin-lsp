@@ -1,5 +1,5 @@
-import { CancellationToken, commands, ExtensionContext, languages, TextDocumentContentProvider, Uri, workspace } from "vscode"
 import * as vscode from "vscode"
+import {CancellationToken, commands, ExtensionContext, languages, TextDocumentContentProvider, Uri, workspace} from "vscode"
 
 interface DecompiledDocumentContent {
     code: string;
@@ -93,6 +93,31 @@ export function registerDecompiler(context: ExtensionContext) {
             }
         }
     }
+}
+
+export function registerOpeningJars() {
+    vscode.commands.registerCommand('jetbrains.navigateToJarLocation', async (uriString: string, line: number, character: number) => {
+        try {
+            const uri = vscode.Uri.parse(uriString);
+
+            if (!supportedProtocols.includes(uri.scheme)) {
+                console.error(`[NavigateToJar] Invalid URI decompiled scheme: ${uri.scheme}, expected 'jar' or 'jrt'`);
+                return;
+            }
+
+            const doc = await vscode.workspace.openTextDocument(uri);
+
+            const position = new vscode.Position(line, character);
+            const range = new vscode.Range(position, position);
+            await vscode.window.showTextDocument(doc, {
+                selection: range,
+                preserveFocus: false
+            });
+        } catch (e) {
+            console.error(`[NavigateToJar] Failed to navigate:`, e);
+            vscode.window.showErrorMessage(`Failed to navigate: ${e}`);
+        }
+    })
 }
 
 const ERROR_DURING_DECOMPILATION_TEXT = 'Cannot decompile file'
