@@ -21,7 +21,6 @@ jvm_library(
   resources = [":language-server-project-import_resources"],
   kotlinc_opts = ":custom_language-server-project-import",
   deps = [
-    "@lib//:gradle",
     "@lib//:kotlin-stdlib",
     "@community//jps/model-serialization",
     "@community//platform/extensions",
@@ -31,7 +30,6 @@ jvm_library(
     "@community//platform/workspace/storage",
     "@community//platform/util/jdom",
     "//language-server/community/api.core",
-    "@community//plugins/gradle",
     "@community//platform/util",
     "@community//libraries/kotlinx/serialization/core",
     "@community//libraries/kotlinx/serialization/json",

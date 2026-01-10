@@ -16,6 +16,10 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Collectors
 
+private val KOTLIN_COMPILER_PLUGIN_JAR_PATTERN = Regex(
+    ".*-compiler-plugin.*\\.jar"
+)
+
 object JavaScopes {
     const val COMPILE: String = "compile"
     const val PROVIDED: String = "provided"
@@ -111,8 +115,9 @@ private fun MavenProject.toModuleData(
                     val artifact = artifactResult.artifact
                     val depNode = artifactResult.request.dependencyNode
                     val scope = toDependencyDataScope(depNode?.dependency?.scope)
-
-                    val libName = "Maven: ${artifact.groupId}:${artifact.artifactId}:${artifact.version}"
+                    val libName = artifact.run {
+                        "Maven: $groupId:$artifactId${if (version.isNotEmpty()) ":$version" else ""}"
+                    }
                     add(DependencyData.Library(libName, scope, false))
                     libraries.putIfAbsent(libName, artifact)
                 }
@@ -215,7 +220,19 @@ private fun extractLibraries(
             level = "project",
             module = null,
             type = "repository",
-            roots = roots
+            roots = roots,
+            properties = XmlElement(
+                tag = "properties",
+                attributes = linkedMapOf(
+                    "groupId" to artifact.groupId,
+                    "artifactId" to artifact.artifactId,
+                    "version" to artifact.version,
+                    "baseVersion" to artifact.version,
+                ),
+                children = emptyList(),
+                text = null
+            )
+
         )
     }
 }
@@ -241,7 +258,9 @@ private fun MavenProject.extractKotlinSettings(
             )?.let { result ->
                 result.artifactResults.forEach { artifactResult ->
                     val artifact = artifactResult.artifact
-                    add(artifact.file.absolutePath)
+                    if (artifact.file.name.matches(KOTLIN_COMPILER_PLUGIN_JAR_PATTERN)) {
+                        add(artifact.file.absolutePath)
+                    }
                 }
             }
     }
@@ -260,21 +279,14 @@ private fun MavenProject.extractKotlinSettings(
 //    val compilerPlugins = config?.getChild("compilerPlugins")?.children?.map { it.value } ?: emptyList()
     val pluginOptions = config?.getChild("pluginOptions")?.children?.map { "plugin:${it.value}" } ?: emptyList()
 
-    val targetPlatform = when {
-        kotlinPlugin.artifactId.contains("js") -> "JS"
-        kotlinPlugin.artifactId.contains("native") -> "NATIVE"
-        kotlinPlugin.artifactId.contains("multiplatform") -> "COMMON"
-        else -> "JVM"
-    }
-    val platformString = jvmTarget?.let { "$targetPlatform ($jvmTarget)" } ?: targetPlatform
     val compilerArguments = KotlinJvmCompilerArguments(
-        jvmTarget = jvmTarget ?: "21",
+        jvmTarget = jvmTarget,
         pluginOptions = pluginOptions,
         pluginClasspaths = pluginClasspath
     )
 
     val kotlinSettingsData = KotlinSettingsData(
-        name = moduleName,
+        name = "Kotlin",
         sourceRoots = sourceRoots,
         configFileItems = emptyList(),
         module = moduleName,
@@ -287,8 +299,8 @@ private fun MavenProject.extractKotlinSettings(
         sourceSetNames = emptyList(),
         isTestModule = false,
         externalProjectId = "${this.groupId}:${this.artifactId}:${this.version}",
-        isHmppEnabled = false,
-        pureKotlinSourceFolders = sourceRoots,
+        isHmppEnabled = true,
+        pureKotlinSourceFolders = emptyList(),
         kind = KotlinSettingsData.KotlinModuleKind.DEFAULT,
         compilerArguments = "J${Json.encodeToString(compilerArguments)}",
         additionalArguments = compilerArgs.joinToString(" "),
@@ -296,7 +308,7 @@ private fun MavenProject.extractKotlinSettings(
         scriptTemplatesClasspath = null,
         copyJsLibraryFiles = false,
         outputDirectoryForJsLibraryFiles = null,
-        targetPlatform = platformString,
+        targetPlatform = null,
         externalSystemRunTasks = emptyList(),
         version = 5,
         flushNeeded = false

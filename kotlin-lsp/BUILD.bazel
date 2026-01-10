@@ -79,6 +79,7 @@ jvm_library(
     "@lib//:kotlinc-analysis-api-platform-interface",
     "@community//plugins/kotlin/base/fir/project-structure",
     "//language-server/community/workspace-import/maven-plugin",
+    "//language-server/community/workspace-import/gradle-plugin",
   ]
 )
 
@@ -147,6 +148,7 @@ jvm_library(
     "@community//plugins/kotlin/base/fir/project-structure",
     "@community//plugins/kotlin/base/fir/project-structure:project-structure_test_lib",
     "//language-server/community/workspace-import/maven-plugin",
+    "//language-server/community/workspace-import/gradle-plugin",
   ]
 )
 ### auto-generated section `build language-server.kotlin-lsp` end

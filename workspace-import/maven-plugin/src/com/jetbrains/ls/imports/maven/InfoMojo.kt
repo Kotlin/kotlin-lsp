@@ -41,7 +41,6 @@ class InfoMojo : AbstractMojo() {
                 prettyPrintIndent = " "
                 encodeDefaults = false
             }
-            WorkspaceData.serializer()
             val jsonString = json.encodeToString(
                 project.toWorkspaceData(repositorySystem, repositorySystemSession)
             )

@@ -16,6 +16,7 @@ import com.intellij.platform.workspace.storage.url.VirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.descriptors.ConfigFileItem
 import com.intellij.util.system.OS
+import com.intellij.util.text.nullize
 import com.jetbrains.ls.imports.utils.toIntellijUri
 import kotlinx.serialization.json.Json
 import org.jetbrains.jps.model.serialization.JpsMavenSettings
@@ -170,11 +171,11 @@ private fun toDataClass(
         compilerArguments = entity.compilerArguments?.let {
             toRelativeKotlinCompilerArguments(it)
         },
-        additionalArguments = entity.compilerSettings?.additionalArguments,
-        scriptTemplates = entity.compilerSettings?.scriptTemplates,
-        scriptTemplatesClasspath = entity.compilerSettings?.scriptTemplatesClasspath,
+        additionalArguments = entity.compilerSettings?.additionalArguments?.nullize(),
+        scriptTemplates = entity.compilerSettings?.scriptTemplates?.nullize(),
+        scriptTemplatesClasspath = entity.compilerSettings?.scriptTemplatesClasspath?.nullize(),
         copyJsLibraryFiles = entity.compilerSettings?.copyJsLibraryFiles == true,
-        outputDirectoryForJsLibraryFiles = entity.compilerSettings?.outputDirectoryForJsLibraryFiles,
+        outputDirectoryForJsLibraryFiles = entity.compilerSettings?.outputDirectoryForJsLibraryFiles?.nullize(),
         targetPlatform = entity.targetPlatform,
         externalSystemRunTasks = entity.externalSystemRunTasks,
         version = entity.version,
@@ -355,21 +356,19 @@ private fun toEntity(
     entitySource = entitySource,
 ) {
     this.module = module
+    this.targetPlatform = kotlinSettingsData.targetPlatform
     this.compilerArguments = kotlinSettingsData.compilerArguments?.let {
         toAbsoluteKotlinCompilerArguments(it)
     }
-    if (kotlinSettingsData.additionalArguments != null
-        && kotlinSettingsData.scriptTemplates != null
-        && kotlinSettingsData.scriptTemplatesClasspath != null
-        && kotlinSettingsData.outputDirectoryForJsLibraryFiles != null
-    )
-        this.compilerSettings = CompilerSettingsData(
-            additionalArguments = kotlinSettingsData.additionalArguments,
-            scriptTemplates = kotlinSettingsData.scriptTemplates,
-            scriptTemplatesClasspath = kotlinSettingsData.scriptTemplatesClasspath,
-            copyJsLibraryFiles = kotlinSettingsData.copyJsLibraryFiles,
-            outputDirectoryForJsLibraryFiles = kotlinSettingsData.outputDirectoryForJsLibraryFiles,
+    this.compilerSettings = with(kotlinSettingsData) {
+        CompilerSettingsData(
+            additionalArguments = additionalArguments ?: "",
+            scriptTemplates = scriptTemplates ?: "",
+            scriptTemplatesClasspath = scriptTemplatesClasspath ?: "",
+            copyJsLibraryFiles = copyJsLibraryFiles,
+            outputDirectoryForJsLibraryFiles = outputDirectoryForJsLibraryFiles ?: "",
         )
+    }
 }
 
 private fun addFacetRecursive(

@@ -6,7 +6,7 @@ package com.jetbrains.ls.imports.maven
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
-import com.intellij.platform.workspace.storage.MutableEntityStorage
+import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.io.awaitExit
 import com.intellij.util.io.delete
@@ -40,7 +40,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         projectDirectory: Path,
         virtualFileUrlManager: VirtualFileUrlManager,
         onUnresolvedDependency: (String) -> Unit,
-    ): MutableEntityStorage? {
+    ): EntityStorage? {
         if (!isApplicableDirectory(projectDirectory)) return null
 
         LOG.info("Importing Maven project from: $projectDirectory")

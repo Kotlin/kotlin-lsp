@@ -3,255 +3,32 @@
 
 package com.jetbrains.ls.imports.gradle
 
+import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
-import com.intellij.platform.workspace.jps.entities.*
-import com.intellij.platform.workspace.jps.entities.LibraryTableId.ProjectLibraryTableId
 import com.intellij.platform.workspace.storage.EntityStorage
-import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
-import com.jetbrains.ls.api.core.util.retryWithBackOff
-import com.jetbrains.ls.imports.api.WorkspaceEntitySource
+import com.intellij.util.io.awaitExit
+import com.intellij.util.io.delete
+import com.intellij.util.system.OS
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImporter
-import com.jetbrains.ls.imports.api.findJdks
-import com.jetbrains.ls.imports.utils.toIntellijUri
-import org.gradle.tooling.GradleConnectionException
-import org.gradle.tooling.GradleConnector
-import org.gradle.tooling.ProjectConnection
-import org.gradle.tooling.model.DomainObjectSet
-import org.gradle.tooling.model.build.BuildEnvironment
-import org.gradle.tooling.model.idea.*
-import org.gradle.util.GradleVersion
-import org.jetbrains.kotlin.config.KotlinFacetSettings
-import org.jetbrains.kotlin.config.KotlinModuleKind
-import org.jetbrains.kotlin.idea.facet.KotlinFacetType
-import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
-import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntityBuilder
-import org.jetbrains.kotlin.idea.workspaceModel.kotlinSettings
-import org.jetbrains.plugins.gradle.jvmcompat.GradleJvmSupportMatrix.Companion.isSupported
-import org.jetbrains.plugins.gradle.jvmcompat.GradleJvmSupportMatrix.Companion.suggestLatestSupportedJavaVersion
-import java.io.ByteArrayOutputStream
+import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.nio.file.Path
-import kotlin.io.path.div
-import kotlin.io.path.exists
+import kotlin.io.path.*
+
+private val LOG = logger<GradleWorkspaceImporter>()
+
+private const val JB_GRADLE_HOME: String = "JB_GRADLE_HOME"
+private const val JB_GRADLE_JAVA_HOME: String = "JB_GRADLE_JAVA_HOME"
 
 object GradleWorkspaceImporter : WorkspaceImporter {
-    private const val IDEA_SYNC_ACTIVE_PROPERTY = "idea.sync.active"
-    private const val KOTLIN_LSP_IMPORT_PROPERTY = "com.jetbrains.ls.imports.gradle"
-    private val IMPORTER_PROPERTIES = mapOf(
-        // This immitates how IntelliJ invokes gradle during sync.
-        // Some builds/plugins depend on this property to configure their build for sync
-        IDEA_SYNC_ACTIVE_PROPERTY to "true",
-        // Since this is not actually IntelliJ, offer an alternative identification
-        KOTLIN_LSP_IMPORT_PROPERTY to "true"
-    )
 
-    private val LOG = logger<GradleWorkspaceImporter>()
-
-    override suspend fun importWorkspace(
-        project: Project,
-        projectDirectory: Path,
-        virtualFileUrlManager: VirtualFileUrlManager,
-        onUnresolvedDependency: (String) -> Unit,
-    ): EntityStorage? {
-        if (!isApplicableDirectory(projectDirectory)) return null
-        try {
-            val connector = GradleConnector.newConnector().forProjectDirectory(projectDirectory.toFile())
-
-            connector.connect().use { connection ->
-                val gradleJdks = getGradleJdks(projectDirectory, connection)
-
-                var error: Throwable? = null
-                for (gradleJdk in gradleJdks) {
-                    try {
-                        LOG.info("Importing Gradle project using JDK $gradleJdk")
-                        val ideaProject = connection.model(IdeaProject::class.java)
-                            .withSystemProperties(IMPORTER_PROPERTIES)
-                            .setJavaHome(gradleJdk.toFile())
-                            .get()
-                        val storage = MutableEntityStorage.create()
-                        val entitySource = WorkspaceEntitySource(projectDirectory.toIntellijUri(virtualFileUrlManager))
-                        val libs = mutableSetOf<String>()
-
-                        ideaProject.modules.forEach { module ->
-                            for (isMain in arrayOf(true, false)) {
-                                val entity = ModuleEntity(
-                                    name = module.moduleName(isMain),
-                                    dependencies = buildList {
-                                        module.dependencies.mapNotNullTo(this) { dependency ->
-                                            if (isMain && dependency.scope.scope == "TEST") return@mapNotNullTo null
-                                            when (dependency) {
-                                                is IdeaSingleEntryLibraryDependency -> {
-                                                    val ver = dependency.gradleModuleVersion ?: return@mapNotNullTo null
-                                                    val name = if (ver.version.isNotEmpty())
-                                                        "Gradle: ${ver.group}:${ver.name}:${ver.version}"
-                                                    else
-                                                        "Gradle: ${ver.group}:${ver.name}"
-                                                    if (libs.add(name)) {
-                                                        val libEntity = LibraryEntity(
-                                                            name = name,
-                                                            tableId = ProjectLibraryTableId,
-                                                            roots = listOfNotNull(
-                                                                LibraryRoot(
-                                                                    dependency.file.toPath().toIntellijUri(virtualFileUrlManager),
-                                                                    LibraryRootTypeId.COMPILED
-                                                                ),
-                                                                dependency.source?.let {
-                                                                    LibraryRoot(
-                                                                        it.toPath().toIntellijUri(virtualFileUrlManager),
-                                                                        LibraryRootTypeId.SOURCES
-                                                                    )
-                                                                }
-                                                            ),
-                                                            entitySource = entitySource
-                                                        ) {
-                                                            typeId = LibraryTypeId("java-imported")
-                                                        }
-                                                        storage addEntity libEntity
-                                                        storage addEntity LibraryPropertiesEntity(entitySource) {
-                                                            propertiesXmlTag =
-                                                                "<properties groupId=\"${ver.group}\" artifactId=\"${ver.name}\" version=\"${ver.version}\" baseVersion=\"${ver.version}\" />"
-                                                            library = libEntity
-                                                        }
-                                                    }
-                                                    LibraryDependency(
-                                                        library = LibraryId(name, ProjectLibraryTableId),
-                                                        exported = dependency.exported,
-                                                        scope = DependencyScope.valueOf(dependency.scope.scope)
-                                                    )
-                                                }
-
-                                                is IdeaModuleDependency -> ModuleDependency(
-                                                    module = ModuleId(dependency.targetModuleName + ".main"),
-                                                    exported = dependency.exported,
-                                                    scope = DependencyScope.valueOf(dependency.scope.scope),
-                                                    productionOnTest = false
-                                                )
-
-                                                else -> null
-                                            }
-                                        }
-                                        add(ModuleSourceDependency)
-                                        module.jdkName.let { jdkName ->
-                                            if (jdkName != null) add(SdkDependency(SdkId(jdkName, "JavaSDK")))
-                                            else add(InheritedSdkDependency)
-                                        }
-                                        if (!isMain) {
-                                            add(
-                                                ModuleDependency(
-                                                    module = ModuleId(module.moduleName(isMain = true)),
-                                                    exported = false,
-                                                    scope = DependencyScope.COMPILE,
-                                                    productionOnTest = false
-                                                )
-                                            )
-                                        }
-                                    },
-                                    entitySource = entitySource
-                                ) {
-                                    createFacet(module, isMain = isMain)?.let { facet -> kotlinSettings += facet }
-                                    this.type = ModuleTypeId("JAVA_MODULE")
-                                    this.contentRoots = module.contentRoots.mapNotNull { root ->
-                                        val rootPath = root.rootDirectory.toPath()
-                                        if (!rootPath.exists()) return@mapNotNull null
-                                        ContentRootEntity(
-                                            rootPath.toIntellijUri(virtualFileUrlManager),
-                                            listOf(),
-                                            entitySource
-                                        ) {
-                                            fun sourceRoots(
-                                                rootType: String,
-                                                directories: DomainObjectSet<out IdeaSourceDirectory>
-                                            ): List<SourceRootEntityBuilder> =
-                                                directories.mapNotNull { sourceDirectory ->
-                                                    val sourceRoot = sourceDirectory.directory.toPath()
-                                                    if (!sourceRoot.exists()) return@mapNotNull null
-                                                    SourceRootEntity(
-                                                        url = sourceRoot.toIntellijUri(virtualFileUrlManager),
-                                                        rootTypeId = SourceRootTypeId(rootType),
-                                                        entitySource = entitySource
-                                                    ) {
-                                                        this.contentRoot = this@ContentRootEntity
-                                                    }
-                                                }
-
-                                            this.sourceRoots = if (isMain)
-                                                sourceRoots("java-source", root.sourceDirectories) +
-                                                        sourceRoots("java-resource", root.resourceDirectories)
-                                            else
-                                                sourceRoots("java-test", root.testDirectories) +
-                                                        sourceRoots("java-test-resource", root.testResourceDirectories)
-
-                                            this.excludedUrls = root.excludeDirectories.map {
-                                                ExcludeUrlEntity(
-                                                    url = it.toPath().toIntellijUri(virtualFileUrlManager),
-                                                    entitySource = entitySource
-                                                )
-                                            }
-
-                                            this.module = this@ModuleEntity
-                                        }
-                                    }
-                                }
-
-                                storage addEntity entity
-                            }
-                        }
-                        val out = ByteArrayOutputStream()
-                        connection.newBuild().forTasks("dependencies")
-                            .setJavaHome(gradleJdk.toFile())
-                            .withSystemProperties(IMPORTER_PROPERTIES)
-                            .setStandardOutput(out)
-                            .run()
-                        val output = out.toString()
-                        output.lines()
-                            .filter { it.endsWith(" FAILED") }
-                            .distinct()
-                            .map { it.removeSuffix(" FAILED").substringAfterLast(' ') }
-                            .forEach { onUnresolvedDependency(it) }
-
-                        return storage
-                    } catch (e: Throwable) {
-                        error = e
-                    }
-                }
-                throw error!!
-            }
-        } catch (e: Throwable) {
-            handleError(e)
-        }
-    }
-
-    private fun ModuleEntityBuilder.createFacet(module: IdeaModule, isMain: Boolean): KotlinSettingsEntityBuilder? {
-        return KotlinSettingsEntity(
-            name = KotlinFacetType.INSTANCE.presentableName,
-            moduleId = ModuleId(module.moduleName(isMain)),
-            sourceRoots = emptyList(),
-            configFileItems = emptyList(),
-            useProjectSettings = true,
-            implementedModuleNames = emptyList(),
-            dependsOnModuleNames = emptyList(),
-            additionalVisibleModuleNames = buildSet {
-                if (!isMain) {
-                    add(module.moduleName(isMain = true))
-                }
-            },
-            sourceSetNames = emptyList(),
-            isTestModule = true,
-            externalProjectId = "",
-            isHmppEnabled = true, // always enabled
-            pureKotlinSourceFolders = emptyList(),
-            kind = KotlinModuleKind.DEFAULT,
-            externalSystemRunTasks = emptyList(),
-            version = KotlinFacetSettings.CURRENT_VERSION,
-            flushNeeded = false,
-            entitySource = entitySource
-        )
-    }
-
-    private fun IdeaModule.moduleName(isMain: Boolean): String {
-        return if (isMain) "${this.name}.main" else "${this.name}.test"
+    fun useGradleAndJava(mavenHome: Path, javaHome: Path) {
+        System.setProperty(JB_GRADLE_HOME, mavenHome.toString())
+        System.setProperty(JB_GRADLE_JAVA_HOME, javaHome.toString())
     }
 
     private fun isApplicableDirectory(projectDirectory: Path): Boolean {
@@ -263,55 +40,96 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         ).any { (projectDirectory / it).exists() }
     }
 
-    fun handleError(e: Throwable): Nothing {
-        var err: Throwable? = e
-        while (err != null) {
-            if (err::class.qualifiedName == "org.gradle.internal.exceptions.LocationAwareException" && err.message != null) {
-                val message = try {
-                    val source = (err::class.java.getMethod("getSourceDisplayName").invoke(err) as String).removePrefix("build file ")
-                    val lineNumber = err::class.java.getMethod("getLineNumber").invoke(err) as Int
-                    "Gradle import failed at $source line $lineNumber."
-                } catch (_: Exception) {
-                    break
-                }
-                throw WorkspaceImportException(message, "Gradle import failed:\n${err.message}", err)
-            }
-            err = err.cause
+    override suspend fun importWorkspace(
+        project: Project,
+        projectDirectory: Path,
+        virtualFileUrlManager: VirtualFileUrlManager,
+        onUnresolvedDependency: (String) -> Unit,
+    ): EntityStorage? {
+        if (!isApplicableDirectory(projectDirectory)) return null
+
+        LOG.info("Importing Gradle project from: $projectDirectory")
+        val wrapper = projectDirectory / (if (OS.CURRENT == OS.Windows) "gradlew.bat" else "gradlew")
+        val gradleHome = System.getProperty(JB_GRADLE_HOME)?.let { Path.of(it) }
+        val javaHome = System.getProperty(JB_GRADLE_JAVA_HOME)
+            ?: if (System.getenv()["JAVA_HOME"] == null) System.getProperty("java.home") else null
+        val command = when {
+            wrapper.exists() -> (Path.of(".") / wrapper.name).toString()
+            gradleHome != null -> (gradleHome / "bin" / if (OS.CURRENT == OS.Windows) "gradle.bat" else "gradle").toString()
+            else -> "gradle"
         }
-        throw e
-    }
+        LOG.info("Using Gradle: $command (JAVA_HOME=${javaHome ?: "unspecified"})")
 
-    /**
-     * Access to BuildEnvironment is safe because it does not trigger the compilation of build scripts and Gradle execution.
-     * So, we could safely choose the correct JDK for Gradle daemon that will be used for Gradle-related operations.
-     */
-    private suspend fun getGradleJdks(projectDirectory: Path, connection: ProjectConnection): List<Path> {
-        val buildEnvironment = retryWithBackOff(onError = { e, backoff ->
-            if (e !is GradleConnectionException) throw e
-            LOG.warn("Retrying gradle connection in $backoff... (error: ${e.message})")
-        }) {
-            connection.getModel(BuildEnvironment::class.java)
-        } ?: throw IllegalStateException("Unable to resolve Gradle Build Environment")
-        val knownJdks = findJdks(projectDirectory)
-        val gradleVersion = buildEnvironment.getGradleVersion()
-        return knownJdks
-            .sorted() // Newest first
-            .filter {
-                val version = it.versionInfo?.version ?: return@filter false
-                isSupported(gradleVersion, version)
-            }
-            .map { Path.of(it.path) }
-            .takeIf { it.isNotEmpty() }
-            ?: throw WorkspaceImportException(
+        val pluginResourcePath = "/META-INF/gradle-plugins/imports-gradle-plugin.properties"
+        val pluginJar = PathManager.getResourceRoot(this::class.java, pluginResourcePath)
+            ?: error("Corrupted installation: gradle plugin jar not found")
+
+        val workspaceJsonFile = createTempFile("workspace", ".json")
+        val initScriptFile = createTempFile("gradle-init", ".gradle")
+        
+        try {
+            initScriptFile.writeText(
                 """
-                    Found ${knownJdks.size} JDK's, but none of them is compatible with Gradle: $gradleVersion. 
-                    Please install a valid Java ${suggestLatestSupportedJavaVersion(gradleVersion)} distribution.
-                """.trimIndent(),
-                "Unable to find a compatible JDK for running a Gradle $gradleVersion daemon."
+                    initscript {
+                        dependencies {
+                            repositories {
+                                mavenCentral()
+                            }
+                            classpath(files("${pluginJar.replace('\\', '/')}"))
+                            classpath("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+                        }
+                    }
+                    apply plugin: com.jetbrains.ls.imports.gradle.InfoPlugin
+                """.trimIndent()
             )
+
+            ProcessBuilder(
+                command,
+                "--no-daemon",
+                "--init-script",
+                initScriptFile.toAbsolutePath().toString(),
+                "-Dworkspace.output.file=${workspaceJsonFile.toAbsolutePath()}",
+//                "-Dorg.gradle.jvmargs=-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005",
+//                "--stacktrace",
+                "help", // Dummy task to trigger project evaluation
+                "--quiet"
+            )
+                .apply {
+                    javaHome?.let {
+                        environment()["JAVA_HOME"] = it
+                    }
+                }
+                .directory(projectDirectory.toFile())
+                .inheritIO()
+                .runAndGetOK()
+
+            return JsonWorkspaceImporter.importWorkspaceJson(
+                workspaceJsonFile, projectDirectory, onUnresolvedDependency, virtualFileUrlManager
+            )
+        } finally {
+            workspaceJsonFile.delete()
+            initScriptFile.delete()
+        }
     }
 
-    private fun BuildEnvironment.getGradleVersion(): GradleVersion {
-        return GradleVersion.version(gradle.gradleVersion)
+    private suspend fun ProcessBuilder.runAndGetOK() {
+        val process = try {
+            withContext(Dispatchers.IO) {
+                start()
+            }
+        } catch (e: Exception) {
+            throw WorkspaceImportException(
+                "Failed to start Gradle process",
+                "Cannot execute ${command()} in ${directory()}: ${e.message}",
+                e
+            )
+        }
+        process.awaitExit()
+        if (process.exitValue() != 0) {
+            throw WorkspaceImportException(
+                "Failed to import Gradle project",
+                "Failed to import Gradle project in ${directory()}:\n${command()} returned ${process.exitValue()}"
+            )
+        }
     }
 }

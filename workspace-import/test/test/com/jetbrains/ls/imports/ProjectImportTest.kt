@@ -42,7 +42,7 @@ class ProjectImportTest {
     fun multiProjectGroovyDSL() = doGradleTest("MultiProjectGroovyDSL")
 
     @Test
-    fun customSourceSetts() = doGradleTest("CustomSourceSets")
+    fun customSourceSets() = doGradleTest("CustomSourceSets")
 
     @Test
     fun dependencies() = doGradleTest("Dependencies")
@@ -59,8 +59,12 @@ class ProjectImportTest {
     @Test
     fun simpleMaven() = doMavenTest("SimpleMaven")
 
-    private fun doGradleTest(project: String) =
+    private fun doGradleTest(project: String) {
+        downloadGradleBinaries(Path.of(PathManager.getCommunityHomePath())).let { path ->
+            GradleWorkspaceImporter.useGradleAndJava(path, Path.of(System.getProperty("java.home")))
+        }
         doTest(project, GradleWorkspaceImporter, testDataDir / "gradle")
+    }
 
     private fun doMavenTest(project: String) {
         downloadMavenBinaries(Path.of(PathManager.getCommunityHomePath())).let { path ->
@@ -109,7 +113,8 @@ class ProjectImportTest {
     // 1. ~/.gradle/ paths contain random hashes
     // 2. on Windows kotlin compiler arguments contain double-escaped '\' (i.e. '\\\\')
     fun cropJarPaths(jsonString: String): String =
-        """"([^"]*?)/([^/"]*\.jar)"""".toRegex()
-            .replace(jsonString) { """"${it.groupValues[2]}"""" }
-            .replace("\\\\\\\\", "/")
+        """[^"]*?/.gradle/caches/([^"]*?)/[^/.]*?/([^/"]*\.jar[\\"])""".toRegex()
+            .replace(jsonString.replace("\\\\\\\\", "/").replace("\\\\", "/")) {
+                """<GRADLE_REPO>/${it.groupValues[1]}/#####/${it.groupValues[2]}"""
+            }
 }
