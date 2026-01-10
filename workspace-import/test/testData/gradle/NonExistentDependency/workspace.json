@@ -102,10 +102,10 @@
             "type": "java-imported",
             "roots": [
                 {
-                    "path": "commons-lang3-3.12.0.jar"
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.commons/commons-lang3/3.12.0/#####/commons-lang3-3.12.0.jar"
                 },
                 {
-                    "path": "commons-lang3-3.12.0-sources.jar",
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.commons/commons-lang3/3.12.0/#####/commons-lang3-3.12.0-sources.jar",
                     "type": "SOURCES"
                 }
             ],
@@ -123,10 +123,10 @@
             "type": "java-imported",
             "roots": [
                 {
-                    "path": "kotlin-stdlib-2.2.0.jar"
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.2.0/#####/kotlin-stdlib-2.2.0.jar"
                 },
                 {
-                    "path": "kotlin-stdlib-2.2.0-sources.jar",
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.2.0/#####/kotlin-stdlib-2.2.0-sources.jar",
                     "type": "SOURCES"
                 }
             ],
@@ -144,10 +144,10 @@
             "type": "java-imported",
             "roots": [
                 {
-                    "path": "annotations-13.0.jar"
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0.jar"
                 },
                 {
-                    "path": "annotations-13.0-sources.jar",
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0-sources.jar",
                     "type": "SOURCES"
                 }
             ],
@@ -164,22 +164,26 @@
     "kotlinSettings": [
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/src/main/resources",
+                "<WORKSPACE>/src/main/java",
+                "<WORKSPACE>/src/main/kotlin"
+            ],
             "configFileItems": [],
             "module": "NonExistentDependency.main",
-            "useProjectSettings": true,
+            "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
             "additionalVisibleModuleNames": [],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],
-            "isTestModule": true,
-            "externalProjectId": "",
+            "isTestModule": false,
+            "externalProjectId": ":NonExistentDependency:unspecified",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": null,
+            "compilerArguments": "J{\"jvmTarget\":\"21\"}",
             "additionalArguments": null,
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
@@ -191,10 +195,14 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/src/test/resources",
+                "<WORKSPACE>/src/test/java",
+                "<WORKSPACE>/src/test/kotlin"
+            ],
             "configFileItems": [],
             "module": "NonExistentDependency.test",
-            "useProjectSettings": true,
+            "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
             "additionalVisibleModuleNames": [
@@ -204,11 +212,11 @@
             "testOutputPath": null,
             "sourceSetNames": [],
             "isTestModule": true,
-            "externalProjectId": "",
+            "externalProjectId": ":NonExistentDependency:unspecified",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": null,
+            "compilerArguments": "J{\"jvmTarget\":\"21\"}",
             "additionalArguments": null,
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,

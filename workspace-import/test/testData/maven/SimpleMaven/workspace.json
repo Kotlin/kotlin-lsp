@@ -51,23 +51,39 @@
             "type": "repository",
             "roots": [
                 {
-                    "path": "kotlin-stdlib-1.9.20.jar"
+                    "path": "<MAVEN_REPO>/org/jetbrains/kotlin/kotlin-stdlib/1.9.20/kotlin-stdlib-1.9.20.jar"
                 }
-            ]
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.jetbrains.kotlin",
+                    "artifactId": "kotlin-stdlib",
+                    "version": "1.9.20",
+                    "baseVersion": "1.9.20"
+                }
+            }
         },
         {
             "name": "Maven: org.jetbrains:annotations:13.0",
             "type": "repository",
             "roots": [
                 {
-                    "path": "annotations-13.0.jar"
+                    "path": "<MAVEN_REPO>/org/jetbrains/annotations/13.0/annotations-13.0.jar"
                 }
-            ]
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.jetbrains",
+                    "artifactId": "annotations",
+                    "version": "13.0",
+                    "baseVersion": "13.0"
+                }
+            }
         }
     ],
     "kotlinSettings": [
         {
-            "name": "simple-maven",
+            "name": "Kotlin",
             "sourceRoots": [
                 "<WORKSPACE>/src/main/kotlin",
                 "<WORKSPACE>/src/test/java"
@@ -83,14 +99,11 @@
             "sourceSetNames": [],
             "isTestModule": false,
             "externalProjectId": "com.example:simple-maven:1.0-SNAPSHOT",
-            "isHmppEnabled": false,
-            "pureKotlinSourceFolders": [
-                "<WORKSPACE>/src/main/kotlin",
-                "<WORKSPACE>/src/test/java"
-            ],
+            "isHmppEnabled": true,
+            "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[\"plugin:kotlinx-serialization:sampleOption=true\",\"plugin:kotlinx-serialization:moreOptions=false\"],\"pluginClasspaths\":[\"<MAVEN_REPO>/org/jetbrains/kotlin/kotlin-maven-serialization/1.9.20/kotlin-maven-serialization-1.9.20.jar\",\"<MAVEN_REPO>/org/jetbrains/kotlin/kotlin-serialization-compiler-plugin/1.9.20/kotlin-serialization-compiler-plugin-1.9.20.jar\"]}",
-            "additionalArguments": null,
+            "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[\"plugin:kotlinx-serialization:sampleOption=true\",\"plugin:kotlinx-serialization:moreOptions=false\"],\"pluginClasspaths\":[\"<MAVEN_REPO>/org/jetbrains/kotlin/kotlin-serialization-compiler-plugin/1.9.20/kotlin-serialization-compiler-plugin-1.9.20.jar\"]}",
+            "additionalArguments": "-Xjvm-default=all -Xlambdas=class",
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
             "outputDirectoryForJsLibraryFiles": null,

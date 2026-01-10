@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     kotlin("jvm") version "2.2.0"
+    kotlin("plugin.serialization") version "2.2.0"
 }
 
 repositories {
@@ -12,12 +13,15 @@ subprojects {
     repositories {
         mavenCentral()
     }
+}
 
-    plugins.apply("org.jetbrains.kotlin.jvm")
-
+allprojects {
+    apply(plugin = "org.jetbrains.kotlin.jvm")
     kotlin {
         compilerOptions {
-            jvmTarget = JvmTarget.fromTarget("17")
+            freeCompilerArgs.add("-Xreturn-value-checker=check")
+            freeCompilerArgs.add("-Xcontext-parameters")
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
         }
     }
 }

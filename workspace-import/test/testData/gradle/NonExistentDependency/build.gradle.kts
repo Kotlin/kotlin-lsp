@@ -8,6 +8,12 @@ repositories {
     google()
 }
 
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+    }
+}
+
 dependencies {
     implementation(kotlin("stdlib"))
     implementation("org.apache.commons:commons-lang3:3.12.0")

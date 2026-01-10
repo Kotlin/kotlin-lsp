@@ -344,10 +344,10 @@
             "type": "java-imported",
             "roots": [
                 {
-                    "path": "kotlin-reflect-2.2.0.jar"
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-reflect/2.2.0/#####/kotlin-reflect-2.2.0.jar"
                 },
                 {
-                    "path": "kotlin-reflect-2.2.0-sources.jar",
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-reflect/2.2.0/#####/kotlin-reflect-2.2.0-sources.jar",
                     "type": "SOURCES"
                 }
             ],
@@ -365,10 +365,10 @@
             "type": "java-imported",
             "roots": [
                 {
-                    "path": "kotlin-stdlib-2.2.0.jar"
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.2.0/#####/kotlin-stdlib-2.2.0.jar"
                 },
                 {
-                    "path": "kotlin-stdlib-2.2.0-sources.jar",
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.2.0/#####/kotlin-stdlib-2.2.0-sources.jar",
                     "type": "SOURCES"
                 }
             ],
@@ -386,10 +386,10 @@
             "type": "java-imported",
             "roots": [
                 {
-                    "path": "annotations-13.0.jar"
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0.jar"
                 },
                 {
-                    "path": "annotations-13.0-sources.jar",
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0-sources.jar",
                     "type": "SOURCES"
                 }
             ],
@@ -406,22 +406,26 @@
     "kotlinSettings": [
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/api/src/main/resources",
+                "<WORKSPACE>/api/src/main/java",
+                "<WORKSPACE>/api/src/main/kotlin"
+            ],
             "configFileItems": [],
             "module": "api.main",
-            "useProjectSettings": true,
+            "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
             "additionalVisibleModuleNames": [],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],
-            "isTestModule": true,
-            "externalProjectId": "",
+            "isTestModule": false,
+            "externalProjectId": "multi-project-example:api:unspecified",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": null,
+            "compilerArguments": "J{\"jvmTarget\":\"17\"}",
             "additionalArguments": null,
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
@@ -433,10 +437,14 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/api/src/test/resources",
+                "<WORKSPACE>/api/src/test/java",
+                "<WORKSPACE>/api/src/test/kotlin"
+            ],
             "configFileItems": [],
             "module": "api.test",
-            "useProjectSettings": true,
+            "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
             "additionalVisibleModuleNames": [
@@ -446,11 +454,11 @@
             "testOutputPath": null,
             "sourceSetNames": [],
             "isTestModule": true,
-            "externalProjectId": "",
+            "externalProjectId": "multi-project-example:api:unspecified",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": null,
+            "compilerArguments": "J{\"jvmTarget\":\"17\"}",
             "additionalArguments": null,
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
@@ -462,22 +470,26 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/main/resources",
+                "<WORKSPACE>/core/src/main/java",
+                "<WORKSPACE>/core/src/main/kotlin"
+            ],
             "configFileItems": [],
             "module": "core.main",
-            "useProjectSettings": true,
+            "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
             "additionalVisibleModuleNames": [],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],
-            "isTestModule": true,
-            "externalProjectId": "",
+            "isTestModule": false,
+            "externalProjectId": "multi-project-example:core:unspecified",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": null,
+            "compilerArguments": "J{\"jvmTarget\":\"17\"}",
             "additionalArguments": null,
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
@@ -489,10 +501,14 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/test/resources",
+                "<WORKSPACE>/core/src/test/java",
+                "<WORKSPACE>/core/src/test/kotlin"
+            ],
             "configFileItems": [],
             "module": "core.test",
-            "useProjectSettings": true,
+            "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
             "additionalVisibleModuleNames": [
@@ -502,11 +518,11 @@
             "testOutputPath": null,
             "sourceSetNames": [],
             "isTestModule": true,
-            "externalProjectId": "",
+            "externalProjectId": "multi-project-example:core:unspecified",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": null,
+            "compilerArguments": "J{\"jvmTarget\":\"17\"}",
             "additionalArguments": null,
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
@@ -518,78 +534,26 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
-            "configFileItems": [],
-            "module": "multi-project-example.main",
-            "useProjectSettings": true,
-            "implementedModuleNames": [],
-            "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [],
-            "productionOutputPath": null,
-            "testOutputPath": null,
-            "sourceSetNames": [],
-            "isTestModule": true,
-            "externalProjectId": "",
-            "isHmppEnabled": true,
-            "pureKotlinSourceFolders": [],
-            "kind": "default",
-            "compilerArguments": null,
-            "additionalArguments": null,
-            "scriptTemplates": null,
-            "scriptTemplatesClasspath": null,
-            "outputDirectoryForJsLibraryFiles": null,
-            "targetPlatform": null,
-            "externalSystemRunTasks": [],
-            "version": 5,
-            "flushNeeded": false
-        },
-        {
-            "name": "Kotlin",
-            "sourceRoots": [],
-            "configFileItems": [],
-            "module": "multi-project-example.test",
-            "useProjectSettings": true,
-            "implementedModuleNames": [],
-            "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [
-                "multi-project-example.main"
+            "sourceRoots": [
+                "<WORKSPACE>/service/src/main/resources",
+                "<WORKSPACE>/service/src/main/java",
+                "<WORKSPACE>/service/src/main/kotlin"
             ],
-            "productionOutputPath": null,
-            "testOutputPath": null,
-            "sourceSetNames": [],
-            "isTestModule": true,
-            "externalProjectId": "",
-            "isHmppEnabled": true,
-            "pureKotlinSourceFolders": [],
-            "kind": "default",
-            "compilerArguments": null,
-            "additionalArguments": null,
-            "scriptTemplates": null,
-            "scriptTemplatesClasspath": null,
-            "outputDirectoryForJsLibraryFiles": null,
-            "targetPlatform": null,
-            "externalSystemRunTasks": [],
-            "version": 5,
-            "flushNeeded": false
-        },
-        {
-            "name": "Kotlin",
-            "sourceRoots": [],
             "configFileItems": [],
             "module": "service.main",
-            "useProjectSettings": true,
+            "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
             "additionalVisibleModuleNames": [],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],
-            "isTestModule": true,
-            "externalProjectId": "",
+            "isTestModule": false,
+            "externalProjectId": "multi-project-example:service:unspecified",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": null,
+            "compilerArguments": "J{\"jvmTarget\":\"17\"}",
             "additionalArguments": null,
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
@@ -601,10 +565,14 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/service/src/test/resources",
+                "<WORKSPACE>/service/src/test/java",
+                "<WORKSPACE>/service/src/test/kotlin"
+            ],
             "configFileItems": [],
             "module": "service.test",
-            "useProjectSettings": true,
+            "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
             "additionalVisibleModuleNames": [
@@ -614,11 +582,11 @@
             "testOutputPath": null,
             "sourceSetNames": [],
             "isTestModule": true,
-            "externalProjectId": "",
+            "externalProjectId": "multi-project-example:service:unspecified",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": null,
+            "compilerArguments": "J{\"jvmTarget\":\"17\"}",
             "additionalArguments": null,
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
