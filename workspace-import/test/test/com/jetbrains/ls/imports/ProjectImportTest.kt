@@ -112,8 +112,9 @@ class ProjectImportTest {
 
     // 1. ~/.gradle/ paths contain random hashes
     // 2. on Windows kotlin compiler arguments contain double-escaped '\' (i.e. '\\\\')
+    // 3. TC Windows agents use Z:\gradle\caches\
     fun cropJarPaths(jsonString: String): String =
-        """[^"]*?/.gradle/caches/([^"]*?)/[^/.]*?/([^/"]*\.jar[\\"])""".toRegex()
+        """[^"]*?gradle/caches/([^"]*?)/[^/.]*?/([^/"]*\.jar[\\"])""".toRegex()
             .replace(jsonString.replace("\\\\\\\\", "/").replace("\\\\", "/")) {
                 """<GRADLE_REPO>/${it.groupValues[1]}/#####/${it.groupValues[2]}"""
             }
