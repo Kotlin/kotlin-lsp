@@ -48,15 +48,14 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         val mavenHome = System.getProperty(JB_MAVEN_HOME)?.let { Path.of(it) }
         val javaHome = System.getProperty(JB_MAVEN_JAVA_HOME)
             ?: if (System.getenv()["JAVA_HOME"] == null) System.getProperty("java.home") else null
-        val command = when {
-            wrapper.exists() -> (Path.of(".") / wrapper.name).toString()
-            mavenHome != null -> (mavenHome / "bin" / if (OS.CURRENT == OS.Windows) "mvn.cmd" else "mvn").toString()
-            else -> "mvn"
+        val execPath = when {
+            wrapper.exists() -> wrapper.name
+            mavenHome != null -> mavenHome / "bin" / if (OS.CURRENT == OS.Windows) "mvn.cmd" else "mvn"
+            else -> Path.of("mvn")
         }
-        LOG.info("Using Maven: $command (JAVA_HOME=${javaHome ?: "unspecified"})")
+        LOG.info("Using Maven: $execPath (JAVA_HOME=${javaHome ?: "unspecified"})")
 
         val pomResourcePath = "/META-INF/maven/com.jetbrains.ls/imports.maven.plugin/pom.xml"
-
         val pluginJar = PathManager.getResourceRoot(this::class.java, pomResourcePath)
             ?: error("Corrupted installation: maven plugin jar not found")
 
@@ -67,7 +66,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         try {
             mavenPluginPomFile.writeText(pluginPom)
             ProcessBuilder(
-                command,
+                execPath.toString(),
                 "install:install-file",
                 "-Dfile=$pluginJar",
                 "-DpomFile=$mavenPluginPomFile",
@@ -91,7 +90,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         val workspaceJsonFile = createTempFile("workspace", ".json")
         try {
             ProcessBuilder(
-                command,
+                execPath.toString(),
                 "com.jetbrains.ls:imports-maven-plugin:info",
                 "-f",
                 "pom.xml",

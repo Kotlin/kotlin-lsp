@@ -8,6 +8,7 @@ import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
+import com.intellij.util.PathUtil
 import com.intellij.util.io.awaitExit
 import com.intellij.util.io.delete
 import com.intellij.util.system.OS
@@ -53,20 +54,19 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         val gradleHome = System.getProperty(JB_GRADLE_HOME)?.let { Path.of(it) }
         val javaHome = System.getProperty(JB_GRADLE_JAVA_HOME)
             ?: if (System.getenv()["JAVA_HOME"] == null) System.getProperty("java.home") else null
-        val command = when {
-            wrapper.exists() -> (Path.of(".") / wrapper.name).toString()
-            gradleHome != null -> (gradleHome / "bin" / if (OS.CURRENT == OS.Windows) "gradle.bat" else "gradle").toString()
-            else -> "gradle"
+        val execPath = when {
+            wrapper.exists() -> wrapper
+            gradleHome != null -> gradleHome / "bin" / if (OS.CURRENT == OS.Windows) "gradle.bat" else "gradle"
+            else -> Path("gradle")
         }
-        LOG.info("Using Gradle: $command (JAVA_HOME=${javaHome ?: "unspecified"})")
+        LOG.info("Using Gradle: $execPath (JAVA_HOME=${javaHome ?: "unspecified"})")
 
         val pluginResourcePath = "/META-INF/gradle-plugins/imports-gradle-plugin.properties"
         val pluginJar = PathManager.getResourceRoot(this::class.java, pluginResourcePath)
-            ?: error("Corrupted installation: gradle plugin jar not found")
+            ?: error("Corrupted installation: gradle plugin .properties not found")
 
         val workspaceJsonFile = createTempFile("workspace", ".json")
         val initScriptFile = createTempFile("gradle-init", ".gradle")
-        
         try {
             initScriptFile.writeText(
                 """
@@ -75,7 +75,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                             repositories {
                                 mavenCentral()
                             }
-                            classpath(files("${pluginJar.replace('\\', '/')}"))
+                            classpath(files("${PathUtil.toSystemIndependentName(pluginJar)}"))
                             classpath("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
                         }
                     }
@@ -84,7 +84,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
             )
 
             ProcessBuilder(
-                command,
+                execPath.toString(),
                 "--no-daemon",
                 "--init-script",
                 initScriptFile.toAbsolutePath().toString(),
