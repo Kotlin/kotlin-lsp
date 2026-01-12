@@ -34,6 +34,9 @@ class ProjectImportTest {
             "language-server" / "community" / "workspace-import" / "test" / "testData"
 
     @Test
+    fun newIJKotlinGradle() = doGradleTest("NewIJKotlinGradle")
+
+    @Test
     fun petClinic() = doGradleTest("PetClinic")
 
     @Test
