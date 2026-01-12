@@ -2,22 +2,14 @@
 package com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.intentions
 
 import com.intellij.codeInsight.intention.CommonIntentionAction
-import com.intellij.codeInsight.template.Expression
-import com.intellij.modcommand.*
+import com.intellij.modcommand.ActionContext
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.diagnostic.getOrHandleException
-import com.intellij.openapi.editor.Document
-import com.intellij.openapi.editor.colors.TextAttributesKey
-import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.NlsContexts
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiNameIdentifierOwner
-import com.intellij.psi.PsiNamedElement
 import com.intellij.psi.util.descendantsOfType
 import com.intellij.psi.util.startOffset
 import com.jetbrains.ls.api.core.LSAnalysisContext
@@ -41,7 +33,6 @@ import org.jetbrains.kotlin.idea.codeinsight.api.applicable.intentions.KotlinApp
 import org.jetbrains.kotlin.idea.k2.codeinsight.intentions.MovePropertyToConstructorIntention
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtFile
-import java.util.function.Function
 
 internal object LSKotlinIntentionCodeActionProvider : LSCodeActionProvider {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSKotlinLanguage)
@@ -129,128 +120,3 @@ internal object LSKotlinIntentionCodeActionProvider : LSCodeActionProvider {
 
 private val LOG = fileLogger()
 
-private class FakeModPsiUpdater(
-    var psiElement: KtElement,
-) : ModPsiUpdater {
-    var caret = psiElement.startOffset
-
-    override fun <E : PsiElement?> getWritable(element: E?): E? {
-        return element
-    }
-
-    override fun getOriginalFile(copyFile: PsiFile): PsiFile {
-        return copyFile
-    }
-
-    override fun highlight(
-        element: PsiElement,
-        attributesKey: TextAttributesKey
-    ) {
-    }
-
-    override fun highlight(
-        range: TextRange,
-        attributesKey: TextAttributesKey
-    ) {
-    }
-
-    override fun rename(
-        element: PsiNameIdentifierOwner,
-        suggestedNames: List<String>
-    ) {
-    }
-
-    override fun rename(
-        element: PsiNamedElement,
-        nameIdentifier: PsiElement?,
-        suggestedNames: List<String>
-    ) {
-    }
-
-    override fun trackDeclaration(declaration: PsiElement) {
-    }
-
-    override fun templateBuilder(): ModTemplateBuilder {
-        return object : ModTemplateBuilder {
-            override fun field(
-                element: PsiElement,
-                expression: Expression
-            ): ModTemplateBuilder {
-                return this
-            }
-
-            override fun field(
-                element: PsiElement,
-                varName: String,
-                expression: Expression
-            ): ModTemplateBuilder {
-                return this
-            }
-
-            override fun field(
-                element: PsiElement,
-                rangeInElement: TextRange,
-                varName: String,
-                expression: Expression
-            ): ModTemplateBuilder {
-                return this
-            }
-
-            override fun field(
-                element: PsiElement,
-                varName: String,
-                dependantVariableName: String,
-                alwaysStopAt: Boolean
-            ): ModTemplateBuilder {
-                return this
-            }
-
-            override fun finishAt(offset: Int): ModTemplateBuilder {
-                return this
-            }
-
-            override fun onTemplateFinished(templateFinishFunction: Function<in PsiFile, out ModCommand>): ModTemplateBuilder {
-                return this
-            }
-        }
-    }
-
-    override fun cancel(errorMessage: @NlsContexts.Tooltip String) {
-    }
-
-    override fun showConflicts(conflicts: Map<PsiElement, ModShowConflicts.Conflict>) {
-    }
-
-    override fun message(message: @NlsContexts.Tooltip String) {
-    }
-
-    override fun select(element: PsiElement) {
-    }
-
-    override fun select(range: TextRange) {
-    }
-
-    override fun moveCaretTo(offset: Int) {
-        caret = offset
-    }
-
-    override fun moveCaretTo(element: PsiElement) {
-        caret = element.startOffset
-    }
-
-    override fun getCaretOffset(): Int {
-        return caret
-    }
-
-    override fun getDocument(): Document {
-        return psiElement.containingFile.fileDocument
-    }
-
-    override fun getPsiFile(): PsiFile {
-        return psiElement.containingFile
-    }
-
-    override fun getProject(): Project {
-        return psiElement.project
-    }
-}
