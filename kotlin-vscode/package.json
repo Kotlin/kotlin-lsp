@@ -45,11 +45,18 @@
         "path": "./syntaxes/kotlin.tmLanguage.json"
       }
     ],
+    "breakpoints": [
+      {
+        "language": "kotlin"
+      }
+    ],
     "debuggers": [
       {
         "type": "intellij_debugger",
         "label": "IntelliJ Debugger",
-        "languages": ["java", "kotlin"],
+        "languages": [
+          "kotlin"
+        ],
         "configurationAttributes": {}
       }
     ],
