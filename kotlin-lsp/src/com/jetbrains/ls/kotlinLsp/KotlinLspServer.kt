@@ -112,18 +112,19 @@ private suspend fun handleRequests(
     val exitSignal = CompletableDeferred<Unit>()
     withBaseProtocolFraming(connection, exitSignal) { incoming, outgoing ->
         withServer {
-            val handler = createLspHandlers(config, exitSignal)
+            val handlers = createLspHandlers(config, exitSignal)
 
             withLsp(
-                incoming,
-                outgoing,
-                handler,
+                incoming = incoming,
+                outgoing = outgoing,
+                handlers = handlers,
                 createCoroutineContext = { lspClient ->
                     Client.contextElement(lspClient, runConfig)
                 },
-            ) { _ ->
-                exitSignal.await()
-            }
+                body = { _ ->
+                    exitSignal.await()
+                },
+            )
         }
     }
 }
