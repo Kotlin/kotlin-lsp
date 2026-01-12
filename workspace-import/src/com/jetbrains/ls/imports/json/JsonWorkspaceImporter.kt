@@ -22,6 +22,10 @@ import kotlin.io.path.inputStream
 import kotlin.io.path.notExists
 
 object JsonWorkspaceImporter : WorkspaceImporter {
+
+    private fun isApplicableDirectory(projectDirectory: Path): Boolean =
+        (projectDirectory / "workspace.json").exists()
+
     override suspend fun importWorkspace(
         project: Project,
         projectDirectory: Path,
@@ -31,7 +35,8 @@ object JsonWorkspaceImporter : WorkspaceImporter {
         if (!isApplicableDirectory(projectDirectory)) return null
         val jsonPath = projectDirectory / "workspace.json"
         return importWorkspaceJson(
-            jsonPath, projectDirectory, onUnresolvedDependency, virtualFileUrlManager)
+            jsonPath, projectDirectory, onUnresolvedDependency, virtualFileUrlManager
+        )
     }
 
     fun importWorkspaceJson(
@@ -39,7 +44,7 @@ object JsonWorkspaceImporter : WorkspaceImporter {
         projectDirectory: Path,
         onUnresolvedDependency: (String) -> Unit,
         virtualFileUrlManager: VirtualFileUrlManager
-    ): MutableEntityStorage {
+    ): EntityStorage {
         val workspaceJson: WorkspaceData = try {
             file.inputStream().use { stream ->
                 @OptIn(ExperimentalSerializationApi::class)
@@ -52,29 +57,43 @@ object JsonWorkspaceImporter : WorkspaceImporter {
                 e
             )
         }
-        val workspaceData = WorkspaceModelProcessorForTests.process(workspaceJson)
+        return MutableEntityStorage.create().apply {
+            importWorkspaceData(
+                postProcessWorkspaceData(
+                    workspaceJson,
+                    projectDirectory,
+                    onUnresolvedDependency
+                ),
+                projectDirectory,
+                WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager)),
+                virtualFileUrlManager
+            )
+        }
+    }
+
+    fun postProcessWorkspaceData(
+        workspaceData: WorkspaceData,
+        projectDirectory: Path,
+        onUnresolvedDependency: (String) -> Unit,
+    ): WorkspaceData {
+        val workspaceData = WorkspaceModelProcessorForTests.process(workspaceData)
+        val reportUnresolvedName: (String) -> Unit = { name ->
+            onUnresolvedDependency(name.removeSuffix("Gradle: ").removeSuffix("Maven: "))
+        }
         workspaceData.modules.forEach { module ->
             module.dependencies
                 .filterIsInstance<DependencyData.Library>()
                 .filter { it.name != "JDK" }
                 .filter { dependency -> workspaceData.libraries.none { it.name == dependency.name } }
-                .forEach { onUnresolvedDependency(it.name.removePrefix("Gradle: ")) }
+                .forEach { reportUnresolvedName(it.name) }
         }
         workspaceData.libraries.forEach { library ->
             if (library.roots.any { toAbsolutePath(it.path, projectDirectory).notExists() }) {
-                onUnresolvedDependency(library.name.removePrefix("Gradle: "))
+                reportUnresolvedName(library.name)
             }
         }
-        return workspaceModel(
-            workspaceData,
-            projectDirectory,
-            WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager)),
-            virtualFileUrlManager
-        )
+        return workspaceData
     }
-
-    private fun isApplicableDirectory(projectDirectory: Path): Boolean =
-        (projectDirectory / "workspace.json").exists()
 
     interface WorkspaceModelProcessorForTests {
         fun resolveMissingLibrary(libraryName: String): LibraryData?

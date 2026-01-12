@@ -6,7 +6,6 @@ package com.jetbrains.ls.imports.gradle
 import kotlinx.serialization.json.Json
 import org.gradle.api.Project
 import org.gradle.api.file.SourceDirectorySet
-import org.gradle.api.invocation.Gradle
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.plugins.ide.internal.tooling.GradleProjectBuilder
 import org.gradle.plugins.ide.internal.tooling.IdeaModelBuilder
@@ -19,23 +18,23 @@ private val KOTLIN_COMPILER_PLUGIN_JAR_PATTERN = Regex(
     ".*-compiler-plugin.*\\.jar"
 )
 
-fun Gradle.toWorkspaceData(): WorkspaceData {
+fun Project.toWorkspaceData(): WorkspaceData {
     val modules = mutableListOf<ModuleData>()
     val librariesMap = mutableMapOf<String, LibraryData>()
     val kotlinSettings = mutableListOf<KotlinSettingsData>()
 
     // TODO IdeaProject dependency order is special, use it temporarily
     val ideaProject = IdeaModelBuilder(GradleProjectBuilder())
-        .buildForRoot(gradle.rootProject, false)
+        .buildForRoot(this, false)
     val ideaModules = ideaProject.modules.associateBy { it.name }
 
     // Build project map for inter-project dependencies
     val projectMap = mutableMapOf<String, Project>()
-    gradle.rootProject.allprojects { p ->
+    this.allprojects { p ->
         projectMap["${p.group}:${p.name}"] = p
     }
 
-    gradle.rootProject.allprojects { project ->
+    this.allprojects { project ->
         val sourceSetContainer = project.extensions.findByType(SourceSetContainer::class.java)
         listOf("main", "test").forEach { sourceSetName ->
             val sourceSet = sourceSetContainer?.getByName(sourceSetName)

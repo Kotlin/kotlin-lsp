@@ -9,9 +9,12 @@ import java.io.FileOutputStream
 import java.io.PrintStream
 
 internal class InfoPlugin : Plugin<Gradle> {
+
     override fun apply(gradle: Gradle) {
         gradle.projectsEvaluated {
             val print = System.getProperty("workspace.output.file")?.takeIf { it.isNotEmpty() }?.let {
+                // dump several JSON objects (JSONL), because
+                // special `buildSrc` project is applied separately
                 PrintStream(FileOutputStream(it, true))
             } ?: System.out
             try {
@@ -22,7 +25,7 @@ internal class InfoPlugin : Plugin<Gradle> {
                     encodeDefaults = false
                 }
                 val jsonString = json.encodeToString(
-                    gradle.toWorkspaceData()
+                    gradle.rootProject.toWorkspaceData()
                 )
                 print.println(jsonString)
                 print.flush()

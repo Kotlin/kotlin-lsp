@@ -7,16 +7,25 @@ import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.platform.workspace.storage.EntityStorage
+import com.intellij.platform.workspace.storage.MutableEntityStorage
+import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.PathUtil
 import com.intellij.util.io.awaitExit
 import com.intellij.util.io.delete
 import com.intellij.util.system.OS
+import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImporter
-import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
+import com.jetbrains.ls.imports.json.JsonWorkspaceImporter.postProcessWorkspaceData
+import com.jetbrains.ls.imports.json.WorkspaceData
+import com.jetbrains.ls.imports.json.importWorkspaceData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeToSequence
 import java.nio.file.Path
 import kotlin.io.path.*
 
@@ -65,7 +74,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         val pluginJar = PathManager.getResourceRoot(this::class.java, pluginResourcePath)
             ?: error("Corrupted installation: gradle plugin .properties not found")
 
-        val workspaceJsonFile = createTempFile("workspace", ".json")
+        val workspaceJsonLFile = createTempFile("workspace", ".jsonl")
         val initScriptFile = createTempFile("gradle-init", ".gradle")
         try {
             initScriptFile.writeText(
@@ -88,7 +97,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                 "--no-daemon",
                 "--init-script",
                 initScriptFile.toAbsolutePath().toString(),
-                "-Dworkspace.output.file=${workspaceJsonFile.toAbsolutePath()}",
+                "-Dworkspace.output.file=${workspaceJsonLFile.toAbsolutePath()}",
 //                "-Dorg.gradle.jvmargs=-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005",
 //                "--stacktrace",
                 "help", // Dummy task to trigger project evaluation
@@ -103,11 +112,37 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                 .inheritIO()
                 .runAndGetOK()
 
-            return JsonWorkspaceImporter.importWorkspaceJson(
-                workspaceJsonFile, projectDirectory, onUnresolvedDependency, virtualFileUrlManager
-            )
+            val workspaceJsons = try {
+                workspaceJsonLFile.inputStream().use { stream ->
+                    @OptIn(ExperimentalSerializationApi::class)
+                    Json.decodeToSequence<WorkspaceData>(stream).toList()
+                }
+            } catch (e: SerializationException) {
+                throw WorkspaceImportException(
+                    "Error parsing ${workspaceJsonLFile.name}",
+                    "Error parsing ${workspaceJsonLFile.name}:\n ${e.message ?: e.stackTraceToString()}",
+                    e
+                )
+            }
+
+            val entitySource = WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager))
+            return MutableEntityStorage.create().apply {
+                workspaceJsons.forEach { workspaceJson ->
+                    importWorkspaceData(
+                        postProcessWorkspaceData(
+                            workspaceJson,
+                            projectDirectory,
+                            onUnresolvedDependency
+                        ),
+                        projectDirectory,
+                        entitySource,
+                        virtualFileUrlManager,
+                        ignoreDuplicateLibsAndSdks = true,
+                    )
+                }
+            }
         } finally {
-            workspaceJsonFile.delete()
+            workspaceJsonLFile.delete()
             initScriptFile.delete()
         }
     }

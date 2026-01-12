@@ -3,6 +3,7 @@ package com.jetbrains.ls.imports
 
 import com.intellij.openapi.application.PathManager
 import com.intellij.platform.workspace.storage.EntitySource
+import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.workspaceModel.ide.impl.IdeVirtualFileUrlManagerImpl
 import com.jetbrains.analyzer.api.AnalyzerFileSystems
 import com.jetbrains.analyzer.api.defaultPluginSet
@@ -13,9 +14,9 @@ import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
 import com.jetbrains.ls.imports.json.WorkspaceData
+import com.jetbrains.ls.imports.json.importWorkspaceData
 import com.jetbrains.ls.imports.json.toJson
 import com.jetbrains.ls.imports.json.workspaceData
-import com.jetbrains.ls.imports.json.workspaceModel
 import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
 import com.jetbrains.ls.test.api.utils.compareWithTestdata
 import kotlinx.coroutines.Dispatchers
@@ -106,7 +107,9 @@ class ProjectImportTest {
 
         assertEquals(data, Json.decodeFromString<WorkspaceData>(workspaceJson))
 
-        val storageFromData = workspaceModel(data, projectDir, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(true))
+        val storageFromData = MutableEntityStorage.create().apply {
+            importWorkspaceData(data, projectDir, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(true))
+        }
         assertEquals(data, workspaceData(storageFromData, projectDir))
     }
 

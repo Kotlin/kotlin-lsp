@@ -207,15 +207,18 @@ private fun toRelativePath(path: Path, workspacePath: Path): String {
 }
 
 
-fun workspaceModel(
+fun MutableEntityStorage.importWorkspaceData(
     data: WorkspaceData,
     workspacePath: Path,
     entitySource: EntitySource,
-    virtualFileUrlManager: VirtualFileUrlManager
-): MutableEntityStorage {
-    val storage = MutableEntityStorage.create()
-
+    virtualFileUrlManager: VirtualFileUrlManager,
+    ignoreDuplicateLibsAndSdks: Boolean = false,
+) {
+    val storage = this
     for (sdkData in data.sdks) {
+        if (ignoreDuplicateLibsAndSdks && SdkId(sdkData.name, sdkData.type) in storage) {
+            continue
+        }
         val roots =
             sdkData.roots?.map { SdkRoot(virtualFileUrlManager.getOrCreateFromUrl(it.url), SdkRootTypeId(it.type)) }
                 ?: sdkData.homePath?.let { homePath ->
@@ -242,6 +245,9 @@ fun workspaceModel(
         val tableId = when (libraryData.level) {
             "module" -> ModuleLibraryTableId(ModuleId(libraryData.module!!))
             else -> LibraryTableId.ProjectLibraryTableId
+        }
+        if (ignoreDuplicateLibsAndSdks && LibraryId(libraryData.name, tableId) in storage) {
+            continue
         }
         val roots = libraryData.roots.map {
             LibraryRoot(toAbsolutePath(it.path, workspacePath).toIntellijUri(virtualFileUrlManager), LibraryRootTypeId(it.type), LibraryRoot.InclusionOptions.valueOf(it.inclusionOptions.name))
@@ -321,9 +327,9 @@ fun workspaceModel(
         }
     }
 
-    moduleBuilders.values.forEach { storage.addEntity(it) }
-
-    return storage
+    moduleBuilders.values.forEach {
+        storage addEntity it
+    }
 }
 
 private fun toEntity(
