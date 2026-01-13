@@ -39,6 +39,7 @@
       <excludeFolder url="file://$MODULE_DIR$/testData/gradle/NewIJKotlinGradle/buildSrc/.gradle" />
       <excludeFolder url="file://$MODULE_DIR$/testData/gradle/NewIJKotlinGradle/buildSrc/build" />
       <excludeFolder url="file://$MODULE_DIR$/testData/gradle/NonExistentDependency/.gradle" />
+      <excludeFolder url="file://$MODULE_DIR$/testData/gradle/NewIJKotlinGradle/buildSrc/.kotlin" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

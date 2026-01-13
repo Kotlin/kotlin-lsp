@@ -8,14 +8,11 @@ import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
-import com.intellij.util.io.awaitExit
 import com.intellij.util.io.delete
 import com.intellij.util.system.OS
-import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.jetbrains.ls.imports.utils.runAndGetOK
 import java.nio.file.Path
 import kotlin.io.path.*
 
@@ -82,7 +79,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                 }
                 .directory(projectDirectory.toFile())
                 .inheritIO()
-                .runAndGetOK()
+                .runAndGetOK("Maven")
         } finally {
             mavenPluginPomFile.delete()
         }
@@ -104,34 +101,13 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                 }
                 .directory(projectDirectory.toFile())
                 .inheritIO()
-                .runAndGetOK()
+                .runAndGetOK("Maven")
 
             return JsonWorkspaceImporter.importWorkspaceJson(
                 workspaceJsonFile, projectDirectory, onUnresolvedDependency, virtualFileUrlManager
             )
         } finally {
             workspaceJsonFile.delete()
-        }
-    }
-
-    private suspend fun ProcessBuilder.runAndGetOK() {
-        val process = try {
-            withContext(Dispatchers.IO) {
-                start()
-            }
-        } catch (e: Exception) {
-            throw WorkspaceImportException(
-                "Failed to start Maven process",
-                "Cannot execute ${command()} in ${directory()}: ${e.message}",
-                e
-            )
-        }
-        process.awaitExit()
-        if (process.exitValue() != 0) {
-            throw WorkspaceImportException(
-                "Failed to import Maven project",
-                "Failed to import Maven project in ${directory()}:\n${command()} returned ${process.exitValue()}"
-            )
         }
     }
 }

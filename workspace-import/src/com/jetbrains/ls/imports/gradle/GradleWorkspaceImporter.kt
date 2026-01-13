@@ -11,7 +11,6 @@ import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.PathUtil
-import com.intellij.util.io.awaitExit
 import com.intellij.util.io.delete
 import com.intellij.util.system.OS
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
@@ -20,8 +19,7 @@ import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter.postProcessWorkspaceData
 import com.jetbrains.ls.imports.json.WorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.jetbrains.ls.imports.utils.runAndGetOK
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -110,7 +108,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                 }
                 .directory(projectDirectory.toFile())
                 .inheritIO()
-                .runAndGetOK()
+                .runAndGetOK("Gradle")
 
             val workspaceJsons = try {
                 workspaceJsonLFile.inputStream().use { stream ->
@@ -144,27 +142,6 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         } finally {
             workspaceJsonLFile.delete()
             initScriptFile.delete()
-        }
-    }
-
-    private suspend fun ProcessBuilder.runAndGetOK() {
-        val process = try {
-            withContext(Dispatchers.IO) {
-                start()
-            }
-        } catch (e: Exception) {
-            throw WorkspaceImportException(
-                "Failed to start Gradle process",
-                "Cannot execute ${command()} in ${directory()}: ${e.message}",
-                e
-            )
-        }
-        process.awaitExit()
-        if (process.exitValue() != 0) {
-            throw WorkspaceImportException(
-                "Failed to import Gradle project",
-                "Failed to import Gradle project in ${directory()}:\n${command()} returned ${process.exitValue()}"
-            )
         }
     }
 }
