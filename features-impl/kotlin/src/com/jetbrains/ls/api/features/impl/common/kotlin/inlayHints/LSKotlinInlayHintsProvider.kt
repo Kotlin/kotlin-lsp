@@ -29,7 +29,6 @@ internal object LSKotlinInlayHintsProvider : LSInlayHintsProviderBase(
 
     override val lspConfigurationParamsSection: String = "jetbrains.kotlin"
 
-
     private class KotlinHintFactory(
         paddingLeft: Boolean? = null,
         paddingRight: Boolean? = null,
@@ -45,5 +44,7 @@ internal object LSKotlinInlayHintsProvider : LSInlayHintsProviderBase(
             }
             else -> super.getLocationTarget(actionData, psiFile)
         }
+
+        override fun isCollapsingEnabled(options: InlayOptions): Boolean = false
     }
 }

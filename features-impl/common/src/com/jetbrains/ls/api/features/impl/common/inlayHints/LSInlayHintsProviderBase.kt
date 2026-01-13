@@ -17,6 +17,7 @@ import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.core.util.toTextRange
+import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
 import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
@@ -78,7 +79,7 @@ abstract class LSInlayHintsProviderBase(
                             presentation,
                             psiFile,
                             document,
-                            InlayHintResolveData(params, presentation, providerIndex, options,uniqueId),
+                            InlayHintResolveData(params, presentation, providerIndex, options, uniqueId)
                         )
                     }
                 }
@@ -110,21 +111,33 @@ abstract class LSInlayHintsProviderBase(
                 val psiFile = file.findPsiFile(project) ?: return@a null
                 val document = file.findDocument() ?: return@a null
                 val provider = createProviders(data.options)[data.providerIndex]
-                provider.factory.resolveHint(hint, data.presentation, psiFile, document)
+                provider.factory.resolveHint(hint, data.presentation, psiFile, document, data.options)
             }
         }
     }
 
-    protected open class HintFactoryBase(
+    protected abstract class HintFactoryBase(
         private val paddingLeft: Boolean?,
         private val paddingRight: Boolean?,
         private val kind: InlayHintKind?,
     ) {
         fun createHint(presentation: Presentation, psiFile: PsiFile, document: Document, data: InlayHintResolveData): InlayHint {
             val position = presentation.position.toOriginal() as? InlineInlayPosition ?: error("Only inline hints are supported")
-            val labels = presentation.hints.flatMap { hintToLabel(it, psiFile, resolve = false) }
+            val lspPosition = document.positionByOffset(position.offset)
+            val documentUri = DocumentUri(psiFile.virtualFile.uri)
+            val labels = presentation.hints.flatMap {
+                hintToLabel(
+                    it,
+                    psiFile,
+                    documentUri,
+                    data.options,
+                    lspPosition,
+                    position.offset,
+                    resolve = false
+                )
+            }
             return InlayHint(
-                position = document.positionByOffset(position.offset),
+                position = lspPosition,
                 label = OrString.of(labels),
                 kind = kind,
                 textEdits = null,
@@ -135,7 +148,15 @@ abstract class LSInlayHintsProviderBase(
             )
         }
 
-        private fun hintToLabel(hint: Hint, psiFile: PsiFile, resolve: Boolean): List<InlayHintLabelPart> = when (hint) {
+        private fun hintToLabel(
+            hint: Hint,
+            psiFile: PsiFile,
+            documentUri: DocumentUri,
+            options: InlayOptions,
+            position: Position,
+            offset: Int,
+            resolve: Boolean
+        ): List<InlayHintLabelPart> = when (hint) {
             is Hint.TextHint -> {
                 listOf(
                     InlayHintLabelPart(
@@ -149,26 +170,47 @@ abstract class LSInlayHintsProviderBase(
                     )
                 )
             }
+
             is Hint.ListHint -> {
-              hint.hints.flatMap { hintToLabel(it, psiFile, resolve) }
+                hint.hints.flatMap { hintToLabel(it, psiFile, documentUri, options, position, offset, resolve) }
+            }
+
+            is Hint.CollapsibleListHint -> {
+                if (!resolve && isCollapsingEnabled(options)) {
+                    hint.collapsedHints.flatMap { hintToLabel(it, psiFile, documentUri, options, position, offset, resolve) }
+                } else {
+                    hint.expandedHints.flatMap { hintToLabel(it, psiFile, documentUri, options, position, offset, resolve) }
+                }
             }
         }
 
-        internal fun resolveHint(hint: InlayHint, presentation: Presentation, psiFile: PsiFile, document: Document): InlayHint {
-            val labels = presentation.hints.flatMap { hintToLabel(it, psiFile, resolve = true) }
+        internal fun resolveHint(
+            hint: InlayHint,
+            presentation: Presentation,
+            psiFile: PsiFile,
+            document: Document,
+            options: InlayOptions
+        ): InlayHint {
+            val documentUri = DocumentUri(psiFile.virtualFile.uri)
+            val offset = document.getLineStartOffset(hint.position.line) + hint.position.character
+            val labels =
+                presentation.hints.flatMap { hintToLabel(it, psiFile, documentUri, options, hint.position, offset, resolve = true) }
             return hint.copy(label = OrString.of(labels))
         }
 
         protected open fun getLocationTarget(
             actionData: InlayActionDataSerializable?,
             psiFile: PsiFile,
-        ): PsiElement? = when(actionData?.handlerId) {
+        ): PsiElement? = when (actionData?.handlerId) {
             PsiPointerInlayActionNavigationHandler.HANDLER_ID -> {
                 val payload = actionData.payload as InlayActionPayloadDataSerializable.PsiPointerInlayActionPayloadSerializable
                 payload.pointer.restore(psiFile.project)
             }
+
             else -> null
         }
+
+        protected abstract fun isCollapsingEnabled(options: InlayOptions): Boolean
     }
 
     private fun collectHints(
@@ -209,13 +251,17 @@ abstract class LSInlayHintsProviderBase(
             hintFormat: HintFormat,
             builder: PresentationTreeBuilder.() -> Unit
         ) {
-            _presentations += Presentation(InlayPositionSerializable.fromInlayPosition(position), tooltip, LSCommonTreeBuilder().apply(builder).hints)
+            _presentations += Presentation(
+                InlayPositionSerializable.fromInlayPosition(position),
+                tooltip,
+                LSCommonTreeBuilder().apply(builder).hints
+            )
         }
 
         override fun whenOptionEnabled(optionId: String, block: () -> Unit) {
-           if (inlayOptions.isEnabled(optionId)) {
-               block()
-           }
+            if (inlayOptions.isEnabled(optionId)) {
+                block()
+            }
         }
     }
 
@@ -270,8 +316,13 @@ abstract class LSInlayHintsProviderBase(
             expandedState: CollapsiblePresentationTreeBuilder.() -> Unit,
             collapsedState: CollapsiblePresentationTreeBuilder.() -> Unit
         ) {
-            // Collapsed view is not supported for now, so instead we show inlay hint in the expanded state
-            _hints += Hint.ListHint(LSCommonTreeBuilder().apply(expandedState)._hints)
+            val expandedHints = LSCommonTreeBuilder().apply(expandedState)._hints
+            val collapsedHints = LSCommonTreeBuilder().apply(collapsedState)._hints
+
+            _hints += Hint.CollapsibleListHint(
+                expandedHints = expandedHints,
+                collapsedHints = collapsedHints
+            )
         }
 
         override fun toggleButton(builder: PresentationTreeBuilder.() -> Unit) {
@@ -335,9 +386,18 @@ abstract class LSInlayHintsProviderBase(
         companion object {
             fun fromInlayPosition(position: InlayPosition): InlayPositionSerializable {
                 return when (position) {
-                    is InlineInlayPosition -> InlineInlayPositionSerializable(position.offset, position.relatedToPrevious, position.priority)
+                    is InlineInlayPosition -> InlineInlayPositionSerializable(
+                        position.offset,
+                        position.relatedToPrevious,
+                        position.priority
+                    )
+
                     is EndOfLinePosition -> EndOfLinePositionSerializable(position.line, position.priority)
-                    is AboveLineIndentedPosition -> AboveLineIndentedPositionSerializable(position.offset, position.verticalPriority, position.priority)
+                    is AboveLineIndentedPosition -> AboveLineIndentedPositionSerializable(
+                        position.offset,
+                        position.verticalPriority,
+                        position.priority
+                    )
                 }
             }
         }
@@ -402,5 +462,12 @@ abstract class LSInlayHintsProviderBase(
             val text: String,
             val actionData: InlayActionDataSerializable?,
         ) : Hint
+
+        @Serializable
+        class CollapsibleListHint(
+            val expandedHints: List<Hint>,
+            val collapsedHints: List<Hint>
+        ) : Hint
+
     }
 }
