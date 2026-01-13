@@ -96,6 +96,10 @@ export function registerDecompiler(context: ExtensionContext) {
 }
 
 export function registerOpeningJars() {
+    /*
+     * Registers command for navigating to jar/jrt locations.
+     * See LSP-393
+    */
     vscode.commands.registerCommand('jetbrains.navigateToJarLocation', async (uriString: string, line: number, character: number) => {
         try {
             const uri = vscode.Uri.parse(uriString);

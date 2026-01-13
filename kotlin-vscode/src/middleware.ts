@@ -2,6 +2,10 @@ import {Middleware} from 'vscode-languageclient/node';
 
 export const middleware: Middleware = {
     resolveInlayHint: async (hint, token, next) => {
+        /*
+         * Replaces location with command for jar/jrt schemes when resolving an inlay hint.
+         * See LSP-393
+         */
         const result = await next(hint, token);
 
         if (result && result.label && typeof result.label === 'object' && Array.isArray(result.label)) {
