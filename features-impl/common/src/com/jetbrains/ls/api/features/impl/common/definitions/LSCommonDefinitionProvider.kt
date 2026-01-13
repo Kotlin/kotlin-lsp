@@ -30,7 +30,7 @@ import kotlinx.coroutines.flow.flow
 
 class LSCommonDefinitionProvider(
     override val supportedLanguages: Set<LSLanguage>,
-    private val targetKinds: Set<TargetKind>
+    private val targetKinds: Set<TargetKind>,
 ) : LSDefinitionProvider {
     context(_: LSServer, _: LspHandlerContext)
     override fun provideDefinitions(params: DefinitionParams): Flow<Location> = flow {
@@ -42,14 +42,14 @@ class LSCommonDefinitionProvider(
                 val document = file.findDocument() ?: return@readAction emptyList()
                 val targets = psiFile.getTargetsAtPosition(params.position, document, targetKinds)
 
-                targets.mapNotNull {
-                    when (it) {
-                        is PsiPackage -> it.directory?.uri?.let { Location(DocumentUri(it), Range.BEGINNING) }
-                        else -> it.getLspLocationForDefinition()
+                targets.mapNotNull { psiElement ->
+                    when (psiElement) {
+                        is PsiPackage -> psiElement.directory?.uri?.let { uri -> Location(DocumentUri(uri), Range.BEGINNING) }
+                        else -> psiElement.getLspLocationForDefinition()
                     }
                 }
             }
-        }.forEach { emit(it) }
+        }.forEach { location -> emit(location) }
     }
 }
 
@@ -60,7 +60,6 @@ private val PsiPackage.directory: VirtualFile?
         return StubIndex.getInstance()
             .getContainingFilesIterator(JavaFilePackageIndex.FILE_PACKAGE_INDEX, qualifiedName, project, EverythingGlobalScope())
             .asSequence()
-            .filterNot { it.isFromLibrary() }
-            .mapNotNull { it.parent }
-            .firstOrNull()
+            .filterNot { virtualFile -> virtualFile.isFromLibrary() }
+            .firstNotNullOfOrNull { virtualFile -> virtualFile.parent }
     }
