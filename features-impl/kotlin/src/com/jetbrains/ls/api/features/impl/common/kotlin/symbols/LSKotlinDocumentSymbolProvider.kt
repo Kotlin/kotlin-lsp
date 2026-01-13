@@ -3,13 +3,11 @@ package com.jetbrains.ls.api.features.impl.common.kotlin.symbols
 
 import com.intellij.psi.PsiElement
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
-import com.jetbrains.ls.api.features.impl.common.symbols.LSDocumentSymbolProviderBase
-import com.jetbrains.ls.api.features.language.LSLanguage
+import com.jetbrains.ls.api.features.impl.common.symbols.LSDocumentSymbolProviderPsiBase
 import com.jetbrains.lsp.protocol.SymbolKind
 import org.jetbrains.kotlin.psi.*
 
-internal object LSKotlinDocumentSymbolProvider: LSDocumentSymbolProviderBase() {
-    override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
+internal object LSKotlinDocumentSymbolProvider: LSDocumentSymbolProviderPsiBase(LSKotlinLanguage) {
 
     override fun getName(element: PsiElement): String? =
         when (element) {
@@ -22,9 +20,8 @@ internal object LSKotlinDocumentSymbolProvider: LSDocumentSymbolProviderBase() {
             else -> super.getName(element)
         }
 
-
     override fun getKind(element: PsiElement): SymbolKind? =
-       element.getKind()
+        element.getKind()
 
     override fun isDeprecated(element: PsiElement): Boolean =
         // TODO: Something more robust

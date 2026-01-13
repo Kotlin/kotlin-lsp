@@ -3,24 +3,22 @@ package com.jetbrains.ls.api.features.impl.common.symbols
 
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.vfs.findPsiFile
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiNameIdentifierOwner
+import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
-import com.jetbrains.ls.api.features.impl.common.utils.getLspLocation
-import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
 import com.jetbrains.ls.api.features.symbols.LSDocumentSymbolProvider
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.DocumentSymbol
 import com.jetbrains.lsp.protocol.DocumentSymbolParams
+import com.jetbrains.lsp.protocol.Range
 import com.jetbrains.lsp.protocol.SymbolKind
 import com.jetbrains.lsp.protocol.SymbolTag
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-abstract class LSDocumentSymbolProviderBase : LSDocumentSymbolProvider {
+abstract class LSDocumentSymbolProviderBase<T> : LSDocumentSymbolProvider {
     context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getDocumentSymbols(params: DocumentSymbolParams): Flow<DocumentSymbol> = flow {
         val uri = params.textDocument.uri.uri
@@ -28,7 +26,7 @@ abstract class LSDocumentSymbolProviderBase : LSDocumentSymbolProvider {
             readAction {
                 uri.findVirtualFile()
                     ?.findPsiFile(project)
-                    ?.let { psiFile -> getNestedDeclarations(psiFile) }
+                    ?.let { psiFile -> getRootDeclarations(psiFile) }
                     ?.mapNotNull { declaration ->
                         mapDeclaration(declaration)
                     } ?: emptyList()
@@ -37,11 +35,10 @@ abstract class LSDocumentSymbolProviderBase : LSDocumentSymbolProvider {
     }
 
     context(analysisContext: LSAnalysisContext)
-    private fun mapDeclaration(element: PsiElement): DocumentSymbol? {
+    protected open fun mapDeclaration(element: T): DocumentSymbol? {
         val name = getName(element) ?: return null
         val kind = getKind(element) ?: return null
-        val range = element.getLspLocation()?.range ?: return null
-        val selectionRange = element.getLspLocationForDefinition()?.range ?: return null
+        val ranges = getRanges(element) ?: return null
         val deprecated = isDeprecated(element)
         return DocumentSymbol(
             name = name,
@@ -49,19 +46,20 @@ abstract class LSDocumentSymbolProviderBase : LSDocumentSymbolProvider {
             kind = kind,
             tags = if (deprecated) listOf(SymbolTag.Deprecated) else null,
             deprecated = deprecated,
-            range = range,
-            selectionRange = selectionRange,
+            range = ranges.range,
+            selectionRange = ranges.selectionRange,
             children = getNestedDeclarations(element).mapNotNull { mapDeclaration(it) }.takeIf { it.isNotEmpty() }
         )
     }
 
-    protected open fun getName(element: PsiElement): String? =
-        when (element) {
-            is PsiNameIdentifierOwner -> element.name
-            else -> null
-        }
 
-    protected abstract fun getKind(element: PsiElement): SymbolKind?
-    protected abstract fun isDeprecated(element: PsiElement): Boolean
-    protected abstract fun getNestedDeclarations(element: PsiElement): List<PsiElement>
+
+    data class ElementRanges(val range: Range, val selectionRange: Range)
+
+    protected abstract fun getRanges(element: T): ElementRanges?
+    protected abstract fun getName(element: T): String?
+    protected abstract fun getKind(element: T): SymbolKind?
+    protected abstract fun isDeprecated(element: T): Boolean
+    protected abstract fun getRootDeclarations(psiFile: PsiFile): List<T>
+    protected abstract fun getNestedDeclarations(element: T): List<T>
 }
