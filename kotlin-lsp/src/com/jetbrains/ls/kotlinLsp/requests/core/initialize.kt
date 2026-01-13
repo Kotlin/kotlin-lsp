@@ -76,6 +76,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
                 textDocumentSync = TextDocumentSyncKind.Incremental,
                 definitionProvider = OrBoolean(true),
                 implementationProvider = OrBoolean(true),
+                typeDefinitionProvider = OrBoolean(true),
                 diagnosticProvider = DiagnosticOptions(
                     identifier = null,
                     interFileDependencies = true,

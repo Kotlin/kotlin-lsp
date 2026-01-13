@@ -18,6 +18,7 @@ import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokens
 import com.jetbrains.ls.api.features.signatureHelp.LSSignatureHelp
 import com.jetbrains.ls.api.features.symbols.LSDocumentSymbols
 import com.jetbrains.ls.api.features.symbols.LSWorkspaceSymbols
+import com.jetbrains.ls.api.features.typeDefinition.LSTypeDefinition
 import com.jetbrains.ls.api.features.typeHierarchy.LSTypeHierarchy
 import com.jetbrains.lsp.implementation.LspHandlersBuilder
 import com.jetbrains.lsp.protocol.*
@@ -41,6 +42,7 @@ internal fun LspHandlersBuilder.features() {
     request(CompletionResolveRequestType) { LSCompletion.resolveCompletion(it) }
     request(DefinitionRequestType) { LSDefinition.getDefinition(it) }
     request(Implementation.ImplementationRequest) { LSImplementation.getImplementation(it) }
+    request(TypeDefinitionRequestType) { LSTypeDefinition.getTypeDefinition(it) }
     request(DocumentDiagnosticRequestType) { LSDiagnostic.getDiagnostics(it) }
     request(HoverRequestType) { LSHover.getHover(it) }
     request(ReferenceRequestType) { LSReferences.getReferences(it) }
