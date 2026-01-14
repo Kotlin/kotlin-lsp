@@ -229,7 +229,7 @@ private suspend fun initFolder(
     virtualFileUrlManager: VirtualFileUrlManager,
     storage: MutableEntityStorage,
 ) {
-    val project = AnalyzerContext.currentProject
+    val project = AnalyzerContext.current
     progress.report(Report(message = "Importing folder ${folder}"))
     for (importer in importers) {
         val unresolved = mutableSetOf<String>()
