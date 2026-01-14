@@ -51,7 +51,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         val execPath = when {
             wrapper.exists() -> wrapper.name
             mavenHome != null -> mavenHome / "bin" / if (OS.CURRENT == OS.Windows) "mvn.cmd" else "mvn"
-            else -> Path.of("mvn")
+            else -> Path.of(if (OS.CURRENT == OS.Windows) "mvn.cmd" else "mvn")
         }
         LOG.info("Using Maven: $execPath (JAVA_HOME=${javaHome ?: "unspecified"})")
 

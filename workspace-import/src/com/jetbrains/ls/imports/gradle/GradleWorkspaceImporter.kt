@@ -66,7 +66,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         val execPath = when {
             wrapper.exists() -> wrapper
             gradleHome != null -> gradleHome / "bin" / if (OS.CURRENT == OS.Windows) "gradle.bat" else "gradle"
-            else -> Path("gradle")
+            else -> Path(if (OS.CURRENT == OS.Windows) "gradle.bat" else "gradle")
         }
         LOG.info("Using Gradle: $execPath (JAVA_HOME=${javaHome ?: "unspecified"})")
 
