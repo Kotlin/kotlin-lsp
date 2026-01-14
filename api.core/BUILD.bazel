@@ -1,3 +1,12 @@
+load("@community//build:tests-options.bzl", "jps_test")
+
+jps_test(
+  name = "api.core_test",
+  runtime_deps = [":api.core_test_lib"],
+  sandbox = True,
+)
+### skip generation section `test language-server.api.core`
+
 ### auto-generated section `build language-server.api.core` start
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
 load("@rules_jvm//:jvm.bzl", "jvm_library")
@@ -49,12 +58,3 @@ jvm_library(
   ]
 )
 ### auto-generated section `build language-server.api.core` end
-
-### auto-generated section `test language-server.api.core` start
-load("@community//build:tests-options.bzl", "jps_test")
-
-jps_test(
-  name = "api.core_test",
-  runtime_deps = [":api.core_test_lib"]
-)
-### auto-generated section `test language-server.api.core` end
