@@ -4,7 +4,6 @@ load("@rules_jvm//:jvm.bzl", "jvm_library", "resourcegroup")
 
 create_kotlinc_options(
   name = "custom_integration-tests",
-  progressive = False,
   x_context_parameters = True
 )
 

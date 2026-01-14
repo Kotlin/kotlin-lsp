@@ -13,11 +13,6 @@
                     "type": "library",
                     "name": "Maven: org.jetbrains.kotlin:kotlin-stdlib:1.9.20",
                     "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Maven: org.jetbrains:annotations:13.0",
-                    "scope": "compile"
                 }
             ],
             "contentRoots": [
@@ -29,12 +24,12 @@
                             "type": "java-source"
                         },
                         {
-                            "path": "<WORKSPACE>/src/test/java",
-                            "type": "java-test"
-                        },
-                        {
                             "path": "<WORKSPACE>/src/main/resources",
                             "type": "java-resource"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/test/java",
+                            "type": "java-test"
                         },
                         {
                             "path": "<WORKSPACE>/src/test/resources",
@@ -51,17 +46,17 @@
             "type": "repository",
             "roots": [
                 {
+                    "path": "<MAVEN_REPO>/org/jetbrains/kotlin/kotlin-stdlib/1.9.20/kotlin-stdlib-1.9.20-javadoc.jar",
+                    "type": "JAVADOC"
+                },
+                {
+                    "path": "<MAVEN_REPO>/org/jetbrains/kotlin/kotlin-stdlib/1.9.20/kotlin-stdlib-1.9.20-sources.jar",
+                    "type": "SOURCES"
+                },
+                {
                     "path": "<MAVEN_REPO>/org/jetbrains/kotlin/kotlin-stdlib/1.9.20/kotlin-stdlib-1.9.20.jar"
                 }
-            ],
-            "properties": {
-                "attributes": {
-                    "groupId": "org.jetbrains.kotlin",
-                    "artifactId": "kotlin-stdlib",
-                    "version": "1.9.20",
-                    "baseVersion": "1.9.20"
-                }
-            }
+            ]
         },
         {
             "name": "Maven: org.jetbrains:annotations:13.0",
@@ -70,15 +65,7 @@
                 {
                     "path": "<MAVEN_REPO>/org/jetbrains/annotations/13.0/annotations-13.0.jar"
                 }
-            ],
-            "properties": {
-                "attributes": {
-                    "groupId": "org.jetbrains",
-                    "artifactId": "annotations",
-                    "version": "13.0",
-                    "baseVersion": "13.0"
-                }
-            }
+            ]
         }
     ],
     "kotlinSettings": [
