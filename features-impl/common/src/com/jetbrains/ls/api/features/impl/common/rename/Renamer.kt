@@ -6,10 +6,12 @@ import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.*
 import com.intellij.psi.impl.light.LightElement
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.SearchScope
+import com.intellij.refactoring.BaseRefactoringProcessor
 import com.intellij.refactoring.RefactoringBundle
 import com.intellij.refactoring.RefactoringHelper
 import com.intellij.refactoring.copy.CopyFilesOrDirectoriesHandler
@@ -32,8 +34,6 @@ import com.intellij.usageView.UsageInfo
 import com.intellij.usageView.UsageViewUtil
 import com.intellij.util.containers.MultiMap
 
-import com.intellij.refactoring.BaseRefactoringProcessor
-
 /**
  * A re-implementation of [BaseRefactoringProcessor] without UI dependencies*.
  *
@@ -53,7 +53,7 @@ internal class Renamer(
     private val searchInComments: Boolean,
     private val searchTextOccurrences: Boolean
 ) {
-    private val primaryElement : PsiElement = target
+    private val primaryElement: PsiElement = RenamePsiElementProcessor.forElement(target).substituteElementToRename(target, null) ?: target
     private val allRenames = linkedMapOf<PsiElement, String>()
     private var nonCodeUsages = emptyArray<NonCodeUsageInfo>()
     private val renamers = mutableListOf<AutomaticRenamer>()
@@ -108,7 +108,9 @@ internal class Renamer(
         if (!conflicts.isEmpty()) {
             val conflictData = RefactoringEventData()
             conflictData.putUserData(RefactoringEventData.CONFLICTS_KEY, conflicts.values())
-            throw IllegalStateException(conflicts.values().joinToString(separator = "\n"))
+            throw IllegalStateException(
+                conflicts.values().filterNotNull().joinToString(separator = "\n") { StringUtil.removeHtmlTags(it, true) }
+            )
         }
 
         val variableUsages: MutableList<UsageInfo> = ArrayList()
