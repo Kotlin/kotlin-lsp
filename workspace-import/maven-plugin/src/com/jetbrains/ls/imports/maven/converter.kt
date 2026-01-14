@@ -95,7 +95,7 @@ private fun MavenProject.toModuleData(
                     DependencyData.Module(
                         dependency.artifactId,
                         toDependencyDataScope(dependency.scope),
-                        dependency.optional != "true"
+                        false
                     )
                 )
             }
