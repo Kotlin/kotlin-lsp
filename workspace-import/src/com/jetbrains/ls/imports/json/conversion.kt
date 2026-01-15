@@ -2,6 +2,8 @@
 package com.jetbrains.ls.imports.json
 
 
+import com.intellij.java.workspace.entities.JavaModuleSettingsEntity
+import com.intellij.java.workspace.entities.JavaModuleSettingsEntityBuilder
 import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
 import com.intellij.openapi.util.io.FileUtilRt
@@ -43,6 +45,10 @@ fun workspaceData(storage: EntityStorage, workspacePath: Path): WorkspaceData =
         sdks = storage.entities<SdkEntity>()
             .map { toDataClass(it, workspacePath) }
             .sortedBy { it.name }.toList(),
+        javaSettings = storage.entities<JavaModuleSettingsEntity>()
+            .map { toDataClass(it, workspacePath) }
+            .sortedBy { it.module }
+            .toList(),
         kotlinSettings = storage.entities<KotlinSettingsEntity>()
             .map { toDataClass(it, workspacePath) }
             .sortedBy { it.module }
@@ -330,6 +336,10 @@ fun MutableEntityStorage.importWorkspaceData(
     moduleBuilders.values.forEach {
         storage addEntity it
     }
+
+    for (javaSettings in data.javaSettings) {
+        storage addEntity toEntity(javaSettings, entitySource, moduleBuilders[javaSettings.module]!!, workspacePath)
+    }
 }
 
 private fun toEntity(
@@ -376,6 +386,34 @@ private fun toEntity(
         )
     }
 }
+
+
+
+private fun toEntity(
+    javaSettingsData: JavaSettingsData,
+    entitySource: EntitySource,
+    module: ModuleEntityBuilder,
+    workspacePath: Path
+): JavaModuleSettingsEntityBuilder =
+    JavaModuleSettingsEntity(
+        inheritedCompilerOutput = javaSettingsData.inheritedCompilerOutput,
+        excludeOutput = javaSettingsData.excludeOutput,
+        entitySource = entitySource,
+    ) {
+        this.module = module
+        this.languageLevelId = javaSettingsData.languageLevelId
+    }
+
+private fun toDataClass(entity: JavaModuleSettingsEntity, workspacePath: Path): JavaSettingsData =
+    JavaSettingsData(
+        module = entity.module.name,
+        inheritedCompilerOutput = entity.inheritedCompilerOutput,
+        excludeOutput = entity.excludeOutput,
+        compilerOutput = entity.compilerOutput?.let {  toRelativePath(it, workspacePath) },
+        compilerOutputForTests = entity.compilerOutputForTests?.let {  toRelativePath(it, workspacePath) },
+        languageLevelId = entity.languageLevelId,
+        manifestAttributes = entity.manifestAttributes
+    )
 
 private fun addFacetRecursive(
   data: FacetData,

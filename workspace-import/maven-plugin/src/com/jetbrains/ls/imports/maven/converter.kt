@@ -34,7 +34,8 @@ fun MavenProject.toWorkspaceData(
         modules = modulesData,
         libraries = libraries,
         sdks = emptyList(),
-        kotlinSettings = kotlinSettings
+        kotlinSettings = kotlinSettings,
+        javaSettings = modules.map { it.javaSettings }
     )
 }
 
@@ -654,7 +655,26 @@ internal class MavenTreeModuleImportData(
     val mavenProject: MavenProject,
     val moduleData: MavenModuleData,
     val dependencies: List<MavenImportDependency>,
-)
+) {
+    val javaSettings: JavaSettingsData
+        get() {
+            val level = moduleData.sourceLanguageLevel
+            val jdkLevel = when {
+                level == null -> null
+                level.length == 1 -> "JDK_1_$level"
+                else -> "JDK_${level.replace('.', '_')}"
+            }
+            return JavaSettingsData(
+                module = moduleData.moduleName,
+                inheritedCompilerOutput = false,
+                excludeOutput = false,
+                compilerOutput = null,
+                compilerOutputForTests = null,
+                languageLevelId = jdkLevel,
+                manifestAttributes = emptyMap()
+            )
+        }
+}
 
 private data class LanguageLevels(
     val sourceLevel: String?,

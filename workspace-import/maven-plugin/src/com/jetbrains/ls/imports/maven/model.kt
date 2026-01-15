@@ -22,6 +22,7 @@ data class WorkspaceData(
     val libraries: List<LibraryData> = emptyList(),
     val sdks: List<SdkData> = emptyList(),
     val kotlinSettings: List<KotlinSettingsData> = emptyList(),
+    val javaSettings: List<JavaSettingsData> = emptyList(),
 )
 
 @Serializable
@@ -204,6 +205,17 @@ data class XmlElement(
     val attributes: Map<String, String> = emptyMap(),
     val children: List<XmlElement> = emptyList(),
     val text: String? = null
+)
+
+@Serializable
+data class JavaSettingsData(
+    val module: String,
+    val inheritedCompilerOutput: Boolean,
+    val excludeOutput: Boolean,
+    val compilerOutput: String?,
+    val compilerOutputForTests: String?,
+    val languageLevelId: String?,
+    val manifestAttributes: Map<String, String>
 )
 
 @Serializable

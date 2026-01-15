@@ -99,5 +99,16 @@
             "version": 5,
             "flushNeeded": false
         }
+    ],
+    "javaSettings": [
+        {
+            "module": "simple-maven",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_17",
+            "manifestAttributes": {}
+        }
     ]
 }
