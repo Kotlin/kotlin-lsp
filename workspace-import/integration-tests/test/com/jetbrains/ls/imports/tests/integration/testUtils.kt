@@ -53,8 +53,12 @@ fun gradleTest(
     downloadGradleBinaries().let { path ->
         GradleWorkspaceImporter.useGradleAndJava(path, Path.of(System.getProperty("java.home")))
     }
-
-    doTest(testCase, projectStructureWithModules, GradleWorkspaceImporter)
+    System.setProperty("useNaiveGradleRepoSubstitution", "true")
+    try {
+        doTest(testCase, projectStructureWithModules, GradleWorkspaceImporter)
+    } finally {
+        System.clearProperty("useNaiveGradleRepoSubstitution")
+    }
 }
 
 internal fun mavenTest(
