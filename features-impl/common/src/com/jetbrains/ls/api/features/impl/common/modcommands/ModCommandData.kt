@@ -4,8 +4,8 @@ package com.jetbrains.ls.kotlinLsp.requests.core
 import com.intellij.modcommand.*
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.impl.DocumentImpl
+import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.findDocument
-import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.intellijUriToLspUri
 import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
@@ -164,8 +164,8 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient, changedFi
             val selectionEnd = command.selectionEnd.takeIf { it != -1 } ?: command.caret
             var selection: Range? = null
             if (selectionStart != -1 && selectionEnd != -1) {
-                val doc = changedFiles[command.fileUrl]?.let { DocumentImpl(it) } ?: command.fileUrl.intellijUriToLspUri().findVirtualFile()
-                    ?.findDocument()
+                val doc = changedFiles[command.fileUrl]?.let { DocumentImpl(it) } ?: 
+                    VirtualFileManager.getInstance().findFileByUrl(command.fileUrl)?.findDocument()
 
                 if (doc != null) {
                     selection = Range(
