@@ -39,6 +39,7 @@ jvm_library(
     "@community//platform/analysis-api:analysis",
     "@community//platform/lang-api:lang",
     "@community//java/java-impl:impl",
+    "@community//java/java-backend:backend",
     "//language-server/community/api.features",
     "@community//fleet/lsp.protocol",
   ]
