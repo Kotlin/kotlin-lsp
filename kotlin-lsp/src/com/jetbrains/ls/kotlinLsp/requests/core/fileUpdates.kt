@@ -12,7 +12,7 @@ internal fun LspHandlersBuilder.fileUpdateRequests() {
             uri = didOpen.textDocument.uri.uri,
             fileText = didOpen.textDocument.text,
             version = didOpen.textDocument.version,
-            languageId = didOpen.textDocument.languageId
+            languageId = didOpen.textDocument.languageId,
         )
     }
     notification(DocumentSync.DidClose) { didClose ->
@@ -26,5 +26,3 @@ internal fun LspHandlersBuilder.fileUpdateRequests() {
         )
     }
 }
-
-
