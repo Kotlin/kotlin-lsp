@@ -95,7 +95,7 @@ private fun doTest(
                     urlManager = virtualFileUrlManager,
                     pluginSet = defaultPluginSet(
                         listOf(
-                            readPluginDescriptor(Tests::class.java, "fleet/analyzer/test-import.xml"),
+                            readPluginDescriptor(Tests::class.java, "/META-INF/fleet/analyzer/test-import.xml"),
                         )
                     )
                 )
