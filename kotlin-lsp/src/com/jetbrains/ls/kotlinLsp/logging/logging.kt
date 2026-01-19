@@ -5,7 +5,6 @@ import com.intellij.openapi.diagnostic.DefaultLogger.attachmentsToString
 import com.intellij.openapi.diagnostic.IdeaLogRecordFormatter
 import com.intellij.openapi.diagnostic.LogLevel
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.diagnostic.logger
 import com.jetbrains.ls.kotlinLsp.connection.Client
 import com.jetbrains.lsp.protocol.*
 import java.time.Instant

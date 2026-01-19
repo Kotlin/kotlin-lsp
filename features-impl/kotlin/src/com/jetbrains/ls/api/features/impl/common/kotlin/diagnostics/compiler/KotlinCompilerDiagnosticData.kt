@@ -2,8 +2,6 @@
 package com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.compiler
 
 import com.intellij.openapi.vfs.VirtualFile
-import com.jetbrains.ls.api.core.LSAnalysisContext
-import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.impl.common.diagnostics.DiagnosticData
 import com.jetbrains.ls.api.features.impl.common.diagnostics.DiagnosticSource
 import com.jetbrains.ls.api.features.utils.PsiSerializablePointer
