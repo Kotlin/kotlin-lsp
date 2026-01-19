@@ -58,12 +58,12 @@ class LSCommonInspectionDiagnosticProvider(
         if (!params.textDocument.isSource()) return@flow
         val onTheFly = false
         withAnalysisContext(params.textDocument.uri.uri) {
-            readAction c@{
+            readAction {
                 val diagnostics = mutableListOf<Diagnostic>()
 
-                val file = params.textDocument.findVirtualFile() ?: return@c emptyList()
-                val document = file.findDocument() ?: return@c emptyList()
-                val psiFile = file.findPsiFile(project) ?: return@c emptyList()
+                val file = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
+                val document = file.findDocument() ?: return@readAction emptyList()
+                val psiFile = file.findPsiFile(project) ?: return@readAction emptyList()
                 val inspectionManager = InspectionManagerEx(project)
                 val problemsHolder = ProblemsHolder(inspectionManager, psiFile, onTheFly)
 
@@ -117,7 +117,7 @@ class LSCommonInspectionDiagnosticProvider(
                     problemsHolder.clearResults()
                 }
 
-                return@c diagnostics
+                return@readAction diagnostics
             }
         }.forEach { diagnostic -> emit(diagnostic) }
     }

@@ -29,18 +29,18 @@ class LSCommonReferencesProvider(
     context(_: LSServer, _: LspHandlerContext)
     override fun getReferences(params: ReferenceParams): Flow<Location> = channelFlow {
         withAnalysisContext {
-            readAction a@{
-                val file = params.findVirtualFile() ?: return@a
-                val psiFile = file.findPsiFile(project) ?: return@a
-                val document = file.findDocument() ?: return@a
+            readAction {
+                val file = params.findVirtualFile() ?: return@readAction
+                val psiFile = file.findPsiFile(project) ?: return@readAction
+                val document = file.findDocument() ?: return@readAction
                 val targets = psiFile.getTargetsAtPosition(params.position, document, targetKinds)
-                if (targets.isEmpty()) return@a
+                if (targets.isEmpty()) return@readAction
 
                 val findUsagesManager = FindUsagesManager(project)
 
                 // TODO LSP-241 handle all of them
                 val target = targets.first()
-                val handler = findUsagesManager.getFindUsagesHandler(target, true/*forbid showing dialogs*/) ?: return@a
+                val handler = findUsagesManager.getFindUsagesHandler(target, true/*forbid showing dialogs*/) ?: return@readAction
 
                 if (params.context.includeDeclaration) {
                     target.getLspLocationForDefinition()?.let {

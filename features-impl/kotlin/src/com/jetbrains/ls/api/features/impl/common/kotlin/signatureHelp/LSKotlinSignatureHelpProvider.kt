@@ -37,13 +37,13 @@ internal object LSKotlinSignatureHelpProvider : LSSignatureHelpProvider {
     context(_: LSServer, _: LspHandlerContext)
     override suspend fun getSignatureHelp(params: SignatureHelpParams): SignatureHelp? {
         return withAnalysisContext {
-            readAction r@{
-                val file = params.findVirtualFile() ?: return@r null
-                val ktFile = file.findPsiFile() as? KtFile ?: return@r null
-                val document = file.findDocument() ?: return@r null
+            readAction {
+                val file = params.findVirtualFile() ?: return@readAction null
+                val ktFile = file.findPsiFile() as? KtFile ?: return@readAction null
+                val document = file.findDocument() ?: return@readAction null
                 val offset = document.offsetByPosition(params.position)
                 for (handler in handlers) {
-                    collectByHandler(handler, ktFile, offset)?.let { return@r it }
+                    collectByHandler(handler, ktFile, offset)?.let { return@readAction it }
                 }
                 null
             }

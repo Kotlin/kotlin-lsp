@@ -41,11 +41,11 @@ abstract class LSRenameProviderBase(
     context(_: LSServer, _: LspHandlerContext)
     override suspend fun rename(params: RenameParams): WorkspaceEdit {
         val changes: List<FileChange> = withWriteAnalysisContext {
-            val context = readAction a@{
-                val file = params.findVirtualFile() ?: return@a null
-                val document = file.findDocument() ?: return@a null
+            val context = readAction {
+                val file = params.findVirtualFile() ?: return@readAction null
+                val document = file.findDocument() ?: return@readAction null
                 val offset = document.offsetByPosition(params.position)
-                val psiFile = file.findPsiFile(project) ?: return@a null
+                val psiFile = file.findPsiFile(project) ?: return@readAction null
                 val psiSymbolService = PsiSymbolService.getInstance()
                 val targets = targetSymbols(psiFile, offset).mapNotNull { psiSymbolService.extractElementFromSymbol(it) }
                 val target = targets.firstOrNull()
@@ -63,14 +63,14 @@ abstract class LSRenameProviderBase(
     context(_: LSServer, _: LspHandlerContext)
     override suspend fun renameFile(params: FileRename): WorkspaceEdit? {
         val edits = withWriteAnalysisContext {
-            val context = readAction a@{
+            val context = readAction {
                 // check that a file was already renamed on the previous step
-                if (params.newUri.findVirtualFile() != null) return@a null
+                if (params.newUri.findVirtualFile() != null) return@readAction null
 
-                val nameChange = computeNameChange(params.oldUri, params.newUri) ?: return@a null
-                val file = params.oldUri.findVirtualFile() ?: return@a null
-                val psiFile = file.findPsiFile(project) ?: return@a null
-                val target = getTargetClass(psiFile, nameChange.oldName) ?: return@a null
+                val nameChange = computeNameChange(params.oldUri, params.newUri) ?: return@readAction null
+                val file = params.oldUri.findVirtualFile() ?: return@readAction null
+                val psiFile = file.findPsiFile(project) ?: return@readAction null
+                val target = getTargetClass(psiFile, nameChange.oldName) ?: return@readAction null
                 Context(target, nameChange.newName, DiffGranularity.WORD, params.oldUri)
             } ?: return@withWriteAnalysisContext null
 

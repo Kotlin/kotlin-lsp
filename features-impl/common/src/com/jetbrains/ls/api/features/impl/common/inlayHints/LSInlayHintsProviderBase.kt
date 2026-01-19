@@ -106,10 +106,10 @@ abstract class LSInlayHintsProviderBase(
         val dataJson = hint.data ?: return null
         val data = LSP.json.decodeFromJsonElement(InlayHintResolveData.serializer(), dataJson)
         return withAnalysisContext {
-            readAction a@{
-                val file = data.params.textDocument.findVirtualFile() ?: return@a null
-                val psiFile = file.findPsiFile(project) ?: return@a null
-                val document = file.findDocument() ?: return@a null
+            readAction {
+                val file = data.params.textDocument.findVirtualFile() ?: return@readAction null
+                val psiFile = file.findPsiFile(project) ?: return@readAction null
+                val document = file.findDocument() ?: return@readAction null
                 val provider = createProviders(data.options)[data.providerIndex]
                 provider.factory.resolveHint(hint, data.presentation, psiFile, document, data.options)
             }
