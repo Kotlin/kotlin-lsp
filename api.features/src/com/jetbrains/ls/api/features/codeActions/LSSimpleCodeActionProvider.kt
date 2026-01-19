@@ -74,11 +74,8 @@ abstract class LSSimpleCodeActionProvider<P : Any> : LSCodeActionProvider, LSCom
     )
 
     internal inner class LSSimpleDocumentCommandExecutor : LSDocumentCommandExecutor {
-        context(_: LspHandlerContext, server: LSServer)
-        override suspend fun executeForDocument(
-            documentUri: DocumentUri,
-            otherArgs: List<JsonElement>,
-        ): List<TextEdit> {
+        context(server: LSServer, _: LspHandlerContext)
+        override suspend fun executeForDocument(documentUri: DocumentUri, otherArgs: List<JsonElement>): List<TextEdit> {
             return server.withAnalysisContext {
                 readAction {
                     val file = documentUri.findVirtualFile() ?: return@readAction emptyList()

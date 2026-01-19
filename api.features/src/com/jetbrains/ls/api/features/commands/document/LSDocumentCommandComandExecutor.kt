@@ -11,10 +11,10 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
 
 fun interface LSDocumentCommandExecutor : LSCommandExecutor {
-    context(_: LspHandlerContext, _: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     suspend fun executeForDocument(documentUri: DocumentUri, otherArgs: List<JsonElement>): List<TextEdit>
 
-    context(_: LspHandlerContext, _: LSServer)
+    context(_: LSServer, _: LspHandlerContext)
     override suspend fun execute(arguments: List<JsonElement>): JsonElement {
         require(arguments.isNotEmpty()) { "Expected >= 1 argument, got: ${arguments.size}" }
         val documentUri = LSP.json.decodeFromJsonElement<DocumentUri>(arguments.first())
