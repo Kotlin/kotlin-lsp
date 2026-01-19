@@ -3,10 +3,10 @@ package com.jetbrains.ls.api.features.impl.common.decompiler
 
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.vfs.findPsiFile
+import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.scheme
-import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.decompiler.DecompilerResponse
@@ -34,7 +34,7 @@ object LSDecompileCommandDescriptorProvider : LSCommandDescriptorProvider {
             if (scheme !in ALLOWED_SCHEMES) {
                 throwLspError(ExecuteCommand, "Unexpected URI scheme to decompile: $scheme", Unit, ErrorCodes.InvalidParams, null)
             }
-            val response: DecompilerResponse? = withAnalysisContext {
+            val response: DecompilerResponse? = contextOf<LSServer>().withAnalysisContext {
                 readAction {
                     val psiFile = documentUri.findVirtualFile()?.findPsiFile(project)
                     psiFile?.let { DecompilerResponse(it.text, it.language.id.lowercase()) }

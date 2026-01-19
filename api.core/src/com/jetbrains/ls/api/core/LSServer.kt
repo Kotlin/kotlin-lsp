@@ -68,14 +68,6 @@ interface LSServer { // workspace?
 }
 
 context(server: LSServer)
-suspend fun <R> withAnalysisContext(action: suspend context(LSAnalysisContext) CoroutineScope.() -> R): R =
-    server.withAnalysisContext(action)
-
-context(server: LSServer)
-suspend fun <R> withAnalysisContext(requestedDocumentUri: URI, action: suspend context(LSAnalysisContext) CoroutineScope.() -> R): R =
-    server.withAnalysisContext(requestedDocumentUri, action)
-
-context(server: LSServer)
 suspend fun <R> withWriteAnalysisContext(action: suspend context(LSAnalysisContext) CoroutineScope.() -> R): R =
     server.withWriteAnalysisContext(action)
 

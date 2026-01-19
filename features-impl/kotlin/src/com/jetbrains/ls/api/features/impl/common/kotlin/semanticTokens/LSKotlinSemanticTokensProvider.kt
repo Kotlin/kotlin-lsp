@@ -11,7 +11,6 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
-import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.semanticTokens.*
@@ -58,9 +57,9 @@ object LSKotlinSemanticTokensProvider : LSSemanticTokensProvider {
     /**
      * @param range `null` means tokens from the whole file`
      */
-    context(_: LSServer)
+    context(server: LSServer)
     private suspend fun getTokens(textDocument: TextDocumentIdentifier, range:Range?): List<LSSemanticTokenWithRange> {
-        return withAnalysisContext {
+        return server.withAnalysisContext {
             readAction {
                 val file = textDocument.findVirtualFile() ?: return@readAction emptyList()
                 val ktFile = file.findPsiFile(project) as? KtFile ?: return@readAction emptyList()

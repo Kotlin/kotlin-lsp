@@ -7,7 +7,6 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.findPsiFile
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
-import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.impl.common.hover.LSHoverProviderBase.LSMarkdownDocProvider.Companion.getMarkdownDocAsStringOrMarkupContent
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
@@ -34,9 +33,9 @@ internal object LSKotlinSignatureHelpProvider : LSSignatureHelpProvider {
         KotlinHighLevelArrayAccessParameterInfoHandler(),
     ) as List<KotlinHighLevelParameterInfoWithCallHandlerBase<KtElement, out KtElement>>
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, _: LspHandlerContext)
     override suspend fun getSignatureHelp(params: SignatureHelpParams): SignatureHelp? {
-        return withAnalysisContext {
+        return server.withAnalysisContext {
             readAction {
                 val file = params.findVirtualFile() ?: return@readAction null
                 val ktFile = file.findPsiFile() as? KtFile ?: return@readAction null

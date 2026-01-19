@@ -15,7 +15,6 @@ import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.util.toLspRange
-import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.hover.LSHoverProvider
 import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
 import com.jetbrains.ls.api.features.impl.common.utils.getTargetsAtPosition
@@ -27,9 +26,9 @@ abstract class LSHoverProviderBase(
 ) : LSHoverProvider {
     protected open fun acceptTarget(target: PsiElement): Boolean = true
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, _: LspHandlerContext)
     override suspend fun getHover(params: HoverParams): Hover? {
-        return withAnalysisContext {
+        return server.withAnalysisContext {
             readAction {
                 val virtualFile = params.findVirtualFile() ?: return@readAction null
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction null

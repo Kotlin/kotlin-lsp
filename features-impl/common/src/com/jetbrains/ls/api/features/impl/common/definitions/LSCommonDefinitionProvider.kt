@@ -14,7 +14,6 @@ import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.isFromLibrary
 import com.jetbrains.ls.api.core.util.uri
-import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.definition.LSDefinitionProvider
 import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
 import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
@@ -32,10 +31,10 @@ class LSCommonDefinitionProvider(
     override val supportedLanguages: Set<LSLanguage>,
     private val targetKinds: Set<TargetKind>,
 ) : LSDefinitionProvider {
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, _: LspHandlerContext)
     override fun provideDefinitions(params: DefinitionParams): Flow<Location> = flow {
         val uri = params.textDocument.uri.uri
-        withAnalysisContext(uri) {
+        server.withAnalysisContext(uri) {
             readAction {
                 val file = uri.findVirtualFile() ?: return@readAction emptyList()
                 val psiFile = file.findPsiFile(project) ?: return@readAction emptyList()

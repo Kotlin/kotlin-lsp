@@ -9,7 +9,6 @@ import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
-import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.impl.common.utils.getLspLocation
 import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
 import com.jetbrains.ls.api.features.symbols.LSDocumentSymbolProvider
@@ -22,10 +21,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 abstract class LSDocumentSymbolProviderBase : LSDocumentSymbolProvider {
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, _: LspHandlerContext)
     override fun getDocumentSymbols(params: DocumentSymbolParams): Flow<DocumentSymbol> = flow {
         val uri = params.textDocument.uri.uri
-        withAnalysisContext {
+        server.withAnalysisContext {
             readAction {
                 uri.findVirtualFile()
                     ?.findPsiFile(project)

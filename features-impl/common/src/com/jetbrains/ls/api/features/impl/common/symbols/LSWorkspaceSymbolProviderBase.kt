@@ -7,7 +7,6 @@ import com.intellij.openapi.application.readAction
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
-import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.symbols.LSWorkspaceSymbolProvider
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.WorkspaceSymbol
@@ -24,9 +23,9 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
     context(_: LSServer, _: LSAnalysisContext)
     abstract fun createWorkspaceSymbol(item: NavigationItem, contributor: ChooseByNameContributor): WorkspaceSymbol?
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, _: LspHandlerContext)
     final override fun getWorkspaceSymbols(params: WorkspaceSymbolParams): Flow<WorkspaceSymbol> = channelFlow {
-        withAnalysisContext {
+        server.withAnalysisContext {
             coroutineScope {
                 for (contributor in getContributors()) {
                     launch { handleContributor(contributor, params.query, channel) }

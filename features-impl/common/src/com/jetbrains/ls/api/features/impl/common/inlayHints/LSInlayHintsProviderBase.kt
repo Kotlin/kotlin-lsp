@@ -18,7 +18,6 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.core.util.toTextRange
 import com.jetbrains.ls.api.core.util.uri
-import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
 import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
 import com.jetbrains.ls.api.features.inlayHints.LSInlayHintsProvider
@@ -59,12 +58,12 @@ abstract class LSInlayHintsProviderBase(
         val factory: HintFactoryBase
     )
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, _: LspHandlerContext)
     override fun getInlayHints(params: InlayHintParams): Flow<InlayHint> = flow {
         val result = mutableListOf<InlayHint>()
         val options = requestEnabledInlayOptions(params.textDocument)
 
-        withAnalysisContext {
+        server.withAnalysisContext {
             readAction {
                 val file = params.textDocument.findVirtualFile() ?: return@readAction
                 val psiFile = file.findPsiFile(project) ?: return@readAction
@@ -101,11 +100,11 @@ abstract class LSInlayHintsProviderBase(
         return InlayOptions.create(raw)
     }
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, _: LspHandlerContext)
     override suspend fun resolveInlayHint(hint: InlayHint): InlayHint? {
         val dataJson = hint.data ?: return null
         val data = LSP.json.decodeFromJsonElement(InlayHintResolveData.serializer(), dataJson)
-        return withAnalysisContext {
+        return server.withAnalysisContext {
             readAction {
                 val file = data.params.textDocument.findVirtualFile() ?: return@readAction null
                 val psiFile = file.findPsiFile(project) ?: return@readAction null

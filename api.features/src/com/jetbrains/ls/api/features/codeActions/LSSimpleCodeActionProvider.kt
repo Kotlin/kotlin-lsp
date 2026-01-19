@@ -6,7 +6,6 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.findVirtualFile
-import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.commands.document.LSDocumentCommandExecutor
@@ -35,10 +34,10 @@ abstract class LSSimpleCodeActionProvider<P : Any> : LSCodeActionProvider, LSCom
     context(_: LSServer, _: LSAnalysisContext)
     abstract fun execute(file: VirtualFile, data: P): List<TextEdit>
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, _: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val documentUri = params.textDocument.uri
-        val params = withAnalysisContext {
+        val params = server.withAnalysisContext {
             readAction {
                 val file = documentUri.findVirtualFile() ?: return@readAction null
                 getData(file, params)
@@ -75,12 +74,12 @@ abstract class LSSimpleCodeActionProvider<P : Any> : LSCodeActionProvider, LSCom
     )
 
     internal inner class LSSimpleDocumentCommandExecutor : LSDocumentCommandExecutor {
-        context(_: LspHandlerContext, _: LSServer)
+        context(_: LspHandlerContext, server: LSServer)
         override suspend fun executeForDocument(
             documentUri: DocumentUri,
             otherArgs: List<JsonElement>,
         ): List<TextEdit> {
-            return withAnalysisContext {
+            return server.withAnalysisContext {
                 readAction {
                     val file = documentUri.findVirtualFile() ?: return@readAction emptyList()
                     val argument = otherArgs.firstOrNull()?.let { LSP.json.decodeFromJsonElement(dataSerializer, it) } ?: (NoData as P)

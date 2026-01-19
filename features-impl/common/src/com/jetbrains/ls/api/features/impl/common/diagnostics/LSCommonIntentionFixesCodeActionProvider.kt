@@ -12,7 +12,6 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toTextRange
-import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDescriptorProvider
 import com.jetbrains.ls.api.features.language.LSLanguage
@@ -34,11 +33,11 @@ class LSCommonIntentionFixesCodeActionProvider(
 
     override val providesOnlyKinds: Set<CodeActionKind> get() = setOf(codeActionKind)
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, _: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         if (!params.textDocument.isSource()) return@flow
 
-        withAnalysisContext(params.textDocument.uri.uri) {
+        server.withAnalysisContext(params.textDocument.uri.uri) {
             readAction {
                 val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
                 val document = virtualFile.findDocument() ?: return@readAction emptyList()

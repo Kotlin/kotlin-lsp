@@ -21,7 +21,6 @@ import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.util.positionByOffset
-import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider
@@ -41,9 +40,7 @@ import com.jetbrains.ls.snapshot.api.impl.core.initializeParams
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.protocol.*
-import com.jetbrains.lsp.protocol.CompletionItem
 import fleet.kernel.change
-import fleet.util.UID
 import kotlinx.serialization.json.*
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.projectStructure.KaDanglingFileResolutionMode
@@ -55,12 +52,12 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
     override val supportsResolveRequest: Boolean
         get() = true
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, _: LspHandlerContext)
     override suspend fun provideCompletion(params: CompletionParams): CompletionList {
         return if (!params.textDocument.isSource()) {
             CompletionList.EMPTY
         } else {
-            val itemsWithObjects = withAnalysisContext(params.textDocument.uri.uri) {
+            val itemsWithObjects = server.withAnalysisContext(params.textDocument.uri.uri) {
                 readAction {
                     params.textDocument.findVirtualFile()?.let { file ->
                         file.findPsiFile(project)?.let { psiFile ->
@@ -127,12 +124,12 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
         }
     }
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, _: LspHandlerContext)
     override suspend fun resolveCompletion(completionItem: CompletionItem): CompletionItem? {
         val completionDataKey = completionItem.data?.jsonObject?.get("KotlinCompletionItemKey") ?: return completionItem
 
         return (LatestCompletionSessionEntity.obj(CompletionItemId.fromJson(completionDataKey)) as CompletionData?)?.let { completionData ->
-            withAnalysisContext {
+            server.withAnalysisContext {
                 val completionItem = completionItem.copy(
                     documentation = readAction { computeDocumentation(completionData.lookup) },
                 )
@@ -185,7 +182,7 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
                         }
 
                         else -> {
-                            val insertionResult = withAnalysisContext {
+                            val insertionResult = contextOf<LSServer>().withAnalysisContext {
                                 applyCompletion(completionData)
                             }
                             lspClient.request(

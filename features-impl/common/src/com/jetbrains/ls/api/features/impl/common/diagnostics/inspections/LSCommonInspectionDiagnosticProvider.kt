@@ -22,7 +22,6 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
-import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnosticProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.Blacklist
 import com.jetbrains.ls.api.features.impl.common.diagnostics.DiagnosticSource
@@ -53,11 +52,11 @@ class LSCommonInspectionDiagnosticProvider(
         val diagnosticSource: DiagnosticSource = DiagnosticSource("inspection")
     }
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, _: LspHandlerContext)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
         if (!params.textDocument.isSource()) return@flow
         val onTheFly = false
-        withAnalysisContext(params.textDocument.uri.uri) {
+        server.withAnalysisContext(params.textDocument.uri.uri) {
             readAction {
                 val diagnostics = mutableListOf<Diagnostic>()
 

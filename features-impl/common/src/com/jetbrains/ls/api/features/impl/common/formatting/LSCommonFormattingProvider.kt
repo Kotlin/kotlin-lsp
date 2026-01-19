@@ -14,7 +14,6 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toTextRange
-import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.formatting.LSFormattingProvider
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.textEdits.PsiFileTextEditsCollector
@@ -34,9 +33,9 @@ class LSCommonFormattingProvider(
         return format(params.textDocument, params.options, params.range)
     }
 
-    context(_: LSServer)
+    context(server: LSServer)
     private suspend fun format(textDocument: TextDocumentIdentifier, options: FormattingOptions, range: Range?): List<TextEdit>? {
-        return withAnalysisContext {
+        return server.withAnalysisContext {
             val file = readAction { textDocument.findVirtualFile() } ?: return@withAnalysisContext null
             val document = readAction { file.findDocument() } ?: return@withAnalysisContext null
             PsiFileTextEditsCollector.collectTextEdits(file) { psiFile ->

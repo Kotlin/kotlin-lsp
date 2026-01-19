@@ -12,7 +12,6 @@ import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.util.positionByOffset
-import com.jetbrains.ls.api.core.withAnalysisContext
 import com.jetbrains.ls.api.features.completion.LSCompletionProvider
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
@@ -41,10 +40,10 @@ internal object LSRekotBasedKotlinCompletionProviderImpl : LSCompletionProvider 
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
     override val supportsResolveRequest: Boolean get() = false
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, _: LspHandlerContext)
     override suspend fun provideCompletion(params: CompletionParams): CompletionList {
         if (!params.textDocument.isSource()) return CompletionList.EMPTY
-        return withAnalysisContext {
+        return server.withAnalysisContext {
             readAction {
                 val file = params.textDocument.findVirtualFile() ?: return@readAction EMPTY_COMPLETION_LIST
                 val psiFile = file.findPsiFile(project) as? KtFile ?: return@readAction EMPTY_COMPLETION_LIST
