@@ -12,7 +12,6 @@ import com.jetbrains.analyzer.bootstrap.AnalyzerContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.createSdkEntity
 import com.jetbrains.ls.api.core.util.workspaceFolderPaths
-import com.jetbrains.ls.api.core.workspaceStructure
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.allCommandDescriptors
 import com.jetbrains.ls.api.features.codeActions.LSCodeActions
@@ -165,13 +164,13 @@ private suspend fun LspClient.sendRunConfigurationInfoToClient() {
     )
 }
 
-context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
+context(server: LSServer, _: LSConfiguration, _: LspHandlerContext)
 private suspend fun indexFolders(
     folders: List<Path>,
     params: InitializeParams,
 ) {
     lspClient.withProgress(params, beginTitle = "Initializing project") { progress ->
-        workspaceStructure.updateWorkspaceModelDirectly { virtualFileUrlManager, storage ->
+        server.workspaceStructure.updateWorkspaceModelDirectly { virtualFileUrlManager, storage ->
             if (folders.isNotEmpty()) {
                 for (folder in folders) {
                     initFolder(folder, progress, virtualFileUrlManager, storage)

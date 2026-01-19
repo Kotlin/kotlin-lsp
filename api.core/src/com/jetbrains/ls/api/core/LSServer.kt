@@ -68,9 +68,6 @@ interface LSServer { // workspace?
 }
 
 context(server: LSServer)
-inline val workspaceStructure: LSWorkspaceStructure get() = server.workspaceStructure
-
-context(server: LSServer)
 suspend fun <R> withAnalysisContext(action: suspend context(LSAnalysisContext) CoroutineScope.() -> R): R =
     server.withAnalysisContext(action)
 
