@@ -84,27 +84,25 @@ suspend fun <R> withWritableFile(useSiteFileUri: URI, action: suspend CoroutineS
     server.withWritableFile(useSiteFileUri, action)
 
 context(server: LSServer)
-suspend fun withRenamesEnabled( action: suspend CoroutineScope.() -> Unit): Map<URI, URI> =
-    server.withRenamesEnabled(action)
+suspend fun withRenamesEnabled(action: suspend CoroutineScope.() -> Unit): Map<URI, URI> = server.withRenamesEnabled(action)
 
 interface DapContext {
     val project: Project
 }
 
-context(context: DapContext)
-val project: Project get() = context.project
+context(dapContext: DapContext)
+val project: Project get() = dapContext.project
 
 interface LSAnalysisContext {
     val project: Project
 }
 
-context(context: LSAnalysisContext)
-val project: Project get() = context.project
+context(analysisContext: LSAnalysisContext)
+val project: Project get() = analysisContext.project
 
 interface LSServerStarter {
     suspend fun withServer(action: suspend context(LSServer) CoroutineScope.() -> Unit)
 }
 
 context(context: LSServerStarter)
-suspend fun withServer(action: suspend context(LSServer) CoroutineScope.() -> Unit): Unit =
-    context.withServer(action)
+suspend fun withServer(action: suspend context(LSServer) CoroutineScope.() -> Unit): Unit = context.withServer(action)
