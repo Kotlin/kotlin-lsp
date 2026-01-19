@@ -129,9 +129,9 @@ abstract class LSInlayHintsProviderBase(
                 if (extraLeftPaddingViaSpace) {
                     add(InlayHintLabelPart(" ", tooltip = null, location = null, command = null))
                 }
-                presentation.hints.flatMapTo(this) {
+                presentation.hints.flatMapTo(this) { hint ->
                     hintToLabel(
-                        it,
+                        hint,
                         psiFile,
                         documentUri,
                         data.options,
@@ -471,7 +471,7 @@ abstract class LSInlayHintsProviderBase(
         @Serializable
         class CollapsibleListHint(
             val expandedHints: List<Hint>,
-            val collapsedHints: List<Hint>
+            val collapsedHints: List<Hint>,
         ) : Hint
 
     }
