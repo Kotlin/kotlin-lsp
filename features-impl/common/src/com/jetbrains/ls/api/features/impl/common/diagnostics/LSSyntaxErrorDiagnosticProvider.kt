@@ -24,7 +24,7 @@ import com.jetbrains.lsp.protocol.StringOrInt
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-class LSSyntaxErrorDiagnosticProviderImpl(
+class LSSyntaxErrorDiagnosticProvider(
     override val supportedLanguages: Set<LSLanguage>,
 ) : LSDiagnosticProvider {
     context(_: LSServer, _: LspHandlerContext)
@@ -37,7 +37,7 @@ class LSSyntaxErrorDiagnosticProviderImpl(
                 val psiFile = file.findPsiFile(project) ?: return@readAction emptyList()
                 getSyntaxErrors(psiFile, document)
             }
-        }.forEach { emit(it) }
+        }.forEach { diagnostic -> emit(diagnostic) }
     }
 
     private fun getSyntaxErrors(psiFile: PsiFile, document: Document): List<Diagnostic> {
