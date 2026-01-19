@@ -68,9 +68,6 @@ interface LSServer { // workspace?
 }
 
 context(server: LSServer)
-inline val documents: LSDocuments get() = server.documents
-
-context(server: LSServer)
 inline val workspaceStructure: LSWorkspaceStructure get() = server.workspaceStructure
 
 context(server: LSServer)

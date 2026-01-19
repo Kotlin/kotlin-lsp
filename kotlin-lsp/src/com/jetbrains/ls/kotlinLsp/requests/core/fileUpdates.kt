@@ -2,14 +2,13 @@
 package com.jetbrains.ls.kotlinLsp.requests.core
 
 import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.core.documents
 import com.jetbrains.lsp.implementation.LspHandlersBuilder
 import com.jetbrains.lsp.protocol.DocumentSync
 
-context(_: LSServer)
+context(server: LSServer)
 internal fun LspHandlersBuilder.fileUpdateRequests() {
     notification(DocumentSync.DidOpen) { didOpen ->
-        documents.didOpen(
+        server.documents.didOpen(
             uri = didOpen.textDocument.uri.uri,
             fileText = didOpen.textDocument.text,
             version = didOpen.textDocument.version,
@@ -17,11 +16,11 @@ internal fun LspHandlersBuilder.fileUpdateRequests() {
         )
     }
     notification(DocumentSync.DidClose) { didClose ->
-        documents.didClose(didClose.textDocument.uri.uri)
+        server.documents.didClose(didClose.textDocument.uri.uri)
     }
 
     notification(DocumentSync.DidChange) { didChange ->
-        documents.didChange(
+        server.documents.didChange(
             uri = didChange.textDocument.uri.uri,
             changes = didChange.contentChanges,
         )

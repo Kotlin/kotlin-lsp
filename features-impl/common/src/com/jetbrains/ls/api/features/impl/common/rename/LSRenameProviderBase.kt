@@ -80,7 +80,7 @@ abstract class LSRenameProviderBase(
         return WorkspaceEdit(documentChanges = edits)
     }
 
-    context(_: LSServer)
+    context(server: LSServer)
     private suspend fun doRename(context: Context): List<FileChange>? {
         val originals = mutableMapOf<PsiFile, String>()
         val renames = mutableListOf<RenameFile>()
@@ -125,7 +125,7 @@ abstract class LSRenameProviderBase(
         val edits = readAction {
             originals.map { (file, original) ->
                 val uri = DocumentUri(file.virtualFile.uri)
-                val version = documents.getVersion(uri.uri)
+                val version = server.documents.getVersion(uri.uri)
                     ?: 0 // According to LSP spec, it should be null, but our serialization would drop it, causing an error on the LSP side. Zero seems to work.
                 val id = TextDocumentIdentifier(uri, version)
                 val edits = computeTextEdits(original, file.text, context.granularity)
