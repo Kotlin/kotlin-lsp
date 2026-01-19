@@ -10,7 +10,6 @@ import com.jetbrains.analyzer.filewatcher.FileWatcher
 import com.jetbrains.analyzer.filewatcher.downloadFileWatcherBinaries
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.LSServerStarter
-import com.jetbrains.ls.api.core.withServer
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.impl.common.configuration.DapCommonConfiguration
 import com.jetbrains.ls.api.features.impl.common.configuration.LSCommonConfiguration
@@ -103,7 +102,7 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
     }
 }
 
-context(_: LSServerStarter)
+context(serverStarter: LSServerStarter)
 private suspend fun handleRequests(
     connection: LspConnection,
     runConfig: KotlinLspServerRunConfig,
@@ -111,7 +110,7 @@ private suspend fun handleRequests(
 ) {
     val exitSignal = CompletableDeferred<Unit>()
     withBaseProtocolFraming(connection, exitSignal) { incoming, outgoing ->
-        withServer {
+         serverStarter.withServer {
             val handlers = createLspHandlers(config, exitSignal)
 
             withLsp(

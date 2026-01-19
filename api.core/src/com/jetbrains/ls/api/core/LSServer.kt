@@ -67,17 +67,6 @@ interface LSServer { // workspace?
     val workspaceStructure: LSWorkspaceStructure
 }
 
-context(server: LSServer)
-suspend fun <R> withWriteAnalysisContext(action: suspend context(LSAnalysisContext) CoroutineScope.() -> R): R =
-    server.withWriteAnalysisContext(action)
-
-context(server: LSServer)
-suspend fun <R> withWritableFile(useSiteFileUri: URI, action: suspend CoroutineScope.() -> R): R =
-    server.withWritableFile(useSiteFileUri, action)
-
-context(server: LSServer)
-suspend fun withRenamesEnabled(action: suspend CoroutineScope.() -> Unit): Map<URI, URI> = server.withRenamesEnabled(action)
-
 interface DapContext {
     val project: Project
 }
@@ -95,6 +84,3 @@ val project: Project get() = analysisContext.project
 interface LSServerStarter {
     suspend fun withServer(action: suspend context(LSServer) CoroutineScope.() -> Unit)
 }
-
-context(context: LSServerStarter)
-suspend fun withServer(action: suspend context(LSServer) CoroutineScope.() -> Unit): Unit = context.withServer(action)

@@ -15,7 +15,8 @@ import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.util.IncorrectOperationException
-import com.jetbrains.ls.api.core.*
+import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.*
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.rename.LSRenameProvider
@@ -38,9 +39,9 @@ abstract class LSRenameProviderBase(
         private val LOG = logger<LSRenameProviderBase>()
     }
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, _: LspHandlerContext)
     override suspend fun rename(params: RenameParams): WorkspaceEdit {
-        val changes: List<FileChange> = withWriteAnalysisContext {
+        val changes: List<FileChange> = server.withWriteAnalysisContext {
             val context = readAction {
                 val file = params.findVirtualFile() ?: return@readAction null
                 val document = file.findDocument() ?: return@readAction null
@@ -60,9 +61,9 @@ abstract class LSRenameProviderBase(
         return WorkspaceEdit(documentChanges = changes)
     }
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, _: LspHandlerContext)
     override suspend fun renameFile(params: FileRename): WorkspaceEdit? {
-        val edits = withWriteAnalysisContext {
+        val edits = server.withWriteAnalysisContext {
             val context = readAction {
                 // check that a file was already renamed on the previous step
                 if (params.newUri.findVirtualFile() != null) return@readAction null
@@ -135,12 +136,12 @@ abstract class LSRenameProviderBase(
         return edits + renames
     }
 
-    context(_: LSServer)
+    context(server: LSServer)
     private fun renameAndGetChangedFiles(processor: Renamer): Map<URI, URI> {
         // FIXME(Georgii Ustinov): LSP-342
         return invokeAndWaitIfNeeded {
             runBlockingCancellable {
-                withRenamesEnabled {
+                server.withRenamesEnabled {
                     writeIntentReadAction {
                         processor.rename()
                     }
