@@ -22,16 +22,14 @@ fun initKotlinLspLogger(writeToStdOut: Boolean) {
 private class KotlinLspLoggerFactory(private val writeToStdOut: Boolean) : Logger.Factory {
     private val levels = LoggingLevelsByCategory()
 
-    override fun getLoggerInstance(category: String): Logger =
-        LSPLogger(category, writeToStdOut, levels)
+    override fun getLoggerInstance(category: String): Logger = LSPLogger(category, writeToStdOut, levels)
 }
 
 private class LoggingLevelsByCategory {
     // TODO PersistentHashMap may be faster as we have low write rate here and high read-rate
     private val levels = ConcurrentHashMap<String, LogLevel>()
 
-    fun getLevel(category: String): LogLevel =
-        levels[category] ?: DEFAULT
+    fun getLevel(category: String): LogLevel = levels[category] ?: DEFAULT
 
     fun setLevel(category: String, level: LogLevel) {
         levels[category] = level
@@ -49,11 +47,16 @@ private class LoggingLevelsByCategory {
  * - Common level: logs to the console, affected by [LogLevel]
  */
 // TODO LSP-229 should store logs on disk
-private class LSPLogger(private val category: String, private val writeToStdOut: Boolean, private val levels: LoggingLevelsByCategory) : Logger() {
+private class LSPLogger(
+    private val category: String,
+    private val writeToStdOut: Boolean,
+    private val levels: LoggingLevelsByCategory,
+) : Logger() {
     private val logCreation: Long = System.currentTimeMillis()
     private val withDateTime: Boolean = true
+
     /**
-     * [level] does not affect `$/logTrace` notifications,
+     * [level] does not affect `$/logTrace` notifications.
      */
     private val level: LogLevel
         get() = levels.getLevel(category)
@@ -141,8 +144,8 @@ private class LSPLogger(private val category: String, private val writeToStdOut:
         Client.current?.let { client ->
             fun logMessage(messageType: MessageType) {
                 client.lspClient.notifyAsync(
-                    LogMessageNotification,
-                    LogMessageParams(messageType, messageRendered),
+                    notificationType = LogMessageNotification,
+                    params = LogMessageParams(messageType, messageRendered),
                 )
             }
             when (level) {
@@ -158,8 +161,8 @@ private class LSPLogger(private val category: String, private val writeToStdOut:
                     }
                     if (shouldNotifyForDebug) {
                         client.lspClient.notifyAsync(
-                            LogTraceNotificationType,
-                            LogTraceParams(messageRendered, verbose = null/*TODO LSP-229 provide more details here?*/)
+                            notificationType = LogTraceNotificationType,
+                            params = LogTraceParams(messageRendered, verbose = null/*TODO LSP-229 provide more details here?*/)
                         )
                     }
                 }
