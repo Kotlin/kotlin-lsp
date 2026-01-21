@@ -42,7 +42,10 @@
       {
         "language": "kotlin",
         "scopeName": "source.kotlin",
-        "path": "./syntaxes/kotlin.tmLanguage.json"
+        "path": "./syntaxes/kotlin.tmLanguage.json",
+        "unbalancedBracketScopes": [
+          "keyword.operator.kotlin"
+        ]
       }
     ],
     "breakpoints": [
