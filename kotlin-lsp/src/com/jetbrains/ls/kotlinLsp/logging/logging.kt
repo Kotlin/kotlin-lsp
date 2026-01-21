@@ -22,7 +22,7 @@ fun initKotlinLspLogger(writeToStdOut: Boolean) {
 private class KotlinLspLoggerFactory(private val writeToStdOut: Boolean) : Logger.Factory {
     private val levels = LoggingLevelsByCategory()
 
-    override fun getLoggerInstance(category: String): Logger = LSPLogger(category, writeToStdOut, levels)
+    override fun getLoggerInstance(category: String): Logger = LspLogger(category, writeToStdOut, levels)
 }
 
 private class LoggingLevelsByCategory {
@@ -47,7 +47,7 @@ private class LoggingLevelsByCategory {
  * - Common level: logs to the console, affected by [LogLevel]
  */
 // TODO LSP-229 should store logs on disk
-private class LSPLogger(
+private class LspLogger(
     private val category: String,
     private val writeToStdOut: Boolean,
     private val levels: LoggingLevelsByCategory,
