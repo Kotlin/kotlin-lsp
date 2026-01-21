@@ -27,11 +27,7 @@ import com.jetbrains.ls.kotlinLsp.requests.features
 import com.jetbrains.ls.kotlinLsp.util.logSystemInfo
 import com.jetbrains.ls.snapshot.api.impl.core.withLSServerStarter
 import com.jetbrains.lsp.implementation.*
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import org.jetbrains.kotlin.idea.base.plugin.artifacts.KotlinArtifacts
 import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutMode
 import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutModeProvider
@@ -75,8 +71,8 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
     runBlocking(CoroutineName("root") + Dispatchers.Default) {
         withLSServerStarter(
             analysisPlugins = config.plugins,
-            config.plugins + config.dapPlugins,
-            isUnitTestMode = false
+            debuggerPlugins = config.plugins + config.dapPlugins,
+            isUnitTestMode = false,
         ) {
             preloadKotlinStdlibWhenRunningFromSources()
             val body: suspend CoroutineScope.(LspConnection) -> Unit = { connection ->
@@ -110,7 +106,7 @@ private suspend fun handleRequests(
 ) {
     val exitSignal = CompletableDeferred<Unit>()
     withBaseProtocolFraming(connection, exitSignal) { incoming, outgoing ->
-         serverStarter.withServer {
+        serverStarter.withServer {
             val handlers = createLspHandlers(config, exitSignal)
 
             withLsp(
@@ -196,15 +192,15 @@ private fun isLspRunningFromSources(): Boolean {
 
 fun createConfiguration(): LSConfiguration {
     return LSConfiguration(
-        languageConfigurations = buildList {
-            add(LSCommonConfiguration)
-            add(LSKotlinLanguageConfiguration)
-            add(LSJavaBaseLanguageConfiguration)
-            addAll(getAdditionalLanguageConfigurations())
-        },
+        languageConfigurations = listOf(
+            LSCommonConfiguration,
+            LSKotlinLanguageConfiguration,
+            LSJavaBaseLanguageConfiguration,
+            *(getAdditionalLanguageConfigurations().toTypedArray()),
+        ),
         dapConfiguration = listOf(
             DapCommonConfiguration,
-            DapJvmConfiguration
+            DapJvmConfiguration,
         ),
     )
 }
