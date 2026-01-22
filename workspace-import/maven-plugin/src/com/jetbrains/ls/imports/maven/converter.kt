@@ -341,22 +341,17 @@ private fun MavenProject.collectLibraries(
     repositorySystem: RepositorySystem,
     repositorySystemSession: RepositorySystemSession
 ): List<LibraryData> {
-    val moduleArtifacts = modulesData.map { it.mavenProject.artifactId }.toSet()
 
-    val allLibraries = modulesData
+    val allArtifacts = modulesData
         .flatMap { it.dependencies }
-        .mapNotNull {
-            if (it is MavenImportDependency.Library) {
-                it.artifact to it
-            } else if (it is MavenImportDependency.System) {
-                it.artifact to it
-            } else null
-        }
+        .filterIsInstance<MavenImportDependencyWithArtifact>()
+        .map { it.artifact }
         .distinct()
 
 
-    val libraries = allLibraries.map { (artifact, dependency) ->
+    val libraries = allArtifacts.map { artifact ->
         val libName = "Maven: ${artifact.groupId}:${artifact.artifactId}:${artifact.version}"
+
         LibraryData(
             name = libName,
             level = "project",
@@ -845,10 +840,15 @@ internal data class MavenModuleData(
     val sourceLanguageLevel: String?,
 )
 
+interface MavenImportDependencyWithArtifact{
+    val artifact: Artifact
+    val scope: DependencyDataScope
+}
+
 internal sealed class MavenImportDependency(val scope: DependencyDataScope) {
     class Module(val moduleName: String, scope: DependencyDataScope, val isTestJar: Boolean) : MavenImportDependency(scope)
-    class Library(val artifact: Artifact, scope: DependencyDataScope) : MavenImportDependency(scope)
-    class System(val artifact: Artifact, scope: DependencyDataScope) : MavenImportDependency(scope)
+    class Library(override val artifact: Artifact, scope: DependencyDataScope) : MavenImportDependency(scope), MavenImportDependencyWithArtifact
+    class System(override val artifact: Artifact, scope: DependencyDataScope) : MavenImportDependency(scope), MavenImportDependencyWithArtifact
     class AttachedJar(val name: String, val roots: List<Pair<String, String>>, scope: DependencyDataScope) : MavenImportDependency(scope)
 }
 
