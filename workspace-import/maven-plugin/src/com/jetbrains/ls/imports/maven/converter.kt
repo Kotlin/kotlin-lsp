@@ -14,6 +14,7 @@ import org.eclipse.aether.resolution.DependencyRequest
 import org.eclipse.aether.resolution.DependencyResolutionException
 import org.eclipse.aether.resolution.DependencyResult
 import org.eclipse.aether.util.artifact.JavaScopes
+import java.nio.file.Path
 import java.util.*
 
 
@@ -302,6 +303,39 @@ private fun getModuleName(data: MavenProjectImportData, isTestJar: Boolean): Str
 }
 
 
+fun getArtifactPath(artifact: Artifact, newClassifier: String?): Path {
+    if (newClassifier.isNullOrEmpty()) return artifact.file.toPath()
+    val currentPath = artifact.file.toPath()
+    val file = currentPath.fileName.toString()
+    val newFileName = fileNameWithNewClassifier(file, artifact.classifier, newClassifier)
+    return currentPath.parent.resolve(newFileName)
+}
+
+fun fileNameWithNewClassifier(
+    fileName: String,
+    currentClassifier: String?,
+    newClassifier: String
+): String {
+    val dot = fileName.lastIndexOf('.')
+    require(dot >= 0)
+
+    val base = fileName.substring(0, dot)
+    val ext = fileName.substring(dot)
+
+    val cur = currentClassifier?.trim().orEmpty()
+
+    return if (cur.isEmpty()) {
+        "$base-$newClassifier$ext"
+    } else {
+        val suffix = "-$cur"
+        if (base.endsWith(suffix)) {
+            base.removeSuffix(suffix) + "-$newClassifier$ext"
+        } else {
+            "$base-$newClassifier$ext"
+        }
+    }
+}
+
 private fun MavenProject.collectLibraries(
     modulesData: List<MavenTreeModuleImportData>,
     repositorySystem: RepositorySystem,
@@ -310,30 +344,39 @@ private fun MavenProject.collectLibraries(
     val moduleArtifacts = modulesData.map { it.mavenProject.artifactId }.toSet()
 
     val allLibraries = modulesData
-        .flatMap { it.mavenProject.dependencies }
-        .filter { "${it.groupId}:${it.artifactId}:${it.version}" !in moduleArtifacts }
+        .flatMap { it.dependencies }
+        .mapNotNull {
+            if (it is MavenImportDependency.Library) {
+                it.artifact to it
+            } else if (it is MavenImportDependency.System) {
+                it.artifact to it
+            } else null
+        }
         .distinct()
 
-    val artifactsByLibrary =
-        allLibraries.resolveDependencies("", remoteProjectRepositories, repositorySystem, repositorySystemSession, true, true)
-            ?.let { result ->
-                result.artifactResults
-                    .filter { it.artifact != null }
-                    .groupBy { "Maven: ${it.artifact.groupId}:${it.artifact.artifactId}:${it.artifact.version}" }
-            } ?: emptyMap()
 
-    val libraries = artifactsByLibrary.map { (libName, libArtifacts) ->
+    val libraries = allLibraries.map { (artifact, dependency) ->
+        val libName = "Maven: ${artifact.groupId}:${artifact.artifactId}:${artifact.version}"
         LibraryData(
             name = libName,
             level = "project",
             module = null,
             type = "repository",
-            roots = libArtifacts.map {
+            roots = listOf(
                 LibraryRootData(
-                    path = it.artifact.file.absolutePath,
-                    type = it.artifact.classifier?.takeIf { it.isNotEmpty() }?.uppercase() ?: "CLASSES",
+                    path = getArtifactPath(artifact, "javadoc").toAbsolutePath().toString(),
+                    type = "JAVADOC"
+                ),
+                LibraryRootData(
+                    path = getArtifactPath(artifact, "sources").toAbsolutePath().toString(),
+                    type = "SOURCES"
+                ),
+
+                LibraryRootData(
+                    path = artifact.file.absolutePath,
+                    type = artifact.classifier?.takeIf { it.isNotEmpty() }?.uppercase() ?: "CLASSES",
                 )
-            }
+            )
         )
     }
     return libraries
