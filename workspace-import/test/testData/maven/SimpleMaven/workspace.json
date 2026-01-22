@@ -13,6 +13,11 @@
                     "type": "library",
                     "name": "Maven: org.jetbrains.kotlin:kotlin-stdlib:1.9.20",
                     "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Maven: org.jetbrains:annotations:13.0",
+                    "scope": "compile"
                 }
             ],
             "contentRoots": [
@@ -62,6 +67,14 @@
             "name": "Maven: org.jetbrains:annotations:13.0",
             "type": "repository",
             "roots": [
+                {
+                    "path": "<MAVEN_REPO>/org/jetbrains/annotations/13.0/annotations-13.0-javadoc.jar",
+                    "type": "JAVADOC"
+                },
+                {
+                    "path": "<MAVEN_REPO>/org/jetbrains/annotations/13.0/annotations-13.0-sources.jar",
+                    "type": "SOURCES"
+                },
                 {
                     "path": "<MAVEN_REPO>/org/jetbrains/annotations/13.0/annotations-13.0.jar"
                 }
