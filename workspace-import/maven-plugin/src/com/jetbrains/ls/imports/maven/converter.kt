@@ -167,7 +167,7 @@ internal fun MavenTreeModuleImportData.toModuleData(): ModuleData {
 
                 is MavenImportDependency.System -> {
                     val artifact = dep.artifact
-                    val libName = "Maven: ${artifact.groupId}:${artifact.artifactId}:${artifact.version}"
+                    val libName = createLibName(artifact)
                     add(DependencyData.Library(libName, dep.scope, false))
                 }
 
@@ -350,7 +350,7 @@ private fun MavenProject.collectLibraries(
 
 
     val libraries = allArtifacts.map { artifact ->
-        val libName = "Maven: ${artifact.groupId}:${artifact.artifactId}:${artifact.version}"
+        val libName = createLibName(artifact)
 
         LibraryData(
             name = libName,
@@ -375,6 +375,17 @@ private fun MavenProject.collectLibraries(
         )
     }
     return libraries
+}
+
+private fun createLibName(artifact: Artifact): String {
+    return "Maven: " + listOfNotNull(
+
+        artifact.groupId,
+        artifact.artifactId,
+        artifact.version,
+        artifact.classifier,
+        artifact.type.takeIf { it != "jar" }
+    ).joinToString(":")
 }
 
 private fun convertDependencies(
@@ -840,15 +851,19 @@ internal data class MavenModuleData(
     val sourceLanguageLevel: String?,
 )
 
-interface MavenImportDependencyWithArtifact{
+interface MavenImportDependencyWithArtifact {
     val artifact: Artifact
     val scope: DependencyDataScope
 }
 
 internal sealed class MavenImportDependency(val scope: DependencyDataScope) {
     class Module(val moduleName: String, scope: DependencyDataScope, val isTestJar: Boolean) : MavenImportDependency(scope)
-    class Library(override val artifact: Artifact, scope: DependencyDataScope) : MavenImportDependency(scope), MavenImportDependencyWithArtifact
-    class System(override val artifact: Artifact, scope: DependencyDataScope) : MavenImportDependency(scope), MavenImportDependencyWithArtifact
+    class Library(override val artifact: Artifact, scope: DependencyDataScope) : MavenImportDependency(scope),
+        MavenImportDependencyWithArtifact
+
+    class System(override val artifact: Artifact, scope: DependencyDataScope) : MavenImportDependency(scope),
+        MavenImportDependencyWithArtifact
+
     class AttachedJar(val name: String, val roots: List<Pair<String, String>>, scope: DependencyDataScope) : MavenImportDependency(scope)
 }
 
