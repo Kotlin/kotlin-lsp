@@ -2,6 +2,7 @@
 package com.jetbrains.ls.imports.maven
 
 import kotlinx.serialization.json.Json
+import org.apache.maven.artifact.Artifact
 import org.apache.maven.project.MavenProject
 import org.codehaus.plexus.util.xml.Xpp3Dom
 import org.eclipse.aether.RepositorySystem
@@ -39,6 +40,7 @@ fun MavenProject.toWorkspaceData(
     )
 }
 
+
 private fun getAllModules(topLevelProject: MavenProject): List<MavenTreeModuleImportData> {
     val moduleNames = mapModuleNames(topLevelProject)
     val projects = listOf(topLevelProject) + (topLevelProject.collectedProjects ?: emptyList())
@@ -55,7 +57,7 @@ private fun getAllModules(topLevelProject: MavenProject): List<MavenTreeModuleIm
 
     val allModuleDataWithDependencies = mutableListOf<MavenTreeModuleImportData>()
     for (importData in allModules) {
-        val mavenModuleImportDataList = splitToModules(importData, moduleImportDataByMavenId)
+        val mavenModuleImportDataList = convertToModules(importData, moduleImportDataByMavenId)
         allModuleDataWithDependencies.addAll(mavenModuleImportDataList)
     }
 
@@ -239,15 +241,16 @@ private fun needCreateCompoundModule(project: MavenProject, languageLevels: Lang
     return false
 }
 
-private fun splitToModules(
+private fun convertToModules(
     importData: MavenProjectImportData,
-    moduleImportDataByMavenId: Map<String, MavenProjectImportData>
+    mavenIdToModuleMapping: Map<String, MavenProjectImportData>
 ): List<MavenTreeModuleImportData> {
     val submodules = importData.submodules
     val project = importData.mavenProject
     val module = importData.module
 
     val mainDependencies = mutableListOf<MavenImportDependency>()
+
     val testDependencies = mutableListOf<MavenImportDependency>()
 
     importData.mainSubmodules.forEach {
@@ -255,8 +258,8 @@ private fun splitToModules(
     }
 
     val testSubmodules = importData.testSubmodules
-    for (artifact in project.dependencies) {
-        for (dependency in getDependency(moduleImportDataByMavenId, artifact, project)) {
+    for (artifact in project.artifacts) {
+        for (dependency in convertDependencies(artifact, mavenIdToModuleMapping, project)) {
             if (testSubmodules.isNotEmpty() && dependency.scope == DependencyDataScope.TEST) {
                 testDependencies.add(dependency)
             } else {
@@ -276,7 +279,14 @@ private fun splitToModules(
         val dependencies = when (submodule.type) {
             StandardMavenModuleType.MAIN_ONLY -> mainDependencies
             StandardMavenModuleType.MAIN_ONLY_ADDITIONAL -> mainDependencies + additionalMainDependencies
-            StandardMavenModuleType.TEST_ONLY -> testDependencies + mainDependencies
+            StandardMavenModuleType.TEST_ONLY -> listOf(
+                MavenImportDependency.Module(
+                    submodule.moduleName,
+                    DependencyDataScope.COMPILE,
+                    false
+                )
+            ) + testDependencies + mainDependencies
+
             else -> null
         } ?: continue
         result.add(MavenTreeModuleImportData(project, submodule, dependencies))
@@ -284,6 +294,7 @@ private fun splitToModules(
 
     return result
 }
+
 
 private fun getModuleName(data: MavenProjectImportData, isTestJar: Boolean): String {
     val submodule = if (isTestJar) data.testSubmodules.firstOrNull() else data.mainSubmodules.firstOrNull()
@@ -328,9 +339,9 @@ private fun MavenProject.collectLibraries(
     return libraries
 }
 
-private fun getDependency(
+private fun convertDependencies(
+    artifact: Artifact,
     moduleImportDataByMavenId: Map<String, MavenProjectImportData>,
-    artifact: org.apache.maven.model.Dependency,
     mavenProject: MavenProject
 ): List<MavenImportDependency> {
     val scope = toDependencyDataScope(artifact.scope)
@@ -357,10 +368,7 @@ private fun getDependency(
     } else if ("system" == artifact.scope) {
         return listOf(MavenImportDependency.System(artifact, scope))
     } else {
-        val finalArtifact = if ("bundle" == artifact.type) {
-            artifact.clone().apply { type = "jar" }
-        } else artifact
-        return listOf(MavenImportDependency.Library(finalArtifact, scope))
+        return listOf(MavenImportDependency.Library(artifact, scope))
     }
 }
 
@@ -436,7 +444,7 @@ private fun toDependencyDataScope(scope: String?): DependencyDataScope {
 private fun createAttachArtifactDependency(
     mavenProject: MavenProject,
     scope: DependencyDataScope,
-    artifact: org.apache.maven.model.Dependency
+    artifact: Artifact
 ): MavenImportDependency.AttachedJar? {
     val buildHelperCfg = getPluginGoalConfiguration(mavenProject, "org.codehaus.mojo", "build-helper-maven-plugin", "attach-artifact")
         ?: return null
@@ -466,7 +474,7 @@ private fun createAttachArtifactDependency(
     return if (create) MavenImportDependency.AttachedJar(getAttachedJarsLibName(artifact), roots, scope) else null
 }
 
-private fun getAttachedJarsLibName(artifact: org.apache.maven.model.Dependency): String {
+private fun getAttachedJarsLibName(artifact: Artifact): String {
     val id = "${artifact.groupId}:${artifact.artifactId}:${artifact.version}"
     return "Maven: ATTACHED-JAR: $id"
 }
@@ -553,7 +561,8 @@ private fun adjustPreviewLanguageLevel(mavenProject: MavenProject, level: String
         return "$level-preview"
     }
 
-    val compilerPlugin = mavenProject.buildPlugins.find { it.groupId == "org.apache.maven.plugins" && it.artifactId == "maven-compiler-plugin" }
+    val compilerPlugin =
+        mavenProject.buildPlugins.find { it.groupId == "org.apache.maven.plugins" && it.artifactId == "maven-compiler-plugin" }
     val compilerConfiguration = compilerPlugin?.configuration as? Xpp3Dom
     if (compilerConfiguration != null) {
         val enablePreviewParameter = compilerConfiguration.getChild("enablePreview")?.value?.trim()
@@ -766,6 +775,7 @@ private val StandardMavenModuleType.containsMain: Boolean
         StandardMavenModuleType.SINGLE_MODULE,
         StandardMavenModuleType.MAIN_ONLY,
         StandardMavenModuleType.MAIN_ONLY_ADDITIONAL -> true
+
         else -> false
     }
 
@@ -773,6 +783,7 @@ private val StandardMavenModuleType.containsTest: Boolean
     get() = when (this) {
         StandardMavenModuleType.SINGLE_MODULE,
         StandardMavenModuleType.TEST_ONLY -> true
+
         else -> false
     }
 
@@ -793,8 +804,8 @@ internal data class MavenModuleData(
 
 internal sealed class MavenImportDependency(val scope: DependencyDataScope) {
     class Module(val moduleName: String, scope: DependencyDataScope, val isTestJar: Boolean) : MavenImportDependency(scope)
-    class Library(val artifact: org.apache.maven.model.Dependency, scope: DependencyDataScope) : MavenImportDependency(scope)
-    class System(val artifact: org.apache.maven.model.Dependency, scope: DependencyDataScope) : MavenImportDependency(scope)
+    class Library(val artifact: Artifact, scope: DependencyDataScope) : MavenImportDependency(scope)
+    class System(val artifact: Artifact, scope: DependencyDataScope) : MavenImportDependency(scope)
     class AttachedJar(val name: String, val roots: List<Pair<String, String>>, scope: DependencyDataScope) : MavenImportDependency(scope)
 }
 
@@ -842,6 +853,7 @@ private data class LanguageLevels(
                 || (testTargetLevel != null && testTargetLevel != targetLevel)
     }
 }
+
 
 private class MavenProjectImportData(
     val mavenProject: MavenProject,

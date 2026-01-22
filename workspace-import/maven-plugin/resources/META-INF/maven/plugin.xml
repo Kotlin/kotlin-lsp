@@ -11,11 +11,12 @@
       <goal>info</goal>
       <requiresDirectInvocation>true</requiresDirectInvocation>
       <requiresProject>false</requiresProject>
-      <aggregator>false</aggregator>
+      <aggregator>true</aggregator>
       <requiresOnline>false</requiresOnline>
       <implementation>com.jetbrains.ls.imports.maven.InfoMojo</implementation>
       <instantiationStrategy>per-lookup</instantiationStrategy>
       <executionStrategy>once-per-session</executionStrategy>
+      <requiresDependencyResolution>test</requiresDependencyResolution>
       <threadSafe>false</threadSafe>
       <parameters>
         <parameter>
