@@ -109,7 +109,7 @@ internal class Renamer(
             val conflictData = RefactoringEventData()
             conflictData.putUserData(RefactoringEventData.CONFLICTS_KEY, conflicts.values())
             throw IllegalStateException(
-                conflicts.values().filterNotNull().joinToString(separator = "\n") { StringUtil.removeHtmlTags(it, true) }
+                conflicts.values().filterNotNull().sortedBy { it }.joinToString(separator = "\n") { StringUtil.removeHtmlTags(it, true) }
             )
         }
 
