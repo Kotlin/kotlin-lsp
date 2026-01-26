@@ -66,7 +66,7 @@ class LSCommonInspectionDiagnosticProvider(
                 val inspectionManager = InspectionManagerEx(project)
                 val problemsHolder = ProblemsHolder(inspectionManager, psiFile, onTheFly)
 
-                val localInspections = getLocalInspections(psiFile)
+                val localInspections = getLocalInspections(psiFile) + getSharedLocalInspectionsFromGlobalTools(psiFile.language)
                 for (localInspection in localInspections) {
                     val visitor = localInspection.buildVisitor(problemsHolder, onTheFly)
 
@@ -141,6 +141,7 @@ class LSCommonInspectionDiagnosticProvider(
             .toList()
     }
 
+    @Suppress("DuplicatedCode") // Suppressed until IJPL-231960 is resolved
     private fun getSimpleGlobalInspections(language: Language): List<GlobalSimpleInspectionTool> {
         return InspectionEP.GLOBAL_INSPECTION.extensionList
             .asSequence()
@@ -157,6 +158,28 @@ class LSCommonInspectionDiagnosticProvider(
             }
             .filterNot { blacklist.containsSuperClass(it) }
             .filterIsInstance<GlobalSimpleInspectionTool>()
+            .toList()
+    }
+
+    @Suppress("DuplicatedCode") // Suppressed until IJPL-231960 is resolved
+    private fun getSharedLocalInspectionsFromGlobalTools(language: Language): List<LocalInspectionTool> {
+        return InspectionEP.GLOBAL_INSPECTION.extensionList
+            .asSequence()
+            .filter { it.language == language.id }
+            .filter { it.enabledByDefault }
+            .filter { HighlightDisplayLevel.find(it.level) != HighlightDisplayLevel.DO_NOT_SHOW }
+            .filterNot { blacklist.containsImplementation(it.implementationClass) }
+            .mapNotNull { inspection ->
+                runCatching {
+                    inspection.instantiateTool()
+                }.getOrHandleException {
+                    handleError(it)
+                }
+            }
+            .filterNot { blacklist.containsSuperClass(it) }
+            .filterIsInstance<GlobalInspectionTool>()
+            .mapNotNull { it.sharedLocalInspectionTool }
+            .filterNot { blacklist.containsSuperClass(it) }
             .toList()
     }
 }
