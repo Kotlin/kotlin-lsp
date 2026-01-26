@@ -424,7 +424,7 @@ private fun createLibName(artifact: Artifact): String {
 
         artifact.groupId,
         artifact.artifactId,
-        artifact.version,
+        artifact.baseVersion,
         artifact.classifier,
         artifact.type.takeIf { it != "jar" }
     ).joinToString(":")
