@@ -33,6 +33,7 @@ import org.jetbrains.kotlin.idea.k2.codeinsight.intentions.AddNameToArgumentInte
 import org.jetbrains.kotlin.idea.k2.codeinsight.intentions.AddNamesToCallArgumentsIntention
 import org.jetbrains.kotlin.idea.k2.codeinsight.intentions.AddNamesToFollowingArgumentsIntention
 import org.jetbrains.kotlin.idea.k2.codeinsight.intentions.MovePropertyToConstructorIntention
+import org.jetbrains.kotlin.idea.k2.codeinsight.intentions.SpecifyTypeExplicitlyIntention
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtFile
 
@@ -47,6 +48,10 @@ internal object LSKotlinIntentionCodeActionProvider : LSCodeActionProvider {
             AddNameToArgumentIntention(),
 
             MovePropertyToConstructorIntention(),
+
+            SpecifyTypeExplicitlyIntention(
+                useTemplate = false // templates have to be disabled until LSP-478 is fixed
+            ),
         )
     }
 
