@@ -97,7 +97,10 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                     javaHome?.let {
                         environment()["JAVA_HOME"] = it
                     }
-                   //environment()["MAVEN_OPTS"] = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"
+                    if(System.getProperty("maven.importer.debug").toBoolean()) {
+                        environment()["MAVEN_OPTS"] = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"
+                    }
+
                 }
                 .directory(projectDirectory.toFile())
                 .inheritIO()

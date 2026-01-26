@@ -3,6 +3,7 @@ package com.jetbrains.ls.imports.maven
 
 import kotlinx.serialization.json.Json
 import org.apache.maven.artifact.Artifact
+import org.apache.maven.model.Plugin
 import org.apache.maven.project.MavenProject
 import org.codehaus.plexus.util.xml.Xpp3Dom
 import org.eclipse.aether.RepositorySystem
@@ -26,10 +27,12 @@ fun MavenProject.toWorkspaceData(
     repositorySystemSession: RepositorySystemSession
 ): WorkspaceData {
     val modules = getAllModules(this)
-    val modulesData = modules.map { it.toModuleData() }
+
     val kotlinSettings = modules.mapNotNull {
-        it.mavenProject.extractKotlinSettings(it.moduleData.moduleName, repositorySystem, repositorySystemSession)
+        it.mavenProject.extractKotlinSettings(it.moduleData, repositorySystem, repositorySystemSession)
     }
+    val modulesData = modules.map { it.toModuleData(kotlinSettings) }
+
     val libraries = collectLibraries(modules, repositorySystem, repositorySystemSession)
 
     return WorkspaceData(
@@ -125,71 +128,116 @@ private fun mapModuleNames(root: MavenProject): Map<MavenProject, String> {
     return mavenProjectToModuleName
 }
 
-internal fun MavenTreeModuleImportData.toModuleData(): ModuleData {
+internal fun MavenTreeModuleImportData.toModuleData(kotlinSettingsList: List<KotlinSettingsData>): ModuleData {
     val project = this.mavenProject
     val module = this.moduleData
+    val kotlinSettings = kotlinSettingsList.firstOrNull { it.module == module.moduleName }
 
-    val sourceRoots = buildList {
-        if (module.type.containsMain) {
-            project.compileSourceRoots?.forEach { sourceRoot ->
-                add(SourceRootData(sourceRoot, "java-source"))
-            }
-            project.resources?.forEach { resource ->
-                add(SourceRootData(resource.directory, "java-resource"))
-            }
-        }
-        if (module.type.containsTest) {
-            project.testCompileSourceRoots?.forEach { testRoot ->
-                add(SourceRootData(testRoot, "java-test"))
-            }
-            project.testResources?.forEach { resource ->
-                add(SourceRootData(resource.directory, "java-test-resource"))
-            }
-        }
-    }
+    val sourceRoots = sourceRootData(module, project, kotlinSettings)
 
-    val dependencies = buildList {
-        add(DependencyData.InheritedSdk)
-        add(DependencyData.ModuleSource)
-
-        this@toModuleData.dependencies.forEach { dep ->
-            when (dep) {
-                is MavenImportDependency.Module -> {
-                    add(DependencyData.Module(dep.moduleName, dep.scope, false))
-                }
-
-                is MavenImportDependency.Library -> {
-                    val artifact = dep.artifact
-                    val libName =
-                        "Maven: ${artifact.groupId}:${artifact.artifactId}${if (artifact.version != null && artifact.version.isNotEmpty()) ":${artifact.version}" else ""}"
-                    add(DependencyData.Library(libName, dep.scope, false))
-                }
-
-                is MavenImportDependency.System -> {
-                    val artifact = dep.artifact
-                    val libName = createLibName(artifact)
-                    add(DependencyData.Library(libName, dep.scope, false))
-                }
-
-                is MavenImportDependency.AttachedJar -> {
-                    add(DependencyData.Library(dep.name, dep.scope, false))
-                }
-            }
-        }
-    }
+    val dependencies = dependencyData(this.dependencies)
 
     return ModuleData(
         name = module.moduleName,
         type = "JAVA_MODULE",
         dependencies = dependencies,
-        contentRoots = listOf(
-            ContentRootData(
-                path = project.basedir?.absolutePath ?: "",
-                sourceRoots = sourceRoots
-            )
-        ),
+        contentRoots =
+            contentRootData(project, module, sourceRoots),
         facets = emptyList(),
     )
+}
+
+private fun dependencyData(importDependencies: List<MavenImportDependency>): List<DependencyData> = buildList {
+    add(DependencyData.InheritedSdk)
+    add(DependencyData.ModuleSource)
+
+    importDependencies.forEach { dep ->
+        when (dep) {
+            is MavenImportDependency.Module -> {
+                add(DependencyData.Module(dep.moduleName, dep.scope, false))
+            }
+
+            is MavenImportDependency.Library -> {
+                val artifact = dep.artifact
+                val libName =
+                    "Maven: ${artifact.groupId}:${artifact.artifactId}${if (artifact.version != null && artifact.version.isNotEmpty()) ":${artifact.version}" else ""}"
+                add(DependencyData.Library(libName, dep.scope, false))
+            }
+
+            is MavenImportDependency.System -> {
+                val artifact = dep.artifact
+                val libName = createLibName(artifact)
+                add(DependencyData.Library(libName, dep.scope, false))
+            }
+
+            is MavenImportDependency.AttachedJar -> {
+                add(DependencyData.Library(dep.name, dep.scope, false))
+            }
+        }
+    }
+}
+
+private fun sourceRootData(
+    module: MavenModuleData,
+    project: MavenProject,
+    kotlinSettings: KotlinSettingsData?
+): List<SourceRootData> = buildSet {
+    if (module.type.containsMain) {
+        project.compileSourceRoots?.forEach { sourceRoot ->
+            add(SourceRootData(sourceRoot, "java-source"))
+        }
+        project.resources?.forEach { resource ->
+            if (resource.directory != project.basedir?.absolutePath) {
+                add(SourceRootData(resource.directory, "java-resource"))
+            }
+        }
+        kotlinSettings?.sourceRoots?.forEach {
+            add(SourceRootData(it, "java-source"))
+        }
+    }
+    if (module.type.containsTest) {
+        project.testCompileSourceRoots?.forEach { testRoot ->
+            add(SourceRootData(testRoot, "java-test"))
+        }
+        project.testResources?.forEach { resource ->
+            if (resource.directory != project.basedir?.absolutePath) {
+                add(SourceRootData(resource.directory, "java-test-resource"))
+            }
+        }
+        kotlinSettings?.sourceRoots?.forEach {
+            add(SourceRootData(it, "java-test"))
+        }
+    }
+}.toList()
+
+private fun contentRootData(
+    project: MavenProject,
+    moduleData: MavenModuleData,
+    sourceRoots: List<SourceRootData>
+): List<ContentRootData> {
+
+    if (moduleData.type == StandardMavenModuleType.MAIN_ONLY || moduleData.type == StandardMavenModuleType.MAIN_ONLY_ADDITIONAL) {
+        return sourceRoots.filter { it.type in listOf("java-source", "java-resource") }.map {
+            ContentRootData(
+                path = it.path,
+                sourceRoots = listOf(it)
+            )
+        }
+    } else if (moduleData.type == StandardMavenModuleType.TEST_ONLY) {
+        return sourceRoots.filter { it.type in listOf("java-test", "java-test-resource") }.map {
+            ContentRootData(
+                path = it.path,
+                sourceRoots = listOf(it)
+            )
+        }
+    }
+    return listOf(
+        ContentRootData(
+            path = project.basedir?.absolutePath ?: "",
+            sourceRoots = sourceRoots
+        )
+    )
+
 }
 
 private fun getModuleImportData(
@@ -280,13 +328,7 @@ private fun convertToModules(
         val dependencies = when (submodule.type) {
             StandardMavenModuleType.MAIN_ONLY -> mainDependencies
             StandardMavenModuleType.MAIN_ONLY_ADDITIONAL -> mainDependencies + additionalMainDependencies
-            StandardMavenModuleType.TEST_ONLY -> listOf(
-                MavenImportDependency.Module(
-                    submodule.moduleName,
-                    DependencyDataScope.COMPILE,
-                    false
-                )
-            ) + testDependencies + mainDependencies
+            StandardMavenModuleType.TEST_ONLY -> testDependencies + mainDependencies
 
             else -> null
         } ?: continue
@@ -731,10 +773,12 @@ private fun getPluginGoalConfiguration(project: MavenProject, groupId: String, a
 }
 
 private fun MavenProject.extractKotlinSettings(
-    moduleName: String,
+    moduleData: MavenModuleData,
     repositorySystem: RepositorySystem,
     repositorySystemSession: RepositorySystemSession
 ): KotlinSettingsData? {
+
+    if (moduleData.type == StandardMavenModuleType.COMPOUND_MODULE) return null
     val kotlinPlugin = this.buildPlugins?.find { plugin ->
         plugin.groupId == "org.jetbrains.kotlin" && plugin.artifactId.startsWith("kotlin-maven-plugin")
     } ?: return null
@@ -762,10 +806,18 @@ private fun MavenProject.extractKotlinSettings(
 
     val config = kotlinPlugin.configuration as? org.codehaus.plexus.util.xml.Xpp3Dom
 
-    val sourceRoots = buildList {
-        compileSourceRoots?.forEach { add(it) }
-        testCompileSourceRoots?.forEach { add(it) }
-    }
+    val kotlinCompileSourceRoots = kotlinPlugin.kotlinSourceDirs("compile")
+    val kotlinCompileTestRoots = kotlinPlugin.kotlinSourceDirs("test-compile")
+
+
+    val sourceRoots =
+        if (moduleData.type == StandardMavenModuleType.MAIN_ONLY || moduleData.type == StandardMavenModuleType.MAIN_ONLY_ADDITIONAL) {
+            kotlinCompileSourceRoots
+        } else if (moduleData.type == StandardMavenModuleType.TEST_ONLY) {
+            kotlinCompileTestRoots
+        } else {
+            kotlinCompileSourceRoots + kotlinCompileTestRoots
+        }
 
     val jvmTarget = config?.getChild("jvmTarget")?.value
     val compilerArgs = config?.getChild("args")?.children?.map { it.value } ?: emptyList()
@@ -779,9 +831,9 @@ private fun MavenProject.extractKotlinSettings(
 
     return KotlinSettingsData(
         name = "Kotlin",
-        sourceRoots = sourceRoots,
+        sourceRoots = sourceRoots.toList(),
         configFileItems = emptyList(),
-        module = moduleName,
+        module = moduleData.moduleName,
         useProjectSettings = false,
         implementedModuleNames = emptyList(),
         dependsOnModuleNames = emptyList(),
@@ -805,6 +857,15 @@ private fun MavenProject.extractKotlinSettings(
         version = 5,
         flushNeeded = false
     )
+}
+
+private fun Plugin.kotlinSourceDirs(execution: String): Set<String> {
+    return (executions.firstOrNull { it.id == execution }?.configuration as? Xpp3Dom)
+        ?.getChild("sourceDirs")
+        ?.getChildren("sourceDir")
+        ?.mapNotNull { it.value }
+        ?.toSet()
+        ?: emptySet()
 }
 
 private fun isValidName(name: String?): Boolean {
