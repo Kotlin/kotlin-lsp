@@ -48,7 +48,7 @@ abstract class LSRenameProviderBase(
                 val offset = document.offsetByPosition(params.position)
                 val psiFile = file.findPsiFile(project) ?: return@readAction null
                 val targets = extractTargets(psiFile, offset)
-                val target = targets.firstOrNull()
+                val target = targets.firstOrNull(::isAllowedToRename)
                     ?: throwLspError(RenameRequestType, "This element cannot be renamed", Unit, ErrorCodes.InvalidParams, null)
 
                 Context(target, params.newName, DiffGranularity.CHARACTER)
@@ -155,6 +155,8 @@ abstract class LSRenameProviderBase(
     }
 
     protected abstract fun getTargetClass(psiFile: PsiFile, name: String): PsiElement?
+
+    protected open fun isAllowedToRename(target: PsiElement): Boolean = true
 
     private fun computeNameChange(old: URI, new: URI): NameChange? {
         val newExtension = new.fileExtension
