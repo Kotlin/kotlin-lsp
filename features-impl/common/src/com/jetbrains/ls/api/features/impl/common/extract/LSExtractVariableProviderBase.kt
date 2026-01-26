@@ -1,0 +1,125 @@
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+package com.jetbrains.ls.api.features.impl.common.extract
+
+import com.intellij.openapi.application.readAction
+import com.intellij.openapi.util.TextRange
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.findDocument
+import com.jetbrains.ls.api.core.LSAnalysisContext
+import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.util.findVirtualFile
+import com.jetbrains.ls.api.core.util.toTextRange
+import com.jetbrains.ls.api.core.util.uri
+import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
+import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
+import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
+import com.jetbrains.ls.api.features.commands.document.LSDocumentCommandExecutor
+import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
+import com.jetbrains.lsp.implementation.LspHandlerContext
+import com.jetbrains.lsp.protocol.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.encodeToJsonElement
+
+abstract class LSExtractVariableProviderBase<Context> : LSCodeActionProvider, LSCommandDescriptorProvider {
+    override val commandDescriptors: List<LSCommandDescriptor>
+        get() = listOf(commandDescriptor)
+
+    override val providesOnlyKinds: Set<CodeActionKind>
+        get() = setOf(ExtractActionKind.RefactorExtractVariable)
+
+    private val commandDescriptor = LSCommandDescriptor(
+        title = ACTION_TITLE,
+        name = COMMAND_NAME,
+        executor = object : LSDocumentCommandExecutor {
+            context(server: LSServer, _: LspHandlerContext)
+            override suspend fun executeForDocument(
+                documentUri: DocumentUri,
+                otherArgs: List<JsonElement>
+            ): List<TextEdit> {
+                return server.withWriteAnalysisContext {
+                    val (file, data) = readAction {
+                        val file = documentUri.findVirtualFile() ?: return@readAction null
+                        val data = otherArgs.firstOrNull()?.let { LSP.json.decodeFromJsonElement(ExtractVariableData.serializer(), it) }
+                            ?: return@readAction null
+                        file to data
+                    } ?: return@withWriteAnalysisContext emptyList()
+                    computeExtractVariableEdits(file, data)
+                }
+            }
+        })
+
+    context(server: LSServer, _: LspHandlerContext)
+    override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
+        val documentUri = params.textDocument.uri
+        server.withAnalysisContext {
+            readAction {
+                val file = documentUri.findVirtualFile() ?: return@readAction null
+                val document = file.findDocument() ?: return@readAction null
+                if (getContext(file, params.range.toTextRange(document)) == null) return@readAction null
+            }
+        } ?: return@flow
+        emit(
+            CodeAction(
+                title = ACTION_TITLE,
+                kind = ExtractActionKind.RefactorExtractVariable,
+                command = Command(
+                    title = ACTION_TITLE,
+                    command = COMMAND_NAME,
+                    arguments = listOf<JsonElement>(
+                        LSP.json.encodeToJsonElement<DocumentUri>(documentUri),
+                        LSP.json.encodeToJsonElement<ExtractVariableData>(
+                            ExtractVariableData.serializer(),
+                            ExtractVariableData(params.range)
+                        ),
+                    ),
+                )
+            )
+        )
+    }
+
+    context(server: LSServer, _: LSAnalysisContext)
+    private suspend fun computeExtractVariableEdits(file: VirtualFile, data: ExtractVariableData): List<TextEdit> {
+        val (context, oldDocumentText) = readAction {
+            val document = file.findDocument() ?: return@readAction null
+            val range = data.range.toTextRange(document)
+            val result = getContext(file, range) ?: return@readAction null
+            result to document.text
+        } ?: return emptyList()
+
+        server.withWritableFile(file.uri) {
+            doExtractVariable(context)
+        }
+
+        return readAction {
+            val document = file.findDocument() ?: return@readAction emptyList()
+            computeTextEdits(oldDocumentText, document.text)
+        }
+    }
+
+    /**
+     * Calculates the data necessary to introducing the variable.
+     * @return null if it is impossible to extract the variable in position, context otherwise
+     */
+    context(_: LSAnalysisContext)
+    protected abstract fun getContext(file: VirtualFile, selectedRange: TextRange): Context?
+
+
+    /**
+     * Executes the variable extraction on the given [context].
+     * After this method is called, the variable is extracted and computation of the edits is performed.
+     */
+    context(server: LSServer, _: LSAnalysisContext)
+    protected abstract suspend fun doExtractVariable(context: Context)
+
+
+    @Serializable
+    data class ExtractVariableData(val range: Range)
+
+    companion object {
+        private const val ACTION_TITLE = "Extract to local variable"
+        private const val COMMAND_NAME = "refactor.extract.variable"
+    }
+}
