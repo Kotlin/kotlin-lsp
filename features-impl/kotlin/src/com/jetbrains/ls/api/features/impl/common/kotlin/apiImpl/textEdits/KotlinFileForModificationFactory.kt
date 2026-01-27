@@ -7,7 +7,6 @@ import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.projectStructure.contextModule
 import org.jetbrains.kotlin.idea.base.projectStructure.getKaModule
 import org.jetbrains.kotlin.psi.KtPsiFactory
-import org.jetbrains.kotlin.analysis.api.projectStructure.analysisContextModule
 
 internal class KotlinFileForModificationFactory : PsiFileTextEditsCollector.FileForModificationFactory {
     @OptIn(KaImplementationDetail::class)
@@ -17,7 +16,6 @@ internal class KotlinFileForModificationFactory : PsiFileTextEditsCollector.File
             .also {
                 val module = file.getKaModule(file.project, useSiteModule = null)
                 it.contextModule = module
-                it.virtualFile.analysisContextModule = module
                 it.name = file.name
             }
 }
