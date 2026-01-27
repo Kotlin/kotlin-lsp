@@ -191,7 +191,7 @@ private fun sourceRootData(
                 add(SourceRootData(resource.directory, "java-resource"))
             }
         }
-        kotlinSettings?.sourceRoots?.forEach {
+        kotlinSettings?.compileSourceRoots?.forEach {
             add(SourceRootData(it, "java-source"))
         }
     }
@@ -204,7 +204,7 @@ private fun sourceRootData(
                 add(SourceRootData(resource.directory, "java-test-resource"))
             }
         }
-        kotlinSettings?.sourceRoots?.forEach {
+        kotlinSettings?.testSourceRoots?.forEach {
             add(SourceRootData(it, "java-test"))
         }
     }
@@ -806,17 +806,21 @@ private fun MavenProject.extractKotlinSettings(
 
     val config = kotlinPlugin.configuration as? org.codehaus.plexus.util.xml.Xpp3Dom
 
-    val kotlinCompileSourceRoots = kotlinPlugin.kotlinSourceDirs("compile")
-    val kotlinCompileTestRoots = kotlinPlugin.kotlinSourceDirs("test-compile")
+    val kotlinCompileSourceRoots = kotlinPlugin.kotlinSourceDirs("compile") ?: setOf(
+        basedir.toPath().resolve("src").resolve("main").resolve("kotlin").toAbsolutePath().toString()
+    )
 
+    val kotlinTestSourceRoots = kotlinPlugin.kotlinSourceDirs("test-compile") ?: setOf(
+        basedir.toPath().resolve("src").resolve("test").resolve("java").toAbsolutePath().toString()
+    )
 
     val sourceRoots =
         if (moduleData.type == StandardMavenModuleType.MAIN_ONLY || moduleData.type == StandardMavenModuleType.MAIN_ONLY_ADDITIONAL) {
             kotlinCompileSourceRoots
         } else if (moduleData.type == StandardMavenModuleType.TEST_ONLY) {
-            kotlinCompileTestRoots
+            kotlinTestSourceRoots
         } else {
-            kotlinCompileSourceRoots + kotlinCompileTestRoots
+            kotlinCompileSourceRoots + kotlinTestSourceRoots
         }
 
     val jvmTarget = config?.getChild("jvmTarget")?.value
@@ -832,6 +836,8 @@ private fun MavenProject.extractKotlinSettings(
     return KotlinSettingsData(
         name = "Kotlin",
         sourceRoots = sourceRoots.toList(),
+        compileSourceRoots = kotlinCompileSourceRoots.toList(),
+        testSourceRoots = kotlinTestSourceRoots.toList(),
         configFileItems = emptyList(),
         module = moduleData.moduleName,
         useProjectSettings = false,
@@ -859,13 +865,12 @@ private fun MavenProject.extractKotlinSettings(
     )
 }
 
-private fun Plugin.kotlinSourceDirs(execution: String): Set<String> {
+private fun Plugin.kotlinSourceDirs(execution: String): Set<String>? {
     return (executions.firstOrNull { it.id == execution }?.configuration as? Xpp3Dom)
         ?.getChild("sourceDirs")
         ?.getChildren("sourceDir")
         ?.mapNotNull { it.value }
         ?.toSet()
-        ?: emptySet()
 }
 
 private fun isValidName(name: String?): Boolean {

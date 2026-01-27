@@ -3,6 +3,7 @@ package com.jetbrains.ls.imports.maven
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 /**
  * Copy-pasted from com.jetbrains.ls.imports.json.WorkspaceData
@@ -138,6 +139,11 @@ data class SdkRootData(
 data class KotlinSettingsData(
     val name: String,
     val sourceRoots: List<String>,
+    @kotlinx.serialization.Transient
+    val testSourceRoots: List<String> = emptyList(),
+    @kotlinx.serialization.Transient
+    val compileSourceRoots: List<String> = emptyList(),
+
     val configFileItems: List<ConfigFileItemData>,
     val module: String,
 
