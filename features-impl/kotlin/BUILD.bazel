@@ -82,6 +82,7 @@ jvm_library(
     "//language-server/api.impl.analyzer",
     "@community//fleet/rhizomedb",
     "@community//fleet/kernel",
+    "//language-server/dap/jvm/lsp.features",
   ]
 )
 ### auto-generated section `build language-server.api.features.impl.kotlin` end
