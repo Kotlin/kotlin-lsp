@@ -214,10 +214,4 @@ private fun getModCommand(fix: QuickFix<*>, project: Project, problemDescriptor:
         }
     }
 
-private fun handleError(throwable: Throwable) {
-    when {
-        throwable is LinkageError -> LOG.error(throwable)
-        LOG.isTraceEnabled -> LOG.warn(throwable)
-        else -> LOG.warn(throwable.toString())
-    }
-}
+private fun handleError(throwable: Throwable) = LOG.warn(throwable)
