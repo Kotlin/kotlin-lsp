@@ -16,6 +16,8 @@ import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.diagnosticData
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDescriptorProvider
+import com.jetbrains.ls.api.features.impl.common.modcommands.combinedPresentationNames
+import com.jetbrains.ls.api.features.impl.common.modcommands.flattenChoiceActions
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
 import com.jetbrains.lsp.implementation.LspHandlerContext
@@ -88,20 +90,18 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
                     LOG.warn("Cannot convert $intentionAction to ModCommandAction")
                 }
                 modCommandAction
-            }.mapNotNull { modCommandAction ->
+            }
+            .flatMap { modCommandAction ->
                 val context = ActionContext.from(editor, file)
 
-                val presentation = runCatching {
-                    modCommandAction.getPresentation(context)
-                }.getOrHandleException {
-                    LOG.warn(it)
-                } ?: return@mapNotNull null
-
-                val modCommand = modCommandAction.perform(context)
+                modCommandAction.flattenChoiceActions(context)
+            }
+            .mapNotNull { modCommandActionChain ->
+                val modCommand = modCommandActionChain.leaf.command
                 val modCommandData = ModCommandData.from(modCommand) ?: return@mapNotNull null
 
                 CodeAction(
-                    presentation.name,
+                    modCommandActionChain.combinedPresentationNames(),
                     CodeActionKind.QuickFix,
                     diagnostics = listOf(lspDiagnostic),
                     command = Command(
