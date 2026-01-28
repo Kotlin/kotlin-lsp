@@ -91,20 +91,26 @@ fun ModChooseActionChain.combinedPresentationNames(): String {
  * - [Action1, Action3] -> Action5
  * ```
  *
- * **Important**: To analyze [ModCommand]s, all of the [ModCommandAction]s in the chains will be performed in the [context].
+ * Note 1: To analyze [ModCommand]s, all of the [ModCommandAction]s in the chains will be performed in the [context].
  *
- * Note: Only top-level [ModChooseAction] commands are expanded. If a [ModChooseAction] is wrapped inside another
+ * Note 2: Only top-level [ModChooseAction] commands are expanded. If a [ModChooseAction] is wrapped inside another
  * [ModCommand] (e.g., as part of a composite command), it will not be recursively expanded and will be treated
  * as a terminal command.
+ *
+ * Note 3: If at any point of the execution there is an exception coming from the [ModCommandAction] being performed,
+ * the exception is logged and an empty list is returned.
  */
 fun ModCommandAction.flattenChoiceActions(context: ActionContext): List<ModChooseActionChain> {
-    return flattenChoiceActionsImpl(context, steps = emptyList())
+    return flattenChoiceActionsImpl(context, steps = emptyList()).orEmpty()
 }
 
+/**
+ * Returns a resulting flattened list of [ModChooseActionChain]s, or `null` if there is an exception in any step of the way.
+ */
 private fun ModCommandAction.flattenChoiceActionsImpl(
     context: ActionContext,
     steps: List<ModChooseActionChain.Step>
-): List<ModChooseActionChain> {
+): List<ModChooseActionChain>? {
     val modCommandAction = this
 
     val presentation =
@@ -112,6 +118,9 @@ private fun ModCommandAction.flattenChoiceActionsImpl(
             modCommandAction.getPresentation(context)
         }.getOrHandleException { exception ->
             LOG.warn("Failed to get presentation from mod command action $modCommandAction", exception)
+
+            // exception happened, we bail
+            return null
         }
 
     if (presentation == null) return emptyList()
@@ -121,6 +130,9 @@ private fun ModCommandAction.flattenChoiceActionsImpl(
             modCommandAction.perform(context)
         }.getOrHandleException { exception ->
             LOG.warn("Failed to perform mod command action $modCommandAction", exception)
+
+            // exception happened, we bail
+            return null
         }
 
     if (command == null) return emptyList()
@@ -130,6 +142,8 @@ private fun ModCommandAction.flattenChoiceActionsImpl(
             val newChain = steps + ModChooseActionChain.Step(modCommandAction, presentation, command)
             command.actions.flatMap { subAction ->
                 subAction.flattenChoiceActionsImpl(context, newChain)
+                    // something is wrong down the line, we bail
+                    ?: return null
             }
         }
         else -> listOf(ModChooseActionChain(steps, ModChooseActionChain.Leaf(modCommandAction, presentation, command)))
