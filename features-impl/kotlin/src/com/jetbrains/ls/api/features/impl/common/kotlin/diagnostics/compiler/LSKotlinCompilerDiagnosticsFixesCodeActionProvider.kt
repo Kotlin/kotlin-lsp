@@ -7,7 +7,6 @@ import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.impl.ImaginaryEditor
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.jetbrains.ls.api.core.LSServer
@@ -58,7 +57,6 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
                             val kaDiagnostic = kaDiagnostics.firstOrNull { data.data.matches(it) } ?: continue
                             with(quickFixService) {
                                 result += getQuickFixesAsCodeActions(
-                                    project,
                                     ktFile,
                                     editor,
                                     kaDiagnostic,
@@ -75,7 +73,6 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
 
     context(kaSession: KaSession)
     private fun KotlinQuickFixService.getQuickFixesAsCodeActions(
-        project: Project,
         file: KtFile,
         editor: Editor,
         kaDiagnostic: KaDiagnosticWithPsi<*>,
@@ -84,12 +81,6 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
         return (getQuickFixesWithCatchingFor(kaDiagnostic) + getLazyQuickFixesWithCatchingFor(kaDiagnostic))
             .mapNotNull { fixes ->
                 fixes.getOrHandleException { LOG.warn(it) }
-            }
-            .filter { intentionAction ->
-                runCatching {
-                    // this call may also compute some text inside the intention
-                    intentionAction.isAvailable(project, editor, file)
-                }.getOrHandleException { LOG.warn(it) } ?: false
             }
             .mapNotNull { intentionAction ->
                 val modCommandAction = intentionAction.asModCommandAction()
