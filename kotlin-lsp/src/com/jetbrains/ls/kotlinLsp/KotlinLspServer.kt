@@ -61,7 +61,10 @@ private val LOG by lazy { fileLogger() }
 
 private fun run(runConfig: KotlinLspServerRunConfig) {
     val mode = runConfig.mode
-    initKotlinLspLogger(writeToStdOut = mode != KotlinLspServerMode.Stdio)
+    initKotlinLspLogger(
+        writeToStdOut = mode != KotlinLspServerMode.Stdio,
+        defaultLogLevel = runConfig.logLevel,
+    )
     initIdeaPaths(runConfig.systemPath)
     initExtraProperties()
 

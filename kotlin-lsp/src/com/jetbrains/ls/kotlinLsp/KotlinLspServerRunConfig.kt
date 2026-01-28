@@ -6,11 +6,13 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.PrintHelpMessage
 import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.path
+import com.intellij.openapi.diagnostic.LogLevel
 import java.nio.file.Path
 
 data class KotlinLspServerRunConfig(
     val mode: KotlinLspServerMode,
     val systemPath: Path?,
+    val logLevel: LogLevel = LogLevel.INFO,
 )
 
 sealed interface KotlinLspServerMode {
@@ -48,6 +50,11 @@ private class Parser : CliktCommand(name = "kotlin-lsp") {
         .validate { if (it && stdio) fail("Can't use stdio mode with client mode") }
     val systemPath: Path? by option().path()
         .help("Path for Kotlin LSP caches and indexes")
+    val logLevel: LogLevel by option(
+        help = "Global log level. Supported values: TRACE, DEBUG, INFO, WARNING, ERROR, OFF, ALL.",
+        envvar = "KOTLIN_LSP_LOG_LEVEL",
+    ).convert { parseLogLevel(it) }
+        .default(LogLevel.INFO)
     val multiClient: Boolean by option().flag()
         .help("Whether the Kotlin LSP server is used in multiclient mode. If not set, server will be shut down after the first client disconnects.")
         .validate {
@@ -75,7 +82,7 @@ private class Parser : CliktCommand(name = "kotlin-lsp") {
                 ),
             )
         }
-        return KotlinLspServerRunConfig(mode, systemPath)
+        return KotlinLspServerRunConfig(mode, systemPath, logLevel)
     }
 
     override fun run() {}
@@ -107,4 +114,11 @@ fun KotlinLspServerRunConfig.toArguments(): List<String> = buildList {
         }
     }
     if (systemPath != null) add("--system-path=$systemPath")
+    if (logLevel != LogLevel.INFO) add("--log-level=${logLevel.name}")
+}
+
+private fun parseLogLevel(value: String): LogLevel {
+    return LogLevel.entries.firstOrNull { logLevel -> logLevel.name == value } ?: throw BadParameterValue(
+        text = "'$value' is not a valid log level. Supported values: " + LogLevel.entries.joinToString { it.name } + " (case-sensitive)",
+    )
 }

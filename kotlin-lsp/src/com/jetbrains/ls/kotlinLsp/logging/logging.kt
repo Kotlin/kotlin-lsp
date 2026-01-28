@@ -13,30 +13,26 @@ import java.time.ZoneId
 import java.util.concurrent.ConcurrentHashMap
 
 
-fun initKotlinLspLogger(writeToStdOut: Boolean) {
-    Logger.setFactory(KotlinLspLoggerFactory(writeToStdOut))
+fun initKotlinLspLogger(writeToStdOut: Boolean, defaultLogLevel: LogLevel) {
+    Logger.setFactory(KotlinLspLoggerFactory(writeToStdOut, defaultLogLevel))
     com.intellij.serviceContainer.checkServiceFromWriteAccess = false
     com.intellij.codeInsight.multiverse.logMultiverseState = false
 }
 
-private class KotlinLspLoggerFactory(private val writeToStdOut: Boolean) : Logger.Factory {
-    private val levels = LoggingLevelsByCategory()
+private class KotlinLspLoggerFactory(private val writeToStdOut: Boolean, defaultLogLevel: LogLevel) : Logger.Factory {
+    private val levels = LoggingLevelsByCategory(defaultLogLevel)
 
     override fun getLoggerInstance(category: String): Logger = LspLogger(category, writeToStdOut, levels)
 }
 
-private class LoggingLevelsByCategory {
+private class LoggingLevelsByCategory(private val defaultLogLevel: LogLevel) {
     // TODO PersistentHashMap may be faster as we have low write rate here and high read-rate
     private val levels = ConcurrentHashMap<String, LogLevel>()
 
-    fun getLevel(category: String): LogLevel = levels[category] ?: DEFAULT
+    fun getLevel(category: String): LogLevel = levels[category] ?: defaultLogLevel
 
     fun setLevel(category: String, level: LogLevel) {
         levels[category] = level
-    }
-
-    companion object {
-        val DEFAULT = LogLevel.INFO
     }
 }
 
@@ -162,7 +158,10 @@ private class LspLogger(
                     if (shouldNotifyForDebug) {
                         client.lspClient.notifyAsync(
                             notificationType = LogTraceNotificationType,
-                            params = LogTraceParams(messageRendered, verbose = null/*TODO LSP-229 provide more details here?*/)
+                            params = LogTraceParams(
+                                message = messageRendered,
+                                verbose = null, // TODO: LSP-229 provide more details here?
+                            ),
                         )
                     }
                 }

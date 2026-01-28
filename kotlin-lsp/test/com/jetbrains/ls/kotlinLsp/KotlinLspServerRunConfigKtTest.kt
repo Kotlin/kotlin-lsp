@@ -1,6 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.kotlinLsp
 
+import com.intellij.openapi.diagnostic.LogLevel
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import java.nio.file.Paths
@@ -32,7 +33,7 @@ class KotlinLspServerRunConfigKtTest {
                     TcpConnectionConfig.Server(
                         host = "127.0.0.1",
                         port = 9999,
-                        isMultiClient = false
+                        isMultiClient = false,
                     )
                 ),
                 systemPath = Paths.get("/path/to/system"),
@@ -48,12 +49,18 @@ class KotlinLspServerRunConfigKtTest {
                     TcpConnectionConfig.Server(
                         host = "127.0.0.1",
                         port = 9999,
-                        isMultiClient = true
+                        isMultiClient = true,
                     )
                 ),
                 systemPath = null,
             )
         )
+    }
+
+    @Test
+    fun `log level flag`() {
+        val parsed = parseArguments(arrayOf("--stdio", "--log-level=DEBUG")) as KotlinLspCommand.RunLsp
+        Assertions.assertEquals(LogLevel.DEBUG, parsed.config.logLevel)
     }
 
     private fun doConsistencyTest(config: KotlinLspServerRunConfig) {
