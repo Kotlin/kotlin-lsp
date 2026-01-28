@@ -15,6 +15,11 @@ import com.jetbrains.lsp.protocol.ApplyEditRequests.ApplyEdit
 import kotlinx.serialization.Serializable
 import java.util.*
 
+/**
+ * **Note**: [ModChooseAction] cannot be modeled with [ModCommandData];
+ * see [ModChooseActionChain][com.jetbrains.ls.api.features.impl.common.modcommands.ModChooseActionChain]
+ * for details and utilities related to that.
+ */
 @Serializable
 sealed interface ModCommandData {
     @Serializable
