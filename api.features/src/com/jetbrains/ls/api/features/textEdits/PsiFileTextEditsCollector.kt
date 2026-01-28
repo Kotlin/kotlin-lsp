@@ -7,6 +7,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.invokeAndWaitIfNeeded
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.command.CommandProcessor
+import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findPsiFile
@@ -15,7 +16,6 @@ import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.lsp.protocol.TextEdit
-import kotlin.coroutines.cancellation.CancellationException
 
 object PsiFileTextEditsCollector {
 
@@ -36,12 +36,10 @@ object PsiFileTextEditsCollector {
                         val fileForModification = FileForModificationFactory.forLanguage(originalPsi.language)
                             .createFileForModifications(originalPsi)
                         val textBeforeCommand = fileForModification.text
-                        try {
+                        runCatching {
                             modificationAction(fileForModification)
-                        } catch (ce: CancellationException) {
-                            throw ce
-                        } catch (x: Throwable) {
-                            logger.error("command failed", x)
+                        }.getOrHandleException {
+                            logger.error("command failed", it)
                         }
                         val textAfterCommand = fileForModification.text
                         res = TextEditsComputer.computeTextEdits(textBeforeCommand, textAfterCommand)

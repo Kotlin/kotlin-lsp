@@ -5,6 +5,7 @@ import com.intellij.codeInsight.intention.IntentionManager
 import com.intellij.modcommand.ActionContext
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.fileLogger
+import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
@@ -19,7 +20,6 @@ import com.jetbrains.ls.api.features.utils.isSource
 import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.*
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.encodeToJsonElement
@@ -54,15 +54,12 @@ class LSCommonIntentionFixesCodeActionProvider(
                     .mapNotNull { intentionAction -> intentionAction.asModCommandAction() }
                     .filterNot { modCommandAction -> blacklist.containsImplementation(modCommandAction.javaClass.name) }
                     .mapNotNull { modCommandAction ->
-                        val presentation = try {
-                            modCommandAction.getPresentation(actionContext)
-                        } catch (e: CancellationException) {
-                            throw e
-                        } catch (e: Exception) {
+                        val presentation = runCatching {
                             // If some ModCommand is not available, calling getPresentation() in such case should return null, not throw.
                             // We want to know if getPresentation() throws, since it may point to missing registration of some extensions in the LSP.
-                            LOG.warn("Failed to get presentation from mod command action $modCommandAction", e)
-                            null
+                            modCommandAction.getPresentation(actionContext)
+                        }.getOrHandleException {
+                            LOG.warn("Failed to get presentation from mod command action $modCommandAction", it)
                         }
 
                         if (presentation == null) {
@@ -70,14 +67,11 @@ class LSCommonIntentionFixesCodeActionProvider(
                             return@mapNotNull null
                         }
 
-                        val modCommand = try {
+                        val modCommand = runCatching {
                             modCommandAction.perform(actionContext)
-                        } catch (e: CancellationException) {
-                            throw e
-                        } catch (e: Throwable) {
-                            LOG.warn("Failed to perform mod command action $modCommandAction", e)
-                            return@mapNotNull null
-                        }
+                        }.getOrHandleException {
+                            LOG.warn("Failed to perform mod command action $modCommandAction", it)
+                        } ?: return@mapNotNull null
                         val modCommandData = ModCommandData.from(modCommand) ?: return@mapNotNull null
 
                         CodeAction(
