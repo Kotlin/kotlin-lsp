@@ -97,11 +97,20 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
                     LOG.warn("Cannot convert $intentionAction to ModCommandAction")
                     return@mapNotNull null
                 }
-                val modCommand = modCommandAction.perform(ActionContext.from(editor, file))
+
+                val context = ActionContext.from(editor, file)
+
+                val presentation = runCatching {
+                    modCommandAction.getPresentation(context)
+                }.getOrHandleException {
+                    LOG.warn(it)
+                } ?: return@mapNotNull null
+
+                val modCommand = modCommandAction.perform(context)
                 val modCommandData = ModCommandData.from(modCommand) ?: return@mapNotNull null
 
                 CodeAction(
-                    intentionAction.text,
+                    presentation.name,
                     CodeActionKind.QuickFix,
                     diagnostics = listOf(lspDiagnostic),
                     command = Command(
