@@ -86,9 +86,9 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
                 val modCommandAction = intentionAction.asModCommandAction()
                 if (modCommandAction == null) {
                     LOG.warn("Cannot convert $intentionAction to ModCommandAction")
-                    return@mapNotNull null
                 }
-
+                modCommandAction
+            }.mapNotNull { modCommandAction ->
                 val context = ActionContext.from(editor, file)
 
                 val presentation = runCatching {
