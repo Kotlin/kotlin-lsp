@@ -66,15 +66,14 @@ class LSCommonInspectionDiagnosticProvider(
                 val inspectionManager = InspectionManagerEx(project)
                 val problemsHolder = ProblemsHolder(inspectionManager, psiFile, onTheFly)
 
-                val localInspections = getLocalInspections(psiFile) + getSharedLocalInspectionsFromGlobalTools(psiFile.language)
-                for (localInspection in localInspections) {
+                for (localInspection in getLocalInspections(psiFile) + getSharedLocalInspectionsFromGlobalTools(psiFile.language)) {
                     val visitor = localInspection.buildVisitor(problemsHolder, onTheFly)
 
                     fun collect(element: PsiElement) {
                         runCatching {
                             element.accept(visitor)
                         }.getOrHandleException {
-                            handleError(it)
+                            LOG.warn(it)
                         }
                         diagnostics.addAll(problemsHolder.collectDiagnostics(file, project, localInspection))
                         problemsHolder.clearResults()
@@ -94,7 +93,7 @@ class LSCommonInspectionDiagnosticProvider(
                     runCatching {
                         simpleGlobalInspection.checkFile(psiFile, inspectionManager, problemsHolder, globalInspectionContext, processor)
                     }.getOrHandleException {
-                        handleError(it)
+                        LOG.warn(it)
                     }
                     for (problemDescriptor in problemsHolder.results) {
                         val data = problemDescriptor.createDiagnosticData(project)
@@ -121,64 +120,40 @@ class LSCommonInspectionDiagnosticProvider(
         }.forEach { diagnostic -> emit(diagnostic) }
     }
 
-    private fun getLocalInspections(psiFile: PsiFile): List<LocalInspectionTool> {
-        return LocalInspectionEP.LOCAL_INSPECTION.extensionList
+    private fun getEnabledInspectionTools(extensionList: List<InspectionEP>, languageId: String): Sequence<InspectionProfileEntry> {
+        return extensionList
             .asSequence()
-            .filter { it.language == psiFile.language.id }
-            .filter { it.enabledByDefault }
-            .filter { HighlightDisplayLevel.find(it.level) != HighlightDisplayLevel.DO_NOT_SHOW }
+            .filter { inspectionEP -> inspectionEP.language == languageId }
+            .filter { inspectionEP -> inspectionEP.enabledByDefault }
+            .filter { inspectionEP -> HighlightDisplayLevel.find(inspectionEP.level) != HighlightDisplayLevel.DO_NOT_SHOW }
             .filterNot { blacklist.containsImplementation(it.implementationClass) }
-            .mapNotNull { inspection ->
+            .mapNotNull { inspectionEP ->
                 runCatching {
-                    inspection.instantiateTool()
+                    inspectionEP.instantiateTool()
                 }.getOrHandleException {
-                    handleError(it)
+                    LOG.warn(it)
                 }
             }
             .filterNot { blacklist.containsSuperClass(it) }
+    }
+
+    private fun getLocalInspections(psiFile: PsiFile): List<LocalInspectionTool> {
+        return getEnabledInspectionTools(LocalInspectionEP.LOCAL_INSPECTION.extensionList, psiFile.language.id)
             .filterIsInstance<LocalInspectionTool>()
-            .filter { localInspection -> localInspection.isAvailableForFile(psiFile) }
+            .filter { localInspectionTool -> localInspectionTool.isAvailableForFile(psiFile) }
             .toList()
     }
 
-    @Suppress("DuplicatedCode") // Suppressed until IJPL-231960 is resolved
     private fun getSimpleGlobalInspections(language: Language): List<GlobalSimpleInspectionTool> {
-        return InspectionEP.GLOBAL_INSPECTION.extensionList
-            .asSequence()
-            .filter { it.language == language.id }
-            .filter { it.enabledByDefault }
-            .filter { HighlightDisplayLevel.find(it.level) != HighlightDisplayLevel.DO_NOT_SHOW }
-            .filterNot { blacklist.containsImplementation(it.implementationClass) }
-            .mapNotNull { inspection ->
-                runCatching {
-                    inspection.instantiateTool()
-                }.getOrHandleException {
-                    handleError(it)
-                }
-            }
-            .filterNot { blacklist.containsSuperClass(it) }
+        return getEnabledInspectionTools(InspectionEP.GLOBAL_INSPECTION.extensionList, language.id)
             .filterIsInstance<GlobalSimpleInspectionTool>()
             .toList()
     }
 
-    @Suppress("DuplicatedCode") // Suppressed until IJPL-231960 is resolved
     private fun getSharedLocalInspectionsFromGlobalTools(language: Language): List<LocalInspectionTool> {
-        return InspectionEP.GLOBAL_INSPECTION.extensionList
-            .asSequence()
-            .filter { it.language == language.id }
-            .filter { it.enabledByDefault }
-            .filter { HighlightDisplayLevel.find(it.level) != HighlightDisplayLevel.DO_NOT_SHOW }
-            .filterNot { blacklist.containsImplementation(it.implementationClass) }
-            .mapNotNull { inspection ->
-                runCatching {
-                    inspection.instantiateTool()
-                }.getOrHandleException {
-                    handleError(it)
-                }
-            }
-            .filterNot { blacklist.containsSuperClass(it) }
+        return getEnabledInspectionTools(InspectionEP.GLOBAL_INSPECTION.extensionList, language.id)
             .filterIsInstance<GlobalInspectionTool>()
-            .mapNotNull { it.sharedLocalInspectionTool }
+            .mapNotNull { globalInspectionTool -> globalInspectionTool.sharedLocalInspectionTool }
             .filterNot { blacklist.containsSuperClass(it) }
             .toList()
     }
@@ -191,7 +166,7 @@ private fun ProblemsHolder.collectDiagnostics(
 ): List<Diagnostic> {
     val document = file.findDocument() ?: return emptyList()
     return results
-        .filter { it.highlightType != ProblemHighlightType.INFORMATION }
+        .filter { problemDescriptor -> problemDescriptor.highlightType != ProblemHighlightType.INFORMATION }
         .mapNotNull { problemDescriptor ->
             val data = problemDescriptor.createDiagnosticData(project)
             val message = ProblemDescriptorUtil.renderDescriptor(
@@ -219,22 +194,20 @@ private fun ProblemDescriptor.range(): TextRange? {
 private fun ProblemDescriptor.createDiagnosticData(project: Project): SimpleDiagnosticData {
     return SimpleDiagnosticData(
         diagnosticSource = diagnosticSource,
-        fixes = fixes.orEmpty().mapNotNull { fix ->
-            val modCommand = getModCommand(fix, project, this) ?: return@mapNotNull null
+        fixes = fixes.orEmpty().mapNotNull { quickFix ->
+            val modCommand = getModCommand(quickFix, project, this) ?: return@mapNotNull null
             val modCommandData = ModCommandData.from(modCommand) ?: return@mapNotNull null
-            SimpleDiagnosticQuickfixData(name = fix.name, modCommandData = modCommandData)
+            SimpleDiagnosticQuickfixData(name = quickFix.name, modCommandData = modCommandData)
         },
     )
 }
 
-private fun getModCommand(fix: QuickFix<*>, project: Project, problemDescriptor: ProblemDescriptor): ModCommand? =
-    when (fix) {
+private fun getModCommand(fix: QuickFix<*>, project: Project, problemDescriptor: ProblemDescriptor): ModCommand? {
+    return when (fix) {
         is ModCommandQuickFix -> fix.perform(project, problemDescriptor)
-
         else -> {
-            LOG.debug("Unknown quick fix type: ${fix::class.java}")
+            LOG.warn("Unknown quick fix type: ${fix::class.java}")
             null
         }
     }
-
-private fun handleError(throwable: Throwable) = LOG.warn(throwable)
+}
