@@ -6,6 +6,9 @@ import com.intellij.modcommand.ModChooseAction
 import com.intellij.modcommand.ModCommand
 import com.intellij.modcommand.ModCommandAction
 import com.intellij.modcommand.Presentation
+import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.diagnostic.getOrHandleException
+import com.intellij.openapi.diagnostic.logger
 
 /**
  * Represents a chain of [ModCommandAction]s produced by [ModChooseAction]s.
@@ -102,18 +105,35 @@ private fun ModCommandAction.flattenChoiceActionsImpl(
     context: ActionContext,
     steps: List<ModChooseActionChain.Step>
 ): List<ModChooseActionChain> {
-    val presentation = getPresentation(context)
+    val modCommandAction = this
+
+    val presentation =
+        runCatching {
+            modCommandAction.getPresentation(context)
+        }.getOrHandleException { exception ->
+            LOG.warn("Failed to get presentation from mod command action $modCommandAction", exception)
+        }
+
     if (presentation == null) return emptyList()
 
-    val command = perform(context)
+    val command =
+        runCatching {
+            modCommandAction.perform(context)
+        }.getOrHandleException { exception ->
+            LOG.warn("Failed to perform mod command action $modCommandAction", exception)
+        }
+
+    if (command == null) return emptyList()
 
     return when (command) {
         is ModChooseAction -> {
-            val newChain = steps + ModChooseActionChain.Step(this, presentation, command)
+            val newChain = steps + ModChooseActionChain.Step(modCommandAction, presentation, command)
             command.actions.flatMap { subAction ->
                 subAction.flattenChoiceActionsImpl(context, newChain)
             }
         }
-        else -> listOf(ModChooseActionChain(steps, ModChooseActionChain.Leaf(this, presentation, command)))
+        else -> listOf(ModChooseActionChain(steps, ModChooseActionChain.Leaf(modCommandAction, presentation, command)))
     }
 }
+
+private val LOG: Logger = logger<ModChooseActionChain>()
