@@ -50,9 +50,7 @@ fun gradleTest(
     testCase: TestCase<out ProjectInfoSpec>,
     projectStructureWithModules: ProjectStructureWithModules
 ) {
-    downloadGradleBinaries().let { path ->
-        GradleWorkspaceImporter.useGradleAndJava(path, Path.of(System.getProperty("java.home")))
-    }
+    downloadGradleBinaries()
     System.setProperty("useNaiveGradleRepoSubstitution", "true")
     try {
         doTest(testCase, projectStructureWithModules, GradleWorkspaceImporter)
