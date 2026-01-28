@@ -55,7 +55,7 @@ internal object LSKotlinIntentionCodeActionProvider : LSCodeActionProvider {
         )
     }
 
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val uri = params.textDocument.uri.uri
         server.withAnalysisContext {
@@ -82,7 +82,7 @@ internal object LSKotlinIntentionCodeActionProvider : LSCodeActionProvider {
         }.forEach { emit(it) }
     }
 
-    context(_: LSAnalysisContext)
+    context(analysisContext: LSAnalysisContext)
     private fun createActionContext(ktFile: KtFile, element: PsiElement) = ActionContext(
         project,
         ktFile,

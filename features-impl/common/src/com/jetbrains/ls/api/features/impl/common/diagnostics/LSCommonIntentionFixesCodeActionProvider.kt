@@ -33,7 +33,7 @@ class LSCommonIntentionFixesCodeActionProvider(
 
     override val providesOnlyKinds: Set<CodeActionKind> get() = setOf(codeActionKind)
 
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         if (!params.textDocument.isSource()) return@flow
 

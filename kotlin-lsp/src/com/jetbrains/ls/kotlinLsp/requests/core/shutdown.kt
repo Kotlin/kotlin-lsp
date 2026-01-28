@@ -8,7 +8,7 @@ import com.jetbrains.lsp.protocol.ExitNotificationType
 import com.jetbrains.lsp.protocol.Shutdown
 import kotlinx.coroutines.CompletableDeferred
 
-context(_: LSServer, _: LSConfiguration)
+context(server: LSServer, configuration: LSConfiguration)
 internal fun LspHandlersBuilder.shutdownRequest(exitSignal: CompletableDeferred<Unit>?) {
     request(Shutdown) {
         // TODO All the requests and notifications after this one should return InvalidRequest but only in the single client mode

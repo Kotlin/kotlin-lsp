@@ -43,13 +43,13 @@ object LSKotlinSemanticTokensProvider : LSSemanticTokensProvider {
         return LSSemanticTokenRegistry(LSSemanticTokenTypePredefined.ALL, LSSemanticTokenModifierPredefined.ALL)
     }
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun full(params: SemanticTokensParams): List<LSSemanticTokenWithRange> {
         return getTokens(params.textDocument, range = null)
 
     }
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun range(params: SemanticTokensRangeParams): List<LSSemanticTokenWithRange> {
         return getTokens(params.textDocument, params.range)
     }
@@ -75,7 +75,7 @@ object LSKotlinSemanticTokensProvider : LSSemanticTokensProvider {
         }
     }
 
-    context(_: LSServer, kaSession: KaSession)
+    context(server: LSServer, kaSession: KaSession)
     private fun PsiElement.getRangeWithToken(document: Document): LSSemanticTokenWithRange? = try {
         val psiElement = this
         with(kaSession) {
@@ -111,7 +111,7 @@ object LSKotlinSemanticTokensProvider : LSSemanticTokensProvider {
         null
     }
 
-    context(_: LSServer, kaSession: KaSession)
+    context(server: LSServer, kaSession: KaSession)
     private fun getRangeWithToken(symbol: KaSymbol): LSSemanticToken? = with(kaSession) {
         val type = when (symbol) {
             is KaPackageSymbol -> LSSemanticTokenTypePredefined.NAMESPACE

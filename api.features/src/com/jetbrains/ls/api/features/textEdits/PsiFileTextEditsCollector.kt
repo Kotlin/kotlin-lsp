@@ -21,11 +21,8 @@ object PsiFileTextEditsCollector {
 
     private val logger = logger<PsiFileTextEditsCollector>()
 
-    context(_: LSAnalysisContext)
-    fun collectTextEdits(
-        file: VirtualFile,
-        modificationAction: (file: PsiFile) -> Unit
-    ): List<TextEdit> {
+    context(analysisContext: LSAnalysisContext)
+    fun collectTextEdits(file: VirtualFile, modificationAction: (file: PsiFile) -> Unit): List<TextEdit> {
         val app = ApplicationManager.getApplication()
         app.assertReadAccessNotAllowed()
 
@@ -65,8 +62,7 @@ object PsiFileTextEditsCollector {
         private object Extension : LanguageExtension<FileForModificationFactory>("ls.fileForModificationFactory")
 
         companion object {
-            fun forLanguage(language: Language): FileForModificationFactory =
-                Extension.forLanguage(language)
+            fun forLanguage(language: Language): FileForModificationFactory = Extension.forLanguage(language)
         }
     }
 }

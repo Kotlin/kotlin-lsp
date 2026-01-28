@@ -3,8 +3,6 @@ package com.jetbrains.ls.api.features.completion
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSConfiguration
-import com.jetbrains.ls.api.features.entriesFor
-import com.jetbrains.ls.api.features.entryById
 import com.jetbrains.ls.api.features.resolve.getConfigurationEntryId
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.CompletionItem
@@ -12,16 +10,16 @@ import com.jetbrains.lsp.protocol.CompletionList
 import com.jetbrains.lsp.protocol.CompletionParams
 
 object LSCompletion {
-    context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
+    context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
     suspend fun getCompletion(params: CompletionParams): CompletionList {
-        val results = entriesFor<LSCompletionProvider>(params.textDocument).map { it.provideCompletion(params) }
+        val results = configuration.entriesFor<LSCompletionProvider>(params.textDocument).map { it.provideCompletion(params) }
         return results.combined()
     }
 
-    context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
+    context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
     suspend fun resolveCompletion(item: CompletionItem): CompletionItem {
         val uniqueId = getConfigurationEntryId(item.data) ?: return item
-        val entry = entryById<LSCompletionProvider>(uniqueId) ?: return item
+        val entry = configuration.entryById<LSCompletionProvider>(uniqueId) ?: return item
         return entry.resolveCompletion(item) ?: item
     }
 

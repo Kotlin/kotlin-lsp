@@ -205,7 +205,7 @@ fun createConfiguration(): LSConfiguration {
     )
 }
 
-context(_: LSServer)
+context(server: LSServer)
 fun createLspHandlers(config: LSConfiguration, exitSignal: CompletableDeferred<Unit>?): LspHandlers {
     with(config) {
         return lspHandlers {

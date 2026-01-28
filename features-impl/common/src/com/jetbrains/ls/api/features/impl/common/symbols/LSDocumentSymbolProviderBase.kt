@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 abstract class LSDocumentSymbolProviderBase : LSDocumentSymbolProvider {
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getDocumentSymbols(params: DocumentSymbolParams): Flow<DocumentSymbol> = flow {
         val uri = params.textDocument.uri.uri
         server.withAnalysisContext {
@@ -36,7 +36,7 @@ abstract class LSDocumentSymbolProviderBase : LSDocumentSymbolProvider {
         }.forEach { documentSymbol -> emit(documentSymbol) }
     }
 
-    context(_: LSAnalysisContext)
+    context(analysisContext: LSAnalysisContext)
     private fun mapDeclaration(element: PsiElement): DocumentSymbol? {
         val name = getName(element) ?: return null
         val kind = getKind(element) ?: return null

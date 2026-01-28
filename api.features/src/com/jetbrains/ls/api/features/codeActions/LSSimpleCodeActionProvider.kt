@@ -28,13 +28,13 @@ abstract class LSSimpleCodeActionProvider<P : Any> : LSCodeActionProvider, LSCom
 
     abstract val dataSerializer: KSerializer<P>
 
-    context(_: LSServer, _: LSAnalysisContext)
+    context(server: LSServer, analysisContext: LSAnalysisContext)
     abstract fun getData(file: VirtualFile, params: CodeActionParams): P?
 
-    context(_: LSServer, _: LSAnalysisContext)
+    context(server: LSServer, analysisContext: LSAnalysisContext)
     abstract fun execute(file: VirtualFile, data: P): List<TextEdit>
 
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val documentUri = params.textDocument.uri
         val params = server.withAnalysisContext {
@@ -74,7 +74,7 @@ abstract class LSSimpleCodeActionProvider<P : Any> : LSCodeActionProvider, LSCom
     )
 
     internal inner class LSSimpleDocumentCommandExecutor : LSDocumentCommandExecutor {
-        context(server: LSServer, _: LspHandlerContext)
+        context(server: LSServer, handlerContext: LspHandlerContext)
         override suspend fun executeForDocument(documentUri: DocumentUri, otherArgs: List<JsonElement>): List<TextEdit> {
             return server.withAnalysisContext {
                 readAction {

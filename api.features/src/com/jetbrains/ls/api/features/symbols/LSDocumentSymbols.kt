@@ -3,19 +3,18 @@ package com.jetbrains.ls.api.features.symbols
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSConfiguration
-import com.jetbrains.ls.api.features.entriesFor
 import com.jetbrains.ls.api.features.partialResults.LSConcurrentResponseHandler
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.DocumentSymbol
 import com.jetbrains.lsp.protocol.DocumentSymbolParams
 
 object LSDocumentSymbols {
-    context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
+    context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
     suspend fun getSymbols(params: DocumentSymbolParams): List<DocumentSymbol> =
         LSConcurrentResponseHandler.streamResultsIfPossibleOrRespondDirectly(
             partialResultToken = params.partialResultToken,
             resultSerializer = DocumentSymbol.serializer(),
-            providers = entriesFor<LSDocumentSymbolProvider>(params.textDocument),
+            providers = configuration.entriesFor<LSDocumentSymbolProvider>(params.textDocument),
             getResults = { documentSymbolProvider -> documentSymbolProvider.getDocumentSymbols(params) },
         )
 }

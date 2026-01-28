@@ -9,9 +9,9 @@ import com.jetbrains.lsp.protocol.DocumentRangeFormattingParams
 import com.jetbrains.lsp.protocol.TextEdit
 
 interface LSFormattingProvider : LSLanguageSpecificConfigurationEntry {
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     suspend fun getFormatting(params: DocumentFormattingParams): List<TextEdit>?
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     suspend fun getFormattingRanged(params: DocumentRangeFormattingParams): List<TextEdit>?
 }

@@ -58,7 +58,7 @@ abstract class LSInlayHintsProviderBase(
         val factory: HintFactoryBase
     )
 
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getInlayHints(params: InlayHintParams): Flow<InlayHint> = flow {
         val result = mutableListOf<InlayHint>()
         val options = requestEnabledInlayOptions(params.textDocument)
@@ -87,7 +87,7 @@ abstract class LSInlayHintsProviderBase(
         result.forEach { emit(it) }
     }
 
-    context(_: LspHandlerContext)
+    context(handlerContext: LspHandlerContext)
     private suspend fun requestEnabledInlayOptions(document: TextDocumentIdentifier): InlayOptions {
         val raw = lspClient.request(
             Workspace.Configuration,
@@ -100,7 +100,7 @@ abstract class LSInlayHintsProviderBase(
         return InlayOptions.create(raw)
     }
 
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun resolveInlayHint(hint: InlayHint): InlayHint? {
         val dataJson = hint.data ?: return null
         val data = LSP.json.decodeFromJsonElement(InlayHintResolveData.serializer(), dataJson)

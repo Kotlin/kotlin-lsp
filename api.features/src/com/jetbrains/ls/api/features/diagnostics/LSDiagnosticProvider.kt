@@ -13,6 +13,6 @@ import kotlinx.coroutines.flow.Flow
  */
 interface LSDiagnosticProvider : LSLanguageSpecificConfigurationEntry {
     // TODO LSP-237 handle other parts of `DocumentDiagnosticReport`
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic>
 }

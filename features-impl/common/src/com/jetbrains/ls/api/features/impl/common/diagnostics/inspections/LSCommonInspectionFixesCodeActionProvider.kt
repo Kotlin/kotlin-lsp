@@ -19,7 +19,7 @@ class LSCommonInspectionFixesCodeActionProvider(
 
     override val providesOnlyKinds: Set<CodeActionKind> = setOf(CodeActionKind.QuickFix)
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         params.diagnosticData<SimpleDiagnosticData>()
             .filter { it.data.diagnosticSource == LSCommonInspectionDiagnosticProvider.diagnosticSource }

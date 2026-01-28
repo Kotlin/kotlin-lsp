@@ -52,7 +52,7 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
     override val supportsResolveRequest: Boolean
         get() = true
 
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun provideCompletion(params: CompletionParams): CompletionList {
         return if (!params.textDocument.isSource()) {
             CompletionList.EMPTY
@@ -124,7 +124,7 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
         }
     }
 
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun resolveCompletion(completionItem: CompletionItem): CompletionItem? {
         val completionDataKey = completionItem.data?.jsonObject?.get("KotlinCompletionItemKey") ?: return completionItem
 
@@ -224,7 +224,7 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
 
     private data class CompletionInsertionResult(val edits: List<TextEdit>, val caretPosition: Position, val caretOffset: Int)
 
-    context(_: LSAnalysisContext)
+    context(analysisContext: LSAnalysisContext)
     private fun applyCompletion(completionData: CompletionData): CompletionInsertionResult =
         invokeAndWaitIfNeeded {
             runWriteAction {
@@ -256,7 +256,7 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
 
 
     @OptIn(KaImplementationDetail::class)
-    context(_: LSAnalysisContext)
+    context(analysisContext: LSAnalysisContext)
     private fun <T> withFileForModification(
         physicalPsiFile: PsiFile,
         action: (fileForModification: KtFile) -> T

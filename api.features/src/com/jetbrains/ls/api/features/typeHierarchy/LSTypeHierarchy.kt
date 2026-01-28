@@ -3,8 +3,6 @@ package com.jetbrains.ls.api.features.typeHierarchy
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSConfiguration
-import com.jetbrains.ls.api.features.entriesFor
-import com.jetbrains.ls.api.features.entryById
 import com.jetbrains.ls.api.features.resolve.getConfigurationEntryId
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.TypeHierarchyItem
@@ -14,23 +12,23 @@ import com.jetbrains.lsp.protocol.TypeHierarchySupertypesParams
 
 object LSTypeHierarchy {
 
-    context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
+    context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
     suspend fun prepareTypeHierarchy(params: TypeHierarchyPrepareParams): List<TypeHierarchyItem>? {
-        val providers = entriesFor<LSTypeHierarchyProvider>(params.textDocument)
+        val providers = configuration.entriesFor<LSTypeHierarchyProvider>(params.textDocument)
         return providers.firstNotNullOfOrNull { typeHierarchyProvider -> typeHierarchyProvider.prepareTypeHierarchy(params) }
     }
 
-    context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
+    context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
     suspend fun supertypes(params: TypeHierarchySupertypesParams): List<TypeHierarchyItem>? {
         val providerId = getConfigurationEntryId(params.item.data) ?: return null
-        val provider = entryById<LSTypeHierarchyProvider>(providerId) ?: return null
+        val provider = configuration.entryById<LSTypeHierarchyProvider>(providerId) ?: return null
         return provider.supertypes(params)
     }
 
-    context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
+    context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
     suspend fun subtypes(params: TypeHierarchySubtypesParams): List<TypeHierarchyItem>? {
         val providerId = getConfigurationEntryId(params.item.data) ?: return null
-        val provider = entryById<LSTypeHierarchyProvider>(providerId) ?: return null
+        val provider = configuration.entryById<LSTypeHierarchyProvider>(providerId) ?: return null
         return provider.subtypes(params)
     }
 }

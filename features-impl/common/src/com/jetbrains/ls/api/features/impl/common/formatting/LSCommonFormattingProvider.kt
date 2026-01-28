@@ -23,12 +23,12 @@ import com.jetbrains.lsp.protocol.*
 class LSCommonFormattingProvider(
     override val supportedLanguages: Set<LSLanguage>
 ) : LSFormattingProvider {
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun getFormatting(params: DocumentFormattingParams): List<TextEdit>? {
         return format(params.textDocument, params.options, range = null)
     }
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun getFormattingRanged(params: DocumentRangeFormattingParams): List<TextEdit>? {
         return format(params.textDocument, params.options, params.range)
     }
@@ -54,7 +54,7 @@ class LSCommonFormattingProvider(
     }
 
     // TODO LSP-239 handle FormattingOptions.[trimTrailingWhitespace, insertFinalNewline, trimFinalNewlines]
-    context(_: LSAnalysisContext)
+    context(analysisContext: LSAnalysisContext)
     private fun FormattingOptions.toIntellijJSettings(psiFile: PsiFile): CodeStyleSettings {
         val settings = CodeStyleSettingsManager.getInstance(project).cloneSettings(CodeStyle.getSettings(psiFile))
         val lspOptions = this

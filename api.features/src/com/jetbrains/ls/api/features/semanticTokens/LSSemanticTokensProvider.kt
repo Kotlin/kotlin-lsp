@@ -13,12 +13,12 @@ interface LSSemanticTokensProvider : LSLanguageSpecificConfigurationEntry {
     /**
      * LSP method `textDocument/semanticTokens/full`
      */
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     suspend fun full(params: SemanticTokensParams): List<LSSemanticTokenWithRange>
 
     /**
      * LSP method `textDocument/semanticTokens/range`
      */
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     suspend fun range(params: SemanticTokensRangeParams): List<LSSemanticTokenWithRange>
 }

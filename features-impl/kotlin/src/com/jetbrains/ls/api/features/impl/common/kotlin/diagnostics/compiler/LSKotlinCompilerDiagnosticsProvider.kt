@@ -32,7 +32,7 @@ import org.jetbrains.kotlin.psi.KtFile
 internal object LSKotlinCompilerDiagnosticsProvider : LSDiagnosticProvider {
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
 
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
         if (!params.textDocument.isSource()) return@flow
         val uri = params.textDocument.uri.uri
@@ -50,7 +50,7 @@ internal object LSKotlinCompilerDiagnosticsProvider : LSDiagnosticProvider {
     }
 }
 
-context(_: KaSession, _: LSAnalysisContext, _: LSServer)
+context(kaSession: KaSession, analysisContext: LSAnalysisContext, server: LSServer)
 private fun KaDiagnosticWithPsi<*>.toLsp(document: Document, file: VirtualFile): List<Diagnostic> {
     val data = KotlinCompilerDiagnosticData.create(this, file)
     return textRanges.map { textRange ->

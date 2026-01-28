@@ -39,7 +39,7 @@ import kotlin.collections.set
 internal object LSKotlinHoverProvider : LSHoverProviderBase(TargetKind.ALL) {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSKotlinLanguage)
 
-    context(_: LSServer, _: LSAnalysisContext)
+    context(server: LSServer, analysisContext: LSAnalysisContext)
     override fun generateMarkdownForPsiElementTarget(target: PsiElement, from: PsiFile): String? {
         if (from !is KtFile) return null
 
@@ -55,8 +55,8 @@ internal object LSKotlinHoverProvider : LSHoverProviderBase(TargetKind.ALL) {
         }
     }
 
-    context(kaSession: KaSession)
-    private fun getMarkdownContent(symbol: KaSymbol): String? = with(kaSession) {
+    context(session: KaSession)
+    private fun getMarkdownContent(symbol: KaSymbol): String? = with(session) {
         val renderedSymbol = when (symbol) {
             is KaPackageSymbol -> "package ${symbol.fqName.render()}"
             is KaDeclarationSymbol -> buildString {
@@ -79,7 +79,7 @@ internal object LSKotlinHoverProvider : LSHoverProviderBase(TargetKind.ALL) {
         }
     }
 
-    context(_: KaSession)
+    context(kaSession: KaSession)
     private fun getMarkdownDoc(symbol: KaSymbol): String? {
         if(symbol is KaDeclarationSymbol && symbol.origin != KaSymbolOrigin.JAVA_LIBRARY && symbol.origin != KaSymbolOrigin.JAVA_SOURCE) {
             @OptIn(KtNonPublicApi::class, KaNonPublicApi::class) // special API for Dokka

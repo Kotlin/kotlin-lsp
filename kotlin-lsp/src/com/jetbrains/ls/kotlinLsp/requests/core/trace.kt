@@ -7,7 +7,7 @@ import com.jetbrains.ls.kotlinLsp.connection.Client
 import com.jetbrains.lsp.implementation.LspHandlersBuilder
 import com.jetbrains.lsp.protocol.SetTraceNotificationType
 
-context(_: LSServer, _: LSConfiguration)
+context(server: LSServer, configuration: LSConfiguration)
 internal fun LspHandlersBuilder.setTraceNotification() {
     notification(SetTraceNotificationType) { traceParams ->
         Client.update { it.copy(trace = traceParams.value) }

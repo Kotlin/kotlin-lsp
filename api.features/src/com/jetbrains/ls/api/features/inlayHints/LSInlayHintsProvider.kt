@@ -10,9 +10,9 @@ import com.jetbrains.lsp.protocol.InlayHintParams
 import kotlinx.coroutines.flow.Flow
 
 interface LSInlayHintsProvider : LSLanguageSpecificConfigurationEntry, LSUniqueConfigurationEntry {
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     fun getInlayHints(params: InlayHintParams): Flow<InlayHint>
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     suspend fun resolveInlayHint(hint: InlayHint): InlayHint?
 }

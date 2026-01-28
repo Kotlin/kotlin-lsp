@@ -9,6 +9,6 @@ import com.jetbrains.lsp.protocol.Location
 import kotlinx.coroutines.flow.Flow
 
 interface LSDefinitionProvider : LSLanguageSpecificConfigurationEntry {
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     fun provideDefinitions(params: DefinitionParams): Flow<Location>
 }

@@ -12,12 +12,12 @@ import com.jetbrains.lsp.protocol.TypeHierarchySupertypesParams
 
 interface LSTypeHierarchyProvider : LSLanguageSpecificConfigurationEntry, LSUniqueConfigurationEntry {
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     suspend fun prepareTypeHierarchy(params: TypeHierarchyPrepareParams): List<TypeHierarchyItem>?
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     suspend fun supertypes(params: TypeHierarchySupertypesParams): List<TypeHierarchyItem>?
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     suspend fun subtypes(params: TypeHierarchySubtypesParams): List<TypeHierarchyItem>?
 }

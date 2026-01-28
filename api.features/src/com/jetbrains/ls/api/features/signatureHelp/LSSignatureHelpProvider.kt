@@ -8,6 +8,6 @@ import com.jetbrains.lsp.protocol.SignatureHelp
 import com.jetbrains.lsp.protocol.SignatureHelpParams
 
 interface LSSignatureHelpProvider : LSLanguageSpecificConfigurationEntry {
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     suspend fun getSignatureHelp(params: SignatureHelpParams): SignatureHelp?
 }

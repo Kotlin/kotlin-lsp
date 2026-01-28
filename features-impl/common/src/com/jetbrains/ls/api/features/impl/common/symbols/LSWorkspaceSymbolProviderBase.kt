@@ -20,10 +20,10 @@ import kotlinx.coroutines.launch
 abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
     abstract fun getContributors(): List<ChooseByNameContributor>
 
-    context(_: LSServer, _: LSAnalysisContext)
+    context(server: LSServer, analysisContext: LSAnalysisContext)
     abstract fun createWorkspaceSymbol(item: NavigationItem, contributor: ChooseByNameContributor): WorkspaceSymbol?
 
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     final override fun getWorkspaceSymbols(params: WorkspaceSymbolParams): Flow<WorkspaceSymbol> = channelFlow {
         server.withAnalysisContext {
             coroutineScope {
@@ -34,7 +34,7 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
         }
     }
 
-    context(_: LSServer, _: LSAnalysisContext)
+    context(server: LSServer, analysisContext: LSAnalysisContext)
     private suspend fun handleContributor(
         contributor: ChooseByNameContributor,
         query: String,

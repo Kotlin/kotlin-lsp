@@ -34,7 +34,7 @@ import com.jetbrains.lsp.protocol.TypeHierarchyRequests.SubtypesRequestType
 import com.jetbrains.lsp.protocol.TypeHierarchyRequests.SupertypesRequestType
 import com.jetbrains.lsp.protocol.WorkspaceSymbolRequests.WorkspaceSymbolRequest
 
-context(_: LSServer, _: LSConfiguration)
+context(server: LSServer, configuration: LSConfiguration)
 internal fun LspHandlersBuilder.features() {
     request(CodeActionRequest) { LSCodeActions.getCodeActions(it).map { CommandOrCodeAction.CodeAction(it) } }
     request(ExecuteCommand) { LSCommand.executeCommand(it) }

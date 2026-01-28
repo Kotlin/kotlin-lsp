@@ -29,13 +29,13 @@ internal object LSKotlinOrganizeImportsCodeActionProvider : LSSimpleCodeActionPr
     override val kind: CodeActionKind get() = CodeActionKind.SourceOrganizeImports
     override val dataSerializer: KSerializer<NoData> get() = NoData.serializer()
 
-    context(_: LSServer, _: LSAnalysisContext)
+    context(server: LSServer, analysisContext: LSAnalysisContext)
     override fun getData(file: VirtualFile, params: CodeActionParams): NoData? {
         if (file.findPsiFile(project) !is KtFile) return null
         return NoData
     }
 
-    context(_: LSServer, _: LSAnalysisContext)
+    context(server: LSServer, analysisContext: LSAnalysisContext)
     override fun execute(
         file: VirtualFile,
         data: NoData

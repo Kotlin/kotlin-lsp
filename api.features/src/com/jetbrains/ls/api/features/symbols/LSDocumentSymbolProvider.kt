@@ -9,6 +9,6 @@ import com.jetbrains.lsp.protocol.DocumentSymbolParams
 import kotlinx.coroutines.flow.Flow
 
 interface LSDocumentSymbolProvider : LSLanguageSpecificConfigurationEntry {
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     fun getDocumentSymbols(params: DocumentSymbolParams): Flow<DocumentSymbol>
 }

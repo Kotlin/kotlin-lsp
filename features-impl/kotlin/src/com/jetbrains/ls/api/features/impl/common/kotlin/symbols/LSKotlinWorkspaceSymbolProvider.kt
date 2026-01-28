@@ -24,7 +24,7 @@ internal object LSKotlinWorkspaceSymbolProvider : LSWorkspaceSymbolProviderBase(
         KotlinGotoPropertySymbolContributor(),
     )
 
-    context(_: LSServer, _: LSAnalysisContext)
+    context(server: LSServer, analysisContext: LSAnalysisContext)
     override fun createWorkspaceSymbol(
         item: NavigationItem,
         contributor: ChooseByNameContributor

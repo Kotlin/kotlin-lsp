@@ -9,12 +9,12 @@ import com.jetbrains.lsp.protocol.RenameParams
 import com.jetbrains.lsp.protocol.WorkspaceEdit
 
 object LSRename {
-    context(_: LSServer, configuration: LSConfiguration, _: LspHandlerContext)
+    context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
     suspend fun rename(params: RenameParams): WorkspaceEdit? {
         return configuration.entriesFor<LSRenameProvider>(params.textDocument).firstNotNullOfOrNull { it.rename(params) }
     }
 
-    context(_: LSServer, configuration: LSConfiguration, _: LspHandlerContext)
+    context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
     suspend fun renameFile(params: RenameFilesParams): WorkspaceEdit? {
         val fileRename = params.files.singleOrNull() ?: return null
         return configuration.entriesFor<LSRenameProvider>(fileRename.oldUri).firstNotNullOfOrNull { it.renameFile(fileRename) }

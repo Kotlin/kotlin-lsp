@@ -3,14 +3,13 @@ package com.jetbrains.ls.api.features.hover
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSConfiguration
-import com.jetbrains.ls.api.features.entriesFor
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.Hover
 import com.jetbrains.lsp.protocol.HoverParams
 
 object LSHover {
-    context(_: LSConfiguration, _: LSServer, _: LspHandlerContext)
+    context(configuration: LSConfiguration, server: LSServer, handlerContext: LspHandlerContext)
     suspend fun getHover(params: HoverParams): Hover? {
-        return entriesFor<LSHoverProvider>(params.textDocument).firstNotNullOfOrNull { it.getHover(params) }
+        return configuration.entriesFor<LSHoverProvider>(params.textDocument).firstNotNullOfOrNull { it.getHover(params) }
     }
 }

@@ -9,9 +9,9 @@ import com.jetbrains.lsp.protocol.RenameParams
 import com.jetbrains.lsp.protocol.WorkspaceEdit
 
 interface LSRenameProvider : LSLanguageSpecificConfigurationEntry {
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     suspend fun rename(params: RenameParams): WorkspaceEdit?
 
-    context(_: LSServer, _: LspHandlerContext)
-    suspend fun renameFile(params : FileRename): WorkspaceEdit?
+    context(server: LSServer, handlerContext: LspHandlerContext)
+    suspend fun renameFile(params: FileRename): WorkspaceEdit?
 }

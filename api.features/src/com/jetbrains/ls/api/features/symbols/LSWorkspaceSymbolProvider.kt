@@ -9,6 +9,6 @@ import com.jetbrains.lsp.protocol.WorkspaceSymbolParams
 import kotlinx.coroutines.flow.Flow
 
 interface LSWorkspaceSymbolProvider : LSConfigurationEntry {
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     fun getWorkspaceSymbols(params: WorkspaceSymbolParams): Flow<WorkspaceSymbol>
 }

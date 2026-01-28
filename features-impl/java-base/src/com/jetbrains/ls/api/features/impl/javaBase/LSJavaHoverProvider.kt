@@ -15,7 +15,7 @@ open class LSJavaHoverProvider(targetKinds: Set<TargetKind>) : LSHoverProviderBa
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSJavaLanguage)
 
 
-    context(_: LSServer, _: LSAnalysisContext)
+    context(server: LSServer, analysisContext: LSAnalysisContext)
     override fun generateMarkdownForPsiElementTarget(target: PsiElement, from: PsiFile): String? {
         val renderedDeclaration = render(target) ?: return null
         val documentation = LSMarkdownDocProvider.getMarkdownDoc(target)

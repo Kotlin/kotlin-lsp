@@ -26,7 +26,7 @@ abstract class LSHoverProviderBase(
 ) : LSHoverProvider {
     protected open fun acceptTarget(target: PsiElement): Boolean = true
 
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun getHover(params: HoverParams): Hover? {
         return server.withAnalysisContext {
             readAction {
@@ -57,7 +57,7 @@ abstract class LSHoverProviderBase(
         return null
     }
 
-    context(_: LSServer, _: LSAnalysisContext)
+    context(server: LSServer, analysisContext: LSAnalysisContext)
     abstract fun generateMarkdownForPsiElementTarget(target: PsiElement, from: PsiFile): String?
 
     interface LSMarkdownDocProvider {

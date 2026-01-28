@@ -24,7 +24,7 @@ internal object LSConcurrentResponseHandler {
     }
 
 
-    context(_: LspHandlerContext, _: LSServer)
+    context(handlerContext: LspHandlerContext, _: LSServer)
     suspend fun <H, R> streamResultsIfPossibleOrRespondDirectly(
         partialResultToken: ProgressToken?,
         resultSerializer: KSerializer<R>,

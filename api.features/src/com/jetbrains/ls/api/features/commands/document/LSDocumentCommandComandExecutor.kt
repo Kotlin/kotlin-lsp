@@ -11,10 +11,10 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
 
 fun interface LSDocumentCommandExecutor : LSCommandExecutor {
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     suspend fun executeForDocument(documentUri: DocumentUri, otherArgs: List<JsonElement>): List<TextEdit>
 
-    context(_: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun execute(arguments: List<JsonElement>): JsonElement {
         require(arguments.isNotEmpty()) { "Expected >= 1 argument, got: ${arguments.size}" }
         val documentUri = LSP.json.decodeFromJsonElement<DocumentUri>(arguments.first())
@@ -28,8 +28,8 @@ fun interface LSDocumentCommandExecutor : LSCommandExecutor {
                     label = null,
                     edit = WorkspaceEdit(
                         changes = mapOf(documentUri to edits)
-                    )
-                )
+                    ),
+                ),
             )
         }
         // TODO we just need to return smth, not sure that the result is used

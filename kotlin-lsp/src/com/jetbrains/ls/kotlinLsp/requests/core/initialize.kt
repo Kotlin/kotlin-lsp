@@ -13,10 +13,8 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.createSdkEntity
 import com.jetbrains.ls.api.core.util.workspaceFolderPaths
 import com.jetbrains.ls.api.features.LSConfiguration
-import com.jetbrains.ls.api.features.allCommandDescriptors
 import com.jetbrains.ls.api.features.codeActions.LSCodeActions
 import com.jetbrains.ls.api.features.completion.LSCompletionProvider
-import com.jetbrains.ls.api.features.entries
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokens
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.importWorkspaceToStorage
@@ -40,7 +38,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonPrimitive
 import java.nio.file.Path
 
-context(_: LSServer, _: LSConfiguration)
+context(server: LSServer, configuration: LSConfiguration)
 internal fun LspHandlersBuilder.initializeRequest() {
     request(Initialize) { initParams ->
         Client.update { it.copy(trace = initParams.trace) }
@@ -97,7 +95,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
                     documentSelector = null,
                     triggerCharacters = listOf("."), // TODO LSP-226 should be customized
                     allCommitCharacters = null,
-                    resolveProvider = entries<LSCompletionProvider>().any { it.supportsResolveRequest },
+                    resolveProvider = configuration.entries<LSCompletionProvider>().any { it.supportsResolveRequest },
                     completionItem = null,
                 ),
                 codeActionProvider = OrBoolean.of(
@@ -108,7 +106,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
                     )
                 ),
                 executeCommandProvider = ExecuteCommandOptions(
-                    commands = allCommandDescriptors.map { it.name }
+                    commands = configuration.allCommandDescriptors.map { it.name }
                 ),
                 referencesProvider = OrBoolean(true),
                 hoverProvider = OrBoolean(true),
@@ -164,7 +162,7 @@ private suspend fun LspClient.sendRunConfigurationInfoToClient() {
     )
 }
 
-context(server: LSServer, _: LSConfiguration, _: LspHandlerContext)
+context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
 private suspend fun indexFolders(
     folders: List<Path>,
     params: InitializeParams,
@@ -221,7 +219,7 @@ private val importers = listOf(
     LightWorkspaceImporter
 )
 
-context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
+context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
 private suspend fun initFolder(
     folder: Path,
     progress: ProgressReporter,

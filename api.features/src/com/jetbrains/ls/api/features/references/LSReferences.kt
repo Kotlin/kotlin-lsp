@@ -3,19 +3,18 @@ package com.jetbrains.ls.api.features.references
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSConfiguration
-import com.jetbrains.ls.api.features.entriesFor
 import com.jetbrains.ls.api.features.partialResults.LSConcurrentResponseHandler
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.Location
 import com.jetbrains.lsp.protocol.ReferenceParams
 
 object LSReferences {
-    context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
+    context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
     suspend fun getReferences(params: ReferenceParams): List<Location> {
         return LSConcurrentResponseHandler.streamResultsIfPossibleOrRespondDirectly(
             partialResultToken = params.partialResultToken,
             resultSerializer = Location.serializer(),
-            providers = entriesFor<LSReferencesProvider>(params.textDocument),
+            providers = configuration.entriesFor<LSReferencesProvider>(params.textDocument),
             getResults = { referencesProvider -> referencesProvider.getReferences(params) },
         )
     }

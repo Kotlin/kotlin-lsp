@@ -34,7 +34,7 @@ abstract class LSExtractVariableProviderBase<Context> : LSCodeActionProvider, LS
         title = ACTION_TITLE,
         name = COMMAND_NAME,
         executor = object : LSDocumentCommandExecutor {
-            context(server: LSServer, _: LspHandlerContext)
+            context(server: LSServer, handlerContext: LspHandlerContext)
             override suspend fun executeForDocument(
                 documentUri: DocumentUri,
                 otherArgs: List<JsonElement>
@@ -51,7 +51,7 @@ abstract class LSExtractVariableProviderBase<Context> : LSCodeActionProvider, LS
             }
         })
 
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val documentUri = params.textDocument.uri
         server.withAnalysisContext {
@@ -80,7 +80,7 @@ abstract class LSExtractVariableProviderBase<Context> : LSCodeActionProvider, LS
         )
     }
 
-    context(server: LSServer, _: LSAnalysisContext)
+    context(server: LSServer, analysisContext: LSAnalysisContext)
     private suspend fun computeExtractVariableEdits(file: VirtualFile, data: ExtractVariableData): List<TextEdit> {
         val (context, oldDocumentText) = readAction {
             val document = file.findDocument() ?: return@readAction null
@@ -103,7 +103,7 @@ abstract class LSExtractVariableProviderBase<Context> : LSCodeActionProvider, LS
      * Calculates the data necessary to introducing the variable.
      * @return null if it is impossible to extract the variable in position, context otherwise
      */
-    context(_: LSAnalysisContext)
+    context(analysisContext: LSAnalysisContext)
     protected abstract fun getContext(file: VirtualFile, selectedRange: TextRange): Context?
 
 
@@ -111,7 +111,7 @@ abstract class LSExtractVariableProviderBase<Context> : LSCodeActionProvider, LS
      * Executes the variable extraction on the given [context].
      * After this method is called, the variable is extracted and computation of the edits is performed.
      */
-    context(server: LSServer, _: LSAnalysisContext)
+    context(server: LSServer, analysisContext: LSAnalysisContext)
     protected abstract suspend fun doExtractVariable(context: Context)
 
 

@@ -3,8 +3,6 @@ package com.jetbrains.ls.api.features.codeActions
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSConfiguration
-import com.jetbrains.ls.api.features.entries
-import com.jetbrains.ls.api.features.entriesFor
 import com.jetbrains.ls.api.features.partialResults.LSConcurrentResponseHandler
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.CodeAction
@@ -13,7 +11,7 @@ import com.jetbrains.lsp.protocol.CodeActionParams
 import kotlinx.coroutines.flow.onEach
 
 object LSCodeActions {
-    context(_: LSServer, _: LSConfiguration, _: LspHandlerContext)
+    context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
     suspend fun getCodeActions(params: CodeActionParams): List<CodeAction> {
         return LSConcurrentResponseHandler.streamResultsIfPossibleOrRespondDirectly(
             partialResultToken = params.partialResultToken,
@@ -27,11 +25,10 @@ object LSCodeActions {
         )
     }
 
-    context(_: LSConfiguration)
+    context(configuration: LSConfiguration)
     fun supportedCodeActionKinds(): List<CodeActionKind> {
-        return entries<LSCodeActionProvider>().flatMapTo(mutableSetOf()) { it.providesOnlyKinds }.toList()
+        return configuration.entries<LSCodeActionProvider>().flatMapTo(mutableSetOf()) { it.providesOnlyKinds }.toList()
     }
-
 
     private fun CodeAction.ensureCanBeProvidedBy(provider: LSCodeActionProvider) {
         check(kind in provider.providesOnlyKinds) {
@@ -39,9 +36,9 @@ object LSCodeActions {
         }
     }
 
-    context(_: LSConfiguration)
+    context(configuration: LSConfiguration)
     private fun getProviders(params: CodeActionParams): List<LSCodeActionProvider> {
-        val all = entriesFor<LSCodeActionProvider>(params.textDocument)
+        val all = configuration.entriesFor<LSCodeActionProvider>(params.textDocument)
         val only = params.context.only?.toSet() ?: return all
         return all.filter { provider ->
             provider.providesOnlyKinds.any { it in only }
