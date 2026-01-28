@@ -72,6 +72,8 @@ class LSCommonIntentionFixesCodeActionProvider(
 
                         val modCommand = try {
                             modCommandAction.perform(actionContext)
+                        } catch (e: CancellationException) {
+                            throw e
                         } catch (e: Throwable) {
                             LOG.warn("Failed to perform mod command action $modCommandAction", e)
                             return@mapNotNull null
