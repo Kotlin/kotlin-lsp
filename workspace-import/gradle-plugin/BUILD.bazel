@@ -37,8 +37,10 @@ jvm_library(
   resources = [":gradle-plugin_resources"],
   kotlinc_opts = ":custom_gradle-plugin",
   deps = [
-    "@lib//:kotlin-stdlib",
+    "@lib//:org-codehaus-groovy-groovy",
     "@ultimate_lib//:gradle-provided",
+    "@lib//:kotlin-stdlib",
+    "@ultimate_lib//:javax-inject-provided",
     ":community_libraries_jspecify_provided",
     ":community_libraries_kotlinx_serialization_core_provided",
     ":community_libraries_kotlinx_serialization_json_provided",

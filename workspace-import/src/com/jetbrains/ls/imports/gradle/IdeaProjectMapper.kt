@@ -1,7 +1,11 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.gradle
 
+import com.jetbrains.ls.imports.gradle.action.ProjectMetadata
+import com.jetbrains.ls.imports.gradle.model.KotlinModule
 import com.jetbrains.ls.imports.json.*
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.gradle.tooling.model.ExternalDependency
 import org.gradle.tooling.model.HierarchicalElement
 import org.gradle.tooling.model.UnsupportedMethodException
@@ -9,25 +13,87 @@ import org.gradle.tooling.model.idea.*
 
 internal object IdeaProjectMapper {
 
-    fun toWorkspaceData(project: IdeaProject): WorkspaceData {
+    fun toWorkspaceData(metadata: ProjectMetadata): WorkspaceData {
         val sdks: MutableList<SdkData> = mutableListOf()
         val javaSettings: MutableList<JavaSettingsData> = mutableListOf()
+        val project = metadata.ideaProject
         val knownModules = project.modules.map { it.getFqdn() }
             .toSet()
 
-        val modules = project.modules.flatMap { module ->
-            calculateModules(module, knownModules, { moduleJavaSettings ->
-                javaSettings.add(moduleJavaSettings)
-            }, { sdk ->
-                sdks.add(sdk)
-            })
+        val modules = mutableMapOf<String, ModuleData>()
+
+        project.modules.forEach { module ->
+            val syntheticModules = calculateModules(
+                module,
+                knownModules,
+                { moduleJavaSettings -> javaSettings.add(moduleJavaSettings) },
+                { sdk -> sdks.add(sdk) }
+            )
+            modules.putAll(syntheticModules)
         }
+
         return WorkspaceData(
-            modules = modules,
+            modules = modules.values.toList(),
             libraries = calculateProjectLibraries(project.modules.toList()),
             sdks = sdks,
-            javaSettings = javaSettings
+            javaSettings = javaSettings,
+            kotlinSettings = calculateKotlinSettings(modules, metadata.kotlinModules)
         )
+    }
+
+    private fun calculateKotlinSettings(
+        modules: Map<String, ModuleData>,
+        kotlinModules: Map<String, KotlinModule>
+    ): List<KotlinSettingsData> {
+        val result = mutableListOf<KotlinSettingsData>()
+        for ((name, moduleData) in modules) {
+            if (moduleData.contentRoots.isEmpty()) {
+                continue
+            }
+            val kotlinModuleKey = name.removeSuffix(".main")
+                .removeSuffix(".test")
+            val kotlinModule = kotlinModules[kotlinModuleKey]
+            if (kotlinModule == null) {
+                continue
+            }
+            val compilerSettings = kotlinModule.compilerSettings
+            val kotlinCompilerSettings = compilerSettings.let {
+                Json.encodeToString(KotlinCompilerSettings(it.jvmTarget, it.pluginOptions, it.pluginClasspath))
+            }
+            result.add(
+                KotlinSettingsData(
+                    name = "Kotlin",
+                    sourceRoots = moduleData.contentRoots
+                        .flatMap { it.sourceRoots }
+                        .map { it.path },
+                    configFileItems = emptyList(),
+                    module = name,
+                    useProjectSettings = false,
+                    implementedModuleNames = emptyList(),
+                    dependsOnModuleNames = emptyList(),
+                    additionalVisibleModuleNames = emptySet(),
+                    productionOutputPath = null,
+                    testOutputPath = null,
+                    sourceSetNames = emptyList(),
+                    isTestModule = name.endsWith("test"),
+                    externalProjectId = name,
+                    isHmppEnabled = true,
+                    pureKotlinSourceFolders = emptyList(),
+                    kind = KotlinSettingsData.KotlinModuleKind.DEFAULT,
+                    compilerArguments = "J$kotlinCompilerSettings",
+                    additionalArguments = compilerSettings.compilerArgs.joinToString(" "),
+                    scriptTemplates = null,
+                    scriptTemplatesClasspath = null,
+                    copyJsLibraryFiles = false,
+                    outputDirectoryForJsLibraryFiles = null,
+                    targetPlatform = null,
+                    externalSystemRunTasks = emptyList(),
+                    version = 5,
+                    flushNeeded = false
+                )
+            )
+        }
+        return result
     }
 
     private fun calculateModules(
@@ -35,9 +101,9 @@ internal object IdeaProjectMapper {
         knownModules: Set<String>,
         javaSettingsConsumer: (JavaSettingsData) -> Unit,
         sdkConsumer: (SdkData) -> Unit
-    ): List<ModuleData> {
+    ): Map<String, ModuleData> {
         val moduleName = module.getFqdn()
-        val modules = mutableListOf<ModuleData>()
+        val modules = mutableMapOf<String, ModuleData>()
         val moduleSdk = getSdkData(module)
         if (moduleSdk != null) {
             sdkConsumer(moduleSdk)
@@ -47,46 +113,25 @@ internal object IdeaProjectMapper {
         } else {
             DependencyData.InheritedSdk
         }
-        modules.add(
-            ModuleData(
-                name = moduleName
-            )
+        modules[moduleName] = ModuleData(
+            name = moduleName
         )
         val javaSettings = getJavaSettingsData(module)
         if (javaSettings != null) {
             javaSettingsConsumer(javaSettings)
         }
         module.contentRoots.forEach { contentRoot ->
-            if (contentRoot.testDirectories.isNotEmpty() || contentRoot.testResourceDirectories.isNotEmpty()) {
-                val sourceRoots = mutableListOf<SourceRootData>()
-                    .apply {
-                        contentRoot.testDirectories
-                            .forEach {
-                                add(SourceRootData(it.directory.path, "java-test"))
-                            }
-                        contentRoot.testResourceDirectories
-                            .forEach {
-                                add(SourceRootData(it.directory.path, "java-test-resource"))
-                            }
-                    }
-                val contentRoot = ContentRootData(
-                    findRootForSourceRoots(sourceRoots),
-                    emptyList(),
-                    contentRoot.excludeDirectories.map { it.path },
-                    sourceRoots = sourceRoots
-                )
+            if (contentRoot.hasTestRoots()) {
                 val dependencies = module.dependencies
                     .mapNotNull { getDependencyData(knownModules, it) }
                     .toMutableList()
                 dependencies.add(DependencyData.ModuleSource)
                 dependencies.add(sdkDependencyData)
                 dependencies.add(DependencyData.Module(name = "$moduleName.main", scope = DependencyDataScope.COMPILE))
-                modules.add(
-                    ModuleData(
+                modules["$moduleName.test"] = ModuleData(
                     name = "$moduleName.test",
                     dependencies = dependencies,
-                    contentRoots = listOf(contentRoot)
-                    )
+                    contentRoots = contentRoot.toTestContentRootData()
                 )
                 if (javaSettings != null) {
                     javaSettingsConsumer(
@@ -94,36 +139,17 @@ internal object IdeaProjectMapper {
                     )
                 }
             }
-            if (contentRoot.sourceDirectories.isNotEmpty() || contentRoot.resourceDirectories.isNotEmpty()) {
-                val sourceRoots = mutableListOf<SourceRootData>()
-                    .apply {
-                        contentRoot.sourceDirectories
-                            .forEach {
-                                add(SourceRootData(it.directory.path, "java-source"))
-                            }
-                        contentRoot.resourceDirectories
-                            .forEach {
-                                add(SourceRootData(it.directory.path, "java-resource"))
-                            }
-                    }
-                val contentRoot = ContentRootData(
-                    findRootForSourceRoots(sourceRoots),
-                    emptyList(),
-                    contentRoot.excludeDirectories.map { it.path },
-                    sourceRoots = sourceRoots
-                )
+            if (contentRoot.hasProductionRoots()) {
                 val dependencies = module.dependencies
                     .filter { it.scope.scope != "TEST" }
                     .mapNotNull { getDependencyData(knownModules, it) }
                     .toMutableList()
                 dependencies.add(DependencyData.ModuleSource)
                 dependencies.add(sdkDependencyData)
-                modules.add(
-                    ModuleData(
+                modules["$moduleName.main"] = ModuleData(
                     name = "$moduleName.main",
                     dependencies = dependencies,
-                    contentRoots = listOf(contentRoot)
-                    )
+                    contentRoots = contentRoot.toProductionContentRootData()
                 )
                 if (javaSettings != null) {
                     javaSettingsConsumer(
@@ -133,6 +159,50 @@ internal object IdeaProjectMapper {
             }
         }
         return modules
+    }
+
+    private fun IdeaContentRoot.hasTestRoots(): Boolean {
+        return testDirectories.isNotEmpty() || testResourceDirectories.isNotEmpty()
+    }
+
+    private fun IdeaContentRoot.hasProductionRoots(): Boolean {
+        return sourceDirectories.isNotEmpty() || resourceDirectories.isNotEmpty()
+    }
+
+    private fun IdeaContentRoot.toTestContentRootData(): List<ContentRootData> {
+        val sourceRoots = mutableListOf<SourceRootData>()
+        for (sourceRootFolder in testDirectories) {
+            sourceRoots.add(SourceRootData(sourceRootFolder.directory.path, "java-test"))
+        }
+        for (sourceRootFolder in testResourceDirectories) {
+            sourceRoots.add(SourceRootData(sourceRootFolder.directory.path, "java-test-resource"))
+        }
+        return listOf(
+            ContentRootData(
+                findRootForSourceRoots(sourceRoots),
+                emptyList(),
+                excludeDirectories.map { it.path },
+                sourceRoots = sourceRoots
+            )
+        )
+    }
+
+    private fun IdeaContentRoot.toProductionContentRootData(): List<ContentRootData> {
+        val sourceRoots = mutableListOf<SourceRootData>()
+        for (sourceRootFolder in sourceDirectories) {
+            sourceRoots.add(SourceRootData(sourceRootFolder.directory.path, "java-source"))
+        }
+        for (sourceRootFolder in resourceDirectories) {
+            sourceRoots.add(SourceRootData(sourceRootFolder.directory.path, "java-resource"))
+        }
+        return listOf(
+            ContentRootData(
+                findRootForSourceRoots(sourceRoots),
+                emptyList(),
+                excludeDirectories.map { it.path },
+                sourceRoots = sourceRoots
+            )
+        )
     }
 
     private fun IdeaModule.getFqdn(): String {
@@ -270,11 +340,13 @@ internal object IdeaProjectMapper {
                     isExported = dependency.isExportedSafe()
                 )
             }
+
             is IdeaModuleDependency -> DependencyData.Module(
                 name = (knownModules.find { it.endsWith(".${dependency.targetModuleName}") } ?: dependency.targetModuleName) + ".main",
                 scope = DependencyDataScope.valueOf(dependency.scope.scope),
                 isExported = dependency.isExportedSafe()
             )
+
             else -> null
         }
     }
@@ -297,4 +369,11 @@ internal object IdeaProjectMapper {
             false
         }
     }
+
+    @Serializable
+    private data class KotlinCompilerSettings(
+        val jvmTarget: String?,
+        val pluginOptions: List<String>,
+        val pluginClasspath: List<String>
+    )
 }
