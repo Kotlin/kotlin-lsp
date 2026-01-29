@@ -70,7 +70,6 @@
     <orderEntry type="module" module-name="intellij.java.impl" />
     <orderEntry type="module" module-name="intellij.kotlin.base.util" />
     <orderEntry type="module" module-name="kotlin.completion.impl.shared" />
-    <orderEntry type="module" module-name="kotlin.idea" />
     <orderEntry type="module" module-name="intellij.kotlin.codeInsight.base" />
     <orderEntry type="library" name="kotlinc.analysis-api-impl-base" level="project" />
     <orderEntry type="module" module-name="intellij.kotlin.completion.api" />
