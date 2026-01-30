@@ -10,6 +10,7 @@ import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.util.PathUtil
 import com.intellij.util.lang.JavaVersion
 import org.gradle.util.GradleVersion
+import org.jetbrains.plugins.gradle.jvmcompat.GradleJvmSupportMatrix
 import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -23,13 +24,6 @@ import kotlin.use
 
 object GradleToolingApiHelper {
 
-    private const val JAVA_11: Int = 11
-    private const val JAVA_17: Int = 17
-
-    private val GRADLE_8_14: GradleVersion = GradleVersion.version("8.14")
-    private val GRADLE_7_3: GradleVersion = GradleVersion.version("7.3")
-    private val GRADLE_5_0: GradleVersion = GradleVersion.version("5.0")
-
     private val LOG = logger<GradleToolingApiHelper>()
 
     fun findTheMostCompatibleJdk(project: Project, projectDirectory: Path): String? {
@@ -39,7 +33,7 @@ object GradleToolingApiHelper {
             .map { Pair(JavaVersion.tryParse(javaSdkType.getVersionString(it)), it) }
             .filter { it.first != null }
             .sortedByDescending { it.first }
-            .first { gradleVersion.isCompatibleWithJava(it.first) }
+            .first { GradleJvmSupportMatrix.isSupported(gradleVersion, it.first!!) }
             .second
         LOG.info("Gradle Tooling API will use Java located in $suggestedJavaPath")
         return suggestedJavaPath
@@ -65,22 +59,6 @@ object GradleToolingApiHelper {
             """.trimIndent()
         )
         return initScriptFile.toString()
-    }
-
-    private fun GradleVersion.isCompatibleWithJava(javaVersion: JavaVersion?): Boolean {
-        if (javaVersion == null || !javaVersion.isAtLeast(8)) {
-            return false
-        }
-        if (compareTo(GRADLE_5_0) <= 0 && javaVersion.feature <= JAVA_11) {
-            return true
-        }
-        if (compareTo(GRADLE_8_14) < 0 && javaVersion.feature < JAVA_17) {
-            return false
-        }
-        if (compareTo(GRADLE_7_3) >= 0 && javaVersion.feature == JAVA_17) {
-            return true
-        }
-        return false
     }
 
     private fun guessGradleVersion(projectDirectory: Path): GradleVersion? {
