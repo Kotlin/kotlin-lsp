@@ -1,11 +1,17 @@
 {
     "modules": [
         {
-            "name": "api.main",
+            "name": "multi-project-example"
+        },
+        {
+            "name": "multi-project-example.api"
+        },
+        {
+            "name": "multi-project-example.api.main",
             "dependencies": [
                 {
                     "type": "module",
-                    "name": "core.main",
+                    "name": "multi-project-example.core.main",
                     "scope": "compile"
                 },
                 {
@@ -27,7 +33,7 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/api",
+                    "path": "<WORKSPACE>/api/src/main",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/api/src/main/java",
@@ -46,11 +52,11 @@
             ]
         },
         {
-            "name": "api.test",
+            "name": "multi-project-example.api.test",
             "dependencies": [
                 {
                     "type": "module",
-                    "name": "core.main",
+                    "name": "multi-project-example.core.main",
                     "scope": "compile"
                 },
                 {
@@ -71,13 +77,13 @@
                 },
                 {
                     "type": "module",
-                    "name": "api.main",
+                    "name": "multi-project-example.api.main",
                     "scope": "compile"
                 }
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/api",
+                    "path": "<WORKSPACE>/api/src/test",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/api/src/test/java",
@@ -96,7 +102,10 @@
             ]
         },
         {
-            "name": "core.main",
+            "name": "multi-project-example.core"
+        },
+        {
+            "name": "multi-project-example.core.main",
             "dependencies": [
                 {
                     "type": "library",
@@ -117,7 +126,7 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core",
+                    "path": "<WORKSPACE>/core/src/main",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/core/src/main/java",
@@ -136,7 +145,7 @@
             ]
         },
         {
-            "name": "core.test",
+            "name": "multi-project-example.core.test",
             "dependencies": [
                 {
                     "type": "library",
@@ -156,13 +165,13 @@
                 },
                 {
                     "type": "module",
-                    "name": "core.main",
+                    "name": "multi-project-example.core.main",
                     "scope": "compile"
                 }
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core",
+                    "path": "<WORKSPACE>/core/src/test",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/core/src/test/java",
@@ -202,7 +211,7 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/",
+                    "path": "<WORKSPACE>/src/main",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/src/main/java",
@@ -215,6 +224,129 @@
                         {
                             "path": "<WORKSPACE>/src/main/resources",
                             "type": "java-resource"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "multi-project-example.service"
+        },
+        {
+            "name": "multi-project-example.service.main",
+            "dependencies": [
+                {
+                    "type": "module",
+                    "name": "multi-project-example.api.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-reflect:2.2.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains:annotations:13.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "module",
+                    "name": "multi-project-example.core.main",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "inheritedSdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/service/src/main",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/service/src/main/java",
+                            "type": "java-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/service/src/main/kotlin",
+                            "type": "java-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/service/src/main/resources",
+                            "type": "java-resource"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "multi-project-example.service.test",
+            "dependencies": [
+                {
+                    "type": "module",
+                    "name": "multi-project-example.api.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-reflect:2.2.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains:annotations:13.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "module",
+                    "name": "multi-project-example.core.main",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "module",
+                    "name": "multi-project-example.core.main",
+                    "scope": "test"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "inheritedSdk"
+                },
+                {
+                    "type": "module",
+                    "name": "multi-project-example.service.main",
+                    "scope": "compile"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/service/src/test",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/service/src/test/java",
+                            "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/service/src/test/kotlin",
+                            "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/service/src/test/resources",
+                            "type": "java-test-resource"
                         }
                     ]
                 }
@@ -247,7 +379,7 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/",
+                    "path": "<WORKSPACE>/src/test",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/src/test/java",
@@ -264,132 +396,12 @@
                     ]
                 }
             ]
-        },
-        {
-            "name": "service.main",
-            "dependencies": [
-                {
-                    "type": "module",
-                    "name": "api.main",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-reflect:2.2.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains:annotations:13.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "module",
-                    "name": "core.main",
-                    "scope": "runtime"
-                },
-                {
-                    "type": "moduleSource"
-                },
-                {
-                    "type": "inheritedSdk"
-                }
-            ],
-            "contentRoots": [
-                {
-                    "path": "<WORKSPACE>/service",
-                    "sourceRoots": [
-                        {
-                            "path": "<WORKSPACE>/service/src/main/java",
-                            "type": "java-source"
-                        },
-                        {
-                            "path": "<WORKSPACE>/service/src/main/kotlin",
-                            "type": "java-source"
-                        },
-                        {
-                            "path": "<WORKSPACE>/service/src/main/resources",
-                            "type": "java-resource"
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "name": "service.test",
-            "dependencies": [
-                {
-                    "type": "module",
-                    "name": "api.main",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-reflect:2.2.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains:annotations:13.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "module",
-                    "name": "core.main",
-                    "scope": "runtime"
-                },
-                {
-                    "type": "module",
-                    "name": "core.main",
-                    "scope": "test"
-                },
-                {
-                    "type": "moduleSource"
-                },
-                {
-                    "type": "inheritedSdk"
-                },
-                {
-                    "type": "module",
-                    "name": "service.main",
-                    "scope": "compile"
-                }
-            ],
-            "contentRoots": [
-                {
-                    "path": "<WORKSPACE>/service",
-                    "sourceRoots": [
-                        {
-                            "path": "<WORKSPACE>/service/src/test/java",
-                            "type": "java-test"
-                        },
-                        {
-                            "path": "<WORKSPACE>/service/src/test/kotlin",
-                            "type": "java-test"
-                        },
-                        {
-                            "path": "<WORKSPACE>/service/src/test/resources",
-                            "type": "java-test-resource"
-                        }
-                    ]
-                }
-            ]
         }
     ],
     "libraries": [
         {
             "name": "Gradle: org.jetbrains.kotlin:kotlin-reflect:2.2.0",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-reflect/2.2.0/#####/kotlin-reflect-2.2.0.jar"
@@ -410,7 +422,7 @@
         },
         {
             "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.2.0/#####/kotlin-stdlib-2.2.0.jar"
@@ -431,7 +443,7 @@
         },
         {
             "name": "Gradle: org.jetbrains:annotations:13.0",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0.jar"
@@ -455,12 +467,12 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/api/src/main/resources",
                 "<WORKSPACE>/api/src/main/java",
-                "<WORKSPACE>/api/src/main/kotlin"
+                "<WORKSPACE>/api/src/main/kotlin",
+                "<WORKSPACE>/api/src/main/resources"
             ],
             "configFileItems": [],
-            "module": "api.main",
+            "module": "multi-project-example.api.main",
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
@@ -469,11 +481,11 @@
             "testOutputPath": null,
             "sourceSetNames": [],
             "isTestModule": false,
-            "externalProjectId": "multi-project-example:api:unspecified",
+            "externalProjectId": "multi-project-example.api.main",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"17\"}",
+            "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspath\":[]}",
             "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
@@ -486,27 +498,25 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/api/src/test/resources",
                 "<WORKSPACE>/api/src/test/java",
-                "<WORKSPACE>/api/src/test/kotlin"
+                "<WORKSPACE>/api/src/test/kotlin",
+                "<WORKSPACE>/api/src/test/resources"
             ],
             "configFileItems": [],
-            "module": "api.test",
+            "module": "multi-project-example.api.test",
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [
-                "api.main"
-            ],
+            "additionalVisibleModuleNames": [],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],
             "isTestModule": true,
-            "externalProjectId": "multi-project-example:api:unspecified",
+            "externalProjectId": "multi-project-example.api.test",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"17\"}",
+            "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspath\":[]}",
             "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
@@ -519,12 +529,12 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/core/src/main/resources",
                 "<WORKSPACE>/core/src/main/java",
-                "<WORKSPACE>/core/src/main/kotlin"
+                "<WORKSPACE>/core/src/main/kotlin",
+                "<WORKSPACE>/core/src/main/resources"
             ],
             "configFileItems": [],
-            "module": "core.main",
+            "module": "multi-project-example.core.main",
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
@@ -533,11 +543,11 @@
             "testOutputPath": null,
             "sourceSetNames": [],
             "isTestModule": false,
-            "externalProjectId": "multi-project-example:core:unspecified",
+            "externalProjectId": "multi-project-example.core.main",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"17\"}",
+            "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspath\":[]}",
             "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
@@ -550,27 +560,25 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/core/src/test/resources",
                 "<WORKSPACE>/core/src/test/java",
-                "<WORKSPACE>/core/src/test/kotlin"
+                "<WORKSPACE>/core/src/test/kotlin",
+                "<WORKSPACE>/core/src/test/resources"
             ],
             "configFileItems": [],
-            "module": "core.test",
+            "module": "multi-project-example.core.test",
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [
-                "core.main"
-            ],
+            "additionalVisibleModuleNames": [],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],
             "isTestModule": true,
-            "externalProjectId": "multi-project-example:core:unspecified",
+            "externalProjectId": "multi-project-example.core.test",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"17\"}",
+            "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspath\":[]}",
             "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
@@ -583,9 +591,9 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/src/main/resources",
                 "<WORKSPACE>/src/main/java",
-                "<WORKSPACE>/src/main/kotlin"
+                "<WORKSPACE>/src/main/kotlin",
+                "<WORKSPACE>/src/main/resources"
             ],
             "configFileItems": [],
             "module": "multi-project-example.main",
@@ -597,11 +605,11 @@
             "testOutputPath": null,
             "sourceSetNames": [],
             "isTestModule": false,
-            "externalProjectId": ":multi-project-example:unspecified",
+            "externalProjectId": "multi-project-example.main",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginClasspaths\":[\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-serialization-compiler-plugin-embeddable/2.2.0/#####/kotlin-serialization-compiler-plugin-embeddable-2.2.0.jar\"]}",
+            "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspath\":[\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-serialization-compiler-plugin-embeddable/2.2.0/#####/kotlin-serialization-compiler-plugin-embeddable-2.2.0.jar\"]}",
             "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
@@ -614,45 +622,12 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/src/test/resources",
-                "<WORKSPACE>/src/test/java",
-                "<WORKSPACE>/src/test/kotlin"
-            ],
-            "configFileItems": [],
-            "module": "multi-project-example.test",
-            "useProjectSettings": false,
-            "implementedModuleNames": [],
-            "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [
-                "multi-project-example.main"
-            ],
-            "productionOutputPath": null,
-            "testOutputPath": null,
-            "sourceSetNames": [],
-            "isTestModule": true,
-            "externalProjectId": ":multi-project-example:unspecified",
-            "isHmppEnabled": true,
-            "pureKotlinSourceFolders": [],
-            "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginClasspaths\":[\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-serialization-compiler-plugin-embeddable/2.2.0/#####/kotlin-serialization-compiler-plugin-embeddable-2.2.0.jar\"]}",
-            "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
-            "scriptTemplates": null,
-            "scriptTemplatesClasspath": null,
-            "outputDirectoryForJsLibraryFiles": null,
-            "targetPlatform": null,
-            "externalSystemRunTasks": [],
-            "version": 5,
-            "flushNeeded": false
-        },
-        {
-            "name": "Kotlin",
-            "sourceRoots": [
-                "<WORKSPACE>/service/src/main/resources",
                 "<WORKSPACE>/service/src/main/java",
-                "<WORKSPACE>/service/src/main/kotlin"
+                "<WORKSPACE>/service/src/main/kotlin",
+                "<WORKSPACE>/service/src/main/resources"
             ],
             "configFileItems": [],
-            "module": "service.main",
+            "module": "multi-project-example.service.main",
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
@@ -661,11 +636,11 @@
             "testOutputPath": null,
             "sourceSetNames": [],
             "isTestModule": false,
-            "externalProjectId": "multi-project-example:service:unspecified",
+            "externalProjectId": "multi-project-example.service.main",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"17\"}",
+            "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspath\":[]}",
             "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
@@ -678,27 +653,56 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/service/src/test/resources",
                 "<WORKSPACE>/service/src/test/java",
-                "<WORKSPACE>/service/src/test/kotlin"
+                "<WORKSPACE>/service/src/test/kotlin",
+                "<WORKSPACE>/service/src/test/resources"
             ],
             "configFileItems": [],
-            "module": "service.test",
+            "module": "multi-project-example.service.test",
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [
-                "service.main"
-            ],
+            "additionalVisibleModuleNames": [],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],
             "isTestModule": true,
-            "externalProjectId": "multi-project-example:service:unspecified",
+            "externalProjectId": "multi-project-example.service.test",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"17\"}",
+            "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspath\":[]}",
+            "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
+            "scriptTemplates": null,
+            "scriptTemplatesClasspath": null,
+            "outputDirectoryForJsLibraryFiles": null,
+            "targetPlatform": null,
+            "externalSystemRunTasks": [],
+            "version": 5,
+            "flushNeeded": false
+        },
+        {
+            "name": "Kotlin",
+            "sourceRoots": [
+                "<WORKSPACE>/src/test/java",
+                "<WORKSPACE>/src/test/kotlin",
+                "<WORKSPACE>/src/test/resources"
+            ],
+            "configFileItems": [],
+            "module": "multi-project-example.test",
+            "useProjectSettings": false,
+            "implementedModuleNames": [],
+            "dependsOnModuleNames": [],
+            "additionalVisibleModuleNames": [],
+            "productionOutputPath": null,
+            "testOutputPath": null,
+            "sourceSetNames": [],
+            "isTestModule": true,
+            "externalProjectId": "multi-project-example.test",
+            "isHmppEnabled": true,
+            "pureKotlinSourceFolders": [],
+            "kind": "default",
+            "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspath\":[\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-serialization-compiler-plugin-embeddable/2.2.0/#####/kotlin-serialization-compiler-plugin-embeddable-2.2.0.jar\"]}",
             "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,

@@ -1,11 +1,17 @@
 {
     "modules": [
         {
-            "name": "app.main",
+            "name": "multi-project-source-sets"
+        },
+        {
+            "name": "multi-project-source-sets.app"
+        },
+        {
+            "name": "multi-project-source-sets.app.main",
             "dependencies": [
                 {
                     "type": "module",
-                    "name": "lib.main",
+                    "name": "multi-project-source-sets.lib.main",
                     "scope": "compile"
                 },
                 {
@@ -32,7 +38,7 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app",
+                    "path": "<WORKSPACE>/app/src/main",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/app/src/main/java",
@@ -51,11 +57,11 @@
             ]
         },
         {
-            "name": "app.test",
+            "name": "multi-project-source-sets.app.test",
             "dependencies": [
                 {
                     "type": "module",
-                    "name": "lib.main",
+                    "name": "multi-project-source-sets.lib.main",
                     "scope": "compile"
                 },
                 {
@@ -81,13 +87,13 @@
                 },
                 {
                     "type": "module",
-                    "name": "app.main",
+                    "name": "multi-project-source-sets.app.main",
                     "scope": "compile"
                 }
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app",
+                    "path": "<WORKSPACE>/app/src/test",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/app/src/test/java",
@@ -106,7 +112,10 @@
             ]
         },
         {
-            "name": "lib.main",
+            "name": "multi-project-source-sets.lib"
+        },
+        {
+            "name": "multi-project-source-sets.lib.main",
             "dependencies": [
                 {
                     "type": "library",
@@ -127,7 +136,7 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/lib",
+                    "path": "<WORKSPACE>/lib/src/main",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/lib/src/main/java",
@@ -146,7 +155,7 @@
             ]
         },
         {
-            "name": "lib.test",
+            "name": "multi-project-source-sets.lib.test",
             "dependencies": [
                 {
                     "type": "library",
@@ -166,13 +175,13 @@
                 },
                 {
                     "type": "module",
-                    "name": "lib.main",
+                    "name": "multi-project-source-sets.lib.main",
                     "scope": "compile"
                 }
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/lib",
+                    "path": "<WORKSPACE>/lib/src/test",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/lib/src/test/java",
@@ -194,6 +203,16 @@
             "name": "multi-project-source-sets.main",
             "dependencies": [
                 {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains:annotations:13.0",
+                    "scope": "compile"
+                },
+                {
                     "type": "moduleSource"
                 },
                 {
@@ -202,7 +221,7 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/",
+                    "path": "<WORKSPACE>/src/main",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/src/main/java",
@@ -224,6 +243,16 @@
             "name": "multi-project-source-sets.test",
             "dependencies": [
                 {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains:annotations:13.0",
+                    "scope": "compile"
+                },
+                {
                     "type": "moduleSource"
                 },
                 {
@@ -237,7 +266,7 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/",
+                    "path": "<WORKSPACE>/src/test",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/src/test/java",
@@ -259,7 +288,7 @@
     "libraries": [
         {
             "name": "Gradle: org.jetbrains.kotlin:kotlin-reflect:2.2.0",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-reflect/2.2.0/#####/kotlin-reflect-2.2.0.jar"
@@ -280,7 +309,7 @@
         },
         {
             "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.2.0/#####/kotlin-stdlib-2.2.0.jar"
@@ -301,7 +330,7 @@
         },
         {
             "name": "Gradle: org.jetbrains:annotations:13.0",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0.jar"
@@ -325,12 +354,12 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/app/src/main/resources",
                 "<WORKSPACE>/app/src/main/java",
-                "<WORKSPACE>/app/src/main/kotlin"
+                "<WORKSPACE>/app/src/main/kotlin",
+                "<WORKSPACE>/app/src/main/resources"
             ],
             "configFileItems": [],
-            "module": "app.main",
+            "module": "multi-project-source-sets.app.main",
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
@@ -339,11 +368,11 @@
             "testOutputPath": null,
             "sourceSetNames": [],
             "isTestModule": false,
-            "externalProjectId": "multi-project-source-sets:app:unspecified",
+            "externalProjectId": "multi-project-source-sets.app.main",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"21\"}",
+            "compilerArguments": "J{\"jvmTarget\":\"21\",\"pluginOptions\":[],\"pluginClasspath\":[]}",
             "additionalArguments": null,
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
@@ -356,27 +385,25 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/app/src/test/resources",
                 "<WORKSPACE>/app/src/test/java",
-                "<WORKSPACE>/app/src/test/kotlin"
+                "<WORKSPACE>/app/src/test/kotlin",
+                "<WORKSPACE>/app/src/test/resources"
             ],
             "configFileItems": [],
-            "module": "app.test",
+            "module": "multi-project-source-sets.app.test",
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [
-                "app.main"
-            ],
+            "additionalVisibleModuleNames": [],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],
             "isTestModule": true,
-            "externalProjectId": "multi-project-source-sets:app:unspecified",
+            "externalProjectId": "multi-project-source-sets.app.test",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"21\"}",
+            "compilerArguments": "J{\"jvmTarget\":\"21\",\"pluginOptions\":[],\"pluginClasspath\":[]}",
             "additionalArguments": null,
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
@@ -389,12 +416,12 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/lib/src/main/resources",
                 "<WORKSPACE>/lib/src/main/java",
-                "<WORKSPACE>/lib/src/main/kotlin"
+                "<WORKSPACE>/lib/src/main/kotlin",
+                "<WORKSPACE>/lib/src/main/resources"
             ],
             "configFileItems": [],
-            "module": "lib.main",
+            "module": "multi-project-source-sets.lib.main",
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
@@ -403,11 +430,11 @@
             "testOutputPath": null,
             "sourceSetNames": [],
             "isTestModule": false,
-            "externalProjectId": "multi-project-source-sets:lib:unspecified",
+            "externalProjectId": "multi-project-source-sets.lib.main",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"21\"}",
+            "compilerArguments": "J{\"jvmTarget\":\"21\",\"pluginOptions\":[],\"pluginClasspath\":[]}",
             "additionalArguments": null,
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
@@ -420,27 +447,25 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/lib/src/test/resources",
                 "<WORKSPACE>/lib/src/test/java",
-                "<WORKSPACE>/lib/src/test/kotlin"
+                "<WORKSPACE>/lib/src/test/kotlin",
+                "<WORKSPACE>/lib/src/test/resources"
             ],
             "configFileItems": [],
-            "module": "lib.test",
+            "module": "multi-project-source-sets.lib.test",
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [
-                "lib.main"
-            ],
+            "additionalVisibleModuleNames": [],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],
             "isTestModule": true,
-            "externalProjectId": "multi-project-source-sets:lib:unspecified",
+            "externalProjectId": "multi-project-source-sets.lib.test",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"21\"}",
+            "compilerArguments": "J{\"jvmTarget\":\"21\",\"pluginOptions\":[],\"pluginClasspath\":[]}",
             "additionalArguments": null,
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
@@ -453,9 +478,9 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/src/main/resources",
                 "<WORKSPACE>/src/main/java",
-                "<WORKSPACE>/src/main/kotlin"
+                "<WORKSPACE>/src/main/kotlin",
+                "<WORKSPACE>/src/main/resources"
             ],
             "configFileItems": [],
             "module": "multi-project-source-sets.main",
@@ -467,11 +492,11 @@
             "testOutputPath": null,
             "sourceSetNames": [],
             "isTestModule": false,
-            "externalProjectId": ":multi-project-source-sets:unspecified",
+            "externalProjectId": "multi-project-source-sets.main",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"21\"}",
+            "compilerArguments": "J{\"jvmTarget\":\"21\",\"pluginOptions\":[],\"pluginClasspath\":[]}",
             "additionalArguments": null,
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
@@ -484,27 +509,25 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/src/test/resources",
                 "<WORKSPACE>/src/test/java",
-                "<WORKSPACE>/src/test/kotlin"
+                "<WORKSPACE>/src/test/kotlin",
+                "<WORKSPACE>/src/test/resources"
             ],
             "configFileItems": [],
             "module": "multi-project-source-sets.test",
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [
-                "multi-project-source-sets.main"
-            ],
+            "additionalVisibleModuleNames": [],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],
             "isTestModule": true,
-            "externalProjectId": ":multi-project-source-sets:unspecified",
+            "externalProjectId": "multi-project-source-sets.test",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"21\"}",
+            "compilerArguments": "J{\"jvmTarget\":\"21\",\"pluginOptions\":[],\"pluginClasspath\":[]}",
             "additionalArguments": null,
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
