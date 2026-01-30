@@ -172,12 +172,11 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
                 executor = { arguments ->
                     require(arguments.size == 1) { "Expected 1 argument, got: ${arguments.size}" }
                     val id = arguments[0]
-                    val completionData = LatestCompletionSessionEntity.obj(CompletionItemId.fromJson(id)) as CompletionData?
-                    when (completionData) {
+                    when (val completionData = LatestCompletionSessionEntity.obj(CompletionItemId.fromJson(id)) as CompletionData?) {
                         null -> {
                             lspClient.notify(
-                                ShowMessageNotification,
-                                ShowMessageParams(MessageType.Error, "Your completion session has expired, please try again"),
+                                notificationType = ShowMessageNotificationType,
+                                params = ShowMessageParams(MessageType.Error, "Your completion session has expired, please try again"),
                             )
                         }
 

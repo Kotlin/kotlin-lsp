@@ -157,8 +157,8 @@ private suspend fun LspClient.sendRunConfigurationInfoToClient() {
     val client = Client.current ?: return
     val runConfig = client.runConfig
     notify(
-        LogMessageNotification,
-        LogMessageParams(MessageType.Info, "Process stared with\n${runConfig}"),
+        notificationType = LogMessageNotificationType,
+        params = LogMessageParams(MessageType.Info, "Process stared with\n${runConfig}"),
     )
 }
 
@@ -227,7 +227,7 @@ private suspend fun initFolder(
     storage: MutableEntityStorage,
 ) {
     val project = AnalyzerContext.current
-    progress.report(Report(message = "Importing folder ${folder}"))
+    progress.report(Report(message = "Importing folder $folder"))
     for (importer in importers) {
         val unresolved = mutableSetOf<String>()
         LOG.info("Trying to import using ${importer.javaClass.simpleName}")
@@ -242,24 +242,24 @@ private suspend fun initFolder(
             val logMessage = (e as? WorkspaceImportException)?.logMessage ?: "Error importing folder:\n${e.stackTraceToString()}"
 
             lspClient.notify(
-                ShowMessageNotification,
-                ShowMessageParams(MessageType.Error, "$message Check the log for details."),
+                notificationType = ShowMessageNotificationType,
+                params = ShowMessageParams(MessageType.Error, "$message Check the log for details."),
             )
 
             lspClient.notify(
-                LogMessageNotification,
-                LogMessageParams(MessageType.Error, logMessage)
+                notificationType = LogMessageNotificationType,
+                params = LogMessageParams(MessageType.Error, logMessage),
             )
             LOG.error(e)
             false
         }
 
         if (imported) {
-            progress.report(Report(message = "Successfully imported folder ${folder}"))
+            progress.report(Report(message = "Successfully imported folder $folder"))
             if (unresolved.isNotEmpty()) {
                 lspClient.notify(
-                    ShowMessageNotification,
-                    ShowMessageParams(MessageType.Warning, unresolved.joinToString(", ", "Couldn't resolve some dependencies: ")),
+                    notificationType = ShowMessageNotificationType,
+                    params = ShowMessageParams(MessageType.Warning, unresolved.joinToString(", ", "Couldn't resolve some dependencies: ")),
                 )
             }
             break

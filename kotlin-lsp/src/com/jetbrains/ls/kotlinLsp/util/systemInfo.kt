@@ -6,7 +6,7 @@ import com.intellij.openapi.util.SystemInfo
 import com.intellij.util.system.CpuArch
 import com.intellij.util.system.OS
 import com.jetbrains.lsp.implementation.LspClient
-import com.jetbrains.lsp.protocol.LogMessageNotification
+import com.jetbrains.lsp.protocol.LogMessageNotificationType
 import com.jetbrains.lsp.protocol.LogMessageParams
 import com.jetbrains.lsp.protocol.MessageType
 
@@ -30,8 +30,8 @@ internal fun logSystemInfo() {
 
 internal suspend fun LspClient.sendSystemInfoToClient() {
     notify(
-        LogMessageNotification,
-        LogMessageParams(MessageType.Info, getSystemInfo()),
+        notificationType = LogMessageNotificationType,
+        params = LogMessageParams(MessageType.Info, getSystemInfo()),
     )
 }
 

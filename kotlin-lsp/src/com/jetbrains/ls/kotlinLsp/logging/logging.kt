@@ -154,7 +154,7 @@ private class LspLogger(
     private fun sendLogToClient(client: Client, renderedMessage: String) {
         fun logMessage(messageType: MessageType) {
             client.lspClient.notifyAsync(
-                notificationType = LogMessageNotification,
+                notificationType = LogMessageNotificationType,
                 params = LogMessageParams(messageType, renderedMessage),
             )
         }
