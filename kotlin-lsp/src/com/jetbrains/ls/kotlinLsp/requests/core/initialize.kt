@@ -162,7 +162,7 @@ private suspend fun LspClient.sendRunConfigurationInfoToClient() {
     )
 }
 
-context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
+context(server: LSServer, handlerContext: LspHandlerContext)
 private suspend fun indexFolders(
     folders: List<Path>,
     params: InitializeParams,
@@ -219,7 +219,7 @@ private val importers = listOf(
     LightWorkspaceImporter
 )
 
-context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
+context(handlerContext: LspHandlerContext)
 private suspend fun initFolder(
     folder: Path,
     progress: ProgressReporter,
