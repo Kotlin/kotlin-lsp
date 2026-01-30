@@ -52,7 +52,7 @@ class LSCommonInspectionDiagnosticProvider(
         val diagnosticSource: DiagnosticSource = DiagnosticSource("inspection")
     }
 
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
         if (!params.textDocument.isSource()) return@flow
         val onTheFly = false

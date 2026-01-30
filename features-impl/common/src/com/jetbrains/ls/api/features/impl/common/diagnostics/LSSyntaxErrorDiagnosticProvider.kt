@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.flow
 class LSSyntaxErrorDiagnosticProvider(
     override val supportedLanguages: Set<LSLanguage>,
 ) : LSDiagnosticProvider {
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
         if (!params.textDocument.isSource()) return@flow
         server.withAnalysisContext {

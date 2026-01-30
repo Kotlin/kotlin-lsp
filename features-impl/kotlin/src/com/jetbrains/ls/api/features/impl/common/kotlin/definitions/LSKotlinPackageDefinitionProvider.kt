@@ -28,7 +28,7 @@ import org.jetbrains.kotlin.idea.stubindex.KotlinExactPackagesIndex
 internal object LSKotlinPackageDefinitionProvider : LSDefinitionProvider {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSKotlinLanguage)
 
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override fun provideDefinitions(params: DefinitionParams): Flow<Location> = flow {
         val uri = params.textDocument.uri.uri
         server.withAnalysisContext {

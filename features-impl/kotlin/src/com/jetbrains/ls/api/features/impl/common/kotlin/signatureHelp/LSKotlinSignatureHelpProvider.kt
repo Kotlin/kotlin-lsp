@@ -33,7 +33,7 @@ internal object LSKotlinSignatureHelpProvider : LSSignatureHelpProvider {
         KotlinHighLevelArrayAccessParameterInfoHandler(),
     ) as List<KotlinHighLevelParameterInfoWithCallHandlerBase<KtElement, out KtElement>>
 
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun getSignatureHelp(params: SignatureHelpParams): SignatureHelp? {
         return server.withAnalysisContext {
             readAction {

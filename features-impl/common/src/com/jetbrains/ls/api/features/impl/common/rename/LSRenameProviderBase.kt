@@ -39,7 +39,7 @@ abstract class LSRenameProviderBase(
         private val LOG = logger<LSRenameProviderBase>()
     }
 
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun rename(params: RenameParams): WorkspaceEdit {
         val changes: List<FileChange> = server.withWriteAnalysisContext {
             val context = readAction {
@@ -65,7 +65,7 @@ abstract class LSRenameProviderBase(
         return targetSymbols(psiFile, offset).mapNotNull { psiSymbolService.extractElementFromSymbol(it) }
     }
 
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun renameFile(params: FileRename): WorkspaceEdit? {
         val edits = server.withWriteAnalysisContext {
             val context = readAction {

@@ -31,7 +31,7 @@ class LSCommonDefinitionProvider(
     override val supportedLanguages: Set<LSLanguage>,
     private val targetKinds: Set<TargetKind>,
 ) : LSDefinitionProvider {
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override fun provideDefinitions(params: DefinitionParams): Flow<Location> = flow {
         server.withAnalysisContext(params.textDocument.uri.uri) {
             readAction {
