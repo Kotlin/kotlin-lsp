@@ -60,9 +60,9 @@ internal object LSKotlinIntentionCodeActionProvider : LSCodeActionProvider {
         val uri = params.textDocument.uri.uri
         server.withAnalysisContext {
             readAction {
-                val file = uri.findVirtualFile() ?: return@readAction emptyList()
-                val ktFile = file.findPsiFile(project) as? KtFile ?: return@readAction emptyList()
-                val document = file.findDocument() ?: return@readAction emptyList()
+                val virtualFile = uri.findVirtualFile() ?: return@readAction emptyList()
+                val ktFile = virtualFile.findPsiFile(project) as? KtFile ?: return@readAction emptyList()
+                val document = virtualFile.findDocument() ?: return@readAction emptyList()
                 val actions = createActions()
                 analyze(ktFile) {
                     val result = mutableListOf<CodeAction>()

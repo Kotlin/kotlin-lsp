@@ -35,9 +35,9 @@ class LSCommonDefinitionProvider(
     override fun provideDefinitions(params: DefinitionParams): Flow<Location> = flow {
         server.withAnalysisContext(params.textDocument.uri.uri) {
             readAction {
-                val file = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
-                val psiFile = file.findPsiFile(project) ?: return@readAction emptyList()
-                val document = file.findDocument() ?: return@readAction emptyList()
+                val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
+                val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
+                val document = virtualFile.findDocument() ?: return@readAction emptyList()
                 val targets = psiFile.getTargetsAtPosition(params.position, document, targetKinds)
 
                 targets.mapNotNull { psiElement ->

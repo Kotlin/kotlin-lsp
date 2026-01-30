@@ -71,9 +71,9 @@ sealed class PsiSerializablePointer {
 
     companion object {
         fun fromPsiPointer(pointer: SmartPsiElementPointer<*>): PsiSerializablePointer {
-            val file = pointer.containingFile ?: error("File for pointer is null")
+            val psiFile = pointer.containingFile ?: error("File for pointer is null")
             val element = pointer.element ?: error("Element for pointer is null")
-            return create(element, file.virtualFile)
+            return create(element, psiFile.virtualFile)
         }
 
         fun create(psi: PsiElement, file: VirtualFile): PsiSerializablePointer {

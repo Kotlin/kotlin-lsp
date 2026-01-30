@@ -33,9 +33,9 @@ internal object LSKotlinPackageDefinitionProvider : LSDefinitionProvider {
         val uri = params.textDocument.uri.uri
         server.withAnalysisContext {
             readAction {
-                val file = uri.findVirtualFile() ?: return@readAction emptyList()
-                val psiFile = file.findPsiFile(project) ?: return@readAction emptyList()
-                val document = file.findDocument() ?: return@readAction emptyList()
+                val virtualFile = uri.findVirtualFile() ?: return@readAction emptyList()
+                val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
+                val document = virtualFile.findDocument() ?: return@readAction emptyList()
                 val offset = document.offsetByPosition(params.position)
                 val reference = psiFile.findReferenceAt(offset) ?: return@readAction emptyList()
                 val psiPackage = (reference.resolve() as? PsiPackage) ?: return@readAction emptyList()

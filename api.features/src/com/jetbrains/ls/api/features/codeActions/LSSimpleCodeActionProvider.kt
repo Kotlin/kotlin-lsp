@@ -39,8 +39,8 @@ abstract class LSSimpleCodeActionProvider<P : Any> : LSCodeActionProvider, LSCom
         val documentUri = params.textDocument.uri
         val params = server.withAnalysisContext {
             readAction {
-                val file = documentUri.findVirtualFile() ?: return@readAction null
-                getData(file, params)
+                val virtualFile = documentUri.findVirtualFile() ?: return@readAction null
+                getData(virtualFile, params)
             }
         } ?: return@flow
         val arguments = buildList {
@@ -78,9 +78,9 @@ abstract class LSSimpleCodeActionProvider<P : Any> : LSCodeActionProvider, LSCom
         override suspend fun executeForDocument(documentUri: DocumentUri, otherArgs: List<JsonElement>): List<TextEdit> {
             return server.withAnalysisContext {
                 readAction {
-                    val file = documentUri.findVirtualFile() ?: return@readAction emptyList()
+                    val virtualFile = documentUri.findVirtualFile() ?: return@readAction emptyList()
                     val argument = otherArgs.firstOrNull()?.let { LSP.json.decodeFromJsonElement(dataSerializer, it) } ?: (NoData as P)
-                    execute(file, argument)
+                    execute(virtualFile, argument)
                 }
             }
         }

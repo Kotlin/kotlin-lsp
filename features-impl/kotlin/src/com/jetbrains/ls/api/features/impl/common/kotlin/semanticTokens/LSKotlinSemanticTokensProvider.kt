@@ -61,9 +61,9 @@ object LSKotlinSemanticTokensProvider : LSSemanticTokensProvider {
     private suspend fun getTokens(textDocument: TextDocumentIdentifier, range:Range?): List<LSSemanticTokenWithRange> {
         return server.withAnalysisContext {
             readAction {
-                val file = textDocument.findVirtualFile() ?: return@readAction emptyList()
-                val ktFile = file.findPsiFile(project) as? KtFile ?: return@readAction emptyList()
-                val document = file.findDocument() ?: return@readAction emptyList()
+                val virtualFile = textDocument.findVirtualFile() ?: return@readAction emptyList()
+                val ktFile = virtualFile.findPsiFile(project) as? KtFile ?: return@readAction emptyList()
+                val document = virtualFile.findDocument() ?: return@readAction emptyList()
                 val leafs = ktFile.allNonWhitespaceChildren(document, range)
                 if (leafs.isEmpty()) return@readAction emptyList()
                 analyze(ktFile) {

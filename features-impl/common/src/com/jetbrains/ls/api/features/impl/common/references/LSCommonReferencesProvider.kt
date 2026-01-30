@@ -29,9 +29,9 @@ class LSCommonReferencesProvider(
     override fun getReferences(params: ReferenceParams): Flow<Location> = channelFlow {
         server.withAnalysisContext {
             readAction {
-                val file = params.findVirtualFile() ?: return@readAction
-                val psiFile = file.findPsiFile(project) ?: return@readAction
-                val document = file.findDocument() ?: return@readAction
+                val virtualFile = params.findVirtualFile() ?: return@readAction
+                val psiFile = virtualFile.findPsiFile(project) ?: return@readAction
+                val document = virtualFile.findDocument() ?: return@readAction
                 val targets = psiFile.getTargetsAtPosition(params.position, document, targetKinds)
                 if (targets.isEmpty()) return@readAction
 

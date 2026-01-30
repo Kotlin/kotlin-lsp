@@ -43,10 +43,10 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
         server.withWritableFile(uri) {
             server.withAnalysisContext {
                 readAction {
-                    val file = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
+                    val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
                     val quickFixService = KotlinQuickFixService.getInstance()
-                    val ktFile = file.findPsiFile(project) as? KtFile ?: return@readAction emptyList()
-                    val document = file.findDocument() ?: return@readAction emptyList()
+                    val ktFile = virtualFile.findPsiFile(project) as? KtFile ?: return@readAction emptyList()
+                    val document = virtualFile.findDocument() ?: return@readAction emptyList()
                     analyze(ktFile) {
                         val kaDiagnostics = ktFile.collectDiagnostics(filter = KaDiagnosticCheckerFilter.ONLY_COMMON_CHECKERS)
                         if (kaDiagnostics.isEmpty()) return@analyze emptyList()

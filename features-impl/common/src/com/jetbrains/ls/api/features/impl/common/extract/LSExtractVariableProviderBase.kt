@@ -41,10 +41,10 @@ abstract class LSExtractVariableProviderBase<Context> : LSCodeActionProvider, LS
             ): List<TextEdit> {
                 return server.withWriteAnalysisContext {
                     val (file, data) = readAction {
-                        val file = documentUri.findVirtualFile() ?: return@readAction null
+                        val virtualFile = documentUri.findVirtualFile() ?: return@readAction null
                         val data = otherArgs.firstOrNull()?.let { LSP.json.decodeFromJsonElement(ExtractVariableData.serializer(), it) }
                             ?: return@readAction null
-                        file to data
+                        virtualFile to data
                     } ?: return@withWriteAnalysisContext emptyList()
                     computeExtractVariableEdits(file, data)
                 }
@@ -56,9 +56,9 @@ abstract class LSExtractVariableProviderBase<Context> : LSCodeActionProvider, LS
         val documentUri = params.textDocument.uri
         server.withAnalysisContext {
             readAction {
-                val file = documentUri.findVirtualFile() ?: return@readAction null
-                val document = file.findDocument() ?: return@readAction null
-                if (getContext(file, params.range.toTextRange(document)) == null) return@readAction null
+                val virtualFile = documentUri.findVirtualFile() ?: return@readAction null
+                val document = virtualFile.findDocument() ?: return@readAction null
+                if (getContext(virtualFile, params.range.toTextRange(document)) == null) return@readAction null
             }
         } ?: return@flow
         emit(

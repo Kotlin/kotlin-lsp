@@ -60,9 +60,9 @@ class LSCommonInspectionDiagnosticProvider(
             readAction {
                 val diagnostics = mutableListOf<Diagnostic>()
 
-                val file = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
-                val document = file.findDocument() ?: return@readAction emptyList()
-                val psiFile = file.findPsiFile(project) ?: return@readAction emptyList()
+                val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
+                val document = virtualFile.findDocument() ?: return@readAction emptyList()
+                val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
                 val inspectionManager = InspectionManagerEx(project)
                 val problemsHolder = ProblemsHolder(inspectionManager, psiFile, onTheFly)
 
@@ -75,7 +75,7 @@ class LSCommonInspectionDiagnosticProvider(
                         }.getOrHandleException {
                             LOG.warn(it)
                         }
-                        diagnostics.addAll(problemsHolder.collectDiagnostics(file, project, localInspection))
+                        diagnostics.addAll(problemsHolder.collectDiagnostics(virtualFile, project, localInspection))
                         problemsHolder.clearResults()
                     }
 
