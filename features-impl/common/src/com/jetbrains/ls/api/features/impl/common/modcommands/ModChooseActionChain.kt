@@ -113,27 +113,25 @@ private fun ModCommandAction.flattenChoiceActionsImpl(
 ): List<ModChooseActionChain>? {
     val modCommandAction = this
 
-    val presentation =
-        runCatching {
-            modCommandAction.getPresentation(context)
-        }.getOrHandleException { exception ->
-            LOG.warn("Failed to get presentation from mod command action $modCommandAction", exception)
+    val presentation = runCatching {
+        modCommandAction.getPresentation(context)
+    }.getOrHandleException { exception ->
+        LOG.warn("Failed to get presentation from mod command action $modCommandAction", exception)
 
-            // exception happened, we bail
-            return null
-        }
+        // exception happened, we bail
+        return null
+    }
 
     if (presentation == null) return emptyList()
 
-    val command =
-        runCatching {
-            modCommandAction.perform(context)
-        }.getOrHandleException { exception ->
-            LOG.warn("Failed to perform mod command action $modCommandAction", exception)
+    val command = runCatching {
+        modCommandAction.perform(context)
+    }.getOrHandleException { exception ->
+        LOG.warn("Failed to perform mod command action $modCommandAction", exception)
 
-            // exception happened, we bail
-            return null
-        }
+        // exception happened, we bail
+        return null
+    }
 
     if (command == null) return emptyList()
 
