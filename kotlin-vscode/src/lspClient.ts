@@ -162,15 +162,49 @@ async function createServerOptions(): Promise<ServerOptions | null> {
     const config = workspace.getConfiguration('kotlinLSP.dev');
     const predefinedPort = config.get<number>('serverPort', -1);
     if (predefinedPort != -1) {
-        const socket = net.connect({port: predefinedPort});
-        const result: StreamInfo = {
-            writer: socket,
-            reader: socket
-        };
-        return () => Promise.resolve(result);
+        return await connectToLocalLspServer(predefinedPort);
     } else {
         return await getRunningJavaServerLspOptions()
     }
+}
+
+/**
+ * Connects to an LSP server on the specified port with retry logic.
+ * Waits for the server to become available, retrying multiple times if necessary.
+ *
+ * @param port - The port number to connect to
+ * @returns A function that returns a Promise resolving to StreamInfo, or null if connection fails
+ */
+async function connectToLocalLspServer(port: number): Promise<(() => Promise<StreamInfo>) | null> {
+    const maxRetries = 50;
+    const retryDelayMs = 1000;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            const socket = net.connect({port});
+            await new Promise<void>((resolve, reject) => {
+                socket.once('connect', () => resolve());
+                socket.once('error', (err) => reject(err));
+            });
+            const result: StreamInfo = {
+                writer: socket,
+                reader: socket
+            };
+            return () => Promise.resolve(result);
+        } catch (error) {
+            if (attempt < maxRetries - 1) {
+                console.log(`Waiting for server on port ${port}... (attempt ${attempt + 1}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, retryDelayMs));
+            } else {
+                vscode.window.showErrorMessage(
+                        `Failed to connect to LSP server on port ${port} after ${maxRetries} attempts. ` +
+                        `Please ensure the server is running.`
+                );
+                return null;
+            }
+        }
+    }
+    return null;
 }
 
 async function createLspClient(): Promise<LanguageClient | null> {
