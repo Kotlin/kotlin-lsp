@@ -14,7 +14,7 @@ import com.intellij.openapi.diagnostic.logger
  * Represents a chain of [ModCommandAction]s produced by [ModChooseAction]s.
  * In a trivial case consists of a single non-choice action.
  *
- * [steps] represents a chain of choices which resulted in [leaf].
+ * [steps] represents a chain of choices which results in [leaf].
  *
  * The overall order of steps looks like this:
  * - `step.first()`
@@ -91,11 +91,10 @@ fun ModChooseActionChain.combinedPresentationNames(): String {
  * - [Action1, Action3] -> Action5
  * ```
  *
- * Note 1: To analyze [ModCommand]s, all of the [ModCommandAction]s in the chains will be performed in the [context].
+ * Note 1: To properly recognize and expand [ModChooseAction]s, all of the [ModCommandAction]s in the chains are performed on the passed [context].
  *
  * Note 2: Only top-level [ModChooseAction] commands are expanded. If a [ModChooseAction] is wrapped inside another
- * [ModCommand] (e.g., as part of a composite command), it will not be recursively expanded and will be treated
- * as a terminal command.
+ * [ModCommand] (e.g., as part of a composite command), it is not recursively expanded.
  *
  * Note 3: If at any point of the execution there is an exception coming from the [ModCommandAction] being performed,
  * the exception is logged and an empty list is returned.
