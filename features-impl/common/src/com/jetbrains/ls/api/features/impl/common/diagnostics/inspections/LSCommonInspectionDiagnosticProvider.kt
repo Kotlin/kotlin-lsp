@@ -8,8 +8,8 @@ import com.intellij.lang.Language
 import com.intellij.modcommand.ModCommand
 import com.intellij.modcommand.ModCommandQuickFix
 import com.intellij.openapi.application.readAction
+import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.diagnostic.getOrHandleException
-import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
@@ -42,7 +42,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.encodeToJsonElement
 
-private val LOG = logger<LSCommonInspectionDiagnosticProvider>()
+private val LOG = fileLogger()
 
 class LSCommonInspectionDiagnosticProvider(
     override val supportedLanguages: Set<LSLanguage>,
@@ -66,7 +66,9 @@ class LSCommonInspectionDiagnosticProvider(
                 val inspectionManager = InspectionManagerEx(project)
                 val problemsHolder = ProblemsHolder(inspectionManager, psiFile, onTheFly)
 
-                for (localInspection in getLocalInspections(psiFile) + getSharedLocalInspectionsFromGlobalTools(psiFile.language)) {
+                val localInspections = getLocalInspections(psiFile) + getSharedLocalInspectionsFromGlobalTools(psiFile.language)
+                LOG.trace("got ${localInspections.size} local inspections")
+                for (localInspection in localInspections) {
                     val visitor = localInspection.buildVisitor(problemsHolder, onTheFly)
 
                     fun collect(element: PsiElement) {
@@ -88,7 +90,9 @@ class LSCommonInspectionDiagnosticProvider(
                 }
 
                 val globalInspectionContext = inspectionManager.createNewGlobalContext()
-                for (simpleGlobalInspection in getSimpleGlobalInspections(psiFile.language)) {
+                val globalInspections = getSimpleGlobalInspections(psiFile.language)
+                LOG.trace("got ${globalInspections.size} global inspections")
+                for (simpleGlobalInspection in globalInspections) {
                     val processor = object : ProblemDescriptionsProcessor {}
                     runCatching {
                         simpleGlobalInspection.checkFile(psiFile, inspectionManager, problemsHolder, globalInspectionContext, processor)
