@@ -12,7 +12,8 @@ import java.nio.file.Path
 data class KotlinLspServerRunConfig(
     val mode: KotlinLspServerMode,
     val systemPath: Path?,
-    val logLevel: LogLevel = LogLevel.INFO,
+    val defaultLogLevel: LogLevel = LogLevel.INFO,
+    val logCategories: Map<String, LogLevel> = emptyMap(),
 )
 
 sealed interface KotlinLspServerMode {
@@ -55,6 +56,10 @@ private class Parser : CliktCommand(name = "kotlin-lsp") {
         envvar = "KOTLIN_LSP_LOG_LEVEL",
     ).convert { parseLogLevel(it) }
         .default(LogLevel.INFO)
+    val logCategory: List<List<Pair<String, LogLevel>>> by option(
+        help = "Per-category log level (category:LEVEL). Can be repeated. Unspecified categories use the global log level.",
+        envvar = "KOTLIN_LSP_LOG_CATEGORIES",
+    ).convert { value -> value.split(",").map { parseCategoryLevel(it.trim()) } }.multiple(default = emptyList())
     val multiClient: Boolean by option().flag()
         .help("Whether the Kotlin LSP server is used in multiclient mode. If not set, server will be shut down after the first client disconnects.")
         .validate {
@@ -82,7 +87,7 @@ private class Parser : CliktCommand(name = "kotlin-lsp") {
                 ),
             )
         }
-        return KotlinLspServerRunConfig(mode, systemPath, logLevel)
+        return KotlinLspServerRunConfig(mode, systemPath, logLevel, logCategory.flatten().toMap())
     }
 
     override fun run() {}
@@ -114,11 +119,28 @@ fun KotlinLspServerRunConfig.toArguments(): List<String> = buildList {
         }
     }
     if (systemPath != null) add("--system-path=$systemPath")
-    if (logLevel != LogLevel.INFO) add("--log-level=${logLevel.name}")
+    if (defaultLogLevel != LogLevel.INFO) add("--log-level=${defaultLogLevel.name}")
+    for ((category, level) in logCategories) {
+        add("--log-category=$category:${level.name}")
+    }
 }
 
 private fun parseLogLevel(value: String): LogLevel {
     return LogLevel.entries.firstOrNull { logLevel -> logLevel.name == value } ?: throw BadParameterValue(
         text = "'$value' is not a valid log level. Supported values: " + LogLevel.entries.joinToString { it.name } + " (case-sensitive)",
     )
+}
+
+private fun parseCategoryLevel(value: String): Pair<String, LogLevel> {
+    val colonIdx = value.indexOf(':')
+    if (colonIdx <= 0 || colonIdx == value.lastIndex) {
+        throw BadParameterValue("'$value' is not a valid category:level. Expected format: <category>:<LEVEL>, e.g. com.example:DEBUG")
+    }
+    val category = value.substring(0, colonIdx).trim()
+    if (category.isEmpty()) {
+        throw BadParameterValue("Category must be non-empty in '$value'")
+    }
+    val levelStr = value.substring(colonIdx + 1).trim()
+    val level = parseLogLevel(levelStr)
+    return category to level
 }

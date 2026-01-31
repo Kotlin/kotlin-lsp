@@ -13,21 +13,17 @@ import java.time.ZoneId
 import java.util.concurrent.ConcurrentHashMap
 
 
-fun initKotlinLspLogger(writeToStdOut: Boolean, defaultLogLevel: LogLevel) {
-    Logger.setFactory(KotlinLspLoggerFactory(writeToStdOut, defaultLogLevel))
+fun initKotlinLspLogger(writeToStdout: Boolean, defaultLogLevel: LogLevel, logCategories: Map<String, LogLevel> = emptyMap()) {
+    // TODO(bartekpacia): Use java.util.logging which provides loggers with hierarchy, instead of LoggingLevelsByCategory.
+    val levels = LoggingLevelsByCategory(defaultLogLevel, logCategories)
+    Logger.setFactory { category -> LspLogger(category, writeToStdout, levels) }
     com.intellij.serviceContainer.checkServiceFromWriteAccess = false
     com.intellij.codeInsight.multiverse.logMultiverseState = false
 }
 
-private class KotlinLspLoggerFactory(private val writeToStdOut: Boolean, defaultLogLevel: LogLevel) : Logger.Factory {
-    private val levels = LoggingLevelsByCategory(defaultLogLevel)
-
-    override fun getLoggerInstance(category: String): Logger = LspLogger(category, writeToStdOut, levels)
-}
-
-private class LoggingLevelsByCategory(private val defaultLogLevel: LogLevel) {
+private class LoggingLevelsByCategory(private val defaultLogLevel: LogLevel, logCategories: Map<String, LogLevel> = emptyMap()) {
     // TODO PersistentHashMap may be faster as we have low write rate here and high read-rate
-    private val levels = ConcurrentHashMap<String, LogLevel>()
+    private val levels = ConcurrentHashMap(logCategories)
 
     fun getLevel(category: String): LogLevel = levels[category] ?: defaultLogLevel
 
@@ -85,7 +81,7 @@ private class LspLogger(
         log(LogLevel.ERROR, message, t, details)
     }
 
-    private fun log(level: LogLevel, message: String?, t: Throwable?, details: Array<out String?> = emptyArray()) {
+    private fun log(level: LogLevel, message: String?, throwable: Throwable?, details: Array<out String?> = emptyArray()) {
         if (!shouldLog(level)) return
         val renderedMessage by lazy(LazyThreadSafetyMode.NONE) {
             buildString {
@@ -116,12 +112,12 @@ private class LspLogger(
                 append(" - ")
                 append(message)
 
-                if (t != null) {
+                if (throwable != null) {
                     appendLine()
-                    appendLine(t.message)
-                    append(t.stackTraceToString())
+                    appendLine(throwable.message)
+                    append(throwable.stackTraceToString())
                     try {
-                        attachmentsToString(t).takeIf { it.isNotEmpty() }?.let { appendLine(); append(it) }
+                        attachmentsToString(throwable).takeIf { it.isNotEmpty() }?.let { appendLine(); append(it) }
                     } catch (_: Throwable) {
                     }
                 }
@@ -133,18 +129,18 @@ private class LspLogger(
             }
         }
 
-        // Send log to stdout
+        // Possible log destination #1: stdout
         if (writeToStdOut && shouldLog(level)) {
             println(renderedMessage)
         }
 
-        // Send log to the connected client, using
+        // Possible log destination #2: the connected client
         Client.current?.let { client ->
             sendLogToClient(client, renderedMessage)
         }
 
-        if (t != null && shouldRethrow(t)) {
-            throw t
+        if (throwable != null && shouldRethrow(throwable)) {
+            throw throwable
         }
     }
 

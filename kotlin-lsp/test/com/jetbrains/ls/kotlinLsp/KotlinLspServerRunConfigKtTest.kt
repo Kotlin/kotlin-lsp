@@ -60,7 +60,7 @@ class KotlinLspServerRunConfigKtTest {
     @Test
     fun `log level flag`() {
         val parsed = parseArguments(arrayOf("--stdio", "--log-level=DEBUG")) as KotlinLspCommand.RunLsp
-        Assertions.assertEquals(LogLevel.DEBUG, parsed.config.logLevel)
+        Assertions.assertEquals(LogLevel.DEBUG, parsed.config.defaultLogLevel)
     }
 
     private fun doConsistencyTest(config: KotlinLspServerRunConfig) {
