@@ -6,9 +6,9 @@
     <completion.contributor language="kotlin"
                             id="KotlinCompletionContributor"
                             order="first"
-                            implementationClass="org.jetbrains.kotlin.idea.completion.KotlinFirCompletionContributor"/>
+                            implementationClass="org.jetbrains.kotlin.idea.completion.impl.k2.KotlinFirCompletionContributor"/>
 
-    <applicationService serviceImplementation="org.jetbrains.kotlin.idea.completion.FirCompletionDummyIdentifierProviderService"
+    <applicationService serviceImplementation="org.jetbrains.kotlin.idea.completion.impl.k2.FirCompletionDummyIdentifierProviderService"
                         serviceInterface="org.jetbrains.kotlin.idea.completion.api.CompletionDummyIdentifierProviderService"/>
 
     <weigher key="proximity" implementationClass="org.jetbrains.kotlin.idea.completion.implCommon.weighers.PreferKotlinxLibrariesWeigher"
