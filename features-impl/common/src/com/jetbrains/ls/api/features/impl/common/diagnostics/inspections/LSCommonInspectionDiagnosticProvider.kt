@@ -54,6 +54,7 @@ import kotlinx.serialization.json.encodeToJsonElement
 
 private val LOG = logger<LSCommonInspectionDiagnosticProvider>()
 
+// TODO: LSP-278 Optimize performance of inspections
 class LSCommonInspectionDiagnosticProvider(
     override val supportedLanguages: Set<LSLanguage>,
     private val inspectionBlacklist: Blacklist = Blacklist(),
