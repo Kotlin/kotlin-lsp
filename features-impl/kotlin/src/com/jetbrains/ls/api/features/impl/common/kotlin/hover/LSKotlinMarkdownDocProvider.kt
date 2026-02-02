@@ -2,7 +2,7 @@
 package com.jetbrains.ls.api.features.impl.common.kotlin.hover
 
 import com.intellij.psi.PsiElement
-import com.jetbrains.ls.api.features.impl.common.documentaiton.formatDocComment
+import com.jetbrains.ls.api.features.impl.common.documentation.formatDocComment
 import com.jetbrains.ls.api.features.impl.common.hover.LSHoverProviderBase
 import com.jetbrains.ls.api.features.impl.common.hover.markdownMultilineCode
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
