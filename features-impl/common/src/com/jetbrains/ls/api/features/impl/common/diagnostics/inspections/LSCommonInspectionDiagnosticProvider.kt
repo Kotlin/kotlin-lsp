@@ -19,8 +19,8 @@ import com.intellij.lang.Language
 import com.intellij.modcommand.ModCommand
 import com.intellij.modcommand.ModCommandQuickFix
 import com.intellij.openapi.application.readAction
-import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.diagnostic.getOrHandleException
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
@@ -52,7 +52,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.encodeToJsonElement
 
-private val LOG = fileLogger()
+private val LOG = logger<LSCommonInspectionDiagnosticProvider>()
 
 class LSCommonInspectionDiagnosticProvider(
     override val supportedLanguages: Set<LSLanguage>,
@@ -71,6 +71,9 @@ class LSCommonInspectionDiagnosticProvider(
             readAction {
                 val diagnostics = mutableListOf<Diagnostic>()
 
+                // TODO(bartekpacia): centralize common logging so it's not repeated N times across all LS*Providers
+                LOG.debug("start request textDocument/diagnostic for ${params.textDocument.uri.uri}")
+
                 val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
                 val document = virtualFile.findDocument() ?: return@readAction emptyList()
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
@@ -78,7 +81,7 @@ class LSCommonInspectionDiagnosticProvider(
                 val problemsHolder = ProblemsHolder(inspectionManager, psiFile, onTheFly)
 
                 val localInspections = getLocalInspections(psiFile) + getSharedLocalInspectionsFromGlobalTools(psiFile.language)
-                LOG.trace("got ${localInspections.size} local inspections")
+                LOG.debug("running ${localInspections.size} local inspections")
                 for (localInspection in localInspections) {
                     val visitor = localInspection.buildVisitor(problemsHolder, onTheFly)
 
@@ -92,6 +95,7 @@ class LSCommonInspectionDiagnosticProvider(
                         problemsHolder.clearResults()
                     }
 
+                    LOG.trace("running local inspection ${localInspection.id}")
                     psiFile.accept(object : PsiElementVisitor() {
                         override fun visitElement(element: PsiElement) {
                             collect(element)
@@ -99,12 +103,14 @@ class LSCommonInspectionDiagnosticProvider(
                         }
                     })
                 }
+                LOG.debug("done running local inspections")
 
                 val globalInspectionContext = inspectionManager.createNewGlobalContext()
                 val globalInspections = getSimpleGlobalInspections(psiFile.language)
-                LOG.trace("got ${globalInspections.size} global inspections")
+                LOG.debug("running ${globalInspections.size} simple global inspections")
                 for (simpleGlobalInspection in globalInspections) {
                     val processor = object : ProblemDescriptionsProcessor {}
+                    LOG.trace("running simple global inspection ${simpleGlobalInspection.shortName}")
                     runCatching {
                         simpleGlobalInspection.checkFile(psiFile, inspectionManager, problemsHolder, globalInspectionContext, processor)
                     }.getOrHandleException {
@@ -129,6 +135,7 @@ class LSCommonInspectionDiagnosticProvider(
                     }
                     problemsHolder.clearResults()
                 }
+                LOG.debug("done running simple global inspections")
 
                 return@readAction diagnostics
             }
