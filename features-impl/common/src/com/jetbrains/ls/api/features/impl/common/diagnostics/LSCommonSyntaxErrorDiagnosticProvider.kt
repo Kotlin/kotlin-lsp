@@ -23,7 +23,7 @@ import com.jetbrains.lsp.protocol.StringOrInt
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-class LSSyntaxErrorDiagnosticProvider(
+class LSCommonSyntaxErrorDiagnosticProvider(
     override val supportedLanguages: Set<LSLanguage>,
 ) : LSDiagnosticProvider {
     context(server: LSServer, handlerContext: LspHandlerContext)
