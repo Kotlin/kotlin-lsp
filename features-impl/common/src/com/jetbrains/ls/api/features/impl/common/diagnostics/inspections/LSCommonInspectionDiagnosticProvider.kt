@@ -2,7 +2,18 @@
 package com.jetbrains.ls.api.features.impl.common.diagnostics.inspections
 
 import com.intellij.codeHighlighting.HighlightDisplayLevel
-import com.intellij.codeInspection.*
+import com.intellij.codeInspection.GlobalInspectionTool
+import com.intellij.codeInspection.GlobalSimpleInspectionTool
+import com.intellij.codeInspection.InspectionEP
+import com.intellij.codeInspection.InspectionProfileEntry
+import com.intellij.codeInspection.LocalInspectionEP
+import com.intellij.codeInspection.LocalInspectionTool
+import com.intellij.codeInspection.ProblemDescriptionsProcessor
+import com.intellij.codeInspection.ProblemDescriptor
+import com.intellij.codeInspection.ProblemDescriptorUtil
+import com.intellij.codeInspection.ProblemHighlightType
+import com.intellij.codeInspection.ProblemsHolder
+import com.intellij.codeInspection.QuickFix
 import com.intellij.codeInspection.ex.InspectionManagerEx
 import com.intellij.lang.Language
 import com.intellij.modcommand.ModCommand
@@ -27,7 +38,6 @@ import com.jetbrains.ls.api.features.impl.common.diagnostics.Blacklist
 import com.jetbrains.ls.api.features.impl.common.diagnostics.DiagnosticSource
 import com.jetbrains.ls.api.features.impl.common.diagnostics.SimpleDiagnosticData
 import com.jetbrains.ls.api.features.impl.common.diagnostics.SimpleDiagnosticQuickfixData
-import com.jetbrains.ls.api.features.impl.common.diagnostics.inspections.LSCommonInspectionDiagnosticProvider.Companion.diagnosticSource
 import com.jetbrains.ls.api.features.impl.common.utils.toLspSeverity
 import com.jetbrains.ls.api.features.impl.common.utils.toLspTags
 import com.jetbrains.ls.api.features.language.LSLanguage
@@ -46,7 +56,8 @@ private val LOG = fileLogger()
 
 class LSCommonInspectionDiagnosticProvider(
     override val supportedLanguages: Set<LSLanguage>,
-    private val blacklist: Blacklist = Blacklist(),
+    private val inspectionBlacklist: Blacklist = Blacklist(),
+    private val quickFixBlacklist: Blacklist = Blacklist(),
 ) : LSDiagnosticProvider {
     companion object {
         val diagnosticSource: DiagnosticSource = DiagnosticSource("inspection")
@@ -130,7 +141,7 @@ class LSCommonInspectionDiagnosticProvider(
             .filter { inspectionEP -> inspectionEP.language == languageId }
             .filter { inspectionEP -> inspectionEP.enabledByDefault }
             .filter { inspectionEP -> HighlightDisplayLevel.find(inspectionEP.level) != HighlightDisplayLevel.DO_NOT_SHOW }
-            .filterNot { blacklist.containsImplementation(it.implementationClass) }
+            .filterNot { inspectionBlacklist.containsImplementation(it.implementationClass) }
             .mapNotNull { inspectionEP ->
                 runCatching {
                     inspectionEP.instantiateTool()
@@ -138,7 +149,7 @@ class LSCommonInspectionDiagnosticProvider(
                     LOG.warn(it)
                 }
             }
-            .filterNot { blacklist.containsSuperClass(it) }
+            .filterNot { inspectionBlacklist.containsSuperClass(it) }
     }
 
     private fun getLocalInspections(psiFile: PsiFile): List<LocalInspectionTool> {
@@ -158,33 +169,56 @@ class LSCommonInspectionDiagnosticProvider(
         return getEnabledInspectionTools(InspectionEP.GLOBAL_INSPECTION.extensionList, language.id)
             .filterIsInstance<GlobalInspectionTool>()
             .mapNotNull { globalInspectionTool -> globalInspectionTool.sharedLocalInspectionTool }
-            .filterNot { blacklist.containsSuperClass(it) }
+            .filterNot { inspectionBlacklist.containsSuperClass(it) }
             .toList()
     }
-}
 
-private fun ProblemsHolder.collectDiagnostics(
-    file: VirtualFile,
-    project: Project,
-    localInspectionTool: LocalInspectionTool
-): List<Diagnostic> {
-    val document = file.findDocument() ?: return emptyList()
-    return results
-        .filter { problemDescriptor -> problemDescriptor.highlightType != ProblemHighlightType.INFORMATION }
-        .mapNotNull { problemDescriptor ->
-            val data = problemDescriptor.createDiagnosticData(project)
-            val message = ProblemDescriptorUtil.renderDescriptor(
-                problemDescriptor, problemDescriptor.psiElement, ProblemDescriptorUtil.NONE
-            )
-            Diagnostic(
-                range = problemDescriptor.range()?.toLspRange(document) ?: return@mapNotNull null,
-                severity = problemDescriptor.highlightType.toLspSeverity(),
-                message = message.description,
-                code = StringOrInt.string(localInspectionTool.id),
-                tags = problemDescriptor.highlightType.toLspTags(),
-                data = LSP.json.encodeToJsonElement(data),
-            )
+    private fun ProblemsHolder.collectDiagnostics(
+        file: VirtualFile,
+        project: Project,
+        localInspectionTool: LocalInspectionTool,
+    ): List<Diagnostic> {
+        val document = file.findDocument() ?: return emptyList()
+        return results
+            .filter { problemDescriptor -> problemDescriptor.highlightType != ProblemHighlightType.INFORMATION }
+            .mapNotNull { problemDescriptor ->
+                val data = problemDescriptor.createDiagnosticData(project)
+                val message = ProblemDescriptorUtil.renderDescriptor(
+                    problemDescriptor, problemDescriptor.psiElement, ProblemDescriptorUtil.NONE
+                )
+                Diagnostic(
+                    range = problemDescriptor.range()?.toLspRange(document) ?: return@mapNotNull null,
+                    severity = problemDescriptor.highlightType.toLspSeverity(),
+                    message = message.description,
+                    code = StringOrInt.string(localInspectionTool.id),
+                    tags = problemDescriptor.highlightType.toLspTags(),
+                    data = LSP.json.encodeToJsonElement(data),
+                )
+            }
+    }
+
+    private fun ProblemDescriptor.createDiagnosticData(project: Project): SimpleDiagnosticData {
+        return SimpleDiagnosticData(
+            diagnosticSource = diagnosticSource,
+            fixes = fixes.orEmpty().mapNotNull { quickFix ->
+                val modCommand = getModCommand(quickFix, project, this) ?: return@mapNotNull null
+                val modCommandData = ModCommandData.from(modCommand) ?: return@mapNotNull null
+                SimpleDiagnosticQuickfixData(name = quickFix.name, modCommandData = modCommandData)
+            },
+        )
+    }
+
+    private fun getModCommand(fix: QuickFix<*>, project: Project, problemDescriptor: ProblemDescriptor): ModCommand? {
+        if (fix is ModCommandQuickFix) {
+            return fix.perform(project, problemDescriptor)
         }
+
+        if (!quickFixBlacklist.containsImplementation(fix::class.java.name)) {
+            LOG.warn("Unknown quick fix type: ${fix::class.java}. Please add it to the blacklist and create a YouTrack issue.")
+        }
+
+        return null
+    }
 }
 
 private fun ProblemDescriptor.range(): TextRange? {
@@ -193,25 +227,4 @@ private fun ProblemDescriptor.range(): TextRange? {
     // relative range -> absolute range
     textRangeInElement?.let { return it.shiftRight(elementRange.startOffset) }
     return elementRange
-}
-
-private fun ProblemDescriptor.createDiagnosticData(project: Project): SimpleDiagnosticData {
-    return SimpleDiagnosticData(
-        diagnosticSource = diagnosticSource,
-        fixes = fixes.orEmpty().mapNotNull { quickFix ->
-            val modCommand = getModCommand(quickFix, project, this) ?: return@mapNotNull null
-            val modCommandData = ModCommandData.from(modCommand) ?: return@mapNotNull null
-            SimpleDiagnosticQuickfixData(name = quickFix.name, modCommandData = modCommandData)
-        },
-    )
-}
-
-private fun getModCommand(fix: QuickFix<*>, project: Project, problemDescriptor: ProblemDescriptor): ModCommand? {
-    return when (fix) {
-        is ModCommandQuickFix -> fix.perform(project, problemDescriptor)
-        else -> {
-            LOG.warn("Unknown quick fix type: ${fix::class.java}")
-            null
-        }
-    }
 }

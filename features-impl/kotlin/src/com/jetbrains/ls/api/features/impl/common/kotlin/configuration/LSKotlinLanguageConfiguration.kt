@@ -42,7 +42,7 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSKotlinPackageDefinitionProvider,
         LSKotlinSemanticTokensProvider,
         LSCommonReferencesProvider(setOf(LSKotlinLanguage), TargetKind.ALL),
-        LSCommonInspectionDiagnosticProvider(setOf(LSKotlinLanguage), blacklist = kotlinInspectionBlacklist),
+        LSCommonInspectionDiagnosticProvider(setOf(LSKotlinLanguage), inspectionBlacklist = kotlinInspectionBlacklist),
         LSCommonInspectionFixesCodeActionProvider(setOf(LSKotlinLanguage)),
         LSSyntaxErrorDiagnosticProvider(setOf(LSKotlinLanguage)),
         LSKotlinCompilerDiagnosticsProvider,

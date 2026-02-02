@@ -14,8 +14,8 @@ class Blacklist(entries: List<BlacklistEntry>) {
         return fqcn in implementationClasses
     }
 
-    fun containsSuperClass(inspectionInstance: Any): Boolean {
-        return inspectionInstance::class.supertypes.any { kType ->
+    fun containsSuperClass(cls: Any): Boolean {
+        return cls::class.supertypes.any { kType ->
             (kType.classifier as? KClass<*>)?.java?.name in superClasses
         }
     }
