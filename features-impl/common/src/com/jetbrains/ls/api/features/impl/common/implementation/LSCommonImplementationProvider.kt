@@ -6,19 +6,14 @@ import com.intellij.codeInsight.navigation.ImplementationSearcher
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.editor.impl.ImaginaryEditor
 import com.intellij.openapi.vfs.findDocument
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiNameIdentifierOwner
-import com.intellij.util.concurrency.annotations.RequiresReadLock
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
-import com.jetbrains.ls.api.core.util.toLspRange
-import com.jetbrains.ls.api.core.util.uri
+import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
 import com.jetbrains.ls.api.features.implementation.LSImplementationProvider
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.lsp.implementation.LspHandlerContext
-import com.jetbrains.lsp.protocol.DocumentUri
 import com.jetbrains.lsp.protocol.ImplementationParams
 import com.jetbrains.lsp.protocol.Location
 import kotlinx.coroutines.flow.Flow
@@ -50,27 +45,8 @@ class LSCommonImplementationProvider(
                     targetElementUtil.acceptImplementationForReference(referenceAtCaret, candidate)
                 }
 
-                filtered.mapNotNull { psiElement -> psiElement.toLocation() }
+                filtered.mapNotNull { psiElement -> psiElement.getLspLocationForDefinition() }
             }
         }.forEach { location -> emit(location) }
     }
-}
-
-@RequiresReadLock
-private fun PsiElement.toLocation(): Location? {
-    val virtualFile = this.containingFile?.virtualFile ?: return null
-    val document = virtualFile.findDocument() ?: return null
-    val targetRange = when (this) {
-        is PsiNameIdentifierOwner -> {
-            // Narrow the location to the identifier of the method/class rather than the whole body
-            this.nameIdentifier?.textRange ?: this.textRange
-        }
-
-        else -> this.textRange
-    } ?: return null
-
-    return Location(
-        uri = DocumentUri(virtualFile.uri),
-        range = targetRange.toLspRange(document),
-    )
 }
