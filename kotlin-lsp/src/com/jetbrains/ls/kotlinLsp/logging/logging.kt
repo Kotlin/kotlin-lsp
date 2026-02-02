@@ -16,6 +16,16 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 
+/**
+ * From Javadoc of [java.util.logging.Logger.getLogger]:
+ *
+ * > The LogManager may only retain a weak reference to the newly created Logger.
+ * > It is important to understand that a previously created Logger with the given name may be garbage collected at any time if there is no strong reference to the Logger.
+ *
+ * The only purpose of this list is to keep strong references to the loggers created, so they aren't garbage collected at random times.
+ * This seems ugly. If you know a better approach, please refactor and document accordingly.
+ */
+private val loggers = mutableListOf<java.util.logging.Logger>()
 
 /**
  * Configures java.util.logging (JUL) loggers with hierarchical level inheritance.
@@ -28,8 +38,10 @@ fun initKotlinLspLogger(writeToStdout: Boolean, defaultLogLevel: LogLevel, logCa
 
     for ((category, level) in logCategories) {
         java.util.logging.Logger.getLogger(category).level = level.level
+        loggers.add(java.util.logging.Logger.getLogger(category))
         // Also set for "#category" pattern used by Logger.getInstance(Class)
         java.util.logging.Logger.getLogger("#$category").level = level.level
+        loggers.add(java.util.logging.Logger.getLogger("#$category"))
     }
 
     Logger.setFactory { category -> LspLogger(category, writeToStdout) }
@@ -71,6 +83,14 @@ private class LspLogger(
 
     override fun isTraceEnabled(): Boolean {
         return isLoggable(LogLevel.TRACE) || currentTraceValue() != TraceValue.Off
+    }
+
+    override fun trace(message: String?) {
+        log(LogLevel.TRACE, message, null)
+    }
+
+    override fun trace(t: Throwable?) {
+        log(LogLevel.TRACE, null, t)
     }
 
     override fun debug(message: String?, t: Throwable?) {
