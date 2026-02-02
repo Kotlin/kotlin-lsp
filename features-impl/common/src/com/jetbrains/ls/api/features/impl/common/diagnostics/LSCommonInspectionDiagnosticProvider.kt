@@ -1,5 +1,5 @@
-// Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
-package com.jetbrains.ls.api.features.impl.common.diagnostics.inspections
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+package com.jetbrains.ls.api.features.impl.common.diagnostics
 
 import com.intellij.codeHighlighting.HighlightDisplayLevel
 import com.intellij.codeInspection.GlobalInspectionTool
@@ -19,8 +19,8 @@ import com.intellij.lang.Language
 import com.intellij.modcommand.ModCommand
 import com.intellij.modcommand.ModCommandQuickFix
 import com.intellij.openapi.application.readAction
+import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.diagnostic.getOrHandleException
-import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
@@ -34,10 +34,6 @@ import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnosticProvider
-import com.jetbrains.ls.api.features.impl.common.diagnostics.Blacklist
-import com.jetbrains.ls.api.features.impl.common.diagnostics.DiagnosticSource
-import com.jetbrains.ls.api.features.impl.common.diagnostics.SimpleDiagnosticData
-import com.jetbrains.ls.api.features.impl.common.diagnostics.SimpleDiagnosticQuickfixData
 import com.jetbrains.ls.api.features.impl.common.utils.toLspSeverity
 import com.jetbrains.ls.api.features.impl.common.utils.toLspTags
 import com.jetbrains.ls.api.features.language.LSLanguage
@@ -52,7 +48,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.encodeToJsonElement
 
-private val LOG = logger<LSCommonInspectionDiagnosticProvider>()
+private val LOG = fileLogger()
 
 // TODO: LSP-278 Optimize performance of inspections
 class LSCommonInspectionDiagnosticProvider(

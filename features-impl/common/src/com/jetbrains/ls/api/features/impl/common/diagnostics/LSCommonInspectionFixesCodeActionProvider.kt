@@ -1,14 +1,16 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
-package com.jetbrains.ls.api.features.impl.common.diagnostics.inspections
+package com.jetbrains.ls.api.features.impl.common.diagnostics
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
-import com.jetbrains.ls.api.features.impl.common.diagnostics.SimpleDiagnosticData
-import com.jetbrains.ls.api.features.impl.common.diagnostics.diagnosticData
 import com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDescriptorProvider
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.lsp.implementation.LspHandlerContext
-import com.jetbrains.lsp.protocol.*
+import com.jetbrains.lsp.protocol.CodeAction
+import com.jetbrains.lsp.protocol.CodeActionKind
+import com.jetbrains.lsp.protocol.CodeActionParams
+import com.jetbrains.lsp.protocol.Command
+import com.jetbrains.lsp.protocol.LSP
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.encodeToJsonElement
