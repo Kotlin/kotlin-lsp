@@ -51,8 +51,9 @@ class LSCommonDefinitionProvider(
     }
 }
 
-// A temporary replacement for PsiPackage.directories which is not working because of the missing logic in FakePackageIndexImpl.
-// THis one works only for Java sources and JAR dependencies, Kotlin packages are handled in LSKotlinPackageDefinitionProvider.
+// FIXME: LSP-513
+//  A temporary replacement for PsiPackage.directories which is not working because of the missing logic in FakePackageIndexImpl.
+//  This one works only for Java sources and JAR dependencies, Kotlin packages are handled in LSKotlinPackageDefinitionProvider.
 private val PsiPackage.directory: VirtualFile?
     get() {
         return StubIndex.getInstance()
