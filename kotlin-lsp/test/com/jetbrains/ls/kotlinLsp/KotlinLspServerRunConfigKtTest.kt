@@ -9,7 +9,7 @@ import java.nio.file.Paths
 
 class KotlinLspServerRunConfigKtTest {
     @Test
-    fun `stdio`() {
+    fun stdio() {
         doConsistencyTest(KotlinLspServerRunConfig(KotlinLspServerMode.Stdio, systemPath = null))
     }
 
@@ -61,6 +61,41 @@ class KotlinLspServerRunConfigKtTest {
     fun `log level flag`() {
         val parsed = parseArguments(arrayOf("--stdio", "--log-level=DEBUG")) as KotlinLspCommand.RunLsp
         Assertions.assertEquals(LogLevel.DEBUG, parsed.config.defaultLogLevel)
+    }
+
+    @Test
+    fun `log category single`() {
+        val parsed = parseArguments(arrayOf("--stdio", "--log-category=com.example:DEBUG")) as KotlinLspCommand.RunLsp
+        Assertions.assertEquals(
+            mapOf("com.example" to LogLevel.DEBUG),
+            parsed.config.logCategories,
+        )
+    }
+
+    @Test
+    fun `log category multiple`() {
+        val parsed = parseArguments(
+            arrayOf(
+                "--stdio",
+                "--log-category=com.example:TRACE",
+                "--log-category=com.other:DEBUG",
+            ),
+        ) as KotlinLspCommand.RunLsp
+        Assertions.assertEquals(
+            mapOf("com.example" to LogLevel.TRACE, "com.other" to LogLevel.DEBUG),
+            parsed.config.logCategories,
+        )
+    }
+
+    @Test
+    fun `log category round-trip`() {
+        val config = KotlinLspServerRunConfig(
+            KotlinLspServerMode.Stdio,
+            systemPath = null,
+            defaultLogLevel = LogLevel.INFO,
+            logCategories = mapOf("com.example" to LogLevel.DEBUG, "com.other" to LogLevel.TRACE),
+        )
+        doConsistencyTest(config)
     }
 
     private fun doConsistencyTest(config: KotlinLspServerRunConfig) {
