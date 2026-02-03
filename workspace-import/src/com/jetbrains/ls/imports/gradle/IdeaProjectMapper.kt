@@ -1,8 +1,12 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+@file:Suppress("IO_FILE_USAGE")
+
 package com.jetbrains.ls.imports.gradle
 
+import com.intellij.openapi.diagnostic.logger
 import com.jetbrains.ls.imports.gradle.action.ProjectMetadata
 import com.jetbrains.ls.imports.gradle.model.KotlinModule
+import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet
 import com.jetbrains.ls.imports.json.ContentRootData
 import com.jetbrains.ls.imports.json.DependencyData
 import com.jetbrains.ls.imports.json.DependencyDataScope
@@ -20,14 +24,16 @@ import kotlinx.serialization.json.Json
 import org.gradle.tooling.model.ExternalDependency
 import org.gradle.tooling.model.HierarchicalElement
 import org.gradle.tooling.model.UnsupportedMethodException
-import org.gradle.tooling.model.idea.IdeaContentRoot
 import org.gradle.tooling.model.idea.IdeaDependency
 import org.gradle.tooling.model.idea.IdeaJavaLanguageSettings
 import org.gradle.tooling.model.idea.IdeaModule
 import org.gradle.tooling.model.idea.IdeaModuleDependency
 import org.gradle.tooling.model.idea.IdeaSingleEntryLibraryDependency
+import java.io.File
 
 internal object IdeaProjectMapper {
+
+    private val LOG = logger<IdeaProjectMapper>()
 
     fun toWorkspaceData(metadata: ProjectMetadata): WorkspaceData {
         val sdks: MutableList<SdkData> = mutableListOf()
@@ -40,6 +46,7 @@ internal object IdeaProjectMapper {
 
         project.modules.forEach { module ->
             val syntheticModules = calculateModules(
+                metadata,
                 module,
                 knownModules,
                 { moduleJavaSettings -> javaSettings.add(moduleJavaSettings) },
@@ -113,6 +120,7 @@ internal object IdeaProjectMapper {
     }
 
     private fun calculateModules(
+        metadata: ProjectMetadata,
         module: IdeaModule,
         knownModules: Set<String>,
         javaSettingsConsumer: (JavaSettingsData) -> Unit,
@@ -136,89 +144,101 @@ internal object IdeaProjectMapper {
         if (javaSettings != null) {
             javaSettingsConsumer(javaSettings)
         }
-        module.contentRoots.forEach { contentRoot ->
-            if (contentRoot.hasTestRoots()) {
-                val dependencies = module.dependencies
-                    .mapNotNull { getDependencyData(knownModules, it) }
-                    .toMutableList()
-                dependencies.add(DependencyData.ModuleSource)
-                dependencies.add(sdkDependencyData)
-                dependencies.add(DependencyData.Module(name = "$moduleName.main", scope = DependencyDataScope.COMPILE))
-                modules["$moduleName.test"] = ModuleData(
-                    name = "$moduleName.test",
-                    dependencies = dependencies,
-                    contentRoots = contentRoot.toTestContentRootData()
-                )
-                if (javaSettings != null) {
-                    javaSettingsConsumer(
-                        javaSettings.copy(module = "$moduleName.test")
+        val associatedSourceSets = metadata.sourceSets[moduleName]
+        if (associatedSourceSets.isNullOrEmpty()) {
+            LOG.info("$moduleName has an empty set of source sets")
+            return modules
+        }
+
+        associatedSourceSets.forEach { sourceSet ->
+            when {
+                sourceSet.name == "main" -> {
+                    val dependencies = module.dependencies
+                        .filter { dependency -> dependency.scope.scope != "TEST" }
+                        .mapNotNull { getDependencyData(knownModules, it) }
+                        .toMutableList()
+                    dependencies.add(DependencyData.ModuleSource)
+                    dependencies.add(sdkDependencyData)
+                    modules["$moduleName.main"] = ModuleData(
+                        name = "$moduleName.main",
+                        dependencies = dependencies,
+                        contentRoots = sourceSet.toContentRootData(false)
                     )
+                    if (javaSettings != null) {
+                        javaSettingsConsumer(
+                            javaSettings.copy(module = "$moduleName.main")
+                        )
+                    }
                 }
-            }
-            if (contentRoot.hasProductionRoots()) {
-                val dependencies = module.dependencies
-                    .filter { it.scope.scope != "TEST" }
-                    .mapNotNull { getDependencyData(knownModules, it) }
-                    .toMutableList()
-                dependencies.add(DependencyData.ModuleSource)
-                dependencies.add(sdkDependencyData)
-                modules["$moduleName.main"] = ModuleData(
-                    name = "$moduleName.main",
-                    dependencies = dependencies,
-                    contentRoots = contentRoot.toProductionContentRootData()
-                )
-                if (javaSettings != null) {
-                    javaSettingsConsumer(
-                        javaSettings.copy(module = "$moduleName.main")
+
+                sourceSet.name.lowercase().contains("test") -> {
+                    val dependencies = module.dependencies
+                        .mapNotNull { getDependencyData(knownModules, it) }
+                        .toMutableList()
+                    dependencies.add(DependencyData.ModuleSource)
+                    dependencies.add(sdkDependencyData)
+                    dependencies.add(DependencyData.Module(name = "$moduleName.main", scope = DependencyDataScope.COMPILE))
+                    modules["$moduleName.${sourceSet.name}"] = ModuleData(
+                        name = "$moduleName.${sourceSet.name}",
+                        dependencies = dependencies,
+                        contentRoots = sourceSet.toContentRootData(true)
                     )
+                    if (javaSettings != null) {
+                        javaSettingsConsumer(
+                            javaSettings.copy(module = "$moduleName.${sourceSet.name}")
+                        )
+                    }
+                }
+
+                else -> {
+                    val dependencies = module.dependencies
+                        .mapNotNull { getDependencyData(knownModules, it) }
+                        .toMutableList()
+                    dependencies.add(DependencyData.ModuleSource)
+                    dependencies.add(sdkDependencyData)
+                    dependencies.add(DependencyData.Module(name = "$moduleName.main", scope = DependencyDataScope.COMPILE))
+                    modules["$moduleName.${sourceSet.name}"] = ModuleData(
+                        name = "$moduleName.${sourceSet.name}",
+                        dependencies = dependencies,
+                        contentRoots = sourceSet.toContentRootData(false)
+                    )
+                    if (javaSettings != null) {
+                        javaSettingsConsumer(
+                            javaSettings.copy(module = "$moduleName.${sourceSet.name}")
+                        )
+                    }
                 }
             }
         }
         return modules
     }
 
-    private fun IdeaContentRoot.hasTestRoots(): Boolean {
-        return testDirectories.isNotEmpty() || testResourceDirectories.isNotEmpty()
-    }
-
-    private fun IdeaContentRoot.hasProductionRoots(): Boolean {
-        return sourceDirectories.isNotEmpty() || resourceDirectories.isNotEmpty()
-    }
-
-    private fun IdeaContentRoot.toTestContentRootData(): List<ContentRootData> {
+    private fun ModuleSourceSet.toContentRootData(isTest: Boolean): List<ContentRootData> {
         val sourceRoots = mutableListOf<SourceRootData>()
-        for (sourceRootFolder in testDirectories) {
-            sourceRoots.add(SourceRootData(sourceRootFolder.directory.path, "java-test"))
+        for (sourceRootFolder in sources) {
+            sourceRoots.add(SourceRootData(sourceRootFolder.path, getSourceFolderType(sourceRootFolder, isTest)))
         }
-        for (sourceRootFolder in testResourceDirectories) {
-            sourceRoots.add(SourceRootData(sourceRootFolder.directory.path, "java-test-resource"))
+        for (sourceRootFolder in resources) {
+            sourceRoots.add(SourceRootData(sourceRootFolder.path, if (isTest) "java-test-resource" else "java-resource"))
         }
         return listOf(
             ContentRootData(
                 findRootForSourceRoots(sourceRoots),
                 emptyList(),
-                excludeDirectories.map { it.path },
+                excludes.toMutableList(),
                 sourceRoots = sourceRoots
             )
         )
     }
 
-    private fun IdeaContentRoot.toProductionContentRootData(): List<ContentRootData> {
-        val sourceRoots = mutableListOf<SourceRootData>()
-        for (sourceRootFolder in sourceDirectories) {
-            sourceRoots.add(SourceRootData(sourceRootFolder.directory.path, "java-source"))
+    private fun getSourceFolderType(file: File, isTest: Boolean): String {
+        val folderName = file.name
+        val prefix = when (folderName.lowercase()) {
+            "kotlin" -> "kotlin"
+            "groovy" -> "groovy"
+            else -> "java"
         }
-        for (sourceRootFolder in resourceDirectories) {
-            sourceRoots.add(SourceRootData(sourceRootFolder.directory.path, "java-resource"))
-        }
-        return listOf(
-            ContentRootData(
-                findRootForSourceRoots(sourceRoots),
-                emptyList(),
-                excludeDirectories.map { it.path },
-                sourceRoots = sourceRoots
-            )
-        )
+        return if (isTest) "$prefix-test" else "$prefix-source"
     }
 
     private fun IdeaModule.getFqdn(): String {

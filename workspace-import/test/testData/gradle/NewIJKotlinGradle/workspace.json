@@ -66,7 +66,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/app/src/main/kotlin",
-                            "type": "java-source"
+                            "type": "kotlin-source"
                         },
                         {
                             "path": "<WORKSPACE>/app/src/main/resources",
@@ -166,7 +166,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/app/src/test/kotlin",
-                            "type": "java-test"
+                            "type": "kotlin-test"
                         },
                         {
                             "path": "<WORKSPACE>/app/src/test/resources",
@@ -229,7 +229,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/utils/src/main/kotlin",
-                            "type": "java-source"
+                            "type": "kotlin-source"
                         },
                         {
                             "path": "<WORKSPACE>/utils/src/main/resources",
@@ -339,7 +339,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/utils/src/test/kotlin",
-                            "type": "java-test"
+                            "type": "kotlin-test"
                         },
                         {
                             "path": "<WORKSPACE>/utils/src/test/resources",

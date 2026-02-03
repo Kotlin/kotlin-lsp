@@ -46,7 +46,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/app/src/main/kotlin",
-                            "type": "java-source"
+                            "type": "kotlin-source"
                         },
                         {
                             "path": "<WORKSPACE>/app/src/main/resources",
@@ -101,7 +101,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/app/src/test/kotlin",
-                            "type": "java-test"
+                            "type": "kotlin-test"
                         },
                         {
                             "path": "<WORKSPACE>/app/src/test/resources",
@@ -113,6 +113,51 @@
         },
         {
             "name": "multi-project-source-sets.lib"
+        },
+        {
+            "name": "multi-project-source-sets.lib.integrationTest",
+            "dependencies": [
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains:annotations:13.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "inheritedSdk"
+                },
+                {
+                    "type": "module",
+                    "name": "multi-project-source-sets.lib.main",
+                    "scope": "compile"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/lib/src/integrationTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/lib/src/integrationTest/java",
+                            "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/lib/src/integrationTest/kotlin",
+                            "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/lib/src/integrationTest/resources",
+                            "type": "java-test-resource"
+                        }
+                    ]
+                }
+            ]
         },
         {
             "name": "multi-project-source-sets.lib.main",
@@ -144,7 +189,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/lib/src/main/kotlin",
-                            "type": "java-source"
+                            "type": "kotlin-source"
                         },
                         {
                             "path": "<WORKSPACE>/lib/src/main/resources",
@@ -189,7 +234,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/lib/src/test/kotlin",
-                            "type": "java-test"
+                            "type": "kotlin-test"
                         },
                         {
                             "path": "<WORKSPACE>/lib/src/test/resources",
@@ -229,7 +274,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/src/main/kotlin",
-                            "type": "java-source"
+                            "type": "kotlin-source"
                         },
                         {
                             "path": "<WORKSPACE>/src/main/resources",
@@ -274,7 +319,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/src/test/kotlin",
-                            "type": "java-test"
+                            "type": "kotlin-test"
                         },
                         {
                             "path": "<WORKSPACE>/src/test/resources",

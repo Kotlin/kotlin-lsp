@@ -41,7 +41,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/api/src/main/kotlin",
-                            "type": "java-source"
+                            "type": "kotlin-source"
                         },
                         {
                             "path": "<WORKSPACE>/api/src/main/resources",
@@ -91,7 +91,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/api/src/test/kotlin",
-                            "type": "java-test"
+                            "type": "kotlin-test"
                         },
                         {
                             "path": "<WORKSPACE>/api/src/test/resources",
@@ -134,7 +134,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/core/src/main/kotlin",
-                            "type": "java-source"
+                            "type": "kotlin-source"
                         },
                         {
                             "path": "<WORKSPACE>/core/src/main/resources",
@@ -179,7 +179,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/core/src/test/kotlin",
-                            "type": "java-test"
+                            "type": "kotlin-test"
                         },
                         {
                             "path": "<WORKSPACE>/core/src/test/resources",
@@ -237,7 +237,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/service/src/main/kotlin",
-                            "type": "java-source"
+                            "type": "kotlin-source"
                         },
                         {
                             "path": "<WORKSPACE>/service/src/main/resources",
@@ -302,7 +302,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/service/src/test/kotlin",
-                            "type": "java-test"
+                            "type": "kotlin-test"
                         },
                         {
                             "path": "<WORKSPACE>/service/src/test/resources",

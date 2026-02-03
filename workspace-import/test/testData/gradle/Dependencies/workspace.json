@@ -113,7 +113,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/src/main/kotlin",
-                            "type": "java-source"
+                            "type": "kotlin-source"
                         },
                         {
                             "path": "<WORKSPACE>/src/main/resources",
@@ -348,7 +348,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/src/test/kotlin",
-                            "type": "java-test"
+                            "type": "kotlin-test"
                         },
                         {
                             "path": "<WORKSPACE>/src/test/resources",

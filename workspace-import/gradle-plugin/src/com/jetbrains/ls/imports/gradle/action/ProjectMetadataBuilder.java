@@ -2,6 +2,8 @@
 package com.jetbrains.ls.imports.gradle.action;
 
 import com.jetbrains.ls.imports.gradle.model.KotlinModule;
+import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet;
+import com.jetbrains.ls.imports.gradle.model.ModuleSourceSets;
 import org.gradle.tooling.BuildAction;
 import org.gradle.tooling.BuildController;
 import org.gradle.tooling.model.HierarchicalElement;
@@ -9,8 +11,10 @@ import org.gradle.tooling.model.idea.IdeaModule;
 import org.gradle.tooling.model.idea.IdeaProject;
 import org.jspecify.annotations.NonNull;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
 
@@ -21,16 +25,26 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
             throw new IllegalStateException("Unable to resolve the basic Gradle Project information");
         }
         Map<String, KotlinModule> kotlinModules = new HashMap<>();
+        Map<String, Set<ModuleSourceSet>> sourceSets = new HashMap<>();
         ideaProject.getModules()
                 .forEach(module -> {
                     kotlinModules.put(
                             getModuleFqdn(module),
                             controller.findModel(module, KotlinModule.class)
                     );
+                    ModuleSourceSets moduleSourceSets = controller.findModel(module, ModuleSourceSets.class);
+                    Set<ModuleSourceSet> sourceSetFromModule = moduleSourceSets == null
+                                                               ? Collections.emptySet()
+                                                               : moduleSourceSets.getSourceSets();
+                    sourceSets.put(
+                            getModuleFqdn(module),
+                            sourceSetFromModule
+                    );
                 });
         return new ProjectMetadata(
                 ideaProject,
-                kotlinModules
+                kotlinModules,
+                sourceSets
         );
     }
 
