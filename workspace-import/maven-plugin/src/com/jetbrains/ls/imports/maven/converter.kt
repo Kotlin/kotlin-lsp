@@ -16,7 +16,9 @@ import org.eclipse.aether.resolution.DependencyResolutionException
 import org.eclipse.aether.resolution.DependencyResult
 import org.eclipse.aether.util.artifact.JavaScopes
 import java.nio.file.Path
-import java.util.Locale
+import java.util.*
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.exists
 
 
 private val KOTLIN_COMPILER_PLUGIN_JAR_PATTERN = Regex(".*-compiler-plugin.*\\.jar")
@@ -33,7 +35,7 @@ fun MavenProject.toWorkspaceData(
     }
     val modulesData = modules.map { it.toModuleData(kotlinSettings) }
 
-    val libraries = collectLibraries(modules, repositorySystem, repositorySystemSession)
+    val libraries = collectLibraries(modules, repositorySystem, repositorySystemSession, remoteProjectRepositories)
 
     return WorkspaceData(
         modules = modulesData,
@@ -381,7 +383,8 @@ fun fileNameWithNewClassifier(
 private fun MavenProject.collectLibraries(
     modulesData: List<MavenTreeModuleImportData>,
     repositorySystem: RepositorySystem,
-    repositorySystemSession: RepositorySystemSession
+    repositorySystemSession: RepositorySystemSession,
+    remoteRepositories: List<RemoteRepository>,
 ): List<LibraryData> {
 
     val allArtifacts = modulesData
@@ -390,6 +393,24 @@ private fun MavenProject.collectLibraries(
         .map { it.artifact }
         .distinct()
 
+        val dependenciesToResolve = allArtifacts.map { artifact ->
+            org.apache.maven.model.Dependency().apply {
+                groupId = artifact.groupId
+                artifactId = artifact.artifactId
+                version = artifact.version
+                classifier = artifact.classifier
+                type = artifact.type
+                scope = artifact.scope
+            }
+        }
+        dependenciesToResolve.resolveDependencies(
+            "Project Libraries",
+            remoteRepositories,
+            repositorySystem,
+            repositorySystemSession,
+            true,
+            true
+        )
 
     val libraries = allArtifacts.map { artifact ->
         val libName = createLibName(artifact)
@@ -399,20 +420,25 @@ private fun MavenProject.collectLibraries(
             level = "project",
             module = null,
             type = "repository",
-            roots = listOf(
-                LibraryRootData(
-                    path = getArtifactPath(artifact, "javadoc").toAbsolutePath().toString(),
-                    type = "JAVADOC"
-                ),
-                LibraryRootData(
-                    path = getArtifactPath(artifact, "sources").toAbsolutePath().toString(),
-                    type = "SOURCES"
-                ),
-
-                LibraryRootData(
-                    path = artifact.file.absolutePath,
-                    type = artifact.classifier?.takeIf { it.isNotEmpty() }?.uppercase() ?: "CLASSES",
-                )
+            roots = listOfNotNull(
+                getArtifactPath(artifact, "javadoc").takeIf { it.exists() }?.let {
+                    LibraryRootData(
+                        path = it.absolutePathString(),
+                        type = "JAVADOC"
+                    )
+                },
+                getArtifactPath(artifact, "sources").takeIf { it.exists() }?.let {
+                    LibraryRootData(
+                        path = it.absolutePathString(),
+                        type = "SOURCES"
+                    )
+                },
+                artifact.file.toPath().takeIf { it.exists() }?.let {
+                    LibraryRootData(
+                        path = it.absolutePathString(),
+                        type = artifact.classifier?.takeIf { it.isNotEmpty() }?.uppercase() ?: "CLASSES",
+                    )
+                }
             )
         )
     }
