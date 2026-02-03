@@ -5,6 +5,7 @@ import com.intellij.openapi.application.readAction
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
+import com.intellij.util.concurrency.annotations.RequiresReadLock
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.findVirtualFile
@@ -16,13 +17,27 @@ import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.commands.document.LSDocumentCommandExecutor
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
 import com.jetbrains.lsp.implementation.LspHandlerContext
-import com.jetbrains.lsp.protocol.*
+import com.jetbrains.lsp.protocol.CodeAction
+import com.jetbrains.lsp.protocol.CodeActionKind
+import com.jetbrains.lsp.protocol.CodeActionParams
+import com.jetbrains.lsp.protocol.Command
+import com.jetbrains.lsp.protocol.DocumentUri
+import com.jetbrains.lsp.protocol.LSP
+import com.jetbrains.lsp.protocol.Range
+import com.jetbrains.lsp.protocol.TextEdit
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 
+/**
+ * Base class for extracting the variable in LSP.
+ * Expected workflow:
+ * 1. Fetch available options to extract the variable in the given range with [getChoices].
+ * 2. Based on the user selection in step 1, create a context with [getWriteContext].
+ * 3. Execute the variable extraction with [doExtractVariable].
+ */
 abstract class LSExtractVariableProviderBase<Context> : LSCodeActionProvider, LSCommandDescriptorProvider {
     override val commandDescriptors: List<LSCommandDescriptor>
         get() = listOf(commandDescriptor)
@@ -31,7 +46,7 @@ abstract class LSExtractVariableProviderBase<Context> : LSCodeActionProvider, LS
         get() = setOf(ExtractActionKind.RefactorExtractVariable)
 
     private val commandDescriptor = LSCommandDescriptor(
-        title = ACTION_TITLE,
+        title = DESCRIPTOR_TITLE,
         name = COMMAND_NAME,
         executor = object : LSDocumentCommandExecutor {
             context(server: LSServer, handlerContext: LspHandlerContext)
@@ -54,43 +69,45 @@ abstract class LSExtractVariableProviderBase<Context> : LSCodeActionProvider, LS
     context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val documentUri = params.textDocument.uri
-        server.withAnalysisContext {
+        val choices = server.withAnalysisContext {
             readAction {
                 val virtualFile = documentUri.findVirtualFile() ?: return@readAction null
                 val document = virtualFile.findDocument() ?: return@readAction null
-                if (getContext(virtualFile, params.range.toTextRange(document)) == null) return@readAction null
+                getChoices(virtualFile, params.range.toTextRange(document)) ?: return@readAction null
             }
         } ?: return@flow
-        emit(
-            CodeAction(
-                title = ACTION_TITLE,
-                kind = ExtractActionKind.RefactorExtractVariable,
-                command = Command(
-                    title = ACTION_TITLE,
-                    command = COMMAND_NAME,
-                    arguments = listOf<JsonElement>(
-                        LSP.json.encodeToJsonElement<DocumentUri>(documentUri),
-                        LSP.json.encodeToJsonElement<ExtractVariableData>(
-                            ExtractVariableData.serializer(),
-                            ExtractVariableData(params.range)
+
+        for (choice in choices) {
+            emit(
+                CodeAction(
+                    title = choice,
+                    kind = ExtractActionKind.RefactorExtractVariable,
+                    command = Command(
+                        title = choice,
+                        command = COMMAND_NAME,
+                        arguments = listOf<JsonElement>(
+                            LSP.json.encodeToJsonElement<DocumentUri>(documentUri),
+                            LSP.json.encodeToJsonElement<ExtractVariableData>(
+                                ExtractVariableData.serializer(),
+                                ExtractVariableData(params.range, choice)
+                            ),
                         ),
-                    ),
+                    )
                 )
             )
-        )
+        }
     }
 
     context(server: LSServer, analysisContext: LSAnalysisContext)
     private suspend fun computeExtractVariableEdits(file: VirtualFile, data: ExtractVariableData): List<TextEdit> {
-        val (context, oldDocumentText) = readAction {
+        val (writeContext, oldDocumentText) = readAction {
             val document = file.findDocument() ?: return@readAction null
             val range = data.range.toTextRange(document)
-            val result = getContext(file, range) ?: return@readAction null
-            result to document.text
+            getWriteContext(file, range, data.choice) to document.text
         } ?: return emptyList()
 
         server.withWritableFile(file.uri) {
-            doExtractVariable(context)
+            doExtractVariable(writeContext)
         }
 
         return readAction {
@@ -100,12 +117,20 @@ abstract class LSExtractVariableProviderBase<Context> : LSCodeActionProvider, LS
     }
 
     /**
-     * Calculates the data necessary to introducing the variable.
-     * @return null if it is impossible to extract the variable in position, context otherwise
+     * Calculates the available extraction types in the given [selectedRange].
+     * @return null if it is impossible to extract the variable in position, list of displayable choices otherwise
      */
+    @RequiresReadLock
     context(analysisContext: LSAnalysisContext)
-    protected abstract fun getContext(file: VirtualFile, selectedRange: TextRange): Context?
+    protected abstract fun getChoices(file: VirtualFile, selectedRange: TextRange): List<String>?
 
+    /**
+     * Creates a context for the variable extraction based on the given [choice].
+     * @return context for the variable extraction. It is expected that context can always be retrieved since the [choice] was shown to the user.
+     */
+    @RequiresReadLock
+    context(analysisContext: LSAnalysisContext)
+    protected abstract fun getWriteContext(file: VirtualFile, selectedRange: TextRange, choice: String): Context
 
     /**
      * Executes the variable extraction on the given [context].
@@ -116,10 +141,10 @@ abstract class LSExtractVariableProviderBase<Context> : LSCodeActionProvider, LS
 
 
     @Serializable
-    data class ExtractVariableData(val range: Range)
+    data class ExtractVariableData(val range: Range, val choice: String)
 
     companion object {
-        private const val ACTION_TITLE = "Extract to local variable"
+        private const val DESCRIPTOR_TITLE = "Extract to local variable"
         private const val COMMAND_NAME = "refactor.extract.variable"
     }
 }
