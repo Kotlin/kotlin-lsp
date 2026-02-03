@@ -17,6 +17,8 @@ import org.eclipse.aether.resolution.DependencyResult
 import org.eclipse.aether.util.artifact.JavaScopes
 import java.nio.file.Path
 import java.util.*
+import kotlin.io.path.Path
+import kotlin.io.path.absolute
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
 
@@ -184,15 +186,22 @@ private fun sourceRootData(
     project: MavenProject,
     kotlinSettings: KotlinSettingsData?
 ): List<SourceRootData> = buildSet {
+    val projectRoot = project.basedir?.toPath()?.absolute()
+
+    fun belongsToProject(dir: String) = projectRoot == null || Path(dir).startsWith(projectRoot)
+
     if (module.type.containsMain) {
-        project.compileSourceRoots?.forEach { sourceRoot ->
-            add(SourceRootData(sourceRoot, "java-source"))
-        }
-        project.resources?.forEach { resource ->
-            if (resource.directory != project.basedir?.absolutePath) {
-                add(SourceRootData(resource.directory, "java-resource"))
+        project.compileSourceRoots
+            ?.filter { belongsToProject(it) }
+            ?.forEach { sourceRoot ->
+                add(SourceRootData(sourceRoot, "java-source"))
             }
-        }
+        project.resources
+            ?.map { it.directory }
+            ?.filter { belongsToProject(it) }
+            ?.forEach {
+                add(SourceRootData(it, "java-resource"))
+            }
         kotlinSettings?.compileSourceRoots?.forEach {
             add(SourceRootData(it, "java-source"))
         }
@@ -201,17 +210,22 @@ private fun sourceRootData(
         addModelloGeneratedSources(project, "java-source")
     }
     if (module.type.containsTest) {
-        project.testCompileSourceRoots?.forEach { testRoot ->
-            add(SourceRootData(testRoot, "java-test"))
-        }
-        project.testResources?.forEach { resource ->
-            if (resource.directory != project.basedir?.absolutePath) {
-                add(SourceRootData(resource.directory, "java-test-resource"))
+        project.testCompileSourceRoots
+            ?.filter { belongsToProject(it) }
+            ?.forEach { testRoot ->
+                add(SourceRootData(testRoot, "java-test"))
             }
-        }
-        kotlinSettings?.testSourceRoots?.forEach {
-            add(SourceRootData(it, "java-test"))
-        }
+        project.testResources
+            ?.map { it.directory }
+            ?.filter { belongsToProject(it) }
+            ?.forEach {
+                add(SourceRootData(it, "java-test-resource"))
+            }
+        kotlinSettings?.testSourceRoots
+            ?.filter { belongsToProject(it) }
+            ?.forEach {
+                add(SourceRootData(it, "java-test"))
+            }
         addBuildHelperSources(project, "add-test-source", "java-test")
         addBuildHelperResources(project, "add-test-resource", "java-test-resource")
         addModelloGeneratedSources(project, "java-test")
@@ -223,10 +237,10 @@ private fun MutableSet<SourceRootData>.addBuildHelperSources(
     goal: String,
     rootType: String
 ) {
-    val plugin = project.buildPlugins.find { 
-        it.groupId == "org.codehaus.mojo" && it.artifactId == "build-helper-maven-plugin" 
+    val plugin = project.buildPlugins.find {
+        it.groupId == "org.codehaus.mojo" && it.artifactId == "build-helper-maven-plugin"
     } ?: return
-    
+
     plugin.executions.forEach { execution ->
         if (execution.goals.contains(goal)) {
             val config = execution.configuration as? Xpp3Dom ?: return@forEach
@@ -246,10 +260,10 @@ private fun MutableSet<SourceRootData>.addBuildHelperResources(
     goal: String,
     rootType: String
 ) {
-    val plugin = project.buildPlugins.find { 
-        it.groupId == "org.codehaus.mojo" && it.artifactId == "build-helper-maven-plugin" 
+    val plugin = project.buildPlugins.find {
+        it.groupId == "org.codehaus.mojo" && it.artifactId == "build-helper-maven-plugin"
     } ?: return
-    
+
     plugin.executions.forEach { execution ->
         if (execution.goals.contains(goal)) {
             val config = execution.configuration as? Xpp3Dom ?: return@forEach
@@ -269,24 +283,24 @@ private fun MutableSet<SourceRootData>.addModelloGeneratedSources(
     project: MavenProject,
     rootType: String
 ) {
-    val plugin = project.buildPlugins.find { 
-        it.groupId == "org.codehaus.modello" && it.artifactId == "modello-maven-plugin" 
+    val plugin = project.buildPlugins.find {
+        it.groupId == "org.codehaus.modello" && it.artifactId == "modello-maven-plugin"
     } ?: return
-    
+
     // Modello plugin generates Java sources with various goals (java, velocity, etc.)
     val javaGeneratingGoals = setOf("java", "velocity", "java5", "jpox-jdo-mapping", "jpox-metadata-class")
-    
+
     plugin.executions.forEach { execution ->
         // Check if any execution has a goal that generates Java sources
         if (execution.goals.any { it in javaGeneratingGoals }) {
             // Get outputDirectory from execution configuration or plugin configuration
             val executionConfig = execution.configuration as? Xpp3Dom
             val pluginConfig = plugin.configuration as? Xpp3Dom
-            
+
             val outputDir = executionConfig?.getChild("outputDirectory")?.value?.trim()
                 ?: pluginConfig?.getChild("outputDirectory")?.value?.trim()
                 ?: "${project.build?.directory ?: "target"}/generated-sources/modello"
-            
+
             if (outputDir.isNotEmpty()) {
                 add(SourceRootData(outputDir, rootType))
             }
