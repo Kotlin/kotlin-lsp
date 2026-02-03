@@ -16,7 +16,7 @@ import org.eclipse.aether.resolution.DependencyResolutionException
 import org.eclipse.aether.resolution.DependencyResult
 import org.eclipse.aether.util.artifact.JavaScopes
 import java.nio.file.Path
-import java.util.*
+import java.util.Locale
 
 
 private val KOTLIN_COMPILER_PLUGIN_JAR_PATTERN = Regex(".*-compiler-plugin.*\\.jar")

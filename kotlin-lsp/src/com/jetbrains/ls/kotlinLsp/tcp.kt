@@ -8,11 +8,21 @@ import com.jetbrains.lsp.implementation.ByteWriter
 import com.jetbrains.lsp.implementation.LspClient
 import com.jetbrains.lsp.implementation.LspConnection
 import io.ktor.network.selector.SelectorManager
-import io.ktor.network.sockets.*
+import io.ktor.network.sockets.Socket
+import io.ktor.network.sockets.aSocket
+import io.ktor.network.sockets.isClosed
+import io.ktor.network.sockets.openReadChannel
+import io.ktor.network.sockets.openWriteChannel
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.ByteWriteChannel
 import io.ktor.utils.io.InternalAPI
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import kotlinx.io.Sink
 import kotlinx.io.Source
 

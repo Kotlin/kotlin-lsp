@@ -5,7 +5,12 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.commands.LSCommandExecutor
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.lspClient
-import com.jetbrains.lsp.protocol.*
+import com.jetbrains.lsp.protocol.ApplyEditRequests
+import com.jetbrains.lsp.protocol.ApplyWorkspaceEditParams
+import com.jetbrains.lsp.protocol.DocumentUri
+import com.jetbrains.lsp.protocol.LSP
+import com.jetbrains.lsp.protocol.TextEdit
+import com.jetbrains.lsp.protocol.WorkspaceEdit
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement

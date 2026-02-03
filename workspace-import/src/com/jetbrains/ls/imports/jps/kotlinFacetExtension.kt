@@ -10,8 +10,17 @@ import org.jetbrains.jps.model.ex.JpsElementChildRoleBase
 import org.jetbrains.jps.model.module.JpsModule
 import org.jetbrains.jps.model.serialization.JpsProjectExtensionSerializer
 import org.jetbrains.jps.model.serialization.facet.JpsFacetConfigurationSerializer
-import org.jetbrains.kotlin.cli.common.arguments.*
-import org.jetbrains.kotlin.config.*
+import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
+import org.jetbrains.kotlin.cli.common.arguments.K2JSCompilerArguments
+import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
+import org.jetbrains.kotlin.cli.common.arguments.K2MetadataCompilerArguments
+import org.jetbrains.kotlin.cli.common.arguments.setApiVersionToLanguageVersionIfNeeded
+import org.jetbrains.kotlin.config.CompilerSettings
+import org.jetbrains.kotlin.config.JpsPluginSettings
+import org.jetbrains.kotlin.config.KotlinCommonJpsModelSerializerExtension
+import org.jetbrains.kotlin.config.KotlinFacetSettings
+import org.jetbrains.kotlin.config.SettingConstants
+import org.jetbrains.kotlin.config.deserializeFacetSettings
 
 // A copy-paste from the obsolete and incompatible
 // kotlin-jps-plugin-classpath-2.1.21.jar library

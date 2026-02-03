@@ -26,8 +26,16 @@ import com.jetbrains.ls.kotlinLsp.requests.core.shutdownRequest
 import com.jetbrains.ls.kotlinLsp.requests.features
 import com.jetbrains.ls.kotlinLsp.util.getSystemInfo
 import com.jetbrains.ls.snapshot.api.impl.core.withLSServerStarter
-import com.jetbrains.lsp.implementation.*
-import kotlinx.coroutines.*
+import com.jetbrains.lsp.implementation.LspConnection
+import com.jetbrains.lsp.implementation.LspHandlers
+import com.jetbrains.lsp.implementation.lspHandlers
+import com.jetbrains.lsp.implementation.withBaseProtocolFraming
+import com.jetbrains.lsp.implementation.withLsp
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.kotlin.idea.base.plugin.artifacts.KotlinArtifacts
 import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutMode
 import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutModeProvider
@@ -37,8 +45,13 @@ import java.lang.invoke.MethodHandles
 import java.net.URLDecoder
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.*
-import kotlin.io.path.*
+import java.util.ServiceLoader
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.createDirectories
+import kotlin.io.path.createTempDirectory
+import kotlin.io.path.div
+import kotlin.io.path.extension
+import kotlin.io.path.name
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {

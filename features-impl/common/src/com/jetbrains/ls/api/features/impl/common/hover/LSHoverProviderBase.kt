@@ -19,7 +19,13 @@ import com.jetbrains.ls.api.features.hover.LSHoverProvider
 import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
 import com.jetbrains.ls.api.features.impl.common.utils.getTargetsAtPosition
 import com.jetbrains.lsp.implementation.LspHandlerContext
-import com.jetbrains.lsp.protocol.*
+import com.jetbrains.lsp.protocol.Hover
+import com.jetbrains.lsp.protocol.HoverParams
+import com.jetbrains.lsp.protocol.MarkupContent
+import com.jetbrains.lsp.protocol.MarkupKindType
+import com.jetbrains.lsp.protocol.Position
+import com.jetbrains.lsp.protocol.Range
+import com.jetbrains.lsp.protocol.StringOrMarkupContent
 
 abstract class LSHoverProviderBase(
     private val targetKinds: Set<TargetKind>

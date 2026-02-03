@@ -8,7 +8,12 @@ import com.jetbrains.ls.api.features.impl.common.inlayHints.LSInlayHintsProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.lsp.protocol.InlayHintKind
 import org.jetbrains.kotlin.idea.codeInsight.hints.KotlinFqnDeclarativeInlayActionHandler
-import org.jetbrains.kotlin.idea.k2.codeinsight.hints.*
+import org.jetbrains.kotlin.idea.k2.codeinsight.hints.KtCallChainHintsProvider
+import org.jetbrains.kotlin.idea.k2.codeinsight.hints.KtDefaultParameterInlayHintsProvider
+import org.jetbrains.kotlin.idea.k2.codeinsight.hints.KtLambdasHintsProvider
+import org.jetbrains.kotlin.idea.k2.codeinsight.hints.KtParameterHintsProvider
+import org.jetbrains.kotlin.idea.k2.codeinsight.hints.KtReferencesTypeHintsProvider
+import org.jetbrains.kotlin.idea.k2.codeinsight.hints.KtValuesHintsProvider
 
 internal object LSKotlinInlayHintsProvider : LSInlayHintsProviderBase(
     supportedLanguages = setOf(LSKotlinLanguage),

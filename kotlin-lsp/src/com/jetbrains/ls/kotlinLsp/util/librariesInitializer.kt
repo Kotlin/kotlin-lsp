@@ -6,7 +6,7 @@ import com.intellij.openapi.projectRoots.DefaultJdkConfigurator
 import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
 import com.intellij.openapi.util.io.toNioPathOrNull
 import com.intellij.util.PathUtil
-import com.jetbrains.ls.api.core.util.*
+import com.jetbrains.ls.api.core.util.intellijUriToLspUri
 import com.jetbrains.ls.snapshot.api.impl.core.InitializeParamsEntity
 import com.jetbrains.lsp.protocol.URI
 import kotlinx.coroutines.ExperimentalCoroutinesApi

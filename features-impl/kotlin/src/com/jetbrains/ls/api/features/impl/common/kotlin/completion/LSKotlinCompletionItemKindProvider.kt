@@ -1,12 +1,18 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.kotlin.completion
 
-import com.intellij.psi.*
+import com.intellij.psi.PsiElement
 import com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider
 import com.jetbrains.lsp.protocol.CompletionItemKind
 import org.jetbrains.kotlin.asJava.unwrapped
 import org.jetbrains.kotlin.lexer.KtTokens
-import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtConstructor
+import org.jetbrains.kotlin.psi.KtEnumEntry
+import org.jetbrains.kotlin.psi.KtFunction
+import org.jetbrains.kotlin.psi.KtParameter
+import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.KtTypeParameter
 import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 
 internal class LSKotlinCompletionItemKindProvider : LSCompletionItemKindProvider {

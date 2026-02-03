@@ -1,7 +1,18 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.kotlinLsp.requests.core
 
-import com.intellij.modcommand.*
+import com.intellij.modcommand.ModChooseAction
+import com.intellij.modcommand.ModCommand
+import com.intellij.modcommand.ModCompositeCommand
+import com.intellij.modcommand.ModCreateFile
+import com.intellij.modcommand.ModDeleteFile
+import com.intellij.modcommand.ModDisplayMessage
+import com.intellij.modcommand.ModHighlight
+import com.intellij.modcommand.ModMoveFile
+import com.intellij.modcommand.ModNavigate
+import com.intellij.modcommand.ModNothing
+import com.intellij.modcommand.ModRegisterTabOut
+import com.intellij.modcommand.ModUpdateFileText
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.impl.DocumentImpl
 import com.intellij.openapi.vfs.VirtualFileManager
@@ -10,10 +21,24 @@ import com.jetbrains.ls.api.core.util.intellijUriToLspUri
 import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
 import com.jetbrains.lsp.implementation.LspClient
-import com.jetbrains.lsp.protocol.*
 import com.jetbrains.lsp.protocol.ApplyEditRequests.ApplyEdit
+import com.jetbrains.lsp.protocol.ApplyWorkspaceEditParams
+import com.jetbrains.lsp.protocol.CreateFile
+import com.jetbrains.lsp.protocol.DeleteFile
+import com.jetbrains.lsp.protocol.DocumentUri
+import com.jetbrains.lsp.protocol.MessageType
+import com.jetbrains.lsp.protocol.Range
+import com.jetbrains.lsp.protocol.RenameFile
+import com.jetbrains.lsp.protocol.ShowDocument
+import com.jetbrains.lsp.protocol.ShowDocumentParams
+import com.jetbrains.lsp.protocol.ShowMessageRequestParams
+import com.jetbrains.lsp.protocol.TextDocumentEdit
+import com.jetbrains.lsp.protocol.TextDocumentIdentifier
+import com.jetbrains.lsp.protocol.TextEdit
+import com.jetbrains.lsp.protocol.Window
+import com.jetbrains.lsp.protocol.WorkspaceEdit
 import kotlinx.serialization.Serializable
-import java.util.*
+import java.util.Base64
 
 /**
  * **Note**: [ModChooseAction] cannot be modeled with [ModCommandData];

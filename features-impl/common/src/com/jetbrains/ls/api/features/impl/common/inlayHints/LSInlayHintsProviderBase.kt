@@ -1,7 +1,23 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.inlayHints
 
-import com.intellij.codeInsight.hints.declarative.*
+import com.intellij.codeInsight.hints.declarative.AboveLineIndentedPosition
+import com.intellij.codeInsight.hints.declarative.CollapseState
+import com.intellij.codeInsight.hints.declarative.CollapsiblePresentationTreeBuilder
+import com.intellij.codeInsight.hints.declarative.EndOfLinePosition
+import com.intellij.codeInsight.hints.declarative.HintFormat
+import com.intellij.codeInsight.hints.declarative.InlayActionData
+import com.intellij.codeInsight.hints.declarative.InlayActionPayload
+import com.intellij.codeInsight.hints.declarative.InlayHintsProvider
+import com.intellij.codeInsight.hints.declarative.InlayPayload
+import com.intellij.codeInsight.hints.declarative.InlayPosition
+import com.intellij.codeInsight.hints.declarative.InlayTreeSink
+import com.intellij.codeInsight.hints.declarative.InlineInlayPosition
+import com.intellij.codeInsight.hints.declarative.PresentationTreeBuilder
+import com.intellij.codeInsight.hints.declarative.PsiPointerInlayActionNavigationHandler
+import com.intellij.codeInsight.hints.declarative.PsiPointerInlayActionPayload
+import com.intellij.codeInsight.hints.declarative.SharedBypassCollector
+import com.intellij.codeInsight.hints.declarative.StringInlayActionPayload
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.impl.ImaginaryEditor
@@ -27,7 +43,18 @@ import com.jetbrains.ls.api.features.utils.PsiSerializablePointer
 import com.jetbrains.ls.api.features.utils.toPsiPointer
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.lspClient
-import com.jetbrains.lsp.protocol.*
+import com.jetbrains.lsp.protocol.ConfigurationItem
+import com.jetbrains.lsp.protocol.ConfigurationParams
+import com.jetbrains.lsp.protocol.DocumentUri
+import com.jetbrains.lsp.protocol.InlayHint
+import com.jetbrains.lsp.protocol.InlayHintKind
+import com.jetbrains.lsp.protocol.InlayHintLabelPart
+import com.jetbrains.lsp.protocol.InlayHintParams
+import com.jetbrains.lsp.protocol.LSP
+import com.jetbrains.lsp.protocol.OrString
+import com.jetbrains.lsp.protocol.Position
+import com.jetbrains.lsp.protocol.TextDocumentIdentifier
+import com.jetbrains.lsp.protocol.Workspace
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.Flow

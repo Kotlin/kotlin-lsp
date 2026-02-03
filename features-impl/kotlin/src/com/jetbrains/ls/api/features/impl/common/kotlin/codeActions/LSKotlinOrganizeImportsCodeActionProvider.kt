@@ -4,10 +4,10 @@ package com.jetbrains.ls.api.features.impl.common.kotlin.codeActions
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
-import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
+import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.features.codeActions.LSSimpleCodeActionProvider
 import com.jetbrains.ls.api.features.codeActions.LSSimpleCodeActionProvider.NoData
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage

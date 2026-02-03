@@ -2,7 +2,7 @@
 package com.jetbrains.ls.api.features.semanticTokens
 
 import com.jetbrains.lsp.protocol.Range
-import java.util.*
+import java.util.Objects
 
 class LSSemanticTokenWithRange(
     val token: LSSemanticToken,

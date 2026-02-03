@@ -4,6 +4,7 @@ package com.jetbrains.ls.api.features.impl.common.kotlin.apiImpl.textEdits
 import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.features.textEdits.PsiFileTextEditsCollector
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
+import org.jetbrains.kotlin.analysis.api.projectStructure.analysisContextModule
 import org.jetbrains.kotlin.analysis.api.projectStructure.contextModule
 import org.jetbrains.kotlin.idea.base.projectStructure.getKaModule
 import org.jetbrains.kotlin.psi.KtPsiFactory

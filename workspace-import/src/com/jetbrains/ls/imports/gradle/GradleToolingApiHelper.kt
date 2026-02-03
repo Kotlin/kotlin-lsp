@@ -15,7 +15,7 @@ import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.*
+import java.util.Properties
 import kotlin.io.path.createTempFile
 import kotlin.io.path.isDirectory
 import kotlin.io.path.isRegularFile

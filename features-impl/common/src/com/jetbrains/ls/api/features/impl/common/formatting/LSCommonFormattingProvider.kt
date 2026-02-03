@@ -18,7 +18,12 @@ import com.jetbrains.ls.api.features.formatting.LSFormattingProvider
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.textEdits.PsiFileTextEditsCollector
 import com.jetbrains.lsp.implementation.LspHandlerContext
-import com.jetbrains.lsp.protocol.*
+import com.jetbrains.lsp.protocol.DocumentFormattingParams
+import com.jetbrains.lsp.protocol.DocumentRangeFormattingParams
+import com.jetbrains.lsp.protocol.FormattingOptions
+import com.jetbrains.lsp.protocol.Range
+import com.jetbrains.lsp.protocol.TextDocumentIdentifier
+import com.jetbrains.lsp.protocol.TextEdit
 
 class LSCommonFormattingProvider(
     override val supportedLanguages: Set<LSLanguage>

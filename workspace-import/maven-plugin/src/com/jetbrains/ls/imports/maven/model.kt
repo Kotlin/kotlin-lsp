@@ -3,7 +3,6 @@ package com.jetbrains.ls.imports.maven
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 
 /**
  * Copy-pasted from com.jetbrains.ls.imports.json.WorkspaceData

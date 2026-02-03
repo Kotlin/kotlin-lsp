@@ -21,17 +21,31 @@ import com.jetbrains.ls.api.features.symbols.LSWorkspaceSymbols
 import com.jetbrains.ls.api.features.typeDefinition.LSTypeDefinition
 import com.jetbrains.ls.api.features.typeHierarchy.LSTypeHierarchy
 import com.jetbrains.lsp.implementation.LspHandlersBuilder
-import com.jetbrains.lsp.protocol.*
 import com.jetbrains.lsp.protocol.CodeActions.CodeActionRequest
+import com.jetbrains.lsp.protocol.CommandOrCodeAction
 import com.jetbrains.lsp.protocol.Commands.ExecuteCommand
+import com.jetbrains.lsp.protocol.CompletionRequestType
+import com.jetbrains.lsp.protocol.CompletionResolveRequestType
+import com.jetbrains.lsp.protocol.CompletionResult
+import com.jetbrains.lsp.protocol.DefinitionRequestType
 import com.jetbrains.lsp.protocol.Diagnostics.DocumentDiagnosticRequestType
+import com.jetbrains.lsp.protocol.DocumentSymbolRequest
+import com.jetbrains.lsp.protocol.FormattingRequestType
+import com.jetbrains.lsp.protocol.HoverRequestType
+import com.jetbrains.lsp.protocol.Implementation
 import com.jetbrains.lsp.protocol.InlayHints.InlayHintRequestType
 import com.jetbrains.lsp.protocol.InlayHints.ResolveInlayHint
+import com.jetbrains.lsp.protocol.RangeFormattingRequestType
+import com.jetbrains.lsp.protocol.ReferenceRequestType
+import com.jetbrains.lsp.protocol.RenameRequestType
 import com.jetbrains.lsp.protocol.SemanticTokensRequests.SemanticTokensFullRequest
 import com.jetbrains.lsp.protocol.SemanticTokensRequests.SemanticTokensRangeRequest
+import com.jetbrains.lsp.protocol.SignatureHelpRequest
+import com.jetbrains.lsp.protocol.TypeDefinitionRequestType
 import com.jetbrains.lsp.protocol.TypeHierarchyRequests.PrepareTypeHierarchyRequestType
 import com.jetbrains.lsp.protocol.TypeHierarchyRequests.SubtypesRequestType
 import com.jetbrains.lsp.protocol.TypeHierarchyRequests.SupertypesRequestType
+import com.jetbrains.lsp.protocol.Workspace
 import com.jetbrains.lsp.protocol.WorkspaceSymbolRequests.WorkspaceSymbolRequest
 
 context(server: LSServer, configuration: LSConfiguration)

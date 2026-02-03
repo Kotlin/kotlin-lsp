@@ -1,7 +1,9 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.kotlinLsp
 
-import com.jetbrains.lsp.implementation.*
+import com.jetbrains.lsp.implementation.ByteWriter
+import com.jetbrains.lsp.implementation.LspConnection
+import com.jetbrains.lsp.implementation.cancel
 import io.ktor.utils.io.jvm.javaio.toByteReadChannel
 import io.ktor.utils.io.streams.asByteWriteChannel
 import kotlinx.coroutines.CoroutineScope

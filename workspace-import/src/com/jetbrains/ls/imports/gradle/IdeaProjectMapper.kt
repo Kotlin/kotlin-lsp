@@ -3,13 +3,29 @@ package com.jetbrains.ls.imports.gradle
 
 import com.jetbrains.ls.imports.gradle.action.ProjectMetadata
 import com.jetbrains.ls.imports.gradle.model.KotlinModule
-import com.jetbrains.ls.imports.json.*
+import com.jetbrains.ls.imports.json.ContentRootData
+import com.jetbrains.ls.imports.json.DependencyData
+import com.jetbrains.ls.imports.json.DependencyDataScope
+import com.jetbrains.ls.imports.json.JavaSettingsData
+import com.jetbrains.ls.imports.json.KotlinSettingsData
+import com.jetbrains.ls.imports.json.LibraryData
+import com.jetbrains.ls.imports.json.LibraryRootData
+import com.jetbrains.ls.imports.json.ModuleData
+import com.jetbrains.ls.imports.json.SdkData
+import com.jetbrains.ls.imports.json.SourceRootData
+import com.jetbrains.ls.imports.json.WorkspaceData
+import com.jetbrains.ls.imports.json.XmlElement
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.gradle.tooling.model.ExternalDependency
 import org.gradle.tooling.model.HierarchicalElement
 import org.gradle.tooling.model.UnsupportedMethodException
-import org.gradle.tooling.model.idea.*
+import org.gradle.tooling.model.idea.IdeaContentRoot
+import org.gradle.tooling.model.idea.IdeaDependency
+import org.gradle.tooling.model.idea.IdeaJavaLanguageSettings
+import org.gradle.tooling.model.idea.IdeaModule
+import org.gradle.tooling.model.idea.IdeaModuleDependency
+import org.gradle.tooling.model.idea.IdeaSingleEntryLibraryDependency
 
 internal object IdeaProjectMapper {
 

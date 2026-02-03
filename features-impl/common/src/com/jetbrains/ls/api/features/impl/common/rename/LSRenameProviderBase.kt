@@ -17,7 +17,12 @@ import com.intellij.psi.PsiFile
 import com.intellij.util.IncorrectOperationException
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
-import com.jetbrains.ls.api.core.util.*
+import com.jetbrains.ls.api.core.util.fileExtension
+import com.jetbrains.ls.api.core.util.fileName
+import com.jetbrains.ls.api.core.util.findVirtualFile
+import com.jetbrains.ls.api.core.util.offsetByPosition
+import com.jetbrains.ls.api.core.util.scheme
+import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.rename.LSRenameProvider
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.DiffGranularity
@@ -25,7 +30,17 @@ import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdit
 import com.jetbrains.lsp.implementation.LspException
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.throwLspError
-import com.jetbrains.lsp.protocol.*
+import com.jetbrains.lsp.protocol.DocumentUri
+import com.jetbrains.lsp.protocol.ErrorCodes
+import com.jetbrains.lsp.protocol.FileChange
+import com.jetbrains.lsp.protocol.FileRename
+import com.jetbrains.lsp.protocol.RenameFile
+import com.jetbrains.lsp.protocol.RenameParams
+import com.jetbrains.lsp.protocol.RenameRequestType
+import com.jetbrains.lsp.protocol.TextDocumentEdit
+import com.jetbrains.lsp.protocol.TextDocumentIdentifier
+import com.jetbrains.lsp.protocol.URI
+import com.jetbrains.lsp.protocol.WorkspaceEdit
 
 abstract class LSRenameProviderBase(
     override val supportedLanguages: Set<LSLanguage>,

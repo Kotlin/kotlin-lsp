@@ -10,7 +10,13 @@ import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.commands.document.LSDocumentCommandExecutor
 import com.jetbrains.lsp.implementation.LspHandlerContext
-import com.jetbrains.lsp.protocol.*
+import com.jetbrains.lsp.protocol.CodeAction
+import com.jetbrains.lsp.protocol.CodeActionKind
+import com.jetbrains.lsp.protocol.CodeActionParams
+import com.jetbrains.lsp.protocol.Command
+import com.jetbrains.lsp.protocol.DocumentUri
+import com.jetbrains.lsp.protocol.LSP
+import com.jetbrains.lsp.protocol.TextEdit
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.KSerializer

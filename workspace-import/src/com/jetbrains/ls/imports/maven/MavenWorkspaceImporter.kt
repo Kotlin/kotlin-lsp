@@ -14,7 +14,10 @@ import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
 import com.jetbrains.ls.imports.utils.runAndGetOK
 import java.nio.file.Path
-import kotlin.io.path.*
+import kotlin.io.path.createTempFile
+import kotlin.io.path.div
+import kotlin.io.path.exists
+import kotlin.io.path.writeText
 
 private val LOG = logger<MavenWorkspaceImporter>()
 
