@@ -28,14 +28,14 @@ import org.jetbrains.kotlin.idea.stubindex.KotlinExactPackagesIndex
 internal object LSKotlinPackageDefinitionProvider : LSDefinitionProvider {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSKotlinLanguage)
 
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override fun provideDefinitions(params: DefinitionParams): Flow<Location> = flow {
         val uri = params.textDocument.uri.uri
         server.withAnalysisContext {
             readAction {
-                val file = uri.findVirtualFile() ?: return@readAction emptyList()
-                val psiFile = file.findPsiFile(project) ?: return@readAction emptyList()
-                val document = file.findDocument() ?: return@readAction emptyList()
+                val virtualFile = uri.findVirtualFile() ?: return@readAction emptyList()
+                val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
+                val document = virtualFile.findDocument() ?: return@readAction emptyList()
                 val offset = document.offsetByPosition(params.position)
                 val reference = psiFile.findReferenceAt(offset) ?: return@readAction emptyList()
                 val psiPackage = (reference.resolve() as? PsiPackage) ?: return@readAction emptyList()

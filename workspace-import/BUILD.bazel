@@ -21,6 +21,7 @@ jvm_library(
   resources = [":language-server-project-import_resources"],
   kotlinc_opts = ":custom_language-server-project-import",
   deps = [
+    "@ultimate_lib//:language-server-project-import-gradle-tooling-api-provided",
     "@lib//:kotlin-stdlib",
     "@community//jps/model-serialization",
     "@community//platform/extensions",
@@ -47,6 +48,8 @@ jvm_library(
     "@community//platform/core-api:core",
     "@community//plugins/kotlin/base/plugin",
     "@community//libraries/jspecify",
+    "//language-server/community/workspace-import/gradle-plugin",
+    "@community//plugins/gradle",
   ]
 )
 ### auto-generated section `build language-server.project-import` end

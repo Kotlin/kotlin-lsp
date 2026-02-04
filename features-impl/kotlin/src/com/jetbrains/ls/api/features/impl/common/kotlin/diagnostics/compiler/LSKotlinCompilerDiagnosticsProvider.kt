@@ -38,12 +38,12 @@ internal object LSKotlinCompilerDiagnosticsProvider : LSDiagnosticProvider {
         val uri = params.textDocument.uri.uri
         server.withAnalysisContext {
             readAction {
-                val file = uri.findVirtualFile() ?: return@readAction emptyList()
-                val ktFile = file.findPsiFile(project) as? KtFile ?: return@readAction emptyList()
-                val document = file.findDocument() ?: return@readAction emptyList()
+                val virtualFile = uri.findVirtualFile() ?: return@readAction emptyList()
+                val ktFile = virtualFile.findPsiFile(project) as? KtFile ?: return@readAction emptyList()
+                val document = virtualFile.findDocument() ?: return@readAction emptyList()
                 analyze(ktFile) {
                     val diagnostics = ktFile.collectDiagnostics(filter = KaDiagnosticCheckerFilter.ONLY_COMMON_CHECKERS)
-                    diagnostics.flatMap { it.toLsp(document, file) }
+                    diagnostics.flatMap { it.toLsp(document, virtualFile) }
                 }
             }
         }.forEach { emit(it) }

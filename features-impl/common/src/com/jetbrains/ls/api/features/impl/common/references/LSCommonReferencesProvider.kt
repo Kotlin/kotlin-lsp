@@ -25,13 +25,13 @@ class LSCommonReferencesProvider(
     override val supportedLanguages: Set<LSLanguage>,
     private val targetKinds: Set<TargetKind>
 ) : LSReferencesProvider {
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getReferences(params: ReferenceParams): Flow<Location> = channelFlow {
         server.withAnalysisContext {
             readAction {
-                val file = params.findVirtualFile() ?: return@readAction
-                val psiFile = file.findPsiFile(project) ?: return@readAction
-                val document = file.findDocument() ?: return@readAction
+                val virtualFile = params.findVirtualFile() ?: return@readAction
+                val psiFile = virtualFile.findPsiFile(project) ?: return@readAction
+                val document = virtualFile.findDocument() ?: return@readAction
                 val targets = psiFile.getTargetsAtPosition(params.position, document, targetKinds)
                 if (targets.isEmpty()) return@readAction
 

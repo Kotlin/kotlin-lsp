@@ -4,6 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd)"
 OUT_DIR=$(realpath "$SCRIPT_DIR/../../../out")
+BUILD_EXTENSION_SCRIPT="$SCRIPT_DIR/buildExtension.sh"
 
 BUILD_INTELLIJ_LSP=false
 if [[ "$*" == *"--intellij"* ]]; then
@@ -16,6 +17,11 @@ if [ "$BUILD_INTELLIJ_LSP" = true ]; then
 else
     ARTIFACT_DIR="$OUT_DIR/jps-artifacts/language_server_kotlin_lsp_zip"
     BUILD_DIR="$OUT_DIR/vscode-extension/language_server_kotlin_lsp"
+fi
+
+if [[ ! -f "$BUILD_EXTENSION_SCRIPT" ]]; then
+  echo "Error: buildExtension script not found: $BUILD_EXTENSION_SCRIPT" >&2
+  exit 1
 fi
 
 FIRST_ZIP="$(find "$ARTIFACT_DIR" -type f -name '*.zip' -print -quit)"
@@ -44,27 +50,12 @@ for zip in "$ARTIFACT_DIR"/*.zip; do
     vsix_target_filename="$basename-$version-$platform.vsix"
 
     EXTENSION_DIR="$BUILD_DIR/vscode-$platform"
-    if [[ -d "$EXTENSION_DIR" ]]; then
-      rm -rf -- "$EXTENSION_DIR"
-    fi
-    mkdir -p "$EXTENSION_DIR"
-    cp -R "$SCRIPT_DIR/../kotlin-vscode/.nvmrc" "$EXTENSION_DIR"
-    cp -R "$SCRIPT_DIR/../kotlin-vscode/.vscodeignore" "$EXTENSION_DIR"
-    cp -R "$SCRIPT_DIR/../kotlin-vscode/icons" "$EXTENSION_DIR"
-    cp -R "$SCRIPT_DIR/../kotlin-vscode/"/*.js "$EXTENSION_DIR"
-    cp -R "$SCRIPT_DIR/../kotlin-vscode/"/*.json "$EXTENSION_DIR"
-    cp -R "$SCRIPT_DIR/../kotlin-vscode/LICENSE" "$EXTENSION_DIR"
-    cp -R "$SCRIPT_DIR/../kotlin-vscode/src" "$EXTENSION_DIR"
-    cp -R "$SCRIPT_DIR/../kotlin-vscode/syntaxes" "$EXTENSION_DIR"
-    pushd "$EXTENSION_DIR" > /dev/null
-    if [ "$BUILD_INTELLIJ_LSP" = true ]; then
-        echo "Applying internal package-patch.json..."
-        npm run apply-intellij
-    fi
+    export BUILD_DIR="$BUILD_DIR"
+    export EXTENSION_DIR="$EXTENSION_DIR"
+    export VSIX_TARGET_FILENAME="$vsix_target_filename"
+    export VSCE_VERSION="$version"
     export LSP_ZIP_PATH="$zip"
-    echo "Running npm install and npx vsce package..."
-    npm install
-    npx --yes vsce package "$version" --out "$BUILD_DIR/$vsix_target_filename" --baseContentUrl=https://github.com/Kotlin/kotlin-lsp/tree/main/kotlin-vscode
-    rm -rf "$EXTENSION_DIR"
-    popd > /dev/null
+    export APPLY_INTELLIJ_PATCH="$BUILD_INTELLIJ_LSP"
+
+    bash "$BUILD_EXTENSION_SCRIPT"
 done

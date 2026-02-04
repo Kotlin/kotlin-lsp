@@ -33,13 +33,13 @@ internal object LSKotlinSignatureHelpProvider : LSSignatureHelpProvider {
         KotlinHighLevelArrayAccessParameterInfoHandler(),
     ) as List<KotlinHighLevelParameterInfoWithCallHandlerBase<KtElement, out KtElement>>
 
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun getSignatureHelp(params: SignatureHelpParams): SignatureHelp? {
         return server.withAnalysisContext {
             readAction {
-                val file = params.findVirtualFile() ?: return@readAction null
-                val ktFile = file.findPsiFile() as? KtFile ?: return@readAction null
-                val document = file.findDocument() ?: return@readAction null
+                val virtualFile = params.findVirtualFile() ?: return@readAction null
+                val ktFile = virtualFile.findPsiFile() as? KtFile ?: return@readAction null
+                val document = virtualFile.findDocument() ?: return@readAction null
                 val offset = document.offsetByPosition(params.position)
                 for (handler in handlers) {
                     collectByHandler(handler, ktFile, offset)?.let { return@readAction it }

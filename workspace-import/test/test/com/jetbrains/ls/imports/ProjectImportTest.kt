@@ -64,9 +64,7 @@ class ProjectImportTest {
     fun simpleMaven() = doMavenTest("SimpleMaven")
 
     private fun doGradleTest(project: String) {
-        downloadGradleBinaries().let { path ->
-            GradleWorkspaceImporter.useGradleAndJava(path, Path.of(System.getProperty("java.home")))
-        }
+        downloadGradleBinaries()
         doTest(project, GradleWorkspaceImporter, testDataDir / "gradle")
     }
 

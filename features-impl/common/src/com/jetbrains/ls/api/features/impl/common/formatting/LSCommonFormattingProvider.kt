@@ -36,9 +36,9 @@ class LSCommonFormattingProvider(
     context(server: LSServer)
     private suspend fun format(textDocument: TextDocumentIdentifier, options: FormattingOptions, range: Range?): List<TextEdit>? {
         return server.withAnalysisContext {
-            val file = readAction { textDocument.findVirtualFile() } ?: return@withAnalysisContext null
-            val document = readAction { file.findDocument() } ?: return@withAnalysisContext null
-            PsiFileTextEditsCollector.collectTextEdits(file) { psiFile ->
+            val virtualFile = readAction { textDocument.findVirtualFile() } ?: return@withAnalysisContext null
+            val document = readAction { virtualFile.findDocument() } ?: return@withAnalysisContext null
+            PsiFileTextEditsCollector.collectTextEdits(virtualFile) { psiFile ->
                 val textRange = when (range) {
                     null -> TextRange(0, psiFile.textLength)
                     else -> range.toTextRange(document)

@@ -3,7 +3,7 @@ package com.jetbrains.ls.api.features.impl.javaBase
 
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaDocumentedElement
-import com.jetbrains.ls.api.features.impl.common.documentaiton.formatDocComment
+import com.jetbrains.ls.api.features.impl.common.documentation.formatDocComment
 import com.jetbrains.ls.api.features.impl.common.hover.LSHoverProviderBase
 import com.jetbrains.ls.api.features.impl.common.hover.markdownMultilineCode
 

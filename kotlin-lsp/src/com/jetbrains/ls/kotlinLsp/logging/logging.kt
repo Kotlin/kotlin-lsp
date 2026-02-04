@@ -6,38 +6,47 @@ import com.intellij.openapi.diagnostic.IdeaLogRecordFormatter
 import com.intellij.openapi.diagnostic.LogLevel
 import com.intellij.openapi.diagnostic.Logger
 import com.jetbrains.ls.kotlinLsp.connection.Client
-import com.jetbrains.lsp.protocol.*
+import com.jetbrains.lsp.protocol.LogMessageNotificationType
+import com.jetbrains.lsp.protocol.LogMessageParams
+import com.jetbrains.lsp.protocol.LogTraceNotificationType
+import com.jetbrains.lsp.protocol.LogTraceParams
+import com.jetbrains.lsp.protocol.MessageType
+import com.jetbrains.lsp.protocol.TraceValue
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.util.concurrent.ConcurrentHashMap
 
+/**
+ * From Javadoc of [java.util.logging.Logger.getLogger]:
+ *
+ * > The LogManager may only retain a weak reference to the newly created Logger.
+ * > It is important to understand that a previously created Logger with the given name may be garbage collected at any time if there is no strong reference to the Logger.
+ *
+ * The only purpose of this list is to keep strong references to the loggers created, so they aren't garbage collected at random times.
+ * This seems ugly. If you know a better approach, please refactor and document accordingly.
+ */
+private val loggers = mutableListOf<java.util.logging.Logger>()
 
-fun initKotlinLspLogger(writeToStdOut: Boolean) {
-    Logger.setFactory(KotlinLspLoggerFactory(writeToStdOut))
+/**
+ * Configures java.util.logging (JUL) loggers with hierarchical level inheritance.
+ *
+ * JUL provides automatic hierarchy: `com.foo.bar` inherits from `com.foo` when log level is not explicitly set on the former.
+ */
+fun initKotlinLspLogger(writeToStdout: Boolean, defaultLogLevel: LogLevel, logCategories: Map<String, LogLevel> = emptyMap()) {
+    // Set root logger as default for all unspecified categories
+    java.util.logging.Logger.getLogger("").level = defaultLogLevel.level
+
+    for ((category, level) in logCategories) {
+        java.util.logging.Logger.getLogger(category).level = level.level
+        loggers.add(java.util.logging.Logger.getLogger(category))
+        // Also set for "#category" pattern used by Logger.getInstance(Class)
+        java.util.logging.Logger.getLogger("#$category").level = level.level
+        loggers.add(java.util.logging.Logger.getLogger("#$category"))
+    }
+
+    Logger.setFactory { category -> LspLogger(category, writeToStdout) }
     com.intellij.serviceContainer.checkServiceFromWriteAccess = false
     com.intellij.codeInsight.multiverse.logMultiverseState = false
-}
-
-private class KotlinLspLoggerFactory(private val writeToStdOut: Boolean) : Logger.Factory {
-    private val levels = LoggingLevelsByCategory()
-
-    override fun getLoggerInstance(category: String): Logger = LspLogger(category, writeToStdOut, levels)
-}
-
-private class LoggingLevelsByCategory {
-    // TODO PersistentHashMap may be faster as we have low write rate here and high read-rate
-    private val levels = ConcurrentHashMap<String, LogLevel>()
-
-    fun getLevel(category: String): LogLevel = levels[category] ?: DEFAULT
-
-    fun setLevel(category: String, level: LogLevel) {
-        levels[category] = level
-    }
-
-    companion object {
-        val DEFAULT = LogLevel.INFO
-    }
 }
 
 /**
@@ -50,27 +59,38 @@ private class LoggingLevelsByCategory {
 private class LspLogger(
     private val category: String,
     private val writeToStdOut: Boolean,
-    private val levels: LoggingLevelsByCategory,
 ) : Logger() {
     private val logCreation: Long = System.currentTimeMillis()
     private val withDateTime: Boolean = true
 
     /**
-     * [level] does not affect `$/logTrace` notifications.
+     * Uses JUL's hierarchical level inheritance.
+     *
+     * When the log level is not set on this logger, JUL walks up the parent chain.
      */
-    private val level: LogLevel
-        get() = levels.getLevel(category)
+    private fun isLoggable(level: LogLevel): Boolean {
+        val logger: java.util.logging.Logger = java.util.logging.Logger.getLogger(category)
+        return logger.isLoggable(level.level)
+    }
 
     override fun setLevel(level: LogLevel) {
-        levels.setLevel(category, level)
+        java.util.logging.Logger.getLogger(category).level = level.level
     }
 
     override fun isDebugEnabled(): Boolean {
-        return shouldLog(LogLevel.DEBUG) || currentTraceValue() != TraceValue.Off
+        return isLoggable(LogLevel.DEBUG) || currentTraceValue() != TraceValue.Off
     }
 
     override fun isTraceEnabled(): Boolean {
-        return shouldLog(LogLevel.TRACE) || currentTraceValue() != TraceValue.Off
+        return isLoggable(LogLevel.TRACE) || currentTraceValue() != TraceValue.Off
+    }
+
+    override fun trace(message: String?) {
+        log(LogLevel.TRACE, message, null)
+    }
+
+    override fun trace(t: Throwable?) {
+        log(LogLevel.TRACE, null, t)
     }
 
     override fun debug(message: String?, t: Throwable?) {
@@ -89,9 +109,9 @@ private class LspLogger(
         log(LogLevel.ERROR, message, t, details)
     }
 
-    private fun log(level: LogLevel, message: String?, t: Throwable?, details: Array<out String?> = emptyArray()) {
-        if (!shouldLog(level)) return
-        val messageRendered by lazy(LazyThreadSafetyMode.NONE) {
+    private fun log(level: LogLevel, message: String?, throwable: Throwable?, details: Array<out String?> = emptyArray()) {
+        if (!isLoggable(level)) return
+        val renderedMessage by lazy(LazyThreadSafetyMode.NONE) {
             buildString {
                 val currentMillis = System.currentTimeMillis()
                 if (withDateTime) {
@@ -120,12 +140,12 @@ private class LspLogger(
                 append(" - ")
                 append(message)
 
-                if (t != null) {
+                if (throwable != null) {
                     appendLine()
-                    appendLine(t.message)
-                    append(t.stackTraceToString())
+                    appendLine(throwable.message)
+                    append(throwable.stackTraceToString())
                     try {
-                        attachmentsToString(t).takeIf { it.isNotEmpty() }?.let { appendLine(); append(it) }
+                        attachmentsToString(throwable).takeIf { it.isNotEmpty() }?.let { appendLine(); append(it) }
                     } catch (_: Throwable) {
                     }
                 }
@@ -137,45 +157,56 @@ private class LspLogger(
             }
         }
 
-        if (writeToStdOut && shouldLog(level)) {
-            println(messageRendered)
+        // Possible log destination #1: stdout
+        if (writeToStdOut) {
+            println(renderedMessage)
         }
 
+        // Possible log destination #2: the connected client
         Client.current?.let { client ->
-            fun logMessage(messageType: MessageType) {
-                client.lspClient.notifyAsync(
-                    notificationType = LogMessageNotification,
-                    params = LogMessageParams(messageType, messageRendered),
-                )
-            }
-            when (level) {
-                LogLevel.OFF -> {}
-                LogLevel.ERROR -> logMessage(MessageType.Error)
-                LogLevel.WARNING -> logMessage(MessageType.Warning)
-                LogLevel.INFO -> logMessage(MessageType.Info)
-                LogLevel.DEBUG, LogLevel.TRACE -> {
-                    // send debug trace to the client
-                    val shouldNotifyForDebug = when (client.trace) {
-                        TraceValue.Off, null -> false
-                        TraceValue.Messages, TraceValue.Verbose -> true
-                    }
-                    if (shouldNotifyForDebug) {
-                        client.lspClient.notifyAsync(
-                            notificationType = LogTraceNotificationType,
-                            params = LogTraceParams(messageRendered, verbose = null/*TODO LSP-229 provide more details here?*/)
-                        )
-                    }
-                }
-
-                LogLevel.ALL -> {}
-            }
+            sendLogToClient(client, level, renderedMessage)
         }
-        if (t != null && shouldRethrow(t)) {
-            throw t
+
+        if (throwable != null && shouldRethrow(throwable)) {
+            throw throwable
+        }
+    }
+
+    /**
+     * Sends an LSP notification containing [renderedMessage] to the connected [client].
+     */
+    private fun sendLogToClient(client: Client, level: LogLevel, renderedMessage: String) {
+        fun logMessage(messageType: MessageType) {
+            client.lspClient.notifyAsync(
+                notificationType = LogMessageNotificationType,
+                params = LogMessageParams(messageType, renderedMessage),
+            )
+        }
+        when (level) {
+            LogLevel.OFF -> {}
+            LogLevel.ERROR -> logMessage(MessageType.Error)
+            LogLevel.WARNING -> logMessage(MessageType.Warning)
+            LogLevel.INFO -> logMessage(MessageType.Info)
+            LogLevel.DEBUG, LogLevel.TRACE -> {
+                // send debug trace to the client
+                val shouldNotifyForDebug = when (client.trace) {
+                    TraceValue.Off, null -> false
+                    TraceValue.Messages, TraceValue.Verbose -> true
+                }
+                if (shouldNotifyForDebug) {
+                    client.lspClient.notifyAsync(
+                        notificationType = LogTraceNotificationType,
+                        params = LogTraceParams(
+                            message = renderedMessage,
+                            verbose = null, // TODO: LSP-229 provide more details here?
+                        ),
+                    )
+                }
+            }
+
+            LogLevel.ALL -> {}
         }
     }
 
     private fun currentTraceValue(): TraceValue = Client.current?.trace ?: TraceValue.Off
-
-    private fun shouldLog(level: LogLevel): Boolean = level <= this.level
 }

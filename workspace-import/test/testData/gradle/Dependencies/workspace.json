@@ -1,6 +1,9 @@
 {
     "modules": [
         {
+            "name": "kotlin-dependency-example"
+        },
+        {
             "name": "kotlin-dependency-example.main",
             "dependencies": [
                 {
@@ -102,7 +105,7 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/",
+                    "path": "<WORKSPACE>/src/main",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/src/main/java",
@@ -337,7 +340,7 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/",
+                    "path": "<WORKSPACE>/src/test",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/src/test/java",
@@ -359,7 +362,7 @@
     "libraries": [
         {
             "name": "Gradle: ch.qos.logback:logback-classic:1.4.11",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/ch.qos.logback/logback-classic/1.4.11/#####/logback-classic-1.4.11.jar"
@@ -380,7 +383,7 @@
         },
         {
             "name": "Gradle: ch.qos.logback:logback-core:1.4.11",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/ch.qos.logback/logback-core/1.4.11/#####/logback-core-1.4.11.jar"
@@ -401,7 +404,7 @@
         },
         {
             "name": "Gradle: com.google.code.findbugs:jsr305:3.0.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.google.code.findbugs/jsr305/3.0.2/#####/jsr305-3.0.2.jar"
@@ -422,7 +425,7 @@
         },
         {
             "name": "Gradle: com.google.errorprone:error_prone_annotations:2.18.0",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.google.errorprone/error_prone_annotations/2.18.0/#####/error_prone_annotations-2.18.0.jar"
@@ -443,7 +446,7 @@
         },
         {
             "name": "Gradle: com.google.guava:failureaccess:1.0.1",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.google.guava/failureaccess/1.0.1/#####/failureaccess-1.0.1.jar"
@@ -464,7 +467,7 @@
         },
         {
             "name": "Gradle: com.google.guava:guava:32.1.1-jre",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.google.guava/guava/32.1.1-jre/#####/guava-32.1.1-jre.jar"
@@ -485,7 +488,7 @@
         },
         {
             "name": "Gradle: com.google.j2objc:j2objc-annotations:2.8",
-            "type": "java-imported",
+            "type": "PROVIDED",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.google.j2objc/j2objc-annotations/2.8/#####/j2objc-annotations-2.8.jar"
@@ -506,7 +509,7 @@
         },
         {
             "name": "Gradle: com.squareup.moshi:moshi:1.15.0",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.squareup.moshi/moshi/1.15.0/#####/moshi-1.15.0.jar"
@@ -527,7 +530,7 @@
         },
         {
             "name": "Gradle: com.squareup.okio:okio:2.10.0",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.squareup.okio/okio/2.10.0/#####/okio-jvm-2.10.0.jar"
@@ -548,7 +551,7 @@
         },
         {
             "name": "Gradle: io.mockk:mockk-agent-api-jvm:1.13.7",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/io.mockk/mockk-agent-api-jvm/1.13.7/#####/mockk-agent-api-jvm-1.13.7.jar"
@@ -569,7 +572,7 @@
         },
         {
             "name": "Gradle: io.mockk:mockk-agent-jvm:1.13.7",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/io.mockk/mockk-agent-jvm/1.13.7/#####/mockk-agent-jvm-1.13.7.jar"
@@ -590,7 +593,7 @@
         },
         {
             "name": "Gradle: io.mockk:mockk-core-jvm:1.13.7",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/io.mockk/mockk-core-jvm/1.13.7/#####/mockk-core-jvm-1.13.7.jar"
@@ -611,7 +614,7 @@
         },
         {
             "name": "Gradle: io.mockk:mockk-dsl-jvm:1.13.7",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/io.mockk/mockk-dsl-jvm/1.13.7/#####/mockk-dsl-jvm-1.13.7.jar"
@@ -632,7 +635,7 @@
         },
         {
             "name": "Gradle: io.mockk:mockk-jvm:1.13.7",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/io.mockk/mockk-jvm/1.13.7/#####/mockk-jvm-1.13.7.jar"
@@ -653,7 +656,7 @@
         },
         {
             "name": "Gradle: junit:junit:4.13.2",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/junit/junit/4.13.2/#####/junit-4.13.2.jar"
@@ -674,7 +677,7 @@
         },
         {
             "name": "Gradle: net.bytebuddy:byte-buddy-agent:1.12.20",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/net.bytebuddy/byte-buddy-agent/1.12.20/#####/byte-buddy-agent-1.12.20.jar"
@@ -695,7 +698,7 @@
         },
         {
             "name": "Gradle: net.bytebuddy:byte-buddy:1.12.20",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/net.bytebuddy/byte-buddy/1.12.20/#####/byte-buddy-1.12.20.jar"
@@ -716,7 +719,7 @@
         },
         {
             "name": "Gradle: org.apache.commons:commons-lang3:3.12.0",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.commons/commons-lang3/3.12.0/#####/commons-lang3-3.12.0.jar"
@@ -737,7 +740,7 @@
         },
         {
             "name": "Gradle: org.apiguardian:apiguardian-api:1.1.2",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apiguardian/apiguardian-api/1.1.2/#####/apiguardian-api-1.1.2.jar"
@@ -758,7 +761,7 @@
         },
         {
             "name": "Gradle: org.checkerframework:checker-qual:3.33.0",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.checkerframework/checker-qual/3.33.0/#####/checker-qual-3.33.0.jar"
@@ -779,7 +782,7 @@
         },
         {
             "name": "Gradle: org.hamcrest:hamcrest-core:1.3",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/#####/hamcrest-core-1.3.jar"
@@ -800,7 +803,7 @@
         },
         {
             "name": "Gradle: org.jetbrains.kotlin:kotlin-reflect:1.8.20",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-reflect/1.8.20/#####/kotlin-reflect-1.8.20.jar"
@@ -821,7 +824,7 @@
         },
         {
             "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.21",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-jdk7/1.8.21/#####/kotlin-stdlib-jdk7-1.8.21.jar"
@@ -842,7 +845,7 @@
         },
         {
             "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.21",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-jdk8/1.8.21/#####/kotlin-stdlib-jdk8-1.8.21.jar"
@@ -863,7 +866,7 @@
         },
         {
             "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.2.0/#####/kotlin-stdlib-2.2.0.jar"
@@ -884,7 +887,7 @@
         },
         {
             "name": "Gradle: org.jetbrains.kotlin:kotlin-test-junit5:2.2.0",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-test-junit5/2.2.0/#####/kotlin-test-junit5-2.2.0.jar"
@@ -905,7 +908,7 @@
         },
         {
             "name": "Gradle: org.jetbrains.kotlin:kotlin-test:2.2.0",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-test/2.2.0/#####/kotlin-test-2.2.0.jar"
@@ -926,7 +929,7 @@
         },
         {
             "name": "Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.1",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-core-jvm/1.7.1/#####/kotlinx-coroutines-core-jvm-1.7.1.jar"
@@ -947,7 +950,7 @@
         },
         {
             "name": "Gradle: org.jetbrains:annotations:23.0.0",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/23.0.0/#####/annotations-23.0.0.jar"
@@ -968,7 +971,7 @@
         },
         {
             "name": "Gradle: org.junit.jupiter:junit-jupiter-api:5.10.1",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-api/5.10.1/#####/junit-jupiter-api-5.10.1.jar"
@@ -989,7 +992,7 @@
         },
         {
             "name": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.10.1",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-engine/5.10.1/#####/junit-jupiter-engine-5.10.1.jar"
@@ -1010,7 +1013,7 @@
         },
         {
             "name": "Gradle: org.junit.jupiter:junit-jupiter-params:5.10.1",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-params/5.10.1/#####/junit-jupiter-params-5.10.1.jar"
@@ -1031,7 +1034,7 @@
         },
         {
             "name": "Gradle: org.junit.jupiter:junit-jupiter:5.10.1",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter/5.10.1/#####/junit-jupiter-5.10.1.jar"
@@ -1052,7 +1055,7 @@
         },
         {
             "name": "Gradle: org.junit.platform:junit-platform-commons:1.10.1",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-commons/1.10.1/#####/junit-platform-commons-1.10.1.jar"
@@ -1073,7 +1076,7 @@
         },
         {
             "name": "Gradle: org.junit.platform:junit-platform-engine:1.10.1",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-engine/1.10.1/#####/junit-platform-engine-1.10.1.jar"
@@ -1094,7 +1097,7 @@
         },
         {
             "name": "Gradle: org.junit.platform:junit-platform-launcher:1.10.1",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-launcher/1.10.1/#####/junit-platform-launcher-1.10.1.jar"
@@ -1115,7 +1118,7 @@
         },
         {
             "name": "Gradle: org.objenesis:objenesis:3.3",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.objenesis/objenesis/3.3/#####/objenesis-3.3.jar"
@@ -1136,7 +1139,7 @@
         },
         {
             "name": "Gradle: org.opentest4j:opentest4j:1.3.0",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.opentest4j/opentest4j/1.3.0/#####/opentest4j-1.3.0.jar"
@@ -1157,7 +1160,7 @@
         },
         {
             "name": "Gradle: org.projectlombok:lombok:1.18.28",
-            "type": "java-imported",
+            "type": "PROVIDED",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.projectlombok/lombok/1.18.28/#####/lombok-1.18.28.jar"
@@ -1178,7 +1181,7 @@
         },
         {
             "name": "Gradle: org.slf4j:slf4j-api:2.0.7",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.slf4j/slf4j-api/2.0.7/#####/slf4j-api-2.0.7.jar"
@@ -1202,9 +1205,9 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/src/main/resources",
                 "<WORKSPACE>/src/main/java",
-                "<WORKSPACE>/src/main/kotlin"
+                "<WORKSPACE>/src/main/kotlin",
+                "<WORKSPACE>/src/main/resources"
             ],
             "configFileItems": [],
             "module": "kotlin-dependency-example.main",
@@ -1216,11 +1219,11 @@
             "testOutputPath": null,
             "sourceSetNames": [],
             "isTestModule": false,
-            "externalProjectId": ":kotlin-dependency-example:unspecified",
+            "externalProjectId": "kotlin-dependency-example.main",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"21\"}",
+            "compilerArguments": "J{\"jvmTarget\":\"21\",\"pluginOptions\":[],\"pluginClasspath\":[]}",
             "additionalArguments": null,
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
@@ -1233,27 +1236,25 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/src/test/resources",
                 "<WORKSPACE>/src/test/java",
-                "<WORKSPACE>/src/test/kotlin"
+                "<WORKSPACE>/src/test/kotlin",
+                "<WORKSPACE>/src/test/resources"
             ],
             "configFileItems": [],
             "module": "kotlin-dependency-example.test",
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [
-                "kotlin-dependency-example.main"
-            ],
+            "additionalVisibleModuleNames": [],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],
             "isTestModule": true,
-            "externalProjectId": ":kotlin-dependency-example:unspecified",
+            "externalProjectId": "kotlin-dependency-example.test",
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"21\"}",
+            "compilerArguments": "J{\"jvmTarget\":\"21\",\"pluginOptions\":[],\"pluginClasspath\":[]}",
             "additionalArguments": null,
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,

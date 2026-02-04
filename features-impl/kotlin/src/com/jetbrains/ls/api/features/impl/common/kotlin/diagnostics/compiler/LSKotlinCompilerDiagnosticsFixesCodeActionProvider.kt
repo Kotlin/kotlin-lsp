@@ -7,7 +7,6 @@ import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.impl.ImaginaryEditor
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.jetbrains.ls.api.core.LSServer
@@ -17,6 +16,8 @@ import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.diagnosticData
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDescriptorProvider
+import com.jetbrains.ls.api.features.impl.common.modcommands.combinedPresentationNames
+import com.jetbrains.ls.api.features.impl.common.modcommands.flattenChoiceActions
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
 import com.jetbrains.lsp.implementation.LspHandlerContext
@@ -35,7 +36,7 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
     override val providesOnlyKinds: Set<CodeActionKind> = setOf(CodeActionKind.QuickFix)
 
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val diagnosticData = params.diagnosticData<KotlinCompilerDiagnosticData>().ifEmpty { return@flow }
 
@@ -43,10 +44,10 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
         server.withWritableFile(uri) {
             server.withAnalysisContext {
                 readAction {
-                    val file = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
+                    val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
                     val quickFixService = KotlinQuickFixService.getInstance()
-                    val ktFile = file.findPsiFile(project) as? KtFile ?: return@readAction emptyList()
-                    val document = file.findDocument() ?: return@readAction emptyList()
+                    val ktFile = virtualFile.findPsiFile(project) as? KtFile ?: return@readAction emptyList()
+                    val document = virtualFile.findDocument() ?: return@readAction emptyList()
                     analyze(ktFile) {
                         val kaDiagnostics = ktFile.collectDiagnostics(filter = KaDiagnosticCheckerFilter.ONLY_COMMON_CHECKERS)
                         if (kaDiagnostics.isEmpty()) return@analyze emptyList()
@@ -58,7 +59,6 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
                             val kaDiagnostic = kaDiagnostics.firstOrNull { data.data.matches(it) } ?: continue
                             with(quickFixService) {
                                 result += getQuickFixesAsCodeActions(
-                                    project,
                                     ktFile,
                                     editor,
                                     kaDiagnostic,
@@ -75,7 +75,6 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
 
     context(kaSession: KaSession)
     private fun KotlinQuickFixService.getQuickFixesAsCodeActions(
-        project: Project,
         file: KtFile,
         editor: Editor,
         kaDiagnostic: KaDiagnosticWithPsi<*>,
@@ -85,23 +84,24 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
             .mapNotNull { fixes ->
                 fixes.getOrHandleException { LOG.warn(it) }
             }
-            .filter { intentionAction ->
-                runCatching {
-                    // this call may also compute some text inside the intention
-                    intentionAction.isAvailable(project, editor, file)
-                }.getOrHandleException { LOG.warn(it) } ?: false
-            }
             .mapNotNull { intentionAction ->
                 val modCommandAction = intentionAction.asModCommandAction()
                 if (modCommandAction == null) {
                     LOG.warn("Cannot convert $intentionAction to ModCommandAction")
-                    return@mapNotNull null
                 }
-                val modCommand = modCommandAction.perform(ActionContext.from(editor, file))
+                modCommandAction
+            }
+            .flatMap { modCommandAction ->
+                val context = ActionContext.from(editor, file)
+
+                modCommandAction.flattenChoiceActions(context)
+            }
+            .mapNotNull { modCommandActionChain ->
+                val modCommand = modCommandActionChain.leaf.command
                 val modCommandData = ModCommandData.from(modCommand) ?: return@mapNotNull null
 
                 CodeAction(
-                    intentionAction.text,
+                    modCommandActionChain.combinedPresentationNames(),
                     CodeActionKind.QuickFix,
                     diagnostics = listOf(lspDiagnostic),
                     command = Command(

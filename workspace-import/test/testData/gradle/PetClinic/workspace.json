@@ -1,6 +1,9 @@
 {
     "modules": [
         {
+            "name": "PetClinic"
+        },
+        {
             "name": "PetClinic.main",
             "dependencies": [
                 {
@@ -472,7 +475,7 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/",
+                    "path": "<WORKSPACE>/src/main",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/src/main/java",
@@ -1323,7 +1326,7 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/",
+                    "path": "<WORKSPACE>/src/test",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/src/test/java",
@@ -1341,7 +1344,7 @@
     "libraries": [
         {
             "name": "Gradle: ch.qos.logback:logback-classic:1.5.16",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/ch.qos.logback/logback-classic/1.5.16/#####/logback-classic-1.5.16.jar"
@@ -1362,7 +1365,7 @@
         },
         {
             "name": "Gradle: ch.qos.logback:logback-core:1.5.16",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/ch.qos.logback/logback-core/1.5.16/#####/logback-core-1.5.16.jar"
@@ -1383,7 +1386,7 @@
         },
         {
             "name": "Gradle: com.fasterxml.jackson.core:jackson-annotations:2.18.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.18.2/#####/jackson-annotations-2.18.2.jar"
@@ -1404,7 +1407,7 @@
         },
         {
             "name": "Gradle: com.fasterxml.jackson.core:jackson-core:2.18.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-core/2.18.2/#####/jackson-core-2.18.2.jar"
@@ -1425,7 +1428,7 @@
         },
         {
             "name": "Gradle: com.fasterxml.jackson.core:jackson-databind:2.18.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.18.2/#####/jackson-databind-2.18.2.jar"
@@ -1446,7 +1449,7 @@
         },
         {
             "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.18.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-jdk8/2.18.2/#####/jackson-datatype-jdk8-2.18.2.jar"
@@ -1467,7 +1470,7 @@
         },
         {
             "name": "Gradle: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-jsr310/2.18.2/#####/jackson-datatype-jsr310-2.18.2.jar"
@@ -1488,7 +1491,7 @@
         },
         {
             "name": "Gradle: com.fasterxml.jackson.module:jackson-module-parameter-names:2.18.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.fasterxml.jackson.module/jackson-module-parameter-names/2.18.2/#####/jackson-module-parameter-names-2.18.2.jar"
@@ -1509,7 +1512,7 @@
         },
         {
             "name": "Gradle: com.fasterxml:classmate:1.7.0",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.fasterxml/classmate/1.7.0/#####/classmate-1.7.0.jar"
@@ -1530,7 +1533,7 @@
         },
         {
             "name": "Gradle: com.github.ben-manes.caffeine:caffeine:3.1.8",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.github.ben-manes.caffeine/caffeine/3.1.8/#####/caffeine-3.1.8.jar"
@@ -1551,7 +1554,7 @@
         },
         {
             "name": "Gradle: com.github.docker-java:docker-java-api:3.4.0",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.github.docker-java/docker-java-api/3.4.0/#####/docker-java-api-3.4.0.jar"
@@ -1572,7 +1575,7 @@
         },
         {
             "name": "Gradle: com.github.docker-java:docker-java-transport-zerodep:3.4.0",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.github.docker-java/docker-java-transport-zerodep/3.4.0/#####/docker-java-transport-zerodep-3.4.0.jar"
@@ -1593,7 +1596,7 @@
         },
         {
             "name": "Gradle: com.github.docker-java:docker-java-transport:3.4.0",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.github.docker-java/docker-java-transport/3.4.0/#####/docker-java-transport-3.4.0.jar"
@@ -1614,7 +1617,7 @@
         },
         {
             "name": "Gradle: com.google.errorprone:error_prone_annotations:2.21.1",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.google.errorprone/error_prone_annotations/2.21.1/#####/error_prone_annotations-2.21.1.jar"
@@ -1635,7 +1638,7 @@
         },
         {
             "name": "Gradle: com.h2database:h2:2.3.232",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.h2database/h2/2.3.232/#####/h2-2.3.232.jar"
@@ -1656,7 +1659,7 @@
         },
         {
             "name": "Gradle: com.jayway.jsonpath:json-path:2.9.0",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.jayway.jsonpath/json-path/2.9.0/#####/json-path-2.9.0.jar"
@@ -1677,7 +1680,7 @@
         },
         {
             "name": "Gradle: com.mysql:mysql-connector-j:9.1.0",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.mysql/mysql-connector-j/9.1.0/#####/mysql-connector-j-9.1.0.jar"
@@ -1698,7 +1701,7 @@
         },
         {
             "name": "Gradle: com.sun.istack:istack-commons-runtime:4.1.2",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.sun.istack/istack-commons-runtime/4.1.2/#####/istack-commons-runtime-4.1.2.jar"
@@ -1719,7 +1722,7 @@
         },
         {
             "name": "Gradle: com.vaadin.external.google:android-json:0.0.20131108.vaadin1",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.vaadin.external.google/android-json/0.0.20131108.vaadin1/#####/android-json-0.0.20131108.vaadin1.jar"
@@ -1740,7 +1743,7 @@
         },
         {
             "name": "Gradle: com.zaxxer:HikariCP:5.1.0",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.zaxxer/HikariCP/5.1.0/#####/HikariCP-5.1.0.jar"
@@ -1761,7 +1764,7 @@
         },
         {
             "name": "Gradle: io.micrometer:micrometer-commons:1.14.3",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/io.micrometer/micrometer-commons/1.14.3/#####/micrometer-commons-1.14.3.jar"
@@ -1782,7 +1785,7 @@
         },
         {
             "name": "Gradle: io.micrometer:micrometer-core:1.14.3",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/io.micrometer/micrometer-core/1.14.3/#####/micrometer-core-1.14.3.jar"
@@ -1803,7 +1806,7 @@
         },
         {
             "name": "Gradle: io.micrometer:micrometer-jakarta9:1.14.3",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/io.micrometer/micrometer-jakarta9/1.14.3/#####/micrometer-jakarta9-1.14.3.jar"
@@ -1824,7 +1827,7 @@
         },
         {
             "name": "Gradle: io.micrometer:micrometer-observation:1.14.3",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/io.micrometer/micrometer-observation/1.14.3/#####/micrometer-observation-1.14.3.jar"
@@ -1845,7 +1848,7 @@
         },
         {
             "name": "Gradle: io.projectreactor:reactor-core:3.7.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/io.projectreactor/reactor-core/3.7.2/#####/reactor-core-3.7.2.jar"
@@ -1866,7 +1869,7 @@
         },
         {
             "name": "Gradle: io.smallrye:jandex:3.2.0",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/io.smallrye/jandex/3.2.0/#####/jandex-3.2.0.jar"
@@ -1887,7 +1890,7 @@
         },
         {
             "name": "Gradle: jakarta.activation:jakarta.activation-api:2.1.3",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/jakarta.activation/jakarta.activation-api/2.1.3/#####/jakarta.activation-api-2.1.3.jar"
@@ -1908,7 +1911,7 @@
         },
         {
             "name": "Gradle: jakarta.annotation:jakarta.annotation-api:2.1.1",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/jakarta.annotation/jakarta.annotation-api/2.1.1/#####/jakarta.annotation-api-2.1.1.jar"
@@ -1929,7 +1932,7 @@
         },
         {
             "name": "Gradle: jakarta.inject:jakarta.inject-api:2.0.1",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/jakarta.inject/jakarta.inject-api/2.0.1/#####/jakarta.inject-api-2.0.1.jar"
@@ -1950,7 +1953,7 @@
         },
         {
             "name": "Gradle: jakarta.persistence:jakarta.persistence-api:3.1.0",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/jakarta.persistence/jakarta.persistence-api/3.1.0/#####/jakarta.persistence-api-3.1.0.jar"
@@ -1971,7 +1974,7 @@
         },
         {
             "name": "Gradle: jakarta.transaction:jakarta.transaction-api:2.0.1",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/jakarta.transaction/jakarta.transaction-api/2.0.1/#####/jakarta.transaction-api-2.0.1.jar"
@@ -1992,7 +1995,7 @@
         },
         {
             "name": "Gradle: jakarta.validation:jakarta.validation-api:3.0.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/jakarta.validation/jakarta.validation-api/3.0.2/#####/jakarta.validation-api-3.0.2.jar"
@@ -2013,7 +2016,7 @@
         },
         {
             "name": "Gradle: jakarta.xml.bind:jakarta.xml.bind-api:4.0.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/jakarta.xml.bind/jakarta.xml.bind-api/4.0.2/#####/jakarta.xml.bind-api-4.0.2.jar"
@@ -2034,7 +2037,7 @@
         },
         {
             "name": "Gradle: javax.cache:cache-api:1.1.1",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/javax.cache/cache-api/1.1.1/#####/cache-api-1.1.1.jar"
@@ -2055,7 +2058,7 @@
         },
         {
             "name": "Gradle: junit:junit:4.13.2",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/junit/junit/4.13.2/#####/junit-4.13.2.jar"
@@ -2076,7 +2079,7 @@
         },
         {
             "name": "Gradle: net.bytebuddy:byte-buddy-agent:1.15.11",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/net.bytebuddy/byte-buddy-agent/1.15.11/#####/byte-buddy-agent-1.15.11.jar"
@@ -2097,7 +2100,7 @@
         },
         {
             "name": "Gradle: net.bytebuddy:byte-buddy:1.15.11",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/net.bytebuddy/byte-buddy/1.15.11/#####/byte-buddy-1.15.11.jar"
@@ -2118,7 +2121,7 @@
         },
         {
             "name": "Gradle: net.java.dev.jna:jna:5.13.0",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/net.java.dev.jna/jna/5.13.0/#####/jna-5.13.0.jar"
@@ -2139,7 +2142,7 @@
         },
         {
             "name": "Gradle: net.minidev:accessors-smart:2.5.1",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/net.minidev/accessors-smart/2.5.1/#####/accessors-smart-2.5.1.jar"
@@ -2160,7 +2163,7 @@
         },
         {
             "name": "Gradle: net.minidev:json-smart:2.5.1",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/net.minidev/json-smart/2.5.1/#####/json-smart-2.5.1.jar"
@@ -2181,7 +2184,7 @@
         },
         {
             "name": "Gradle: org.antlr:antlr4-runtime:4.13.0",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.antlr/antlr4-runtime/4.13.0/#####/antlr4-runtime-4.13.0.jar"
@@ -2202,7 +2205,7 @@
         },
         {
             "name": "Gradle: org.apache.commons:commons-compress:1.24.0",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.commons/commons-compress/1.24.0/#####/commons-compress-1.24.0.jar"
@@ -2223,7 +2226,7 @@
         },
         {
             "name": "Gradle: org.apache.logging.log4j:log4j-api:2.24.3",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.logging.log4j/log4j-api/2.24.3/#####/log4j-api-2.24.3.jar"
@@ -2244,7 +2247,7 @@
         },
         {
             "name": "Gradle: org.apache.logging.log4j:log4j-to-slf4j:2.24.3",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.logging.log4j/log4j-to-slf4j/2.24.3/#####/log4j-to-slf4j-2.24.3.jar"
@@ -2265,7 +2268,7 @@
         },
         {
             "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:10.1.34",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.tomcat.embed/tomcat-embed-core/10.1.34/#####/tomcat-embed-core-10.1.34.jar"
@@ -2286,7 +2289,7 @@
         },
         {
             "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-el:10.1.34",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.tomcat.embed/tomcat-embed-el/10.1.34/#####/tomcat-embed-el-10.1.34.jar"
@@ -2307,7 +2310,7 @@
         },
         {
             "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-websocket:10.1.34",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.tomcat.embed/tomcat-embed-websocket/10.1.34/#####/tomcat-embed-websocket-10.1.34.jar"
@@ -2328,7 +2331,7 @@
         },
         {
             "name": "Gradle: org.apiguardian:apiguardian-api:1.1.2",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apiguardian/apiguardian-api/1.1.2/#####/apiguardian-api-1.1.2.jar"
@@ -2349,7 +2352,7 @@
         },
         {
             "name": "Gradle: org.aspectj:aspectjweaver:1.9.22.1",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.aspectj/aspectjweaver/1.9.22.1/#####/aspectjweaver-1.9.22.1.jar"
@@ -2370,7 +2373,7 @@
         },
         {
             "name": "Gradle: org.assertj:assertj-core:3.26.3",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.assertj/assertj-core/3.26.3/#####/assertj-core-3.26.3.jar"
@@ -2391,7 +2394,7 @@
         },
         {
             "name": "Gradle: org.attoparser:attoparser:2.0.7.RELEASE",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.attoparser/attoparser/2.0.7.RELEASE/#####/attoparser-2.0.7.RELEASE.jar"
@@ -2412,7 +2415,7 @@
         },
         {
             "name": "Gradle: org.awaitility:awaitility:4.2.2",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.awaitility/awaitility/4.2.2/#####/awaitility-4.2.2.jar"
@@ -2433,7 +2436,7 @@
         },
         {
             "name": "Gradle: org.checkerframework:checker-qual:3.48.3",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.checkerframework/checker-qual/3.48.3/#####/checker-qual-3.48.3.jar"
@@ -2454,7 +2457,7 @@
         },
         {
             "name": "Gradle: org.eclipse.angus:angus-activation:2.0.2",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.eclipse.angus/angus-activation/2.0.2/#####/angus-activation-2.0.2.jar"
@@ -2475,7 +2478,7 @@
         },
         {
             "name": "Gradle: org.glassfish.jaxb:jaxb-core:4.0.5",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.glassfish.jaxb/jaxb-core/4.0.5/#####/jaxb-core-4.0.5.jar"
@@ -2496,7 +2499,7 @@
         },
         {
             "name": "Gradle: org.glassfish.jaxb:jaxb-runtime:4.0.5",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.glassfish.jaxb/jaxb-runtime/4.0.5/#####/jaxb-runtime-4.0.5.jar"
@@ -2517,7 +2520,7 @@
         },
         {
             "name": "Gradle: org.glassfish.jaxb:txw2:4.0.5",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.glassfish.jaxb/txw2/4.0.5/#####/txw2-4.0.5.jar"
@@ -2538,7 +2541,7 @@
         },
         {
             "name": "Gradle: org.graalvm.buildtools:junit-platform-native:0.10.3",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.graalvm.buildtools/junit-platform-native/0.10.3/#####/junit-platform-native-0.10.3.jar"
@@ -2559,7 +2562,7 @@
         },
         {
             "name": "Gradle: org.hamcrest:hamcrest-core:2.2",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.hamcrest/hamcrest-core/2.2/#####/hamcrest-core-2.2.jar"
@@ -2580,7 +2583,7 @@
         },
         {
             "name": "Gradle: org.hamcrest:hamcrest:2.2",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.hamcrest/hamcrest/2.2/#####/hamcrest-2.2.jar"
@@ -2601,7 +2604,7 @@
         },
         {
             "name": "Gradle: org.hdrhistogram:HdrHistogram:2.2.2",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.hdrhistogram/HdrHistogram/2.2.2/#####/HdrHistogram-2.2.2.jar"
@@ -2622,7 +2625,7 @@
         },
         {
             "name": "Gradle: org.hibernate.common:hibernate-commons-annotations:7.0.3.Final",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.hibernate.common/hibernate-commons-annotations/7.0.3.Final/#####/hibernate-commons-annotations-7.0.3.Final.jar"
@@ -2643,7 +2646,7 @@
         },
         {
             "name": "Gradle: org.hibernate.orm:hibernate-core:6.6.5.Final",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.hibernate.orm/hibernate-core/6.6.5.Final/#####/hibernate-core-6.6.5.Final.jar"
@@ -2664,7 +2667,7 @@
         },
         {
             "name": "Gradle: org.hibernate.validator:hibernate-validator:8.0.2.Final",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.hibernate.validator/hibernate-validator/8.0.2.Final/#####/hibernate-validator-8.0.2.Final.jar"
@@ -2685,7 +2688,7 @@
         },
         {
             "name": "Gradle: org.jboss.logging:jboss-logging:3.6.1.Final",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jboss.logging/jboss-logging/3.6.1.Final/#####/jboss-logging-3.6.1.Final.jar"
@@ -2706,7 +2709,7 @@
         },
         {
             "name": "Gradle: org.jetbrains:annotations:17.0.0",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/17.0.0/#####/annotations-17.0.0.jar"
@@ -2727,7 +2730,7 @@
         },
         {
             "name": "Gradle: org.jspecify:jspecify:1.0.0",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jspecify/jspecify/1.0.0/#####/jspecify-1.0.0.jar"
@@ -2748,7 +2751,7 @@
         },
         {
             "name": "Gradle: org.junit.jupiter:junit-jupiter-api:5.11.4",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-api/5.11.4/#####/junit-jupiter-api-5.11.4.jar"
@@ -2769,7 +2772,7 @@
         },
         {
             "name": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.11.4",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-engine/5.11.4/#####/junit-jupiter-engine-5.11.4.jar"
@@ -2790,7 +2793,7 @@
         },
         {
             "name": "Gradle: org.junit.jupiter:junit-jupiter-params:5.11.4",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-params/5.11.4/#####/junit-jupiter-params-5.11.4.jar"
@@ -2811,7 +2814,7 @@
         },
         {
             "name": "Gradle: org.junit.jupiter:junit-jupiter:5.11.4",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter/5.11.4/#####/junit-jupiter-5.11.4.jar"
@@ -2832,7 +2835,7 @@
         },
         {
             "name": "Gradle: org.junit.platform:junit-platform-commons:1.11.4",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-commons/1.11.4/#####/junit-platform-commons-1.11.4.jar"
@@ -2853,7 +2856,7 @@
         },
         {
             "name": "Gradle: org.junit.platform:junit-platform-console:1.11.4",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-console/1.11.4/#####/junit-platform-console-1.11.4.jar"
@@ -2874,7 +2877,7 @@
         },
         {
             "name": "Gradle: org.junit.platform:junit-platform-engine:1.11.4",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-engine/1.11.4/#####/junit-platform-engine-1.11.4.jar"
@@ -2895,7 +2898,7 @@
         },
         {
             "name": "Gradle: org.junit.platform:junit-platform-launcher:1.11.4",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-launcher/1.11.4/#####/junit-platform-launcher-1.11.4.jar"
@@ -2916,7 +2919,7 @@
         },
         {
             "name": "Gradle: org.junit.platform:junit-platform-reporting:1.11.4",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-reporting/1.11.4/#####/junit-platform-reporting-1.11.4.jar"
@@ -2937,7 +2940,7 @@
         },
         {
             "name": "Gradle: org.latencyutils:LatencyUtils:2.0.3",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.latencyutils/LatencyUtils/2.0.3/#####/LatencyUtils-2.0.3.jar"
@@ -2958,7 +2961,7 @@
         },
         {
             "name": "Gradle: org.mockito:mockito-core:5.14.2",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.mockito/mockito-core/5.14.2/#####/mockito-core-5.14.2.jar"
@@ -2979,7 +2982,7 @@
         },
         {
             "name": "Gradle: org.mockito:mockito-junit-jupiter:5.14.2",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.mockito/mockito-junit-jupiter/5.14.2/#####/mockito-junit-jupiter-5.14.2.jar"
@@ -3000,7 +3003,7 @@
         },
         {
             "name": "Gradle: org.objenesis:objenesis:3.3",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.objenesis/objenesis/3.3/#####/objenesis-3.3.jar"
@@ -3021,7 +3024,7 @@
         },
         {
             "name": "Gradle: org.opentest4j:opentest4j:1.3.0",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.opentest4j/opentest4j/1.3.0/#####/opentest4j-1.3.0.jar"
@@ -3042,7 +3045,7 @@
         },
         {
             "name": "Gradle: org.ow2.asm:asm:9.6",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.ow2.asm/asm/9.6/#####/asm-9.6.jar"
@@ -3063,7 +3066,7 @@
         },
         {
             "name": "Gradle: org.postgresql:postgresql:42.7.5",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.postgresql/postgresql/42.7.5/#####/postgresql-42.7.5.jar"
@@ -3084,7 +3087,7 @@
         },
         {
             "name": "Gradle: org.reactivestreams:reactive-streams:1.0.4",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.reactivestreams/reactive-streams/1.0.4/#####/reactive-streams-1.0.4.jar"
@@ -3105,7 +3108,7 @@
         },
         {
             "name": "Gradle: org.rnorth.duct-tape:duct-tape:1.0.8",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.rnorth.duct-tape/duct-tape/1.0.8/#####/duct-tape-1.0.8.jar"
@@ -3126,7 +3129,7 @@
         },
         {
             "name": "Gradle: org.skyscreamer:jsonassert:1.5.3",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.skyscreamer/jsonassert/1.5.3/#####/jsonassert-1.5.3.jar"
@@ -3147,7 +3150,7 @@
         },
         {
             "name": "Gradle: org.slf4j:jul-to-slf4j:2.0.16",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.slf4j/jul-to-slf4j/2.0.16/#####/jul-to-slf4j-2.0.16.jar"
@@ -3168,7 +3171,7 @@
         },
         {
             "name": "Gradle: org.slf4j:slf4j-api:2.0.16",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.slf4j/slf4j-api/2.0.16/#####/slf4j-api-2.0.16.jar"
@@ -3189,7 +3192,7 @@
         },
         {
             "name": "Gradle: org.springframework.boot:spring-boot-actuator-autoconfigure:3.4.2",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot-actuator-autoconfigure/3.4.2/#####/spring-boot-actuator-autoconfigure-3.4.2.jar"
@@ -3210,7 +3213,7 @@
         },
         {
             "name": "Gradle: org.springframework.boot:spring-boot-actuator:3.4.2",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot-actuator/3.4.2/#####/spring-boot-actuator-3.4.2.jar"
@@ -3231,7 +3234,7 @@
         },
         {
             "name": "Gradle: org.springframework.boot:spring-boot-autoconfigure:3.4.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot-autoconfigure/3.4.2/#####/spring-boot-autoconfigure-3.4.2.jar"
@@ -3252,7 +3255,7 @@
         },
         {
             "name": "Gradle: org.springframework.boot:spring-boot-devtools:3.4.2",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot-devtools/3.4.2/#####/spring-boot-devtools-3.4.2.jar"
@@ -3273,7 +3276,7 @@
         },
         {
             "name": "Gradle: org.springframework.boot:spring-boot-docker-compose:3.4.2",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot-docker-compose/3.4.2/#####/spring-boot-docker-compose-3.4.2.jar"
@@ -3294,7 +3297,7 @@
         },
         {
             "name": "Gradle: org.springframework.boot:spring-boot-starter-actuator:3.4.2",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-actuator/3.4.2/#####/spring-boot-starter-actuator-3.4.2.jar"
@@ -3315,7 +3318,7 @@
         },
         {
             "name": "Gradle: org.springframework.boot:spring-boot-starter-cache:3.4.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-cache/3.4.2/#####/spring-boot-starter-cache-3.4.2.jar"
@@ -3336,7 +3339,7 @@
         },
         {
             "name": "Gradle: org.springframework.boot:spring-boot-starter-data-jpa:3.4.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-data-jpa/3.4.2/#####/spring-boot-starter-data-jpa-3.4.2.jar"
@@ -3357,7 +3360,7 @@
         },
         {
             "name": "Gradle: org.springframework.boot:spring-boot-starter-jdbc:3.4.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-jdbc/3.4.2/#####/spring-boot-starter-jdbc-3.4.2.jar"
@@ -3378,7 +3381,7 @@
         },
         {
             "name": "Gradle: org.springframework.boot:spring-boot-starter-json:3.4.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-json/3.4.2/#####/spring-boot-starter-json-3.4.2.jar"
@@ -3399,7 +3402,7 @@
         },
         {
             "name": "Gradle: org.springframework.boot:spring-boot-starter-logging:3.4.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-logging/3.4.2/#####/spring-boot-starter-logging-3.4.2.jar"
@@ -3420,7 +3423,7 @@
         },
         {
             "name": "Gradle: org.springframework.boot:spring-boot-starter-test:3.4.2",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-test/3.4.2/#####/spring-boot-starter-test-3.4.2.jar"
@@ -3441,7 +3444,7 @@
         },
         {
             "name": "Gradle: org.springframework.boot:spring-boot-starter-thymeleaf:3.4.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-thymeleaf/3.4.2/#####/spring-boot-starter-thymeleaf-3.4.2.jar"
@@ -3462,7 +3465,7 @@
         },
         {
             "name": "Gradle: org.springframework.boot:spring-boot-starter-tomcat:3.4.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-tomcat/3.4.2/#####/spring-boot-starter-tomcat-3.4.2.jar"
@@ -3483,7 +3486,7 @@
         },
         {
             "name": "Gradle: org.springframework.boot:spring-boot-starter-validation:3.4.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-validation/3.4.2/#####/spring-boot-starter-validation-3.4.2.jar"
@@ -3504,7 +3507,7 @@
         },
         {
             "name": "Gradle: org.springframework.boot:spring-boot-starter-web:3.4.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot-starter-web/3.4.2/#####/spring-boot-starter-web-3.4.2.jar"
@@ -3525,7 +3528,7 @@
         },
         {
             "name": "Gradle: org.springframework.boot:spring-boot-starter:3.4.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot-starter/3.4.2/#####/spring-boot-starter-3.4.2.jar"
@@ -3546,7 +3549,7 @@
         },
         {
             "name": "Gradle: org.springframework.boot:spring-boot-test-autoconfigure:3.4.2",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot-test-autoconfigure/3.4.2/#####/spring-boot-test-autoconfigure-3.4.2.jar"
@@ -3567,7 +3570,7 @@
         },
         {
             "name": "Gradle: org.springframework.boot:spring-boot-test:3.4.2",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot-test/3.4.2/#####/spring-boot-test-3.4.2.jar"
@@ -3588,7 +3591,7 @@
         },
         {
             "name": "Gradle: org.springframework.boot:spring-boot-testcontainers:3.4.2",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot-testcontainers/3.4.2/#####/spring-boot-testcontainers-3.4.2.jar"
@@ -3609,7 +3612,7 @@
         },
         {
             "name": "Gradle: org.springframework.boot:spring-boot:3.4.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot/3.4.2/#####/spring-boot-3.4.2.jar"
@@ -3630,7 +3633,7 @@
         },
         {
             "name": "Gradle: org.springframework.data:spring-data-commons:3.4.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.data/spring-data-commons/3.4.2/#####/spring-data-commons-3.4.2.jar"
@@ -3651,7 +3654,7 @@
         },
         {
             "name": "Gradle: org.springframework.data:spring-data-jpa:3.4.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.data/spring-data-jpa/3.4.2/#####/spring-data-jpa-3.4.2.jar"
@@ -3672,7 +3675,7 @@
         },
         {
             "name": "Gradle: org.springframework:spring-aop:6.2.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-aop/6.2.2/#####/spring-aop-6.2.2.jar"
@@ -3693,7 +3696,7 @@
         },
         {
             "name": "Gradle: org.springframework:spring-aspects:6.2.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-aspects/6.2.2/#####/spring-aspects-6.2.2.jar"
@@ -3714,7 +3717,7 @@
         },
         {
             "name": "Gradle: org.springframework:spring-beans:6.2.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-beans/6.2.2/#####/spring-beans-6.2.2.jar"
@@ -3735,7 +3738,7 @@
         },
         {
             "name": "Gradle: org.springframework:spring-context-support:6.2.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-context-support/6.2.2/#####/spring-context-support-6.2.2.jar"
@@ -3756,7 +3759,7 @@
         },
         {
             "name": "Gradle: org.springframework:spring-context:6.2.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-context/6.2.2/#####/spring-context-6.2.2.jar"
@@ -3777,7 +3780,7 @@
         },
         {
             "name": "Gradle: org.springframework:spring-core:6.2.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-core/6.2.2/#####/spring-core-6.2.2.jar"
@@ -3798,7 +3801,7 @@
         },
         {
             "name": "Gradle: org.springframework:spring-expression:6.2.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-expression/6.2.2/#####/spring-expression-6.2.2.jar"
@@ -3819,7 +3822,7 @@
         },
         {
             "name": "Gradle: org.springframework:spring-jcl:6.2.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-jcl/6.2.2/#####/spring-jcl-6.2.2.jar"
@@ -3840,7 +3843,7 @@
         },
         {
             "name": "Gradle: org.springframework:spring-jdbc:6.2.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-jdbc/6.2.2/#####/spring-jdbc-6.2.2.jar"
@@ -3861,7 +3864,7 @@
         },
         {
             "name": "Gradle: org.springframework:spring-orm:6.2.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-orm/6.2.2/#####/spring-orm-6.2.2.jar"
@@ -3882,7 +3885,7 @@
         },
         {
             "name": "Gradle: org.springframework:spring-test:6.2.2",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-test/6.2.2/#####/spring-test-6.2.2.jar"
@@ -3903,7 +3906,7 @@
         },
         {
             "name": "Gradle: org.springframework:spring-tx:6.2.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-tx/6.2.2/#####/spring-tx-6.2.2.jar"
@@ -3924,7 +3927,7 @@
         },
         {
             "name": "Gradle: org.springframework:spring-web:6.2.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-web/6.2.2/#####/spring-web-6.2.2.jar"
@@ -3945,7 +3948,7 @@
         },
         {
             "name": "Gradle: org.springframework:spring-webmvc:6.2.2",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-webmvc/6.2.2/#####/spring-webmvc-6.2.2.jar"
@@ -3966,7 +3969,7 @@
         },
         {
             "name": "Gradle: org.testcontainers:database-commons:1.20.4",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.testcontainers/database-commons/1.20.4/#####/database-commons-1.20.4.jar"
@@ -3987,7 +3990,7 @@
         },
         {
             "name": "Gradle: org.testcontainers:jdbc:1.20.4",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.testcontainers/jdbc/1.20.4/#####/jdbc-1.20.4.jar"
@@ -4008,7 +4011,7 @@
         },
         {
             "name": "Gradle: org.testcontainers:junit-jupiter:1.20.4",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.testcontainers/junit-jupiter/1.20.4/#####/junit-jupiter-1.20.4.jar"
@@ -4029,7 +4032,7 @@
         },
         {
             "name": "Gradle: org.testcontainers:mysql:1.20.4",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.testcontainers/mysql/1.20.4/#####/mysql-1.20.4.jar"
@@ -4050,7 +4053,7 @@
         },
         {
             "name": "Gradle: org.testcontainers:testcontainers:1.20.4",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.testcontainers/testcontainers/1.20.4/#####/testcontainers-1.20.4.jar"
@@ -4071,7 +4074,7 @@
         },
         {
             "name": "Gradle: org.thymeleaf:thymeleaf-spring6:3.1.3.RELEASE",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.thymeleaf/thymeleaf-spring6/3.1.3.RELEASE/#####/thymeleaf-spring6-3.1.3.RELEASE.jar"
@@ -4092,7 +4095,7 @@
         },
         {
             "name": "Gradle: org.thymeleaf:thymeleaf:3.1.3.RELEASE",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.thymeleaf/thymeleaf/3.1.3.RELEASE/#####/thymeleaf-3.1.3.RELEASE.jar"
@@ -4113,7 +4116,7 @@
         },
         {
             "name": "Gradle: org.unbescape:unbescape:1.1.6.RELEASE",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.unbescape/unbescape/1.1.6.RELEASE/#####/unbescape-1.1.6.RELEASE.jar"
@@ -4134,7 +4137,7 @@
         },
         {
             "name": "Gradle: org.webjars.npm:bootstrap:5.3.3",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.webjars.npm/bootstrap/5.3.3/#####/bootstrap-5.3.3.jar"
@@ -4155,7 +4158,7 @@
         },
         {
             "name": "Gradle: org.webjars.npm:font-awesome:4.7.0",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.webjars.npm/font-awesome/4.7.0/#####/font-awesome-4.7.0.jar"
@@ -4176,7 +4179,7 @@
         },
         {
             "name": "Gradle: org.webjars:webjars-locator-lite:1.0.1",
-            "type": "java-imported",
+            "type": "RUNTIME",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.webjars/webjars-locator-lite/1.0.1/#####/webjars-locator-lite-1.0.1.jar"
@@ -4197,7 +4200,7 @@
         },
         {
             "name": "Gradle: org.xmlunit:xmlunit-core:2.10.0",
-            "type": "java-imported",
+            "type": "TEST",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.xmlunit/xmlunit-core/2.10.0/#####/xmlunit-core-2.10.0.jar"
@@ -4218,7 +4221,7 @@
         },
         {
             "name": "Gradle: org.yaml:snakeyaml:2.3",
-            "type": "java-imported",
+            "type": "COMPILE",
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.yaml/snakeyaml/2.3/#####/snakeyaml-2.3.jar"

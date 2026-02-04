@@ -65,9 +65,9 @@ abstract class LSInlayHintsProviderBase(
 
         server.withAnalysisContext {
             readAction {
-                val file = params.textDocument.findVirtualFile() ?: return@readAction
-                val psiFile = file.findPsiFile(project) ?: return@readAction
-                val document = file.findDocument() ?: return@readAction
+                val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction
+                val psiFile = virtualFile.findPsiFile(project) ?: return@readAction
+                val document = virtualFile.findDocument() ?: return@readAction
                 val textRange = params.range.toTextRange(document)
                 val editor = ImaginaryEditor(project, document)
 
@@ -106,9 +106,9 @@ abstract class LSInlayHintsProviderBase(
         val data = LSP.json.decodeFromJsonElement(InlayHintResolveData.serializer(), dataJson)
         return server.withAnalysisContext {
             readAction {
-                val file = data.params.textDocument.findVirtualFile() ?: return@readAction null
-                val psiFile = file.findPsiFile(project) ?: return@readAction null
-                val document = file.findDocument() ?: return@readAction null
+                val virtualFile = data.params.textDocument.findVirtualFile() ?: return@readAction null
+                val psiFile = virtualFile.findPsiFile(project) ?: return@readAction null
+                val document = virtualFile.findDocument() ?: return@readAction null
                 val provider = createProviders(data.options)[data.providerIndex]
                 provider.factory.resolveHint(hint, data.presentation, psiFile, document, data.options)
             }

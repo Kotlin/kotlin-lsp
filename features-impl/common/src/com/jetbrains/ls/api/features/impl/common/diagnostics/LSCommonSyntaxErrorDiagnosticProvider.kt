@@ -23,17 +23,17 @@ import com.jetbrains.lsp.protocol.StringOrInt
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-class LSSyntaxErrorDiagnosticProvider(
+class LSCommonSyntaxErrorDiagnosticProvider(
     override val supportedLanguages: Set<LSLanguage>,
 ) : LSDiagnosticProvider {
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
         if (!params.textDocument.isSource()) return@flow
         server.withAnalysisContext {
             readAction {
-                val file = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
-                val document = file.findDocument() ?: return@readAction emptyList()
-                val psiFile = file.findPsiFile(project) ?: return@readAction emptyList()
+                val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
+                val document = virtualFile.findDocument() ?: return@readAction emptyList()
+                val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
                 getSyntaxErrors(psiFile, document)
             }
         }.forEach { diagnostic -> emit(diagnostic) }

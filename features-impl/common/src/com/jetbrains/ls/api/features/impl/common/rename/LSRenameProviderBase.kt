@@ -39,14 +39,14 @@ abstract class LSRenameProviderBase(
         private val LOG = logger<LSRenameProviderBase>()
     }
 
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun rename(params: RenameParams): WorkspaceEdit {
         val changes: List<FileChange> = server.withWriteAnalysisContext {
             val context = readAction {
-                val file = params.findVirtualFile() ?: return@readAction null
-                val document = file.findDocument() ?: return@readAction null
+                val virtualFile = params.findVirtualFile() ?: return@readAction null
+                val document = virtualFile.findDocument() ?: return@readAction null
                 val offset = document.offsetByPosition(params.position)
-                val psiFile = file.findPsiFile(project) ?: return@readAction null
+                val psiFile = virtualFile.findPsiFile(project) ?: return@readAction null
                 val targets = extractTargets(psiFile, offset)
                 val target = targets.firstOrNull(::isAllowedToRename)
                     ?: throwLspError(RenameRequestType, "This element cannot be renamed", Unit, ErrorCodes.InvalidParams, null)
@@ -65,7 +65,7 @@ abstract class LSRenameProviderBase(
         return targetSymbols(psiFile, offset).mapNotNull { psiSymbolService.extractElementFromSymbol(it) }
     }
 
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun renameFile(params: FileRename): WorkspaceEdit? {
         val edits = server.withWriteAnalysisContext {
             val context = readAction {
@@ -73,8 +73,8 @@ abstract class LSRenameProviderBase(
                 if (params.newUri.findVirtualFile() != null) return@readAction null
 
                 val nameChange = computeNameChange(params.oldUri, params.newUri) ?: return@readAction null
-                val file = params.oldUri.findVirtualFile() ?: return@readAction null
-                val psiFile = file.findPsiFile(project) ?: return@readAction null
+                val virtualFile = params.oldUri.findVirtualFile() ?: return@readAction null
+                val psiFile = virtualFile.findPsiFile(project) ?: return@readAction null
                 val target = getTargetClass(psiFile, nameChange.oldName) ?: return@readAction null
                 Context(target, nameChange.newName, DiffGranularity.WORD, params.oldUri)
             } ?: return@withWriteAnalysisContext null
@@ -98,7 +98,7 @@ abstract class LSRenameProviderBase(
             }
 
             val processor = Renamer(target.project, target, newName, true, false)
-            processor.usages.map { it.file }.distinct().filterNotNull().forEach { originals[it] = it.text}
+            processor.usages.map { it.file }.distinct().filterNotNull().forEach { originals[it] = it.text }
             processor
         } ?: return null
 
@@ -184,6 +184,6 @@ abstract class LSRenameProviderBase(
         val target: PsiElement,
         val newName: String,
         val granularity: DiffGranularity,
-        val uriToSkip : URI? = null
+        val uriToSkip: URI? = null
     )
 }

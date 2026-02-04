@@ -31,13 +31,13 @@ class LSCommonDefinitionProvider(
     override val supportedLanguages: Set<LSLanguage>,
     private val targetKinds: Set<TargetKind>,
 ) : LSDefinitionProvider {
-    context(server: LSServer, _: LspHandlerContext)
+    context(server: LSServer, handlerContext: LspHandlerContext)
     override fun provideDefinitions(params: DefinitionParams): Flow<Location> = flow {
         server.withAnalysisContext(params.textDocument.uri.uri) {
             readAction {
-                val file = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
-                val psiFile = file.findPsiFile(project) ?: return@readAction emptyList()
-                val document = file.findDocument() ?: return@readAction emptyList()
+                val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
+                val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
+                val document = virtualFile.findDocument() ?: return@readAction emptyList()
                 val targets = psiFile.getTargetsAtPosition(params.position, document, targetKinds)
 
                 targets.mapNotNull { psiElement ->
@@ -51,8 +51,9 @@ class LSCommonDefinitionProvider(
     }
 }
 
-// A temporary replacement for PsiPackage.directories which is not working because of the missing logic in FakePackageIndexImpl.
-// THis one works only for Java sources and JAR dependencies, Kotlin packages are handled in LSKotlinPackageDefinitionProvider.
+// FIXME: LSP-513
+//  A temporary replacement for PsiPackage.directories which is not working because of the missing logic in FakePackageIndexImpl.
+//  This one works only for Java sources and JAR dependencies, Kotlin packages are handled in LSKotlinPackageDefinitionProvider.
 private val PsiPackage.directory: VirtualFile?
     get() {
         return StubIndex.getInstance()

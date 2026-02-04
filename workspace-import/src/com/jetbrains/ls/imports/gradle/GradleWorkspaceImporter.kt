@@ -3,41 +3,28 @@
 
 package com.jetbrains.ls.imports.gradle
 
-import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
-import com.intellij.util.PathUtil
-import com.intellij.util.io.delete
-import com.intellij.util.system.OS
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
-import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImporter
+import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.findTheMostCompatibleJdk
+import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.getInitScriptPathString
+import com.jetbrains.ls.imports.gradle.action.ProjectMetadataBuilder
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter.postProcessWorkspaceData
-import com.jetbrains.ls.imports.json.WorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData
-import com.jetbrains.ls.imports.utils.runAndGetOK
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.decodeToSequence
+import org.gradle.tooling.GradleConnector
+import java.io.File
 import java.nio.file.Path
-import kotlin.io.path.*
+import kotlin.io.path.div
+import kotlin.io.path.exists
 
 private val LOG = logger<GradleWorkspaceImporter>()
 
-private const val JB_GRADLE_HOME: String = "JB_GRADLE_HOME"
-private const val JB_GRADLE_JAVA_HOME: String = "JB_GRADLE_JAVA_HOME"
-
 object GradleWorkspaceImporter : WorkspaceImporter {
-
-    fun useGradleAndJava(mavenHome: Path, javaHome: Path) {
-        System.setProperty(JB_GRADLE_HOME, mavenHome.toString())
-        System.setProperty(JB_GRADLE_JAVA_HOME, javaHome.toString())
-    }
 
     private fun isApplicableDirectory(projectDirectory: Path): Boolean {
         return listOf(
@@ -57,91 +44,33 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         if (!isApplicableDirectory(projectDirectory)) return null
 
         LOG.info("Importing Gradle project from: $projectDirectory")
-        val wrapper = projectDirectory / (if (OS.CURRENT == OS.Windows) "gradlew.bat" else "gradlew")
-        val gradleHome = System.getProperty(JB_GRADLE_HOME)?.let { Path.of(it) }
-        val javaHome = System.getProperty(JB_GRADLE_JAVA_HOME)
-            ?: if (System.getenv()["JAVA_HOME"] == null) System.getProperty("java.home") else null
-        val execPath = when {
-            wrapper.exists() -> wrapper
-            gradleHome != null -> gradleHome / "bin" / if (OS.CURRENT == OS.Windows) "gradle.bat" else "gradle"
-            else -> Path(if (OS.CURRENT == OS.Windows) "gradle.bat" else "gradle")
-        }
-        LOG.info("Using Gradle: $execPath (JAVA_HOME=${javaHome ?: "unspecified"})")
 
-        val pluginResourcePath = "/META-INF/gradle-plugins/imports-gradle-plugin.properties"
-        val pluginJar = PathManager.getResourceRoot(this::class.java, pluginResourcePath)
-            ?: error("Corrupted installation: gradle plugin .properties not found")
-
-        val workspaceJsonLFile = createTempFile("workspace", ".jsonl")
-        val initScriptFile = createTempFile("gradle-init", ".gradle")
-        try {
-            initScriptFile.writeText(
-                """
-                    initscript {
-                        dependencies {
-                            repositories {
-                                mavenCentral()
-                            }
-                            classpath(files("${PathUtil.toSystemIndependentName(pluginJar)}"))
-                            classpath("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
-                        }
-                    }
-                    apply plugin: com.jetbrains.ls.imports.gradle.InfoPlugin
-                """.trimIndent()
-            )
-
-            ProcessBuilder(
-                execPath.toString(),
-                "--no-daemon",
-                "--init-script",
-                initScriptFile.toAbsolutePath().toString(),
-                "-Dworkspace.output.file=${workspaceJsonLFile.toAbsolutePath()}",
-//                "-Dorg.gradle.jvmargs=-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005",
-//                "--stacktrace",
-                "help", // Dummy task to trigger project evaluation
-                "--quiet"
-            )
-                .apply {
-                    javaHome?.let {
-                        environment()["JAVA_HOME"] = it
-                    }
+        val gradleProjectData = GradleConnector.newConnector()
+            .forProjectDirectory(projectDirectory.toFile())
+            .connect()
+            .use {
+                val builder = it.action(ProjectMetadataBuilder())
+                    .addArguments("--stacktrace", "--init-script", getInitScriptPathString())
+                    .withCancellationToken(GradleConnector.newCancellationTokenSource().token())
+                val jdkToUse = findTheMostCompatibleJdk(project, projectDirectory)
+                if (jdkToUse != null) {
+                    builder.setJavaHome(File(jdkToUse))
                 }
-                .directory(projectDirectory.toFile())
-                .inheritIO()
-                .runAndGetOK("Gradle")
-
-            val workspaceJsons = try {
-                workspaceJsonLFile.inputStream().use { stream ->
-                    @OptIn(ExperimentalSerializationApi::class)
-                    Json.decodeToSequence<WorkspaceData>(stream).toList()
-                }
-            } catch (e: SerializationException) {
-                throw WorkspaceImportException(
-                    "Error parsing ${workspaceJsonLFile.name}",
-                    "Error parsing ${workspaceJsonLFile.name}:\n ${e.message ?: e.stackTraceToString()}",
-                    e
-                )
+                builder.run()
             }
-
-            val entitySource = WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager))
-            return MutableEntityStorage.create().apply {
-                workspaceJsons.forEach { workspaceJson ->
-                    importWorkspaceData(
-                        postProcessWorkspaceData(
-                            workspaceJson,
-                            projectDirectory,
-                            onUnresolvedDependency
-                        ),
-                        projectDirectory,
-                        entitySource,
-                        virtualFileUrlManager,
-                        ignoreDuplicateLibsAndSdks = true,
-                    )
-                }
-            }
-        } finally {
-            workspaceJsonLFile.delete()
-            initScriptFile.delete()
+        val entitySource = WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager))
+        return MutableEntityStorage.create().apply {
+            importWorkspaceData(
+                postProcessWorkspaceData(
+                    IdeaProjectMapper.toWorkspaceData(gradleProjectData),
+                    projectDirectory,
+                    onUnresolvedDependency
+                ),
+                projectDirectory,
+                entitySource,
+                virtualFileUrlManager,
+                ignoreDuplicateLibsAndSdks = true,
+            )
         }
     }
 }
