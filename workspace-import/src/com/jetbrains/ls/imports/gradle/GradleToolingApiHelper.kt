@@ -9,8 +9,8 @@ import com.intellij.openapi.projectRoots.impl.JavaHomeFinder
 import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.util.PathUtil
 import com.intellij.util.lang.JavaVersion
+import com.jetbrains.ls.imports.gradle.compatibility.GradleJvmCompatibilityChecker
 import org.gradle.util.GradleVersion
-import org.jetbrains.plugins.gradle.jvmcompat.GradleJvmSupportMatrix
 import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -33,7 +33,7 @@ object GradleToolingApiHelper {
             .map { Pair(JavaVersion.tryParse(javaSdkType.getVersionString(it)), it) }
             .filter { it.first != null }
             .sortedByDescending { it.first }
-            .first { GradleJvmSupportMatrix.isSupported(gradleVersion, it.first!!) }
+            .first { GradleJvmCompatibilityChecker.isSupported(gradleVersion, it.first!!) }
             .second
         LOG.info("Gradle Tooling API will use Java located in $suggestedJavaPath")
         return suggestedJavaPath
