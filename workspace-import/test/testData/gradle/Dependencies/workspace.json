@@ -1,7 +1,20 @@
 {
     "modules": [
         {
-            "name": "kotlin-dependency-example"
+            "name": "kotlin-dependency-example",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "inheritedSdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/"
+                }
+            ]
         },
         {
             "name": "kotlin-dependency-example.main",

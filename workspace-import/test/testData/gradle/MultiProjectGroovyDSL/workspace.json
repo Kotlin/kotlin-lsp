@@ -1,10 +1,36 @@
 {
     "modules": [
         {
-            "name": "multi-project-example"
+            "name": "multi-project-example",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "inheritedSdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/"
+                }
+            ]
         },
         {
-            "name": "multi-project-example.api"
+            "name": "multi-project-example.api",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "inheritedSdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/api"
+                }
+            ]
         },
         {
             "name": "multi-project-example.api.main",
@@ -102,7 +128,20 @@
             ]
         },
         {
-            "name": "multi-project-example.core"
+            "name": "multi-project-example.core",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "inheritedSdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/core"
+                }
+            ]
         },
         {
             "name": "multi-project-example.core.main",
@@ -190,7 +229,20 @@
             ]
         },
         {
-            "name": "multi-project-example.service"
+            "name": "multi-project-example.service",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "inheritedSdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/service"
+                }
+            ]
         },
         {
             "name": "multi-project-example.service.main",

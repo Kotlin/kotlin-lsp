@@ -30,6 +30,8 @@ import org.gradle.tooling.model.idea.IdeaModule
 import org.gradle.tooling.model.idea.IdeaModuleDependency
 import org.gradle.tooling.model.idea.IdeaSingleEntryLibraryDependency
 import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.exists
 
 internal object IdeaProjectMapper {
 
@@ -70,7 +72,7 @@ internal object IdeaProjectMapper {
     ): List<KotlinSettingsData> {
         val result = mutableListOf<KotlinSettingsData>()
         for ((name, moduleData) in modules) {
-            if (moduleData.contentRoots.isEmpty()) {
+            if (!moduleData.hasValidSourceRoots()) {
                 continue
             }
             val kotlinModuleKey = name.removeSuffix(".main")
@@ -138,7 +140,14 @@ internal object IdeaProjectMapper {
             DependencyData.InheritedSdk
         }
         modules[moduleName] = ModuleData(
-            name = moduleName
+            name = moduleName,
+            dependencies = listOf(
+                DependencyData.ModuleSource,
+                sdkDependencyData
+            ),
+            contentRoots = listOf(
+                ContentRootData(module.gradleProject.projectDirectory.path)
+            )
         )
         val javaSettings = getJavaSettingsData(module)
         if (javaSettings != null) {
@@ -162,7 +171,7 @@ internal object IdeaProjectMapper {
                     modules["$moduleName.main"] = ModuleData(
                         name = "$moduleName.main",
                         dependencies = dependencies,
-                        contentRoots = sourceSet.toContentRootData(false)
+                        contentRoots = sourceSet.toContentRootData(module.gradleProject.projectDirectory, false)
                     )
                     if (javaSettings != null) {
                         javaSettingsConsumer(
@@ -181,7 +190,7 @@ internal object IdeaProjectMapper {
                     modules["$moduleName.${sourceSet.name}"] = ModuleData(
                         name = "$moduleName.${sourceSet.name}",
                         dependencies = dependencies,
-                        contentRoots = sourceSet.toContentRootData(true)
+                        contentRoots = sourceSet.toContentRootData(module.gradleProject.projectDirectory, true)
                     )
                     if (javaSettings != null) {
                         javaSettingsConsumer(
@@ -200,7 +209,7 @@ internal object IdeaProjectMapper {
                     modules["$moduleName.${sourceSet.name}"] = ModuleData(
                         name = "$moduleName.${sourceSet.name}",
                         dependencies = dependencies,
-                        contentRoots = sourceSet.toContentRootData(false)
+                        contentRoots = sourceSet.toContentRootData(module.gradleProject.projectDirectory, false)
                     )
                     if (javaSettings != null) {
                         javaSettingsConsumer(
@@ -213,17 +222,35 @@ internal object IdeaProjectMapper {
         return modules
     }
 
-    private fun ModuleSourceSet.toContentRootData(isTest: Boolean): List<ContentRootData> {
+    private fun ModuleSourceSet.toContentRootData(moduleRoot: File, isTest: Boolean): List<ContentRootData> {
         val sourceRoots = mutableListOf<SourceRootData>()
         for (sourceRootFolder in sources) {
-            sourceRoots.add(SourceRootData(sourceRootFolder.path, getSourceFolderType(sourceRootFolder, isTest)))
+            if (sourceRootFolder.exists() && sourceRootFolder.isDirectory) {
+                sourceRoots.add(
+                    SourceRootData(
+                        sourceRootFolder.path,
+                        getSourceFolderType(sourceRootFolder, isTest)
+                    )
+                )
+            }
         }
         for (sourceRootFolder in resources) {
-            sourceRoots.add(SourceRootData(sourceRootFolder.path, if (isTest) "java-test-resource" else "java-resource"))
+            if (sourceRootFolder.exists() && sourceRootFolder.isDirectory) {
+                sourceRoots.add(
+                    SourceRootData(
+                        sourceRootFolder.path,
+                        if (isTest) "java-test-resource" else "java-resource"
+                    )
+                )
+            }
+        }
+        var commonRoot = findRootForSourceRoots(sourceRoots)
+        if (commonRoot.isEmpty()) {
+            commonRoot = if (isTest) "$moduleRoot/src/test" else "$moduleRoot/src/main"
         }
         return listOf(
             ContentRootData(
-                findRootForSourceRoots(sourceRoots),
+                commonRoot,
                 emptyList(),
                 excludes.toMutableList(),
                 sourceRoots = sourceRoots
@@ -277,6 +304,12 @@ internal object IdeaProjectMapper {
                 result += currentChar
             }
         return result
+    }
+
+    private fun ModuleData.hasValidSourceRoots(): Boolean {
+        return contentRoots
+            .flatMap { it.sourceRoots }
+            .any { Path.of(it.path).exists() }
     }
 
     private fun calculateProjectLibraries(modules: List<IdeaModule>): List<LibraryData> {

@@ -1,7 +1,20 @@
 {
     "modules": [
         {
-            "name": "NonExistentDependency"
+            "name": "NonExistentDependency",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "inheritedSdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/"
+                }
+            ]
         },
         {
             "name": "NonExistentDependency.main",

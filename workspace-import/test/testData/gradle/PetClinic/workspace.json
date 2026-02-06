@@ -1,7 +1,20 @@
 {
     "modules": [
         {
-            "name": "PetClinic"
+            "name": "PetClinic",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "inheritedSdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/"
+                }
+            ]
         },
         {
             "name": "PetClinic.aot",
@@ -840,25 +853,7 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/",
-                    "sourceRoots": [
-                        {
-                            "path": "<WORKSPACE>/src/aot/java",
-                            "type": "java-source"
-                        },
-                        {
-                            "path": "<WORKSPACE>/build/generated/aotSources",
-                            "type": "java-source"
-                        },
-                        {
-                            "path": "<WORKSPACE>/src/aot/resources",
-                            "type": "java-resource"
-                        },
-                        {
-                            "path": "<WORKSPACE>/build/generated/aotResources",
-                            "type": "java-resource"
-                        }
-                    ]
+                    "path": "<WORKSPACE>/src/main"
                 }
             ]
         },
@@ -1699,25 +1694,7 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/",
-                    "sourceRoots": [
-                        {
-                            "path": "<WORKSPACE>/src/aotTest/java",
-                            "type": "java-test"
-                        },
-                        {
-                            "path": "<WORKSPACE>/build/generated/aotTestSources",
-                            "type": "java-test"
-                        },
-                        {
-                            "path": "<WORKSPACE>/src/aotTest/resources",
-                            "type": "java-test-resource"
-                        },
-                        {
-                            "path": "<WORKSPACE>/build/generated/aotTestResources",
-                            "type": "java-test-resource"
-                        }
-                    ]
+                    "path": "<WORKSPACE>/src/test"
                 }
             ]
         },

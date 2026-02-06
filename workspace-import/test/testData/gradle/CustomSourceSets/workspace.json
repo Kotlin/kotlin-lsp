@@ -1,10 +1,36 @@
 {
     "modules": [
         {
-            "name": "multi-project-source-sets"
+            "name": "multi-project-source-sets",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "inheritedSdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/"
+                }
+            ]
         },
         {
-            "name": "multi-project-source-sets.app"
+            "name": "multi-project-source-sets.app",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "inheritedSdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/app"
+                }
+            ]
         },
         {
             "name": "multi-project-source-sets.app.main",
@@ -112,7 +138,20 @@
             ]
         },
         {
-            "name": "multi-project-source-sets.lib"
+            "name": "multi-project-source-sets.lib",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "inheritedSdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/lib"
+                }
+            ]
         },
         {
             "name": "multi-project-source-sets.lib.integrationTest",
@@ -141,21 +180,7 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/lib/src/integrationTest",
-                    "sourceRoots": [
-                        {
-                            "path": "<WORKSPACE>/lib/src/integrationTest/java",
-                            "type": "java-test"
-                        },
-                        {
-                            "path": "<WORKSPACE>/lib/src/integrationTest/kotlin",
-                            "type": "kotlin-test"
-                        },
-                        {
-                            "path": "<WORKSPACE>/lib/src/integrationTest/resources",
-                            "type": "java-test-resource"
-                        }
-                    ]
+                    "path": "<WORKSPACE>/lib/src/test"
                 }
             ]
         },

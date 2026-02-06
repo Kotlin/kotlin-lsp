@@ -1,10 +1,36 @@
 {
     "modules": [
         {
-            "name": "NewIJKotlinGradle"
+            "name": "NewIJKotlinGradle",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "inheritedSdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/"
+                }
+            ]
         },
         {
-            "name": "NewIJKotlinGradle.app"
+            "name": "NewIJKotlinGradle.app",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "inheritedSdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/app"
+                }
+            ]
         },
         {
             "name": "NewIJKotlinGradle.app.main",
@@ -58,19 +84,11 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/src/main",
+                    "path": "<WORKSPACE>/app/src/main/kotlin",
                     "sourceRoots": [
-                        {
-                            "path": "<WORKSPACE>/app/src/main/java",
-                            "type": "java-source"
-                        },
                         {
                             "path": "<WORKSPACE>/app/src/main/kotlin",
                             "type": "kotlin-source"
-                        },
-                        {
-                            "path": "<WORKSPACE>/app/src/main/resources",
-                            "type": "java-resource"
                         }
                     ]
                 }
@@ -161,10 +179,6 @@
                     "path": "<WORKSPACE>/app/src/test",
                     "sourceRoots": [
                         {
-                            "path": "<WORKSPACE>/app/src/test/java",
-                            "type": "java-test"
-                        },
-                        {
                             "path": "<WORKSPACE>/app/src/test/kotlin",
                             "type": "kotlin-test"
                         },
@@ -177,7 +191,20 @@
             ]
         },
         {
-            "name": "NewIJKotlinGradle.utils"
+            "name": "NewIJKotlinGradle.utils",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "inheritedSdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/utils"
+                }
+            ]
         },
         {
             "name": "NewIJKotlinGradle.utils.main",
@@ -223,10 +250,6 @@
                 {
                     "path": "<WORKSPACE>/utils/src/main",
                     "sourceRoots": [
-                        {
-                            "path": "<WORKSPACE>/utils/src/main/java",
-                            "type": "java-source"
-                        },
                         {
                             "path": "<WORKSPACE>/utils/src/main/kotlin",
                             "type": "kotlin-source"
@@ -333,10 +356,6 @@
                 {
                     "path": "<WORKSPACE>/utils/src/test",
                     "sourceRoots": [
-                        {
-                            "path": "<WORKSPACE>/utils/src/test/java",
-                            "type": "java-test"
-                        },
                         {
                             "path": "<WORKSPACE>/utils/src/test/kotlin",
                             "type": "kotlin-test"
@@ -692,9 +711,7 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/app/src/main/java",
-                "<WORKSPACE>/app/src/main/kotlin",
-                "<WORKSPACE>/app/src/main/resources"
+                "<WORKSPACE>/app/src/main/kotlin"
             ],
             "configFileItems": [],
             "module": "NewIJKotlinGradle.app.main",
@@ -723,7 +740,6 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/app/src/test/java",
                 "<WORKSPACE>/app/src/test/kotlin",
                 "<WORKSPACE>/app/src/test/resources"
             ],
@@ -754,7 +770,6 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/utils/src/main/java",
                 "<WORKSPACE>/utils/src/main/kotlin",
                 "<WORKSPACE>/utils/src/main/resources"
             ],
@@ -785,7 +800,6 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/utils/src/test/java",
                 "<WORKSPACE>/utils/src/test/kotlin",
                 "<WORKSPACE>/utils/src/test/resources"
             ],
