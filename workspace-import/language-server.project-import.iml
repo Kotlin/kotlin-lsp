@@ -29,24 +29,6 @@
       <sourceFolder url="file://$MODULE_DIR$/resources" type="java-resource" />
     </content>
     <orderEntry type="inheritedJdk" />
-    <orderEntry type="module-library" scope="PROVIDED">
-      <library name="gradle.tooling.api" type="repository">
-        <properties include-transitive-deps="false" maven-id="org.gradle:gradle-tooling-api:9.3.0">
-          <verification>
-            <artifact url="file://$MAVEN_REPOSITORY$/org/gradle/gradle-tooling-api/9.3.0/gradle-tooling-api-9.3.0.jar">
-              <sha256sum>24545170260d7d0b21ee586bf47f6b9e43ae181aab7b7d8c88040595969741a8</sha256sum>
-            </artifact>
-          </verification>
-        </properties>
-        <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/org/gradle/gradle-tooling-api/9.3.0/gradle-tooling-api-9.3.0.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="jar://$MAVEN_REPOSITORY$/org/gradle/gradle-tooling-api/9.3.0/gradle-tooling-api-9.3.0-sources.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="kotlin-stdlib" level="project" />
     <orderEntry type="module" module-name="intellij.platform.jps.model.serialization" />
@@ -75,5 +57,6 @@
     <orderEntry type="module" module-name="intellij.kotlin.base.plugin" />
     <orderEntry type="module" module-name="intellij.libraries.jspecify" />
     <orderEntry type="module" module-name="language-server.project-import.gradle-plugin" />
+    <orderEntry type="library" name="Gradle Tooling API" level="project" />
   </component>
 </module>
