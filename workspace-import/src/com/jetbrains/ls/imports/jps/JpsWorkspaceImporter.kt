@@ -36,7 +36,6 @@ import com.intellij.platform.workspace.jps.entities.SourceRootTypeId
 import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
-import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.customName
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImporter
@@ -271,13 +270,13 @@ object JpsWorkspaceImporter : WorkspaceImporter {
                                     val url = url.run { if (startsWith("jrt://")) replace("!/", "!/modules/") else this }
                                     SdkRoot(
                                         virtualFileUrlManager.getOrCreateFromUrl(url),
-                                        SdkRootTypeId(OrderRootType.CLASSES.customName),
+                                        SdkRootTypeId.CLASSES,
                                     )
                                 }
                                 library.getRootUrls(JpsOrderRootType.SOURCES).mapNotNullTo(this) { url ->
                                     SdkRoot(
                                         virtualFileUrlManager.getOrCreateFromUrl(url),
-                                        SdkRootTypeId(OrderRootType.SOURCES.customName),
+                                        SdkRootTypeId.SOURCES,
                                     )
                                 }
                             },
@@ -329,7 +328,7 @@ object JpsWorkspaceImporter : WorkspaceImporter {
                     classRoots.mapTo(this) {
                         SdkRoot(
                             virtualFileUrlManager.getOrCreateFromUrl(it),
-                            SdkRootTypeId(OrderRootType.CLASSES.customName),
+                            SdkRootTypeId.CLASSES,
                         )
                     }
                     val srcZip = Path.of(sdk.path, "lib", "src.zip")
@@ -338,7 +337,7 @@ object JpsWorkspaceImporter : WorkspaceImporter {
                         classRoots.mapTo(this) {
                             SdkRoot(
                                 virtualFileUrlManager.getOrCreateFromUrl("$prefix${it.substringAfterLast("/")}"),
-                                SdkRootTypeId(OrderRootType.SOURCES.customName),
+                                SdkRootTypeId.SOURCES,
                             )
                         }
                     }

@@ -4,7 +4,6 @@ package com.jetbrains.ls.api.core.util
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.projectRoots.SdkType
-import com.intellij.openapi.roots.OrderRootType
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.openapi.vfs.VirtualFile
@@ -22,7 +21,6 @@ import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.entities
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.psi.PsiFile
-import com.intellij.workspaceModel.ide.impl.legacyBridge.sdk.customName
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.lsp.protocol.DocumentUri
@@ -135,7 +133,7 @@ fun createSdkEntity(
             roots.mapTo(this) { root ->
                 SdkRoot(
                     urlManager.getOrCreateFromUrl(root.lspUriToIntellijUri()!!),
-                    SdkRootTypeId(OrderRootType.CLASSES.customName),
+                    SdkRootTypeId.CLASSES,
                 )
             }
 
@@ -148,7 +146,7 @@ fun createSdkEntity(
                     roots.mapTo(this) { root ->
                         SdkRoot(
                             urlManager.getOrCreateFromUrl("$prefix${root.uri.substringAfterLast("/")}"),
-                            SdkRootTypeId(OrderRootType.SOURCES.customName),
+                            SdkRootTypeId.SOURCES,
                         )
                     }
                 }
