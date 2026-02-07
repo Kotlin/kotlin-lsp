@@ -16,7 +16,7 @@ import org.eclipse.aether.resolution.DependencyResolutionException
 import org.eclipse.aether.resolution.DependencyResult
 import org.eclipse.aether.util.artifact.JavaScopes
 import java.nio.file.Path
-import java.util.*
+import java.util.Locale
 import kotlin.io.path.Path
 import kotlin.io.path.absolute
 import kotlin.io.path.absolutePathString
