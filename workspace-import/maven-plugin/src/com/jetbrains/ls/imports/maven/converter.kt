@@ -163,8 +163,7 @@ private fun dependencyData(importDependencies: List<MavenImportDependency>): Lis
 
             is MavenImportDependency.Library -> {
                 val artifact = dep.artifact
-                val libName =
-                    "Maven: ${artifact.groupId}:${artifact.artifactId}${if (artifact.version != null && artifact.version.isNotEmpty()) ":${artifact.version}" else ""}"
+                val libName = createLibName(artifact)
                 add(DependencyData.Library(libName, dep.scope, false))
             }
 
