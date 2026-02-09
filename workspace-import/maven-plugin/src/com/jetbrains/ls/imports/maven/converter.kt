@@ -208,6 +208,8 @@ private fun sourceRootData(
         addBuildHelperSources(project, "add-source", "java-source")
         addBuildHelperResources(project, "add-resource", "java-resource")
         addModelloGeneratedSources(project, "java-source")
+        addCompilerGeneratedSources(project, "java-source")
+        addGeneratedDirProperty(project, "java-source")
     }
     if (module.type.containsTest) {
         project.testCompileSourceRoots
@@ -305,6 +307,37 @@ private fun MutableSet<SourceRootData>.addModelloGeneratedSources(
                 add(SourceRootData(outputDir, rootType))
             }
         }
+    }
+}
+
+private fun MutableSet<SourceRootData>.addCompilerGeneratedSources(
+    project: MavenProject,
+    rootType: String
+) {
+    val plugin = project.buildPlugins.find {
+        it.groupId == "org.apache.maven.plugins" && it.artifactId == "maven-compiler-plugin"
+    } ?: return
+
+    plugin.executions.forEach { execution ->
+        val executionConfig = execution.configuration as? Xpp3Dom
+        val pluginConfig = plugin.configuration as? Xpp3Dom
+
+        val outputDir = executionConfig?.getChild("generatedSourcesDirectory")?.value?.trim()
+            ?: pluginConfig?.getChild("generatedSourcesDirectory")?.value?.trim()
+
+        if (!outputDir.isNullOrEmpty()) {
+            add(SourceRootData(outputDir, rootType))
+        }
+    }
+}
+
+private fun MutableSet<SourceRootData>.addGeneratedDirProperty(
+    project: MavenProject,
+    rootType: String
+) {
+    val generatedDir = project.properties.getProperty("generated.dir")?.trim()
+    if (!generatedDir.isNullOrEmpty()) {
+        add(SourceRootData(generatedDir, rootType))
     }
 }
 
