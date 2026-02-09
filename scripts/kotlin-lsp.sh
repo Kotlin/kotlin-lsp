@@ -42,6 +42,7 @@ exec "$JAVA_BIN" \
     --add-opens java.base/java.util.concurrent=ALL-UNNAMED \
     --add-opens java.base/java.util.concurrent.atomic=ALL-UNNAMED \
     --add-opens java.base/java.util.concurrent.locks=ALL-UNNAMED \
+    --add-opens java.base/jdk.internal.ref=ALL-UNNAMED \
     --add-opens java.base/jdk.internal.vm=ALL-UNNAMED \
     --add-opens java.base/sun.net.dns=ALL-UNNAMED \
     --add-opens java.base/sun.nio.ch=ALL-UNNAMED \
@@ -81,4 +82,5 @@ exec "$JAVA_BIN" \
     --enable-native-access=ALL-UNNAMED \
     -Djdk.lang.Process.launchMechanism=FORK \
     -Djava.awt.headless=true \
+    -Djava.system.class.loader=com.intellij.util.lang.PathClassLoader \
     -cp "$DIR/lib/*" com.jetbrains.ls.kotlinLsp.KotlinLspServerKt "$@"

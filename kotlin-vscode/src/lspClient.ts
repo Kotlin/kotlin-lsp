@@ -279,6 +279,7 @@ const defaultJvmOptions = [
     "--add-opens", "java.base/java.util.concurrent=ALL-UNNAMED",
     "--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED",
     "--add-opens", "java.base/java.util.concurrent.locks=ALL-UNNAMED",
+    "--add-opens", "java.base/jdk.internal.ref=ALL-UNNAMED",
     "--add-opens", "java.base/jdk.internal.vm=ALL-UNNAMED",
     "--add-opens", "java.base/sun.net.dns=ALL-UNNAMED",
     "--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED",
@@ -317,5 +318,6 @@ const defaultJvmOptions = [
     "--add-opens", "jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED",
     "--enable-native-access=ALL-UNNAMED",
     "-Djdk.lang.Process.launchMechanism=FORK",
+    "-Djava.system.class.loader=com.intellij.util.lang.PathClassLoader",
     "-Djava.awt.headless=true",
 ]

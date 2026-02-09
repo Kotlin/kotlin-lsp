@@ -4,7 +4,6 @@ package com.jetbrains.ls.kotlinLsp
 import com.intellij.openapi.application.ClassPathUtil.addKotlinStdlib
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.fileLogger
-import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.util.SystemProperties
 import com.jetbrains.analyzer.filewatcher.FileWatcher
 import com.jetbrains.analyzer.filewatcher.downloadFileWatcherBinaries
@@ -41,12 +40,8 @@ import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutMode
 import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutModeProvider
 import org.jetbrains.kotlin.idea.compiler.configuration.isRunningFromSources
 import java.io.RandomAccessFile
-import java.lang.invoke.MethodHandles
-import java.net.URLDecoder
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.ServiceLoader
-import kotlin.io.path.absolutePathString
 import kotlin.io.path.createDirectories
 import kotlin.io.path.createTempDirectory
 import kotlin.io.path.div
@@ -176,8 +171,9 @@ private fun initIdeaPaths(systemPath: Path?) {
 }
 
 private fun getInstallationPath(): Path {
-    val path = MethodHandles.lookup().lookupClass().getProtectionDomain().codeSource.location.path
-    val jarPath = Paths.get(FileUtilRt.toSystemDependentName(URLDecoder.decode(path, "UTF-8")).removePrefix("\\"))
+    val serverClass = Class.forName("com.jetbrains.ls.kotlinLsp.KotlinLspServerKt")
+    val jarPath = PathManager.getJarForClass(serverClass)?.toAbsolutePath()
+        ?: error("No jar for KotlinLspServerKt class")
     check(jarPath.extension == "jar") { "Path to jar is expected to end with .jar: $jarPath" }
     val libsDir = jarPath.parent
     check(libsDir.name == "lib") { "lib dir is expected to be named `lib`: $libsDir" }
@@ -198,12 +194,12 @@ private fun initExtraProperties() {
 
 private fun isLspRunningFromSources(): Boolean {
     val serverClass = Class.forName("com.jetbrains.ls.kotlinLsp.KotlinLspServerKt")
-    val jar = PathManager.getJarForClass(serverClass)?.absolutePathString() ?: return false
+    val jar = PathManager.getJarForClass(serverClass)?.toAbsolutePath() ?: return false
     val outSuffixes = arrayOf(
-        "bazel-out/jvm-fastbuild/bin/language-server/community/kotlin-lsp/kotlin-lsp.jar",
-        "/out/classes/production/language-server.kotlin-lsp"
+        "/bazel-out/jvm-fastbuild/bin/language-server/",
+        "/out/classes/production/"
     )
-    return outSuffixes.any { jar.endsWith(FileUtilRt.toSystemDependentName(it)) }
+    return outSuffixes.any { jar.toString().contains(it) }
 }
 
 
