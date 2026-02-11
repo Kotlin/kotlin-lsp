@@ -4,6 +4,7 @@ package com.jetbrains.ls.kotlinLsp
 import com.intellij.openapi.application.ClassPathUtil.addKotlinStdlib
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.fileLogger
+import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.util.SystemProperties
 import com.jetbrains.analyzer.filewatcher.FileWatcher
 import com.jetbrains.analyzer.filewatcher.downloadFileWatcherBinaries
@@ -194,11 +195,9 @@ private fun initExtraProperties() {
 private fun isLspRunningFromSources(): Boolean {
     val serverClass = Class.forName("com.jetbrains.ls.kotlinLsp.KotlinLspServerKt")
     val jar = PathManager.getJarForClass(serverClass)?.toAbsolutePath() ?: return false
-    val outSuffixes = arrayOf(
-        "/bazel-out/jvm-fastbuild/bin/language-server/",
-        "/out/classes/production/",
-    )
-    return outSuffixes.any { jar.toString().contains(it) }
+    return sequenceOf("/bazel-out/jvm-fastbuild/", "/out/classes/production/")
+        .map { FileUtilRt.toSystemDependentName(it) }
+        .any { jar.toString().contains(it) }
 }
 
 
