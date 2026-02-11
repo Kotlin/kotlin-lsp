@@ -40,26 +40,27 @@ internal object IdeaProjectMapper {
     fun toWorkspaceData(metadata: ProjectMetadata): WorkspaceData {
         val sdks: MutableList<SdkData> = mutableListOf()
         val javaSettings: MutableList<JavaSettingsData> = mutableListOf()
-        val project = metadata.ideaProject
-        val knownModules = project.modules.map { it.getFqdn() }
-            .toSet()
-
         val modules = mutableMapOf<String, ModuleData>()
 
-        project.modules.forEach { module ->
-            val syntheticModules = calculateModules(
-                metadata,
-                module,
-                knownModules,
-                { moduleJavaSettings -> javaSettings.add(moduleJavaSettings) },
-                { sdk -> sdks.add(sdk) }
-            )
-            modules.putAll(syntheticModules)
-        }
+        val allGradleModules: List<IdeaModule> = metadata.includedProjects.flatMap { it.modules }
+        // all project modules should be calculated before processing to provide a proper module substitution between projects
+        val knownModules: List<String> = allGradleModules.map { it.getFqdn() }
+
+        allGradleModules
+            .map {
+                splitModulePerSourceSet(
+                    it,
+                    metadata,
+                    knownModules,
+                    { moduleJavaSettings -> javaSettings.add(moduleJavaSettings) },
+                    { sdk -> sdks.add(sdk) }
+                )
+            }
+            .forEach { modules.putAll(it) }
 
         return WorkspaceData(
             modules = modules.values.toList(),
-            libraries = calculateProjectLibraries(project.modules.toList()),
+            libraries = calculateProjectLibraries(allGradleModules),
             sdks = sdks,
             javaSettings = javaSettings,
             kotlinSettings = calculateKotlinSettings(modules, metadata.kotlinModules)
@@ -121,10 +122,10 @@ internal object IdeaProjectMapper {
         return result
     }
 
-    private fun calculateModules(
-        metadata: ProjectMetadata,
+    private fun splitModulePerSourceSet(
         module: IdeaModule,
-        knownModules: Set<String>,
+        metadata: ProjectMetadata,
+        knownModules: List<String>,
         javaSettingsConsumer: (JavaSettingsData) -> Unit,
         sdkConsumer: (SdkData) -> Unit
     ): Map<String, ModuleData> {
@@ -397,7 +398,7 @@ internal object IdeaProjectMapper {
     }
 
     private fun getDependencyData(
-        knownModules: Set<String>,
+        knownModules: List<String>,
         dependency: IdeaDependency
     ): DependencyData? {
         return when (dependency) {
