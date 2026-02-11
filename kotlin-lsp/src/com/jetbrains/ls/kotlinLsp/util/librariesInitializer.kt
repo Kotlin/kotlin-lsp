@@ -29,8 +29,7 @@ fun getKotlinStdlibPath(): Path {
             // get kotlin stdlib from the current classpath
             val classFromStdlibButNotInBuiltins = Sequence::class.java
             val stdlibJar = PathUtil.getJarPathForClass(classFromStdlibButNotInBuiltins)
-            stdlibJar.toNioPathOrNull()
-                ?: error("Failed to find kotlin stdlib jar in $stdlibJar")
+            stdlibJar.toNioPathOrNull() ?: error("Failed to find kotlin stdlib jar in $stdlibJar")
         }
     }
 }
@@ -43,7 +42,7 @@ fun getKotlinStdlibSourcesPath(): Path? {
         }
 
         else -> {
-           null // LSP-224 TODO we should bundle the sources jar
+            null // TODO: LSP-224 We should bundle the sources jar
         }
     }
 }
@@ -57,7 +56,7 @@ fun javaHome(): String {
         ?.let { it as? JsonPrimitive }
         ?.takeIf { it.isString }
         ?.content
-        ?.takeIf { it.isNotBlank()}
+        ?.takeIf { it.isNotBlank() }
 
     if (defaultJdkPath != null) {
         if (!Path.of(defaultJdkPath).isDirectory()) {

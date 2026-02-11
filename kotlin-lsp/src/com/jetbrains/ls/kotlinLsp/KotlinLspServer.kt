@@ -172,8 +172,7 @@ private fun initIdeaPaths(systemPath: Path?) {
 
 private fun getInstallationPath(): Path {
     val serverClass = Class.forName("com.jetbrains.ls.kotlinLsp.KotlinLspServerKt")
-    val jarPath = PathManager.getJarForClass(serverClass)?.toAbsolutePath()
-        ?: error("No jar for KotlinLspServerKt class")
+    val jarPath = PathManager.getJarForClass(serverClass)?.toAbsolutePath() ?: error("No jar for KotlinLspServerKt class")
     check(jarPath.extension == "jar") { "Path to jar is expected to end with .jar: $jarPath" }
     val libsDir = jarPath.parent
     check(libsDir.name == "lib") { "lib dir is expected to be named `lib`: $libsDir" }
@@ -197,7 +196,7 @@ private fun isLspRunningFromSources(): Boolean {
     val jar = PathManager.getJarForClass(serverClass)?.toAbsolutePath() ?: return false
     val outSuffixes = arrayOf(
         "/bazel-out/jvm-fastbuild/bin/language-server/",
-        "/out/classes/production/"
+        "/out/classes/production/",
     )
     return outSuffixes.any { jar.toString().contains(it) }
 }

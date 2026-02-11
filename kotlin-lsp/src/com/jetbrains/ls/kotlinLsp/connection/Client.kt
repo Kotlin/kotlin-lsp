@@ -18,7 +18,13 @@ data class Client(
 
         fun contextElement(lspClient: LspClient, runConfig: KotlinLspServerRunConfig?): ThreadContextElement<*> {
             return ClientConnectionHolder.ThreadBound.asContextElement(
-                ClientConnectionHolder(Client(lspClient, runConfig, trace = null))
+                ClientConnectionHolder(
+                    connection = Client(
+                        lspClient = lspClient,
+                        runConfig = runConfig,
+                        trace = null,
+                    ),
+                ),
             )
         }
 

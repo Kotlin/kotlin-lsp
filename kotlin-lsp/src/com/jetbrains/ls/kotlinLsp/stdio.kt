@@ -14,7 +14,7 @@ import java.io.OutputStream
 suspend fun stdioConnection(
     inputStream: InputStream,
     outputStream: OutputStream,
-    body: suspend CoroutineScope.(LspConnection) -> Unit
+    body: suspend CoroutineScope.(LspConnection) -> Unit,
 ) {
     coroutineScope {
         body(StdioConnection(inputStream, outputStream))

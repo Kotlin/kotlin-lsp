@@ -63,7 +63,7 @@ suspend fun tcpServer(config: TcpConnectionConfig.Server, server: suspend Corout
 
 suspend fun tcpClient(
     config: TcpConnectionConfig.Client,
-    body: suspend CoroutineScope.(LspConnection) -> Unit
+    body: suspend CoroutineScope.(LspConnection) -> Unit,
 ) {
     SelectorManager(Dispatchers.IO).use { selectorManager ->
         retryWithBackOff(onError = { e, backoff ->

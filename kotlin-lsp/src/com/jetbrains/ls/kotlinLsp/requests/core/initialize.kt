@@ -78,7 +78,7 @@ context(server: LSServer, configuration: LSConfiguration)
 internal fun LspHandlersBuilder.initializeRequest() {
     request(Initialize) { initParams ->
         Client.update { it.copy(trace = initParams.trace) }
-        // TODO take into account client capabilities LSP-223
+        // TODO: LSP-223 take into account client capabilities
 
         lspClient.sendRunConfigurationInfoToClient()
         lspClient.sendSystemInfoToClient()
@@ -86,8 +86,8 @@ internal fun LspHandlersBuilder.initializeRequest() {
         LOG.info(
             "Got `initialize` request from ${initParams.clientInfo ?: "unknown"}\nparams:\n${
                 LSP.json.encodeToString(
-                    InitializeParams.serializer(),
-                    initParams
+                    serializer = InitializeParams.serializer(),
+                    value = initParams,
                 )
             }"
         )
@@ -102,8 +102,8 @@ internal fun LspHandlersBuilder.initializeRequest() {
             indexFolders(folders, initParams)
         }
 
-        // TODO LSP-226 determine base on entries,
-        // TODO LSP-227 register capabilities dynamically for each language separately
+        // TODO: LSP-226 determine capabilities based on registered configuration entries (LSConfigurationEntry)
+        // TODO: LSP-227 register capabilities dynamically for each language separately
         val result = InitializeResult(
             capabilities = ServerCapabilities(
                 textDocumentSync = TextDocumentSyncKind.Incremental,
@@ -129,7 +129,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
                 ),
                 completionProvider = CompletionRegistrationOptions(
                     documentSelector = null,
-                    triggerCharacters = listOf("."), // TODO LSP-226 should be customized
+                    triggerCharacters = listOf("."), // TODO: LSP-226 should be customized
                     allCommitCharacters = null,
                     resolveProvider = configuration.entries<LSCompletionProvider>().any { it.supportsResolveRequest },
                     completionItem = null,
@@ -142,7 +142,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
                     )
                 ),
                 executeCommandProvider = ExecuteCommandOptions(
-                    commands = configuration.allCommandDescriptors.map { it.name }
+                    commands = configuration.allCommandDescriptors.map { it.name },
                 ),
                 referencesProvider = OrBoolean(true),
                 hoverProvider = OrBoolean(true),
@@ -171,7 +171,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
                 signatureHelpProvider = SignatureHelpRegistrationOptions(
                     triggerCharacters = listOf("(", ","),
                     retriggerCharacters = listOf(","),
-                    workDoneProgress = false
+                    workDoneProgress = false,
                 ),
                 documentFormattingProvider = OrBoolean(true),
                 inlayHintProvider = OrBoolean.of(
@@ -181,7 +181,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
             ),
             serverInfo = InitializeResult.ServerInfo(
                 name = "Kotlin LSP by JetBrains",
-                version = "0.1" // TODO LSP-225 proper version here from the build number
+                version = "0.1", // TODO: LSP-225 proper version here from the build number
             ),
         )
         LOG.info("InitializeResult:\n${LSP.json.encodeToString(InitializeResult.serializer(), result)}")
@@ -199,10 +199,7 @@ private suspend fun LspClient.sendRunConfigurationInfoToClient() {
 }
 
 context(server: LSServer, handlerContext: LspHandlerContext)
-private suspend fun indexFolders(
-    folders: List<Path>,
-    params: InitializeParams,
-) {
+private suspend fun indexFolders(folders: List<Path>, params: InitializeParams) {
     lspClient.withProgress(params, beginTitle = "Initializing project") { progress ->
         server.workspaceStructure.updateWorkspaceModelDirectly { virtualFileUrlManager, storage ->
             if (folders.isNotEmpty()) {
@@ -217,22 +214,21 @@ private suspend fun indexFolders(
             var defaultJdk = storage.entities(SdkEntity::class.java).singleOrNull()
             storage.entities<ModuleEntity>().forEach { module ->
                 storage.modifyModuleEntity(module) {
-                    dependencies = dependencies.map {
-                        when (it) {
+                    dependencies = dependencies.map { moduleDependencyItem ->
+                        when (moduleDependencyItem) {
                             is InheritedSdkDependency -> {
-                                defaultJdk = defaultJdk
-                                    ?: createSdkEntity(
-                                        name = "Java SDK",
-                                        type = JavaSdk.getInstance(),
-                                        roots = jdkRoots(),
-                                        urlManager = virtualFileUrlManager,
-                                        source = DefaultJdkEntitySource,
-                                        storage
-                                    )
+                                defaultJdk = defaultJdk ?: createSdkEntity(
+                                    name = "Java SDK",
+                                    type = JavaSdk.getInstance(),
+                                    roots = jdkRoots(),
+                                    urlManager = virtualFileUrlManager,
+                                    source = DefaultJdkEntitySource,
+                                    storage = storage,
+                                )
                                 SdkDependency(defaultJdk.symbolicId)
                             }
 
-                            else -> it
+                            else -> moduleDependencyItem
                         }
                     }.toMutableList()
                 }
@@ -241,9 +237,7 @@ private suspend fun indexFolders(
             progress.report(Report(message = "Indexing..."))
         }
 
-        WorkDoneProgress.End(
-            message = "Workspace is imported and indexed",
-        )
+        WorkDoneProgress.End(message = "Workspace is imported and indexed")
     }
 }
 
@@ -252,7 +246,7 @@ private val importers = listOf(
     MavenWorkspaceImporter,
     GradleWorkspaceImporter,
     JpsWorkspaceImporter,
-    LightWorkspaceImporter
+    LightWorkspaceImporter,
 )
 
 context(handlerContext: LspHandlerContext)

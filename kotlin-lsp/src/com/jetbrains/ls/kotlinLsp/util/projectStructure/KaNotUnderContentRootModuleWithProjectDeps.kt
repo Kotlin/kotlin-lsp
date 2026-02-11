@@ -27,7 +27,7 @@ import kotlin.collections.forEach
 class KaNotUnderContentRootModuleWithProjectDeps(
     file: PsiFile?,
     override val project: Project,
-): KaNotUnderContentRootModule, KaModuleBase() {
+) : KaNotUnderContentRootModule, KaModuleBase() {
     private val filePointer = file?.createSmartPointer()
 
     override val name: String = "Non under content root module, but provided with base project libraries dependencies"
@@ -74,11 +74,8 @@ class KaNotUnderContentRootModuleWithProjectDeps(
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        return other is KaNotUnderContentRootModuleWithProjectDeps
-                && filePointer == other.filePointer
+        return other is KaNotUnderContentRootModuleWithProjectDeps && filePointer == other.filePointer
     }
 
-    override fun hashCode(): Int {
-        return filePointer.hashCode()
-    }
+    override fun hashCode(): Int = filePointer.hashCode()
 }
