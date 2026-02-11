@@ -3,13 +3,12 @@ package com.jetbrains.ls.api.features.impl.common.rename
 
 import com.intellij.model.psi.PsiSymbolService
 import com.intellij.model.psi.impl.targetSymbols
+import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.ex.ApplicationUtil
-import com.intellij.openapi.application.invokeAndWaitIfNeeded
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.application.writeIntentReadAction
 import com.intellij.openapi.diagnostic.LogLevel
 import com.intellij.openapi.diagnostic.logger
-import com.intellij.openapi.progress.runBlockingCancellable
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
@@ -41,6 +40,8 @@ import com.jetbrains.lsp.protocol.TextDocumentEdit
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 import com.jetbrains.lsp.protocol.URI
 import com.jetbrains.lsp.protocol.WorkspaceEdit
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 abstract class LSRenameProviderBase(
     override val supportedLanguages: Set<LSLanguage>,
@@ -156,14 +157,11 @@ abstract class LSRenameProviderBase(
     }
 
     context(server: LSServer)
-    private fun renameAndGetChangedFiles(processor: Renamer): Map<URI, URI> {
-        // FIXME(Georgii Ustinov): LSP-342
-        return invokeAndWaitIfNeeded {
-            runBlockingCancellable {
-                server.withRenamesEnabled {
-                    writeIntentReadAction {
-                        processor.rename()
-                    }
+    private suspend fun renameAndGetChangedFiles(processor: Renamer): Map<URI, URI> {
+        return withContext(Dispatchers.EDT) {
+            server.withRenamesEnabled {
+                writeIntentReadAction {
+                    processor.rename()
                 }
             }
         }
