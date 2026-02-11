@@ -18,6 +18,7 @@ import com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.compiler.LSK
 import com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.compiler.LSKotlinCompilerDiagnosticsProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.intentions.LSKotlinIntentionCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.kotlinInspectionBlacklist
+import com.jetbrains.ls.api.features.impl.common.kotlin.diagnostics.kotlinQuickFixBlacklist
 import com.jetbrains.ls.api.features.impl.common.kotlin.hover.LSKotlinHoverProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.inlayHints.LSKotlinInlayHintsProvider
 import com.jetbrains.ls.api.features.impl.common.kotlin.language.LSKotlinLanguage
@@ -43,7 +44,11 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSKotlinPackageDefinitionProvider,
         LSKotlinSemanticTokensProvider,
         LSCommonReferencesProvider(setOf(LSKotlinLanguage), TargetKind.ALL),
-        LSCommonInspectionDiagnosticProvider(setOf(LSKotlinLanguage), inspectionBlacklist = kotlinInspectionBlacklist),
+        LSCommonInspectionDiagnosticProvider(
+            supportedLanguages = setOf(LSKotlinLanguage),
+            inspectionBlacklist = kotlinInspectionBlacklist,
+            quickFixBlacklist = kotlinQuickFixBlacklist,
+        ),
         LSCommonInspectionFixesCodeActionProvider(setOf(LSKotlinLanguage)),
         LSCommonSyntaxErrorDiagnosticProvider(setOf(LSKotlinLanguage)),
         LSKotlinCompilerDiagnosticsProvider,

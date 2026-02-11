@@ -51,3 +51,14 @@ internal val kotlinInspectionBlacklist = Blacklist(
         reason = "they are slow as calling additional diagnostic collection",
     ),
 )
+
+internal val kotlinQuickFixBlacklist = Blacklist(
+    BlacklistEntry.Class(
+        fqcn = $$"org.jetbrains.kotlin.idea.k2.codeinsight.inspections.PackageDirectoryMismatchInspection$MoveFileToPackageFix",
+        reason = "LSP-582",
+    ),
+    BlacklistEntry.Class(
+        fqcn = $$"org.jetbrains.kotlin.idea.k2.codeinsight.inspections.PackageDirectoryMismatchInspection$ChangePackageFix",
+        reason = "LSP-583",
+    ),
+)
