@@ -6,13 +6,13 @@ import kotlin.reflect.KClass
 class Blacklist(entries: List<BlacklistEntry>) {
     constructor(vararg entries: BlacklistEntry) : this(entries.toList())
 
-    private val implementationClasses = entries.filterIsInstance<BlacklistEntry.Class>().map { entry -> entry.fqcn }
+    private val implementationClasses: Map<String, BlacklistEntry.Class> = entries
+        .filterIsInstance<BlacklistEntry.Class>()
+        .associateBy { entry -> entry.fqcn }
 
     private val superClasses = entries.filterIsInstance<BlacklistEntry.SuperClass>().map { entry -> entry.fqcn }
 
-    fun containsImplementation(fqcn: String): Boolean {
-        return fqcn in implementationClasses
-    }
+    fun containsImplementation(fqcn: String): Boolean = implementationClasses.contains(fqcn)
 
     fun containsSuperClass(cls: Any): Boolean {
         return cls::class.supertypes.any { kType ->
