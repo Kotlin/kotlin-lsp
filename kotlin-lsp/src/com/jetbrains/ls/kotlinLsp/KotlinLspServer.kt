@@ -43,8 +43,10 @@ import org.jetbrains.kotlin.idea.compiler.configuration.isRunningFromSources
 import java.io.RandomAccessFile
 import java.nio.file.Path
 import java.util.ServiceLoader
+import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.createTempDirectory
+import kotlin.io.path.deleteRecursively
 import kotlin.io.path.div
 import kotlin.io.path.extension
 import kotlin.io.path.name
@@ -158,8 +160,8 @@ private fun initIdeaPaths(systemPath: Path?) {
                 isLockAcquired
             }
             ?: createTempDirectory("idea-system").also {
-                @Suppress("SSBasedInspection")
-                it.toFile().deleteOnExit()
+                @OptIn(ExperimentalPathApi::class)
+                Runtime.getRuntime().addShutdownHook(Thread { it.deleteRecursively() })
             }
 
         systemProperty("idea.home.path", "$path")

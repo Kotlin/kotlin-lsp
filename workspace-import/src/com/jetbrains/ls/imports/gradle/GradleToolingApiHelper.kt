@@ -39,13 +39,13 @@ object GradleToolingApiHelper {
         return suggestedJavaPath
     }
 
-    fun getInitScriptPathString(): String {
+    fun getInitScriptPath(): Path {
         val pluginResourcePath = "/META-INF/gradle-plugins/imports-gradle-plugin.properties"
         val pluginJar = PathManager.getResourceRoot(this::class.java, pluginResourcePath)
             ?: error("Corrupted installation: gradle plugin .properties not found")
-        val initScriptFile = createTempFile("lsp-gradle-init", ".gradle")
-        initScriptFile.writeText(
-            """
+        return createTempFile("lsp-gradle-init", ".gradle").also {
+            it.writeText(
+                """
             initscript {
                 dependencies {
                     repositories {
@@ -57,8 +57,8 @@ object GradleToolingApiHelper {
             
             apply plugin: com.jetbrains.ls.imports.gradle.IdeaGradleLspPlugin
             """.trimIndent()
-        )
-        return initScriptFile.toString()
+            )
+        }
     }
 
     private fun guessGradleVersion(projectDirectory: Path): GradleVersion? {
