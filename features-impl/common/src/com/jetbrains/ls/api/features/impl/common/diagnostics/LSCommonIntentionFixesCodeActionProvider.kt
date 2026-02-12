@@ -41,7 +41,7 @@ class LSCommonIntentionFixesCodeActionProvider(
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         if (!params.textDocument.isSource()) return@flow
 
-        server.withAnalysisContext(params.textDocument.uri.uri) {
+        server.withAnalysisContext {
             readAction {
                 val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
                 val document = virtualFile.findDocument() ?: return@readAction emptyList()

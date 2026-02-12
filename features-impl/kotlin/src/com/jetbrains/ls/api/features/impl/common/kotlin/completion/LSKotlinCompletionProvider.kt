@@ -81,7 +81,7 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
         return if (!params.textDocument.isSource()) {
             CompletionList.EMPTY
         } else {
-            val itemsWithObjects = server.withAnalysisContext(params.textDocument.uri.uri) {
+            val itemsWithObjects = server.withAnalysisContext {
                 readAction {
                     params.textDocument.findVirtualFile()?.let { file ->
                         file.findPsiFile(project)?.let { psiFile ->

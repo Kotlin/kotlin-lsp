@@ -19,28 +19,6 @@ interface LSServer { // workspace?
         action: suspend context(LSAnalysisContext) CoroutineScope.() -> R,
     ): R
 
-    /**
-     * Runs the given action inside an analysis context that is bound to the current project and
-     * the provided document.
-     *
-     * This overload is thought to be used for actions that require a specific document to be
-     * available during analysis.
-     * Moreover, it allows specifying the document URI that should be analyzed making it available inside
-     * the action's context. This is mainly used in `isolatedDocumentsMode`, where thanks to
-     * [requestedDocumentUri] the analysis context is referred to the provided document.
-     *
-     * In general, prefer this overload for LSP handlers that are inherently tied to a specific document,
-     * or if you are in `isolatedDocumentsMode`.
-     *
-     * @param requestedDocumentUri The URI of the document that should be analyzed.
-     * @param action The action to run inside the project's analysis context.
-     * @return The result of the action.
-     */
-    suspend fun <R> withAnalysisContext(
-        requestedDocumentUri: URI,
-        action: suspend context(LSAnalysisContext) CoroutineScope.() -> R,
-    ): R
-
     suspend fun <R> withWriteAnalysisContext(
         action: suspend context(LSAnalysisContext, CoroutineScope) () -> R,
     ): R

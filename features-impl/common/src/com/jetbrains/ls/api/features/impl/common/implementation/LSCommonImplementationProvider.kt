@@ -24,7 +24,7 @@ class LSCommonImplementationProvider(
 ) : LSImplementationProvider {
     context(server: LSServer, handlerContext: LspHandlerContext)
     override fun provideImplementations(params: ImplementationParams): Flow<Location> = flow {
-        server.withAnalysisContext(params.textDocument.uri.uri) {
+        server.withAnalysisContext {
             readAction {
                 val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
                 val document = virtualFile.findDocument() ?: return@readAction emptyList()

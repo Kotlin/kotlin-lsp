@@ -65,7 +65,7 @@ class LSCommonInspectionDiagnosticProvider(
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
         if (!params.textDocument.isSource()) return@flow
         val onTheFly = false
-        server.withAnalysisContext(params.textDocument.uri.uri) {
+        server.withAnalysisContext {
             readAction {
                 val diagnostics = mutableListOf<Diagnostic>()
 
