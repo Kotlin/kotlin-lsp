@@ -77,7 +77,9 @@ internal object LSKotlinIntentionCodeActionProvider : LSCodeActionProvider {
                         for (action in actions) {
                             val codeAction = runCatching {
                                 toCodeAction(action, actionContext, ktElement)
-                            }.getOrHandleException { LOG.debug(it) } ?: continue
+                            }.getOrHandleException {
+                                LOG.warn("failed to convert ${action::class.qualifiedName} to CodeAction", it)
+                            } ?: continue
                             result += codeAction
                         }
                     }
