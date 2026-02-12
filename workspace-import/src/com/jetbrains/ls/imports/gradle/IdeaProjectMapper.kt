@@ -425,7 +425,7 @@ internal object IdeaProjectMapper {
         if (gradleModuleVersion != null) {
             return "Gradle: ${gradleModuleVersion.group ?: ""}:${gradleModuleVersion.name ?: ""}:${gradleModuleVersion.version ?: ""}"
         }
-        return null
+        return file?.name
     }
 
     private fun IdeaDependency.isExportedSafe(): Boolean {

@@ -444,6 +444,101 @@
                 },
                 {
                     "type": "library",
+                    "name": "gradle-api-9.2.0.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "groovy-4.0.28.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "groovy-ant-4.0.28.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "groovy-astbuilder-4.0.28.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "groovy-datetime-4.0.28.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "groovy-dateutil-4.0.28.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "groovy-groovydoc-4.0.28.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "groovy-json-4.0.28.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "groovy-nio-4.0.28.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "groovy-templates-4.0.28.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "groovy-xml-4.0.28.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "javaparser-core-3.27.0.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "kotlin-stdlib-2.2.20.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "kotlin-reflect-2.2.20.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "gradle-installation-beacon-9.2.0.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "gradle-kotlin-dsl-extensions-9.2.0.jar",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "gradle-kotlin-dsl-9.2.0.jar",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "gradle-kotlin-dsl-shared-runtime-9.2.0.jar",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "gradle-kotlin-dsl-tooling-models-9.2.0.jar",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
                     "name": "Gradle: org.jetbrains.kotlin:kotlin-gradle-plugin-idea-proto:2.3.0",
                     "scope": "runtime"
                 },
@@ -593,6 +688,101 @@
                 },
                 {
                     "type": "library",
+                    "name": "gradle-api-9.2.0.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "groovy-4.0.28.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "groovy-ant-4.0.28.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "groovy-astbuilder-4.0.28.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "groovy-datetime-4.0.28.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "groovy-dateutil-4.0.28.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "groovy-groovydoc-4.0.28.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "groovy-json-4.0.28.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "groovy-nio-4.0.28.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "groovy-templates-4.0.28.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "groovy-xml-4.0.28.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "javaparser-core-3.27.0.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "kotlin-stdlib-2.2.20.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "kotlin-reflect-2.2.20.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "gradle-installation-beacon-9.2.0.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "gradle-kotlin-dsl-extensions-9.2.0.jar",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "gradle-kotlin-dsl-9.2.0.jar",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "gradle-kotlin-dsl-shared-runtime-9.2.0.jar",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "gradle-kotlin-dsl-tooling-models-9.2.0.jar",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
                     "name": "Gradle: org.jetbrains.kotlin:kotlin-gradle-plugin-idea-proto:2.3.0",
                     "scope": "runtime"
                 },
@@ -709,6 +899,16 @@
                 {
                     "type": "library",
                     "name": "Gradle: com.google.errorprone:error_prone_annotations:2.27.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "gradle-test-kit-9.2.0.jar",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "pluginUnderTestMetadata",
                     "scope": "test"
                 },
                 {
@@ -1528,6 +1728,231 @@
                     "baseVersion": "1.3.0"
                 }
             }
+        },
+        {
+            "name": "gradle-api-9.2.0.jar",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/9.2.0/#####/gradle-api-9.2.0.jar"
+                }
+            ]
+        },
+        {
+            "name": "gradle-installation-beacon-9.2.0.jar",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<HOME>/.gradle/wrapper/dists/gradle-9.2.0-bin/11i5gvueggl8a5cioxuftxrik/gradle-9.2.0/lib/gradle-installation-beacon-9.2.0.jar"
+                }
+            ]
+        },
+        {
+            "name": "gradle-kotlin-dsl-9.2.0.jar",
+            "type": "PROVIDED",
+            "roots": [
+                {
+                    "path": "<HOME>/.gradle/wrapper/dists/gradle-9.2.0-bin/11i5gvueggl8a5cioxuftxrik/gradle-9.2.0/lib/gradle-kotlin-dsl-9.2.0.jar"
+                }
+            ]
+        },
+        {
+            "name": "gradle-kotlin-dsl-extensions-9.2.0.jar",
+            "type": "PROVIDED",
+            "roots": [
+                {
+                    "path": "<HOME>/.gradle/wrapper/dists/gradle-9.2.0-bin/11i5gvueggl8a5cioxuftxrik/gradle-9.2.0/lib/gradle-kotlin-dsl-extensions-9.2.0.jar"
+                }
+            ]
+        },
+        {
+            "name": "gradle-kotlin-dsl-shared-runtime-9.2.0.jar",
+            "type": "PROVIDED",
+            "roots": [
+                {
+                    "path": "<HOME>/.gradle/wrapper/dists/gradle-9.2.0-bin/11i5gvueggl8a5cioxuftxrik/gradle-9.2.0/lib/gradle-kotlin-dsl-shared-runtime-9.2.0.jar"
+                }
+            ]
+        },
+        {
+            "name": "gradle-kotlin-dsl-tooling-models-9.2.0.jar",
+            "type": "PROVIDED",
+            "roots": [
+                {
+                    "path": "<HOME>/.gradle/wrapper/dists/gradle-9.2.0-bin/11i5gvueggl8a5cioxuftxrik/gradle-9.2.0/lib/gradle-kotlin-dsl-tooling-models-9.2.0.jar"
+                }
+            ]
+        },
+        {
+            "name": "gradle-test-kit-9.2.0.jar",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/9.2.0/#####/gradle-test-kit-9.2.0.jar"
+                }
+            ]
+        },
+        {
+            "name": "groovy-4.0.28.jar",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<HOME>/.gradle/wrapper/dists/gradle-9.2.0-bin/11i5gvueggl8a5cioxuftxrik/gradle-9.2.0/lib/groovy-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.groovy/groovy/4.0.28/#####/groovy-4.0.28-sources.jar",
+                    "type": "SOURCES"
+                }
+            ]
+        },
+        {
+            "name": "groovy-ant-4.0.28.jar",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<HOME>/.gradle/wrapper/dists/gradle-9.2.0-bin/11i5gvueggl8a5cioxuftxrik/gradle-9.2.0/lib/groovy-ant-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.groovy/groovy-ant/4.0.28/#####/groovy-ant-4.0.28-sources.jar",
+                    "type": "SOURCES"
+                }
+            ]
+        },
+        {
+            "name": "groovy-astbuilder-4.0.28.jar",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<HOME>/.gradle/wrapper/dists/gradle-9.2.0-bin/11i5gvueggl8a5cioxuftxrik/gradle-9.2.0/lib/groovy-astbuilder-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.groovy/groovy-astbuilder/4.0.28/#####/groovy-astbuilder-4.0.28-sources.jar",
+                    "type": "SOURCES"
+                }
+            ]
+        },
+        {
+            "name": "groovy-datetime-4.0.28.jar",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<HOME>/.gradle/wrapper/dists/gradle-9.2.0-bin/11i5gvueggl8a5cioxuftxrik/gradle-9.2.0/lib/groovy-datetime-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.groovy/groovy-datetime/4.0.28/#####/groovy-datetime-4.0.28-sources.jar",
+                    "type": "SOURCES"
+                }
+            ]
+        },
+        {
+            "name": "groovy-dateutil-4.0.28.jar",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<HOME>/.gradle/wrapper/dists/gradle-9.2.0-bin/11i5gvueggl8a5cioxuftxrik/gradle-9.2.0/lib/groovy-dateutil-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.groovy/groovy-dateutil/4.0.28/#####/groovy-dateutil-4.0.28-sources.jar",
+                    "type": "SOURCES"
+                }
+            ]
+        },
+        {
+            "name": "groovy-groovydoc-4.0.28.jar",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<HOME>/.gradle/wrapper/dists/gradle-9.2.0-bin/11i5gvueggl8a5cioxuftxrik/gradle-9.2.0/lib/groovy-groovydoc-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.groovy/groovy-groovydoc/4.0.28/#####/groovy-groovydoc-4.0.28-sources.jar",
+                    "type": "SOURCES"
+                }
+            ]
+        },
+        {
+            "name": "groovy-json-4.0.28.jar",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<HOME>/.gradle/wrapper/dists/gradle-9.2.0-bin/11i5gvueggl8a5cioxuftxrik/gradle-9.2.0/lib/groovy-json-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.groovy/groovy-json/4.0.28/#####/groovy-json-4.0.28-sources.jar",
+                    "type": "SOURCES"
+                }
+            ]
+        },
+        {
+            "name": "groovy-nio-4.0.28.jar",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<HOME>/.gradle/wrapper/dists/gradle-9.2.0-bin/11i5gvueggl8a5cioxuftxrik/gradle-9.2.0/lib/groovy-nio-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.groovy/groovy-nio/4.0.28/#####/groovy-nio-4.0.28-sources.jar",
+                    "type": "SOURCES"
+                }
+            ]
+        },
+        {
+            "name": "groovy-templates-4.0.28.jar",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<HOME>/.gradle/wrapper/dists/gradle-9.2.0-bin/11i5gvueggl8a5cioxuftxrik/gradle-9.2.0/lib/groovy-templates-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.groovy/groovy-templates/4.0.28/#####/groovy-templates-4.0.28-sources.jar",
+                    "type": "SOURCES"
+                }
+            ]
+        },
+        {
+            "name": "groovy-xml-4.0.28.jar",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<HOME>/.gradle/wrapper/dists/gradle-9.2.0-bin/11i5gvueggl8a5cioxuftxrik/gradle-9.2.0/lib/groovy-xml-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.groovy/groovy-xml/4.0.28/#####/groovy-xml-4.0.28-sources.jar",
+                    "type": "SOURCES"
+                }
+            ]
+        },
+        {
+            "name": "javaparser-core-3.27.0.jar",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<HOME>/.gradle/wrapper/dists/gradle-9.2.0-bin/11i5gvueggl8a5cioxuftxrik/gradle-9.2.0/lib/javaparser-core-3.27.0.jar"
+                }
+            ]
+        },
+        {
+            "name": "kotlin-reflect-2.2.20.jar",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<HOME>/.gradle/wrapper/dists/gradle-9.2.0-bin/11i5gvueggl8a5cioxuftxrik/gradle-9.2.0/lib/kotlin-reflect-2.2.20.jar"
+                }
+            ]
+        },
+        {
+            "name": "kotlin-stdlib-2.2.20.jar",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<HOME>/.gradle/wrapper/dists/gradle-9.2.0-bin/11i5gvueggl8a5cioxuftxrik/gradle-9.2.0/lib/kotlin-stdlib-2.2.20.jar"
+                }
+            ]
+        },
+        {
+            "name": "pluginUnderTestMetadata",
+            "type": "TEST",
+            "roots": []
         }
     ],
     "kotlinSettings": [

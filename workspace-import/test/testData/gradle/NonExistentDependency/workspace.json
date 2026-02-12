@@ -35,6 +35,11 @@
                     "scope": "compile"
                 },
                 {
+                    "type": "library",
+                    "name": "unresolved dependency - com.example.nonexistent nonexistent-library 1.0.0",
+                    "scope": "compile"
+                },
+                {
                     "type": "moduleSource"
                 },
                 {
@@ -77,6 +82,11 @@
                 {
                     "type": "library",
                     "name": "Gradle: org.jetbrains:annotations:13.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "unresolved dependency - com.example.nonexistent nonexistent-library 1.0.0",
                     "scope": "compile"
                 },
                 {
@@ -175,6 +185,11 @@
                     "baseVersion": "13.0"
                 }
             }
+        },
+        {
+            "name": "unresolved dependency - com.example.nonexistent nonexistent-library 1.0.0",
+            "type": "COMPILE",
+            "roots": []
         }
     ],
     "kotlinSettings": [
