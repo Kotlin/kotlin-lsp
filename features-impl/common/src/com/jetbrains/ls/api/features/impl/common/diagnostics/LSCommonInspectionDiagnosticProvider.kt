@@ -20,8 +20,8 @@ import com.intellij.lang.impl.modcommand.ModCommandActionQuickFixWrapper
 import com.intellij.modcommand.ModCommand
 import com.intellij.modcommand.ModCommandQuickFix
 import com.intellij.openapi.application.readAction
-import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.diagnostic.getOrHandleException
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
@@ -49,7 +49,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.encodeToJsonElement
 
-private val LOG = fileLogger()
+private val LOG = logger<LSCommonInspectionDiagnosticProvider>()
 
 // TODO: LSP-278 Optimize performance of inspections
 class LSCommonInspectionDiagnosticProvider(

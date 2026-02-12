@@ -4,8 +4,8 @@ package com.jetbrains.ls.api.features.impl.common.diagnostics
 import com.intellij.codeInsight.intention.IntentionManager
 import com.intellij.modcommand.ActionContext
 import com.intellij.openapi.application.readAction
-import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.diagnostic.getOrHandleException
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
@@ -28,7 +28,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.encodeToJsonElement
 
-private val LOG = fileLogger()
+private val LOG = logger<LSCommonIntentionFixesCodeActionProvider>()
 
 class LSCommonIntentionFixesCodeActionProvider(
     override val supportedLanguages: Set<LSLanguage>,

@@ -37,6 +37,8 @@ import org.jetbrains.kotlin.analysis.api.diagnostics.KaDiagnosticWithPsi
 import org.jetbrains.kotlin.idea.codeinsight.api.applicators.fixes.KotlinQuickFixService
 import org.jetbrains.kotlin.psi.KtFile
 
+private val LOG = logger<LSKotlinCompilerDiagnosticsFixesCodeActionProvider>()
+
 internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActionProvider {
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
     override val providesOnlyKinds: Set<CodeActionKind> = setOf(CodeActionKind.QuickFix)
@@ -121,5 +123,3 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
             .toList()
     }
 }
-
-private val LOG = logger<LSKotlinCompilerDiagnosticsFixesCodeActionProvider>()
