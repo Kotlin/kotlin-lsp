@@ -52,6 +52,12 @@ class ProjectImportTest {
     fun dependencies() = doGradleTest("Dependencies")
 
     @Test
+    fun gradle6Project() = doGradleTest("Gradle6Project")
+
+    @Test
+    fun gradle7Project() = doGradleTest("Gradle7Project")
+
+    @Test
     fun empty() = doGradleTest("Empty")
 
     @Test
