@@ -567,6 +567,17 @@ private fun MavenProject.collectLibraries(
                         type = artifact.classifier?.takeIf { it.isNotEmpty() }?.uppercase() ?: "CLASSES",
                     )
                 }
+            ),
+            properties = XmlElement(
+                tag = "properties",
+                attributes = linkedMapOf(
+                    "groupId" to artifact.groupId,
+                    "artifactId" to artifact.artifactId,
+                    "version" to artifact.version,
+                    "baseVersion" to artifact.version,
+                ),
+                children = emptyList(),
+                text = null
             )
         )
     }
