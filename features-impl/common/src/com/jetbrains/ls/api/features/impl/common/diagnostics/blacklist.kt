@@ -14,6 +14,8 @@ class Blacklist(entries: List<BlacklistEntry>) {
 
     fun containsImplementation(fqcn: String): Boolean = implementationClasses.contains(fqcn)
 
+    fun getImplementationBlacklistEntry(fqcn: String): BlacklistEntry? = implementationClasses[fqcn]
+
     fun containsSuperClass(cls: Any): Boolean {
         return cls::class.supertypes.any { kType ->
             (kType.classifier as? KClass<*>)?.java?.name in superClasses

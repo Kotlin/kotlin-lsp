@@ -16,6 +16,7 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.codeInspection.QuickFix
 import com.intellij.codeInspection.ex.InspectionManagerEx
 import com.intellij.lang.Language
+import com.intellij.lang.impl.modcommand.ModCommandActionQuickFixWrapper
 import com.intellij.modcommand.ModCommand
 import com.intellij.modcommand.ModCommandQuickFix
 import com.intellij.openapi.application.readAction
@@ -213,15 +214,43 @@ class LSCommonInspectionDiagnosticProvider(
     }
 
     private fun getModCommand(fix: QuickFix<*>, project: Project, problemDescriptor: ProblemDescriptor): ModCommand? {
-        if (fix is ModCommandQuickFix) {
-            return fix.perform(project, problemDescriptor)
+        val fixClass = fix::class.java.name
+        val blacklistEntry = quickFixBlacklist.getImplementationBlacklistEntry(fixClass)
+        fun logQuickFixBlacklisted() {
+            LOG.warn("Quick fix $fixClass is a ModCommandQuickFix, but it is blacklisted because of ${blacklistEntry?.reason}.")
         }
 
-        if (!quickFixBlacklist.containsImplementation(fix::class.java.name)) {
-            LOG.warn("Unknown quick fix type: ${fix::class.java}. Please add it to the blacklist and create a YouTrack issue.")
-        }
+        return when (fix) {
+            is ModCommandActionQuickFixWrapper -> {
+                val wrappedFixClass = fix.action::class.java.name
+                val wrappedFixBlacklistEntry = quickFixBlacklist.getImplementationBlacklistEntry(wrappedFixClass)
+                if (wrappedFixBlacklistEntry != null) {
+                    LOG.warn("Quick fix $fixClass is a ModCommandQuickFix, but wrapped action $wrappedFixClass is blacklisted because of ${wrappedFixBlacklistEntry.reason}.")
+                    null
+                } else if (blacklistEntry != null) {
+                    logQuickFixBlacklisted()
+                    null
+                } else {
+                    fix.perform(project, problemDescriptor)
+                }
+            }
 
-        return null
+            is ModCommandQuickFix -> {
+                if (blacklistEntry != null) {
+                    logQuickFixBlacklisted()
+                    null
+                } else {
+                    fix.perform(project, problemDescriptor)
+                }
+            }
+
+            else -> {
+                if (blacklistEntry == null) {
+                    LOG.warn("Unknown quick fix type: $fixClass. Please add it to the blacklist and create a YouTrack issue.")
+                }
+                null
+            }
+        }
     }
 }
 
