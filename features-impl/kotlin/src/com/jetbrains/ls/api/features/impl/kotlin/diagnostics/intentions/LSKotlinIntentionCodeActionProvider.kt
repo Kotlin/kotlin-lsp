@@ -4,15 +4,13 @@ package com.jetbrains.ls.api.features.impl.kotlin.diagnostics.intentions
 import com.intellij.codeInsight.intention.CommonIntentionAction
 import com.intellij.modcommand.ActionContext
 import com.intellij.openapi.application.readAction
-import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.diagnostic.getOrHandleException
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
-import com.intellij.psi.PsiElement
 import com.intellij.psi.util.descendantsOfType
 import com.intellij.psi.util.startOffset
-import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
@@ -41,6 +39,8 @@ import org.jetbrains.kotlin.idea.k2.codeinsight.intentions.MovePropertyToConstru
 import org.jetbrains.kotlin.idea.k2.codeinsight.intentions.SpecifyTypeExplicitlyIntention
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtFile
+
+private val LOG = logger<LSKotlinIntentionCodeActionProvider>()
 
 internal object LSKotlinIntentionCodeActionProvider : LSCodeActionProvider {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSKotlinLanguage)
@@ -73,7 +73,10 @@ internal object LSKotlinIntentionCodeActionProvider : LSCodeActionProvider {
                     val result = mutableListOf<CodeAction>()
                     for (ktElement in ktFile.descendantsOfType<KtElement>()) {
                         if (!params.range.intersects(ktElement.textRange.toLspRange(document))) continue
-                        val actionContext = createActionContext(ktFile, ktElement)
+                        val actionContext = run {
+                            val selection = TextRange(ktElement.startOffset, ktElement.startOffset) // empty selection
+                            ActionContext(project, ktFile, ktElement.startOffset, selection, ktElement)
+                        }
                         for (action in actions) {
                             val codeAction = runCatching {
                                 toCodeAction(action, actionContext, ktElement)
@@ -86,25 +89,16 @@ internal object LSKotlinIntentionCodeActionProvider : LSCodeActionProvider {
                     result
                 }
             }
-        }.forEach { emit(it) }
+        }.forEach { codeAction -> emit(codeAction) }
     }
-
-    context(analysisContext: LSAnalysisContext)
-    private fun createActionContext(ktFile: KtFile, element: PsiElement) = ActionContext(
-        project,
-        ktFile,
-        element.startOffset,
-        TextRange(element.startOffset, element.startOffset), // empty selection
-        element,
-    )
 
     private fun toCodeAction(
         action: KotlinApplicableModCommandAction<*, *>,
         actionContext: ActionContext,
-        child: KtElement
+        child: KtElement,
     ): CodeAction? {
-        val modCodeAction = (action as? CommonIntentionAction)?.asModCommandAction()
-        if (modCodeAction == null) {
+        val modCommandAction = (action as? CommonIntentionAction)?.asModCommandAction()
+        if (modCommandAction == null) {
             LOG.warn("Cannot convert $action to ModCommandAction")
             return null
         }
@@ -118,7 +112,7 @@ internal object LSKotlinIntentionCodeActionProvider : LSCodeActionProvider {
                 val selection = TextRange(offset, offset) // empty selection
                 ActionContext(child.project, ktPsiFile, offset, selection, null)
             }
-            val modCommand = modCodeAction.perform(actionContext)
+            val modCommand = modCommandAction.perform(actionContext)
             val modCommandData = ModCommandData.from(modCommand) ?: return null
             return CodeAction(
                 title = presentation.name,
@@ -135,6 +129,3 @@ internal object LSKotlinIntentionCodeActionProvider : LSCodeActionProvider {
         }
     }
 }
-
-private val LOG = fileLogger()
-
