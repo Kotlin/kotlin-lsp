@@ -8,7 +8,3 @@ interface LSConfigurationEntry
 interface LSLanguageSpecificConfigurationEntry : LSConfigurationEntry {
     val supportedLanguages: Set<LSLanguage>
 }
-
-
-fun LSLanguageSpecificConfigurationEntry.supportLanguage(language: LSLanguage): Boolean =
-    supportedLanguages.contains(language)
