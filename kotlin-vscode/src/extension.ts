@@ -1,5 +1,5 @@
 import * as path from 'path';
-import {commands, type ExtensionContext, Uri, window, workspace} from "vscode"
+import {commands, type ExtensionContext, extensions, type OutputChannel, Uri, window, workspace,} from "vscode"
 import {registerDecompiler, registerOpeningJars} from "./decompiler"
 import {initLspClient, startLspClient} from './lspClient';
 import {registerStatusBarItem} from './statusBar';
@@ -7,13 +7,23 @@ import {registerDapServer} from "./dap"
 import {registerDatabase} from "./database"
 import {registerDebugJava} from "./debugjava"
 
-
-export const extensionId = 'kotlin'
-
-let _context : ExtensionContext | undefined
+let _context: ExtensionContext | undefined
+let _outputChannel: OutputChannel | undefined;
 
 export function getContext(): ExtensionContext {
     return _context!;
+}
+
+export function getOutputChannel(): OutputChannel {
+    return _outputChannel!;
+}
+
+export function logInfo(text: string) {
+    if (_outputChannel) {
+        _outputChannel.appendLine(text)
+    } else {
+        console.log(text);
+    }
 }
 
 function registerExportWorkspaceToJsonCommand(context: ExtensionContext) {
@@ -36,6 +46,7 @@ function registerExportWorkspaceToJsonCommand(context: ExtensionContext) {
 
 export async function activate(context: ExtensionContext) {
     _context = context
+    initOutputChannel(context)
     registerDecompiler(context)
     registerOpeningJars()
     registerDapServer(context);
@@ -45,4 +56,10 @@ export async function activate(context: ExtensionContext) {
     registerStatusBarItem()
     initLspClient()
     await startLspClient()
+}
+
+function initOutputChannel(context: ExtensionContext) {
+    const extension = extensions.getExtension(context.extension.id);
+    const pkg = extension?.packageJSON as { displayName?: string } | undefined;
+    _outputChannel = window.createOutputChannel(pkg?.displayName ?? 'JetBrains LSP');
 }

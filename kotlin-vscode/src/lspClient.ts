@@ -1,8 +1,6 @@
 import * as vscode from "vscode"
 import {workspace} from "vscode"
 import * as path from "node:path"
-import {promisify} from 'util';
-import {exec} from 'child_process';
 import {
     Disposable,
     LanguageClient,
@@ -16,10 +14,8 @@ import {
 import {chmodSync} from 'fs';
 import * as net from "node:net"
 import * as os from 'os';
-import {extensionId, getContext} from "./extension"
+import {getContext, getOutputChannel, logInfo} from "./extension"
 import {middleware} from "./middleware";
-
-const execAsync = promisify(exec);
 
 let _client: LanguageClient | undefined;
 
@@ -88,74 +84,16 @@ export async function stopLspClient(): Promise<void> {
     _client = undefined
 }
 
-
-const jrePathForLspSettingName = 'kotlinLSP.jrePathToRunLsp';
-// IMPORTANT: when updating this constant, please update the `kotlinLSP.jrePathToRunLsp` setting description in package.json as well
-const minimumSupportedJavaVersion = 21
-
-
-function getJrePathForKotlinLSP() {
-    const configured = vscode.workspace.getConfiguration().get<string>(jrePathForLspSettingName)
-    if (configured) return configured
-    const relative = os.platform() === 'darwin'
-            ? path.join('server', 'jre', 'Contents', 'Home')
-            : path.join('server', 'jre')
-    return getContext().asAbsolutePath(relative)
-}
-
-function getJavaPath(): string {
-    let jrePath = getJrePathForKotlinLSP();
-
-    if (!jrePath) {
-        return 'java'
-    }
-
-    const javaExecutable = os.platform() === 'win32' ? 'java.exe' : 'java';
-    const javaBin = path.join(jrePath, 'bin', javaExecutable);
+function getLauncherPath(): string {
+    const relative = path.join('server', 'bin')
+    const launcherName = os.platform() === 'win32'
+            ? 'languageServer64.exe'
+            : 'languageServer'
+    const launcherPath = path.join(getContext().asAbsolutePath(relative), launcherName);
     if (os.platform() !== 'win32') {
-        chmodSync(javaBin, 0o755);
+        chmodSync(launcherPath, 0o755);
     }
-    return javaBin
-}
-
-async function ensureCorrectJavaVersion(javaCommand: string): Promise<boolean> {
-    try {
-        const {stdout, stderr} = await execAsync(`"${javaCommand}" -version`);
-
-        // Java version is usually reported in stderr
-        const versionOutput = stdout || stderr;
-        const versionMatch = versionOutput.match(/version "(\d+)(?:\.(\d+))?/);
-
-        if (!versionMatch) {
-            vscode.window.showErrorMessage('Failed to determine Java version.');
-            return false;
-        }
-
-        const majorVersion = parseInt(versionMatch[1], 10);
-
-        if (isNaN(majorVersion) || majorVersion < minimumSupportedJavaVersion) {
-            const openSettingsButtonText = 'Open Settings'
-            vscode.window.showErrorMessage(
-                    `Kotlin LSP requires Java ${minimumSupportedJavaVersion} or later.
-                     You are currently using version ${versionMatch[1]}. 
-                     Please update the ${jrePathForLspSettingName} setting to point to a JRE ${minimumSupportedJavaVersion}+ installation`,
-                openSettingsButtonText,
-            ).then(selection => {
-                if (selection === openSettingsButtonText) {
-                    vscode.commands.executeCommand('workbench.action.openSettings', `${extensionId}.${jrePathForLspSettingName}`);
-                }
-            });
-            return false;
-        }
-
-        return true;
-    } catch (error) {
-        console.error('Error executing Java command:', error);
-        vscode.window.showErrorMessage('Failed to execute Java command to run lsp server. ' +
-                `Please ensure that \`${jrePathForLspSettingName}\` option is set correctly to the JRE installation path.` +
-                `Current value is \`${getJrePathForKotlinLSP()}\``);
-        return false;
-    }
+    return launcherPath
 }
 
 async function createServerOptions(): Promise<ServerOptions | null> {
@@ -193,7 +131,7 @@ async function connectToLocalLspServer(port: number): Promise<(() => Promise<Str
             return () => Promise.resolve(result);
         } catch (error) {
             if (attempt < maxRetries - 1) {
-                console.log(`Waiting for server on port ${port}... (attempt ${attempt + 1}/${maxRetries})`);
+                logInfo(`Waiting for server on port ${port}... (attempt ${attempt + 1}/${maxRetries})`);
                 await new Promise(resolve => setTimeout(resolve, retryDelayMs));
             } else {
                 vscode.window.showErrorMessage(
@@ -217,6 +155,7 @@ async function createLspClient(): Promise<LanguageClient | null> {
             {scheme: 'jar', language: 'plaintext'}, {scheme: 'jrt', language: 'plaintext'},
         ],
         progressOnInitialization: true,
+        outputChannel: getOutputChannel(),
         initializationOptions: {
             defaultJdk: workspace.getConfiguration().get('kotlinLSP.jdkForSymbolResolution')
         },
@@ -233,28 +172,29 @@ async function createLspClient(): Promise<LanguageClient | null> {
 
 
 async function getRunningJavaServerLspOptions(): Promise<ServerOptions | null> {
-    const javaCommand = await getJavaPath();
-    if (!javaCommand) return null;
-
-    const isJavaVersionValid = await ensureCorrectJavaVersion(javaCommand);
-    if (!isJavaVersionValid) return null;
-
-    const extractPath = getContext().asAbsolutePath(path.join('server', 'lib'));
+    const launcherPath = getLauncherPath();
 
     const context = getContext()
     const args: string[] = []
-    args.push(...defaultJvmOptions)
-    args.push(...getUserJvmOptions())
-    args.push(
-        '-classpath', extractPath + path.sep + '*',
-        'com.jetbrains.ls.kotlinLsp.KotlinLspServerKt', '--client',
-    );
+    args.push('run', '--client');
     if (context.storageUri) {
         args.push('--system-path', context.storageUri.fsPath)
     }
+    const userJvmOptions = getUserJvmOptions()
+    const env = buildJvmOptionsEnv(process.env, userJvmOptions)
+
+    logInfo('Starting language server');
+    logInfo(`  command: ${launcherPath}`);
+    logInfo(`  args   : ${JSON.stringify(args)}`);
+    logInfo(`  VM opts: ${JSON.stringify(userJvmOptions)}`);
+    logInfo('');
+
     return <ServerOptions>{
-        command: javaCommand,
+        command: launcherPath,
         args: args,
+        options: {
+            env: env,
+        },
         transport: {
             kind: TransportKind.socket,
             port: 9998
@@ -269,59 +209,26 @@ function getUserJvmOptions() : string[] {
     return settings ?? []
 }
 
-const defaultJvmOptions = [
-    "--add-opens", "java.base/java.io=ALL-UNNAMED",
-    "--add-opens", "java.base/java.lang=ALL-UNNAMED",
-    "--add-opens", "java.base/java.lang.ref=ALL-UNNAMED",
-    "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED",
-    "--add-opens", "java.base/java.net=ALL-UNNAMED",
-    "--add-opens", "java.base/java.nio=ALL-UNNAMED",
-    "--add-opens", "java.base/java.nio.charset=ALL-UNNAMED",
-    "--add-opens", "java.base/java.text=ALL-UNNAMED",
-    "--add-opens", "java.base/java.time=ALL-UNNAMED",
-    "--add-opens", "java.base/java.util=ALL-UNNAMED",
-    "--add-opens", "java.base/java.util.concurrent=ALL-UNNAMED",
-    "--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED",
-    "--add-opens", "java.base/java.util.concurrent.locks=ALL-UNNAMED",
-    "--add-opens", "java.base/jdk.internal.ref=ALL-UNNAMED",
-    "--add-opens", "java.base/jdk.internal.vm=ALL-UNNAMED",
-    "--add-opens", "java.base/sun.net.dns=ALL-UNNAMED",
-    "--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED",
-    "--add-opens", "java.base/sun.nio.fs=ALL-UNNAMED",
-    "--add-opens", "java.base/sun.security.ssl=ALL-UNNAMED",
-    "--add-opens", "java.base/sun.security.util=ALL-UNNAMED",
-    "--add-opens", "java.desktop/com.apple.eawt=ALL-UNNAMED",
-    "--add-opens", "java.desktop/com.apple.eawt.event=ALL-UNNAMED",
-    "--add-opens", "java.desktop/com.apple.laf=ALL-UNNAMED",
-    "--add-opens", "java.desktop/com.sun.java.swing=ALL-UNNAMED",
-    "--add-opens", "java.desktop/com.sun.java.swing.plaf.gtk=ALL-UNNAMED",
-    "--add-opens", "java.desktop/java.awt=ALL-UNNAMED",
-    "--add-opens", "java.desktop/java.awt.dnd.peer=ALL-UNNAMED",
-    "--add-opens", "java.desktop/java.awt.event=ALL-UNNAMED",
-    "--add-opens", "java.desktop/java.awt.font=ALL-UNNAMED",
-    "--add-opens", "java.desktop/java.awt.image=ALL-UNNAMED",
-    "--add-opens", "java.desktop/java.awt.peer=ALL-UNNAMED",
-    "--add-opens", "java.desktop/javax.swing=ALL-UNNAMED",
-    "--add-opens", "java.desktop/javax.swing.plaf.basic=ALL-UNNAMED",
-    "--add-opens", "java.desktop/javax.swing.text=ALL-UNNAMED",
-    "--add-opens", "java.desktop/javax.swing.text.html=ALL-UNNAMED",
-    "--add-opens", "java.desktop/sun.awt=ALL-UNNAMED",
-    "--add-opens", "java.desktop/sun.awt.X11=ALL-UNNAMED",
-    "--add-opens", "java.desktop/sun.awt.datatransfer=ALL-UNNAMED",
-    "--add-opens", "java.desktop/sun.awt.image=ALL-UNNAMED",
-    "--add-opens", "java.desktop/sun.awt.windows=ALL-UNNAMED",
-    "--add-opens", "java.desktop/sun.font=ALL-UNNAMED",
-    "--add-opens", "java.desktop/sun.java2d=ALL-UNNAMED",
-    "--add-opens", "java.desktop/sun.lwawt=ALL-UNNAMED",
-    "--add-opens", "java.desktop/sun.lwawt.macosx=ALL-UNNAMED",
-    "--add-opens", "java.desktop/sun.swing=ALL-UNNAMED",
-    "--add-opens", "java.management/sun.management=ALL-UNNAMED",
-    "--add-opens", "jdk.attach/sun.tools.attach=ALL-UNNAMED",
-    "--add-opens", "jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
-    "--add-opens", "jdk.internal.jvmstat/sun.jvmstat.monitor=ALL-UNNAMED",
-    "--add-opens", "jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED",
-    "--enable-native-access=ALL-UNNAMED",
-    "-Djdk.lang.Process.launchMechanism=FORK",
-    "-Djava.system.class.loader=com.intellij.util.lang.PathClassLoader",
-    "-Djava.awt.headless=true",
-]
+function buildJvmOptionsEnv(baseEnv: NodeJS.ProcessEnv, extraOptions: string[]): NodeJS.ProcessEnv {
+    if (extraOptions.length === 0) {
+        return baseEnv
+    }
+    const OPTION = 'IJ_JAVA_OPTIONS'
+    const env: NodeJS.ProcessEnv = {...baseEnv}
+
+    const current = env[OPTION] ?? ''
+    const extra = extraOptions.map(shellQuoteIfNeeded).join(' ')
+    env[OPTION] = current ? `${current} ${extra}` : extra
+
+    return env
+}
+
+function shellQuoteIfNeeded(arg: string): string {
+    // No quoting needed
+    if (/^[a-zA-Z0-9._=:/@-]+$/.test(arg)) {
+        return arg
+    }
+    // Escape special characters
+    const escaped = arg.replace(/(["\\$`])/g, '\\$1')
+    return `"${escaped}"`
+}

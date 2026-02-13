@@ -4,7 +4,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const intellijVscodeDir = path.resolve(__dirname, '../../../../language-server/intellij-vscode');
+const intellijVscodeDir = path.resolve(__dirname, '../../../../../language-server/intellij-vscode');
 
 function merge(target, patch) {
     if (Array.isArray(target) && Array.isArray(patch)) {
