@@ -32,7 +32,8 @@ private val LOG = fileLogger()
 
 class LSCommonIntentionFixesCodeActionProvider(
     override val supportedLanguages: Set<LSLanguage>,
-    private val blacklist: Blacklist = Blacklist(),
+    private val intentionBlacklist: Blacklist = Blacklist(),
+    private val quickFixBlacklist: Blacklist = Blacklist(),
 ) : LSCodeActionProvider {
 
     override val providesOnlyKinds: Set<CodeActionKind> get() = setOf(codeActionKind)
@@ -56,7 +57,18 @@ class LSCommonIntentionFixesCodeActionProvider(
                     .getAvailableIntentions(languageIds)
                     .asSequence()
                     .mapNotNull { intentionAction -> intentionAction.asModCommandAction() }
-                    .filterNot { modCommandAction -> blacklist.containsImplementation(modCommandAction.javaClass.name) }
+                    .filterNot { modCommandAction ->
+                        val actionClass = modCommandAction.javaClass.name
+                        val blacklistEntry = quickFixBlacklist.getImplementationBlacklistEntry(actionClass)
+                        if (blacklistEntry != null) {
+                            LOG.debug("Quick fix $actionClass is blacklisted because of ${blacklistEntry.reason}")
+                            true
+                        } else {
+                            false
+                        }
+                    }
+
+                    .filterNot { modCommandAction -> intentionBlacklist.containsImplementation(modCommandAction.javaClass.name) }
                     .mapNotNull { modCommandAction ->
                         val presentation = runCatching {
                             // If some ModCommand is not available, calling getPresentation() in such case should return null, not throw.
