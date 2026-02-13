@@ -81,8 +81,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                     }
                 }
                 .directory(projectDirectory.toFile())
-                .inheritIO()
-                .runAndGetOK("Maven")
+                .runAndGetOK("Maven", processOutputLogger = LOG)
         } finally {
             mavenPluginPomFile.delete()
         }
@@ -106,8 +105,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
 
                 }
                 .directory(projectDirectory.toFile())
-                .inheritIO()
-                .runAndGetOK("Maven")
+                .runAndGetOK("Maven", processOutputLogger = LOG)
 
             return JsonWorkspaceImporter.importWorkspaceJson(
                 workspaceJsonFile, projectDirectory, onUnresolvedDependency, virtualFileUrlManager
