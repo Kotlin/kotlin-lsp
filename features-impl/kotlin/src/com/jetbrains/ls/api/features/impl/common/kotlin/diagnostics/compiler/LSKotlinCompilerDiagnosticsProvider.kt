@@ -6,7 +6,6 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
-import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
@@ -23,7 +22,6 @@ import com.jetbrains.lsp.protocol.StringOrInt
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.encodeToJsonElement
-import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.analysis.api.components.KaDiagnosticCheckerFilter
 import org.jetbrains.kotlin.analysis.api.diagnostics.KaDiagnosticWithPsi
@@ -46,11 +44,10 @@ internal object LSKotlinCompilerDiagnosticsProvider : LSDiagnosticProvider {
                     diagnostics.flatMap { it.toLsp(document, virtualFile) }
                 }
             }
-        }.forEach { emit(it) }
+        }.forEach { diagnostic -> emit(diagnostic) }
     }
 }
 
-context(kaSession: KaSession, analysisContext: LSAnalysisContext, server: LSServer)
 private fun KaDiagnosticWithPsi<*>.toLsp(document: Document, file: VirtualFile): List<Diagnostic> {
     val data = KotlinCompilerDiagnosticData.create(this, file)
     return textRanges.map { textRange ->
