@@ -39,6 +39,10 @@
                         {
                             "path": "<WORKSPACE>/src/test/resources",
                             "type": "java-test-resource"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/test/kotlin",
+                            "type": "java-test"
                         }
                     ]
                 }
@@ -102,7 +106,7 @@
             "name": "Kotlin",
             "sourceRoots": [
                 "<WORKSPACE>/src/main/kotlin",
-                "<WORKSPACE>/src/test/java"
+                "<WORKSPACE>/src/test/kotlin"
             ],
             "configFileItems": [],
             "module": "simple-maven",

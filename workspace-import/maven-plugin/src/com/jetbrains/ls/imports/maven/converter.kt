@@ -3,6 +3,7 @@ package com.jetbrains.ls.imports.maven
 
 import kotlinx.serialization.json.Json
 import org.apache.maven.artifact.Artifact
+import org.apache.maven.model.Dependency
 import org.apache.maven.model.Plugin
 import org.apache.maven.project.MavenProject
 import org.codehaus.plexus.util.xml.Xpp3Dom
@@ -21,7 +22,6 @@ import kotlin.io.path.Path
 import kotlin.io.path.absolute
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
-
 
 private val KOTLIN_COMPILER_PLUGIN_JAR_PATTERN = Regex(".*-compiler-plugin.*\\.jar")
 private val IMPORTED_CLASSIFIERS = setOf("client")
@@ -187,35 +187,29 @@ private fun sourceRootData(
 ): List<SourceRootData> = buildSet {
     val projectRoot = project.basedir?.toPath()?.absolute()
 
-    fun belongsToProject(dir: String) = projectRoot == null || Path(dir).startsWith(projectRoot)
+    fun belongsToProject(dir: String) = projectRoot == null || Path(dir).let { it != projectRoot && it.startsWith(projectRoot) }
 
     if (module.type.containsMain) {
         project.compileSourceRoots
             ?.filter { belongsToProject(it) }
-            ?.forEach { sourceRoot ->
-                add(SourceRootData(sourceRoot, "java-source"))
-            }
+            ?.forEach { add(SourceRootData(it, "java-source")) }
         project.resources
             ?.map { it.directory }
             ?.filter { belongsToProject(it) }
-            ?.forEach {
-                add(SourceRootData(it, "java-resource"))
-            }
+            ?.forEach { add(SourceRootData(it, "java-resource")) }
         kotlinSettings?.compileSourceRoots?.forEach {
             add(SourceRootData(it, "java-source"))
         }
-        addBuildHelperSources(project, "add-source", "java-source")
-        addBuildHelperResources(project, "add-resource", "java-resource")
+        addBuildHelperRoots(project, "add-source", "sources","java-source")
+        addBuildHelperRoots(project, "add-resource", "resources","java-resource")
         addModelloGeneratedSources(project, "java-source")
-        addCompilerGeneratedSources(project, "java-source")
+        addCompilerGeneratedSources(project, "compiler:compile","java-source")
         addGeneratedDirProperty(project, "java-source")
     }
     if (module.type.containsTest) {
         project.testCompileSourceRoots
             ?.filter { belongsToProject(it) }
-            ?.forEach { testRoot ->
-                add(SourceRootData(testRoot, "java-test"))
-            }
+            ?.forEach { add(SourceRootData(it, "java-test")) }
         project.testResources
             ?.map { it.directory }
             ?.filter { belongsToProject(it) }
@@ -224,28 +218,26 @@ private fun sourceRootData(
             }
         kotlinSettings?.testSourceRoots
             ?.filter { belongsToProject(it) }
-            ?.forEach {
-                add(SourceRootData(it, "java-test"))
-            }
-        addBuildHelperSources(project, "add-test-source", "java-test")
-        addBuildHelperResources(project, "add-test-resource", "java-test-resource")
+            ?.forEach { add(SourceRootData(it, "java-test")) }
+        addBuildHelperRoots(project, "add-test-source", "sources", "java-test")
+        addBuildHelperRoots(project, "add-test-resource", "resources","java-test-resource")
+        addCompilerGeneratedSources(project, "compiler:testCompile","java-source")
         addModelloGeneratedSources(project, "java-test")
     }
 }.toList()
 
-private fun MutableSet<SourceRootData>.addBuildHelperSources(
+private fun MutableSet<SourceRootData>.addBuildHelperRoots(
     project: MavenProject,
     goal: String,
+    property: String,
     rootType: String
 ) {
-    val plugin = project.buildPlugins.find {
-        it.groupId == "org.codehaus.mojo" && it.artifactId == "build-helper-maven-plugin"
-    } ?: return
+    val plugin = findPlugin(project, "org.codehaus.mojo", "build-helper-maven-plugin") ?: return
 
     plugin.executions.forEach { execution ->
         if (execution.goals.contains(goal)) {
             val config = execution.configuration as? Xpp3Dom ?: return@forEach
-            val sources = config.getChild("sources") ?: return@forEach
+            val sources = config.getChild(property) ?: return@forEach
             sources.children.forEach { sourceElement ->
                 val path = sourceElement.value?.trim()
                 if (!path.isNullOrEmpty()) {
@@ -256,37 +248,16 @@ private fun MutableSet<SourceRootData>.addBuildHelperSources(
     }
 }
 
-private fun MutableSet<SourceRootData>.addBuildHelperResources(
-    project: MavenProject,
-    goal: String,
-    rootType: String
-) {
-    val plugin = project.buildPlugins.find {
-        it.groupId == "org.codehaus.mojo" && it.artifactId == "build-helper-maven-plugin"
-    } ?: return
 
-    plugin.executions.forEach { execution ->
-        if (execution.goals.contains(goal)) {
-            val config = execution.configuration as? Xpp3Dom ?: return@forEach
-            val resources = config.getChild("resources") ?: return@forEach
-            resources.children.forEach { resourceElement ->
-                val directory = resourceElement.getChild("directory")
-                val path = directory?.value?.trim()
-                if (!path.isNullOrEmpty()) {
-                    add(SourceRootData(path, rootType))
-                }
-            }
-        }
-    }
+private fun findPlugin(project: MavenProject, groupId: String, artifactId: String): Plugin? {
+    return project.buildPlugins.find { it.groupId == groupId && it.artifactId == artifactId }
 }
 
 private fun MutableSet<SourceRootData>.addModelloGeneratedSources(
     project: MavenProject,
     rootType: String
 ) {
-    val plugin = project.buildPlugins.find {
-        it.groupId == "org.codehaus.modello" && it.artifactId == "modello-maven-plugin"
-    } ?: return
+    val plugin = findPlugin(project, "org.codehaus.mojo", "modello-maven-plugin") ?: return
 
     // Modello plugin generates Java sources with various goals (java, velocity, etc.)
     val javaGeneratingGoals = setOf("java", "velocity", "java5", "jpox-jdo-mapping", "jpox-metadata-class")
@@ -311,21 +282,23 @@ private fun MutableSet<SourceRootData>.addModelloGeneratedSources(
 
 private fun MutableSet<SourceRootData>.addCompilerGeneratedSources(
     project: MavenProject,
+    goal: String,
     rootType: String
 ) {
-    val plugin = project.buildPlugins.find {
-        it.groupId == "org.apache.maven.plugins" && it.artifactId == "maven-compiler-plugin"
-    } ?: return
+    val plugin = findCompilerPlugin(project) ?: return
 
     plugin.executions.forEach { execution ->
-        val executionConfig = execution.configuration as? Xpp3Dom
-        val pluginConfig = plugin.configuration as? Xpp3Dom
+        if (goal in execution.goals) {
+            val executionConfig = execution.configuration as? Xpp3Dom
+            val pluginConfig = plugin.configuration as? Xpp3Dom
 
-        val outputDir = executionConfig?.getChild("generatedSourcesDirectory")?.value?.trim()
-            ?: pluginConfig?.getChild("generatedSourcesDirectory")?.value?.trim()
+            val outputDir = executionConfig?.getChild("generatedSourcesDirectory")?.value?.trim()
+                ?: pluginConfig?.getChild("generatedSourcesDirectory")?.value?.trim()
+                ?: project.properties.getProperty("project.build.directory")?.trim()?.let { "$it/generated-sources/annotations" }
 
-        if (!outputDir.isNullOrEmpty()) {
-            add(SourceRootData(outputDir, rootType))
+            if (!outputDir.isNullOrEmpty()) {
+                add(SourceRootData(outputDir, rootType))
+            }
         }
     }
 }
@@ -344,30 +317,37 @@ private fun contentRootData(
     project: MavenProject,
     moduleData: MavenModuleData,
     sourceRoots: List<SourceRootData>
-): List<ContentRootData> {
+): List<ContentRootData>  {
+    val baseDir = project.basedir?.absolutePath ?: ""
 
-    if (moduleData.type == StandardMavenModuleType.MAIN_ONLY || moduleData.type == StandardMavenModuleType.MAIN_ONLY_ADDITIONAL) {
-        return sourceRoots.filter { it.type in listOf("java-source", "java-resource") }.map {
-            ContentRootData(
-                path = it.path,
-                sourceRoots = listOf(it)
-            )
-        }
-    } else if (moduleData.type == StandardMavenModuleType.TEST_ONLY) {
-        return sourceRoots.filter { it.type in listOf("java-test", "java-test-resource") }.map {
-            ContentRootData(
-                path = it.path,
-                sourceRoots = listOf(it)
-            )
-        }
+    val type = moduleData.type
+    if (type != StandardMavenModuleType.MAIN_ONLY &&
+        type != StandardMavenModuleType.MAIN_ONLY_ADDITIONAL  &&
+        type != StandardMavenModuleType.TEST_ONLY
+    ) {
+        return listOf(ContentRootData(path = baseDir, sourceRoots = sourceRoots))
     }
-    return listOf(
-        ContentRootData(
-            path = project.basedir?.absolutePath ?: "",
-            sourceRoots = sourceRoots
-        )
-    )
 
+    if (type == StandardMavenModuleType.TEST_ONLY) {
+        return sourceRoots.map { ContentRootData(path = it.path, sourceRoots = listOf(it)) }
+    }
+
+    val standardPaths = (project.compileSourceRoots.orEmpty() + project.resources.orEmpty().map { it.directory }).toSet()
+
+    val standardContentRoots= sourceRoots
+        .filter { it.path in standardPaths }
+        .takeIf { it.isNotEmpty() }
+        ?.map { ContentRootData(path = it.path, sourceRoots = listOf(it)) }
+        ?: emptyList()
+
+    val nonStandardContentRoots =
+        sourceRoots
+            .filter { it.path !in standardPaths }
+            .takeIf { it.isNotEmpty() }
+            ?.let { listOf(ContentRootData(path = baseDir, sourceRoots = it)) }
+            ?: emptyList()
+
+    return  standardContentRoots + nonStandardContentRoots
 }
 
 private fun getModuleImportData(
@@ -414,10 +394,27 @@ private fun getModuleImportDataSingle(
 }
 
 private fun needCreateCompoundModule(project: MavenProject, languageLevels: LanguageLevels): Boolean {
-    if ("pom" == project.packaging) return false
+    if ("pom" == project.packaging || project.modules.isNotEmpty()) return false
     if (languageLevels.mainAndTestLevelsDiffer()) return true
+    if (hasTestCompilerArgs(project)) return true
+    if (mainAndTestCompilerArgsDiffer(project)) return true
     if (getNonDefaultCompilerExecutions(project).isNotEmpty()) return true
     return false
+}
+
+private fun hasTestCompilerArgs(project: MavenProject): Boolean {
+    val plugin = findCompilerPlugin(project) ?: return false
+    val executions = plugin.executions
+    if (executions == null || executions.isEmpty()) {
+        return hasTestCompilerArgs(plugin.configuration as? Xpp3Dom)
+    }
+
+    return executions.any { hasTestCompilerArgs(it.configuration as? Xpp3Dom) }
+}
+
+private fun hasTestCompilerArgs(config: Xpp3Dom?): Boolean {
+    return config != null && (config.getChild("testCompilerArgument") != null ||
+            config.getChild("testCompilerArguments") != null)
 }
 
 private fun convertToModules(
@@ -508,7 +505,7 @@ fun fileNameWithNewClassifier(
     }
 }
 
-private fun MavenProject.collectLibraries(
+private fun collectLibraries(
     modulesData: List<MavenTreeModuleImportData>,
     repositorySystem: RepositorySystem,
     repositorySystemSession: RepositorySystemSession,
@@ -522,7 +519,7 @@ private fun MavenProject.collectLibraries(
         .distinct()
 
         val dependenciesToResolve = allArtifacts.map { artifact ->
-            org.apache.maven.model.Dependency().apply {
+            Dependency().apply {
                 groupId = artifact.groupId
                 artifactId = artifact.artifactId
                 version = artifact.version
@@ -564,7 +561,7 @@ private fun MavenProject.collectLibraries(
                 artifact.file.toPath().takeIf { it.exists() }?.let {
                     LibraryRootData(
                         path = it.absolutePathString(),
-                        type = artifact.classifier?.takeIf { it.isNotEmpty() }?.uppercase() ?: "CLASSES",
+                        type = "CLASSES",
                     )
                 }
             ),
@@ -589,8 +586,8 @@ private fun createLibName(artifact: Artifact): String {
 
         artifact.groupId,
         artifact.artifactId,
-        artifact.baseVersion,
         artifact.classifier,
+        artifact.baseVersion,
         artifact.type.takeIf { it != "jar" }
     ).joinToString(":")
 }
@@ -628,7 +625,7 @@ private fun convertDependencies(
     }
 }
 
-private fun List<org.apache.maven.model.Dependency>.resolveDependencies(
+private fun List<Dependency>.resolveDependencies(
     name: String,
     remoteRepositories: List<RemoteRepository>,
     repositorySystem: RepositorySystem,
@@ -785,7 +782,7 @@ private fun getLanguageLevel(mavenProject: MavenProject, supplier: () -> String?
 }
 
 private fun getDefaultLevel(mavenProject: MavenProject): String {
-    val plugin = mavenProject.buildPlugins.find { it.groupId == "org.apache.maven.plugins" && it.artifactId == "maven-compiler-plugin" }
+    val plugin = findCompilerPlugin(mavenProject)
     if (plugin != null && plugin.version != null) {
         if (compareVersions("3.11.0", plugin.version) <= 0) {
             return "1.8"
@@ -818,7 +815,7 @@ private fun adjustPreviewLanguageLevel(mavenProject: MavenProject, level: String
     }
 
     val compilerPlugin =
-        mavenProject.buildPlugins.find { it.groupId == "org.apache.maven.plugins" && it.artifactId == "maven-compiler-plugin" }
+        findCompilerPlugin(mavenProject)
     val compilerConfiguration = compilerPlugin?.configuration as? Xpp3Dom
     if (compilerConfiguration != null) {
         val enablePreviewParameter = compilerConfiguration.getChild("enablePreview")?.value?.trim()
@@ -860,7 +857,7 @@ private fun parseJavaFeatureNumber(level: String?): Int? {
 }
 
 private fun getSourceLanguageLevel(project: MavenProject, executionId: String? = null): String? {
-    return getCompilerProp(project, "source", executionId)
+    return getCompilerProp(project, "release", executionId) ?: getCompilerProp(project, "source", executionId)
 }
 
 private fun getTestSourceLanguageLevel(project: MavenProject): String? {
@@ -868,7 +865,7 @@ private fun getTestSourceLanguageLevel(project: MavenProject): String? {
 }
 
 private fun getTargetLanguageLevel(project: MavenProject, executionId: String? = null): String? {
-    return getCompilerProp(project, "target", executionId)
+    return getCompilerProp(project, "release", executionId) ?: getCompilerProp(project, "target", executionId)
 }
 
 private fun getTestTargetLanguageLevel(project: MavenProject): String? {
@@ -884,13 +881,13 @@ private fun getCompilerProp(project: MavenProject, prop: String, executionId: St
 }
 
 private fun isReleaseCompilerProp(project: MavenProject): Boolean {
-    val plugin = project.buildPlugins.find { it.groupId == "org.apache.maven.plugins" && it.artifactId == "maven-compiler-plugin" }
+    val plugin = findCompilerPlugin(project)
     val version = plugin?.version ?: return false
     return compareVersions("3.6", version) >= 0
 }
 
 private fun doGetCompilerProp(project: MavenProject, prop: String, executionId: String? = null): String? {
-    val plugin = project.buildPlugins.find { it.groupId == "org.apache.maven.plugins" && it.artifactId == "maven-compiler-plugin" }
+    val plugin = findCompilerPlugin(project)
         ?: return project.properties.getProperty("maven.compiler.$prop")
 
     if (executionId != null) {
@@ -922,14 +919,25 @@ private fun doGetCompilerProp(project: MavenProject, prop: String, executionId: 
 }
 
 private fun getNonDefaultCompilerExecutions(project: MavenProject): List<String> {
-    val plugin = project.buildPlugins.find { it.groupId == "org.apache.maven.plugins" && it.artifactId == "maven-compiler-plugin" }
-        ?: return emptyList()
+    val plugin = findCompilerPlugin(project) ?: return emptyList()
 
     return plugin.executions
         .filter { it.id != "default-compile" && it.id != "default-testCompile" }
         .filter { (it.configuration as? Xpp3Dom)?.getChild("compileSourceRoots") != null }
         .map { it.id }
 }
+
+private fun mainAndTestCompilerArgsDiffer(project: MavenProject): Boolean {
+    val plugin = findCompilerPlugin(project) ?: return false
+    val executions = plugin.executions
+    if (executions == null || executions.isEmpty()) return false
+    val compilerArgs = (executions.find { it.id == "default-compile" }?.configuration as? Xpp3Dom)?.getChild("compilerArgs")
+    val testCompilerArgs = (executions.find { it.id == "default-testCompile"}?.configuration as? Xpp3Dom)?.getChild("compilerArgs")
+    return compilerArgs != testCompilerArgs
+}
+
+private fun findCompilerPlugin(project: MavenProject): Plugin? =
+    findPlugin(project, "org.apache.maven.plugins","maven-compiler-plugin")
 
 private fun getPluginGoalConfiguration(project: MavenProject, groupId: String, artifactId: String, goal: String): Xpp3Dom? {
     val plugin = project.buildPlugins.find { it.groupId == groupId && it.artifactId == artifactId } ?: return null
@@ -944,9 +952,7 @@ private fun MavenProject.extractKotlinSettings(
 ): KotlinSettingsData? {
 
     if (moduleData.type == StandardMavenModuleType.COMPOUND_MODULE) return null
-    val kotlinPlugin = this.buildPlugins?.find { plugin ->
-        plugin.groupId == "org.jetbrains.kotlin" && plugin.artifactId.startsWith("kotlin-maven-plugin")
-    } ?: return null
+    val kotlinPlugin = findPlugin(this, "org.jetbrains.kotlin", "kotlin-maven-plugin") ?: return null
 
     println("Found Kotlin plugin: ${kotlinPlugin.groupId}:${kotlinPlugin.artifactId}:${kotlinPlugin.version}")
 
@@ -969,23 +975,21 @@ private fun MavenProject.extractKotlinSettings(
             }
     }
 
-    val config = kotlinPlugin.configuration as? org.codehaus.plexus.util.xml.Xpp3Dom
+    val config = kotlinPlugin.configuration as? Xpp3Dom
 
     val kotlinCompileSourceRoots = kotlinPlugin.kotlinSourceDirs("compile") ?: setOf(
         basedir.toPath().resolve("src").resolve("main").resolve("kotlin").toAbsolutePath().toString()
     )
 
     val kotlinTestSourceRoots = kotlinPlugin.kotlinSourceDirs("test-compile") ?: setOf(
-        basedir.toPath().resolve("src").resolve("test").resolve("java").toAbsolutePath().toString()
+        basedir.toPath().resolve("src").resolve("test").resolve("kotlin").toAbsolutePath().toString()
     )
 
-    val sourceRoots =
-        if (moduleData.type == StandardMavenModuleType.MAIN_ONLY || moduleData.type == StandardMavenModuleType.MAIN_ONLY_ADDITIONAL) {
-            kotlinCompileSourceRoots
-        } else if (moduleData.type == StandardMavenModuleType.TEST_ONLY) {
-            kotlinTestSourceRoots
-        } else {
-            kotlinCompileSourceRoots + kotlinTestSourceRoots
+    val sourceRoots = when (moduleData.type) {
+            StandardMavenModuleType.MAIN_ONLY,
+            StandardMavenModuleType.MAIN_ONLY_ADDITIONAL -> kotlinCompileSourceRoots
+            StandardMavenModuleType.TEST_ONLY -> kotlinTestSourceRoots
+            else -> kotlinCompileSourceRoots + kotlinTestSourceRoots
         }
 
     val jvmTarget = config?.getChild("jvmTarget")?.value
