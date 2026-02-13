@@ -217,7 +217,7 @@ class LSCommonInspectionDiagnosticProvider(
         val fixClass = fix::class.java.name
         val blacklistEntry = quickFixBlacklist.getImplementationBlacklistEntry(fixClass)
         fun logQuickFixBlacklisted() {
-            LOG.warn("Quick fix $fixClass is a ModCommandQuickFix, but it is blacklisted because of ${blacklistEntry?.reason}.")
+            LOG.debug("Quick fix $fixClass is a ModCommandQuickFix, but it is blacklisted because of ${blacklistEntry?.reason}")
         }
 
         return when (fix) {
@@ -225,7 +225,7 @@ class LSCommonInspectionDiagnosticProvider(
                 val wrappedFixClass = fix.action::class.java.name
                 val wrappedFixBlacklistEntry = quickFixBlacklist.getImplementationBlacklistEntry(wrappedFixClass)
                 if (wrappedFixBlacklistEntry != null) {
-                    LOG.warn("Quick fix $fixClass is a ModCommandQuickFix, but wrapped action $wrappedFixClass is blacklisted because of ${wrappedFixBlacklistEntry.reason}.")
+                    LOG.debug("Quick fix $fixClass is a ModCommandQuickFix, but wrapped action $wrappedFixClass is blacklisted because of ${wrappedFixBlacklistEntry.reason}")
                     null
                 } else if (blacklistEntry != null) {
                     logQuickFixBlacklisted()
