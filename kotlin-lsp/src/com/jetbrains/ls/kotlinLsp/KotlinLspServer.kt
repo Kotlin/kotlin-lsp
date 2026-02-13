@@ -13,8 +13,8 @@ import com.jetbrains.ls.api.core.LSServerStarter
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.impl.common.configuration.DapCommonConfiguration
 import com.jetbrains.ls.api.features.impl.common.configuration.LSCommonConfiguration
-import com.jetbrains.ls.api.features.impl.common.kotlin.configuration.LSKotlinLanguageConfiguration
-import com.jetbrains.ls.api.features.impl.common.kotlin.debug.DapJvmConfiguration
+import com.jetbrains.ls.api.features.impl.kotlin.configuration.LSKotlinLanguageConfiguration
+import com.jetbrains.ls.api.features.impl.kotlin.debug.DapJvmConfiguration
 import com.jetbrains.ls.api.features.impl.javaBase.LSJavaBaseLanguageConfiguration
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.kotlinLsp.connection.Client

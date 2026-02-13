@@ -4,13 +4,13 @@
 
   <extensions defaultExtensionNs="ls">
     <fileForModificationFactory language="kotlin"
-                                implementationClass="com.jetbrains.ls.api.features.impl.common.kotlin.apiImpl.textEdits.KotlinFileForModificationFactory" />
+                                implementationClass="com.jetbrains.ls.api.features.impl.kotlin.apiImpl.textEdits.KotlinFileForModificationFactory" />
 
     <markdownDocProvider language="kotlin"
-                         implementationClass="com.jetbrains.ls.api.features.impl.common.kotlin.hover.LSKotlinMarkdownDocProvider"/>
+                         implementationClass="com.jetbrains.ls.api.features.impl.kotlin.hover.LSKotlinMarkdownDocProvider"/>
 
     <completionItemKindProvider language="kotlin"
-                                implementationClass="com.jetbrains.ls.api.features.impl.common.kotlin.completion.LSKotlinCompletionItemKindProvider"/>
+                                implementationClass="com.jetbrains.ls.api.features.impl.kotlin.completion.LSKotlinCompletionItemKindProvider"/>
 
   </extensions>
 </idea-plugin>
