@@ -155,7 +155,6 @@ jvm_library(
     "@community//libraries/ktor/io",
     "@lib//:kotlinc-analysis-api-platform-interface",
     "@community//plugins/kotlin/base/fir/project-structure",
-    "@community//plugins/kotlin/base/fir/project-structure:project-structure_test_lib",
     "//language-server/community/workspace-import/maven-plugin",
     "//language-server/community/workspace-import/gradle-plugin",
   ]
