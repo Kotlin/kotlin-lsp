@@ -38,7 +38,7 @@ class LSCommonTypeDefinitionProvider(
                 val flags = TargetElementUtil.REFERENCED_ELEMENT_ACCEPTED or TargetElementUtil.ELEMENT_NAME_ACCEPTED
                 val typeElements = GotoTypeDeclarationAction.findSymbolTypes(editor, offset, flags)
 
-                typeElements?.mapNotNull { psiElement -> psiElement.getLspLocationForDefinition() } ?: emptyList()
+                typeElements?.mapNotNull { psiElement -> psiElement?.getLspLocationForDefinition() } ?: emptyList()
             }
         }.forEach { location -> emit(location) }
     }
