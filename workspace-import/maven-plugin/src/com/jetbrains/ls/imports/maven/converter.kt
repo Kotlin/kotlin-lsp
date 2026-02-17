@@ -158,7 +158,7 @@ private fun dependencyData(importDependencies: List<MavenImportDependency>): Lis
     importDependencies.forEach { dep ->
         when (dep) {
             is MavenImportDependency.Module -> {
-                add(DependencyData.Module(dep.moduleName, dep.scope, false))
+                add(DependencyData.Module(dep.moduleName, dep.scope, false, dep.isTestJar))
             }
 
             is MavenImportDependency.Library -> {

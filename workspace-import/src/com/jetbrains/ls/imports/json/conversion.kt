@@ -329,7 +329,7 @@ fun MutableEntityStorage.importWorkspaceData(
                     module = ModuleId(dependency.name),
                     exported = dependency.isExported,
                     scope = DependencyScope.valueOf(dependency.scope.name),
-                    productionOnTest = false
+                    productionOnTest = dependency.isTestJar
                 )
 
                 is DependencyData.Library -> libraryEntities[dependency.name]?.let {

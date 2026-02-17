@@ -31,6 +31,7 @@ sealed class DependencyData {
         val name: String,
         val scope: DependencyDataScope,
         val isExported: Boolean = false,
+        val isTestJar: Boolean = false,
     ) : DependencyData()
 
     @Serializable
