@@ -40,5 +40,6 @@
     <orderEntry type="module" module-name="intellij.libraries.kotlinx.serialization.json" />
     <orderEntry type="module" module-name="intellij.libraries.kotlinx.serialization.core" />
     <orderEntry type="library" name="java-diff-utils" level="project" />
+    <orderEntry type="module" module-name="language-server.analyzer" />
   </component>
 </module>

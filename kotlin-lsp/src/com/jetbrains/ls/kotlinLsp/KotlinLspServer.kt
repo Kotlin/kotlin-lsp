@@ -6,17 +6,21 @@ import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.util.SystemProperties
+import com.jetbrains.analyzer.api.defaultPluginSet
+import com.jetbrains.analyzer.api.mapLspServices
 import com.jetbrains.analyzer.filewatcher.FileWatcher
 import com.jetbrains.analyzer.filewatcher.downloadFileWatcherBinaries
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.LSServerStarter
+import com.jetbrains.ls.api.features.ApplicationInitProvider
 import com.jetbrains.ls.api.features.LSConfiguration
+import com.jetbrains.ls.api.features.LanguageServerExtension
+import com.jetbrains.ls.api.features.ProjectInitProvider
 import com.jetbrains.ls.api.features.impl.common.configuration.DapCommonConfiguration
 import com.jetbrains.ls.api.features.impl.common.configuration.LSCommonConfiguration
+import com.jetbrains.ls.api.features.impl.javaBase.LSJavaBaseLanguageConfiguration
 import com.jetbrains.ls.api.features.impl.kotlin.configuration.LSKotlinLanguageConfiguration
 import com.jetbrains.ls.api.features.impl.kotlin.debug.DapJvmConfiguration
-import com.jetbrains.ls.api.features.impl.javaBase.LSJavaBaseLanguageConfiguration
-import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.kotlinLsp.connection.Client
 import com.jetbrains.ls.kotlinLsp.logging.initKotlinLspLogger
 import com.jetbrains.ls.kotlinLsp.requests.core.fileUpdateRequests
@@ -25,6 +29,7 @@ import com.jetbrains.ls.kotlinLsp.requests.core.setTraceNotification
 import com.jetbrains.ls.kotlinLsp.requests.core.shutdownRequest
 import com.jetbrains.ls.kotlinLsp.requests.features
 import com.jetbrains.ls.kotlinLsp.util.getSystemInfo
+import com.jetbrains.ls.snapshot.api.impl.core.ProjectEnvConfig
 import com.jetbrains.ls.snapshot.api.impl.core.withLSServerStarter
 import com.jetbrains.lsp.implementation.LspConnection
 import com.jetbrains.lsp.implementation.LspHandlers
@@ -42,7 +47,6 @@ import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutModePr
 import org.jetbrains.kotlin.idea.compiler.configuration.isRunningFromSources
 import java.io.RandomAccessFile
 import java.nio.file.Path
-import java.util.ServiceLoader
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.createTempDirectory
@@ -70,6 +74,20 @@ fun main(args: Array<String>) {
 // use after `initKotlinLspLogger` call
 private val LOG by lazy { fileLogger() }
 
+fun LSConfiguration.analysisConfig(): ProjectEnvConfig =
+    ProjectEnvConfig(
+        pluginSet = defaultPluginSet(plugins),
+        projectInits = entries.asSequence().filterIsInstance<ProjectInitProvider>().map { it.projectInit }.toList(),
+        applicationInits = entries.asSequence().filterIsInstance<ApplicationInitProvider>().map { it.applicationInit }.toList()
+    )
+
+fun LSConfiguration.debuggerConfig(): ProjectEnvConfig =
+    ProjectEnvConfig(
+        pluginSet = defaultPluginSet(plugins + dapPlugins),
+        projectInits = entries.asSequence().filterIsInstance<ProjectInitProvider>().map { it.projectInit }.toList(),
+        applicationInits = entries.asSequence().filterIsInstance<ApplicationInitProvider>().map { it.applicationInit }.toList()
+    )
+
 private fun run(runConfig: KotlinLspServerRunConfig) {
     val mode = runConfig.mode
     initKotlinLspLogger(
@@ -85,8 +103,8 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
     @Suppress("RAW_RUN_BLOCKING")
     runBlocking(CoroutineName("root") + Dispatchers.Default) {
         withLSServerStarter(
-            analysisPlugins = config.plugins,
-            debuggerPlugins = config.plugins + config.dapPlugins,
+            analysisPlugins = config.analysisConfig(),
+            debuggerPlugins = config.debuggerConfig(),
             isUnitTestMode = false,
         ) {
             preloadKotlinStdlibWhenRunningFromSources()
@@ -209,7 +227,9 @@ fun createConfiguration(): LSConfiguration {
             LSCommonConfiguration,
             LSKotlinLanguageConfiguration,
             LSJavaBaseLanguageConfiguration,
-            *(getAdditionalLanguageConfigurations().toTypedArray()),
+            *(mapLspServices(LanguageServerExtension::class) {
+                it.configuration
+            }.toTypedArray()),
         ),
         dapConfiguration = listOf(
             DapCommonConfiguration,
@@ -237,15 +257,5 @@ fun createLspHandlers(config: LSConfiguration, exitSignal: CompletableDeferred<U
 private fun preloadKotlinStdlibWhenRunningFromSources() {
     if (isRunningFromSources) {
         KotlinArtifacts.kotlinStdlibPath
-    }
-}
-
-interface LanguageConfigurationProvider {
-    val languageConfiguration: LSConfigurationPiece
-}
-
-private fun getAdditionalLanguageConfigurations(): List<LSConfigurationPiece> {
-    return ServiceLoader.load(LanguageConfigurationProvider::class.java).map {
-        it.languageConfiguration
     }
 }

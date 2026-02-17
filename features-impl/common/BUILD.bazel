@@ -48,7 +48,6 @@ jvm_library(
     "@community//java/java-psi-api:psi",
     "@community//platform/indexing-api:indexing",
     "@community//platform/core-ui",
-    "//codeServer/core",
     "//language-server/community/workspace-import:language-server-project-import",
     "@community//platform/refactoring",
     "@community//platform/projectModel-api:projectModel",

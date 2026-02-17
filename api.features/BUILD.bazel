@@ -36,6 +36,7 @@ jvm_library(
     "@community//libraries/kotlinx/serialization/json",
     "@community//libraries/kotlinx/serialization/core",
     "@ultimate_lib//:java-diff-utils",
+    "//language-server/analyzer",
   ]
 )
 ### auto-generated section `build language-server.api.features` end
