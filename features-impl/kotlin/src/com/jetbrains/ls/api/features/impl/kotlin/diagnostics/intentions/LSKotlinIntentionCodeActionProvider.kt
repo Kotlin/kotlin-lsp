@@ -102,8 +102,7 @@ internal object LSKotlinIntentionCodeActionProvider : LSCodeActionProvider {
             LOG.warn("Cannot convert $action to ModCommandAction")
             return null
         }
-        @Suppress("UNCHECKED_CAST")
-        if (!(action as KotlinApplicableModCommandAction<KtElement, *>).isApplicableByPsi(child)) return null
+
         val presentation = action.getPresentation(actionContext) ?: return null
         val ktPsiFile = child.containingKtFile
         analyze(ktPsiFile) {
