@@ -113,7 +113,7 @@ abstract class LSRenameProviderBase(
                 originals[it] = it.text
             }
 
-            val processor = Renamer(target.project, target, newName, true, false)
+            val processor = Renamer(target.project, target, newName, false, false)
             processor.usages.map { it.file }.distinct().filterNotNull().forEach { originals[it] = it.text }
             processor
         } ?: return null
