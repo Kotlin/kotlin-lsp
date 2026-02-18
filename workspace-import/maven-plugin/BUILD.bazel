@@ -39,4 +39,21 @@ jvm_library(
     ":community_libraries_kotlinx_serialization_json_provided",
   ]
 )
+
+jvm_library(
+  name = "maven-plugin_test_lib",
+  module_name = "language-server.project-import.maven-plugin",
+  visibility = ["//visibility:public"],
+  srcs = glob([], allow_empty = True),
+  kotlinc_opts = ":custom_maven-plugin",
+  runtime_deps = [
+    ":maven-plugin",
+    "@community//libraries/kotlinx/serialization/core",
+    "@community//libraries/kotlinx/serialization/core:core_test_lib",
+    "@community//libraries/kotlinx/serialization/json",
+    "@community//libraries/kotlinx/serialization/json:json_test_lib",
+    "@ultimate_lib//:apache-maven-plugin-api-provided",
+    "@ultimate_lib//:apache-maven-core-provided",
+  ]
+)
 ### auto-generated section `build language-server.project-import.maven-plugin` end

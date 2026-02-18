@@ -62,4 +62,48 @@ jvm_library(
     "//language-server/dap/platform",
   ]
 )
+
+jvm_library(
+  name = "common_test_lib",
+  module_name = "language-server.api.features.impl.common",
+  visibility = ["//visibility:public"],
+  srcs = glob([], allow_empty = True),
+  kotlinc_opts = ":custom_common",
+  runtime_deps = [
+    ":common",
+    "@community//libraries/kotlinx/coroutines/core:core_test_lib",
+    "@community//platform/analysis-api:analysis_test_lib",
+    "@community//platform/core-api:core_test_lib",
+    "@community//platform/workspace/storage:storage_test_lib",
+    "//language-server/community/api.core:api.core_test_lib",
+    "@community//platform/analysis-impl:analysis-impl_test_lib",
+    "@community//platform/util:util_test_lib",
+    "//language-server/community/api.features:api.features_test_lib",
+    "@community//platform/util:util-ui_test_lib",
+    "@community//platform/editor-ui-api:editor-ui_test_lib",
+    "@community//platform/core-impl:core-impl_test_lib",
+    "@community//platform/editor-ui-ex:editor-ex_test_lib",
+    "@community//libraries/kotlinx/serialization/json:json_test_lib",
+    "@community//libraries/kotlinx/serialization/core:core_test_lib",
+    "//language-server/analyzer:analyzer_test_lib",
+    "@community//fleet/lsp.protocol:lsp.protocol_test_lib",
+    "@community//platform/code-style-api:codeStyle_test_lib",
+    "@community//platform/lang-api:lang_test_lib",
+    "@community//platform/lang-impl:lang-impl_test_lib",
+    "@community//java/java-psi-api:psi_test_lib",
+    "@community//platform/indexing-api:indexing_test_lib",
+    "@community//platform/core-ui:core-ui_test_lib",
+    "//language-server/community/workspace-import:language-server-project-import_test_lib",
+    "@community//platform/refactoring:refactoring_test_lib",
+    "@community//platform/projectModel-api:projectModel_test_lib",
+    "@community//platform/platform-impl:ide-impl_test_lib",
+    "@community//platform/usageView:usageView_test_lib",
+    "@community//platform/ide-core:ide-core_test_lib",
+    "@community//plugins/kotlin/code-insight/impl-base:kotlin-codeInsight-shared_test_lib",
+    "@community//libraries/kotlinx/collections-immutable:libraries-kotlinx-collections-immutable_test_lib",
+    "//language-server/api.impl.analyzer:api.impl.analyzer_test_lib",
+    "@community//fleet/rhizomedb:rhizomedb_test_lib",
+    "//language-server/dap/platform:platform_test_lib",
+  ]
+)
 ### auto-generated section `build language-server.api.features.impl.common` end

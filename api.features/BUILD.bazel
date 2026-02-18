@@ -39,4 +39,25 @@ jvm_library(
     "//language-server/analyzer",
   ]
 )
+
+jvm_library(
+  name = "api.features_test_lib",
+  module_name = "language-server.api.features",
+  visibility = ["//visibility:public"],
+  srcs = glob([], allow_empty = True),
+  kotlinc_opts = ":custom_api.features",
+  runtime_deps = [
+    ":api.features",
+    "@community//fleet/lsp.protocol:lsp.protocol_test_lib",
+    "@community//libraries/kotlinx/coroutines/core:core_test_lib",
+    "@community//platform/core-api:core_test_lib",
+    "//language-server/community/api.core:api.core_test_lib",
+    "@community//platform/analysis-impl:analysis-impl_test_lib",
+    "@community//platform/core-impl:core-impl_test_lib",
+    "@community//platform/util:util_test_lib",
+    "@community//libraries/kotlinx/serialization/json:json_test_lib",
+    "@community//libraries/kotlinx/serialization/core:core_test_lib",
+    "//language-server/analyzer:analyzer_test_lib",
+  ]
+)
 ### auto-generated section `build language-server.api.features` end

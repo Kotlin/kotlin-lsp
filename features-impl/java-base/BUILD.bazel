@@ -44,4 +44,27 @@ jvm_library(
     "@community//fleet/lsp.protocol",
   ]
 )
+
+jvm_library(
+  name = "java-base_test_lib",
+  module_name = "language-server.api.features.impl.java-base",
+  visibility = ["//visibility:public"],
+  srcs = glob([], allow_empty = True),
+  kotlinc_opts = ":custom_java-base",
+  runtime_deps = [
+    ":java-base",
+    "@community//libraries/kotlinx/coroutines/core:core_test_lib",
+    "@community//libraries/kotlinx/serialization/json:json_test_lib",
+    "@community//libraries/kotlinx/serialization/core:core_test_lib",
+    "//language-server/community/api.core:api.core_test_lib",
+    "//language-server/community/features-impl/common:common_test_lib",
+    "@community//platform/core-api:core_test_lib",
+    "@community//platform/analysis-api:analysis_test_lib",
+    "@community//platform/lang-api:lang_test_lib",
+    "@community//java/java-impl:impl_test_lib",
+    "@community//java/java-backend:backend_test_lib",
+    "//language-server/community/api.features:api.features_test_lib",
+    "@community//fleet/lsp.protocol:lsp.protocol_test_lib",
+  ]
+)
 ### auto-generated section `build language-server.api.features.impl.java-base` end

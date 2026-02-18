@@ -51,4 +51,39 @@ jvm_library(
     "@ultimate_lib//:gradle_tooling_a_p_i",
   ]
 )
+
+jvm_library(
+  name = "language-server-project-import_test_lib",
+  module_name = "language-server.project-import",
+  visibility = ["//visibility:public"],
+  srcs = glob([], allow_empty = True),
+  kotlinc_opts = ":custom_language-server-project-import",
+  runtime_deps = [
+    ":language-server-project-import",
+    "@community//jps/model-serialization:model-serialization_test_lib",
+    "@community//platform/extensions:extensions_test_lib",
+    "@community//platform/lang-core:lang-core_test_lib",
+    "@community//platform/projectModel-api:projectModel_test_lib",
+    "@community//platform/workspace/jps:jps_test_lib",
+    "@community//platform/workspace/storage:storage_test_lib",
+    "@community//platform/util/jdom:jdom_test_lib",
+    "//language-server/community/api.core:api.core_test_lib",
+    "@community//platform/util:util_test_lib",
+    "@community//libraries/kotlinx/serialization/core:core_test_lib",
+    "@community//libraries/kotlinx/serialization/json:json_test_lib",
+    "@community//libraries/kotlinx/coroutines/core:core_test_lib",
+    "@community//java/java-impl:impl_test_lib",
+    "@community//java/openapi:java_test_lib",
+    "@community//plugins/kotlin/base/facet:facet_test_lib",
+    "@community//jps/model-api:model_test_lib",
+    "@community//jps/model-impl:model-impl_test_lib",
+    "@community//platform/execution:execution_test_lib",
+    "@community//platform/eel-provider:eel-provider_test_lib",
+    "@community//platform/external-system-impl:externalSystem-impl_test_lib",
+    "@community//platform/core-api:core_test_lib",
+    "@community//plugins/kotlin/base/plugin:plugin_test_lib",
+    "@community//libraries/jspecify:jspecify_test_lib",
+    "//language-server/community/workspace-import/gradle-plugin:gradle-plugin_test_lib",
+  ]
+)
 ### auto-generated section `build language-server.project-import` end

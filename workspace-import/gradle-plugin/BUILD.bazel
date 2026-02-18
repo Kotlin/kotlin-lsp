@@ -46,4 +46,23 @@ jvm_library(
     ":community_libraries_kotlinx_serialization_json_provided",
   ]
 )
+
+jvm_library(
+  name = "gradle-plugin_test_lib",
+  module_name = "language-server.project-import.gradle-plugin",
+  visibility = ["//visibility:public"],
+  srcs = glob([], allow_empty = True),
+  kotlinc_opts = ":custom_gradle-plugin",
+  runtime_deps = [
+    ":gradle-plugin",
+    "@ultimate_lib//:gradle-provided",
+    "@community//libraries/jspecify",
+    "@community//libraries/jspecify:jspecify_test_lib",
+    "@community//libraries/kotlinx/serialization/core",
+    "@community//libraries/kotlinx/serialization/core:core_test_lib",
+    "@community//libraries/kotlinx/serialization/json",
+    "@community//libraries/kotlinx/serialization/json:json_test_lib",
+    "@ultimate_lib//:javax-inject-provided",
+  ]
+)
 ### auto-generated section `build language-server.project-import.gradle-plugin` end

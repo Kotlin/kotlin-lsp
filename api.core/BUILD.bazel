@@ -44,17 +44,25 @@ jvm_library(
   deps = [
     "@lib//:kotlin-stdlib",
     "@community//platform/core-api:core",
+    "@community//platform/core-api:core_test_lib",
     "@community//platform/util",
+    "@community//platform/util:util_test_lib",
     "@community//platform/workspace/storage",
+    "@community//platform/workspace/storage:storage_test_lib",
     "@community//platform/workspace/jps",
+    "@community//platform/workspace/jps:jps_test_lib",
     "@community//fleet/lsp.protocol",
+    "@community//fleet/lsp.protocol:lsp.protocol_test_lib",
     "@lib//:junit5",
     "@lib//:junit5Jupiter",
     "@community//platform/testFramework",
     "@community//platform/testFramework:testFramework_test_lib",
     "@community//platform/lang-core",
+    "@community//platform/lang-core:lang-core_test_lib",
     "@community//platform/projectModel-api:projectModel",
+    "@community//platform/projectModel-api:projectModel_test_lib",
     "@community//platform/projectModel-impl",
+    "@community//platform/projectModel-impl:projectModel-impl_test_lib",
   ]
 )
 ### auto-generated section `build language-server.api.core` end
