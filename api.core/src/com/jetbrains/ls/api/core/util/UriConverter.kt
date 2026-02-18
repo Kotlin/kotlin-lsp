@@ -159,5 +159,5 @@ val URI.fileExtension: String?
     get() {
         val name = fileName
         val dotIndex = name.lastIndexOf('.')
-        return if (dotIndex > 0) name.substring(dotIndex + 1) else null
+        return if (dotIndex >= 0) name.substring(dotIndex + 1) else null
     }

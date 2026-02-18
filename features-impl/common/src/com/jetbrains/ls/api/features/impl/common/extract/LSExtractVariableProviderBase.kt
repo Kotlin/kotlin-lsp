@@ -11,6 +11,7 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toTextRange
 import com.jetbrains.ls.api.core.util.uri
+import com.jetbrains.ls.api.core.withWriteAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
@@ -54,13 +55,13 @@ abstract class LSExtractVariableProviderBase<Context> : LSCodeActionProvider, LS
                 documentUri: DocumentUri,
                 otherArgs: List<JsonElement>
             ): List<TextEdit> {
-                return server.withWriteAnalysisContext {
+                return server.withWriteAnalysisContextAndFileSettings(documentUri.uri) {
                     val (file, data) = readAction {
                         val virtualFile = documentUri.findVirtualFile() ?: return@readAction null
                         val data = otherArgs.firstOrNull()?.let { LSP.json.decodeFromJsonElement(ExtractVariableData.serializer(), it) }
                             ?: return@readAction null
                         virtualFile to data
-                    } ?: return@withWriteAnalysisContext emptyList()
+                    } ?: return@withWriteAnalysisContextAndFileSettings emptyList()
                     computeExtractVariableEdits(file, data)
                 }
             }

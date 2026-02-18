@@ -10,6 +10,7 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
+import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnosticProvider
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
@@ -34,7 +35,7 @@ internal object LSKotlinCompilerDiagnosticsProvider : LSDiagnosticProvider {
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
         if (!params.textDocument.isSource()) return@flow
         val uri = params.textDocument.uri.uri
-        server.withAnalysisContext {
+        server.withAnalysisContextAndFileSettings(uri) {
             readAction {
                 val virtualFile = uri.findVirtualFile() ?: return@readAction emptyList()
                 val ktFile = virtualFile.findPsiFile(project) as? KtFile ?: return@readAction emptyList()

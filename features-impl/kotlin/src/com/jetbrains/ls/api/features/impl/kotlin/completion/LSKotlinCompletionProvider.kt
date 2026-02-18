@@ -21,6 +21,7 @@ import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.util.positionByOffset
+import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider
@@ -81,7 +82,7 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
         return if (!params.textDocument.isSource()) {
             CompletionList.EMPTY
         } else {
-            val itemsWithObjects = server.withAnalysisContext {
+            val itemsWithObjects = server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
                 readAction {
                     params.textDocument.findVirtualFile()?.let { file ->
                         file.findPsiFile(project)?.let { psiFile ->
@@ -153,7 +154,7 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
         val completionDataKey = completionItem.data?.jsonObject?.get("KotlinCompletionItemKey") ?: return completionItem
 
         return (LatestCompletionSessionEntity.obj(CompletionItemId.fromJson(completionDataKey)) as CompletionData?)?.let { completionData ->
-            server.withAnalysisContext {
+            server.withAnalysisContextAndFileSettings(completionData.params.textDocument.uri.uri) {
                 val completionItem = completionItem.copy(
                     documentation = readAction { computeDocumentation(completionData.lookup) },
                 )
@@ -205,27 +206,27 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
                         }
 
                         else -> {
-                            val insertionResult = contextOf<LSServer>().withAnalysisContext {
-                                applyCompletion(completionData)
-                            }
-                            lspClient.request(
-                                ApplyEditRequests.ApplyEdit,
-                                ApplyWorkspaceEditParams(
-                                    label = null,
-                                    edit = WorkspaceEdit(
-                                        changes = mapOf(completionData.params.textDocument.uri to insertionResult.edits)
+                            contextOf<LSServer>().withAnalysisContextAndFileSettings(completionData.params.textDocument.uri.uri) {
+                                val insertionResult = applyCompletion(completionData)
+                                lspClient.request(
+                                    ApplyEditRequests.ApplyEdit,
+                                    ApplyWorkspaceEditParams(
+                                        label = null,
+                                        edit = WorkspaceEdit(
+                                            changes = mapOf(completionData.params.textDocument.uri to insertionResult.edits)
+                                        )
                                     )
                                 )
-                            )
-                            lspClient.request(
-                                ShowDocument,
-                                ShowDocumentParams(
-                                    uri = completionData.params.textDocument.uri.uri,
-                                    external = false,
-                                    takeFocus = true,
-                                    selection = Range(insertionResult.caretPosition, insertionResult.caretPosition)
+                                lspClient.request(
+                                    ShowDocument,
+                                    ShowDocumentParams(
+                                        uri = completionData.params.textDocument.uri.uri,
+                                        external = false,
+                                        takeFocus = true,
+                                        selection = Range(insertionResult.caretPosition, insertionResult.caretPosition)
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
 

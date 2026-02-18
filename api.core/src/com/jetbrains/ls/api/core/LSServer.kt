@@ -6,22 +6,47 @@ import com.jetbrains.lsp.protocol.URI
 import kotlinx.coroutines.CoroutineScope
 
 interface LSServer { // workspace?
-
     /**
-     * Runs the given action inside an analysis context that is bound to the current project.
+     * Runs the given [action] inside an analysis context that is bound to the current project.
      *
      * This is the default way for getting analysis services in LSP handlers.
      *
      * @param action The action to run inside the project's analysis context.
      * @return The result of the action.
+     *
+     * @see withFileSettings
      */
     suspend fun <R> withAnalysisContext(
         action: suspend context(LSAnalysisContext) CoroutineScope.() -> R,
     ): R
 
+
+    /**
+     * Runs the given [action] inside an analysis context that is bound to the current project with
+     * the independent cache for `PSI` and `Document`.
+     *
+     * @param action The action to run inside the project's analysis context.
+     * @return The result of the action.
+     *
+     * @see withFileSettings
+     */
     suspend fun <R> withWriteAnalysisContext(
         action: suspend context(LSAnalysisContext, CoroutineScope) () -> R,
     ): R
+
+
+    /**
+     * Runs the given [action] inside that with the preconfigured settings for the given [useSiteFileUri].
+     *
+     * @return The result of the action.
+     * @see withAnalysisContextAndFileSettings
+     * @see withWriteAnalysisContextAndFileSettings
+     */
+    context(analysisContext: LSAnalysisContext)
+    suspend fun <R> withFileSettings(
+        useSiteFileUri: URI,
+        action: suspend context(LSAnalysisContext) CoroutineScope.() -> R
+    ) : R
 
     suspend fun <R> withWritableFile(
         useSiteFileUri: URI,
@@ -43,6 +68,36 @@ interface LSServer { // workspace?
     val documents: LSDocuments
 
     val workspaceStructure: LSWorkspaceStructure
+}
+
+/**
+ * @see LSServer.withAnalysisContext
+ * @see LSServer.withFileSettings
+ */
+suspend fun <R> LSServer.withAnalysisContextAndFileSettings(
+    useSiteFileUri: URI,
+    action: suspend context(LSAnalysisContext) CoroutineScope.() -> R
+): R {
+    return withAnalysisContext {
+        withFileSettings(useSiteFileUri) {
+            action()
+        }
+    }
+}
+
+/**
+ * @see LSServer.withFileSettings
+ * @see LSServer.withWriteAnalysisContext
+ */
+suspend fun <R> LSServer.withWriteAnalysisContextAndFileSettings(
+    useSiteFileUri: URI,
+    action: suspend context(LSAnalysisContext) CoroutineScope.() -> R
+): R {
+    return withWriteAnalysisContext {
+        withFileSettings(useSiteFileUri) {
+            action()
+        }
+    }
 }
 
 interface DapContext {

@@ -12,6 +12,7 @@ import com.intellij.openapi.vfs.findPsiFile
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
+import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.diagnosticData
 import com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDescriptorProvider
@@ -49,7 +50,7 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
 
         val uri = params.textDocument.uri.uri
         server.withWritableFile(uri) {
-            server.withAnalysisContext {
+            server.withAnalysisContextAndFileSettings(uri) {
                 readAction {
                     val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
                     val quickFixService = KotlinQuickFixService.getInstance()
