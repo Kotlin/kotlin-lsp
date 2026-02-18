@@ -56,7 +56,7 @@
     <orderEntry type="module" module-name="intellij.platform.core" />
     <orderEntry type="module" module-name="intellij.kotlin.base.plugin" />
     <orderEntry type="module" module-name="intellij.libraries.jspecify" />
-    <orderEntry type="module" module-name="language-server.project-import.gradle-plugin" />
+    <orderEntry type="module" module-name="language-server.workspace-import.gradle-plugin" />
     <orderEntry type="library" name="Gradle Tooling API" level="project" />
   </component>
 </module>

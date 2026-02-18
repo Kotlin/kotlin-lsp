@@ -62,7 +62,7 @@
     <orderEntry type="module" module-name="language-server.analyzer" />
     <orderEntry type="module" module-name="intellij.kotlin.base.codeInsight" />
     <orderEntry type="module" module-name="intellij.kotlin.searching.base" />
-    <orderEntry type="module" module-name="language-server.project-import" />
+    <orderEntry type="module" module-name="language-server.workspace-import" />
     <orderEntry type="module" module-name="intellij.platform.workspace.jps" />
     <orderEntry type="library" name="clikt" level="project" />
     <orderEntry type="module" module-name="fleet.rhizomedb" />
@@ -78,7 +78,7 @@
     <orderEntry type="module" module-name="intellij.libraries.ktor.io" />
     <orderEntry type="library" name="kotlinc.analysis-api-platform-interface" level="project" />
     <orderEntry type="module" module-name="intellij.kotlin.projectStructure" />
-    <orderEntry type="module" module-name="language-server.project-import.maven-plugin" />
-    <orderEntry type="module" module-name="language-server.project-import.gradle-plugin" />
+    <orderEntry type="module" module-name="language-server.workspace-import.maven-plugin" />
+    <orderEntry type="module" module-name="language-server.workspace-import.gradle-plugin" />
   </component>
 </module>

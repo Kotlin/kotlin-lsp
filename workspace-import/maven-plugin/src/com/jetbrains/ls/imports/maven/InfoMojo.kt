@@ -13,7 +13,7 @@ import java.io.PrintStream
 /**
  * ```
  * mvn install:install-file \
- *   -Dfile=out/jps-artifacts/language-server.project-import.maven-plugin.jar \
+ *   -Dfile=out/jps-artifacts/language-server.workspace-import.maven-plugin.jar \
  *   -DgroupId=com.jetbrains.ls \
  *   -DartifactId=imports-maven-plugin \
  *   -Dversion=0.99 \

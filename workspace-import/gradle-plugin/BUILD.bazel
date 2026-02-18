@@ -1,4 +1,4 @@
-### auto-generated section `build language-server.project-import.gradle-plugin` start
+### auto-generated section `build language-server.workspace-import.gradle-plugin` start
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
 load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_provided_library", "resourcegroup")
 
@@ -31,7 +31,7 @@ jvm_provided_library(
 
 jvm_library(
   name = "gradle-plugin",
-  module_name = "language-server.project-import.gradle-plugin",
+  module_name = "language-server.workspace-import.gradle-plugin",
   visibility = ["//visibility:public"],
   srcs = glob(["src/**/*.kt", "src/**/*.java", "src/**/*.form"], allow_empty = True),
   resources = [":gradle-plugin_resources"],
@@ -49,7 +49,7 @@ jvm_library(
 
 jvm_library(
   name = "gradle-plugin_test_lib",
-  module_name = "language-server.project-import.gradle-plugin",
+  module_name = "language-server.workspace-import.gradle-plugin",
   visibility = ["//visibility:public"],
   srcs = glob([], allow_empty = True),
   kotlinc_opts = ":custom_gradle-plugin",
@@ -65,4 +65,4 @@ jvm_library(
     "@ultimate_lib//:javax-inject-provided",
   ]
 )
-### auto-generated section `build language-server.project-import.gradle-plugin` end
+### auto-generated section `build language-server.workspace-import.gradle-plugin` end

@@ -1,4 +1,4 @@
-### auto-generated section `build language-server.project-import.test` start
+### auto-generated section `build language-server.workspace-import.test` start
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
 load("@rules_jvm//:jvm.bzl", "jvm_library")
 
@@ -16,7 +16,7 @@ jvm_library(
 
 jvm_library(
   name = "test_test_lib",
-  module_name = "language-server.project-import.test",
+  module_name = "language-server.workspace-import.test",
   visibility = ["//visibility:public"],
   srcs = glob(["test/**/*.kt", "test/**/*.java", "test/**/*.form"], allow_empty = True),
   kotlinc_opts = ":custom_test",
@@ -36,8 +36,8 @@ jvm_library(
     "@community//platform/projectModel-impl:projectModel-impl_test_lib",
     "@community//platform/util",
     "@community//platform/util:util_test_lib",
-    "//language-server/community/workspace-import:language-server-project-import",
-    "//language-server/community/workspace-import:language-server-project-import_test_lib",
+    "//language-server/community/workspace-import",
+    "//language-server/community/workspace-import:workspace-import_test_lib",
     "@community//platform/workspace/jps",
     "@community//platform/workspace/jps:jps_test_lib",
     "//language-server/api.impl.analyzer",
@@ -64,13 +64,13 @@ jvm_library(
     "@community//platform/ide-core-impl:ide-core-impl_test_lib",
   ]
 )
-### auto-generated section `build language-server.project-import.test` end
+### auto-generated section `build language-server.workspace-import.test` end
 
-### auto-generated section `test language-server.project-import.test` start
+### auto-generated section `test language-server.workspace-import.test` start
 load("@community//build:tests-options.bzl", "jps_test")
 
 jps_test(
   name = "test_test",
   runtime_deps = [":test_test_lib"]
 )
-### auto-generated section `test language-server.project-import.test` end
+### auto-generated section `test language-server.workspace-import.test` end

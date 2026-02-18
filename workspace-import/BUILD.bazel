@@ -1,25 +1,25 @@
-### auto-generated section `build language-server.project-import` start
+### auto-generated section `build language-server.workspace-import` start
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
 load("@rules_jvm//:jvm.bzl", "jvm_library", "resourcegroup")
 
 create_kotlinc_options(
-  name = "custom_language-server-project-import",
+  name = "custom_workspace-import",
   x_context_parameters = True
 )
 
 resourcegroup(
-  name = "language-server-project-import_resources",
+  name = "workspace-import_resources",
   srcs = glob(["resources/**/*"]),
   strip_prefix = "resources"
 )
 
 jvm_library(
-  name = "language-server-project-import",
-  module_name = "language-server.project-import",
+  name = "workspace-import",
+  module_name = "language-server.workspace-import",
   visibility = ["//visibility:public"],
   srcs = glob(["gen/**/*.kt", "gen/**/*.java", "src/**/*.kt", "src/**/*.java", "src/**/*.form"], allow_empty = True),
-  resources = [":language-server-project-import_resources"],
-  kotlinc_opts = ":custom_language-server-project-import",
+  resources = [":workspace-import_resources"],
+  kotlinc_opts = ":custom_workspace-import",
   deps = [
     "@lib//:kotlin-stdlib",
     "@community//jps/model-serialization",
@@ -53,13 +53,13 @@ jvm_library(
 )
 
 jvm_library(
-  name = "language-server-project-import_test_lib",
-  module_name = "language-server.project-import",
+  name = "workspace-import_test_lib",
+  module_name = "language-server.workspace-import",
   visibility = ["//visibility:public"],
   srcs = glob([], allow_empty = True),
-  kotlinc_opts = ":custom_language-server-project-import",
+  kotlinc_opts = ":custom_workspace-import",
   runtime_deps = [
-    ":language-server-project-import",
+    ":workspace-import",
     "@community//jps/model-serialization:model-serialization_test_lib",
     "@community//platform/extensions:extensions_test_lib",
     "@community//platform/lang-core:lang-core_test_lib",
@@ -86,4 +86,4 @@ jvm_library(
     "//language-server/community/workspace-import/gradle-plugin:gradle-plugin_test_lib",
   ]
 )
-### auto-generated section `build language-server.project-import` end
+### auto-generated section `build language-server.workspace-import` end
