@@ -265,7 +265,7 @@ private fun MutableSet<SourceRootData>.addBuildHelperRoots(
             sources.children.forEach { sourceElement ->
                 val path = sourceElement.value?.trim()
                 if (!path.isNullOrEmpty()) {
-                    add(SourceRootData(path, rootType))
+                    add(SourceRootData(toAbsolutePath(project, path), rootType))
                 }
             }
         }
@@ -298,7 +298,7 @@ private fun MutableSet<SourceRootData>.addModelloGeneratedSources(
                 ?: "${project.build?.directory ?: "target"}/generated-sources/modello"
 
             if (outputDir.isNotEmpty()) {
-                add(SourceRootData(outputDir, rootType))
+                add(SourceRootData(toAbsolutePath(project, outputDir), rootType))
             }
         }
     }
@@ -321,10 +321,17 @@ private fun MutableSet<SourceRootData>.addCompilerGeneratedSources(
                 ?: project.properties.getProperty("project.build.directory")?.trim()?.let { "$it/generated-sources/annotations" }
 
             if (!outputDir.isNullOrEmpty()) {
-                add(SourceRootData(outputDir, rootType))
+                add(SourceRootData(toAbsolutePath(project, outputDir), rootType))
             }
         }
     }
+}
+
+private fun toAbsolutePath(project: MavenProject, path: String): String {
+    val p = Path(path)
+    if (p.isAbsolute) return path
+    if (project.basedir != null) return project.basedir.toPath().resolve(path).absolutePathString()
+    return p.absolutePathString()
 }
 
 private fun MutableSet<SourceRootData>.addGeneratedDirProperty(
