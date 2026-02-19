@@ -204,6 +204,7 @@ private fun sourceRootData(
         addBuildHelperRoots(project, "add-resource", "resources","java-resource")
         addModelloGeneratedSources(project, "java-source")
         addCompilerGeneratedSources(project, "compiler:compile","java-source")
+        addAntlr4GeneratedSources(project, "java-source")
         addGeneratedDirProperty(project, "java-source")
     }
     if (module.type.containsTest) {
@@ -222,9 +223,32 @@ private fun sourceRootData(
         addBuildHelperRoots(project, "add-test-source", "sources", "java-test")
         addBuildHelperRoots(project, "add-test-resource", "resources","java-test-resource")
         addCompilerGeneratedSources(project, "compiler:testCompile","java-source")
+        addAntlr4GeneratedSources(project, "java-test")
         addModelloGeneratedSources(project, "java-test")
     }
 }.toList()
+
+private fun MutableSet<SourceRootData>.addAntlr4GeneratedSources(
+    project: MavenProject,
+    rootType: String
+) {
+    val plugin = findPlugin(project, "org.antlr", "antlr4-maven-plugin") ?: return
+
+    plugin.executions.forEach { execution ->
+        if (execution.goals.contains("antlr4")) {
+            val executionConfig = execution.configuration as? Xpp3Dom
+            val pluginConfig = plugin.configuration as? Xpp3Dom
+
+            val outputDir = executionConfig?.getChild("outputDirectory")?.value?.trim()
+                ?: pluginConfig?.getChild("outputDirectory")?.value?.trim()
+                ?: "${project.build?.directory ?: "target"}/generated-sources/antlr4"
+
+            if (outputDir.isNotEmpty()) {
+                add(SourceRootData(outputDir, rootType))
+            }
+        }
+    }
+}
 
 private fun MutableSet<SourceRootData>.addBuildHelperRoots(
     project: MavenProject,
