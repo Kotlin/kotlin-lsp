@@ -99,7 +99,9 @@ private fun doTest(
                         listOf(
                             readPluginDescriptor(Tests::class.java, "/META-INF/fleet/analyzer/test-import.xml"),
                         )
-                    )
+                    ),
+                    applicationInits = emptyList(),
+                    projectInits = emptyList(),
                 )
             ) { analyzerProject ->
                 val originalProject = analyzerProject.project
@@ -140,7 +142,7 @@ private fun doTest(
                     }
                 }
 
-                val storage = importer.importWorkspace(projectWithStore, projectDir, virtualFileUrlManager) {}
+                val storage = importer.importWorkspace(projectWithStore, projectDir, null, virtualFileUrlManager) {}
                     ?: fail("Workspace import failed")
 
                 val expectedModules = projectStructureWithModules.modules

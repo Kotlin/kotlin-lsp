@@ -38,10 +38,12 @@
     <orderEntry type="module" module-name="intellij.platform.core" />
     <orderEntry type="module" module-name="intellij.platform.core.impl" />
     <orderEntry type="module" module-name="intellij.platform.analysis" />
+    <orderEntry type="module" module-name="intellij.platform.workspace.storage" />
     <orderEntry type="module" module-name="intellij.platform.util" />
     <orderEntry type="module" module-name="intellij.kotlin.completion.impl" />
     <orderEntry type="module" module-name="intellij.kotlin.codeInsight" />
     <orderEntry type="library" name="kotlinc.kotlin-compiler-common" level="project" />
+    <orderEntry type="library" name="kotlinc.kotlin-compiler-fir" level="project" />
     <orderEntry type="library" name="kotlinc.analysis-api" level="project" />
     <orderEntry type="library" name="kotlinc.analysis-api-k2" level="project" />
     <orderEntry type="module" module-name="intellij.java.psi" />
@@ -62,7 +64,6 @@
     <orderEntry type="module" module-name="intellij.platform.editor.ex" />
     <orderEntry type="module" module-name="intellij.platform.editor.ui" />
     <orderEntry type="module" module-name="intellij.kotlin.searching" />
-    <orderEntry type="module" module-name="kotlin.plugin.k2" />
     <orderEntry type="module" module-name="intellij.platform.lang" />
     <orderEntry type="module" module-name="intellij.kotlin.base.analysis" />
     <orderEntry type="module" module-name="intellij.kotlin.base.analysis.utils" />
@@ -72,15 +73,19 @@
     <orderEntry type="module" module-name="kotlin.completion.impl.shared" />
     <orderEntry type="module" module-name="intellij.kotlin.codeInsight.base" />
     <orderEntry type="library" name="kotlinc.analysis-api-impl-base" level="project" />
+    <orderEntry type="library" name="kotlinc.low-level-api-fir" level="project" />
     <orderEntry type="module" module-name="intellij.kotlin.completion.api" />
     <orderEntry type="module" module-name="intellij.codeServer.core" />
     <orderEntry type="module" module-name="kotlin.fir" />
     <orderEntry type="module" module-name="intellij.kotlin.navigation" />
     <orderEntry type="module" module-name="intellij.kotlin.codeInsight.shared" />
+    <orderEntry type="module" module-name="language-server.analyzer.kotlin" />
     <orderEntry type="module" module-name="language-server.dap.jvm" />
     <orderEntry type="module" module-name="language-server.api.impl.analyzer" />
     <orderEntry type="module" module-name="fleet.rhizomedb" />
     <orderEntry type="module" module-name="fleet.kernel" />
     <orderEntry type="module" module-name="language-server.dap.jvm.lsp.features" />
+    <orderEntry type="module" module-name="language-server.workspace-import" />
+    <orderEntry type="module" module-name="language-server.api.features.impl.java-base" />
   </component>
 </module>

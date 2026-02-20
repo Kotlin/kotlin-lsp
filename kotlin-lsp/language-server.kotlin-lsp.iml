@@ -26,7 +26,6 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/test" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/gen" isTestSource="false" generated="true" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
@@ -35,34 +34,21 @@
     <orderEntry type="module" module-name="fleet.util.core" />
     <orderEntry type="module" module-name="intellij.platform.core" />
     <orderEntry type="module" module-name="intellij.platform.core.impl" />
-    <orderEntry type="module" module-name="intellij.java.psi" />
     <orderEntry type="module" module-name="intellij.platform.lang.core" />
     <orderEntry type="module" module-name="intellij.platform.projectModel" />
     <orderEntry type="module" module-name="intellij.platform.util" />
     <orderEntry type="module" module-name="intellij.libraries.kotlinx.coroutines.core" />
     <orderEntry type="module" module-name="intellij.libraries.kotlinx.serialization.json" />
     <orderEntry type="module" module-name="intellij.libraries.kotlinx.serialization.core" />
-    <orderEntry type="library" name="kotlinc.kotlin-compiler-common" level="project" />
     <orderEntry type="module" module-name="intellij.platform.execution" />
     <orderEntry type="module" module-name="intellij.platform.workspace.storage" />
     <orderEntry type="module" module-name="language-server.analyzer.filewatcher" />
     <orderEntry type="module" module-name="language-server.api.core" />
     <orderEntry type="module" module-name="language-server.api.impl.analyzer" />
-    <orderEntry type="library" name="kotlinc.analysis-api" level="project" />
-    <orderEntry type="library" name="kotlinc.analysis-api-k2" level="project" />
-    <orderEntry type="module" module-name="intellij.java.impl" />
-    <orderEntry type="module" module-name="intellij.java" />
-    <orderEntry type="module" module-name="intellij.kotlin.base.plugin" />
     <orderEntry type="module" module-name="language-server.api.features" />
     <orderEntry type="module" module-name="intellij.platform.editor.ex" />
-    <orderEntry type="module" module-name="kotlin.fir" />
-    <orderEntry type="module" module-name="intellij.kotlin.base.projectStructure" />
     <orderEntry type="module" module-name="language-server.api.features.impl.common" />
-    <orderEntry type="module" module-name="language-server.api.features.impl.kotlin" />
     <orderEntry type="module" module-name="language-server.analyzer" />
-    <orderEntry type="module" module-name="intellij.kotlin.base.codeInsight" />
-    <orderEntry type="module" module-name="intellij.kotlin.searching.base" />
-    <orderEntry type="module" module-name="language-server.workspace-import" />
     <orderEntry type="module" module-name="intellij.platform.workspace.jps" />
     <orderEntry type="library" name="clikt" level="project" />
     <orderEntry type="module" module-name="fleet.rhizomedb" />
@@ -74,10 +60,9 @@
     <orderEntry type="library" scope="TEST" name="JUnit5Jupiter" level="project" />
     <orderEntry type="library" scope="TEST" name="JUnit5Launcher" level="project" />
     <orderEntry type="library" scope="TEST" name="JUnit5Params" level="project" />
-    <orderEntry type="module" module-name="language-server.api.features.impl.java-base" />
     <orderEntry type="module" module-name="intellij.libraries.ktor.io" />
-    <orderEntry type="library" name="kotlinc.analysis-api-platform-interface" level="project" />
-    <orderEntry type="module" module-name="intellij.kotlin.projectStructure" />
+    <orderEntry type="module" module-name="language-server.api.features.impl.java-base" />
+    <orderEntry type="module" module-name="language-server.api.features.impl.kotlin" />
     <orderEntry type="module" module-name="language-server.workspace-import.maven-plugin" />
     <orderEntry type="module" module-name="language-server.workspace-import.gradle-plugin" />
   </component>

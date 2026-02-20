@@ -31,6 +31,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="kotlin-stdlib" level="project" />
+    <orderEntry type="module" module-name="fleet.lsp.protocol" />
     <orderEntry type="module" module-name="intellij.platform.jps.model.serialization" />
     <orderEntry type="module" module-name="intellij.platform.extensions" />
     <orderEntry type="module" module-name="intellij.platform.lang.core" />
@@ -58,5 +59,7 @@
     <orderEntry type="module" module-name="intellij.libraries.jspecify" />
     <orderEntry type="module" module-name="language-server.workspace-import.gradle-plugin" />
     <orderEntry type="library" name="Gradle Tooling API" level="project" />
+    <orderEntry type="module" module-name="language-server.analyzer.kotlin" />
+    <orderEntry type="module" module-name="language-server.api.impl.analyzer" />
   </component>
 </module>

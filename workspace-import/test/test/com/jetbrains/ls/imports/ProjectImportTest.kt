@@ -6,7 +6,6 @@ import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.workspaceModel.ide.impl.IdeVirtualFileUrlManagerImpl
 import com.jetbrains.analyzer.api.AnalyzerFileSystems
-import com.jetbrains.analyzer.api.defaultPluginSet
 import com.jetbrains.analyzer.api.withAnalyzer
 import com.jetbrains.analyzer.bootstrap.AnalyzerProjectId
 import com.jetbrains.analyzer.bootstrap.WorkspaceModelSnapshot
@@ -18,12 +17,18 @@ import com.jetbrains.ls.imports.json.importWorkspaceData
 import com.jetbrains.ls.imports.json.toJson
 import com.jetbrains.ls.imports.json.workspaceData
 import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
+import com.jetbrains.ls.imports.utils.DETECT_PROJECT_SDK
 import com.jetbrains.ls.test.api.utils.compareWithTestdata
+import com.jetbrains.ls.test.api.utils.testApplicationInits
+import com.jetbrains.ls.test.api.utils.testPluginSet
+import com.jetbrains.ls.test.api.utils.testProjectInits
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.nio.file.Path
 import kotlin.io.path.div
@@ -32,6 +37,12 @@ import kotlin.io.path.exists
 class ProjectImportTest {
     private val testDataDir = PathManager.getHomeDir() /
             "language-server" / "community" / "workspace-import" / "test" / "testData"
+
+    @BeforeEach
+    fun setUp() { DETECT_PROJECT_SDK = false }
+
+    @AfterEach
+    fun tearDown() { DETECT_PROJECT_SDK = true }
 
     @Test
     fun newIJKotlinGradle() = doGradleTest("NewIJKotlinGradle")
@@ -95,10 +106,12 @@ class ProjectImportTest {
                         projectId = AnalyzerProjectId(),
                         entities = currentSnapshot.entityStore,
                         urlManager = virtualFileUrlManager,
-                        pluginSet = defaultPluginSet()
+                        pluginSet = testPluginSet,
+                        applicationInits = testApplicationInits,
+                        projectInits = testProjectInits,
                     )
                 ) {
-                    importer.importWorkspace(it.project, projectDir, virtualFileUrlManager) {}
+                    importer.importWorkspace(it.project, projectDir, null, virtualFileUrlManager) {}
                 }
             }
         }

@@ -22,6 +22,7 @@ jvm_library(
   kotlinc_opts = ":custom_workspace-import",
   deps = [
     "@lib//:kotlin-stdlib",
+    "@community//fleet/lsp.protocol",
     "@community//jps/model-serialization",
     "@community//platform/extensions",
     "@community//platform/lang-core",
@@ -49,6 +50,8 @@ jvm_library(
     "@community//libraries/jspecify",
     "//language-server/community/workspace-import/gradle-plugin",
     "@ultimate_lib//:gradle_tooling_a_p_i",
+    "//language-server/analyzer.kotlin",
+    "//language-server/api.impl.analyzer",
   ]
 )
 
@@ -60,6 +63,7 @@ jvm_library(
   kotlinc_opts = ":custom_workspace-import",
   runtime_deps = [
     ":workspace-import",
+    "@community//fleet/lsp.protocol:lsp.protocol_test_lib",
     "@community//jps/model-serialization:model-serialization_test_lib",
     "@community//platform/extensions:extensions_test_lib",
     "@community//platform/lang-core:lang-core_test_lib",
@@ -84,6 +88,8 @@ jvm_library(
     "@community//plugins/kotlin/base/plugin:plugin_test_lib",
     "@community//libraries/jspecify:jspecify_test_lib",
     "//language-server/community/workspace-import/gradle-plugin:gradle-plugin_test_lib",
+    "//language-server/analyzer.kotlin:analyzer.kotlin_test_lib",
+    "//language-server/api.impl.analyzer:api.impl.analyzer_test_lib",
   ]
 )
 ### auto-generated section `build language-server.workspace-import` end

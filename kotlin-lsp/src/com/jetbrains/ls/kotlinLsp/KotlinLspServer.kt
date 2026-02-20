@@ -1,9 +1,10 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.kotlinLsp
 
-import com.intellij.openapi.application.ClassPathUtil.addKotlinStdlib
+import com.intellij.openapi.application.Application
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.fileLogger
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.util.SystemProperties
 import com.jetbrains.analyzer.api.defaultPluginSet
@@ -12,15 +13,18 @@ import com.jetbrains.analyzer.filewatcher.FileWatcher
 import com.jetbrains.analyzer.filewatcher.downloadFileWatcherBinaries
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.LSServerStarter
-import com.jetbrains.ls.api.features.ApplicationInitProvider
+import com.jetbrains.ls.api.features.AnalyzerContainerType
+import com.jetbrains.ls.api.features.ApplicationInitEntry
+import com.jetbrains.ls.api.features.InvalidateHookEntry
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.LanguageServerExtension
-import com.jetbrains.ls.api.features.ProjectInitProvider
+import com.jetbrains.ls.api.features.ProjectInitEntry
+import com.jetbrains.ls.api.features.RhizomeEntityTypeEntry
+import com.jetbrains.ls.api.features.RhizomeLowMemoryWatcherHook
+import com.jetbrains.ls.api.features.RhizomeWorkspaceInitEntry
+import com.jetbrains.ls.api.features.analyzerContainerBuilderEntries
 import com.jetbrains.ls.api.features.impl.common.configuration.DapCommonConfiguration
 import com.jetbrains.ls.api.features.impl.common.configuration.LSCommonConfiguration
-import com.jetbrains.ls.api.features.impl.javaBase.LSJavaBaseLanguageConfiguration
-import com.jetbrains.ls.api.features.impl.kotlin.configuration.LSKotlinLanguageConfiguration
-import com.jetbrains.ls.api.features.impl.kotlin.debug.DapJvmConfiguration
 import com.jetbrains.ls.kotlinLsp.connection.Client
 import com.jetbrains.ls.kotlinLsp.logging.initKotlinLspLogger
 import com.jetbrains.ls.kotlinLsp.requests.core.fileUpdateRequests
@@ -36,15 +40,12 @@ import com.jetbrains.lsp.implementation.LspHandlers
 import com.jetbrains.lsp.implementation.lspHandlers
 import com.jetbrains.lsp.implementation.withBaseProtocolFraming
 import com.jetbrains.lsp.implementation.withLsp
+import com.jetbrains.rhizomedb.ChangeScope
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.kotlin.idea.base.plugin.artifacts.KotlinArtifacts
-import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutMode
-import org.jetbrains.kotlin.idea.compiler.configuration.KotlinPluginLayoutModeProvider
-import org.jetbrains.kotlin.idea.compiler.configuration.isRunningFromSources
 import java.io.RandomAccessFile
 import java.nio.file.Path
 import kotlin.io.path.ExperimentalPathApi
@@ -74,19 +75,15 @@ fun main(args: Array<String>) {
 // use after `initKotlinLspLogger` call
 private val LOG by lazy { fileLogger() }
 
-fun LSConfiguration.analysisConfig(): ProjectEnvConfig =
-    ProjectEnvConfig(
-        pluginSet = defaultPluginSet(plugins),
-        projectInits = entries.asSequence().filterIsInstance<ProjectInitProvider>().map { it.projectInit }.toList(),
-        applicationInits = entries.asSequence().filterIsInstance<ApplicationInitProvider>().map { it.applicationInit }.toList()
-    )
-
-fun LSConfiguration.debuggerConfig(): ProjectEnvConfig =
-    ProjectEnvConfig(
-        pluginSet = defaultPluginSet(plugins + dapPlugins),
-        projectInits = entries.asSequence().filterIsInstance<ProjectInitProvider>().map { it.projectInit }.toList(),
-        applicationInits = entries.asSequence().filterIsInstance<ApplicationInitProvider>().map { it.applicationInit }.toList()
-    )
+fun LSConfiguration.lowMemoryHooks(): List<context(ChangeScope) () -> Unit> =
+    entries.mapNotNull {
+        (it as? RhizomeLowMemoryWatcherHook)?.let { hook ->
+            val hookFun: context(ChangeScope) () -> Unit = {
+                hook.onLowMemory()
+            }
+            hookFun
+        }
+    }
 
 private fun run(runConfig: KotlinLspServerRunConfig) {
     val mode = runConfig.mode
@@ -103,11 +100,12 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
     @Suppress("RAW_RUN_BLOCKING")
     runBlocking(CoroutineName("root") + Dispatchers.Default) {
         withLSServerStarter(
-            analysisPlugins = config.analysisConfig(),
-            debuggerPlugins = config.debuggerConfig(),
+            lowMemoryHooks = config.lowMemoryHooks(),
+            analysisConfig = config.configFor(AnalyzerContainerType.ANALYSIS),
+            writableConfig = config.configFor(AnalyzerContainerType.WRITE),
+            debuggerConfig = config.configForDebugger(),
             isUnitTestMode = false,
         ) {
-            preloadKotlinStdlibWhenRunningFromSources()
             val body: suspend CoroutineScope.(LspConnection) -> Unit = { connection ->
                 handleRequests(connection, runConfig, config)
             }
@@ -207,7 +205,7 @@ private fun systemProperty(name: String, value: String, ifAbsent: Boolean = fals
 }
 
 private fun initExtraProperties() {
-    KotlinPluginLayoutModeProvider.setForcedKotlinPluginLayoutMode(KotlinPluginLayoutMode.LSP)
+    SystemProperties.setProperty("kotlin.plugin.layout", "LSP")
     // TrigramIndex.isEnabled() -> false:
     SystemProperties.setProperty("find.use.indexing.searcher.extensions", "false")
 }
@@ -223,39 +221,46 @@ private fun isLspRunningFromSources(): Boolean {
 
 fun createConfiguration(): LSConfiguration {
     return LSConfiguration(
-        languageConfigurations = listOf(
+        configurations = listOf(
             LSCommonConfiguration,
-            LSKotlinLanguageConfiguration,
-            LSJavaBaseLanguageConfiguration,
+            DapCommonConfiguration,
             *(mapLspServices(LanguageServerExtension::class) {
                 it.configuration
             }.toTypedArray()),
         ),
-        dapConfiguration = listOf(
-            DapCommonConfiguration,
-            DapJvmConfiguration,
-        ),
     )
 }
+
+fun LSConfiguration.configFor(type: AnalyzerContainerType): ProjectEnvConfig =
+    ProjectEnvConfig(
+        pluginSet = defaultPluginSet(plugins),
+        projectInits = analyzerContainerBuilderEntries<ProjectInitEntry, Project> { builder, project ->
+            builder.initProject(project, type)
+        },
+        applicationInits = analyzerContainerBuilderEntries<ApplicationInitEntry, Application> { builder, application ->
+            builder.initApplication(application, type)
+        },
+        entityTypes = entries.mapNotNull { (it as? RhizomeEntityTypeEntry)?.entityType() },
+        workspaceInits = entries.mapNotNull {
+            (it as? RhizomeWorkspaceInitEntry)?.let { hook -> { context -> hook.workspaceInit(context) } }
+        },
+        invalidationHooks = entries.mapNotNull {
+            (it as? InvalidateHookEntry)?.let { hook -> { urls -> hook.invalidation(urls) } }
+        },
+    )
+
+fun LSConfiguration.configForDebugger(): ProjectEnvConfig =
+    configFor(AnalyzerContainerType.ANALYSIS).copy(pluginSet = defaultPluginSet(plugins + dapPlugins))
 
 context(server: LSServer)
 fun createLspHandlers(config: LSConfiguration, exitSignal: CompletableDeferred<Unit>?): LspHandlers {
     with(config) {
         return lspHandlers {
-            initializeRequest()
+            initializeRequest(workspaceImporters)
             setTraceNotification()
             shutdownRequest(exitSignal)
             fileUpdateRequests()
             features()
         }
-    }
-}
-
-/**
- * for some reason without this line [addKotlinStdlib] will fail with [ClassNotFoundException]
- */
-private fun preloadKotlinStdlibWhenRunningFromSources() {
-    if (isRunningFromSources) {
-        KotlinArtifacts.kotlinStdlibPath
     }
 }

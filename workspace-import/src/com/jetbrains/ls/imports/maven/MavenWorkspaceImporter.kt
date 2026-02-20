@@ -38,6 +38,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
     override suspend fun importWorkspace(
         project: Project,
         projectDirectory: Path,
+        defaultSdkPath: Path?,
         virtualFileUrlManager: VirtualFileUrlManager,
         onUnresolvedDependency: (String) -> Unit,
     ): EntityStorage? {
@@ -108,7 +109,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                 .runAndGetOK("Maven", processOutputLogger = LOG)
 
             return JsonWorkspaceImporter.importWorkspaceJson(
-                workspaceJsonFile, projectDirectory, onUnresolvedDependency, virtualFileUrlManager
+                workspaceJsonFile, projectDirectory, defaultSdkPath, virtualFileUrlManager, onUnresolvedDependency
             )
         } finally {
             workspaceJsonFile.delete()

@@ -31,6 +31,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="kotlin-stdlib" level="project" />
     <orderEntry type="module" module-name="fleet.lsp.protocol" />
+    <orderEntry type="module" module-name="fleet.rhizomedb" />
     <orderEntry type="module" module-name="intellij.libraries.kotlinx.coroutines.core" />
     <orderEntry type="module" module-name="intellij.platform.core" />
     <orderEntry type="module" module-name="language-server.api.core" />
@@ -41,5 +42,6 @@
     <orderEntry type="module" module-name="intellij.libraries.kotlinx.serialization.core" />
     <orderEntry type="library" name="java-diff-utils" level="project" />
     <orderEntry type="module" module-name="language-server.analyzer" />
+    <orderEntry type="module" module-name="language-server.api.impl.analyzer" />
   </component>
 </module>

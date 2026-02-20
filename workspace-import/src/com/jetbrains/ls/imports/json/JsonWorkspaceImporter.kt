@@ -9,6 +9,7 @@ import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImporter
+import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -29,21 +30,23 @@ object JsonWorkspaceImporter : WorkspaceImporter {
     override suspend fun importWorkspace(
         project: Project,
         projectDirectory: Path,
+        defaultSdkPath: Path?,
         virtualFileUrlManager: VirtualFileUrlManager,
         onUnresolvedDependency: (String) -> Unit
     ): EntityStorage? {
         if (!isApplicableDirectory(projectDirectory)) return null
         val jsonPath = projectDirectory / "workspace.json"
         return importWorkspaceJson(
-            jsonPath, projectDirectory, onUnresolvedDependency, virtualFileUrlManager
+            jsonPath, projectDirectory, defaultSdkPath, virtualFileUrlManager, onUnresolvedDependency
         )
     }
 
     fun importWorkspaceJson(
         file: Path,
         projectDirectory: Path,
-        onUnresolvedDependency: (String) -> Unit,
-        virtualFileUrlManager: VirtualFileUrlManager
+        defaultSdkPath: Path?,
+        virtualFileUrlManager: VirtualFileUrlManager,
+        onUnresolvedDependency: (String) -> Unit
     ): EntityStorage {
         val workspaceJson: WorkspaceData = try {
             file.inputStream().use { stream ->
@@ -68,6 +71,7 @@ object JsonWorkspaceImporter : WorkspaceImporter {
                 WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager)),
                 virtualFileUrlManager
             )
+            fixMissingProjectSdk(defaultSdkPath, virtualFileUrlManager)
         }
     }
 

@@ -7,9 +7,11 @@ import com.intellij.openapi.components.impl.ProjectWidePathMacroContributor
 import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.JavaSdk
+import com.intellij.openapi.projectRoots.impl.JavaHomeFinder
+import com.intellij.openapi.projectRoots.impl.JavaHomeFinder.getFinder
 import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
-import com.intellij.openapi.roots.OrderRootType
 import com.intellij.openapi.util.io.FileUtilRt
+import com.intellij.platform.eel.provider.getEelDescriptor
 import com.intellij.platform.workspace.jps.entities.ContentRootEntity
 import com.intellij.platform.workspace.jps.entities.DependencyScope
 import com.intellij.platform.workspace.jps.entities.ExcludeUrlEntity
@@ -39,7 +41,6 @@ import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImporter
-import com.jetbrains.ls.imports.api.findJdks
 import com.jetbrains.ls.imports.utils.toIntellijUri
 import org.jetbrains.jps.model.JpsElementFactory
 import org.jetbrains.jps.model.JpsModel
@@ -80,6 +81,7 @@ object JpsWorkspaceImporter : WorkspaceImporter {
     override suspend fun importWorkspace(
         project: Project,
         projectDirectory: Path,
+        defaultSdkPath: Path?,
         virtualFileUrlManager: VirtualFileUrlManager,
         onUnresolvedDependency: (String) -> Unit,
     ): EntityStorage? {
@@ -366,4 +368,18 @@ private fun initGlobalJpsOptions(model: JpsModel) {
 private fun JpsLibraryType<*>.toSdkType(): String = when (this) {
     is JpsJavaSdkType -> JavaSdk.getInstance().name
     else -> toString()
+}
+
+fun findJdks(projectPath: Path): Set<JavaHomeFinder.JdkEntry> {
+    val knownJdks = getFinder(projectPath.getEelDescriptor())
+        .checkConfiguredJdks(false)
+        .checkEmbeddedJava(false)
+        .findExistingJdkEntries()
+    if (knownJdks.isEmpty()) {
+        throw WorkspaceImportException(
+            "Unable to find JDK for Gradle execution. No JDK's found on the machine!",
+            "There are no JDKs on the machine. Unable to run Gradle."
+        )
+    }
+    return knownJdks
 }

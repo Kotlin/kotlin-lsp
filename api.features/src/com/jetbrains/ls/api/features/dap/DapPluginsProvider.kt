@@ -2,9 +2,8 @@
 package com.jetbrains.ls.api.features.dap
 
 import com.intellij.ide.plugins.PluginMainDescriptor
-import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
+import com.jetbrains.ls.api.features.LSConfigurationEntry
 
-class DapConfigurationPiece(
-    val commands: List<LSCommandDescriptorProvider> = emptyList(),
+class DapPluginsProvider(
     val plugins: List<PluginMainDescriptor> = emptyList(),
-)
+): LSConfigurationEntry

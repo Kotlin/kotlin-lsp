@@ -1,8 +1,6 @@
-<idea-plugin xmlns:xi="http://www.w3.org/2001/XInclude">
+<idea-plugin>
   <id>features/javaBase/apiImpl</id>
   <vendor>JetBrains</vendor>
-
-  <xi:include href="/META-INF/RegistryKeys.xml"/>
 
   <extensionPoints>
     <extensionPoint qualifiedName="com.intellij.modcompletion.completionItemProvider"

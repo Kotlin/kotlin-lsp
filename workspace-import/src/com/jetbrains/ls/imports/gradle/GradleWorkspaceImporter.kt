@@ -17,6 +17,7 @@ import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.getInitScriptPath
 import com.jetbrains.ls.imports.gradle.action.ProjectMetadataBuilder
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter.postProcessWorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData
+import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
 import org.gradle.tooling.GradleConnector
 import java.io.File
 import java.nio.file.Path
@@ -40,6 +41,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
     override suspend fun importWorkspace(
         project: Project,
         projectDirectory: Path,
+        defaultSdkPath: Path?,
         virtualFileUrlManager: VirtualFileUrlManager,
         onUnresolvedDependency: (String) -> Unit,
     ): EntityStorage? {
@@ -78,6 +80,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                 virtualFileUrlManager,
                 ignoreDuplicateLibsAndSdks = true,
             )
+            fixMissingProjectSdk(defaultSdkPath, virtualFileUrlManager)
         }
     }
 }

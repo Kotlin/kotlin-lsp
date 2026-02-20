@@ -2,33 +2,21 @@
 package com.jetbrains.ls.kotlinLsp.requests.core
 
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.projectRoots.JavaSdk
-import com.intellij.platform.workspace.jps.entities.InheritedSdkDependency
-import com.intellij.platform.workspace.jps.entities.ModuleEntity
-import com.intellij.platform.workspace.jps.entities.SdkDependency
-import com.intellij.platform.workspace.jps.entities.SdkEntity
-import com.intellij.platform.workspace.jps.entities.modifyModuleEntity
-import com.intellij.platform.workspace.storage.EntitySource
+import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.platform.workspace.storage.MutableEntityStorage
-import com.intellij.platform.workspace.storage.entities
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.jetbrains.analyzer.bootstrap.AnalyzerContext
 import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.core.util.createSdkEntity
 import com.jetbrains.ls.api.core.util.workspaceFolderPaths
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.codeActions.LSCodeActions
 import com.jetbrains.ls.api.features.completion.LSCompletionProvider
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokens
+import com.jetbrains.ls.imports.api.EmptyWorkspaceImporter
 import com.jetbrains.ls.imports.api.WorkspaceImportException
-import com.jetbrains.ls.imports.api.importWorkspaceToStorage
-import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
-import com.jetbrains.ls.imports.jps.JpsWorkspaceImporter
-import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
-import com.jetbrains.ls.imports.light.LightWorkspaceImporter
-import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
+import com.jetbrains.ls.imports.api.WorkspaceImporter
+import com.jetbrains.ls.imports.api.applyChangesWithDeduplication
 import com.jetbrains.ls.kotlinLsp.connection.Client
-import com.jetbrains.ls.kotlinLsp.util.jdkRoots
 import com.jetbrains.ls.kotlinLsp.util.sendSystemInfoToClient
 import com.jetbrains.ls.snapshot.api.impl.core.InitializeParamsEntity
 import com.jetbrains.ls.snapshot.api.impl.core.lspInitializationOptions
@@ -71,11 +59,15 @@ import fleet.kernel.change
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import java.nio.file.Path
 
-context(server: LSServer, configuration: LSConfiguration)
-internal fun LspHandlersBuilder.initializeRequest() {
+private val LOG: Logger by lazy { fileLogger() }
+
+context(_: LSServer, configuration: LSConfiguration)
+internal fun LspHandlersBuilder.initializeRequest(workspaceImporters: List<WorkspaceImporter>) {
     request(Initialize) { initParams ->
         Client.update { it.copy(trace = initParams.trace) }
         // TODO: LSP-223 take into account client capabilities
@@ -99,7 +91,7 @@ internal fun LspHandlersBuilder.initializeRequest() {
         }
 
         if (initParams.lspInitializationOptions?.skipImport != true) {
-            indexFolders(folders, initParams)
+            indexFolders(folders, workspaceImporters, initParams)
         }
 
         // TODO: LSP-226 determine capabilities based on registered configuration entries (LSConfigurationEntry)
@@ -199,41 +191,31 @@ private suspend fun LspClient.sendRunConfigurationInfoToClient() {
 }
 
 context(server: LSServer, handlerContext: LspHandlerContext)
-private suspend fun indexFolders(folders: List<Path>, params: InitializeParams) {
+private suspend fun indexFolders(
+    folders: List<Path>,
+    workspaceImporters: List<WorkspaceImporter>,
+    params: InitializeParams,
+) {
+    val defaultSdkPath = defaultSdkPath(params.initializationOptions)
     lspClient.withProgress(params, beginTitle = "Initializing project") { progress ->
+        val emptyWorkspaceImporters = workspaceImporters.asSequence()
+            .filterIsInstance<EmptyWorkspaceImporter>()
         server.workspaceStructure.updateWorkspaceModelDirectly { virtualFileUrlManager, storage ->
             if (folders.isNotEmpty()) {
                 for (folder in folders) {
-                    initFolder(folder, progress, virtualFileUrlManager, storage)
+                    initFolder(folder, workspaceImporters, progress, defaultSdkPath, virtualFileUrlManager, storage)
                 }
             } else {
-                progress.report(Report(message = "Using light mode"))
-                LightWorkspaceImporter.createEmptyWorkspace(virtualFileUrlManager, storage)
-            }
-
-            var defaultJdk = storage.entities(SdkEntity::class.java).singleOrNull()
-            storage.entities<ModuleEntity>().forEach { module ->
-                storage.modifyModuleEntity(module) {
-                    dependencies = dependencies.map { moduleDependencyItem ->
-                        when (moduleDependencyItem) {
-                            is InheritedSdkDependency -> {
-                                defaultJdk = defaultJdk ?: createSdkEntity(
-                                    name = "Java SDK",
-                                    type = JavaSdk.getInstance(),
-                                    roots = jdkRoots(),
-                                    urlManager = virtualFileUrlManager,
-                                    source = DefaultJdkEntitySource,
-                                    storage = storage,
-                                )
-                                SdkDependency(defaultJdk.symbolicId)
-                            }
-
-                            else -> moduleDependencyItem
-                        }
-                    }.toMutableList()
+                val emptyStorage = emptyWorkspaceImporters.map { importer ->
+                    importer.createEmptyWorkspace(defaultSdkPath, virtualFileUrlManager)
+                }.firstOrNull()
+                if (emptyStorage != null) {
+                    progress.report(Report(message = "Using light mode"))
+                    storage.applyChangesWithDeduplication(emptyStorage)
+                } else {
+                    progress.report(Report(message = "Skipping import (light mode not supported)"))
                 }
             }
-
             progress.report(Report(message = "Indexing..."))
         }
 
@@ -241,29 +223,27 @@ private suspend fun indexFolders(folders: List<Path>, params: InitializeParams) 
     }
 }
 
-private val importers = listOf(
-    JsonWorkspaceImporter,
-    MavenWorkspaceImporter,
-    GradleWorkspaceImporter,
-    JpsWorkspaceImporter,
-    LightWorkspaceImporter,
-)
-
 context(handlerContext: LspHandlerContext)
 private suspend fun initFolder(
     folder: Path,
+    workspaceImporters: List<WorkspaceImporter>,
     progress: ProgressReporter,
+    defaultSdkPath: Path?,
     virtualFileUrlManager: VirtualFileUrlManager,
     storage: MutableEntityStorage,
 ) {
     val project = AnalyzerContext.current
     progress.report(Report(message = "Importing folder $folder"))
-    for (importer in importers) {
+    for (importer in workspaceImporters) {
         val unresolved = mutableSetOf<String>()
         LOG.info("Trying to import using ${importer.javaClass.simpleName}")
         val imported = try {
             withContext(Dispatchers.IO) {
-                importer.importWorkspaceToStorage(project.project, storage, folder, virtualFileUrlManager, unresolved::add)
+                importer.importWorkspace(project.project, folder, defaultSdkPath, virtualFileUrlManager, unresolved::add)
+                    ?.let { diff ->
+                        storage.applyChangesWithDeduplication(diff)
+                        true
+                    } ?: false
             }
         } catch (e: CancellationException) {
             throw e
@@ -297,6 +277,11 @@ private suspend fun initFolder(
     }
 }
 
-private object DefaultJdkEntitySource : EntitySource
-
-private val LOG = Logger.getInstance("initialize")
+private fun defaultSdkPath(initOptions: JsonElement?): Path? = initOptions
+    ?.let { it as? JsonObject }
+    ?.get("defaultJdk")
+    ?.let { it as? JsonPrimitive }
+    ?.takeIf { it.isString }
+    ?.content
+    ?.takeIf { it.isNotBlank() }
+    ?.let { return Path.of(it) }

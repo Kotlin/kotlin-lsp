@@ -24,8 +24,8 @@ import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.PathUtil
 import com.jetbrains.ls.api.core.util.UriConverter
-import com.jetbrains.ls.imports.api.WorkspaceImporter
-import com.jetbrains.ls.imports.utils.applyChangesWithDeduplication
+import com.jetbrains.ls.imports.api.EmptyWorkspaceImporter
+import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
 import org.jetbrains.kotlin.idea.base.plugin.artifacts.KotlinArtifacts
 import org.jetbrains.kotlin.idea.compiler.configuration.isRunningFromSources
 import java.nio.file.Path
@@ -39,23 +39,28 @@ import kotlin.io.path.listDirectoryEntries
  * Builds a minimal workspace model for projects without a recognized build system.
  * Mirrors the logic of initLightEditMode but operates on a fresh MutableEntityStorage and does not use updateWorkspaceModel.
  */
-object LightWorkspaceImporter : WorkspaceImporter {
+object LightWorkspaceImporter : EmptyWorkspaceImporter {
     override suspend fun importWorkspace(
-      project: Project,
-      projectDirectory: Path,
-      virtualFileUrlManager: VirtualFileUrlManager,
-      onUnresolvedDependency: (String) -> Unit
-    ): EntityStorage? =
-        createLightWorkspace(projectDirectory, virtualFileUrlManager)
+        project: Project,
+        projectDirectory: Path,
+        defaultSdkPath: Path?,
+        virtualFileUrlManager: VirtualFileUrlManager,
+        onUnresolvedDependency: (String) -> Unit
+    ): EntityStorage {
+        return createLightWorkspace(projectDirectory, virtualFileUrlManager, defaultSdkPath)
+    }
 
-    fun createEmptyWorkspace(virtualFileUrlManager: VirtualFileUrlManager, storage: MutableEntityStorage) {
-        val model = createLightWorkspace(null, virtualFileUrlManager)
-        applyChangesWithDeduplication(storage, model)
+    override fun createEmptyWorkspace(
+        defaultSdkPath: Path?,
+        virtualFileUrlManager: VirtualFileUrlManager
+    ): EntityStorage {
+        return createLightWorkspace(null, virtualFileUrlManager, defaultSdkPath)
     }
 
     private fun createLightWorkspace(
         projectDirectory: Path?,
-        virtualFileUrlManager: VirtualFileUrlManager
+        virtualFileUrlManager: VirtualFileUrlManager,
+        defaultSdkPath: Path?
     ): MutableEntityStorage {
         val storage = MutableEntityStorage.create()
         val entitySource = object : EntitySource {}
@@ -135,7 +140,7 @@ object LightWorkspaceImporter : WorkspaceImporter {
                     }
             }
         }
-
+        storage.fixMissingProjectSdk(defaultSdkPath, virtualFileUrlManager)
         return storage
     }
 

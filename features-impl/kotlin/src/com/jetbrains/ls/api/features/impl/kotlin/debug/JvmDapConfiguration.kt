@@ -7,15 +7,20 @@ import com.jetbrains.dap.jvm.javaOpenapiDebuggerModule
 import com.jetbrains.dap.jvm.javaSharedDebuggerModule
 import com.jetbrains.dap.jvm.jvmDapPlugin
 import com.jetbrains.dap.lsp.features.completion.jvmDapLspPlugin
-import com.jetbrains.ls.api.features.dap.DapConfigurationPiece
+import com.jetbrains.ls.api.features.dap.DapPluginsProvider
+import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 
-val DapJvmConfiguration: DapConfigurationPiece = DapConfigurationPiece(
-    plugins = listOf(
-        javaSharedDebuggerModule,
-        javaOpenapiDebuggerModule,
-        javaDebuggerModule,
-        javaBackendDebuggerModule,
-        jvmDapPlugin,
-        jvmDapLspPlugin
+val DapJvmConfiguration: LSConfigurationPiece = LSConfigurationPiece(
+    entries = listOf(
+        DapPluginsProvider(
+            plugins = listOf(
+                javaSharedDebuggerModule,
+                javaOpenapiDebuggerModule,
+                javaDebuggerModule,
+                javaBackendDebuggerModule,
+                jvmDapPlugin,
+                jvmDapLspPlugin
+            )
+        )
     )
 )

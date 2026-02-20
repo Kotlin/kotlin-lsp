@@ -7,10 +7,22 @@ import com.jetbrains.dap.platform.xDebuggerImplModule
 import com.jetbrains.dap.platform.xDebuggerModule
 import com.jetbrains.dap.platform.xDebuggerRpcModule
 import com.jetbrains.dap.platform.xDebuggerSharedModule
-import com.jetbrains.ls.api.features.dap.DapConfigurationPiece
+import com.jetbrains.ls.api.features.dap.DapPluginsProvider
 import com.jetbrains.ls.api.features.impl.common.debug.LSStartDebugCommandDescriptorProvider
+import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 
-val DapCommonConfiguration: DapConfigurationPiece = DapConfigurationPiece(
-    commands = listOf(LSStartDebugCommandDescriptorProvider),
-    plugins = listOf(xDebuggerModule, xDebuggerRpcModule, xDebuggerSharedModule, xDebuggerImplModule, xDebuggerBackendModule, dapPlugin),
+val DapCommonConfiguration: LSConfigurationPiece = LSConfigurationPiece(
+    entries = listOf(
+        LSStartDebugCommandDescriptorProvider,
+        DapPluginsProvider(
+            plugins = listOf(
+                xDebuggerModule,
+                xDebuggerRpcModule,
+                xDebuggerSharedModule,
+                xDebuggerImplModule,
+                xDebuggerBackendModule,
+                dapPlugin
+            ),
+        )
+    ),
 )

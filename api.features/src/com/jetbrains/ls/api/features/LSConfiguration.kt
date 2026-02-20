@@ -5,10 +5,11 @@ import com.intellij.ide.plugins.PluginMainDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
-import com.jetbrains.ls.api.features.dap.DapConfigurationPiece
+import com.jetbrains.ls.api.features.dap.DapPluginsProvider
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.language.matches
+import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 import com.jetbrains.lsp.protocol.URI
 
@@ -17,6 +18,7 @@ class LSConfiguration(
     val plugins: List<PluginMainDescriptor>,
     val dapPlugins: List<PluginMainDescriptor>,
     val languages: List<LSLanguage>,
+    val workspaceImporters: List<WorkspaceImporter>,
 ) {
     val allCommandDescriptors: List<LSCommandDescriptor> = entries<LSCommandDescriptorProvider>().flatMap { it.commandDescriptors }
 
@@ -87,14 +89,18 @@ class LSConfiguration(
 }
 
 fun LSConfiguration(
-    languageConfigurations: List<LSConfigurationPiece>,
-    dapConfiguration: List<DapConfigurationPiece>,
+    configurations: List<LSConfigurationPiece>,
 ): LSConfiguration {
     return LSConfiguration(
-        entries = languageConfigurations.flatMap { it.entries } + dapConfiguration.flatMap { it.commands },
-        plugins = languageConfigurations.flatMap { it.plugins },
-        dapPlugins = dapConfiguration.flatMap { it.plugins },
-        languages = languageConfigurations.flatMap { it.languages },
+        entries = configurations.flatMap { it.entries },
+        plugins = configurations.flatMap { it.plugins },
+        dapPlugins = configurations.asSequence().flatMap { it.entries }
+            .filterIsInstance<DapPluginsProvider>().flatMap { it.plugins }
+            .toList(),
+        languages = configurations.flatMap { it.languages },
+        workspaceImporters = configurations.asSequence().flatMap { it.entries }
+            .filterIsInstance<WorkspaceImporterEntry>().map { it.importer }
+            .toList()
     )
 }
 

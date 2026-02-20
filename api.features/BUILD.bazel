@@ -27,6 +27,7 @@ jvm_library(
   deps = [
     "@lib//:kotlin-stdlib",
     "@community//fleet/lsp.protocol",
+    "@community//fleet/rhizomedb",
     "@community//libraries/kotlinx/coroutines/core",
     "@community//platform/core-api:core",
     "//language-server/community/api.core",
@@ -37,6 +38,7 @@ jvm_library(
     "@community//libraries/kotlinx/serialization/core",
     "@ultimate_lib//:java-diff-utils",
     "//language-server/analyzer",
+    "//language-server/api.impl.analyzer",
   ]
 )
 
@@ -49,6 +51,7 @@ jvm_library(
   runtime_deps = [
     ":api.features",
     "@community//fleet/lsp.protocol:lsp.protocol_test_lib",
+    "@community//fleet/rhizomedb:rhizomedb_test_lib",
     "@community//libraries/kotlinx/coroutines/core:core_test_lib",
     "@community//platform/core-api:core_test_lib",
     "//language-server/community/api.core:api.core_test_lib",
@@ -58,6 +61,7 @@ jvm_library(
     "@community//libraries/kotlinx/serialization/json:json_test_lib",
     "@community//libraries/kotlinx/serialization/core:core_test_lib",
     "//language-server/analyzer:analyzer_test_lib",
+    "//language-server/api.impl.analyzer:api.impl.analyzer_test_lib",
   ]
 )
 ### auto-generated section `build language-server.api.features` end
