@@ -4,6 +4,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const intellijVscodeDir = path.resolve(__dirname, '../../../../language-server/intellij-vscode');
 
 function merge(target, patch) {
     if (Array.isArray(target) && Array.isArray(patch)) {
@@ -39,7 +40,38 @@ function applyPatch(targetPath, patchPath, outputPath) {
     console.log(`Merged JSON written to ${outputPath}`);
 }
 
+/**
+ * Recursively copies IntelliJ related files into kotlin-vscode sources.
+ * Missing source directories are ignored to keep the patch step resilient.
+ * Existing files with the same name are overwritten by overlay versions.
+ */
+function copyOverlayDirectory(sourceDir, targetDir) {
+    if (!fs.existsSync(sourceDir)) {
+        return;
+    }
 
-applyPatch('package.json', '../../../../language-server/intellij-vscode/package-patch.json', 'package.json');
-applyPatch('package.json', '../../../../language-server/intellij-vscode/package-patch-sql.json', 'package.json');
+    fs.mkdirSync(targetDir, {recursive: true});
+    for (const entry of fs.readdirSync(sourceDir, {withFileTypes: true})) {
+        const sourcePath = path.join(sourceDir, entry.name);
+        const targetPath = path.join(targetDir, entry.name);
+        if (entry.isDirectory()) {
+            if (fs.existsSync(targetPath) && !fs.statSync(targetPath).isDirectory()) {
+                fs.rmSync(targetPath, {recursive: true, force: true});
+            }
+            copyOverlayDirectory(sourcePath, targetPath);
+            continue;
+        }
+        if (entry.isFile()) {
+            if (fs.existsSync(targetPath) && fs.statSync(targetPath).isDirectory()) {
+                fs.rmSync(targetPath, {recursive: true, force: true});
+            }
+            fs.copyFileSync(sourcePath, targetPath);
+            fs.chmodSync(targetPath, fs.statSync(sourcePath).mode);
+        }
+    }
+}
 
+applyPatch('package.json', path.join(intellijVscodeDir, 'package-patch.json'), 'package.json');
+applyPatch('package.json', path.join(intellijVscodeDir, 'package-patch-sql.json'), 'package.json');
+copyOverlayDirectory(path.join(intellijVscodeDir, 'src'), path.resolve(__dirname, 'src'));
+copyOverlayDirectory(path.join(intellijVscodeDir, 'bin'), path.resolve(__dirname, 'bin'));

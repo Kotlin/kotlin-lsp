@@ -5,6 +5,7 @@ import {initLspClient, startLspClient} from './lspClient';
 import {registerStatusBarItem} from './statusBar';
 import {registerDapServer} from "./dap"
 import {registerDatabase} from "./database"
+import {registerDebugJava} from "./debugjava"
 
 
 export const extensionId = 'kotlin'
@@ -38,6 +39,7 @@ export async function activate(context: ExtensionContext) {
     registerDecompiler(context)
     registerOpeningJars()
     registerDapServer(context);
+    registerDebugJava(context)
     registerDatabase(context);
     registerExportWorkspaceToJsonCommand(context)
     registerStatusBarItem()
