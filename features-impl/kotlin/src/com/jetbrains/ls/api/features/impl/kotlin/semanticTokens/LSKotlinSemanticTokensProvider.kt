@@ -7,6 +7,7 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
@@ -20,11 +21,9 @@ import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokenRegistry
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokenTypePredefined
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokenWithRange
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokensProvider
+import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokensProviderBase
 import com.jetbrains.ls.api.features.utils.allNonWhitespaceChildren
-import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.Range
-import com.jetbrains.lsp.protocol.SemanticTokensParams
-import com.jetbrains.lsp.protocol.SemanticTokensRangeParams
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 import kotlinx.coroutines.CancellationException
 import org.jetbrains.annotations.ApiStatus
@@ -65,42 +64,22 @@ import org.jetbrains.kotlin.psi.KtSimpleNameExpression
 private val LOG = logger<LSKotlinSemanticTokensProvider>()
 
 @ApiStatus.Internal
-object LSKotlinSemanticTokensProvider : LSSemanticTokensProvider {
+object LSKotlinSemanticTokensProvider : LSSemanticTokensProviderBase() {
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
+    override val supportedTokenTypes: List<LSSemanticTokenTypePredefined> = LSSemanticTokenTypePredefined.ALL
+    override val supportedTokenModifiers: List<LSSemanticTokenModifierPredefined> = LSSemanticTokenModifierPredefined.ALL
 
-    override fun createRegistry(): LSSemanticTokenRegistry {
-        return LSSemanticTokenRegistry(LSSemanticTokenTypePredefined.ALL, LSSemanticTokenModifierPredefined.ALL)
-    }
-
-    context(server: LSServer, handlerContext: LspHandlerContext)
-    override suspend fun full(params: SemanticTokensParams): List<LSSemanticTokenWithRange> {
-        return getTokens(params.textDocument, range = null)
-
-    }
-
-    context(server: LSServer, handlerContext: LspHandlerContext)
-    override suspend fun range(params: SemanticTokensRangeParams): List<LSSemanticTokenWithRange> {
-        return getTokens(params.textDocument, params.range)
-    }
-
-    /**
-     * @param range `null` means tokens from the whole file`
-     */
     context(server: LSServer)
-    private suspend fun getTokens(textDocument: TextDocumentIdentifier, range:Range?): List<LSSemanticTokenWithRange> {
-        return server.withAnalysisContext {
-            readAction {
-                val virtualFile = textDocument.findVirtualFile() ?: return@readAction emptyList()
-                val ktFile = virtualFile.findPsiFile(project) as? KtFile ?: return@readAction emptyList()
-                val document = virtualFile.findDocument() ?: return@readAction emptyList()
-                val leafs = ktFile.allNonWhitespaceChildren(document, range)
-                if (leafs.isEmpty()) return@readAction emptyList()
-                analyze(ktFile) {
-                    leafs.mapNotNull { element ->
-                        element.getRangeWithToken(document)
-                    }
-                }
-            }
+    override fun getSemanticTokens(
+        psiFile: PsiFile,
+        document: Document,
+        documentRange: Range?
+    ): List<LSSemanticTokenWithRange> {
+        if (psiFile !is KtFile) return emptyList()
+        return analyze(psiFile) {
+            val leafs = psiFile.allNonWhitespaceChildren(document, documentRange)
+            if (leafs.isEmpty()) return emptyList()
+            leafs.mapNotNull { it.getRangeWithToken(document) }
         }
     }
 
@@ -131,11 +110,9 @@ object LSKotlinSemanticTokensProvider : LSSemanticTokensProvider {
                 else -> null
             }
         }
-    }
-    catch (e: CancellationException) {
+    } catch (e: CancellationException) {
         throw e
-    }
-    catch (e: Throwable) {
+    } catch (e: Throwable) {
         LOG.error(e)
         null
     }
