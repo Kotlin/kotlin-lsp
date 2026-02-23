@@ -16,10 +16,10 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.codeInspection.QuickFix
 import com.intellij.codeInspection.ex.InspectionManagerEx
 import com.intellij.lang.Language
-import com.intellij.lang.impl.modcommand.ModCommandActionQuickFixWrapper
 import com.intellij.modcommand.ModCommand
 import com.intellij.modcommand.ModCommandQuickFix
 import com.intellij.openapi.application.readAction
+import com.intellij.openapi.diagnostic.ReportingClassSubstitutor
 import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
@@ -215,43 +215,23 @@ class LSCommonInspectionDiagnosticProvider(
     }
 
     private fun getModCommand(fix: QuickFix<*>, project: Project, problemDescriptor: ProblemDescriptor): ModCommand? {
-        val fixClass = fix::class.java.name
+        val fixClass = ReportingClassSubstitutor.getClassToReport(fix).name
         val blacklistEntry = quickFixBlacklist.getImplementationBlacklistEntry(fixClass)
-        fun logQuickFixBlacklisted() {
-            LOG.debug("Quick fix $fixClass is a ModCommandQuickFix, but it is blacklisted because of ${blacklistEntry?.reason}")
+
+        if (fix is ModCommandQuickFix) {
+            if (blacklistEntry != null) {
+                LOG.debug("Quick fix $fixClass is a ModCommandQuickFix, but it is blacklisted because of ${blacklistEntry.reason}")
+                return null
+            }
+
+            return fix.perform(project, problemDescriptor)
         }
 
-        return when (fix) {
-            is ModCommandActionQuickFixWrapper -> {
-                val wrappedFixClass = fix.action::class.java.name
-                val wrappedFixBlacklistEntry = quickFixBlacklist.getImplementationBlacklistEntry(wrappedFixClass)
-                if (wrappedFixBlacklistEntry != null) {
-                    LOG.debug("Quick fix $fixClass is a ModCommandQuickFix, but wrapped action $wrappedFixClass is blacklisted because of ${wrappedFixBlacklistEntry.reason}")
-                    null
-                } else if (blacklistEntry != null) {
-                    logQuickFixBlacklisted()
-                    null
-                } else {
-                    fix.perform(project, problemDescriptor)
-                }
-            }
-
-            is ModCommandQuickFix -> {
-                if (blacklistEntry != null) {
-                    logQuickFixBlacklisted()
-                    null
-                } else {
-                    fix.perform(project, problemDescriptor)
-                }
-            }
-
-            else -> {
-                if (blacklistEntry == null) {
-                    LOG.warn("Unknown quick fix type: $fixClass. Please add it to the blacklist and create a YouTrack issue.")
-                }
-                null
-            }
+        if (blacklistEntry == null) {
+            LOG.warn("Unknown quick fix type: $fixClass. Please add it to the blacklist and create a YouTrack issue.")
         }
+
+        return null
     }
 }
 
