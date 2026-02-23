@@ -234,7 +234,7 @@ fun createLspHandlers(config: LSConfiguration, exitSignal: CompletableDeferred<U
  */
 private fun preloadKotlinStdlibWhenRunningFromSources() {
     if (isRunningFromSources) {
-        KotlinArtifacts.kotlinStdlibPath
+        KotlinArtifacts.kotlinStdlib
     }
 }
 

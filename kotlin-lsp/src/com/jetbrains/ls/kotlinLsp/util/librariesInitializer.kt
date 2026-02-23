@@ -22,7 +22,7 @@ fun getKotlinStdlibPath(): Path {
     return when {
         isRunningFromSources -> {
             // get kotlin stdlib used for monorepo compilation
-            KotlinArtifacts.kotlinStdlibPath
+            KotlinArtifacts.kotlinStdlib.toPath()
         }
 
         else -> {
@@ -38,7 +38,7 @@ fun getKotlinStdlibSourcesPath(): Path? {
     return when {
         isRunningFromSources -> {
             // get kotlin stdlib used for monorepo compilation
-            KotlinArtifacts.kotlinStdlibSourcesPath
+            KotlinArtifacts.kotlinStdlibSources.toPath()
         }
 
         else -> {

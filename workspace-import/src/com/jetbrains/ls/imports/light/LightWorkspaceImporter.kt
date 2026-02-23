@@ -141,13 +141,13 @@ object LightWorkspaceImporter : WorkspaceImporter {
 
     private fun getKotlinStdlibPath(): String =
         when {
-            isRunningFromSources -> KotlinArtifacts.kotlinStdlibPath.absolutePathString()
+            isRunningFromSources -> KotlinArtifacts.kotlinStdlib.absolutePath
             else -> PathUtil.getJarPathForClass(Sequence::class.java)
         }
 
     private fun getKotlinStdlibSourcesPath(): String? =
         when {
-            isRunningFromSources -> KotlinArtifacts.kotlinStdlibSourcesPath.absolutePathString()
+            isRunningFromSources -> KotlinArtifacts.kotlinStdlibSources.absolutePath
             else -> null // LSP-224 TODO we should bundle the sources jar
         }
 }
