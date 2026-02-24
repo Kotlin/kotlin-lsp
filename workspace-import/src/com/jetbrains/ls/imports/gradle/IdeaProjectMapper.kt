@@ -14,7 +14,6 @@ import com.jetbrains.ls.imports.json.JavaSettingsData
 import com.jetbrains.ls.imports.json.KotlinSettingsData
 import com.jetbrains.ls.imports.json.ModuleData
 import com.jetbrains.ls.imports.json.SdkData
-import com.jetbrains.ls.imports.json.SourceRootData
 import com.jetbrains.ls.imports.json.WorkspaceData
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -22,7 +21,6 @@ import org.gradle.api.JavaVersion
 import org.gradle.tooling.model.idea.IdeaJavaLanguageSettings
 import org.gradle.tooling.model.idea.IdeaModule
 import org.gradle.tooling.model.idea.IdeaProject
-import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.exists
 
@@ -35,18 +33,19 @@ internal class IdeaProjectMapper {
     fun toWorkspaceData(metadata: ProjectMetadata): WorkspaceData {
         val sdks: MutableList<SdkData> = mutableListOf()
         val javaSettings: MutableList<JavaSettingsData> = mutableListOf()
-        val modules = mutableMapOf<String, ModuleData>()
 
-        val allGradleModules: List<IdeaModule> = metadata.includedProjects.flatMap { it.modules }
-        val dependencyResolver = SourceSetDependencyResolver(metadata)
         fillProjectJdkCache(metadata.includedProjects)
+        val dependencyResolver = SourceSetDependencyResolver(metadata)
+        val contentRootResolver = GradleContentRootResolver(metadata)
 
-        allGradleModules
-            .map {
+        val modules = mutableMapOf<String, ModuleData>()
+        metadata.includedProjects.flatMap { it.modules }
+            .map { module ->
                 splitModulePerSourceSet(
-                    module = it,
+                    module = module,
                     metadata = metadata,
                     dependencyResolver = dependencyResolver,
+                    contentRootResolver = contentRootResolver,
                     javaSettingsConsumer = { moduleJavaSettings -> javaSettings.add(moduleJavaSettings) },
                     sdkConsumer = { sdk -> sdks.add(sdk) }
                 )
@@ -147,6 +146,7 @@ internal class IdeaProjectMapper {
         module: IdeaModule,
         metadata: ProjectMetadata,
         dependencyResolver: SourceSetDependencyResolver,
+        contentRootResolver: GradleContentRootResolver,
         javaSettingsConsumer: (JavaSettingsData) -> Unit,
         sdkConsumer: (SdkData) -> Unit
     ): Map<String, ModuleData> {
@@ -194,10 +194,7 @@ internal class IdeaProjectMapper {
             modules["${module.name}.${sourceSet.name}"] = ModuleData(
                 name = "${module.name}.${sourceSet.name}",
                 dependencies = sourceSetDependencies,
-                contentRoots = sourceSet.toContentRootData(
-                    module.gradleProject.projectDirectory,
-                    sourceSet.isTest()
-                )
+                contentRoots = contentRootResolver.getContentRoots(module, sourceSet)
             )
             val sourceSetJavaSettings = getModuleJavaSettingsData(
                 "${module.name}.${sourceSet.name}",
@@ -244,66 +241,6 @@ internal class IdeaProjectMapper {
         }
         return languageLevel?.level?.replace("JDK_", "")
             ?: javaLanguageSettings?.languageLevel?.getJavaVersion()
-    }
-
-    private fun ModuleSourceSet.toContentRootData(moduleRoot: File, isTest: Boolean): List<ContentRootData> {
-        val sourceRoots = mutableListOf<SourceRootData>()
-        for (sourceRootFolder in sources) {
-            if (sourceRootFolder.exists() && sourceRootFolder.isDirectory) {
-                sourceRoots.add(
-                    SourceRootData(
-                        sourceRootFolder.path,
-                        if (isTest) "java-test" else "java-source"
-                    )
-                )
-            }
-        }
-        for (sourceRootFolder in resources) {
-            if (sourceRootFolder.exists() && sourceRootFolder.isDirectory) {
-                sourceRoots.add(
-                    SourceRootData(
-                        sourceRootFolder.path,
-                        if (isTest) "java-test-resource" else "java-resource"
-                    )
-                )
-            }
-        }
-        return listOf(
-            ContentRootData(
-                findRootForSourceRoots(name, moduleRoot, sourceRoots),
-                emptyList(),
-                excludes.toMutableList(),
-                sourceRoots = sourceRoots
-            )
-        )
-    }
-
-    private fun findRootForSourceRoots(sourceSetName: String, moduleRoot: File, sourceRoots: List<SourceRootData>): String {
-        if (sourceRoots.isEmpty() || sourceRoots.size == 1) {
-            return "${moduleRoot.path}/src/$sourceSetName"
-        }
-        return findCommonPrefix(sourceRoots.map { it.path })
-    }
-
-    private fun findCommonPrefix(strings: List<String>): String {
-        if (strings.isEmpty()) {
-            return ""
-        }
-        var result = ""
-        strings.first()
-            .indices
-            .forEach { currentLetterIndex ->
-                val currentChar = strings[0][currentLetterIndex]
-                for (currentStringIndex in 1 until strings.size) {
-                    if (
-                        currentLetterIndex >= strings[currentStringIndex].length || strings[currentStringIndex][currentLetterIndex] != currentChar
-                    ) {
-                        return result
-                    }
-                }
-                result += currentChar
-            }
-        return result
     }
 
     private fun ModuleData.hasValidSourceRoots(): Boolean {

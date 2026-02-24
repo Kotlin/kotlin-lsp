@@ -230,13 +230,16 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/src/debug",
+                    "path": "<WORKSPACE>/app/src/main",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/app/src/main/java",
                             "type": "java-source"
                         }
                     ]
+                },
+                {
+                    "path": "<WORKSPACE>/app/src/debug"
                 }
             ]
         },
@@ -434,7 +437,10 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/src/debugAndroidTest"
+                    "path": "<WORKSPACE>/app/src/androidTest"
+                },
+                {
+                    "path": "<WORKSPACE>/app/src/androidTestDebug"
                 }
             ]
         },
@@ -632,7 +638,10 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/src/debugUnitTest"
+                    "path": "<WORKSPACE>/app/src/test"
+                },
+                {
+                    "path": "<WORKSPACE>/app/src/testDebug"
                 }
             ]
         },

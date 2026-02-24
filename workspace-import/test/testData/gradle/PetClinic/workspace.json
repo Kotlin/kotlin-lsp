@@ -493,6 +493,12 @@
             "contentRoots": [
                 {
                     "path": "<WORKSPACE>/src/aot"
+                },
+                {
+                    "path": "<WORKSPACE>/build/generated/aotSources"
+                },
+                {
+                    "path": "<WORKSPACE>/build/generated/aotResources"
                 }
             ]
         },
@@ -1201,6 +1207,12 @@
             "contentRoots": [
                 {
                     "path": "<WORKSPACE>/src/aotTest"
+                },
+                {
+                    "path": "<WORKSPACE>/build/generated/aotTestSources"
+                },
+                {
+                    "path": "<WORKSPACE>/build/generated/aotTestResources"
                 }
             ]
         },

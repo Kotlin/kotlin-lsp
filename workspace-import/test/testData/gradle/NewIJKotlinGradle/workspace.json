@@ -415,20 +415,35 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/buildSrc",
+                    "path": "<WORKSPACE>/buildSrc/src/main",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/buildSrc/src/main/kotlin",
                             "type": "java-source"
-                        },
+                        }
+                    ]
+                },
+                {
+                    "path": "<WORKSPACE>/buildSrc/build/generated-sources/kotlin-dsl-external-plugin-spec-builders/kotlin",
+                    "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/buildSrc/build/generated-sources/kotlin-dsl-external-plugin-spec-builders/kotlin",
                             "type": "java-source"
-                        },
+                        }
+                    ]
+                },
+                {
+                    "path": "<WORKSPACE>/buildSrc/build/generated-sources/kotlin-dsl-accessors/kotlin",
+                    "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/buildSrc/build/generated-sources/kotlin-dsl-accessors/kotlin",
                             "type": "java-source"
-                        },
+                        }
+                    ]
+                },
+                {
+                    "path": "<WORKSPACE>/buildSrc/build/generated-sources/kotlin-dsl-plugins/kotlin",
+                    "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/buildSrc/build/generated-sources/kotlin-dsl-plugins/kotlin",
                             "type": "java-source"

@@ -370,12 +370,20 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app",
+                    "path": "<WORKSPACE>/app/src/main",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/app/src/main/java",
                             "type": "java-source"
-                        },
+                        }
+                    ]
+                },
+                {
+                    "path": "<WORKSPACE>/app/src/debug"
+                },
+                {
+                    "path": "<WORKSPACE>/app/build/generated/data_binding_base_class_source_out/debug/out",
+                    "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/app/build/generated/data_binding_base_class_source_out/debug/out",
                             "type": "java-source"
@@ -798,13 +806,19 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/src/debugAndroidTest",
+                    "path": "<WORKSPACE>/app/src/androidTest",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/app/src/androidTest/java",
                             "type": "java-test"
                         }
                     ]
+                },
+                {
+                    "path": "<WORKSPACE>/app/src/androidTestDebug"
+                },
+                {
+                    "path": "<WORKSPACE>/app/build/generated/data_binding_base_class_source_out/debugAndroidTest/out"
                 }
             ]
         },
@@ -1152,13 +1166,16 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/src/debugUnitTest",
+                    "path": "<WORKSPACE>/app/src/test",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/app/src/test/java",
                             "type": "java-test"
                         }
                     ]
+                },
+                {
+                    "path": "<WORKSPACE>/app/src/testDebug"
                 }
             ]
         },
@@ -1529,13 +1546,16 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/library/src/debug",
+                    "path": "<WORKSPACE>/library/src/main",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/library/src/main/java",
                             "type": "java-source"
                         }
                     ]
+                },
+                {
+                    "path": "<WORKSPACE>/library/src/debug"
                 }
             ]
         },
@@ -1973,13 +1993,16 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/library/src/debugAndroidTest",
+                    "path": "<WORKSPACE>/library/src/androidTest",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/library/src/androidTest/java",
                             "type": "java-test"
                         }
                     ]
+                },
+                {
+                    "path": "<WORKSPACE>/library/src/androidTestDebug"
                 }
             ]
         },
@@ -2347,13 +2370,16 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/library/src/debugUnitTest",
+                    "path": "<WORKSPACE>/library/src/test",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/library/src/test/java",
                             "type": "java-test"
                         }
                     ]
+                },
+                {
+                    "path": "<WORKSPACE>/library/src/testDebug"
                 }
             ]
         }
