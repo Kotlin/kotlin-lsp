@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features.impl.common.diagnostics
 
 import com.intellij.codeHighlighting.HighlightDisplayLevel
+import com.intellij.codeInsight.intention.IntentionAction
 import com.intellij.codeInspection.GlobalInspectionTool
 import com.intellij.codeInspection.GlobalSimpleInspectionTool
 import com.intellij.codeInspection.InspectionEP
@@ -16,6 +17,7 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.codeInspection.QuickFix
 import com.intellij.codeInspection.ex.InspectionManagerEx
 import com.intellij.lang.Language
+import com.intellij.modcommand.ActionContext
 import com.intellij.modcommand.ModCommand
 import com.intellij.modcommand.ModCommandQuickFix
 import com.intellij.openapi.application.readAction
@@ -225,6 +227,18 @@ class LSCommonInspectionDiagnosticProvider(
             }
 
             return fix.perform(project, problemDescriptor)
+        }
+
+        if (fix is IntentionAction) {
+            if (blacklistEntry != null) {
+                LOG.debug("Quick fix $fixClass is an IntentionAction, but it is blacklisted because of ${blacklistEntry.reason}")
+                return null
+            }
+
+            val modCommandAction = fix.asModCommandAction()
+            if (modCommandAction != null) {
+                return modCommandAction.perform(ActionContext.from(problemDescriptor))
+            }
         }
 
         if (blacklistEntry == null) {
