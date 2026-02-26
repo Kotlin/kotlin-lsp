@@ -71,7 +71,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         return MutableEntityStorage.create().apply {
             importWorkspaceData(
                 postProcessWorkspaceData(
-                    IdeaProjectMapper.toWorkspaceData(gradleProjectData),
+                    IdeaProjectMapper().toWorkspaceData(gradleProjectData),
                     projectDirectory,
                     onUnresolvedDependency
                 ),

@@ -36,11 +36,6 @@
             "name": "multi-project-source-sets.app.main",
             "dependencies": [
                 {
-                    "type": "module",
-                    "name": "multi-project-source-sets.lib.main",
-                    "scope": "compile"
-                },
-                {
                     "type": "library",
                     "name": "Gradle: org.jetbrains.kotlin:kotlin-reflect:2.2.0",
                     "scope": "compile"
@@ -48,6 +43,11 @@
                 {
                     "type": "library",
                     "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "module",
+                    "name": "multi-project-source-sets.lib.main",
                     "scope": "compile"
                 },
                 {
@@ -87,7 +87,7 @@
             "dependencies": [
                 {
                     "type": "module",
-                    "name": "multi-project-source-sets.lib.main",
+                    "name": "multi-project-source-sets.app.main",
                     "scope": "compile"
                 },
                 {
@@ -101,6 +101,11 @@
                     "scope": "compile"
                 },
                 {
+                    "type": "module",
+                    "name": "multi-project-source-sets.lib.main",
+                    "scope": "compile"
+                },
+                {
                     "type": "library",
                     "name": "Gradle: org.jetbrains:annotations:13.0",
                     "scope": "compile"
@@ -110,11 +115,6 @@
                 },
                 {
                     "type": "inheritedSdk"
-                },
-                {
-                    "type": "module",
-                    "name": "multi-project-source-sets.app.main",
-                    "scope": "compile"
                 }
             ],
             "contentRoots": [
@@ -167,15 +167,15 @@
                     "scope": "compile"
                 },
                 {
+                    "type": "module",
+                    "name": "multi-project-source-sets.lib.main",
+                    "scope": "compile"
+                },
+                {
                     "type": "moduleSource"
                 },
                 {
                     "type": "inheritedSdk"
-                },
-                {
-                    "type": "module",
-                    "name": "multi-project-source-sets.lib.main",
-                    "scope": "compile"
                 }
             ],
             "contentRoots": [
@@ -228,6 +228,11 @@
             "name": "multi-project-source-sets.lib.test",
             "dependencies": [
                 {
+                    "type": "module",
+                    "name": "multi-project-source-sets.lib.main",
+                    "scope": "compile"
+                },
+                {
                     "type": "library",
                     "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
                     "scope": "compile"
@@ -242,11 +247,6 @@
                 },
                 {
                     "type": "inheritedSdk"
-                },
-                {
-                    "type": "module",
-                    "name": "multi-project-source-sets.lib.main",
-                    "scope": "compile"
                 }
             ],
             "contentRoots": [
@@ -313,6 +313,11 @@
             "name": "multi-project-source-sets.test",
             "dependencies": [
                 {
+                    "type": "module",
+                    "name": "multi-project-source-sets.main",
+                    "scope": "compile"
+                },
+                {
                     "type": "library",
                     "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
                     "scope": "compile"
@@ -327,11 +332,6 @@
                 },
                 {
                     "type": "inheritedSdk"
-                },
-                {
-                    "type": "module",
-                    "name": "multi-project-source-sets.main",
-                    "scope": "compile"
                 }
             ],
             "contentRoots": [

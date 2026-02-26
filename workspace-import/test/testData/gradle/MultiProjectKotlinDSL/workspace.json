@@ -36,13 +36,13 @@
             "name": "multi-project-example.api.main",
             "dependencies": [
                 {
-                    "type": "module",
-                    "name": "multi-project-example.core.main",
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
                     "scope": "compile"
                 },
                 {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+                    "type": "module",
+                    "name": "multi-project-example.core.main",
                     "scope": "compile"
                 },
                 {
@@ -82,12 +82,17 @@
             "dependencies": [
                 {
                     "type": "module",
-                    "name": "multi-project-example.core.main",
+                    "name": "multi-project-example.api.main",
                     "scope": "compile"
                 },
                 {
                     "type": "library",
                     "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "module",
+                    "name": "multi-project-example.core.main",
                     "scope": "compile"
                 },
                 {
@@ -100,11 +105,6 @@
                 },
                 {
                     "type": "inheritedSdk"
-                },
-                {
-                    "type": "module",
-                    "name": "multi-project-example.api.main",
-                    "scope": "compile"
                 }
             ],
             "contentRoots": [
@@ -187,6 +187,11 @@
             "name": "multi-project-example.core.test",
             "dependencies": [
                 {
+                    "type": "module",
+                    "name": "multi-project-example.core.main",
+                    "scope": "compile"
+                },
+                {
                     "type": "library",
                     "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
                     "scope": "compile"
@@ -201,11 +206,6 @@
                 },
                 {
                     "type": "inheritedSdk"
-                },
-                {
-                    "type": "module",
-                    "name": "multi-project-example.core.main",
-                    "scope": "compile"
                 }
             ],
             "contentRoots": [
@@ -310,7 +310,7 @@
                 {
                     "type": "module",
                     "name": "multi-project-example.core.main",
-                    "scope": "runtime"
+                    "scope": "provided"
                 },
                 {
                     "type": "moduleSource"
@@ -344,6 +344,11 @@
             "dependencies": [
                 {
                     "type": "module",
+                    "name": "multi-project-example.service.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "module",
                     "name": "multi-project-example.api.main",
                     "scope": "compile"
                 },
@@ -365,23 +370,13 @@
                 {
                     "type": "module",
                     "name": "multi-project-example.core.main",
-                    "scope": "runtime"
-                },
-                {
-                    "type": "module",
-                    "name": "multi-project-example.core.main",
-                    "scope": "test"
+                    "scope": "provided"
                 },
                 {
                     "type": "moduleSource"
                 },
                 {
                     "type": "inheritedSdk"
-                },
-                {
-                    "type": "module",
-                    "name": "multi-project-example.service.main",
-                    "scope": "compile"
                 }
             ],
             "contentRoots": [
@@ -408,6 +403,11 @@
             "name": "multi-project-example.test",
             "dependencies": [
                 {
+                    "type": "module",
+                    "name": "multi-project-example.main",
+                    "scope": "compile"
+                },
+                {
                     "type": "library",
                     "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
                     "scope": "compile"
@@ -422,11 +422,6 @@
                 },
                 {
                     "type": "inheritedSdk"
-                },
-                {
-                    "type": "module",
-                    "name": "multi-project-example.main",
-                    "scope": "compile"
                 }
             ],
             "contentRoots": [

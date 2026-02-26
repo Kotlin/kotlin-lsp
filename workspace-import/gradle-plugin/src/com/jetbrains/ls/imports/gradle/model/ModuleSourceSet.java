@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.Set;
 
+@SuppressWarnings("IO_FILE_USAGE")
 public interface ModuleSourceSet extends Serializable {
 
     @NonNull String getName();
@@ -16,4 +17,12 @@ public interface ModuleSourceSet extends Serializable {
     @NonNull Set<@NonNull File> getResources();
 
     @NonNull Set<@NonNull String> getExcludes();
+
+    @NonNull Set<@NonNull File> getRuntimeClasspath();
+
+    @NonNull Set<@NonNull File> getCompileClasspath();
+
+    @NonNull Set<@NonNull File> getSourceSetOutput();
+
+    boolean hasUnresolvedDependencies();
 }

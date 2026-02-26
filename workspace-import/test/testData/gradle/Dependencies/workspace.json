@@ -111,12 +111,12 @@
                 },
                 {
                     "type": "library",
-                    "name": "unresolved dependency - com.github.User Repo Tag",
+                    "name": "Gradle: unresolved dependency - com.github.User Repo Tag",
                     "scope": "compile"
                 },
                 {
                     "type": "library",
-                    "name": "unresolved dependency - mysql mysql-connector-java 8.0.34",
+                    "name": "Gradle: unresolved dependency - mysql mysql-connector-java 8.0.34",
                     "scope": "runtime"
                 },
                 {
@@ -241,12 +241,12 @@
                 },
                 {
                     "type": "library",
-                    "name": "unresolved dependency - com.github.User Repo Tag",
+                    "name": "Gradle: unresolved dependency - com.github.User Repo Tag",
                     "scope": "compile"
                 },
                 {
                     "type": "library",
-                    "name": "unresolved dependency - mysql mysql-connector-java 8.0.34",
+                    "name": "Gradle: unresolved dependency - mysql mysql-connector-java 8.0.34",
                     "scope": "runtime"
                 },
                 {
@@ -361,19 +361,19 @@
                 },
                 {
                     "type": "library",
-                    "name": "unresolved dependency - mysql mysql-connector-java 8.0.34",
+                    "name": "Gradle: unresolved dependency - mysql mysql-connector-java 8.0.34",
                     "scope": "test"
+                },
+                {
+                    "type": "module",
+                    "name": "kotlin-dependency-example.main",
+                    "scope": "compile"
                 },
                 {
                     "type": "moduleSource"
                 },
                 {
                     "type": "inheritedSdk"
-                },
-                {
-                    "type": "module",
-                    "name": "kotlin-dependency-example.main",
-                    "scope": "compile"
                 }
             ],
             "contentRoots": [
@@ -1239,12 +1239,12 @@
             }
         },
         {
-            "name": "unresolved dependency - com.github.User Repo Tag",
+            "name": "Gradle: unresolved dependency - com.github.User Repo Tag",
             "type": "COMPILE",
             "roots": []
         },
         {
-            "name": "unresolved dependency - mysql mysql-connector-java 8.0.34",
+            "name": "Gradle: unresolved dependency - mysql mysql-connector-java 8.0.34",
             "type": "RUNTIME",
             "roots": []
         }
