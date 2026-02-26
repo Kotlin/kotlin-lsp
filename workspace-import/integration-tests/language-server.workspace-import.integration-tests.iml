@@ -50,6 +50,7 @@
     <orderEntry type="module" module-name="language-server.analyzer" scope="TEST" />
     <orderEntry type="module" module-name="intellij.platform.buildScripts.downloader" scope="TEST" />
     <orderEntry type="module" module-name="intellij.ide.starter.extended" scope="TEST" />
+    <orderEntry type="module" module-name="intellij.ide.starter.extended.allure" scope="TEST" />
     <orderEntry type="module" module-name="intellij.tools.ide.starter" scope="TEST" />
     <orderEntry type="module" module-name="intellij.workspaceModel.integrationTests" scope="TEST" />
     <orderEntry type="module" module-name="intellij.workspaceModel.performanceTesting" scope="TEST" />
