@@ -22,11 +22,11 @@ import com.intellij.workspaceModel.performanceTesting.validator.models.ModuleEnt
 import com.intellij.workspaceModel.performanceTesting.validator.models.ModuleEntityDtoFactory.moduleEntityToModuleEntityDto
 import com.intellij.workspaceModel.performanceTesting.validator.models.ProjectStructureWithModules
 import com.jetbrains.analyzer.api.AnalyzerFileSystems
-import com.jetbrains.analyzer.api.defaultPluginSet
 import com.jetbrains.analyzer.api.withAnalyzer
 import com.jetbrains.analyzer.bootstrap.AnalyzerProjectId
 import com.jetbrains.analyzer.bootstrap.WorkspaceModelSnapshot
 import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
+import com.jetbrains.analyzer.bootstrap.pluginSet
 import com.jetbrains.analyzer.bootstrap.readPluginDescriptor
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.downloadGradleBinaries
@@ -34,6 +34,9 @@ import com.jetbrains.ls.imports.downloadMavenBinaries
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
 import com.jetbrains.ls.imports.jps.JpsWorkspaceImporter
 import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
+import com.jetbrains.ls.test.api.utils.testApplicationInits
+import com.jetbrains.ls.test.api.utils.testPluginSet
+import com.jetbrains.ls.test.api.utils.testProjectInits
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.annotations.NonNls
@@ -66,6 +69,7 @@ internal fun mavenTest(
     mavenTest(testCase, expected.getStructure())
 
 }
+
 internal fun mavenTest(
     testCase: TestCase<out ProjectInfoSpec>,
     projectStructureWithModules: ProjectStructureWithModules
@@ -102,13 +106,12 @@ private fun doTest(
                     projectId = AnalyzerProjectId(),
                     entities = currentSnapshot.entityStore,
                     urlManager = virtualFileUrlManager,
-                    pluginSet = defaultPluginSet(
-                        listOf(
-                            readPluginDescriptor(Tests::class.java, "/META-INF/fleet/analyzer/test-import.xml"),
-                        )
+                    pluginSet = pluginSet(
+                        listOf(readPluginDescriptor(Tests::class.java, "/META-INF/fleet/analyzer/test-import.xml")) +
+                                testPluginSet.allPlugins
                     ),
-                    applicationInits = emptyList(),
-                    projectInits = emptyList(),
+                    applicationInits = testApplicationInits,
+                    projectInits = testProjectInits,
                 )
             ) { analyzerProject ->
                 val originalProject = analyzerProject.project
