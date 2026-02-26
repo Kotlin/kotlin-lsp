@@ -60,6 +60,6 @@ private fun getPluginRoot(classForClasspath: Class<*>): Path {
  * The function is inline to have a correct classloader of the call-side
  */
 @Suppress("NOTHING_TO_INLINE")
-inline fun ijPluginByXml(xmlResourcePath: String): PluginMainDescriptor {
-    return ijPluginByXml(xmlResourcePath, object : Any() {}::class.java)
+inline fun ijPluginByXml(xmlResourcePath: String, useFakePluginId: Boolean = false): PluginMainDescriptor {
+    return ijPluginByXml(xmlResourcePath, object : Any() {}::class.java, useFakePluginId = useFakePluginId)
 }
