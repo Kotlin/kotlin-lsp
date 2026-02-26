@@ -1,33 +1,21 @@
-[
-  {
-    "name": "empty-maven-project-custom-src-root",
-    "moduleTypeId": "JAVA_MODULE",
-    "imlFilePath": ".idea/empty-maven-project-custom-src-root.iml",
-    "contentDirs": [
-      "",
-      "src/main"
-    ],
-    "sourceDirs": [
-      "src/main/java",
-      "src/main/javaSrc"
-    ],
-    "testSourceDirs": [
-      "src/test/java"
-    ],
-    "resourceDirs": [
-      "src/main/resources"
-    ],
-    "testResourceDirs": [
-      "src/test/resources"
-    ],
-    "generatedSourceDirs": [],
-    "excludeDirs": [],
-    "outputDir": "",
-    "testOutputDir": "",
-    "totalDependenciesNumber": 2,
-    "libraries": [],
-    "moduleDependencies": [],
-    "jdkName": "",
-    "languageLevel": "JDK_17"
-  }
-]
+[ {
+  "name" : "empty-maven-project-custom-src-root",
+  "moduleTypeId" : "JAVA_MODULE",
+  "imlFilePath" : ".idea/empty-maven-project-custom-src-root.iml",
+  "contentDirs" : [ "" ],
+  "sourceDirs" : [ "src/main/java" ],
+  "testSourceDirs" : [ "src/test/java" ],
+  "resourceDirs" : [ "src/main/resources" ],
+  "testResourceDirs" : [ "src/test/resources" ],
+  "generatedSourceDirs" : [ ],
+  "excludeDirs" : [ ],
+  "outputDir" : "",
+  "testOutputDir" : "",
+  "facetNames" : [ ],
+  "totalDependenciesNumber" : 2,
+  "libraries" : [ ],
+  "moduleDependencies" : [ ],
+  "jdkName" : "",
+  "languageLevel" : "JDK_17",
+  "overriddenProjectPath" : null
+} ]

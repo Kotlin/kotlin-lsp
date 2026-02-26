@@ -9,6 +9,6 @@ import org.junit.jupiter.api.Test
 class ImportMavenLogbackTest {
     @Test
     fun importMavenLogback() {
-        mavenTest(TestCases.IU.MavenLogback, LspTestData.MavenLogbackModulesData)
+        mavenTest(TestCases.IU.MavenLogback, LspTestData.MavenLogBackModulesData)
     }
 }

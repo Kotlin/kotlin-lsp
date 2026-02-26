@@ -34,7 +34,7 @@ sealed interface LspTestData {
 
     object MavenEmptyProjectCustomSrcRootModulesData: LspTestData
 
-    object MavenLogbackModulesData: LspTestData
+    object MavenLogBackModulesData: LspTestData
 
     object MavenComplexStructuresModulesData: LspTestData
 
@@ -49,6 +49,8 @@ sealed interface LspTestData {
     object MavenProjectWithDifferentTypesOfRootsModulesData: LspTestData
 
     object MavenSpringCloudExamplesModulesData: LspTestData
+
+    object MavenJavaDesignPatternsSmallModulesData: LspTestData
 }
 
 

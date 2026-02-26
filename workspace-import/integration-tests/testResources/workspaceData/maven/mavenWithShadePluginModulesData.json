@@ -1,147 +1,91 @@
-[
-  {
-    "name": "app",
-    "moduleTypeId": "JAVA_MODULE",
-    "imlFilePath": ".idea/app.iml",
-    "contentDirs": [
-      "app"
-    ],
-    "sourceDirs": [
-      "app/src/main/java"
-    ],
-    "testSourceDirs": [
-      "app/src/test/java"
-    ],
-    "resourceDirs": [
-      "app/src/main/resources"
-    ],
-    "testResourceDirs": [
-      "app/src/test/resources"
-    ],
-    "generatedSourceDirs": [],
-    "excludeDirs": [],
-    "outputDir": "",
-    "testOutputDir": "",
-    "facetNames": [],
-    "totalDependenciesNumber": 4,
-    "libraries": [
-      {
-        "name": "Maven Shade: com.app:module-a-shaded:1.0-SNAPSHOT",
-        "exported": false,
-        "scope": "COMPILE",
-        "roots": [
-          {
-            "url": "jar://PROJECT_PLACEHOLDER/module-a-shaded/target/module-a-shaded-1.0-SNAPSHOT.jar!/",
-            "type": {
-              "name": "CLASSES"
-            },
-            "inclusionOptions": "ROOT_ITSELF"
-          }
-        ]
-      }
-    ],
-    "moduleDependencies": [
-      {
-        "name": "module-a-shaded",
-        "exported": false,
-        "scope": "COMPILE",
-        "productionOnTest": false
-      }
-    ],
-    "jdkName": "",
-    "languageLevel": "JDK_1_8",
-    "overriddenProjectPath": null
-  },
-  {
-    "name": "module-a",
-    "moduleTypeId": "JAVA_MODULE",
-    "imlFilePath": ".idea/module-a.iml",
-    "contentDirs": [
-      "module-a"
-    ],
-    "sourceDirs": [
-      "module-a/src/main/java"
-    ],
-    "testSourceDirs": [
-      "module-a/src/test/java"
-    ],
-    "resourceDirs": [
-      "module-a/src/main/resources"
-    ],
-    "testResourceDirs": [
-      "module-a/src/test/resources"
-    ],
-    "generatedSourceDirs": [],
-    "excludeDirs": [],
-    "outputDir": "",
-    "testOutputDir": "",
-    "facetNames": [],
-    "totalDependenciesNumber": 2,
-    "libraries": [],
-    "moduleDependencies": [],
-    "jdkName": "",
-    "languageLevel": "JDK_1_8",
-    "overriddenProjectPath": null
-  },
-  {
-    "name": "module-a-shaded",
-    "moduleTypeId": "JAVA_MODULE",
-    "imlFilePath": ".idea/module-a-shaded.iml",
-    "contentDirs": [
-      "module-a-shaded"
-    ],
-    "sourceDirs": [
-      "module-a-shaded/src/main/java"
-    ],
-    "testSourceDirs": [
-      "module-a-shaded/src/test/java"
-    ],
-    "resourceDirs": [
-      "module-a-shaded/src/main/resources"
-    ],
-    "testResourceDirs": [
-      "module-a-shaded/src/test/resources"
-    ],
-    "generatedSourceDirs": [],
-    "excludeDirs": [],
-    "outputDir": "",
-    "testOutputDir": "",
-    "facetNames": [],
-    "totalDependenciesNumber": 3,
-    "libraries": [],
-    "moduleDependencies": [
-      {
-        "name": "module-a",
-        "exported": false,
-        "scope": "COMPILE",
-        "productionOnTest": false
-      }
-    ],
-    "jdkName": "",
-    "languageLevel": "JDK_1_8",
-    "overriddenProjectPath": null
-  },
-  {
-    "name": "parent-pom",
-    "moduleTypeId": "JAVA_MODULE",
-    "imlFilePath": ".idea/parent-pom.iml",
-    "contentDirs": [
-      ""
-    ],
-    "sourceDirs": [],
-    "testSourceDirs": [],
-    "resourceDirs": [],
-    "testResourceDirs": [],
-    "generatedSourceDirs": [],
-    "excludeDirs": [],
-    "outputDir": "",
-    "testOutputDir": "",
-    "facetNames": [],
-    "totalDependenciesNumber": 2,
-    "libraries": [],
-    "moduleDependencies": [],
-    "jdkName": "",
-    "languageLevel": "JDK_1_5",
-    "overriddenProjectPath": null
-  }
-]
+[ {
+  "name" : "app",
+  "moduleTypeId" : "JAVA_MODULE",
+  "imlFilePath" : ".idea/app.iml",
+  "contentDirs" : [ "app" ],
+  "sourceDirs" : [ "app/src/main/java" ],
+  "testSourceDirs" : [ "app/src/test/java" ],
+  "resourceDirs" : [ "app/src/main/resources" ],
+  "testResourceDirs" : [ "app/src/test/resources" ],
+  "generatedSourceDirs" : [ ],
+  "excludeDirs" : [ ],
+  "outputDir" : "",
+  "testOutputDir" : "",
+  "facetNames" : [ ],
+  "totalDependenciesNumber" : 3,
+  "libraries" : [ ],
+  "moduleDependencies" : [ {
+    "name" : "module-a-shaded",
+    "exported" : false,
+    "scope" : "COMPILE",
+    "productionOnTest" : false
+  } ],
+  "jdkName" : "",
+  "languageLevel" : "JDK_1_8",
+  "overriddenProjectPath" : null
+}, {
+  "name" : "module-a",
+  "moduleTypeId" : "JAVA_MODULE",
+  "imlFilePath" : ".idea/module-a.iml",
+  "contentDirs" : [ "module-a" ],
+  "sourceDirs" : [ "module-a/src/main/java" ],
+  "testSourceDirs" : [ "module-a/src/test/java" ],
+  "resourceDirs" : [ "module-a/src/main/resources" ],
+  "testResourceDirs" : [ "module-a/src/test/resources" ],
+  "generatedSourceDirs" : [ ],
+  "excludeDirs" : [ ],
+  "outputDir" : "",
+  "testOutputDir" : "",
+  "facetNames" : [ ],
+  "totalDependenciesNumber" : 2,
+  "libraries" : [ ],
+  "moduleDependencies" : [ ],
+  "jdkName" : "",
+  "languageLevel" : "JDK_1_8",
+  "overriddenProjectPath" : null
+}, {
+  "name" : "module-a-shaded",
+  "moduleTypeId" : "JAVA_MODULE",
+  "imlFilePath" : ".idea/module-a-shaded.iml",
+  "contentDirs" : [ "module-a-shaded" ],
+  "sourceDirs" : [ "module-a-shaded/src/main/java" ],
+  "testSourceDirs" : [ "module-a-shaded/src/test/java" ],
+  "resourceDirs" : [ "module-a-shaded/src/main/resources" ],
+  "testResourceDirs" : [ "module-a-shaded/src/test/resources" ],
+  "generatedSourceDirs" : [ ],
+  "excludeDirs" : [ ],
+  "outputDir" : "",
+  "testOutputDir" : "",
+  "facetNames" : [ ],
+  "totalDependenciesNumber" : 3,
+  "libraries" : [ ],
+  "moduleDependencies" : [ {
+    "name" : "module-a",
+    "exported" : false,
+    "scope" : "COMPILE",
+    "productionOnTest" : false
+  } ],
+  "jdkName" : "",
+  "languageLevel" : "JDK_1_8",
+  "overriddenProjectPath" : null
+}, {
+  "name" : "parent-pom",
+  "moduleTypeId" : "JAVA_MODULE",
+  "imlFilePath" : ".idea/parent-pom.iml",
+  "contentDirs" : [ "" ],
+  "sourceDirs" : [ ],
+  "testSourceDirs" : [ ],
+  "resourceDirs" : [ ],
+  "testResourceDirs" : [ ],
+  "generatedSourceDirs" : [ ],
+  "excludeDirs" : [ ],
+  "outputDir" : "",
+  "testOutputDir" : "",
+  "facetNames" : [ ],
+  "totalDependenciesNumber" : 2,
+  "libraries" : [ ],
+  "moduleDependencies" : [ ],
+  "jdkName" : "",
+  "languageLevel" : "JDK_1_5",
+  "overriddenProjectPath" : null
+} ]

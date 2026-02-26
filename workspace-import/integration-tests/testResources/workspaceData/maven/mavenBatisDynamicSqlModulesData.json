@@ -34,62 +34,10 @@
   "facetNames" : [ "Kotlin" ],
   "totalDependenciesNumber" : 13,
   "libraries" : [ {
-    "name" : "Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10",
-    "exported" : false,
-    "scope" : "PROVIDED",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.9.10/kotlin-stdlib-jdk8-1.9.10.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.9.10/kotlin-stdlib-jdk8-1.9.10-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.9.10/kotlin-stdlib-jdk8-1.9.10-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.jetbrains.kotlin:kotlin-stdlib:1.9.10",
-    "exported" : false,
-    "scope" : "PROVIDED",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib/1.9.10/kotlin-stdlib-1.9.10.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib/1.9.10/kotlin-stdlib-1.9.10-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib/1.9.10/kotlin-stdlib-1.9.10-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
     "name" : "Maven: org.jetbrains.kotlin:kotlin-stdlib-common:1.9.10",
     "exported" : false,
     "scope" : "PROVIDED",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-common/1.9.10/kotlin-stdlib-common-1.9.10.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-common/1.9.10/kotlin-stdlib-common-1.9.10-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
@@ -101,27 +49,10 @@
         "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.jetbrains:annotations:13.0",
-    "exported" : false,
-    "scope" : "PROVIDED",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/annotations/13.0/annotations-13.0.jar!/",
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-common/1.9.10/kotlin-stdlib-common-1.9.10.jar!/",
       "type" : {
         "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/annotations/13.0/annotations-13.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/annotations/13.0/annotations-13.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
     } ]
@@ -130,12 +61,6 @@
     "exported" : false,
     "scope" : "PROVIDED",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.9.10/kotlin-stdlib-jdk7-1.9.10.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.9.10/kotlin-stdlib-jdk7-1.9.10-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
@@ -147,27 +72,102 @@
         "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.springframework:spring-jdbc:5.3.29",
-    "exported" : false,
-    "scope" : "PROVIDED",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-jdbc/5.3.29/spring-jdbc-5.3.29.jar!/",
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.9.10/kotlin-stdlib-jdk7-1.9.10.jar!/",
       "type" : {
         "name" : "CLASSES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-jdbc/5.3.29/spring-jdbc-5.3.29-javadoc.jar!/",
+    } ]
+  }, {
+    "name" : "Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10",
+    "exported" : false,
+    "scope" : "PROVIDED",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.9.10/kotlin-stdlib-jdk8-1.9.10-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
       },
       "inclusionOptions" : "ROOT_ITSELF"
     }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-jdbc/5.3.29/spring-jdbc-5.3.29-sources.jar!/",
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.9.10/kotlin-stdlib-jdk8-1.9.10-sources.jar!/",
       "type" : {
         "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.9.10/kotlin-stdlib-jdk8-1.9.10.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.jetbrains.kotlin:kotlin-stdlib:1.9.10",
+    "exported" : false,
+    "scope" : "PROVIDED",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib/1.9.10/kotlin-stdlib-1.9.10-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib/1.9.10/kotlin-stdlib-1.9.10-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib/1.9.10/kotlin-stdlib-1.9.10.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.jetbrains:annotations:13.0",
+    "exported" : false,
+    "scope" : "PROVIDED",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/annotations/13.0/annotations-13.0-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/annotations/13.0/annotations-13.0-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/annotations/13.0/annotations-13.0.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.mybatis:mybatis:3.5.13",
+    "exported" : false,
+    "scope" : "PROVIDED",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/mybatis/mybatis/3.5.13/mybatis-3.5.13-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/mybatis/mybatis/3.5.13/mybatis-3.5.13-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/mybatis/mybatis/3.5.13/mybatis-3.5.13.jar!/",
+      "type" : {
+        "name" : "CLASSES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
     } ]
@@ -176,12 +176,6 @@
     "exported" : false,
     "scope" : "PROVIDED",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-beans/5.3.29/spring-beans-5.3.29.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-beans/5.3.29/spring-beans-5.3.29-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
@@ -193,18 +187,18 @@
         "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-beans/5.3.29/spring-beans-5.3.29.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
     } ]
   }, {
     "name" : "Maven: org.springframework:spring-core:5.3.29",
     "exported" : false,
     "scope" : "PROVIDED",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-core/5.3.29/spring-core-5.3.29.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-core/5.3.29/spring-core-5.3.29-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
@@ -216,18 +210,18 @@
         "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-core/5.3.29/spring-core-5.3.29.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
     } ]
   }, {
     "name" : "Maven: org.springframework:spring-jcl:5.3.29",
     "exported" : false,
     "scope" : "PROVIDED",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-jcl/5.3.29/spring-jcl-5.3.29.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-jcl/5.3.29/spring-jcl-5.3.29-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
@@ -239,18 +233,41 @@
         "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-jcl/5.3.29/spring-jcl-5.3.29.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.springframework:spring-jdbc:5.3.29",
+    "exported" : false,
+    "scope" : "PROVIDED",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-jdbc/5.3.29/spring-jdbc-5.3.29-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-jdbc/5.3.29/spring-jdbc-5.3.29-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-jdbc/5.3.29/spring-jdbc-5.3.29.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
     } ]
   }, {
     "name" : "Maven: org.springframework:spring-tx:5.3.29",
     "exported" : false,
     "scope" : "PROVIDED",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-tx/5.3.29/spring-tx-5.3.29.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-tx/5.3.29/spring-tx-5.3.29-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
@@ -262,27 +279,10 @@
         "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.mybatis:mybatis:3.5.13",
-    "exported" : false,
-    "scope" : "PROVIDED",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/mybatis/mybatis/3.5.13/mybatis-3.5.13.jar!/",
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-tx/5.3.29/spring-tx-5.3.29.jar!/",
       "type" : {
         "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/mybatis/mybatis/3.5.13/mybatis-3.5.13-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/mybatis/mybatis/3.5.13/mybatis-3.5.13-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
     } ]
@@ -307,752 +307,10 @@
   "facetNames" : [ "Kotlin" ],
   "totalDependenciesNumber" : 72,
   "libraries" : [ {
-    "name" : "Maven: org.jetbrains.kotlin:kotlin-compiler:1.9.10",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-compiler/1.9.10/kotlin-compiler-1.9.10.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-compiler/1.9.10/kotlin-compiler-1.9.10-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-compiler/1.9.10/kotlin-compiler-1.9.10-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.jetbrains.kotlin:kotlin-script-runtime:1.9.10",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-script-runtime/1.9.10/kotlin-script-runtime-1.9.10.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-script-runtime/1.9.10/kotlin-script-runtime-1.9.10-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-script-runtime/1.9.10/kotlin-script-runtime-1.9.10-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.jetbrains.kotlin:kotlin-reflect:1.6.10",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-reflect/1.6.10/kotlin-reflect-1.6.10.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-reflect/1.6.10/kotlin-reflect-1.6.10-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-reflect/1.6.10/kotlin-reflect-1.6.10-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.jetbrains.intellij.deps:trove4j:1.0.20200330",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/intellij/deps/trove4j/1.0.20200330/trove4j-1.0.20200330.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/intellij/deps/trove4j/1.0.20200330/trove4j-1.0.20200330-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/intellij/deps/trove4j/1.0.20200330/trove4j-1.0.20200330-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlinx/kotlinx-coroutines-core/1.5.0/kotlinx-coroutines-core-1.5.0.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlinx/kotlinx-coroutines-core/1.5.0/kotlinx-coroutines-core-1.5.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlinx/kotlinx-coroutines-core/1.5.0/kotlinx-coroutines-core-1.5.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.0",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlinx/kotlinx-coroutines-core-jvm/1.5.0/kotlinx-coroutines-core-jvm-1.5.0.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlinx/kotlinx-coroutines-core-jvm/1.5.0/kotlinx-coroutines-core-jvm-1.5.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlinx/kotlinx-coroutines-core-jvm/1.5.0/kotlinx-coroutines-core-jvm-1.5.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.junit.jupiter:junit-jupiter-engine:5.10.0",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-engine/5.10.0/junit-jupiter-engine-5.10.0.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-engine/5.10.0/junit-jupiter-engine-5.10.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-engine/5.10.0/junit-jupiter-engine-5.10.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.junit.platform:junit-platform-engine:1.10.0",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/platform/junit-platform-engine/1.10.0/junit-platform-engine-1.10.0.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/platform/junit-platform-engine/1.10.0/junit-platform-engine-1.10.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/platform/junit-platform-engine/1.10.0/junit-platform-engine-1.10.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.opentest4j:opentest4j:1.3.0",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.junit.platform:junit-platform-commons:1.10.0",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/platform/junit-platform-commons/1.10.0/junit-platform-commons-1.10.0.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/platform/junit-platform-commons/1.10.0/junit-platform-commons-1.10.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/platform/junit-platform-commons/1.10.0/junit-platform-commons-1.10.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.junit.jupiter:junit-jupiter-api:5.10.0",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-api/5.10.0/junit-jupiter-api-5.10.0.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-api/5.10.0/junit-jupiter-api-5.10.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-api/5.10.0/junit-jupiter-api-5.10.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.apiguardian:apiguardian-api:1.1.2",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.junit.jupiter:junit-jupiter-params:5.10.0",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-params/5.10.0/junit-jupiter-params-5.10.0.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-params/5.10.0/junit-jupiter-params-5.10.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-params/5.10.0/junit-jupiter-params-5.10.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.assertj:assertj-core:3.24.2",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/assertj/assertj-core/3.24.2/assertj-core-3.24.2.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/assertj/assertj-core/3.24.2/assertj-core-3.24.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/assertj/assertj-core/3.24.2/assertj-core-3.24.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: net.bytebuddy:byte-buddy:1.12.21",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/net/bytebuddy/byte-buddy/1.12.21/byte-buddy-1.12.21.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/net/bytebuddy/byte-buddy/1.12.21/byte-buddy-1.12.21-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/net/bytebuddy/byte-buddy/1.12.21/byte-buddy-1.12.21-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.mybatis:mybatis-spring:2.1.1",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/mybatis/mybatis-spring/2.1.1/mybatis-spring-2.1.1.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/mybatis/mybatis-spring/2.1.1/mybatis-spring-2.1.1-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/mybatis/mybatis-spring/2.1.1/mybatis-spring-2.1.1-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.hsqldb:hsqldb:2.7.2",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hsqldb/hsqldb/2.7.2/hsqldb-2.7.2.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hsqldb/hsqldb/2.7.2/hsqldb-2.7.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hsqldb/hsqldb/2.7.2/hsqldb-2.7.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.springframework.batch:spring-batch-core:4.3.9",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/batch/spring-batch-core/4.3.9/spring-batch-core-4.3.9.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/batch/spring-batch-core/4.3.9/spring-batch-core-4.3.9-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/batch/spring-batch-core/4.3.9/spring-batch-core-4.3.9-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: com.fasterxml.jackson.core:jackson-databind:2.11.4",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-databind/2.11.4/jackson-databind-2.11.4.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-databind/2.11.4/jackson-databind-2.11.4-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-databind/2.11.4/jackson-databind-2.11.4-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: com.fasterxml.jackson.core:jackson-annotations:2.11.4",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-annotations/2.11.4/jackson-annotations-2.11.4.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-annotations/2.11.4/jackson-annotations-2.11.4-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-annotations/2.11.4/jackson-annotations-2.11.4-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: com.fasterxml.jackson.core:jackson-core:2.11.4",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-core/2.11.4/jackson-core-2.11.4.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-core/2.11.4/jackson-core-2.11.4-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-core/2.11.4/jackson-core-2.11.4-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: io.micrometer:micrometer-core:1.9.14",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/io/micrometer/micrometer-core/1.9.14/micrometer-core-1.9.14.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/io/micrometer/micrometer-core/1.9.14/micrometer-core-1.9.14-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/io/micrometer/micrometer-core/1.9.14/micrometer-core-1.9.14-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.hdrhistogram:HdrHistogram:2.1.12",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hdrhistogram/HdrHistogram/2.1.12/HdrHistogram-2.1.12.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hdrhistogram/HdrHistogram/2.1.12/HdrHistogram-2.1.12-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hdrhistogram/HdrHistogram/2.1.12/HdrHistogram-2.1.12-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.latencyutils:LatencyUtils:2.0.3",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/latencyutils/LatencyUtils/2.0.3/LatencyUtils-2.0.3.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/latencyutils/LatencyUtils/2.0.3/LatencyUtils-2.0.3-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/latencyutils/LatencyUtils/2.0.3/LatencyUtils-2.0.3-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: javax.batch:javax.batch-api:1.0",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/javax/batch/javax.batch-api/1.0/javax.batch-api-1.0.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/javax/batch/javax.batch-api/1.0/javax.batch-api-1.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/javax/batch/javax.batch-api/1.0/javax.batch-api-1.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.springframework.batch:spring-batch-infrastructure:4.3.9",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/batch/spring-batch-infrastructure/4.3.9/spring-batch-infrastructure-4.3.9.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/batch/spring-batch-infrastructure/4.3.9/spring-batch-infrastructure-4.3.9-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/batch/spring-batch-infrastructure/4.3.9/spring-batch-infrastructure-4.3.9-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.springframework.retry:spring-retry:1.3.4",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/retry/spring-retry/1.3.4/spring-retry-1.3.4.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/retry/spring-retry/1.3.4/spring-retry-1.3.4-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/retry/spring-retry/1.3.4/spring-retry-1.3.4-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.springframework:spring-aop:5.3.29",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-aop/5.3.29/spring-aop-5.3.29.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-aop/5.3.29/spring-aop-5.3.29-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-aop/5.3.29/spring-aop-5.3.29-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.springframework:spring-context:5.3.29",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-context/5.3.29/spring-context-5.3.29.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-context/5.3.29/spring-context-5.3.29-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-context/5.3.29/spring-context-5.3.29-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.springframework:spring-expression:5.3.29",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-expression/5.3.29/spring-expression-5.3.29.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-expression/5.3.29/spring-expression-5.3.29-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-expression/5.3.29/spring-expression-5.3.29-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.springframework.batch:spring-batch-test:4.3.9",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/batch/spring-batch-test/4.3.9/spring-batch-test-4.3.9.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/batch/spring-batch-test/4.3.9/spring-batch-test-4.3.9-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/batch/spring-batch-test/4.3.9/spring-batch-test-4.3.9-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.springframework:spring-test:5.3.29",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-test/5.3.29/spring-test-5.3.29.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-test/5.3.29/spring-test-5.3.29-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-test/5.3.29/spring-test-5.3.29-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
     "name" : "Maven: ch.qos.logback:logback-classic:1.4.11",
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/ch/qos/logback/logback-classic/1.4.11/logback-classic-1.4.11.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/ch/qos/logback/logback-classic/1.4.11/logback-classic-1.4.11-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
@@ -1064,18 +322,18 @@
         "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/ch/qos/logback/logback-classic/1.4.11/logback-classic-1.4.11.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
     } ]
   }, {
     "name" : "Maven: ch.qos.logback:logback-core:1.4.11",
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/ch/qos/logback/logback-core/1.4.11/logback-core-1.4.11.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/ch/qos/logback/logback-core/1.4.11/logback-core-1.4.11-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
@@ -1087,510 +345,79 @@
         "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.slf4j:slf4j-api:2.0.7",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/slf4j/slf4j-api/2.0.7/slf4j-api-2.0.7.jar!/",
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/ch/qos/logback/logback-core/1.4.11/logback-core-1.4.11.jar!/",
       "type" : {
         "name" : "CLASSES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/slf4j/slf4j-api/2.0.7/slf4j-api-2.0.7-javadoc.jar!/",
+    } ]
+  }, {
+    "name" : "Maven: com.fasterxml.jackson.core:jackson-annotations:2.11.4",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-annotations/2.11.4/jackson-annotations-2.11.4-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
       },
       "inclusionOptions" : "ROOT_ITSELF"
     }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/slf4j/slf4j-api/2.0.7/slf4j-api-2.0.7-sources.jar!/",
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-annotations/2.11.4/jackson-annotations-2.11.4-sources.jar!/",
       "type" : {
         "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.hamcrest:hamcrest:2.2",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest/2.2/hamcrest-2.2.jar!/",
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-annotations/2.11.4/jackson-annotations-2.11.4.jar!/",
       "type" : {
         "name" : "CLASSES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest/2.2/hamcrest-2.2-javadoc.jar!/",
+    } ]
+  }, {
+    "name" : "Maven: com.fasterxml.jackson.core:jackson-core:2.11.4",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-core/2.11.4/jackson-core-2.11.4-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
       },
       "inclusionOptions" : "ROOT_ITSELF"
     }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest/2.2/hamcrest-2.2-sources.jar!/",
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-core/2.11.4/jackson-core-2.11.4-sources.jar!/",
       "type" : {
         "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.testcontainers:postgresql:1.19.0",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/postgresql/1.19.0/postgresql-1.19.0.jar!/",
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-core/2.11.4/jackson-core-2.11.4.jar!/",
       "type" : {
         "name" : "CLASSES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/postgresql/1.19.0/postgresql-1.19.0-javadoc.jar!/",
+    } ]
+  }, {
+    "name" : "Maven: com.fasterxml.jackson.core:jackson-databind:2.11.4",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-databind/2.11.4/jackson-databind-2.11.4-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
       },
       "inclusionOptions" : "ROOT_ITSELF"
     }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/postgresql/1.19.0/postgresql-1.19.0-sources.jar!/",
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-databind/2.11.4/jackson-databind-2.11.4-sources.jar!/",
       "type" : {
         "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.testcontainers:jdbc:1.19.0",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/jdbc/1.19.0/jdbc-1.19.0.jar!/",
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-databind/2.11.4/jackson-databind-2.11.4.jar!/",
       "type" : {
         "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/jdbc/1.19.0/jdbc-1.19.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/jdbc/1.19.0/jdbc-1.19.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.testcontainers:database-commons:1.19.0",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/database-commons/1.19.0/database-commons-1.19.0.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/database-commons/1.19.0/database-commons-1.19.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/database-commons/1.19.0/database-commons-1.19.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.testcontainers:junit-jupiter:1.19.0",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/junit-jupiter/1.19.0/junit-jupiter-1.19.0.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/junit-jupiter/1.19.0/junit-jupiter-1.19.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/junit-jupiter/1.19.0/junit-jupiter-1.19.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.testcontainers:testcontainers:1.19.0",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/testcontainers/1.19.0/testcontainers-1.19.0.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/testcontainers/1.19.0/testcontainers-1.19.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/testcontainers/1.19.0/testcontainers-1.19.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: junit:junit:4.13.2",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.13.2/junit-4.13.2.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.13.2/junit-4.13.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.13.2/junit-4.13.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.hamcrest:hamcrest-core:1.3",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.apache.commons:commons-compress:1.23.0",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/apache/commons/commons-compress/1.23.0/commons-compress-1.23.0.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/apache/commons/commons-compress/1.23.0/commons-compress-1.23.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/apache/commons/commons-compress/1.23.0/commons-compress-1.23.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.rnorth.duct-tape:duct-tape:1.0.8",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/rnorth/duct-tape/duct-tape/1.0.8/duct-tape-1.0.8.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/rnorth/duct-tape/duct-tape/1.0.8/duct-tape-1.0.8-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/rnorth/duct-tape/duct-tape/1.0.8/duct-tape-1.0.8-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: com.github.docker-java:docker-java-api:3.3.3",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/docker-java/docker-java-api/3.3.3/docker-java-api-3.3.3.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/docker-java/docker-java-api/3.3.3/docker-java-api-3.3.3-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/docker-java/docker-java-api/3.3.3/docker-java-api-3.3.3-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: com.github.docker-java:docker-java-transport-zerodep:3.3.3",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/docker-java/docker-java-transport-zerodep/3.3.3/docker-java-transport-zerodep-3.3.3.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/docker-java/docker-java-transport-zerodep/3.3.3/docker-java-transport-zerodep-3.3.3-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/docker-java/docker-java-transport-zerodep/3.3.3/docker-java-transport-zerodep-3.3.3-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: com.github.docker-java:docker-java-transport:3.3.3",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/docker-java/docker-java-transport/3.3.3/docker-java-transport-3.3.3.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/docker-java/docker-java-transport/3.3.3/docker-java-transport-3.3.3-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/docker-java/docker-java-transport/3.3.3/docker-java-transport-3.3.3-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.postgresql:postgresql:42.6.0",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/postgresql/postgresql/42.6.0/postgresql-42.6.0.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/postgresql/postgresql/42.6.0/postgresql-42.6.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/postgresql/postgresql/42.6.0/postgresql-42.6.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.checkerframework:checker-qual:3.31.0",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/checkerframework/checker-qual/3.31.0/checker-qual-3.31.0.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/checkerframework/checker-qual/3.31.0/checker-qual-3.31.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/checkerframework/checker-qual/3.31.0/checker-qual-3.31.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.testcontainers:mariadb:1.19.0",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/mariadb/1.19.0/mariadb-1.19.0.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/mariadb/1.19.0/mariadb-1.19.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/mariadb/1.19.0/mariadb-1.19.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.mariadb.jdbc:mariadb-java-client:3.2.0",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/mariadb/jdbc/mariadb-java-client/3.2.0/mariadb-java-client-3.2.0.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/mariadb/jdbc/mariadb-java-client/3.2.0/mariadb-java-client-3.2.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/mariadb/jdbc/mariadb-java-client/3.2.0/mariadb-java-client-3.2.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: com.github.waffle:waffle-jna:3.2.0",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/waffle/waffle-jna/3.2.0/waffle-jna-3.2.0.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/waffle/waffle-jna/3.2.0/waffle-jna-3.2.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/waffle/waffle-jna/3.2.0/waffle-jna-3.2.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: net.java.dev.jna:jna:5.12.1",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/net/java/dev/jna/jna/5.12.1/jna-5.12.1.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/net/java/dev/jna/jna/5.12.1/jna-5.12.1-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/net/java/dev/jna/jna/5.12.1/jna-5.12.1-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: net.java.dev.jna:jna-platform:5.12.1",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/net/java/dev/jna/jna-platform/5.12.1/jna-platform-5.12.1.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/net/java/dev/jna/jna-platform/5.12.1/jna-platform-5.12.1-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/net/java/dev/jna/jna-platform/5.12.1/jna-platform-5.12.1-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.slf4j:jcl-over-slf4j:1.7.36",
-    "exported" : false,
-    "scope" : "TEST",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/slf4j/jcl-over-slf4j/1.7.36/jcl-over-slf4j-1.7.36.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/slf4j/jcl-over-slf4j/1.7.36/jcl-over-slf4j-1.7.36-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/slf4j/jcl-over-slf4j/1.7.36/jcl-over-slf4j-1.7.36-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
     } ]
@@ -1599,12 +426,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/ben-manes/caffeine/caffeine/2.9.3/caffeine-2.9.3.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/github/ben-manes/caffeine/caffeine/2.9.3/caffeine-2.9.3-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
@@ -1616,18 +437,110 @@
         "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/ben-manes/caffeine/caffeine/2.9.3/caffeine-2.9.3.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: com.github.docker-java:docker-java-api:3.3.3",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/docker-java/docker-java-api/3.3.3/docker-java-api-3.3.3-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/docker-java/docker-java-api/3.3.3/docker-java-api-3.3.3-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/docker-java/docker-java-api/3.3.3/docker-java-api-3.3.3.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: com.github.docker-java:docker-java-transport-zerodep:3.3.3",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/docker-java/docker-java-transport-zerodep/3.3.3/docker-java-transport-zerodep-3.3.3-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/docker-java/docker-java-transport-zerodep/3.3.3/docker-java-transport-zerodep-3.3.3-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/docker-java/docker-java-transport-zerodep/3.3.3/docker-java-transport-zerodep-3.3.3.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: com.github.docker-java:docker-java-transport:3.3.3",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/docker-java/docker-java-transport/3.3.3/docker-java-transport-3.3.3-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/docker-java/docker-java-transport/3.3.3/docker-java-transport-3.3.3-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/docker-java/docker-java-transport/3.3.3/docker-java-transport-3.3.3.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: com.github.waffle:waffle-jna:3.2.0",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/waffle/waffle-jna/3.2.0/waffle-jna-3.2.0-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/waffle/waffle-jna/3.2.0/waffle-jna-3.2.0-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/github/waffle/waffle-jna/3.2.0/waffle-jna-3.2.0.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
     } ]
   }, {
     "name" : "Maven: com.google.errorprone:error_prone_annotations:2.10.0",
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/errorprone/error_prone_annotations/2.10.0/error_prone_annotations-2.10.0.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/errorprone/error_prone_annotations/2.10.0/error_prone_annotations-2.10.0-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
@@ -1639,50 +552,424 @@
         "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10",
-    "exported" : false,
-    "scope" : "PROVIDED",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.9.10/kotlin-stdlib-jdk8-1.9.10.jar!/",
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/errorprone/error_prone_annotations/2.10.0/error_prone_annotations-2.10.0.jar!/",
       "type" : {
         "name" : "CLASSES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.9.10/kotlin-stdlib-jdk8-1.9.10-javadoc.jar!/",
+    } ]
+  }, {
+    "name" : "Maven: io.micrometer:micrometer-core:1.9.14",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/io/micrometer/micrometer-core/1.9.14/micrometer-core-1.9.14-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
       },
       "inclusionOptions" : "ROOT_ITSELF"
     }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.9.10/kotlin-stdlib-jdk8-1.9.10-sources.jar!/",
+      "url" : "jar://MAVEN_M3_REPOSITORY/io/micrometer/micrometer-core/1.9.14/micrometer-core-1.9.14-sources.jar!/",
       "type" : {
         "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.jetbrains.kotlin:kotlin-stdlib:1.9.10",
-    "exported" : false,
-    "scope" : "PROVIDED",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib/1.9.10/kotlin-stdlib-1.9.10.jar!/",
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/io/micrometer/micrometer-core/1.9.14/micrometer-core-1.9.14.jar!/",
       "type" : {
         "name" : "CLASSES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib/1.9.10/kotlin-stdlib-1.9.10-javadoc.jar!/",
+    } ]
+  }, {
+    "name" : "Maven: javax.batch:javax.batch-api:1.0",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/javax/batch/javax.batch-api/1.0/javax.batch-api-1.0-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
       },
       "inclusionOptions" : "ROOT_ITSELF"
     }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib/1.9.10/kotlin-stdlib-1.9.10-sources.jar!/",
+      "url" : "jar://MAVEN_M3_REPOSITORY/javax/batch/javax.batch-api/1.0/javax.batch-api-1.0-sources.jar!/",
       "type" : {
         "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/javax/batch/javax.batch-api/1.0/javax.batch-api-1.0.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: junit:junit:4.13.2",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.13.2/junit-4.13.2-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.13.2/junit-4.13.2-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.13.2/junit-4.13.2.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: net.bytebuddy:byte-buddy:1.12.21",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/net/bytebuddy/byte-buddy/1.12.21/byte-buddy-1.12.21-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/net/bytebuddy/byte-buddy/1.12.21/byte-buddy-1.12.21-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/net/bytebuddy/byte-buddy/1.12.21/byte-buddy-1.12.21.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: net.java.dev.jna:jna-platform:5.12.1",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/net/java/dev/jna/jna-platform/5.12.1/jna-platform-5.12.1-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/net/java/dev/jna/jna-platform/5.12.1/jna-platform-5.12.1-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/net/java/dev/jna/jna-platform/5.12.1/jna-platform-5.12.1.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: net.java.dev.jna:jna:5.12.1",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/net/java/dev/jna/jna/5.12.1/jna-5.12.1-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/net/java/dev/jna/jna/5.12.1/jna-5.12.1-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/net/java/dev/jna/jna/5.12.1/jna-5.12.1.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.apache.commons:commons-compress:1.23.0",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/apache/commons/commons-compress/1.23.0/commons-compress-1.23.0-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/apache/commons/commons-compress/1.23.0/commons-compress-1.23.0-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/apache/commons/commons-compress/1.23.0/commons-compress-1.23.0.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.apiguardian:apiguardian-api:1.1.2",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.assertj:assertj-core:3.24.2",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/assertj/assertj-core/3.24.2/assertj-core-3.24.2-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/assertj/assertj-core/3.24.2/assertj-core-3.24.2-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/assertj/assertj-core/3.24.2/assertj-core-3.24.2.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.checkerframework:checker-qual:3.31.0",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/checkerframework/checker-qual/3.31.0/checker-qual-3.31.0-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/checkerframework/checker-qual/3.31.0/checker-qual-3.31.0-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/checkerframework/checker-qual/3.31.0/checker-qual-3.31.0.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.hamcrest:hamcrest-core:1.3",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.hamcrest:hamcrest:2.2",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest/2.2/hamcrest-2.2-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest/2.2/hamcrest-2.2-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest/2.2/hamcrest-2.2.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.hdrhistogram:HdrHistogram:2.1.12",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/hdrhistogram/HdrHistogram/2.1.12/HdrHistogram-2.1.12-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/hdrhistogram/HdrHistogram/2.1.12/HdrHistogram-2.1.12-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/hdrhistogram/HdrHistogram/2.1.12/HdrHistogram-2.1.12.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.hsqldb:hsqldb:2.7.2",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/hsqldb/hsqldb/2.7.2/hsqldb-2.7.2-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/hsqldb/hsqldb/2.7.2/hsqldb-2.7.2-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/hsqldb/hsqldb/2.7.2/hsqldb-2.7.2.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.jetbrains.intellij.deps:trove4j:1.0.20200330",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/intellij/deps/trove4j/1.0.20200330/trove4j-1.0.20200330-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/intellij/deps/trove4j/1.0.20200330/trove4j-1.0.20200330-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/intellij/deps/trove4j/1.0.20200330/trove4j-1.0.20200330.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.jetbrains.kotlin:kotlin-compiler:1.9.10",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-compiler/1.9.10/kotlin-compiler-1.9.10-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-compiler/1.9.10/kotlin-compiler-1.9.10-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-compiler/1.9.10/kotlin-compiler-1.9.10.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.jetbrains.kotlin:kotlin-reflect:1.6.10",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-reflect/1.6.10/kotlin-reflect-1.6.10-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-reflect/1.6.10/kotlin-reflect-1.6.10-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-reflect/1.6.10/kotlin-reflect-1.6.10.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.jetbrains.kotlin:kotlin-script-runtime:1.9.10",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-script-runtime/1.9.10/kotlin-script-runtime-1.9.10-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-script-runtime/1.9.10/kotlin-script-runtime-1.9.10-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-script-runtime/1.9.10/kotlin-script-runtime-1.9.10.jar!/",
+      "type" : {
+        "name" : "CLASSES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
     } ]
@@ -1691,12 +978,6 @@
     "exported" : false,
     "scope" : "PROVIDED",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-common/1.9.10/kotlin-stdlib-common-1.9.10.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-common/1.9.10/kotlin-stdlib-common-1.9.10-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
@@ -1708,27 +989,10 @@
         "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.jetbrains:annotations:13.0",
-    "exported" : false,
-    "scope" : "PROVIDED",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/annotations/13.0/annotations-13.0.jar!/",
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-common/1.9.10/kotlin-stdlib-common-1.9.10.jar!/",
       "type" : {
         "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/annotations/13.0/annotations-13.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/annotations/13.0/annotations-13.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
     } ]
@@ -1737,12 +1001,6 @@
     "exported" : false,
     "scope" : "PROVIDED",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.9.10/kotlin-stdlib-jdk7-1.9.10.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.9.10/kotlin-stdlib-jdk7-1.9.10-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
@@ -1754,27 +1012,556 @@
         "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.springframework:spring-jdbc:5.3.29",
-    "exported" : false,
-    "scope" : "PROVIDED",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-jdbc/5.3.29/spring-jdbc-5.3.29.jar!/",
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.9.10/kotlin-stdlib-jdk7-1.9.10.jar!/",
       "type" : {
         "name" : "CLASSES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-jdbc/5.3.29/spring-jdbc-5.3.29-javadoc.jar!/",
+    } ]
+  }, {
+    "name" : "Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10",
+    "exported" : false,
+    "scope" : "PROVIDED",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.9.10/kotlin-stdlib-jdk8-1.9.10-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
       },
       "inclusionOptions" : "ROOT_ITSELF"
     }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-jdbc/5.3.29/spring-jdbc-5.3.29-sources.jar!/",
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.9.10/kotlin-stdlib-jdk8-1.9.10-sources.jar!/",
       "type" : {
         "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.9.10/kotlin-stdlib-jdk8-1.9.10.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.jetbrains.kotlin:kotlin-stdlib:1.9.10",
+    "exported" : false,
+    "scope" : "PROVIDED",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib/1.9.10/kotlin-stdlib-1.9.10-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib/1.9.10/kotlin-stdlib-1.9.10-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlin/kotlin-stdlib/1.9.10/kotlin-stdlib-1.9.10.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.0",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlinx/kotlinx-coroutines-core-jvm/1.5.0/kotlinx-coroutines-core-jvm-1.5.0-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlinx/kotlinx-coroutines-core-jvm/1.5.0/kotlinx-coroutines-core-jvm-1.5.0-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlinx/kotlinx-coroutines-core-jvm/1.5.0/kotlinx-coroutines-core-jvm-1.5.0.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlinx/kotlinx-coroutines-core/1.5.0/kotlinx-coroutines-core-1.5.0-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/kotlinx/kotlinx-coroutines-core/1.5.0/kotlinx-coroutines-core-1.5.0.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.jetbrains:annotations:13.0",
+    "exported" : false,
+    "scope" : "PROVIDED",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/annotations/13.0/annotations-13.0-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/annotations/13.0/annotations-13.0-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/jetbrains/annotations/13.0/annotations-13.0.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.junit.jupiter:junit-jupiter-api:5.10.0",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-api/5.10.0/junit-jupiter-api-5.10.0-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-api/5.10.0/junit-jupiter-api-5.10.0-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-api/5.10.0/junit-jupiter-api-5.10.0.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.junit.jupiter:junit-jupiter-engine:5.10.0",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-engine/5.10.0/junit-jupiter-engine-5.10.0-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-engine/5.10.0/junit-jupiter-engine-5.10.0-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-engine/5.10.0/junit-jupiter-engine-5.10.0.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.junit.jupiter:junit-jupiter-params:5.10.0",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-params/5.10.0/junit-jupiter-params-5.10.0-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-params/5.10.0/junit-jupiter-params-5.10.0-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-params/5.10.0/junit-jupiter-params-5.10.0.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.junit.platform:junit-platform-commons:1.10.0",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/platform/junit-platform-commons/1.10.0/junit-platform-commons-1.10.0-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/platform/junit-platform-commons/1.10.0/junit-platform-commons-1.10.0-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/platform/junit-platform-commons/1.10.0/junit-platform-commons-1.10.0.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.junit.platform:junit-platform-engine:1.10.0",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/platform/junit-platform-engine/1.10.0/junit-platform-engine-1.10.0-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/platform/junit-platform-engine/1.10.0/junit-platform-engine-1.10.0-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/platform/junit-platform-engine/1.10.0/junit-platform-engine-1.10.0.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.latencyutils:LatencyUtils:2.0.3",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/latencyutils/LatencyUtils/2.0.3/LatencyUtils-2.0.3-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/latencyutils/LatencyUtils/2.0.3/LatencyUtils-2.0.3-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/latencyutils/LatencyUtils/2.0.3/LatencyUtils-2.0.3.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.mariadb.jdbc:mariadb-java-client:3.2.0",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/mariadb/jdbc/mariadb-java-client/3.2.0/mariadb-java-client-3.2.0-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/mariadb/jdbc/mariadb-java-client/3.2.0/mariadb-java-client-3.2.0-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/mariadb/jdbc/mariadb-java-client/3.2.0/mariadb-java-client-3.2.0.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.mybatis:mybatis-spring:2.1.1",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/mybatis/mybatis-spring/2.1.1/mybatis-spring-2.1.1-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/mybatis/mybatis-spring/2.1.1/mybatis-spring-2.1.1-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/mybatis/mybatis-spring/2.1.1/mybatis-spring-2.1.1.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.mybatis:mybatis:3.5.13",
+    "exported" : false,
+    "scope" : "PROVIDED",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/mybatis/mybatis/3.5.13/mybatis-3.5.13-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/mybatis/mybatis/3.5.13/mybatis-3.5.13-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/mybatis/mybatis/3.5.13/mybatis-3.5.13.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.opentest4j:opentest4j:1.3.0",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.postgresql:postgresql:42.6.0",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/postgresql/postgresql/42.6.0/postgresql-42.6.0-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/postgresql/postgresql/42.6.0/postgresql-42.6.0-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/postgresql/postgresql/42.6.0/postgresql-42.6.0.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.rnorth.duct-tape:duct-tape:1.0.8",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/rnorth/duct-tape/duct-tape/1.0.8/duct-tape-1.0.8-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/rnorth/duct-tape/duct-tape/1.0.8/duct-tape-1.0.8-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/rnorth/duct-tape/duct-tape/1.0.8/duct-tape-1.0.8.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.slf4j:jcl-over-slf4j:1.7.36",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/slf4j/jcl-over-slf4j/1.7.36/jcl-over-slf4j-1.7.36-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/slf4j/jcl-over-slf4j/1.7.36/jcl-over-slf4j-1.7.36-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/slf4j/jcl-over-slf4j/1.7.36/jcl-over-slf4j-1.7.36.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.slf4j:slf4j-api:2.0.7",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/slf4j/slf4j-api/2.0.7/slf4j-api-2.0.7-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/slf4j/slf4j-api/2.0.7/slf4j-api-2.0.7-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/slf4j/slf4j-api/2.0.7/slf4j-api-2.0.7.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.springframework.batch:spring-batch-core:4.3.9",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/batch/spring-batch-core/4.3.9/spring-batch-core-4.3.9-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/batch/spring-batch-core/4.3.9/spring-batch-core-4.3.9-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/batch/spring-batch-core/4.3.9/spring-batch-core-4.3.9.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.springframework.batch:spring-batch-infrastructure:4.3.9",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/batch/spring-batch-infrastructure/4.3.9/spring-batch-infrastructure-4.3.9-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/batch/spring-batch-infrastructure/4.3.9/spring-batch-infrastructure-4.3.9-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/batch/spring-batch-infrastructure/4.3.9/spring-batch-infrastructure-4.3.9.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.springframework.batch:spring-batch-test:4.3.9",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/batch/spring-batch-test/4.3.9/spring-batch-test-4.3.9-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/batch/spring-batch-test/4.3.9/spring-batch-test-4.3.9-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/batch/spring-batch-test/4.3.9/spring-batch-test-4.3.9.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.springframework.retry:spring-retry:1.3.4",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/retry/spring-retry/1.3.4/spring-retry-1.3.4-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/retry/spring-retry/1.3.4/spring-retry-1.3.4-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/retry/spring-retry/1.3.4/spring-retry-1.3.4.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.springframework:spring-aop:5.3.29",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-aop/5.3.29/spring-aop-5.3.29-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-aop/5.3.29/spring-aop-5.3.29-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-aop/5.3.29/spring-aop-5.3.29.jar!/",
+      "type" : {
+        "name" : "CLASSES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
     } ]
@@ -1783,12 +1570,6 @@
     "exported" : false,
     "scope" : "PROVIDED",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-beans/5.3.29/spring-beans-5.3.29.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-beans/5.3.29/spring-beans-5.3.29-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
@@ -1800,18 +1581,41 @@
         "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-beans/5.3.29/spring-beans-5.3.29.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.springframework:spring-context:5.3.29",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-context/5.3.29/spring-context-5.3.29-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-context/5.3.29/spring-context-5.3.29-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-context/5.3.29/spring-context-5.3.29.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
     } ]
   }, {
     "name" : "Maven: org.springframework:spring-core:5.3.29",
     "exported" : false,
     "scope" : "PROVIDED",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-core/5.3.29/spring-core-5.3.29.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-core/5.3.29/spring-core-5.3.29-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
@@ -1823,18 +1627,41 @@
         "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-core/5.3.29/spring-core-5.3.29.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.springframework:spring-expression:5.3.29",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-expression/5.3.29/spring-expression-5.3.29-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-expression/5.3.29/spring-expression-5.3.29-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-expression/5.3.29/spring-expression-5.3.29.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
     } ]
   }, {
     "name" : "Maven: org.springframework:spring-jcl:5.3.29",
     "exported" : false,
     "scope" : "PROVIDED",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-jcl/5.3.29/spring-jcl-5.3.29.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-jcl/5.3.29/spring-jcl-5.3.29-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
@@ -1846,18 +1673,64 @@
         "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-jcl/5.3.29/spring-jcl-5.3.29.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.springframework:spring-jdbc:5.3.29",
+    "exported" : false,
+    "scope" : "PROVIDED",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-jdbc/5.3.29/spring-jdbc-5.3.29-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-jdbc/5.3.29/spring-jdbc-5.3.29-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-jdbc/5.3.29/spring-jdbc-5.3.29.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.springframework:spring-test:5.3.29",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-test/5.3.29/spring-test-5.3.29-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-test/5.3.29/spring-test-5.3.29-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-test/5.3.29/spring-test-5.3.29.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
     } ]
   }, {
     "name" : "Maven: org.springframework:spring-tx:5.3.29",
     "exported" : false,
     "scope" : "PROVIDED",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-tx/5.3.29/spring-tx-5.3.29.jar!/",
-      "type" : {
-        "name" : "CLASSES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-tx/5.3.29/spring-tx-5.3.29-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
@@ -1869,27 +1742,148 @@
         "name" : "SOURCES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
-    } ]
-  }, {
-    "name" : "Maven: org.mybatis:mybatis:3.5.13",
-    "exported" : false,
-    "scope" : "PROVIDED",
-    "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/mybatis/mybatis/3.5.13/mybatis-3.5.13.jar!/",
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/springframework/spring-tx/5.3.29/spring-tx-5.3.29.jar!/",
       "type" : {
         "name" : "CLASSES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/mybatis/mybatis/3.5.13/mybatis-3.5.13-javadoc.jar!/",
+    } ]
+  }, {
+    "name" : "Maven: org.testcontainers:database-commons:1.19.0",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/database-commons/1.19.0/database-commons-1.19.0-javadoc.jar!/",
       "type" : {
         "name" : "JAVADOC"
       },
       "inclusionOptions" : "ROOT_ITSELF"
     }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/mybatis/mybatis/3.5.13/mybatis-3.5.13-sources.jar!/",
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/database-commons/1.19.0/database-commons-1.19.0-sources.jar!/",
       "type" : {
         "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/database-commons/1.19.0/database-commons-1.19.0.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.testcontainers:jdbc:1.19.0",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/jdbc/1.19.0/jdbc-1.19.0-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/jdbc/1.19.0/jdbc-1.19.0-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/jdbc/1.19.0/jdbc-1.19.0.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.testcontainers:junit-jupiter:1.19.0",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/junit-jupiter/1.19.0/junit-jupiter-1.19.0-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/junit-jupiter/1.19.0/junit-jupiter-1.19.0-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/junit-jupiter/1.19.0/junit-jupiter-1.19.0.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.testcontainers:mariadb:1.19.0",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/mariadb/1.19.0/mariadb-1.19.0-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/mariadb/1.19.0/mariadb-1.19.0-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/mariadb/1.19.0/mariadb-1.19.0.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.testcontainers:postgresql:1.19.0",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/postgresql/1.19.0/postgresql-1.19.0-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/postgresql/1.19.0/postgresql-1.19.0-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/postgresql/1.19.0/postgresql-1.19.0.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.testcontainers:testcontainers:1.19.0",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/testcontainers/1.19.0/testcontainers-1.19.0-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/testcontainers/1.19.0/testcontainers-1.19.0-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/testcontainers/testcontainers/1.19.0/testcontainers-1.19.0.jar!/",
+      "type" : {
+        "name" : "CLASSES"
       },
       "inclusionOptions" : "ROOT_ITSELF"
     } ]
