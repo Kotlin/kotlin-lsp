@@ -219,7 +219,10 @@ async function createLspClient(): Promise<LanguageClient | null> {
         initializationOptions: {
             defaultJdk: workspace.getConfiguration().get('kotlinLSP.jdkForSymbolResolution')
         },
-        middleware: middleware
+        middleware: middleware,
+        markdown: {
+            supportHtml: true,
+        }
     };
     let serverOptions = await createServerOptions()
     if (!serverOptions) return null
