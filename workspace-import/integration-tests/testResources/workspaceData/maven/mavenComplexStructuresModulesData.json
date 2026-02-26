@@ -1,0 +1,162 @@
+[ {
+  "name" : "bartest",
+  "moduleTypeId" : "JAVA_MODULE",
+  "imlFilePath" : ".idea/bartest.iml",
+  "contentDirs" : [ "bartest" ],
+  "sourceDirs" : [ "bartest/src/main/java" ],
+  "testSourceDirs" : [ "bartest/src/test/java" ],
+  "resourceDirs" : [ "bartest/src/main/resources" ],
+  "testResourceDirs" : [ "bartest/src/test/resources" ],
+  "generatedSourceDirs" : [ ],
+  "excludeDirs" : [ ],
+  "outputDir" : "",
+  "testOutputDir" : "",
+  "facetNames" : [ ],
+  "totalDependenciesNumber" : 6,
+  "libraries" : [ {
+    "name" : "Maven: junit:junit:4.11",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.11/junit-4.11.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.11/junit-4.11-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.11/junit-4.11-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  }, {
+    "name" : "Maven: org.hamcrest:hamcrest-core:1.3",
+    "exported" : false,
+    "scope" : "TEST",
+    "roots" : [ {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar!/",
+      "type" : {
+        "name" : "CLASSES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-javadoc.jar!/",
+      "type" : {
+        "name" : "JAVADOC"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    }, {
+      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-sources.jar!/",
+      "type" : {
+        "name" : "SOURCES"
+      },
+      "inclusionOptions" : "ROOT_ITSELF"
+    } ]
+  } ],
+  "moduleDependencies" : [ {
+    "name" : "footest.main",
+    "exported" : false,
+    "scope" : "COMPILE",
+    "productionOnTest" : false
+  }, {
+    "name" : "footest.test",
+    "exported" : false,
+    "scope" : "TEST",
+    "productionOnTest" : true
+  } ],
+  "jdkName" : "",
+  "languageLevel" : "JDK_1_8",
+  "overriddenProjectPath" : null
+}, {
+  "name" : "footest",
+  "moduleTypeId" : "JAVA_MODULE",
+  "imlFilePath" : ".idea/footest.iml",
+  "contentDirs" : [ "footest" ],
+  "sourceDirs" : [ ],
+  "testSourceDirs" : [ ],
+  "resourceDirs" : [ ],
+  "testResourceDirs" : [ ],
+  "generatedSourceDirs" : [ ],
+  "excludeDirs" : [ ],
+  "outputDir" : "",
+  "testOutputDir" : "",
+  "facetNames" : [ ],
+  "totalDependenciesNumber" : 2,
+  "libraries" : [ ],
+  "moduleDependencies" : [ ],
+  "jdkName" : "",
+  "languageLevel" : "JDK_1_8",
+  "overriddenProjectPath" : null
+}, {
+  "name" : "footest.main",
+  "moduleTypeId" : "JAVA_MODULE",
+  "imlFilePath" : ".idea/footest.main.iml",
+  "contentDirs" : [ "footest/src/main/java", "footest/src/main/resources" ],
+  "sourceDirs" : [ "footest/src/main/java" ],
+  "testSourceDirs" : [ ],
+  "resourceDirs" : [ "footest/src/main/resources" ],
+  "testResourceDirs" : [ ],
+  "generatedSourceDirs" : [ ],
+  "excludeDirs" : [ ],
+  "outputDir" : "",
+  "testOutputDir" : "",
+  "facetNames" : [ ],
+  "totalDependenciesNumber" : 2,
+  "libraries" : [ ],
+  "moduleDependencies" : [ ],
+  "jdkName" : "",
+  "languageLevel" : "JDK_1_8",
+  "overriddenProjectPath" : null
+}, {
+  "name" : "footest.test",
+  "moduleTypeId" : "JAVA_MODULE",
+  "imlFilePath" : ".idea/footest.test.iml",
+  "contentDirs" : [ "footest/src/test/java", "footest/src/test/resources" ],
+  "sourceDirs" : [ ],
+  "testSourceDirs" : [ "footest/src/test/java" ],
+  "resourceDirs" : [ ],
+  "testResourceDirs" : [ "footest/src/test/resources" ],
+  "generatedSourceDirs" : [ ],
+  "excludeDirs" : [ ],
+  "outputDir" : "",
+  "testOutputDir" : "",
+  "facetNames" : [ ],
+  "totalDependenciesNumber" : 3,
+  "libraries" : [ ],
+  "moduleDependencies" : [ {
+    "name" : "footest.main",
+    "exported" : false,
+    "scope" : "COMPILE",
+    "productionOnTest" : false
+  } ],
+  "jdkName" : "",
+  "languageLevel" : "JDK_11",
+  "overriddenProjectPath" : null
+}, {
+  "name" : "idea317065",
+  "moduleTypeId" : "JAVA_MODULE",
+  "imlFilePath" : ".idea/idea317065.iml",
+  "contentDirs" : [ "" ],
+  "sourceDirs" : [ ],
+  "testSourceDirs" : [ ],
+  "resourceDirs" : [ ],
+  "testResourceDirs" : [ ],
+  "generatedSourceDirs" : [ ],
+  "excludeDirs" : [ ],
+  "outputDir" : "",
+  "testOutputDir" : "",
+  "facetNames" : [ ],
+  "totalDependenciesNumber" : 2,
+  "libraries" : [ ],
+  "moduleDependencies" : [ ],
+  "jdkName" : "",
+  "languageLevel" : "JDK_1_8",
+  "overriddenProjectPath" : null
+} ]

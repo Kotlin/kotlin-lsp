@@ -1,0 +1,62 @@
+[
+  {
+    "name": "maven-with-profiles",
+    "moduleTypeId": "JAVA_MODULE",
+    "imlFilePath": ".idea/maven-with-profiles.iml",
+    "contentDirs": [
+      ""
+    ],
+    "sourceDirs": [
+      "src/main/java"
+    ],
+    "testSourceDirs": [
+      "src/test/java"
+    ],
+    "resourceDirs": [
+      "src/main/resources"
+    ],
+    "testResourceDirs": [
+      "src/test/resources"
+    ],
+    "generatedSourceDirs": [],
+    "excludeDirs": [],
+    "outputDir": "",
+    "testOutputDir": "",
+    "facetNames": [],
+    "totalDependenciesNumber": 3,
+    "libraries": [
+      {
+        "name": "Maven: commons-lang:commons-lang:2.4",
+        "exported": false,
+        "scope": "COMPILE",
+        "roots": [
+          {
+            "url": "jar://MAVEN_M3_REPOSITORY/commons-lang/commons-lang/2.4/commons-lang-2.4.jar!/",
+            "type": {
+              "name": "CLASSES"
+            },
+            "inclusionOptions": "ROOT_ITSELF"
+          },
+          {
+            "url": "jar://MAVEN_M3_REPOSITORY/commons-lang/commons-lang/2.4/commons-lang-2.4-sources.jar!/",
+            "type": {
+              "name": "SOURCES"
+            },
+            "inclusionOptions": "ROOT_ITSELF"
+          },
+          {
+            "url": "jar://MAVEN_M3_REPOSITORY/commons-lang/commons-lang/2.4/commons-lang-2.4-javadoc.jar!/",
+            "type": {
+              "name": "JAVADOC"
+            },
+            "inclusionOptions": "ROOT_ITSELF"
+          }
+        ]
+      }
+    ],
+    "moduleDependencies": [],
+    "jdkName": "",
+    "languageLevel": "JDK_17",
+    "overriddenProjectPath": null
+  }
+]

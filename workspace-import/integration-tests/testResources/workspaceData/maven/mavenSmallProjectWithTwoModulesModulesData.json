@@ -1,0 +1,84 @@
+[
+  {
+    "name": "module1",
+    "moduleTypeId": "JAVA_MODULE",
+    "imlFilePath": ".idea/module1.iml",
+    "contentDirs": [
+      "module1"
+    ],
+    "sourceDirs": [
+      "module1/src/main/java"
+    ],
+    "testSourceDirs": [
+      "module1/src/test/java"
+    ],
+    "resourceDirs": [
+      "module1/src/main/resources"
+    ],
+    "testResourceDirs": [
+      "module1/src/test/resources"
+    ],
+    "generatedSourceDirs": [],
+    "excludeDirs": [],
+    "outputDir": "",
+    "testOutputDir": "",
+    "facetNames": [],
+    "totalDependenciesNumber": 2,
+    "libraries": [],
+    "moduleDependencies": [],
+    "jdkName": "",
+    "languageLevel": "JDK_17"
+  },
+  {
+    "name": "module2",
+    "moduleTypeId": "JAVA_MODULE",
+    "imlFilePath": ".idea/module2.iml",
+    "contentDirs": [
+      "module2"
+    ],
+    "sourceDirs": [
+      "module2/src/main/java"
+    ],
+    "testSourceDirs": [
+      "module2/src/test/java"
+    ],
+    "resourceDirs": [
+      "module2/src/main/resources"
+    ],
+    "testResourceDirs": [
+      "module2/src/test/resources"
+    ],
+    "generatedSourceDirs": [],
+    "excludeDirs": [],
+    "outputDir": "",
+    "testOutputDir": "",
+    "facetNames": [],
+    "totalDependenciesNumber": 2,
+    "libraries": [],
+    "moduleDependencies": [],
+    "jdkName": "",
+    "languageLevel": "JDK_17"
+  },
+  {
+    "name": "recompile-modules",
+    "moduleTypeId": "JAVA_MODULE",
+    "imlFilePath": ".idea/recompile-modules.iml",
+    "contentDirs": [
+      ""
+    ],
+    "sourceDirs": [],
+    "testSourceDirs": [],
+    "resourceDirs": [],
+    "testResourceDirs": [],
+    "generatedSourceDirs": [],
+    "excludeDirs": [],
+    "outputDir": "",
+    "testOutputDir": "",
+    "facetNames": [],
+    "totalDependenciesNumber": 2,
+    "libraries": [],
+    "moduleDependencies": [],
+    "jdkName": "",
+    "languageLevel": "JDK_17"
+  }
+]
