@@ -2,15 +2,15 @@
 package com.jetbrains.ls.kotlinLsp
 
 import com.intellij.openapi.application.Application
+import com.intellij.openapi.application.ApplicationNamesInfo
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.platform.diagnostic.telemetry.TelemetryManager
 import com.intellij.platform.diagnostic.telemetry.impl.TelemetryManagerImpl
-import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.util.SystemProperties
 import com.jetbrains.analyzer.api.defaultPluginSet
-import com.jetbrains.analyzer.api.mapLspServices
 import com.jetbrains.analyzer.filewatcher.FileWatcher
 import com.jetbrains.analyzer.filewatcher.downloadFileWatcherBinaries
 import com.jetbrains.ls.api.core.LSServer
@@ -51,6 +51,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import java.io.RandomAccessFile
 import java.nio.file.Path
+import java.util.ServiceLoader
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.createTempDirectory
@@ -61,6 +62,26 @@ import kotlin.io.path.name
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
+    if (args.firstOrNull() == "run") {
+        println(buildString {
+            "IJ_JAVA_OPTIONS".let { k ->
+                appendLine("$k=${System.getenv(k)}")
+            }
+            appendLine("idea.home.path=${PathManager.getHomeDir()}")
+            appendLine("idea.config.path=${PathManager.getConfigDir()}")
+            appendLine("idea.system.path=${PathManager.getSystemDir()}")
+            appendLine()
+        })
+    }
+    ApplicationNamesInfo::class.java.getClassLoader().let { loader ->
+        val prop = "idea.platform.prefix"
+        when {
+            System.getProperty(prop) != null -> Unit
+            loader.getResource("idea/KotlinLspApplicationInfo.xml") != null -> SystemProperties.setProperty(prop, "KotlinLsp")
+            loader.getResource("idea/IntelliJApplicationInfo.xml") != null -> SystemProperties.setProperty(prop, "IntelliJLsp")
+            else -> error("Unknown platform prefix")
+        }
+    }
     when (val command = parseArguments(args)) {
         is KotlinLspCommand.Help -> {
             println(command.message)
@@ -237,13 +258,16 @@ private fun isLspRunningFromSources(): Boolean {
 
 
 fun createConfiguration(): LSConfiguration {
+    val serverExtensions = ServiceLoader.load(LanguageServerExtension::class.java).toList()
+    LOG.info(
+        if (serverExtensions.isEmpty()) "Server extensions not found"
+        else "Server extensions loaded:\n  ${serverExtensions.joinToString("\n  ") { it.javaClass.name }}"
+    )
     return LSConfiguration(
         configurations = listOf(
             LSCommonConfiguration,
             DapCommonConfiguration,
-            *(mapLspServices(LanguageServerExtension::class) {
-                it.configuration
-            }.toTypedArray()),
+            *serverExtensions.map { it.configuration }.toTypedArray()
         ),
     )
 }
