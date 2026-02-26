@@ -1,6 +1,9 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.kotlinLsp
 
+import com.intellij.ide.plugins.ClassLoaderConfigurator
+import com.intellij.ide.plugins.PluginManagerCore
+import com.intellij.ide.plugins.loadDescriptors
 import com.intellij.openapi.application.Application
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.fileLogger
@@ -8,9 +11,14 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.platform.diagnostic.telemetry.TelemetryManager
 import com.intellij.platform.diagnostic.telemetry.impl.TelemetryManagerImpl
+import com.intellij.platform.ide.bootstrap.ZipFilePoolImpl
 import com.intellij.util.PlatformUtils
 import com.intellij.util.SystemProperties
+import com.intellij.util.lang.PathClassLoader
+import com.intellij.util.lang.UrlClassLoader
+import com.intellij.util.lang.ZipFilePool
 import com.jetbrains.analyzer.api.defaultPluginSet
+import com.jetbrains.analyzer.bootstrap.pluginSet
 import com.jetbrains.analyzer.filewatcher.FileWatcher
 import com.jetbrains.analyzer.filewatcher.downloadFileWatcherBinaries
 import com.jetbrains.ls.api.core.LSServer
@@ -57,8 +65,6 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.createTempDirectory
 import kotlin.io.path.deleteRecursively
 import kotlin.io.path.div
-import kotlin.io.path.extension
-import kotlin.io.path.name
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
@@ -127,7 +133,36 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
             },
         )
 
-        val config = createConfiguration()
+        val zipPoolDeferred = async {
+            val result = ZipFilePoolImpl()
+            ZipFilePool.PATH_CLASSLOADER_POOL = result
+            result
+        }
+        val languageServerExtensions = loadDescriptors(zipPoolDeferred, null).let { (_, pluginLoadingResult) ->
+            val coreLoader = PluginManagerCore::class.java.classLoader
+            val plugins = pluginLoadingResult.pluginLists.flatMap { it.plugins }
+            val configurator = ClassLoaderConfigurator(pluginSet(emptyList()), coreLoader)
+
+            // Keep using combined classloader for now
+            plugins.asSequence().flatMap { descriptor ->
+                sequenceOf(descriptor) + descriptor.contentModules.asSequence()
+            }
+                .mapNotNull { descriptor ->
+                    configurator.configureModule(descriptor)
+                    descriptor.pluginClassLoader
+                }
+                .filter { it != coreLoader }
+                .map { (it as? PathClassLoader)?.classPath ?: (it as UrlClassLoader).classPath }
+                .flatMap { cp -> cp.files }
+                .toList()
+                .let { files ->
+                    (coreLoader as PathClassLoader).classPath.addFiles(files)
+                }
+
+            ServiceLoader.load(LanguageServerExtension::class.java, coreLoader)
+                .asSequence().distinctBy { it.javaClass }.toList()
+        }
+        val config = createConfiguration(languageServerExtensions)
 
         withLSServerStarter(
             lowMemoryHooks = config.lowMemoryHooks(),
@@ -188,54 +223,53 @@ private suspend fun handleRequests(
 private fun initIdeaPaths(systemPath: Path?) {
     val serverClass = Class.forName("com.jetbrains.ls.kotlinLsp.KotlinLspServerKt")
     val jarPath = PathManager.getJarForClass(serverClass)?.toAbsolutePath()
-    val jarPathStr = jarPath?.let { FileUtilRt.toSystemIndependentName(jarPath.toString()) }
+    val jarPathStr = jarPath?.let { FileUtilRt.toSystemIndependentName(jarPath.toString()) } ?: ""
 
-    if (arrayOf("/bazel-out/jvm-fastbuild/", "/out/classes/production/")
-            .any { jarPathStr?.contains(it) == true }
-    ) {
-        val homeDir = PathManager.getHomeDir()
-        val code = PlatformUtils.getPlatformPrefix().lowercase()
-            .removeSuffix("lsp") + "-lsp"
-        systemProperty("idea.config.path", "${homeDir / "config" / code}", ifAbsent = true)
-        systemProperty("idea.system.path", "${homeDir / "system" / code}", ifAbsent = true)
-        val nativeFileWatcherPath = downloadFileWatcherBinaries(homeDir / "community")
-        FileWatcher.initLibraryFromSources(nativeFileWatcherPath)
-    } else {
-        val path = systemPath
-            ?.createDirectories()
-            ?.takeIf {
-                @Suppress("IO_FILE_USAGE")
-                val channel = RandomAccessFile((it / ".app.lock").toFile(), "rw").channel
-                val isLockAcquired = channel.tryLock() != null
-                if (!isLockAcquired) {
-                    LOG.info("The specified workspace data path is already in use: $it")
-                    channel.close()
-                }
-                isLockAcquired
-            }
-            ?: createTempDirectory("idea-system").also {
-                @OptIn(ExperimentalPathApi::class)
-                Runtime.getRuntime().addShutdownHook(Thread { it.deleteRecursively() })
-            }
-
-        jarPath?.parent?.parent?.let { home ->
-            systemProperty("idea.home.path", "$home")
+    when {
+        jarPathStr.contains("/out/dev-run/") -> {
+            val nativeFileWatcherPath = downloadFileWatcherBinaries(Path.of(PathManager.getCommunityHomePath()))
+            FileWatcher.initLibrary(nativeFileWatcherPath)
         }
-        systemProperty("idea.config.path", "${path / "config"}", ifAbsent = true)
-        systemProperty("idea.system.path", "${path / "system"}", ifAbsent = true)
-        FileWatcher.initLibrary(getInstallationPath() / "native")
+
+        jarPathStr.contains("/bazel-out/jvm-fastbuild/") ||
+                jarPathStr.contains("/out/classes/production/") -> {
+            val homeDir = PathManager.getHomeDir()
+            val code = PlatformUtils.getPlatformPrefix().lowercase()
+                .removeSuffix("lsp") + "-lsp"
+            systemProperty("idea.config.path", "${homeDir / "config" / code}", ifAbsent = true)
+            systemProperty("idea.system.path", "${homeDir / "system" / code}", ifAbsent = true)
+            val nativeFileWatcherPath = downloadFileWatcherBinaries(homeDir / "community")
+            FileWatcher.initLibrary(nativeFileWatcherPath)
+        }
+
+        else -> {
+            val path = systemPath
+                ?.createDirectories()
+                ?.takeIf {
+                    @Suppress("IO_FILE_USAGE")
+                    val channel = RandomAccessFile((it / ".app.lock").toFile(), "rw").channel
+                    val isLockAcquired = channel.tryLock() != null
+                    if (!isLockAcquired) {
+                        LOG.info("The specified workspace data path is already in use: $it")
+                        channel.close()
+                    }
+                    isLockAcquired
+                }
+                ?: createTempDirectory("idea-system").also {
+                    @OptIn(ExperimentalPathApi::class)
+                    Runtime.getRuntime().addShutdownHook(Thread { it.deleteRecursively() })
+                }
+
+            jarPath?.parent?.parent?.let { home ->
+                systemProperty("idea.home.path", "$home")
+            }
+            systemProperty("idea.config.path", "${path / "config"}", ifAbsent = true)
+            systemProperty("idea.system.path", "${path / "system"}", ifAbsent = true)
+            FileWatcher.initLibrary(PathManager.getLibDir() / "filewatcher")
+        }
     }
     LOG.info("idea.config.path=${System.getProperty("idea.config.path")}")
     LOG.info("idea.system.path=${System.getProperty("idea.system.path")}")
-}
-
-private fun getInstallationPath(): Path {
-    val serverClass = Class.forName("com.jetbrains.ls.kotlinLsp.KotlinLspServerKt")
-    val jarPath = PathManager.getJarForClass(serverClass)?.toAbsolutePath() ?: error("No jar for KotlinLspServerKt class")
-    check(jarPath.extension == "jar") { "Path to jar is expected to end with .jar: $jarPath" }
-    val libsDir = jarPath.parent
-    check(libsDir.name == "lib") { "lib dir is expected to be named `lib`: $libsDir" }
-    return libsDir.parent
 }
 
 private fun systemProperty(name: String, value: String, ifAbsent: Boolean = false) {
@@ -250,17 +284,21 @@ private fun initExtraProperties() {
     SystemProperties.setProperty("find.use.indexing.searcher.extensions", "false")
 }
 
-fun createConfiguration(): LSConfiguration {
-    val serverExtensions = ServiceLoader.load(LanguageServerExtension::class.java).toList()
+fun createConfiguration(
+    extensions: List<LanguageServerExtension> =
+        ServiceLoader.load(LanguageServerExtension::class.java).toList()
+): LSConfiguration {
     LOG.info(
-        if (serverExtensions.isEmpty()) "Server extensions not found"
-        else "Server extensions loaded:\n  ${serverExtensions.joinToString("\n  ") { it.javaClass.name }}"
+        if (extensions.isEmpty()) "Server extensions not found"
+        else "Server extensions loaded:\n  ${extensions.joinToString("\n  ") { it.javaClass.run { "$simpleName ($name)" } }}"
     )
     return LSConfiguration(
         configurations = listOf(
             LSCommonConfiguration,
             DapCommonConfiguration,
-            *serverExtensions.map { it.configuration }.toTypedArray()
+            *(extensions.map {
+                it.configuration
+            }.toTypedArray()),
         ),
     )
 }

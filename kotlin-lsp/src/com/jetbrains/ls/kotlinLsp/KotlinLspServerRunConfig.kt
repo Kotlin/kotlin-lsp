@@ -4,6 +4,9 @@ package com.jetbrains.ls.kotlinLsp
 import com.github.ajalt.clikt.core.BadParameterValue
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.PrintHelpMessage
+import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.arguments.optional
+import com.github.ajalt.clikt.parameters.arguments.validate
 import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
@@ -44,7 +47,14 @@ sealed class KotlinLspCommand {
     data class Help(val message: String) : KotlinLspCommand()
 }
 
-private class Parser : CliktCommand(name = "kotlin-lsp") {
+private class Parser : CliktCommand(name = "languageServer") {
+    @Suppress("unused") // dummy arg for IJ launcher
+    val command: String? by argument().optional()
+        .validate {
+            if (it != "run") {
+                fail("Unknown command '$it'. Only 'run' is supported.")
+            }
+        }
     // the name "socket" is hardcoded in VSCode
     val socket: SocketConfig by option()
         .convert { it.toSocketConfig() }
