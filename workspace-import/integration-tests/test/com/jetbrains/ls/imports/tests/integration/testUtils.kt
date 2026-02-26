@@ -61,6 +61,13 @@ fun gradleTest(
 
 internal fun mavenTest(
     testCase: TestCase<out ProjectInfoSpec>,
+    expected: LspTestData
+) {
+    mavenTest(testCase, expected.getStructure())
+
+}
+internal fun mavenTest(
+    testCase: TestCase<out ProjectInfoSpec>,
     projectStructureWithModules: ProjectStructureWithModules
 ) {
     val mavenPath = downloadMavenBinaries()
