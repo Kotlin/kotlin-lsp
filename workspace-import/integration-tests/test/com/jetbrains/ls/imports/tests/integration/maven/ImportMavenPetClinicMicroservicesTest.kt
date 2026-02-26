@@ -3,12 +3,13 @@ package com.jetbrains.ls.imports.tests.integration.maven
 
 import com.intellij.ide.starter.extended.data.TestCases
 import com.intellij.workspaceModel.integrationTests.data.maven.mavenPetClinicMicroservices.mavenPetClinicMicroservicesModulesData
+import com.jetbrains.ls.imports.tests.integration.LspTestData
 import com.jetbrains.ls.imports.tests.integration.mavenTest
 import org.junit.jupiter.api.Test
 
 class ImportMavenPetClinicMicroservicesTest {
     @Test
     fun importMavenPetClinicMicroservices() {
-        mavenTest(TestCases.IU.MavenPetClinicMicroservices, mavenPetClinicMicroservicesModulesData)
+        mavenTest(TestCases.IU.MavenPetClinicMicroservices, LspTestData.MavenPetClinicMicroservicesModulesData)
     }
 }

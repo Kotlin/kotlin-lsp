@@ -2,13 +2,13 @@
 package com.jetbrains.ls.imports.tests.integration.maven
 
 import com.intellij.ide.starter.extended.data.TestCases
-import com.intellij.workspaceModel.integrationTests.data.maven.withDifferentTypesOfRoots.mavenProjectWithDifferentTypesOfRootsModulesData
+import com.jetbrains.ls.imports.tests.integration.LspTestData
 import com.jetbrains.ls.imports.tests.integration.mavenTest
 import org.junit.jupiter.api.Test
 
 class ImportMavenProjectWithDifferentTypesOfRootsTest {
     @Test
     fun importMavenProjectWithDifferentTypesOfRoots() {
-        mavenTest(TestCases.IU.MavenProjectWithDifferentTypesOfRoots, mavenProjectWithDifferentTypesOfRootsModulesData)
+        mavenTest(TestCases.IU.MavenProjectWithDifferentTypesOfRoots, LspTestData.MavenProjectWithDifferentTypesOfRootsModulesData)
     }
 }

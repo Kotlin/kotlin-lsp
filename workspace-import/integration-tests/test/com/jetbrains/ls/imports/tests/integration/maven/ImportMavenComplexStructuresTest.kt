@@ -2,13 +2,13 @@
 package com.jetbrains.ls.imports.tests.integration.maven
 
 import com.intellij.ide.starter.extended.data.TestCases
-import com.intellij.workspaceModel.integrationTests.data.maven.mavenComplexStructures.mavenComplexStructuresModulesData
+import com.jetbrains.ls.imports.tests.integration.LspTestData
 import com.jetbrains.ls.imports.tests.integration.mavenTest
 import org.junit.jupiter.api.Test
 
 class ImportMavenComplexStructuresTest {
     @Test
     fun importMavenComplexStructures() {
-        mavenTest(TestCases.IU.MavenComplexStructures, mavenComplexStructuresModulesData)
+        mavenTest(TestCases.IU.MavenComplexStructures, LspTestData.MavenComplexStructuresModulesData)
     }
 }

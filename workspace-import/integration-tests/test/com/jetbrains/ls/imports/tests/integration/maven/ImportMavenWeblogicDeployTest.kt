@@ -2,13 +2,13 @@
 package com.jetbrains.ls.imports.tests.integration.maven
 
 import com.intellij.ide.starter.extended.data.TestCases
-import com.intellij.workspaceModel.integrationTests.data.maven.mavenWeblogicDeploy.mavenWeblogicDeployModulesData
+import com.jetbrains.ls.imports.tests.integration.LspTestData
 import com.jetbrains.ls.imports.tests.integration.mavenTest
 import org.junit.jupiter.api.Test
 
 class ImportMavenWeblogicDeployTest {
     @Test
     fun importMavenWeblogicDeploy() {
-        mavenTest(TestCases.IU.MavenWeblogicDeploy, mavenWeblogicDeployModulesData)
+        mavenTest(TestCases.IU.MavenWeblogicDeploy, LspTestData.MavenWeblogicDeployModulesData)
     }
 }

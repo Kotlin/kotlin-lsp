@@ -2,13 +2,13 @@
 package com.jetbrains.ls.imports.tests.integration.maven
 
 import com.intellij.ide.starter.extended.data.TestCases
-import com.intellij.workspaceModel.integrationTests.data.maven.mavenTutSpringBootKotlin.mavenTutSpringBootKotlinModulesData
+import com.jetbrains.ls.imports.tests.integration.LspTestData
 import com.jetbrains.ls.imports.tests.integration.mavenTest
 import org.junit.jupiter.api.Test
 
 class ImportMavenTutSpringBootKotlinTest {
     @Test
     fun importMavenTutSpringBootKotlin() {
-        mavenTest(TestCases.IU.TutSpringBootKotlin, mavenTutSpringBootKotlinModulesData)
+        mavenTest(TestCases.IU.TutSpringBootKotlin, LspTestData.MavenTutSpringBootKotlinModulesData)
     }
 }

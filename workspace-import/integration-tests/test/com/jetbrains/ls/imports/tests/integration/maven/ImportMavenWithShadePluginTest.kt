@@ -2,13 +2,13 @@
 package com.jetbrains.ls.imports.tests.integration.maven
 
 import com.intellij.ide.starter.extended.data.TestCases
-import com.intellij.workspaceModel.integrationTests.data.maven.mavenWithShadePlugin.mavenWithShadePluginModulesData
+import com.jetbrains.ls.imports.tests.integration.LspTestData
 import com.jetbrains.ls.imports.tests.integration.mavenTest
 import org.junit.jupiter.api.Test
 
 class ImportMavenWithShadePluginTest {
     @Test
     fun importMavenWithShadePlugin() {
-        mavenTest(TestCases.IU.MavenWithShadePlugin, mavenWithShadePluginModulesData)
+        mavenTest(TestCases.IU.MavenWithShadePlugin, LspTestData.MavenWithShadePluginModulesData)
     }
 }
