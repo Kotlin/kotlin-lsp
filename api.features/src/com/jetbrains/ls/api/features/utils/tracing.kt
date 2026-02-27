@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.single
 
 /**
  * Wraps the provider result collection into a provider-level span.
@@ -36,4 +37,16 @@ internal fun <T> IJTracer.traceProviderResults(
     } finally {
         span.end()
     }
+}
+
+internal suspend fun <T> IJTracer.traceProviderResults(
+    spanName: String,
+    provider: Any,
+    getResult: suspend () -> T,
+): T {
+    return traceProviderResults(
+        spanName = spanName,
+        provider = provider,
+        results = flow { emit(getResult()) },
+    ).single()
 }

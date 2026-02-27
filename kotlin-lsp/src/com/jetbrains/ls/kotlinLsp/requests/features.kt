@@ -63,7 +63,7 @@ internal fun LspHandlersBuilder.features() {
         LSCodeActions.getCodeActions(codeActionParams).map { action -> CommandOrCodeAction.CodeAction(action) }
     }
     request(ExecuteCommand) { LSCommand.executeCommand(it) }
-    request(CompletionRequestType) { completionParams ->
+    requestTraced(CompletionRequestType) { completionParams ->
         LSCompletion.getCompletion(completionParams).let { items -> CompletionResult.MaybeIncomplete(items) }
     }
     request(CompletionResolveRequestType) { LSCompletion.resolveCompletion(it) }
