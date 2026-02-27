@@ -30,6 +30,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="kotlin-stdlib" level="project" />
+    <orderEntry type="library" name="opentelemetry" level="project" />
     <orderEntry type="module" module-name="fleet.lsp.protocol" />
     <orderEntry type="module" module-name="fleet.util.core" />
     <orderEntry type="module" module-name="intellij.platform.core" />
@@ -65,5 +66,7 @@
     <orderEntry type="module" module-name="language-server.api.features.impl.kotlin" />
     <orderEntry type="module" module-name="language-server.workspace-import.maven-plugin" />
     <orderEntry type="module" module-name="language-server.workspace-import.gradle-plugin" />
+    <orderEntry type="module" module-name="intellij.platform.diagnostic.telemetry" />
+    <orderEntry type="module" module-name="intellij.platform.diagnostic.telemetry.impl" />
   </component>
 </module>

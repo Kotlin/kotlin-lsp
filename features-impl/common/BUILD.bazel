@@ -26,6 +26,7 @@ jvm_library(
   kotlinc_opts = ":custom_common",
   deps = [
     "@lib//:kotlin-stdlib",
+    "@lib//:opentelemetry",
     "@community//libraries/kotlinx/coroutines/core",
     "@community//platform/analysis-api:analysis",
     "@community//platform/core-api:core",
@@ -53,6 +54,7 @@ jvm_library(
     "@community//platform/usageView",
     "@community//platform/ide-core",
     "@community//libraries/kotlinx/collections-immutable:libraries-kotlinx-collections-immutable",
+    "@community//platform/diagnostic/telemetry",
     "@lib//:caffeine",
     "//language-server/api.impl.analyzer",
     "@community//fleet/rhizomedb",
@@ -95,6 +97,7 @@ jvm_library(
     "@community//platform/usageView:usageView_test_lib",
     "@community//platform/ide-core:ide-core_test_lib",
     "@community//libraries/kotlinx/collections-immutable:libraries-kotlinx-collections-immutable_test_lib",
+    "@community//platform/diagnostic/telemetry:telemetry_test_lib",
     "//language-server/api.impl.analyzer:api.impl.analyzer_test_lib",
     "@community//fleet/rhizomedb:rhizomedb_test_lib",
     "//language-server/dap/platform:platform_test_lib",

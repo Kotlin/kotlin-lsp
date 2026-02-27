@@ -5,6 +5,8 @@ import com.intellij.openapi.application.Application
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.project.Project
+import com.intellij.platform.diagnostic.telemetry.TelemetryManager
+import com.intellij.platform.diagnostic.telemetry.impl.TelemetryManagerImpl
 import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.util.SystemProperties
 import com.jetbrains.analyzer.api.defaultPluginSet
@@ -45,6 +47,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import java.io.RandomAccessFile
 import java.nio.file.Path
@@ -95,10 +98,24 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
     initIdeaPaths(runConfig.systemPath)
     initExtraProperties()
 
-    val config = createConfiguration()
+    runBlocking(CoroutineName("root") + Dispatchers.Default) root@{
+        TelemetryManager.setTelemetryManager(
+            provider = async(CoroutineName("opentelemetry configuration")) {
+                runCatching {
+                    TelemetryManagerImpl(
+                        coroutineScope = this@root,
+                        isUnitTestMode = false,
+                        loadExporterExtensions = false,
+                    )
+                }.getOrElse { e ->
+                    LOG.warn("Can't initialize OpenTelemetry: will use NOOP implementation", e)
+                    null
+                }
+            },
+        )
 
-    @Suppress("RAW_RUN_BLOCKING")
-    runBlocking(CoroutineName("root") + Dispatchers.Default) {
+        val config = createConfiguration()
+
         withLSServerStarter(
             lowMemoryHooks = config.lowMemoryHooks(),
             analysisConfig = config.configFor(AnalyzerContainerType.ANALYSIS),

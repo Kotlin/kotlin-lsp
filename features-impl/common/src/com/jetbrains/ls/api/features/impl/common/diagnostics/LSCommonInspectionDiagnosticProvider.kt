@@ -29,6 +29,8 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
+import com.intellij.platform.diagnostic.telemetry.TelemetryManager
+import com.intellij.platform.diagnostic.telemetry.helpers.use
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiFile
@@ -37,6 +39,7 @@ import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
+import com.jetbrains.ls.api.features.diagnostics.LSDiagnostic
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnosticProvider
 import com.jetbrains.ls.api.features.impl.common.utils.toLspSeverity
 import com.jetbrains.ls.api.features.impl.common.utils.toLspTags
@@ -54,6 +57,11 @@ import kotlinx.serialization.json.encodeToJsonElement
 
 private val LOG = logger<LSCommonInspectionDiagnosticProvider>()
 
+private enum class InspectionKind(val attributeValue: String, val spanName: String) {
+    Local("local", "diagnostics.localInspection"),
+    Global("global", "diagnostics.globalInspection"),
+}
+
 // TODO: LSP-278 Optimize performance of inspections
 class LSCommonInspectionDiagnosticProvider(
     override val supportedLanguages: Set<LSLanguage>,
@@ -62,6 +70,11 @@ class LSCommonInspectionDiagnosticProvider(
 ) : LSDiagnosticProvider {
     companion object {
         val diagnosticSource: DiagnosticSource = DiagnosticSource("inspection")
+
+        private const val SPAN_LOCAL_INSPECTIONS = "diagnostics.runLocalInspections"
+        private const val SPAN_GLOBAL_INSPECTIONS = "diagnostics.runGlobalInspections"
+
+        private val tracer = TelemetryManager.getTracer(LSDiagnostic.scope)
     }
 
     context(server: LSServer, handlerContext: LspHandlerContext)
@@ -72,75 +85,98 @@ class LSCommonInspectionDiagnosticProvider(
             readAction {
                 val diagnostics = mutableListOf<Diagnostic>()
 
-                // TODO(bartekpacia): centralize common logging so it's not repeated N times across all LS*Providers
-                LOG.debug("start request textDocument/diagnostic for ${params.textDocument.uri.uri}")
-
                 val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
                 val document = virtualFile.findDocument() ?: return@readAction emptyList()
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
+
+                // TODO(bartekpacia): centralize common logging so it's not repeated N times across all LS*Providers
+                LOG.debug("request textDocument/diagnostic for ${virtualFile.name}")
+
                 val inspectionManager = InspectionManagerEx(project)
                 val problemsHolder = ProblemsHolder(inspectionManager, psiFile, onTheFly)
 
-                val localInspections = getLocalInspections(psiFile) + getSharedLocalInspectionsFromGlobalTools(psiFile.language)
-                LOG.debug("running ${localInspections.size} local inspections")
-                for (localInspection in localInspections) {
-                    val visitor = localInspection.buildVisitor(problemsHolder, onTheFly)
+                tracer.spanBuilder(SPAN_LOCAL_INSPECTIONS).use {
+                    val localInspections = getLocalInspections(psiFile) + getSharedLocalInspectionsFromGlobalTools(psiFile.language)
+                    for (localInspection in localInspections) {
+                        runInspection(kind = InspectionKind.Local, inspectionId = localInspection.id) {
+                            val diagnosticsBeforeInspection = diagnostics.size
+                            val visitor = localInspection.buildVisitor(problemsHolder, onTheFly)
 
-                    fun collect(element: PsiElement) {
-                        runCatching {
-                            element.accept(visitor)
-                        }.getOrHandleException {
-                            LOG.warn(it)
+                            fun collect(element: PsiElement) {
+                                runCatching {
+                                    element.accept(visitor)
+                                }.getOrHandleException {
+                                    LOG.warn(it)
+                                }
+                                diagnostics.addAll(problemsHolder.collectDiagnostics(virtualFile, project, localInspection))
+                                problemsHolder.clearResults()
+                            }
+
+                            psiFile.accept(object : PsiElementVisitor() {
+                                override fun visitElement(element: PsiElement) {
+                                    collect(element)
+                                    element.acceptChildren(this)
+                                }
+                            })
+                            diagnostics.size - diagnosticsBeforeInspection
                         }
-                        diagnostics.addAll(problemsHolder.collectDiagnostics(virtualFile, project, localInspection))
-                        problemsHolder.clearResults()
                     }
+                }
 
-                    LOG.trace("running local inspection ${localInspection.id}")
-                    psiFile.accept(object : PsiElementVisitor() {
-                        override fun visitElement(element: PsiElement) {
-                            collect(element)
-                            element.acceptChildren(this)
+                tracer.spanBuilder(SPAN_GLOBAL_INSPECTIONS).use {
+                    val globalInspectionContext = inspectionManager.createNewGlobalContext()
+                    val globalInspections = getSimpleGlobalInspections(psiFile.language)
+                    for (simpleGlobalInspection in globalInspections) {
+                        runInspection(kind = InspectionKind.Global, inspectionId = simpleGlobalInspection.shortName) {
+                            val diagnosticsBeforeInspection = diagnostics.size
+                            val processor = object : ProblemDescriptionsProcessor {}
+                            runCatching {
+                                simpleGlobalInspection.checkFile(
+                                    /* psiFile = */ psiFile,
+                                    /* manager = */ inspectionManager,
+                                    /* problemsHolder = */ problemsHolder,
+                                    /* globalContext = */ globalInspectionContext,
+                                    /* problemDescriptionsProcessor = */ processor,
+                                )
+                            }.getOrHandleException {
+                                LOG.warn(it)
+                            }
+                            for (problemDescriptor in problemsHolder.results) {
+                                val data = problemDescriptor.createDiagnosticData(project)
+                                val range = problemDescriptor.range()?.toLspRange(document) ?: continue
+                                val message = ProblemDescriptorUtil.renderDescriptor(
+                                    problemDescriptor, problemDescriptor.psiElement, ProblemDescriptorUtil.NONE
+                                )
+                                diagnostics.add(
+                                    Diagnostic(
+                                        range = range,
+                                        severity = problemDescriptor.highlightType.toLspSeverity(),
+                                        message = message.description,
+                                        code = StringOrInt.string(simpleGlobalInspection.shortName),
+                                        tags = problemDescriptor.highlightType.toLspTags(),
+                                        data = LSP.json.encodeToJsonElement<SimpleDiagnosticData>(data),
+                                    ),
+                                )
+                            }
+                            problemsHolder.clearResults()
+                            diagnostics.size - diagnosticsBeforeInspection
                         }
-                    })
-                }
-                LOG.debug("done running local inspections")
-
-                val globalInspectionContext = inspectionManager.createNewGlobalContext()
-                val globalInspections = getSimpleGlobalInspections(psiFile.language)
-                LOG.debug("running ${globalInspections.size} simple global inspections")
-                for (simpleGlobalInspection in globalInspections) {
-                    val processor = object : ProblemDescriptionsProcessor {}
-                    LOG.trace("running simple global inspection ${simpleGlobalInspection.shortName}")
-                    runCatching {
-                        simpleGlobalInspection.checkFile(psiFile, inspectionManager, problemsHolder, globalInspectionContext, processor)
-                    }.getOrHandleException {
-                        LOG.warn(it)
                     }
-                    for (problemDescriptor in problemsHolder.results) {
-                        val data = problemDescriptor.createDiagnosticData(project)
-                        val range = problemDescriptor.range()?.toLspRange(document) ?: continue
-                        val message = ProblemDescriptorUtil.renderDescriptor(
-                            problemDescriptor, problemDescriptor.psiElement, ProblemDescriptorUtil.NONE
-                        )
-                        diagnostics.add(
-                            Diagnostic(
-                                range = range,
-                                severity = problemDescriptor.highlightType.toLspSeverity(),
-                                message = message.description,
-                                code = StringOrInt.string(simpleGlobalInspection.shortName),
-                                tags = problemDescriptor.highlightType.toLspTags(),
-                                data = LSP.json.encodeToJsonElement<SimpleDiagnosticData>(data),
-                            ),
-                        )
-                    }
-                    problemsHolder.clearResults()
-                }
-                LOG.debug("done running simple global inspections")
 
-                return@readAction diagnostics
+                    diagnostics
+                }
             }
         }.forEach { diagnostic -> emit(diagnostic) }
+    }
+
+    private fun runInspection(kind: InspectionKind, inspectionId: String, block: () -> Int) {
+        tracer.spanBuilder(kind.spanName)
+            .setAttribute("inspection.kind", kind.attributeValue)
+            .setAttribute("inspection.id", inspectionId)
+            .use { span ->
+                val produced = block()
+                span.setAttribute("diagnostics.count", produced.toLong())
+            }
     }
 
     private fun getEnabledInspectionTools(extensionList: List<InspectionEP>, languageId: String): Sequence<InspectionProfileEntry> {
@@ -222,7 +258,7 @@ class LSCommonInspectionDiagnosticProvider(
 
         if (fix is ModCommandQuickFix) {
             if (blacklistEntry != null) {
-                LOG.debug("Quick fix $fixClass is a ModCommandQuickFix, but it is blacklisted because of ${blacklistEntry.reason}")
+                LOG.trace("Quick fix $fixClass is a ModCommandQuickFix, but it is blacklisted because of ${blacklistEntry.reason}")
                 return null
             }
 
@@ -231,7 +267,7 @@ class LSCommonInspectionDiagnosticProvider(
 
         if (fix is IntentionAction) {
             if (blacklistEntry != null) {
-                LOG.debug("Quick fix $fixClass is an IntentionAction, but it is blacklisted because of ${blacklistEntry.reason}")
+                LOG.trace("Quick fix $fixClass is an IntentionAction, but it is blacklisted because of ${blacklistEntry.reason}")
                 return null
             }
 

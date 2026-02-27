@@ -48,6 +48,10 @@ class LSCommonIntentionFixesCodeActionProvider(
                 val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
                 val document = virtualFile.findDocument() ?: return@readAction emptyList()
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
+
+                // TODO(bartekpacia): centralize common logging so it's not repeated N times across all LS*Providers
+                LOG.debug("request textDocument/diagnostic for ${virtualFile.name}")
+
                 val actionContext = run {
                     val offset = params.range.toTextRange(document).startOffset
                     val selection = TextRange(offset, offset) // empty selection
@@ -62,7 +66,7 @@ class LSCommonIntentionFixesCodeActionProvider(
                         val actionClass = modCommandAction.javaClass.name
                         val blacklistEntry = quickFixBlacklist.getImplementationBlacklistEntry(actionClass)
                         if (blacklistEntry != null) {
-                            LOG.debug("Quick fix $actionClass is blacklisted because of ${blacklistEntry.reason}")
+                            LOG.trace("Quick fix $actionClass is blacklisted because of ${blacklistEntry.reason}")
                             true
                         } else {
                             false
