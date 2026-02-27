@@ -19,16 +19,16 @@ import kotlinx.coroutines.flow.single
  * records non-cancellation failures on the span,
  * and always closes the span when the provider flow completes.
  */
-internal fun <T> IJTracer.traceProviderResults(
+internal fun <T> IJTracer.traceProvider(
     spanName: String,
     provider: Any,
-    results: Flow<T>,
+    resultsFlow: Flow<T>,
 ): Flow<T> = flow {
     val span = spanBuilder(spanName)
         .setAttribute("provider.class", provider.javaClass.simpleName)
         .startSpan()
     try {
-        emitAll(results.flowOn(Context.current().with(span).asContextElement()))
+        emitAll(resultsFlow.flowOn(Context.current().with(span).asContextElement()))
     } catch (e: Throwable) {
         if (Logger.shouldRethrow(e)) throw e
         span.recordException(e)
@@ -39,14 +39,14 @@ internal fun <T> IJTracer.traceProviderResults(
     }
 }
 
-internal suspend fun <T> IJTracer.traceProviderResults(
+internal suspend fun <T> IJTracer.traceProvider(
     spanName: String,
     provider: Any,
-    getResult: suspend () -> T,
+    block: suspend () -> T,
 ): T {
-    return traceProviderResults(
+    return traceProvider(
         spanName = spanName,
         provider = provider,
-        results = flow { emit(getResult()) },
+        resultsFlow = flow { emit(block()) },
     ).single()
 }

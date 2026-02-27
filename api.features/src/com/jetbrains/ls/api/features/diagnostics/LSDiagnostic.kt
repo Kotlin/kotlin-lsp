@@ -6,7 +6,7 @@ import com.intellij.platform.diagnostic.telemetry.TelemetryManager
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.partialResults.LSConcurrentResponseHandler
-import com.jetbrains.ls.api.features.utils.traceProviderResults
+import com.jetbrains.ls.api.features.utils.traceProvider
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.DocumentDiagnosticParams
 import com.jetbrains.lsp.protocol.DocumentDiagnosticReport
@@ -24,10 +24,10 @@ object LSDiagnostic {
         val diagnostics = LSConcurrentResponseHandler.respondDirectlyWithResultsCollectedConcurrently(
             providers = configuration.entriesFor<LSDiagnosticProvider>(params.textDocument),
             getResults = { diagnosticProvider ->
-                tracer.traceProviderResults(
+                tracer.traceProvider(
                     spanName = "provider.diagnostic",
                     provider = diagnosticProvider,
-                    results = diagnosticProvider.getDiagnostics(params),
+                    resultsFlow = diagnosticProvider.getDiagnostics(params),
                 )
             },
         )

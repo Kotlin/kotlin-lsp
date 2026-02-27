@@ -6,7 +6,7 @@ import com.intellij.platform.diagnostic.telemetry.TelemetryManager
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.partialResults.LSConcurrentResponseHandler
-import com.jetbrains.ls.api.features.utils.traceProviderResults
+import com.jetbrains.ls.api.features.utils.traceProvider
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.DefinitionParams
 import com.jetbrains.lsp.protocol.Location
@@ -22,10 +22,10 @@ object LSDefinition {
             resultSerializer = Location.serializer(),
             providers = configuration.entriesFor<LSDefinitionProvider>(params.textDocument),
             getResults = { definitionProvider ->
-                tracer.traceProviderResults(
+                tracer.traceProvider(
                     spanName = "provider.definition",
                     provider = definitionProvider,
-                    results = definitionProvider.provideDefinitions(params),
+                    resultsFlow = definitionProvider.provideDefinitions(params),
                 )
             },
         )

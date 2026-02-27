@@ -6,7 +6,7 @@ import com.intellij.platform.diagnostic.telemetry.TelemetryManager
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.partialResults.LSConcurrentResponseHandler
-import com.jetbrains.ls.api.features.utils.traceProviderResults
+import com.jetbrains.ls.api.features.utils.traceProvider
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.CodeAction
 import com.jetbrains.lsp.protocol.CodeActionKind
@@ -24,10 +24,10 @@ object LSCodeActions {
             resultSerializer = CodeAction.serializer(),
             providers = getProviders(params),
             getResults = { codeActionProvider ->
-                tracer.traceProviderResults(
+                tracer.traceProvider(
                     spanName = "provider.codeAction",
                     provider = codeActionProvider,
-                    results = codeActionProvider
+                    resultsFlow = codeActionProvider
                         .getCodeActions(params)
                         .onEach { codeAction -> codeAction.ensureCanBeProvidedBy(codeActionProvider) },
                 )

@@ -6,7 +6,7 @@ import com.intellij.platform.diagnostic.telemetry.TelemetryManager
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.partialResults.LSConcurrentResponseHandler
-import com.jetbrains.ls.api.features.utils.traceProviderResults
+import com.jetbrains.ls.api.features.utils.traceProvider
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.DocumentSymbol
 import com.jetbrains.lsp.protocol.DocumentSymbolParams
@@ -22,10 +22,10 @@ object LSDocumentSymbols {
             resultSerializer = DocumentSymbol.serializer(),
             providers = configuration.entriesFor<LSDocumentSymbolProvider>(params.textDocument),
             getResults = { documentSymbolProvider ->
-                tracer.traceProviderResults(
+                tracer.traceProvider(
                     spanName = "provider.documentSymbol",
                     provider = documentSymbolProvider,
-                    results = documentSymbolProvider.getDocumentSymbols(params),
+                    resultsFlow = documentSymbolProvider.getDocumentSymbols(params),
                 )
             },
         )

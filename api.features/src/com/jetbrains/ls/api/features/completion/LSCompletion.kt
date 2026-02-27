@@ -6,7 +6,7 @@ import com.intellij.platform.diagnostic.telemetry.TelemetryManager
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.resolve.getConfigurationEntryId
-import com.jetbrains.ls.api.features.utils.traceProviderResults
+import com.jetbrains.ls.api.features.utils.traceProvider
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.CompletionItem
 import com.jetbrains.lsp.protocol.CompletionList
@@ -20,10 +20,10 @@ object LSCompletion {
     suspend fun getCompletion(params: CompletionParams): CompletionList {
         val providers = configuration.entriesFor<LSCompletionProvider>(params.textDocument)
         val results = providers.map { completionProvider ->
-            tracer.traceProviderResults(
+            tracer.traceProvider(
                 spanName = "provider.completion",
                 provider = completionProvider,
-                getResult = { completionProvider.provideCompletion(params) },
+                block = { completionProvider.provideCompletion(params) },
             )
         }
         return results.combined()
@@ -33,10 +33,10 @@ object LSCompletion {
     suspend fun resolveCompletion(item: CompletionItem): CompletionItem {
         val uniqueId = getConfigurationEntryId(item.data) ?: return item
         val completionProvider = configuration.entryById<LSCompletionProvider>(uniqueId) ?: return item
-        return tracer.traceProviderResults(
+        return tracer.traceProvider(
             spanName = "provider.completion.resolve",
             provider = completionProvider,
-            getResult = { completionProvider.resolveCompletion(item) ?: item },
+            block = { completionProvider.resolveCompletion(item) ?: item },
         )
     }
 
