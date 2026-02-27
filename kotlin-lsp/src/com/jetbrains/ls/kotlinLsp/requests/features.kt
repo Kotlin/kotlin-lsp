@@ -75,7 +75,7 @@ internal fun LspHandlersBuilder.features() {
     request(ReferenceRequestType) { LSReferences.getReferences(it) }
     request(SemanticTokensFullRequest) { LSSemanticTokens.semanticTokensFull(it) }
     request(SemanticTokensRangeRequest) { LSSemanticTokens.semanticTokensRange(it) }
-    request(WorkspaceSymbolRequest) { LSWorkspaceSymbols.getSymbols(it) }
+    requestTraced(WorkspaceSymbolRequest) { LSWorkspaceSymbols.getSymbols(it) }
     requestTraced(DocumentSymbolRequest) { LSDocumentSymbols.getSymbols(it) }
     request(SignatureHelpRequest) { LSSignatureHelp.getSignatureHelp(it) }
     request(RenameRequestType) { LSRename.rename(it) }
