@@ -69,7 +69,7 @@ internal fun LspHandlersBuilder.features() {
     request(CompletionResolveRequestType) { LSCompletion.resolveCompletion(it) }
     requestTraced(DefinitionRequestType) { LSDefinition.getDefinition(it) }
     requestTraced(ImplementationRequest) { LSImplementation.getImplementation(it) }
-    request(TypeDefinitionRequestType) { LSTypeDefinition.getTypeDefinition(it) }
+    requestTraced(TypeDefinitionRequestType) { LSTypeDefinition.getTypeDefinition(it) }
     requestTraced(DocumentDiagnosticRequestType) { LSDiagnostic.getDiagnostics(it) }
     request(HoverRequestType) { LSHover.getHover(it) }
     request(ReferenceRequestType) { LSReferences.getReferences(it) }
