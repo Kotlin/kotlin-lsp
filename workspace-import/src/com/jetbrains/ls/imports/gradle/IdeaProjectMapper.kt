@@ -9,7 +9,6 @@ import com.jetbrains.ls.imports.gradle.model.KotlinModule
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet
 import com.jetbrains.ls.imports.json.ContentRootData
 import com.jetbrains.ls.imports.json.DependencyData
-import com.jetbrains.ls.imports.json.DependencyDataScope
 import com.jetbrains.ls.imports.json.JavaSettingsData
 import com.jetbrains.ls.imports.json.KotlinSettingsData
 import com.jetbrains.ls.imports.json.ModuleData
@@ -18,11 +17,8 @@ import com.jetbrains.ls.imports.json.SourceRootData
 import com.jetbrains.ls.imports.json.WorkspaceData
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import org.gradle.tooling.model.idea.IdeaDependency
 import org.gradle.tooling.model.idea.IdeaJavaLanguageSettings
 import org.gradle.tooling.model.idea.IdeaModule
-import org.gradle.tooling.model.idea.IdeaModuleDependency
-import org.gradle.tooling.model.idea.IdeaSingleEntryLibraryDependency
 import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.exists
@@ -77,7 +73,7 @@ internal class IdeaProjectMapper {
             }
             val compilerSettings = kotlinModule.compilerSettings
             val kotlinCompilerSettings = compilerSettings.let {
-                Json.encodeToString(KotlinCompilerSettings(it.jvmTarget, it.pluginOptions, it.pluginClasspath))
+                Json.encodeToString(KotlinCompilerSettings(it.jvmTarget, it.pluginOptions, it.pluginClasspaths))
             }
             result.add(
                 KotlinSettingsData(
@@ -297,6 +293,6 @@ internal class IdeaProjectMapper {
     private data class KotlinCompilerSettings(
         val jvmTarget: String?,
         val pluginOptions: List<String>,
-        val pluginClasspath: List<String>
+        val pluginClasspaths: List<String>
     )
 }

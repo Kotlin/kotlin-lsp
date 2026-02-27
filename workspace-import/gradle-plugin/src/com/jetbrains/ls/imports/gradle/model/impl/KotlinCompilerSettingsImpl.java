@@ -37,7 +37,7 @@ public final class KotlinCompilerSettingsImpl implements KotlinCompilerSettings 
     }
 
     @Override
-    public @NonNull List<@NonNull String> getPluginClasspath() {
+    public @NonNull List<@NonNull String> getPluginClasspaths() {
         return pluginClasspath;
     }
 
