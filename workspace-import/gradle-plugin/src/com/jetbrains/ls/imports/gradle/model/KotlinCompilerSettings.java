@@ -13,7 +13,7 @@ public interface KotlinCompilerSettings extends Serializable {
 
     @NonNull List<@NonNull String> getPluginOptions();
 
-    @NonNull List<@NonNull String> getPluginClasspath();
+    @NonNull List<@NonNull String> getPluginClasspaths();
 
     @NonNull List<@NonNull String> getCompilerArgs();
 }
