@@ -25,15 +25,11 @@ import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.KotlinWorkspaceModelEnt
 import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.LLFirSessionCacheStorageEntity
 import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.filesInvalidation
 import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.kotlinWorkspaceModel
-import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.lsApiKotlinImpl
 import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.registerLLFirSessionServices
 import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.resetKotlinWorkspaceModelEntity
 import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.resetLLFirSessionCacheEntity
 import com.jetbrains.ls.api.features.impl.kotlin.codeActions.LSKotlinOrganizeImportsCodeActionProvider
-import com.jetbrains.ls.api.features.impl.kotlin.codeActions.kotlinCodeActionsPlugins
-import com.jetbrains.ls.api.features.impl.kotlin.codeStyle.kotlinCodeStylePlugin
 import com.jetbrains.ls.api.features.impl.kotlin.completion.LSKotlinCompletionProvider
-import com.jetbrains.ls.api.features.impl.kotlin.completion.kotlinCompletionPlugin
 import com.jetbrains.ls.api.features.impl.kotlin.definitions.LSKotlinPackageDefinitionProvider
 import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.compiler.LSKotlinCompilerDiagnosticsFixesCodeActionProvider
 import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.compiler.LSKotlinCompilerDiagnosticsProvider
@@ -48,11 +44,8 @@ import com.jetbrains.ls.api.features.impl.kotlin.semanticTokens.LSKotlinSemantic
 import com.jetbrains.ls.api.features.impl.kotlin.signatureHelp.LSKotlinSignatureHelpProvider
 import com.jetbrains.ls.api.features.impl.kotlin.symbols.LSKotlinDocumentSymbolProvider
 import com.jetbrains.ls.api.features.impl.kotlin.symbols.LSKotlinWorkspaceSymbolProvider
-import com.jetbrains.ls.api.features.impl.kotlin.usages.kotlinUsagesIjPlugins
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
-import com.jetbrains.ls.api.features.utils.ijPluginByXml
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceModelEntity
-import org.jetbrains.kotlin.idea.base.fir.codeInsight.FirCodeInsightForClassPath
 
 val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
     entries = listOf(
@@ -109,11 +102,7 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         *kotlinPlugins().toTypedArray(),
         lsApiKotlinImpl,
         kotlinCompletionPlugin,
-        ijPluginByXml(
-            xmlResourcePath = "intellij.kotlin.codeInsight.base.xml",
-            classForClasspath = FirCodeInsightForClassPath::class.java,
-            useFakePluginId = true,
-        ),
+        kotlinFirCodeInsightPlugin,
         *kotlinCodeActionsPlugins.toTypedArray(),
         *kotlinUsagesIjPlugins.toTypedArray(),
         kotlinCodeStylePlugin,
