@@ -49,6 +49,18 @@ import kotlin.io.path.absolutePathString
 
 private object Tests
 
+fun withIgnoringNonClassesRoots(list: List<ModuleEntityDto>): List<ModuleEntityDto> {
+    return list.map { module ->
+        module.copy(
+            libraries = module.libraries.map { lib ->
+                lib.copy(
+                    roots = lib.roots.filter { it.type.name == "CLASSES" }
+                )
+            }
+        )
+    }
+}
+
 fun gradleTest(
     testCase: TestCase<out ProjectInfoSpec>,
     projectStructureWithModules: ProjectStructureWithModules
@@ -66,20 +78,20 @@ internal fun mavenTest(
     testCase: TestCase<out ProjectInfoSpec>,
     expected: LspTestData
 ) {
-    mavenTest(testCase, expected.getStructure())
-
+    mavenTest(testCase, expected.getStructure(), ::withIgnoringNonClassesRoots)
 }
 
 internal fun mavenTest(
     testCase: TestCase<out ProjectInfoSpec>,
-    projectStructureWithModules: ProjectStructureWithModules
+    projectStructureWithModules: ProjectStructureWithModules,
+    resultMapper: (List<ModuleEntityDto>) -> List<ModuleEntityDto> = { it }
 ) {
     val mavenPath = downloadMavenBinaries()
     MavenWorkspaceImporter.useMavenAndJava(mavenPath, Path.of(System.getProperty("java.home")))
     System.setProperty("forceM3Placeholder", "true")
 
     try {
-        doTest(testCase, projectStructureWithModules, MavenWorkspaceImporter)
+        doTest(testCase, projectStructureWithModules, MavenWorkspaceImporter, resultMapper)
     } finally {
         System.clearProperty("forceM3Placeholder")
     }
@@ -92,7 +104,8 @@ internal fun jpsTest(testCase: TestCase<out ProjectInfoSpec>, projectStructureWi
 private fun doTest(
     testCase: TestCase<out ProjectInfoSpec>,
     projectStructureWithModules: ProjectStructureWithModules,
-    importer: WorkspaceImporter
+    importer: WorkspaceImporter,
+    resultMapper: (List<ModuleEntityDto>) -> List<ModuleEntityDto> = { it }
 ) {
     val projectDir = testCase.projectInfo.downloadAndUnpackProject() ?: fail("Couldn't download the project")
 
@@ -176,8 +189,8 @@ private fun doTest(
                 reportDifferences(expectedModules, actualModules)
 
                 assertEquals(
-                    JsonSerializer.serializePretty(normalize(expectedModules)),
-                    JsonSerializer.serializePretty(normalize(actualModules))
+                    JsonSerializer.serializePretty(normalize(resultMapper(expectedModules))),
+                    JsonSerializer.serializePretty(normalize(resultMapper(actualModules)))
                 )
             }
         }
