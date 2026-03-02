@@ -218,7 +218,6 @@ private fun initIdeaPaths(systemPath: Path?) {
                 Runtime.getRuntime().addShutdownHook(Thread { it.deleteRecursively() })
             }
 
-        systemProperty("idea.home.path", "$path")
         systemProperty("idea.config.path", "$path/config", ifAbsent = true)
         systemProperty("idea.system.path", "$path/system", ifAbsent = true)
         FileWatcher.initLibrary(getInstallationPath() / "native")
