@@ -9,6 +9,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.platform.diagnostic.telemetry.TelemetryManager
 import com.intellij.platform.diagnostic.telemetry.impl.TelemetryManagerImpl
+import com.intellij.util.PlatformUtils
 import com.intellij.util.SystemProperties
 import com.jetbrains.analyzer.api.defaultPluginSet
 import com.jetbrains.analyzer.filewatcher.FileWatcher
@@ -78,7 +79,7 @@ fun main(args: Array<String>) {
         when {
             System.getProperty(prop) != null -> Unit
             loader.getResource("idea/KotlinLspApplicationInfo.xml") != null -> SystemProperties.setProperty(prop, "KotlinLsp")
-            loader.getResource("idea/IntelliJApplicationInfo.xml") != null -> SystemProperties.setProperty(prop, "IntelliJLsp")
+            loader.getResource("idea/IntelliJLspApplicationInfo.xml") != null -> SystemProperties.setProperty(prop, "IntelliJLsp")
             else -> error("Unknown platform prefix")
         }
     }
@@ -194,18 +195,26 @@ private suspend fun handleRequests(
 }
 
 private fun initIdeaPaths(systemPath: Path?) {
-    if (isLspRunningFromSources()) {
+    val serverClass = Class.forName("com.jetbrains.ls.kotlinLsp.KotlinLspServerKt")
+    val jarPath = PathManager.getJarForClass(serverClass)?.toAbsolutePath()
+    val jarPathStr = jarPath?.let { FileUtilRt.toSystemIndependentName(jarPath.toString()) }
+
+    if (arrayOf("/bazel-out/jvm-fastbuild/", "/out/classes/production/")
+            .any { jarPathStr?.contains(it) == true }
+    ) {
         val homeDir = PathManager.getHomeDir()
-        systemProperty("idea.config.path", "$homeDir/out/lsp-server/out/lsp-server/config/idea", ifAbsent = true)
-        systemProperty("idea.system.path", "$homeDir/out/lsp-server/out/lsp-server/system/idea", ifAbsent = true)
+        val code = PlatformUtils.getPlatformPrefix().lowercase()
+            .removeSuffix("lsp") + "-lsp"
+        systemProperty("idea.config.path", "${homeDir / "config" / code}", ifAbsent = true)
+        systemProperty("idea.system.path", "${homeDir / "system" / code}", ifAbsent = true)
         val nativeFileWatcherPath = downloadFileWatcherBinaries(homeDir / "community")
         FileWatcher.initLibraryFromSources(nativeFileWatcherPath)
     } else {
         val path = systemPath
             ?.createDirectories()
             ?.takeIf {
-                val lockFile = (it / ".app.lock").toFile()
-                val channel = RandomAccessFile(lockFile, "rw").channel
+                @Suppress("IO_FILE_USAGE")
+                val channel = RandomAccessFile((it / ".app.lock").toFile(), "rw").channel
                 val isLockAcquired = channel.tryLock() != null
                 if (!isLockAcquired) {
                     LOG.info("The specified workspace data path is already in use: $it")
@@ -218,8 +227,11 @@ private fun initIdeaPaths(systemPath: Path?) {
                 Runtime.getRuntime().addShutdownHook(Thread { it.deleteRecursively() })
             }
 
-        systemProperty("idea.config.path", "$path/config", ifAbsent = true)
-        systemProperty("idea.system.path", "$path/system", ifAbsent = true)
+        jarPath?.parent?.parent?.let { home ->
+            systemProperty("idea.home.path", "$home")
+        }
+        systemProperty("idea.config.path", "${path / "config"}", ifAbsent = true)
+        systemProperty("idea.system.path", "${path / "system"}", ifAbsent = true)
         FileWatcher.initLibrary(getInstallationPath() / "native")
     }
     LOG.info("idea.config.path=${System.getProperty("idea.config.path")}")
@@ -246,15 +258,6 @@ private fun initExtraProperties() {
     // TrigramIndex.isEnabled() -> false:
     SystemProperties.setProperty("find.use.indexing.searcher.extensions", "false")
 }
-
-private fun isLspRunningFromSources(): Boolean {
-    val serverClass = Class.forName("com.jetbrains.ls.kotlinLsp.KotlinLspServerKt")
-    val jar = PathManager.getJarForClass(serverClass)?.toAbsolutePath() ?: return false
-    return sequenceOf("/bazel-out/jvm-fastbuild/", "/out/classes/production/")
-        .map { FileUtilRt.toSystemDependentName(it) }
-        .any { jar.toString().contains(it) }
-}
-
 
 fun createConfiguration(): LSConfiguration {
     val serverExtensions = ServiceLoader.load(LanguageServerExtension::class.java).toList()
