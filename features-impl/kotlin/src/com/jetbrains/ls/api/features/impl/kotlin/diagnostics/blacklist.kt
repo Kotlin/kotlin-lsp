@@ -8,47 +8,47 @@ internal val kotlinInspectionBlacklist = Blacklist(
     // Local inspections
     BlacklistEntry.Class(
         fqcn = "org.jetbrains.kotlin.idea.k2.codeinsight.inspections.RemoveRedundantQualifierNameInspection",
-        reason = "slow",
+        reason = "LSP-703",
     ),
     BlacklistEntry.Class(
         fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.shared.KotlinUnusedImportInspection",
-        reason = "slow",
+        reason = "LSP-704",
     ),
     BlacklistEntry.Class(
         fqcn = "org.jetbrains.kotlin.idea.k2.codeinsight.inspections.diagnosticBased.UnusedVariableInspection",
-        reason = "slow",
+        reason = "LSP-705",
     ),
     BlacklistEntry.Class(
         fqcn = "org.jetbrains.kotlin.idea.k2.codeinsight.inspections.diagnosticBased.KotlinUnreachableCodeInspection",
-        reason = "slow",
+        reason = "LSP-706",
     ),
     BlacklistEntry.Class(
         fqcn = "org.jetbrains.kotlin.idea.k2.codeinsight.inspections.RemoveExplicitTypeArgumentsInspection",
-        reason = "slow",
+        reason = "LSP-707",
     ),
     BlacklistEntry.Class(
         fqcn = "org.jetbrains.kotlin.idea.k2.codeinsight.inspections.K2MemberVisibilityCanBePrivateInspection",
-        reason = "slow, performs find usages",
+        reason = "LSP-708",
     ),
     BlacklistEntry.Class(
         fqcn = "org.jetbrains.kotlin.idea.k2.codeinsight.inspections.diagnosticBased.VariableNeverReadInspection",
-        reason = "very slow, uses extended checkers",
+        reason = "LSP-709",
     ),
     BlacklistEntry.Class(
         fqcn = "org.jetbrains.kotlin.idea.k2.codeinsight.inspections.diagnosticBased.AssignedValueIsNeverReadInspection",
-        reason = "very slow, uses extended checkers",
+        reason = "LSP-710",
     ),
     BlacklistEntry.Class(
         fqcn = "org.jetbrains.kotlin.idea.k2.codeinsight.inspections.PublicApiImplicitTypeInspection",
-        reason = "too noisy https://github.com/Kotlin/kotlin-lsp/issues/4",
+        reason = "LSP-711",
     ),
     BlacklistEntry.SuperClass(
         fqcn = "org.jetbrains.kotlin.idea.codeinsight.api.applicable.inspections.KotlinKtDiagnosticBasedInspectionBase",
-        reason = "they are slow as calling additional diagnostic collection",
+        reason = "LSP-712",
     ),
     BlacklistEntry.SuperClass(
         fqcn = "org.jetbrains.kotlin.idea.codeinsight.api.applicable.inspections.KotlinPsiDiagnosticBasedInspectionBase",
-        reason = "they are slow as calling additional diagnostic collection",
+        reason = "LSP-713",
     ),
 )
 
