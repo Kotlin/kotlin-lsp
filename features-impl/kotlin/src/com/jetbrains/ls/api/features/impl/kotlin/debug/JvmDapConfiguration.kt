@@ -3,6 +3,7 @@ package com.jetbrains.ls.api.features.impl.kotlin.debug
 
 import com.jetbrains.dap.jvm.javaDebuggerModules
 import com.jetbrains.dap.jvm.jvmDapPlugin
+import com.jetbrains.dap.jvm.kotlinDebuggerCommonModule
 import com.jetbrains.dap.jvm.kotlinDebuggerK2Module
 import com.jetbrains.dap.lsp.features.completion.jvmDapLspPlugin
 import com.jetbrains.dap.lsp.features.completion.kotlinDapLspPlugin
@@ -14,6 +15,7 @@ val DapJvmConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         DapPluginsProvider(
             plugins = listOf(
                 javaDebuggerModules,
+                kotlinDebuggerCommonModule,
                 kotlinDebuggerK2Module,
                 jvmDapPlugin,
                 jvmDapLspPlugin,
