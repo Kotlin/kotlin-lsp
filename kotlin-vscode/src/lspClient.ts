@@ -213,6 +213,7 @@ async function createLspClient(): Promise<LanguageClient | null> {
             {scheme: 'file', language: 'kotlin'}, {scheme: 'jar', language: 'kotlin'},
             {scheme: 'file', language: 'java'  }, {scheme: 'jar', language: 'java'  }, {scheme: 'jrt', language: 'java'},
             {scheme: 'file', language: 'sql'  },
+            {scheme: 'file', language: 'go'  },
             {scheme: 'jar', language: 'plaintext'}, {scheme: 'jrt', language: 'plaintext'},
         ],
         progressOnInitialization: true,

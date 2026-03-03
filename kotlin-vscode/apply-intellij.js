@@ -73,5 +73,6 @@ function copyOverlayDirectory(sourceDir, targetDir) {
 
 applyPatch('package.json', path.join(intellijVscodeDir, 'package-patch.json'), 'package.json');
 applyPatch('package.json', path.join(intellijVscodeDir, 'package-patch-sql.json'), 'package.json');
+applyPatch('package.json', path.join(intellijVscodeDir, 'package-patch-go.json'), 'package.json');
 copyOverlayDirectory(path.join(intellijVscodeDir, 'src'), path.resolve(__dirname, 'src'));
 copyOverlayDirectory(path.join(intellijVscodeDir, 'bin'), path.resolve(__dirname, 'bin'));
