@@ -8,21 +8,15 @@ SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd)"
 OUT_DIR=$(realpath "$SCRIPT_DIR/../../../out")
 BUILD_EXTENSION_SCRIPT="$SCRIPT_DIR/buildExtension.sh"
 
-if [[ "$*" == *"--intellij"* ]]; then
-    BUILD_INTELLIJ_LSP=true
-    LSP_PREFIX="IntelliJ"
-else
-    BUILD_INTELLIJ_LSP=false
-    LSP_PREFIX="Kotlin"
-fi
+BUNDLE_TYPE="kotlin-lsp"
+for arg in "$@"; do
+    case "$arg" in
+        --bundle-type=*) BUNDLE_TYPE="${arg#--bundle-type=}" ;;
+    esac
+done
 
-if [ "$BUILD_INTELLIJ_LSP" = true ]; then
-    ARTIFACT_DIR="$OUT_DIR/language-server/intellij-lsp/artifacts"
-    BUILD_DIR="$OUT_DIR/language-server/intellij-lsp/vscode-extension"
-else
-    ARTIFACT_DIR="$OUT_DIR/language-server/kotlin-lsp/artifacts"
-    BUILD_DIR="$OUT_DIR/language-server/kotlin-lsp/vscode-extension"
-fi
+ARTIFACT_DIR="$OUT_DIR/language-server/$BUNDLE_TYPE/artifacts"
+BUILD_DIR="$OUT_DIR/language-server/$BUNDLE_TYPE/vscode-extension"
 
 rm -rf "$BUILD_DIR"
 
@@ -34,7 +28,7 @@ fi
 FIRST_BUNDLE="$(find "$ARTIFACT_DIR" -type f -name '*.product-info.json' -print -quit)"
 if [[ -z "$FIRST_BUNDLE" ]]; then
   echo "Error: no .product-info.json found in $ARTIFACT_DIR" >&2
-  echo "Make sure that you have built $LSP_PREFIX LSP bundles by running org.jetbrains.ls.building.${LSP_PREFIX}LspBuildTarget" >&2
+  echo "Make sure that you have built $BUNDLE_TYPE bundles" >&2
   exit 1
 fi
 
@@ -42,13 +36,8 @@ for productInfo in "$ARTIFACT_DIR"/*.product-info.json; do
     bundle="${productInfo%.product-info.json}"
     echo -e "\033[32mProcessing: $bundle\033[0m"
     artifact_filename="$(basename -- "$bundle")"
-    if [ "$BUILD_INTELLIJ_LSP" = true ]; then
-        version_arch_ext="${artifact_filename#intellij-lsp-}"
-        basename="intellij-lsp"
-    else
-        version_arch_ext="${artifact_filename#kotlin-lsp-}"
-        basename="kotlin-lsp"
-    fi
+    version_arch_ext="${artifact_filename#${BUNDLE_TYPE}-}"
+    basename="$BUNDLE_TYPE"
     case "$version_arch_ext" in
       *.tar.gz)  version_arch="${version_arch_ext%.tar.gz}" ;;
       *.win.zip) version_arch="${version_arch_ext%.win.zip}" ;;
@@ -95,7 +84,7 @@ for productInfo in "$ARTIFACT_DIR"/*.product-info.json; do
     VSIX_TARGET_FILENAME="$vsix_target_filename" \
     VSCE_VERSION="$version" \
     LSP_ZIP_PATH="$bundle" \
-    APPLY_INTELLIJ_PATCH="$BUILD_INTELLIJ_LSP" \
+    BUNDLE_TYPE="$BUNDLE_TYPE" \
       bash "$BUILD_EXTENSION_SCRIPT" &
 done
 

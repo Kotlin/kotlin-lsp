@@ -145,15 +145,29 @@ async function connectToLocalLspServer(port: number): Promise<(() => Promise<Str
     return null;
 }
 
+function buildDocumentSelector(): LanguageClientOptions['documentSelector'] {
+    const ext = vscode.extensions.getExtension(getContext().extension.id);
+    const contributedLanguageIds: string[] = (ext?.packageJSON?.contributes?.languages ?? [])
+        .map((l: { id: string }) => l.id);
+    logInfo(`Serving languages: ${contributedLanguageIds.join(', ')}`);
+
+    let supportedSchemes = ['file', 'jar', 'jrt']
+    const selector: NonNullable<LanguageClientOptions['documentSelector']> = [
+        {scheme: 'jar', language: 'plaintext'},
+        {scheme: 'jrt', language: 'plaintext'},
+    ];
+
+    for (const lang of contributedLanguageIds) {
+        for (const scheme of supportedSchemes) {
+            selector.push({scheme, language: lang});
+        }
+    }
+    return selector;
+}
+
 async function createLspClient(): Promise<LanguageClient | null> {
     const clientOptions: LanguageClientOptions = {
-        documentSelector: [
-            {scheme: 'file', language: 'kotlin'}, {scheme: 'jar', language: 'kotlin'},
-            {scheme: 'file', language: 'java'  }, {scheme: 'jar', language: 'java'  }, {scheme: 'jrt', language: 'java'},
-            {scheme: 'file', language: 'sql'  },
-            {scheme: 'file', language: 'go'  },
-            {scheme: 'jar', language: 'plaintext'}, {scheme: 'jrt', language: 'plaintext'},
-        ],
+        documentSelector: buildDocumentSelector(),
         progressOnInitialization: true,
         outputChannel: getOutputChannel(),
         initializationOptions: {

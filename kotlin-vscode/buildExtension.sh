@@ -10,8 +10,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 : "${EXTENSION_DIR:?EXTENSION_DIR is required}"
 : "${VSIX_TARGET_FILENAME:?VSIX_TARGET_FILENAME is required}"
 : "${LSP_ZIP_PATH:?LSP_ZIP_PATH is required}"
+: "${BUNDLE_TYPE:?BUNDLE_TYPE is required}"
 
-APPLY_INTELLIJ_PATCH="${APPLY_INTELLIJ_PATCH:-false}"
 VSCE_VERSION="${VSCE_VERSION:-}"
 
 if [[ -z "$VSCE_VERSION" ]]; then
@@ -44,9 +44,8 @@ cp -R "$SCRIPT_DIR/syntaxes" "$EXTENSION_DIR"
 
 pushd "$EXTENSION_DIR" > /dev/null
 
-# Patch package.json for intellij extension in the temp directory
-if [[ "$APPLY_INTELLIJ_PATCH" == "true" ]]; then
-  echo "Applying intellij package-patch.json..."
+# Patch package.json and overlay sources based on bundle type
+if [[ "$BUNDLE_TYPE" != "kotlin-lsp" ]]; then
   npm run apply-intellij
 fi
 

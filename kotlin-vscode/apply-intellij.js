@@ -5,6 +5,10 @@
 const fs = require('fs');
 const path = require('path');
 const intellijVscodeDir = path.resolve(__dirname, '../../../../../language-server/intellij-vscode');
+const bundleType = process.env.BUNDLE_TYPE || 'kotlin-lsp';
+
+if (bundleType === 'kotlin-lsp') return;
+if (!fs.existsSync(intellijVscodeDir)) return;
 
 function merge(target, patch) {
     if (Array.isArray(target) && Array.isArray(patch)) {
@@ -37,7 +41,7 @@ function applyPatch(targetPath, patchPath, outputPath) {
     const merged = merge(target, patch);
 
     fs.writeFileSync(outputPath, JSON.stringify(merged, null, 2), 'utf8');
-    console.log(`Merged JSON written to ${outputPath}`);
+    console.log(`Merging ${patchPath} to ${outputPath}`);
 }
 
 /**
@@ -71,8 +75,12 @@ function copyOverlayDirectory(sourceDir, targetDir) {
     }
 }
 
-applyPatch('package.json', path.join(intellijVscodeDir, 'package-patch.json'), 'package.json');
-applyPatch('package.json', path.join(intellijVscodeDir, 'package-patch-sql.json'), 'package.json');
-applyPatch('package.json', path.join(intellijVscodeDir, 'package-patch-go.json'), 'package.json');
-copyOverlayDirectory(path.join(intellijVscodeDir, 'src'), path.resolve(__dirname, 'src'));
-copyOverlayDirectory(path.join(intellijVscodeDir, 'bin'), path.resolve(__dirname, 'bin'));
+function patchPackageJson(patchFile) {
+    applyPatch('package.json', path.join(intellijVscodeDir, patchFile), 'package.json');
+}
+
+function copyOverlayDir(subdir) {
+    copyOverlayDirectory(path.join(intellijVscodeDir, subdir), path.join(__dirname, subdir));
+}
+
+require(path.join(intellijVscodeDir, 'apply-intellij-impl.js'))(bundleType, patchPackageJson, copyOverlayDir);
