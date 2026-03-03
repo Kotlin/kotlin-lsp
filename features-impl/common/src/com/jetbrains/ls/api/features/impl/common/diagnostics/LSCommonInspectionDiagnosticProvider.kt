@@ -9,6 +9,7 @@ import com.intellij.codeInspection.InspectionEP
 import com.intellij.codeInspection.InspectionProfileEntry
 import com.intellij.codeInspection.LocalInspectionEP
 import com.intellij.codeInspection.LocalInspectionTool
+import com.intellij.codeInspection.LocalInspectionToolSession
 import com.intellij.codeInspection.ProblemDescriptionsProcessor
 import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.ProblemDescriptorUtil
@@ -97,10 +98,12 @@ class LSCommonInspectionDiagnosticProvider(
 
                 tracer.spanBuilder(SPAN_LOCAL_INSPECTIONS).use {
                     val localInspections = getLocalInspections(psiFile) + getSharedLocalInspectionsFromGlobalTools(psiFile.language)
+                    val fileRange = psiFile.textRange
+                    val session = LocalInspectionToolSession(psiFile, fileRange, fileRange, null)
                     for (localInspection in localInspections) {
                         runInspection(kind = InspectionKind.Local, inspectionId = localInspection.id) {
                             val diagnosticsBeforeInspection = diagnostics.size
-                            val visitor = localInspection.buildVisitor(problemsHolder, onTheFly)
+                            val visitor = localInspection.buildVisitor(problemsHolder, onTheFly, session)
 
                             fun collect(element: PsiElement) {
                                 runCatching {
