@@ -2,7 +2,6 @@
 package com.jetbrains.ls.kotlinLsp
 
 import com.intellij.openapi.application.Application
-import com.intellij.openapi.application.ApplicationNamesInfo
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.project.Project
@@ -74,15 +73,7 @@ fun main(args: Array<String>) {
             appendLine()
         })
     }
-    ApplicationNamesInfo::class.java.getClassLoader().let { loader ->
-        val prop = "idea.platform.prefix"
-        when {
-            System.getProperty(prop) != null -> Unit
-            loader.getResource("idea/KotlinLspApplicationInfo.xml") != null -> SystemProperties.setProperty(prop, "KotlinLsp")
-            loader.getResource("idea/IntelliJLspApplicationInfo.xml") != null -> SystemProperties.setProperty(prop, "IntelliJLsp")
-            else -> error("Unknown platform prefix")
-        }
-    }
+    SystemProperties.setProperty("idea.platform.prefix", "LanguageServer")
     when (val command = parseArguments(args)) {
         is KotlinLspCommand.Help -> {
             println(command.message)
