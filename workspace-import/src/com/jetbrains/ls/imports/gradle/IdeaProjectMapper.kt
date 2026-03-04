@@ -56,6 +56,10 @@ internal class IdeaProjectMapper {
         )
     }
 
+
+    private val mainSourceSetSuffix: String = ".main"
+    private val testSourceSetSuffix: String = ".test"
+
     private fun calculateKotlinSettings(
         modules: Map<String, ModuleData>,
         kotlinModules: Map<String, KotlinModule>
@@ -65,8 +69,8 @@ internal class IdeaProjectMapper {
             if (!moduleData.hasValidSourceRoots()) {
                 continue
             }
-            val kotlinModuleKey = name.removeSuffix(".main")
-                .removeSuffix(".test")
+            val kotlinModuleKey = name.removeSuffix(mainSourceSetSuffix)
+                .removeSuffix(testSourceSetSuffix)
             val kotlinModule = kotlinModules[kotlinModuleKey]
             if (kotlinModule == null) {
                 continue
