@@ -83,4 +83,5 @@ exec "$JAVA_BIN" \
     -Djdk.lang.Process.launchMechanism=FORK \
     -Djava.awt.headless=true \
     -Djava.system.class.loader=com.intellij.util.lang.PathClassLoader \
+    -Xlog:cds=off \
     -cp "$DIR/lib/*" com.jetbrains.ls.kotlinLsp.KotlinLspServerKt "$@"
