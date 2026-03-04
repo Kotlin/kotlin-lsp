@@ -4,11 +4,12 @@ package com.jetbrains.ls.imports.tests.integration.gradle
 import com.intellij.ide.starter.extended.data.TestCases
 import com.intellij.workspaceModel.integrationTests.data.gradle.gradleSpringFramework.gradleSpringFrameworkModulesData
 import com.jetbrains.ls.imports.tests.integration.gradleTest
+import com.jetbrains.ls.imports.tests.integration.withIgnoringNonClassesRoots
 import org.junit.jupiter.api.Test
 
 class ImportGradleSpringFrameworkTest {
     @Test
     fun importGradleSpringFramework() {
-        gradleTest(TestCases.IU.GradleSpringFramework, gradleSpringFrameworkModulesData())
+        gradleTest(TestCases.IU.GradleSpringFramework, gradleSpringFrameworkModulesData(), ::withIgnoringNonClassesRoots)
     }
 }

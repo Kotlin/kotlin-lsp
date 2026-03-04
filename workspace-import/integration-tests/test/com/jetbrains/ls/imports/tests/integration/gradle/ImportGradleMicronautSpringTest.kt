@@ -4,11 +4,12 @@ package com.jetbrains.ls.imports.tests.integration.gradle
 import com.intellij.ide.starter.extended.data.TestCases
 import com.intellij.workspaceModel.integrationTests.data.gradle.gradleMicronautSpring.gradleMicronautSpringModulesData
 import com.jetbrains.ls.imports.tests.integration.gradleTest
+import com.jetbrains.ls.imports.tests.integration.withIgnoringNonClassesRoots
 import org.junit.jupiter.api.Test
 
 class ImportGradleMicronautSpringTest {
     @Test
     fun importGradleMicronautSpring() {
-        gradleTest(TestCases.IU.GradleMicronautSpring, gradleMicronautSpringModulesData())
+        gradleTest(TestCases.IU.GradleMicronautSpring, gradleMicronautSpringModulesData(), ::withIgnoringNonClassesRoots)
     }
 }

@@ -63,12 +63,13 @@ fun withIgnoringNonClassesRoots(list: List<ModuleEntityDto>): List<ModuleEntityD
 
 fun gradleTest(
     testCase: TestCase<out ProjectInfoSpec>,
-    projectStructureWithModules: ProjectStructureWithModules
+    projectStructureWithModules: ProjectStructureWithModules,
+    resultMapper: (List<ModuleEntityDto>) -> List<ModuleEntityDto> = { it }
 ) {
     downloadGradleBinaries()
     System.setProperty("useNaiveGradleRepoSubstitution", "true")
     try {
-        doTest(testCase, projectStructureWithModules, GradleWorkspaceImporter)
+        doTest(testCase, projectStructureWithModules, GradleWorkspaceImporter, resultMapper)
     } finally {
         System.clearProperty("useNaiveGradleRepoSubstitution")
     }

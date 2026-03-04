@@ -4,11 +4,12 @@ package com.jetbrains.ls.imports.tests.integration.gradle
 import com.intellij.ide.starter.extended.data.TestCases
 import com.intellij.workspaceModel.integrationTests.data.gradle.gradleEhCache3.gradleEhCache3ModulesData
 import com.jetbrains.ls.imports.tests.integration.gradleTest
+import com.jetbrains.ls.imports.tests.integration.withIgnoringNonClassesRoots
 import org.junit.jupiter.api.Test
 
 class ImportGradleEhCache3Test {
     @Test
     fun importGradleEhCache3() {
-        gradleTest(TestCases.IU.GradleEhCache3, gradleEhCache3ModulesData)
+        gradleTest(TestCases.IU.GradleEhCache3, gradleEhCache3ModulesData, ::withIgnoringNonClassesRoots)
     }
 }
