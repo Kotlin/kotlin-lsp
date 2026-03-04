@@ -60,6 +60,28 @@ internal class IdeaProjectMapper {
     private val mainSourceSetSuffix: String = ".main"
     private val testSourceSetSuffix: String = ".test"
 
+    /**
+     * We provide a very simple "naive" implementation of determining the modules
+     * with additional visibility (== "friend" modules):
+     *
+     * For each `.test` module, we consider the matching `.main` module to be a "friend" module.
+     * This way, `test` modules would be able to correctly see the internal declarations from
+     * the `main` modules, which is how it's supposed to work.
+     *
+     * In the future this should be replaced with a proper solution. See LSP-732.
+     */
+    private fun computeAdditionalVisibleModuleNames(moduleName: String): Set<String> {
+        val matchingMainModuleName = if (moduleName.endsWith(testSourceSetSuffix)) {
+            moduleName.removeSuffix(testSourceSetSuffix) + mainSourceSetSuffix
+        } else {
+            null
+        }
+
+        return setOfNotNull(
+            matchingMainModuleName,
+        )
+    }
+
     private fun calculateKotlinSettings(
         modules: Map<String, ModuleData>,
         kotlinModules: Map<String, KotlinModule>
@@ -90,7 +112,7 @@ internal class IdeaProjectMapper {
                     useProjectSettings = false,
                     implementedModuleNames = emptyList(),
                     dependsOnModuleNames = emptyList(),
-                    additionalVisibleModuleNames = emptySet(),
+                    additionalVisibleModuleNames = computeAdditionalVisibleModuleNames(name),
                     productionOutputPath = null,
                     testOutputPath = null,
                     sourceSetNames = emptyList(),
