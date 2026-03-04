@@ -2,6 +2,11 @@
 package com.jetbrains.ls.api.features
 
 import com.intellij.ide.plugins.PluginMainDescriptor
-import com.jetbrains.ls.api.features.utils.ijPluginByXml
+import com.jetbrains.analyzer.plugins.makePlugin
 
-val lsApiPlugin: PluginMainDescriptor = ijPluginByXml("META-INF/language-server/features/api/lsApi.xml")
+val lsApiPlugin: PluginMainDescriptor = makePlugin(
+    pluginId = "ls.api",
+    xmlModules = mapOf(
+        "language-server/features/api" to "META-INF/language-server/features/api/lsApi.xml"
+    ),
+)

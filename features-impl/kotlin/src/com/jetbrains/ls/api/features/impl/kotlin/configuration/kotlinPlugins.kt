@@ -2,45 +2,31 @@
 package com.jetbrains.ls.api.features.impl.kotlin.configuration
 
 import com.intellij.ide.plugins.PluginMainDescriptor
-import com.jetbrains.ls.api.features.utils.ijPluginByXml
-import org.jetbrains.kotlin.idea.base.fir.codeInsight.FirCodeInsightForClassPath
-import org.jetbrains.kotlin.idea.codeInsight.inspections.shared.KotlinUnusedImportInspection
-import org.jetbrains.kotlin.idea.k2.codeinsight.inspections.UsePropertyAccessSyntaxInspection
-import org.jetbrains.kotlin.idea.plugin.common.KotlinPluginCommonClassForClassPath
-import org.jetbrains.kotlin.idea.searching.kmp.KotlinK2ExpectActualSupport
+import com.jetbrains.analyzer.plugins.makePlugin
 
-internal val lsApiKotlinImpl: PluginMainDescriptor = ijPluginByXml(
-    "META-INF/language-server/features/kotlin/lsApiKotlinImpl.xml"
+internal val kotlinFeature: PluginMainDescriptor = makePlugin(
+    pluginId = "org.jetbrains.ls.feature.kotlin",
+    xmlModules = mapOf(
+        "features/kotlin/core" to "META-INF/language-server/features/kotlin/lsApiKotlinImpl.xml",
+        "features/kotlin/completion" to "META-INF/language-server/features/kotlin/completion.xml",
+        "features/kotlin/codeActions" to "META-INF/language-server/features/kotlin/codeActions.xml",
+        "intellij.kotlin.codeInsight.inspections" to "intellij.kotlin.codeInsight.inspections.xml",
+        "kotlin.code-insight.inspections.shared" to "kotlin.code-insight.inspections.shared.xml",
+        "ls.kotlin.searchingBase" to "META-INF/searching-base.xml",
+        "features/kotlin/usages" to "META-INF/language-server/features/kotlin/usages.xml",
+        "intellij.kotlin.searching" to "intellij.kotlin.searching.xml",
+        "ls.kotlin.formatter" to "META-INF/formatter.xml",
+        "intellij.kotlin.codeInsight.base" to "intellij.kotlin.codeInsight.base.xml",
+    ),
+    emptyModules = listOf(
+        "intellij.kotlin.base.externalSystem",
+        "intellij.kotlin.codeInsight.intentions",
+        "intellij.kotlin.refactorings",
+        "intellij.kotlin.codeInsight",
+        "intellij.kotlin.highlighting",
+    ),
+    dependencies = listOf(
+        "org.jetbrains.ls.plugin.kotlin",
+        "org.jetbrains.ls.feature.java-base"
+    ),
 )
-
-internal val kotlinCompletionPlugin: PluginMainDescriptor = ijPluginByXml(
-    "META-INF/language-server/features/kotlin/completion.xml"
-)
-
-internal val kotlinCodeActionsPlugins: List<PluginMainDescriptor> = listOf(
-    ijPluginByXml("META-INF/language-server/features/kotlin/codeActions.xml"),
-    ijPluginByXml("intellij.kotlin.codeInsight.inspections.xml", classForClasspath = UsePropertyAccessSyntaxInspection::class.java),
-    ijPluginByXml("kotlin.code-insight.inspections.shared.xml", classForClasspath = KotlinUnusedImportInspection::class.java),
-)
-
-internal val kotlinUsagesIjPlugins: List<PluginMainDescriptor> by lazy {
-    listOf(
-        ijPluginByXml("META-INF/searching-base.xml", KotlinPluginCommonClassForClassPath::class.java, useFakePluginId = true),
-        ijPluginByXml("META-INF/language-server/features/kotlin/usages.xml"),
-        ijPluginByXml("intellij.kotlin.searching.xml", KotlinK2ExpectActualSupport::class.java),
-    )
-}
-
-internal val kotlinCodeStylePlugin: PluginMainDescriptor =
-    ijPluginByXml(
-        "/META-INF/formatter.xml",
-        classForClasspath = KotlinPluginCommonClassForClassPath::class.java,
-        useFakePluginId = true,
-    )
-
-internal val kotlinFirCodeInsightPlugin: PluginMainDescriptor =
-    ijPluginByXml(
-        xmlResourcePath = "intellij.kotlin.codeInsight.base.xml",
-        classForClasspath = FirCodeInsightForClassPath::class.java,
-        useFakePluginId = true,
-    )

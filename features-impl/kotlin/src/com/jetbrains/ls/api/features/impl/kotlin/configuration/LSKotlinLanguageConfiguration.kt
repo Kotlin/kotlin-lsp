@@ -4,7 +4,7 @@ package com.jetbrains.ls.api.features.impl.kotlin.configuration
 import com.jetbrains.analyzer.kotlin.initKotlinApplicationContainer
 import com.jetbrains.analyzer.kotlin.initKotlinProjectContainer
 import com.jetbrains.analyzer.kotlin.initKotlinWorkspaceModelCaches
-import com.jetbrains.analyzer.kotlin.kotlinPlugins
+import com.jetbrains.analyzer.kotlin.kotlinPlugin
 import com.jetbrains.ls.api.features.ApplicationInitEntry
 import com.jetbrains.ls.api.features.InvalidateHookEntry
 import com.jetbrains.ls.api.features.ProjectInitEntry
@@ -99,13 +99,8 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSKotlinInlayHintsProvider,
     ),
     plugins = listOf(
-        *kotlinPlugins().toTypedArray(),
-        lsApiKotlinImpl,
-        kotlinCompletionPlugin,
-        kotlinFirCodeInsightPlugin,
-        *kotlinCodeActionsPlugins.toTypedArray(),
-        *kotlinUsagesIjPlugins.toTypedArray(),
-        kotlinCodeStylePlugin,
+        kotlinPlugin,
+        kotlinFeature,
     ),
     languages = listOf(
         LSKotlinLanguage,

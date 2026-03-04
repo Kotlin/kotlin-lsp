@@ -1,7 +1,4 @@
 <idea-plugin>
-  <id>features/kotlin/core</id>
-  <vendor>JetBrains</vendor>
-
   <extensions defaultExtensionNs="ls">
     <fileForModificationFactory language="kotlin"
                                 implementationClass="com.jetbrains.ls.api.features.impl.kotlin.apiImpl.textEdits.KotlinFileForModificationFactory" />

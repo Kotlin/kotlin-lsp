@@ -1,7 +1,4 @@
 <idea-plugin>
-  <id>features/javaBase/apiImpl</id>
-  <vendor>JetBrains</vendor>
-
   <extensionPoints>
     <extensionPoint qualifiedName="com.intellij.modcompletion.completionItemProvider"
                     beanClass="com.intellij.lang.LanguageExtensionPoint" dynamic="true">

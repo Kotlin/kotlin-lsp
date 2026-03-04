@@ -1,7 +1,4 @@
 <idea-plugin>
-  <id>com.jetbrains.fleet.analyzer.test-import</id>
-  <vendor>JetBrains</vendor>
-
   <extensionPoints>
     <extensionPoint qualifiedName="org.jetbrains.idea.maven.versionAwareMavenSupport" interface="org.jetbrains.idea.maven.MavenVersionAwareSupportExtension" dynamic="true"/>
     <extensionPoint qualifiedName="com.intellij.projectStorePathCustomizer"

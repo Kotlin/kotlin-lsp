@@ -27,7 +27,7 @@ import com.jetbrains.analyzer.bootstrap.AnalyzerProjectId
 import com.jetbrains.analyzer.bootstrap.WorkspaceModelSnapshot
 import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
 import com.jetbrains.analyzer.bootstrap.pluginSet
-import com.jetbrains.analyzer.bootstrap.readPluginDescriptor
+import com.jetbrains.analyzer.plugins.makePlugin
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.downloadGradleBinaries
 import com.jetbrains.ls.imports.downloadMavenBinaries
@@ -121,8 +121,12 @@ private fun doTest(
                     entities = currentSnapshot.entityStore,
                     urlManager = virtualFileUrlManager,
                     pluginSet = pluginSet(
-                        listOf(readPluginDescriptor(Tests::class.java, "/META-INF/fleet/analyzer/test-import.xml")) +
-                                testPluginSet.allPlugins
+                        listOf(
+                            makePlugin(
+                                "com.jetbrains.fleet.analyzer.test-import",
+                                mapOf("com.jetbrains.fleet.analyzer.test-import" to "/META-INF/fleet/analyzer/test-import.xml")
+                            )
+                        ) + testPluginSet.allPlugins
                     ),
                     applicationInits = testApplicationInits,
                     projectInits = testProjectInits,

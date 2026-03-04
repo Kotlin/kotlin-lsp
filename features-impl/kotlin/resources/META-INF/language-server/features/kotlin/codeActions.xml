@@ -1,8 +1,4 @@
 <idea-plugin>
-    <id>features/kotlin/codeActions</id>
-    <vendor>JetBrains</vendor>
-
-
   <extensionPoints>
     <extensionPoint qualifiedName="org.jetbrains.kotlin.codeinsight.quickfix.registrar"
                     interface="org.jetbrains.kotlin.idea.codeinsight.api.applicators.fixes.KotlinQuickFixRegistrar"

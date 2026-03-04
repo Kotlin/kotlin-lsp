@@ -1,7 +1,4 @@
 <idea-plugin>
-  <id>features/kotlin/completion</id>
-  <vendor>JetBrains</vendor>
-
   <extensions defaultExtensionNs="com.intellij">
     <completion.contributor language="kotlin"
                             id="KotlinCompletionContributor"
