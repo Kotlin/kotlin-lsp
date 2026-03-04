@@ -1996,7 +1996,9 @@
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [],
+            "additionalVisibleModuleNames": [
+                "NewIJKotlinGradle.app.main"
+            ],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],
@@ -2056,7 +2058,9 @@
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [],
+            "additionalVisibleModuleNames": [
+                "NewIJKotlinGradle.utils.main"
+            ],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],

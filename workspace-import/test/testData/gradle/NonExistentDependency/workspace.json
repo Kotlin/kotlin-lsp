@@ -236,7 +236,9 @@
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [],
+            "additionalVisibleModuleNames": [
+                "NonExistentDependency.main"
+            ],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],

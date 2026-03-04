@@ -559,7 +559,9 @@
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [],
+            "additionalVisibleModuleNames": [
+                "multi-project-example.api.main"
+            ],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],
@@ -621,7 +623,9 @@
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [],
+            "additionalVisibleModuleNames": [
+                "multi-project-example.core.main"
+            ],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],
@@ -714,7 +718,9 @@
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [],
+            "additionalVisibleModuleNames": [
+                "multi-project-example.service.main"
+            ],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],
@@ -745,7 +751,9 @@
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [],
+            "additionalVisibleModuleNames": [
+                "multi-project-example.main"
+            ],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],

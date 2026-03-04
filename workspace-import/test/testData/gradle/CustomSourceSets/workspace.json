@@ -464,7 +464,9 @@
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [],
+            "additionalVisibleModuleNames": [
+                "multi-project-source-sets.app.main"
+            ],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],
@@ -526,7 +528,9 @@
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [],
+            "additionalVisibleModuleNames": [
+                "multi-project-source-sets.lib.main"
+            ],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],
@@ -588,7 +592,9 @@
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [],
+            "additionalVisibleModuleNames": [
+                "multi-project-source-sets.main"
+            ],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],
