@@ -32,32 +32,7 @@ sealed class DependencyData {
         val scope: DependencyDataScope,
         val isExported: Boolean = false,
         val isTestJar: Boolean = false,
-    ) : DependencyData() {
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-            if (!super.equals(other)) return false
-
-            other as Module
-
-            if (isExported != other.isExported) return false
-            if (isTestJar != other.isTestJar) return false
-            if (name != other.name) return false
-            if (scope != other.scope) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = super.hashCode()
-            result = 31 * result + isExported.hashCode()
-            result = 31 * result + isTestJar.hashCode()
-            result = 31 * result + name.hashCode()
-            result = 31 * result + scope.hashCode()
-            return result
-        }
-    }
+    ) : DependencyData()
 
     @Serializable
     @SerialName("library")
@@ -65,30 +40,7 @@ sealed class DependencyData {
         val name: String,
         val scope: DependencyDataScope,
         val isExported: Boolean = false,
-    ) : DependencyData() {
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-            if (!super.equals(other)) return false
-
-            other as Library
-
-            if (isExported != other.isExported) return false
-            if (name != other.name) return false
-            if (scope != other.scope) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = super.hashCode()
-            result = 31 * result + isExported.hashCode()
-            result = 31 * result + name.hashCode()
-            result = 31 * result + scope.hashCode()
-            return result
-        }
-    }
+    ) : DependencyData()
 
     @Serializable
     @SerialName("inheritedSdk")
@@ -100,39 +52,7 @@ sealed class DependencyData {
 
     @Serializable
     @SerialName("sdk")
-    data class Sdk(val name: String, val kind: String) : DependencyData() {
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-            if (!super.equals(other)) return false
-
-            other as Sdk
-
-            if (name != other.name) return false
-            if (kind != other.kind) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = super.hashCode()
-            result = 31 * result + name.hashCode()
-            result = 31 * result + kind.hashCode()
-            return result
-        }
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return javaClass.hashCode()
-    }
-
+    data class Sdk(val name: String, val kind: String) : DependencyData()
 }
 
 
