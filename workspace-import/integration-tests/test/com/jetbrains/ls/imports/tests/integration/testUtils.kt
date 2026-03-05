@@ -28,6 +28,7 @@ import com.jetbrains.analyzer.bootstrap.WorkspaceModelSnapshot
 import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
 import com.jetbrains.analyzer.bootstrap.pluginSet
 import com.jetbrains.analyzer.plugins.makePlugin
+import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.downloadGradleBinaries
 import com.jetbrains.ls.imports.downloadMavenBinaries
@@ -170,8 +171,16 @@ private fun doTest(
                     }
                 }
 
-                val storage = importer.importWorkspace(projectWithStore, projectDir, null, virtualFileUrlManager) {}
-                    ?: fail("Workspace import failed")
+                val stdError = ArrayList<String>()
+                val storage = try {
+                    importer.importWorkspace(projectWithStore, projectDir, null, virtualFileUrlManager) {
+                        stdError.add(it)
+                    }
+                        ?: fail("Workspace import failed: " + stdError.joinToString("\n"))
+                } catch (e: WorkspaceImportException) {
+                    fail(e.logMessage + stdError.joinToString("\n"))
+                }
+
 
                 val expectedModules = projectStructureWithModules.modules
                 System.setProperty("com.intellij.workspaceModel.performanceTesting.extension", projectDir.absolutePathString())

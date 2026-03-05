@@ -12,7 +12,7 @@ import com.intellij.util.io.delete
 import com.intellij.util.system.OS
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
-import com.jetbrains.ls.imports.utils.runAndGetOK
+import com.jetbrains.ls.imports.utils.runWithErrorReporting
 import java.nio.file.Path
 import kotlin.io.path.createTempFile
 import kotlin.io.path.div
@@ -82,7 +82,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                     }
                 }
                 .directory(projectDirectory.toFile())
-                .runAndGetOK("Maven", processOutputLogger = LOG)
+                .runWithErrorReporting("Maven", onUnresolvedDependency)
         } finally {
             mavenPluginPomFile.delete()
         }
@@ -106,7 +106,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
 
                 }
                 .directory(projectDirectory.toFile())
-                .runAndGetOK("Maven", processOutputLogger = LOG)
+                .runWithErrorReporting("Maven", onUnresolvedDependency)
 
             return JsonWorkspaceImporter.importWorkspaceJson(
                 workspaceJsonFile, projectDirectory, defaultSdkPath, virtualFileUrlManager, onUnresolvedDependency
