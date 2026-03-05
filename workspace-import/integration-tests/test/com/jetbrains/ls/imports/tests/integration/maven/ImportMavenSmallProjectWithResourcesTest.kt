@@ -3,7 +3,7 @@ package com.jetbrains.ls.imports.tests.integration.maven
 
 import com.intellij.ide.starter.extended.allure.Subsystems
 import com.intellij.ide.starter.extended.data.TestCases
-import com.intellij.workspaceModel.integrationTests.data.maven.mavenSmallProjectWithResources.mavenSmallProjectWithResourcesModulesData
+import com.jetbrains.ls.imports.tests.integration.LspTestData
 import com.jetbrains.ls.imports.tests.integration.mavenTest
 import org.junit.jupiter.api.Test
 
@@ -11,6 +11,6 @@ import org.junit.jupiter.api.Test
 class ImportMavenSmallProjectWithResourcesTest {
     @Test
     fun importMavenSmallProjectWithResources() {
-        mavenTest(TestCases.IU.MavenSmallProjectWithResources, mavenSmallProjectWithResourcesModulesData())
+        mavenTest(TestCases.IU.MavenSmallProjectWithResources, LspTestData.MavenSmallProjectWithResourcesModulesData)
     }
 }

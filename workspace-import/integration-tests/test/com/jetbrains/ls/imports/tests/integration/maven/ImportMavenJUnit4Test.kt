@@ -3,7 +3,7 @@ package com.jetbrains.ls.imports.tests.integration.maven
 
 import com.intellij.ide.starter.extended.allure.Subsystems
 import com.intellij.ide.starter.extended.data.TestCases
-import com.intellij.workspaceModel.integrationTests.data.maven.mavenJUnit4.mavenJUnit4ModulesData
+import com.jetbrains.ls.imports.tests.integration.LspTestData
 import com.jetbrains.ls.imports.tests.integration.mavenTest
 import org.junit.jupiter.api.Test
 
@@ -11,6 +11,6 @@ import org.junit.jupiter.api.Test
 class ImportMavenJUnit4Test {
     @Test
     fun importMavenJUnit4() {
-        mavenTest(TestCases.IU.MavenJUnit4, mavenJUnit4ModulesData)
+        mavenTest(TestCases.IU.MavenJUnit4, LspTestData.MavenJUnit4ModulesData)
     }
 }

@@ -53,6 +53,22 @@ sealed interface LspTestData {
     object MavenJavaDesignPatternsSmallModulesData: LspTestData
 
     object MavenJacksonCoreModulesData: LspTestData
+
+    object MavenGuavaModulesData: LspTestData
+
+    object MavenJUnit4ModulesData: LspTestData
+
+    object MavenProjectWithProfilesModulesDataTest: LspTestData
+
+    object MavenSmallProjectWithTwoModulesModulesData: LspTestData
+
+    object MavenSmallProjectWithResourcesModulesData: LspTestData
+
+    object MavenSpringBootExamplesModulesData: LspTestData
+
+    object MavenTitanModulesData: LspTestData
+
+    object MavenZipkinModulesData: LspTestData
 }
 
 

@@ -36,6 +36,7 @@ import com.jetbrains.ls.imports.downloadMavenBinaries
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
 import com.jetbrains.ls.imports.jps.JpsWorkspaceImporter
 import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
+import com.jetbrains.ls.test.api.projectTests.projects.LspTestProjectFromGitHub
 import com.jetbrains.ls.test.api.utils.testApplicationInits
 import com.jetbrains.ls.test.api.utils.testPluginSet
 import com.jetbrains.ls.test.api.utils.testProjectInits
@@ -49,7 +50,6 @@ import org.junit.jupiter.api.fail
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 
-private object Tests
 
 fun withIgnoringNonClassesRoots(list: List<ModuleEntityDto>): List<ModuleEntityDto> {
     return list.map { module ->
@@ -71,21 +71,29 @@ fun gradleTest(
     downloadGradleBinaries()
     System.setProperty("useNaiveGradleRepoSubstitution", "true")
     try {
-        doTest(testCase, projectStructureWithModules, GradleWorkspaceImporter, resultMapper)
+        val projectDir = testCase.projectInfo.downloadAndUnpackProject() ?: fail("Cannot unpack project")
+        doTest(projectDir, projectStructureWithModules, GradleWorkspaceImporter, resultMapper)
     } finally {
         System.clearProperty("useNaiveGradleRepoSubstitution")
     }
+}
+
+internal fun mavenTest(testCase: LspTestProjectFromGitHub, expected: LspTestData) {
+    val projectDir = testCase.project.downloadAndUnpackProject()
+    mavenTest(projectDir, expected.getStructure(), ::withIgnoringNonClassesRoots)
+
 }
 
 internal fun mavenTest(
     testCase: TestCase<out ProjectInfoSpec>,
     expected: LspTestData
 ) {
-    mavenTest(testCase, expected.getStructure(), ::withIgnoringNonClassesRoots)
+    val projectDir = testCase.projectInfo.downloadAndUnpackProject() ?: fail("Cannot unpack project")
+    mavenTest(projectDir, expected.getStructure(), ::withIgnoringNonClassesRoots)
 }
 
 internal fun mavenTest(
-    testCase: TestCase<out ProjectInfoSpec>,
+    projectDir: Path,
     projectStructureWithModules: ProjectStructureWithModules,
     resultMapper: (List<ModuleEntityDto>) -> List<ModuleEntityDto> = { it }
 ) {
@@ -94,119 +102,118 @@ internal fun mavenTest(
     System.setProperty("forceM3Placeholder", "true")
 
     try {
-        doTest(testCase, projectStructureWithModules, MavenWorkspaceImporter, resultMapper)
+        doTest(projectDir, projectStructureWithModules, MavenWorkspaceImporter, resultMapper)
     } finally {
         System.clearProperty("forceM3Placeholder")
     }
 }
 
 internal fun jpsTest(testCase: TestCase<out ProjectInfoSpec>, projectStructureWithModules: ProjectStructureWithModules) {
-    doTest(testCase, projectStructureWithModules, JpsWorkspaceImporter)
+    val projectDir = testCase.projectInfo.downloadAndUnpackProject() ?: fail("Couldn't download the project")
+    doTest(projectDir, projectStructureWithModules, JpsWorkspaceImporter)
 }
 
 private fun doTest(
-    testCase: TestCase<out ProjectInfoSpec>,
+    projectDir: Path,
     projectStructureWithModules: ProjectStructureWithModules,
     importer: WorkspaceImporter,
     resultMapper: (List<ModuleEntityDto>) -> List<ModuleEntityDto> = { it }
 ) {
-    val projectDir = testCase.projectInfo.downloadAndUnpackProject() ?: fail("Couldn't download the project")
+        runBlocking(Dispatchers.Default) {
+            withAnalyzer(isUnitTestMode = true) { analyzer ->
+                val currentSnapshot = WorkspaceModelSnapshot.empty()
+                val virtualFileUrlManager = currentSnapshot.virtualFileUrlManager
+                analyzer.withProject(
+                    analyzerProjectConfigForImport(
+                        fileSystems = AnalyzerFileSystems.default(),
+                        projectId = AnalyzerProjectId(),
+                        entities = currentSnapshot.entityStore,
+                        urlManager = virtualFileUrlManager,
+                        pluginSet = pluginSet(
+                            listOf(
+                                makePlugin(
+                                    "com.jetbrains.fleet.analyzer.test-import",
+                                    mapOf("com.jetbrains.fleet.analyzer.test-import" to "/META-INF/fleet/analyzer/test-import.xml")
+                                )
+                            ) + testPluginSet.allPlugins
+                        ),
+                        applicationInits = testApplicationInits,
+                        projectInits = testProjectInits,
+                    )
+                ) { analyzerProject ->
+                    val originalProject = analyzerProject.project
 
-    runBlocking(Dispatchers.Default) {
-        withAnalyzer(isUnitTestMode = true) { analyzer ->
-            val currentSnapshot = WorkspaceModelSnapshot.empty()
-            val virtualFileUrlManager = currentSnapshot.virtualFileUrlManager
-            analyzer.withProject(
-                analyzerProjectConfigForImport(
-                    fileSystems = AnalyzerFileSystems.default(),
-                    projectId = AnalyzerProjectId(),
-                    entities = currentSnapshot.entityStore,
-                    urlManager = virtualFileUrlManager,
-                    pluginSet = pluginSet(
-                        listOf(
-                            makePlugin(
-                                "com.jetbrains.fleet.analyzer.test-import",
-                                mapOf("com.jetbrains.fleet.analyzer.test-import" to "/META-INF/fleet/analyzer/test-import.xml")
-                            )
-                        ) + testPluginSet.allPlugins
-                    ),
-                    applicationInits = testApplicationInits,
-                    projectInits = testProjectInits,
-                )
-            ) { analyzerProject ->
-                val originalProject = analyzerProject.project
+                    val projectWithStore = object : Project by originalProject, ProjectStoreOwner {
+                        override val componentStore: IProjectStore =
+                            ApplicationManager.getApplication().service<ProjectStoreFactory>().createStore(this).also {
+                                it.setPath(projectDir)
+                            }
 
-                val projectWithStore = object : Project by originalProject, ProjectStoreOwner {
-                    override val componentStore: IProjectStore =
-                        ApplicationManager.getApplication().service<ProjectStoreFactory>().createStore(this).also {
-                            it.setPath(projectDir)
+                        override fun getPresentableUrl(): @SystemDependent @NonNls String? =
+                            originalProject.getPresentableUrl()
+
+                        override fun scheduleSave() {
+                            originalProject.scheduleSave()
                         }
 
-                    override fun getPresentableUrl(): @SystemDependent @NonNls String? =
-                        originalProject.getPresentableUrl()
+                        override fun isDefault(): Boolean =
+                            originalProject.isDefault()
 
-                    override fun scheduleSave() {
-                        originalProject.scheduleSave()
+                        override fun getComponent(name: String): BaseComponent? =
+                            originalProject.getComponent(name)
+
+                        override fun <T> getServiceForClient(serviceClass: Class<T?>): T? =
+                            originalProject.getServiceForClient(serviceClass)
+
+                        override fun <T> getServices(
+                            serviceClass: Class<T?>,
+                            client: ClientKind?
+                        ): @Unmodifiable List<T?> =
+                            originalProject.getServices(serviceClass, client)
+
+                        override fun <T> getServiceIfCreated(serviceClass: Class<T?>): T? =
+                            originalProject.getServiceIfCreated(serviceClass)
+
+                        override fun logError(error: Throwable, pluginId: PluginId) {
+                            originalProject.logError(error, pluginId)
+                        }
+                    }
+                    val progressReporter = SavingProgressReporter()
+                    val storage = try {
+                        importer.importWorkspace(projectWithStore, projectDir, null, virtualFileUrlManager, progressReporter)
+                            ?: fail("Workspace import failed: $progressReporter")
+                    } catch (e: WorkspaceImportException) {
+                        fail(e.logMessage + progressReporter.toString())
                     }
 
-                    override fun isDefault(): Boolean =
-                        originalProject.isDefault()
 
-                    override fun getComponent(name: String): BaseComponent? =
-                        originalProject.getComponent(name)
+                    val expectedModules = projectStructureWithModules.modules
+                    System.setProperty("com.intellij.workspaceModel.performanceTesting.extension", projectDir.absolutePathString())
+                    val actualModules = try {
 
-                    override fun <T> getServiceForClient(serviceClass: Class<T?>): T? =
-                        originalProject.getServiceForClient(serviceClass)
+                        storage.modules.map { module ->
+                            moduleEntityToModuleEntityDto(
+                                module,
+                                storage.javaModuleSettings.firstOrNull { it.module == module },
+                                projectWithStore,
+                                storage,
+                                true
+                            )
+                        }.toList()
 
-                    override fun <T> getServices(
-                        serviceClass: Class<T?>,
-                        client: ClientKind?
-                    ): @Unmodifiable List<T?> =
-                        originalProject.getServices(serviceClass, client)
-
-                    override fun <T> getServiceIfCreated(serviceClass: Class<T?>): T? =
-                        originalProject.getServiceIfCreated(serviceClass)
-
-                    override fun logError(error: Throwable, pluginId: PluginId) {
-                        originalProject.logError(error, pluginId)
+                    } finally {
+                        System.setProperty("com.intellij.workspaceModel.performanceTesting.extension", "")
                     }
+
+                    reportDifferences(expectedModules, actualModules)
+
+                    assertEquals(
+                        JsonSerializer.serializePretty(normalize(resultMapper(expectedModules))),
+                        JsonSerializer.serializePretty(normalize(resultMapper(actualModules)))
+                    )
                 }
-                val progressReporter = SavingProgressReporter()
-                val storage = try {
-                    importer.importWorkspace(projectWithStore, projectDir, null, virtualFileUrlManager, progressReporter)
-                        ?: fail("Workspace import failed: $progressReporter")
-                } catch (e: WorkspaceImportException) {
-                    fail(e.logMessage + progressReporter.toString())
-                }
-
-
-                val expectedModules = projectStructureWithModules.modules
-                System.setProperty("com.intellij.workspaceModel.performanceTesting.extension", projectDir.absolutePathString())
-                val actualModules = try {
-
-                    storage.modules.map { module ->
-                        moduleEntityToModuleEntityDto(
-                            module,
-                            storage.javaModuleSettings.firstOrNull { it.module == module },
-                            projectWithStore,
-                            storage,
-                            true
-                        )
-                    }.toList()
-
-                } finally {
-                    System.setProperty("com.intellij.workspaceModel.performanceTesting.extension", "")
-                }
-
-                reportDifferences(expectedModules, actualModules)
-
-                assertEquals(
-                    JsonSerializer.serializePretty(normalize(resultMapper(expectedModules))),
-                    JsonSerializer.serializePretty(normalize(resultMapper(actualModules)))
-                )
             }
         }
-    }
 }
 
 class SavingProgressReporter : WorkspaceImportProgressReporter {
@@ -227,7 +234,7 @@ class SavingProgressReporter : WorkspaceImportProgressReporter {
     override fun toString(): String {
         return output.toString() +
                 "\r\n------------------------------------------" +
-                "UNRESOLVED: $unresolvedDeps"
+                "UNRESOLVED: $unresolvedDeps" +
                 "\r\n------------------------------------------"
     }
 

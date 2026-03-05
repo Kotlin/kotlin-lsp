@@ -3,7 +3,7 @@ package com.jetbrains.ls.imports.tests.integration.maven
 
 import com.intellij.ide.starter.extended.allure.Subsystems
 import com.intellij.ide.starter.extended.data.TestCases
-import com.intellij.workspaceModel.integrationTests.data.maven.mavenGuava.mavenGuavaModulesData
+import com.jetbrains.ls.imports.tests.integration.LspTestData
 import com.jetbrains.ls.imports.tests.integration.mavenTest
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -13,6 +13,6 @@ class ImportMavenGuavaTest {
     @Test
     @Disabled("Freeze")
     fun importMavenGuava() {
-        mavenTest(TestCases.IU.MavenGuava, mavenGuavaModulesData())
+        mavenTest(TestCases.IU.MavenGuava, LspTestData.MavenGuavaModulesData)
     }
 }
