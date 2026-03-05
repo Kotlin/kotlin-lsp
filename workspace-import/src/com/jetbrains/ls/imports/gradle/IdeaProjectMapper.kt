@@ -17,8 +17,10 @@ import com.jetbrains.ls.imports.json.SourceRootData
 import com.jetbrains.ls.imports.json.WorkspaceData
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.gradle.tooling.model.HierarchicalElement
 import org.gradle.tooling.model.idea.IdeaJavaLanguageSettings
 import org.gradle.tooling.model.idea.IdeaModule
+import org.gradle.tooling.model.idea.IdeaProject
 import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.exists
@@ -164,7 +166,7 @@ internal class IdeaProjectMapper {
                 ContentRootData(module.gradleProject.projectDirectory.path)
             )
         )
-        val javaSettings = getJavaSettingsData(module)
+        val javaSettings = getJavaSettingsData(module, module)
         if (javaSettings != null) {
             javaSettingsConsumer(javaSettings)
         }
@@ -280,20 +282,32 @@ internal class IdeaProjectMapper {
             .any { Path.of(it.path).exists() }
     }
 
-    private fun getJavaSettingsData(module: IdeaModule): JavaSettingsData? {
-        return if (module.javaLanguageSettings.isSpecified()) {
-            JavaSettingsData(
+    private fun getJavaSettingsData(module: IdeaModule, javaInformationSource: HierarchicalElement): JavaSettingsData? {
+        if (javaInformationSource is IdeaModule && javaInformationSource.javaLanguageSettings.isSpecified()) {
+            return JavaSettingsData(
                 module = module.getFqdn(),
                 inheritedCompilerOutput = module.compilerOutput?.inheritOutputDirs ?: false,
                 compilerOutput = module.compilerOutput?.outputDir?.path,
                 compilerOutputForTests = module.compilerOutput?.testOutputDir?.path,
-                languageLevelId = module.javaLanguageSettings?.targetBytecodeVersion?.name?.replace("VERSION", "JDK"),
+                languageLevelId = javaInformationSource.javaLanguageSettings?.targetBytecodeVersion?.name?.replace("VERSION", "JDK"),
                 manifestAttributes = emptyMap(),
                 excludeOutput = false
             )
-        } else {
-            null
+        } else if (javaInformationSource is IdeaProject) {
+            if (javaInformationSource.javaLanguageSettings.isSpecified()) {
+                return JavaSettingsData(
+                    module = module.getFqdn(),
+                    inheritedCompilerOutput = module.compilerOutput?.inheritOutputDirs ?: false,
+                    compilerOutput = module.compilerOutput?.outputDir?.path,
+                    compilerOutputForTests = module.compilerOutput?.testOutputDir?.path,
+                    languageLevelId = javaInformationSource.javaLanguageSettings?.targetBytecodeVersion?.name?.replace("VERSION", "JDK"),
+                    manifestAttributes = emptyMap(),
+                    excludeOutput = false
+                )
+            }
         }
+        val parent = javaInformationSource.parent ?: return null
+        return getJavaSettingsData(module, parent)
     }
 
     private fun IdeaJavaLanguageSettings?.isSpecified(): Boolean {

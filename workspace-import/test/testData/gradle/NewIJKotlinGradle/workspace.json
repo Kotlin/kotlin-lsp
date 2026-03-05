@@ -2026,5 +2026,97 @@
             "version": 5,
             "flushNeeded": false
         }
+    ],
+    "javaSettings": [
+        {
+            "module": "NewIJKotlinGradle",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "NewIJKotlinGradle.app",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "NewIJKotlinGradle.app.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "NewIJKotlinGradle.app.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "NewIJKotlinGradle.utils",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "NewIJKotlinGradle.utils.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "NewIJKotlinGradle.utils.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "buildSrc",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "buildSrc.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "buildSrc.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        }
     ]
 }

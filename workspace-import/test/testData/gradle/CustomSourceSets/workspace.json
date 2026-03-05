@@ -613,5 +613,97 @@
             "version": 5,
             "flushNeeded": false
         }
+    ],
+    "javaSettings": [
+        {
+            "module": "multi-project-source-sets",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "multi-project-source-sets.app",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "multi-project-source-sets.app.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "multi-project-source-sets.app.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "multi-project-source-sets.lib",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "multi-project-source-sets.lib.integrationTest",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "multi-project-source-sets.lib.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "multi-project-source-sets.lib.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "multi-project-source-sets.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "multi-project-source-sets.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        }
     ]
 }
