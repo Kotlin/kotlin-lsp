@@ -61,3 +61,9 @@ popd > /dev/null
 
 # Delete temporary extension directory
 rm -rf "$EXTENSION_DIR"
+
+# Make sure vsix is actually created
+if [[ ! -f "$BUILD_DIR/$VSIX_TARGET_FILENAME" ]]; then
+  echo "Error: vsce package produced no output. Expected: $BUILD_DIR/$VSIX_TARGET_FILENAME" >&2
+  exit 1
+fi

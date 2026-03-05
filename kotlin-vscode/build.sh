@@ -32,6 +32,7 @@ if [[ -z "$FIRST_BUNDLE" ]]; then
   exit 1
 fi
 
+pids=()
 for productInfo in "$ARTIFACT_DIR"/*.product-info.json; do
     bundle="${productInfo%.product-info.json}"
     echo -e "\033[32mProcessing: $bundle\033[0m"
@@ -86,11 +87,21 @@ for productInfo in "$ARTIFACT_DIR"/*.product-info.json; do
     LSP_ZIP_PATH="$bundle" \
     BUNDLE_TYPE="$BUNDLE_TYPE" \
       bash "$BUILD_EXTENSION_SCRIPT" &
+    pids+=($!)
 done
 
-wait
+failed=0
+for pid in "${pids[@]}"; do
+    wait "$pid" || failed=1
+done
 
 end_ts=$(date +%s)
 elapsed=$((end_ts - start_ts))
 
-echo "Completed in ${elapsed} s"
+if [[ $failed -ne 0 ]]; then
+    echo "Error: one or more extension builds failed" >&2
+    echo "Completed in ${elapsed} s"
+    exit 1
+else
+    echo "Completed in ${elapsed} s"
+fi
