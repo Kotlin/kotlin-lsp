@@ -40,6 +40,7 @@ import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
+import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.utils.toIntellijUri
 import org.jetbrains.jps.model.JpsElementFactory
@@ -83,7 +84,7 @@ object JpsWorkspaceImporter : WorkspaceImporter {
         projectDirectory: Path,
         defaultSdkPath: Path?,
         virtualFileUrlManager: VirtualFileUrlManager,
-        onUnresolvedDependency: (String) -> Unit,
+        progress: WorkspaceImportProgressReporter
     ): EntityStorage? {
         if (!isApplicableDirectory(projectDirectory)) return null
         return try {
@@ -122,7 +123,7 @@ object JpsWorkspaceImporter : WorkspaceImporter {
                                             library.getRootUrls(JpsOrderRootType.COMPILED).mapNotNullTo(this) { url ->
                                                 val fileUrl = virtualFileUrlManager.getOrCreateFromUrl(url)
                                                 if (!Path.of(JpsPathUtil.urlToPath(url)).exists()) {
-                                                    onUnresolvedDependency(url)
+                                                    progress.onUnresolvedDependency(url)
                                                     return@mapNotNull null
                                                 }
                                                 LibraryRoot(

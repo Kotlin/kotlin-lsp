@@ -10,6 +10,7 @@ import com.jetbrains.analyzer.api.withAnalyzer
 import com.jetbrains.analyzer.bootstrap.AnalyzerProjectId
 import com.jetbrains.analyzer.bootstrap.WorkspaceModelSnapshot
 import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
+import com.jetbrains.ls.imports.api.EmptyWorkspaceProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
 import com.jetbrains.ls.imports.json.WorkspaceData
@@ -111,7 +112,7 @@ class ProjectImportTest {
                         projectInits = testProjectInits,
                     )
                 ) {
-                    importer.importWorkspace(it.project, projectDir, null, virtualFileUrlManager) {}
+                    importer.importWorkspace(it.project, projectDir, null, virtualFileUrlManager, EmptyWorkspaceProgressReporter())
                 }
             }
         }

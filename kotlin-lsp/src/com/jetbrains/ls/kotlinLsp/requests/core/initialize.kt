@@ -14,6 +14,7 @@ import com.jetbrains.ls.api.features.completion.LSCompletionProvider
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokens
 import com.jetbrains.ls.imports.api.EmptyWorkspaceImporter
 import com.jetbrains.ls.imports.api.WorkspaceImportException
+import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.api.applyChangesWithDeduplication
 import com.jetbrains.ls.kotlinLsp.connection.Client
@@ -236,10 +237,18 @@ private suspend fun initFolder(
     progress.report(Report(message = "Importing folder $folder"))
     for (importer in workspaceImporters) {
         val unresolved = mutableSetOf<String>()
+        val importProgress = object : WorkspaceImportProgressReporter {
+            override fun onUnresolvedDependency(depName: String) {
+                unresolved.add(depName)
+            }
+            override fun onStdOutput(line: String) {}
+            override fun onErrorOutput(line: String) {}
+
+        }
         LOG.info("Trying to import using ${importer.javaClass.simpleName}")
         val imported = try {
             withContext(Dispatchers.IO) {
-                importer.importWorkspace(project.project, folder, defaultSdkPath, virtualFileUrlManager, unresolved::add)
+                importer.importWorkspace(project.project, folder, defaultSdkPath, virtualFileUrlManager, importProgress)
                     ?.let { diff ->
                         storage.applyChangesWithDeduplication(diff)
                         true

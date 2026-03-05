@@ -29,6 +29,7 @@ import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
 import com.jetbrains.analyzer.bootstrap.pluginSet
 import com.jetbrains.analyzer.plugins.makePlugin
 import com.jetbrains.ls.imports.api.WorkspaceImportException
+import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.downloadGradleBinaries
 import com.jetbrains.ls.imports.downloadMavenBinaries
@@ -170,15 +171,12 @@ private fun doTest(
                         originalProject.logError(error, pluginId)
                     }
                 }
-
-                val stdError = ArrayList<String>()
+                val progressReporter = SavingProgressReporter()
                 val storage = try {
-                    importer.importWorkspace(projectWithStore, projectDir, null, virtualFileUrlManager) {
-                        stdError.add(it)
-                    }
-                        ?: fail("Workspace import failed: " + stdError.joinToString("\n"))
+                    importer.importWorkspace(projectWithStore, projectDir, null, virtualFileUrlManager, progressReporter)
+                        ?: fail("Workspace import failed: $progressReporter")
                 } catch (e: WorkspaceImportException) {
-                    fail(e.logMessage + stdError.joinToString("\n"))
+                    fail(e.logMessage + progressReporter.toString())
                 }
 
 
@@ -209,6 +207,30 @@ private fun doTest(
             }
         }
     }
+}
+
+class SavingProgressReporter : WorkspaceImportProgressReporter {
+    val unresolvedDeps = ArrayList<String>()
+    val output = StringBuilder()
+    override fun onUnresolvedDependency(depName: String) {
+        unresolvedDeps.add(depName)
+    }
+
+    override fun onStdOutput(line: String) {
+        output.append(line).append("\n")
+    }
+
+    override fun onErrorOutput(line: String) {
+        output.append(line).append("\n")
+    }
+
+    override fun toString(): String {
+        return output.toString() +
+                "\r\n------------------------------------------" +
+                "UNRESOLVED: $unresolvedDeps"
+                "\r\n------------------------------------------"
+    }
+
 }
 
 private fun reportDifferences(expected: List<ModuleEntityDto>, actual: List<ModuleEntityDto>) {

@@ -12,7 +12,7 @@ interface WorkspaceImporter {
         projectDirectory: Path,
         defaultSdkPath: Path?,
         virtualFileUrlManager: VirtualFileUrlManager,
-        onUnresolvedDependency: (String) -> Unit,
+        progress: WorkspaceImportProgressReporter,
     ): EntityStorage?
 }
 
@@ -28,3 +28,18 @@ class WorkspaceImportException(
     val logMessage: String?,
     cause: Throwable? = null
 ) : Exception(displayMessage, cause)
+
+interface WorkspaceImportProgressReporter {
+    fun onUnresolvedDependency(depName: String)
+    fun onStdOutput(line: String)
+    fun onErrorOutput(line: String)
+}
+
+class EmptyWorkspaceProgressReporter: WorkspaceImportProgressReporter{
+    override fun onUnresolvedDependency(depName: String) {}
+
+    override fun onStdOutput(line: String) {}
+
+    override fun onErrorOutput(line: String) {}
+
+}

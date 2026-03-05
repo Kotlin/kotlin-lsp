@@ -8,6 +8,7 @@ import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
+import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -32,12 +33,12 @@ object JsonWorkspaceImporter : WorkspaceImporter {
         projectDirectory: Path,
         defaultSdkPath: Path?,
         virtualFileUrlManager: VirtualFileUrlManager,
-        onUnresolvedDependency: (String) -> Unit
+        progress: WorkspaceImportProgressReporter
     ): EntityStorage? {
         if (!isApplicableDirectory(projectDirectory)) return null
         val jsonPath = projectDirectory / "workspace.json"
         return importWorkspaceJson(
-            jsonPath, projectDirectory, defaultSdkPath, virtualFileUrlManager, onUnresolvedDependency
+            jsonPath, projectDirectory, defaultSdkPath, virtualFileUrlManager, progress
         )
     }
 
@@ -46,7 +47,7 @@ object JsonWorkspaceImporter : WorkspaceImporter {
         projectDirectory: Path,
         defaultSdkPath: Path?,
         virtualFileUrlManager: VirtualFileUrlManager,
-        onUnresolvedDependency: (String) -> Unit
+        progress: WorkspaceImportProgressReporter
     ): EntityStorage {
         val workspaceJson: WorkspaceData = try {
             file.inputStream().use { stream ->
@@ -65,7 +66,7 @@ object JsonWorkspaceImporter : WorkspaceImporter {
                 postProcessWorkspaceData(
                     workspaceJson,
                     projectDirectory,
-                    onUnresolvedDependency
+                    progress
                 ),
                 projectDirectory,
                 WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager)),
@@ -78,11 +79,11 @@ object JsonWorkspaceImporter : WorkspaceImporter {
     fun postProcessWorkspaceData(
         workspaceData: WorkspaceData,
         projectDirectory: Path,
-        onUnresolvedDependency: (String) -> Unit,
+        progress: WorkspaceImportProgressReporter,
     ): WorkspaceData {
         val workspaceData = WorkspaceModelProcessorForTests.process(workspaceData)
         val reportUnresolvedName: (String) -> Unit = { name ->
-            onUnresolvedDependency(name.removeSuffix("Gradle: ").removeSuffix("Maven: "))
+            progress.onUnresolvedDependency(name.removeSuffix("Gradle: ").removeSuffix("Maven: "))
         }
         workspaceData.modules.forEach { module ->
             module.dependencies

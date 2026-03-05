@@ -25,6 +25,7 @@ import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.PathUtil
 import com.jetbrains.ls.api.core.util.UriConverter
 import com.jetbrains.ls.imports.api.EmptyWorkspaceImporter
+import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
 import org.jetbrains.kotlin.idea.base.plugin.artifacts.KotlinArtifacts
 import org.jetbrains.kotlin.idea.compiler.configuration.isRunningFromSources
@@ -45,7 +46,7 @@ object LightWorkspaceImporter : EmptyWorkspaceImporter {
         projectDirectory: Path,
         defaultSdkPath: Path?,
         virtualFileUrlManager: VirtualFileUrlManager,
-        onUnresolvedDependency: (String) -> Unit
+        progress : WorkspaceImportProgressReporter
     ): EntityStorage {
         return createLightWorkspace(projectDirectory, virtualFileUrlManager, defaultSdkPath)
     }

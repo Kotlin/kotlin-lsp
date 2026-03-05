@@ -5,6 +5,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.util.io.awaitExit
 import com.jetbrains.ls.imports.api.WorkspaceImportException
+import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,7 +13,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-internal suspend fun ProcessBuilder.runWithErrorReporting(toolName: String, errorReporting: (String) -> Unit) {
+internal suspend fun ProcessBuilder.runWithErrorReporting(toolName: String, progress: WorkspaceImportProgressReporter) {
     val exitValue = withContext(Dispatchers.IO) {
         val process = try {
             start()
@@ -23,7 +24,7 @@ internal suspend fun ProcessBuilder.runWithErrorReporting(toolName: String, erro
                 e
             )
         }
-        val outputJob = logOutput(process, logger<MavenWorkspaceImporter>(), errorReporting)
+        val outputJob = logOutput(process, logger<MavenWorkspaceImporter>(), progress)
         process.awaitExit()
         outputJob.join()
         process.exitValue()
@@ -36,18 +37,21 @@ internal suspend fun ProcessBuilder.runWithErrorReporting(toolName: String, erro
     }
 }
 
-internal suspend fun CoroutineScope.logOutput(process: Process, logger: Logger, errorReporting: (String) -> Unit): Job {
+internal suspend fun CoroutineScope.logOutput(process: Process, logger: Logger,  progress: WorkspaceImportProgressReporter): Job {
 
     return launch {
         launch(Dispatchers.IO) {
             process.inputStream.bufferedReader().use { reader ->
-                reader.forEachLine { logger.info("STDOUT: $it") }
+                reader.forEachLine {
+                    progress.onStdOutput(it)
+                    logger.info("STDOUT: $it") }
             }
         }
         launch(Dispatchers.IO) {
             process.errorStream.bufferedReader().forEachLine { it ->
+                progress.onErrorOutput(it)
                 logger.warn("STDERR: $it")
-                errorReporting(it)
+
             }
         }
     }

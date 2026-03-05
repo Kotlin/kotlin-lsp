@@ -10,6 +10,7 @@ import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.io.delete
 import com.intellij.util.system.OS
+import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
 import com.jetbrains.ls.imports.utils.runWithErrorReporting
@@ -40,7 +41,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         projectDirectory: Path,
         defaultSdkPath: Path?,
         virtualFileUrlManager: VirtualFileUrlManager,
-        onUnresolvedDependency: (String) -> Unit,
+        progress: WorkspaceImportProgressReporter,
     ): EntityStorage? {
         if (!isApplicableDirectory(projectDirectory)) return null
 
@@ -82,7 +83,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                     }
                 }
                 .directory(projectDirectory.toFile())
-                .runWithErrorReporting("Maven", onUnresolvedDependency)
+                .runWithErrorReporting("Maven", progress)
         } finally {
             mavenPluginPomFile.delete()
         }
@@ -106,10 +107,10 @@ object MavenWorkspaceImporter : WorkspaceImporter {
 
                 }
                 .directory(projectDirectory.toFile())
-                .runWithErrorReporting("Maven", onUnresolvedDependency)
+                .runWithErrorReporting("Maven", progress)
 
             return JsonWorkspaceImporter.importWorkspaceJson(
-                workspaceJsonFile, projectDirectory, defaultSdkPath, virtualFileUrlManager, onUnresolvedDependency
+                workspaceJsonFile, projectDirectory, defaultSdkPath, virtualFileUrlManager, progress
             )
         } finally {
             workspaceJsonFile.delete()
