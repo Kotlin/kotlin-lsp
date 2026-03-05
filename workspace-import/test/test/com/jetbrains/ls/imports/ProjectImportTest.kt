@@ -13,27 +13,31 @@ import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
 import com.jetbrains.ls.imports.api.EmptyWorkspaceProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
+import com.jetbrains.ls.imports.json.JavaSettingsData
 import com.jetbrains.ls.imports.json.WorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData
 import com.jetbrains.ls.imports.json.toJson
 import com.jetbrains.ls.imports.json.workspaceData
 import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
 import com.jetbrains.ls.imports.utils.DETECT_PROJECT_SDK
-import com.jetbrains.ls.test.api.utils.compareWithTestdata
 import com.jetbrains.ls.test.api.utils.testApplicationInits
 import com.jetbrains.ls.test.api.utils.testPluginSet
 import com.jetbrains.ls.test.api.utils.testProjectInits
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromStream
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNotNull
 import java.nio.file.Path
 import kotlin.io.path.div
 import kotlin.io.path.exists
+import kotlin.io.path.inputStream
 
 class ProjectImportTest {
     private val testDataDir = PathManager.getHomeDir() /
@@ -52,16 +56,16 @@ class ProjectImportTest {
     fun petClinic() = doGradleTest("PetClinic")
 
     @Test
-    fun multiProjectKotlinDSL() = doGradleTest("MultiProjectKotlinDSL")
+    fun multiProjectKotlinDSL() = doGradleTest("MultiProjectKotlinDSL", ::withIgnoringTargetLanguageLevelOnTeamCity)
 
     @Test
-    fun multiProjectGroovyDSL() = doGradleTest("MultiProjectGroovyDSL")
+    fun multiProjectGroovyDSL() = doGradleTest("MultiProjectGroovyDSL", ::withIgnoringTargetLanguageLevelOnTeamCity)
 
     @Test
-    fun customSourceSets() = doGradleTest("CustomSourceSets")
+    fun customSourceSets() = doGradleTest("CustomSourceSets", ::withIgnoringTargetLanguageLevelOnTeamCity)
 
     @Test
-    fun dependencies() = doGradleTest("Dependencies")
+    fun dependencies() = doGradleTest("Dependencies", ::withIgnoringTargetLanguageLevelOnTeamCity)
 
     @Test
     fun gradle6Project() = doGradleTest("Gradle6Project")
@@ -75,15 +79,15 @@ class ProjectImportTest {
     @Test
     fun nonExistentDependency() {
         // TODO: Check that missing dependencies are reported
-        doGradleTest("NonExistentDependency")
+        doGradleTest("NonExistentDependency", ::withIgnoringTargetLanguageLevelOnTeamCity)
     }
 
     @Test
     fun simpleMaven() = doMavenTest("SimpleMaven")
 
-    private fun doGradleTest(project: String) {
+    private fun doGradleTest(project: String, resultMapper: (WorkspaceData) -> WorkspaceData = { it }) {
         downloadGradleBinaries()
-        doTest(project, GradleWorkspaceImporter, testDataDir / "gradle")
+        doTest(project, GradleWorkspaceImporter, testDataDir / "gradle", resultMapper)
     }
 
     private fun doMavenTest(project: String) {
@@ -93,7 +97,12 @@ class ProjectImportTest {
         doTest(project, MavenWorkspaceImporter, testDataDir / "maven")
     }
 
-    private fun doTest(project: String, importer: WorkspaceImporter, testDataDir: Path) {
+    private fun doTest(
+        project: String,
+        importer: WorkspaceImporter,
+        testDataDir: Path,
+        resultMapper: (WorkspaceData) -> WorkspaceData = { it }
+    ) {
         val projectDir = testDataDir / project
         require(projectDir.exists()) { "Project $project not found at $projectDir" }
 
@@ -122,11 +131,21 @@ class ProjectImportTest {
             return
         }
 
-        val data = workspaceData(storage, projectDir)
-        val workspaceJson = toJson(data)
-        compareWithTestdata(projectDir / "workspace.json", cropJarPaths(workspaceJson))
+        val data = resultMapper(workspaceData(storage, projectDir))
 
-        assertEquals(data, Json.decodeFromString<WorkspaceData>(workspaceJson))
+        val expectedData: WorkspaceData = try {
+            val expectedDataPath = projectDir / "workspace.json"
+            val rawExpectedData: WorkspaceData = expectedDataPath.inputStream()
+                .use { stream ->
+                    @OptIn(ExperimentalSerializationApi::class)
+                    Json.decodeFromStream(stream)
+                }
+            resultMapper(rawExpectedData)
+        } catch (e: Exception) {
+            throw e
+        }
+
+        assertEquals(cropJarPaths(toJson(expectedData)), cropJarPaths(toJson(data)))
 
         val storageFromData = MutableEntityStorage.create().apply {
             importWorkspaceData(data, projectDir, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(true))
@@ -142,4 +161,37 @@ class ProjectImportTest {
             .replace(jsonString.replace("\\\\\\\\", "/").replace("\\\\", "/")) {
                 """<GRADLE_REPO>/${it.groupValues[1]}/#####/${it.groupValues[2]}"""
             }
+
+    /**
+     * If there is no explicitly defined java version in a Gradle project, Gradle will use the version from JAVA_HOME.
+     * JAVA_HOME may differ between environments, thus it's simply to ignore the target java version for such projects.
+     */
+    private fun withIgnoringTargetLanguageLevelOnTeamCity(data: WorkspaceData): WorkspaceData {
+        return if (System.getenv("TEAMCITY_VERSION") != null) {
+            withIgnoringTargetLanguageLevel(data)
+        } else {
+            data
+        }
+    }
+
+    private fun withIgnoringTargetLanguageLevel(data: WorkspaceData): WorkspaceData {
+        return WorkspaceData(
+            data.modules,
+            data.libraries,
+            data.sdks,
+            data.kotlinSettings,
+            data.javaSettings.map {
+                assertNotNull(it.languageLevelId, "Module language level should never be null!")
+                JavaSettingsData(
+                    module = it.module,
+                    inheritedCompilerOutput = it.inheritedCompilerOutput,
+                    excludeOutput = it.excludeOutput,
+                    compilerOutput = it.compilerOutput,
+                    compilerOutputForTests = it.compilerOutputForTests,
+                    languageLevelId = "ignored",
+                    manifestAttributes = it.manifestAttributes
+                )
+            }
+        )
+    }
 }
