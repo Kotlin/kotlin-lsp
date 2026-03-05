@@ -138,8 +138,8 @@
             "module": "simple-maven",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
+            "compilerOutput": "<WORKSPACE>/target/classes",
+            "compilerOutputForTests": "<WORKSPACE>/target/test-classes",
             "languageLevelId": "JDK_17",
             "manifestAttributes": {}
         }

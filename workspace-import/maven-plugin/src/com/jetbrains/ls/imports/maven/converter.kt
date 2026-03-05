@@ -189,25 +189,7 @@ private fun sourceRootData(
 
     fun belongsToProject(dir: String) = projectRoot == null || Path(dir).let { it != projectRoot && it.startsWith(projectRoot) }
 
-    if (module.type.containsMain) {
-        project.compileSourceRoots
-            ?.filter { belongsToProject(it) }
-            ?.forEach { add(SourceRootData(it, "java-source")) }
-        project.resources
-            ?.map { it.directory }
-            ?.filter { belongsToProject(it) }
-            ?.forEach { add(SourceRootData(it, "java-resource")) }
-        kotlinSettings?.compileSourceRoots?.forEach {
-            add(SourceRootData(it, "java-source"))
-        }
-        addBuildHelperRoots(project, "add-source", "sources","java-source")
-        addBuildHelperRoots(project, "add-resource", "resources","java-resource")
-        addModelloGeneratedSources(project, "java-source")
-        addCompilerGeneratedSources(project, "compiler:compile","java-source")
-        addAntlr4GeneratedSources(project, "java-source")
-        addGeneratedDirProperty(project, "java-source")
-    }
-    if (module.type.containsTest) {
+    if (module.type == StandardMavenModuleType.TEST_ONLY) {
         project.testCompileSourceRoots
             ?.filter { belongsToProject(it) }
             ?.forEach { add(SourceRootData(it, "java-test")) }
@@ -222,9 +204,47 @@ private fun sourceRootData(
             ?.forEach { add(SourceRootData(it, "java-test")) }
         addBuildHelperRoots(project, "add-test-source", "sources", "java-test")
         addBuildHelperRoots(project, "add-test-resource", "resources","java-test-resource")
-        addCompilerGeneratedSources(project, "compiler:testCompile","java-source")
+        addCompilerGeneratedSources(project, "compiler:testCompile","java-test")
         addAntlr4GeneratedSources(project, "java-test")
         addModelloGeneratedSources(project, "java-test")
+    } else {
+        if (module.type.containsMain) {
+            project.compileSourceRoots
+                ?.filter { belongsToProject(it) }
+                ?.forEach { add(SourceRootData(it, "java-source")) }
+            project.resources
+                ?.map { it.directory }
+                ?.filter { belongsToProject(it) }
+                ?.forEach { add(SourceRootData(it, "java-resource")) }
+            kotlinSettings?.compileSourceRoots?.forEach {
+                add(SourceRootData(it, "java-source"))
+            }
+            addBuildHelperRoots(project, "add-source", "sources","java-source")
+            addBuildHelperRoots(project, "add-resource", "resources","java-resource")
+            addModelloGeneratedSources(project, "java-source")
+            addCompilerGeneratedSources(project, "compiler:compile","java-source")
+            addAntlr4GeneratedSources(project, "java-source")
+            addGeneratedDirProperty(project, "java-source")
+        }
+        if (module.type.containsTest) {
+            project.testCompileSourceRoots
+                ?.filter { belongsToProject(it) }
+                ?.forEach { add(SourceRootData(it, "java-test")) }
+            project.testResources
+                ?.map { it.directory }
+                ?.filter { belongsToProject(it) }
+                ?.forEach {
+                    add(SourceRootData(it, "java-test-resource"))
+                }
+            kotlinSettings?.testSourceRoots
+                ?.filter { belongsToProject(it) }
+                ?.forEach { add(SourceRootData(it, "java-test")) }
+            addBuildHelperRoots(project, "add-test-source", "sources", "java-test")
+            addBuildHelperRoots(project, "add-test-resource", "resources","java-test-resource")
+            addCompilerGeneratedSources(project, "compiler:testCompile","java-source")
+            addAntlr4GeneratedSources(project, "java-test")
+            addModelloGeneratedSources(project, "java-test")
+        }
     }
 }.toList()
 
@@ -1047,7 +1067,7 @@ private fun MavenProject.extractKotlinSettings(
         productionOutputPath = this.build?.outputDirectory,
         testOutputPath = this.build?.testOutputDirectory,
         sourceSetNames = emptyList(),
-        isTestModule = false,
+        isTestModule = moduleData.type == StandardMavenModuleType.TEST_ONLY,
         externalProjectId = "${this.groupId}:${this.artifactId}:${this.version}",
         isHmppEnabled = true,
         pureKotlinSourceFolders = emptyList(),
@@ -1154,12 +1174,22 @@ internal class MavenTreeModuleImportData(
             } else {
                 jdkLevel
             }
+            val outputDir = mavenProject.build?.outputDirectory?.let { toAbsolutePath(mavenProject, it) }
+            val testOutputDir = mavenProject.build?.testOutputDirectory?.let { toAbsolutePath(mavenProject, it) }
+
+            val (compilerOutput, compilerOutputForTests) = when (moduleData.type) {
+                StandardMavenModuleType.SINGLE_MODULE -> outputDir to testOutputDir
+                StandardMavenModuleType.MAIN_ONLY,
+                StandardMavenModuleType.MAIN_ONLY_ADDITIONAL -> outputDir to null
+                StandardMavenModuleType.TEST_ONLY -> testOutputDir to testOutputDir
+                else -> null to null
+            }
             return JavaSettingsData(
                 module = moduleData.moduleName,
                 inheritedCompilerOutput = false,
                 excludeOutput = false,
-                compilerOutput = null,
-                compilerOutputForTests = null,
+                compilerOutput = compilerOutput,
+                compilerOutputForTests = compilerOutputForTests,
                 languageLevelId = finalJdkLevel,
                 manifestAttributes = emptyMap()
             )

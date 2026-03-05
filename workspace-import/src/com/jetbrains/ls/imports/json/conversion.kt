@@ -124,7 +124,8 @@ private fun toDataClass(dependency: ModuleDependencyItem): DependencyData = when
     is ModuleDependency -> DependencyData.Module(
         name = dependency.module.name,
         scope = DependencyDataScope.valueOf(dependency.scope.name),
-        isExported = dependency.exported
+        isExported = dependency.exported,
+        isTestJar = dependency.productionOnTest
     )
 
     is LibraryDependency -> DependencyData.Library(
@@ -367,7 +368,7 @@ fun MutableEntityStorage.importWorkspaceData(
     }
 
     for (javaSettings in data.javaSettings) {
-        storage addEntity toEntity(javaSettings, entitySource, moduleBuilders[javaSettings.module]!!, workspacePath)
+        storage addEntity toEntity(javaSettings, entitySource, moduleBuilders[javaSettings.module]!!, workspacePath, virtualFileUrlManager)
     }
 }
 
@@ -422,7 +423,8 @@ private fun toEntity(
     javaSettingsData: JavaSettingsData,
     entitySource: EntitySource,
     module: ModuleEntityBuilder,
-    workspacePath: Path
+    workspacePath: Path,
+    virtualFileUrlManager: VirtualFileUrlManager,
 ): JavaModuleSettingsEntityBuilder =
     JavaModuleSettingsEntity(
         inheritedCompilerOutput = javaSettingsData.inheritedCompilerOutput,
@@ -431,6 +433,8 @@ private fun toEntity(
     ) {
         this.module = module
         this.languageLevelId = javaSettingsData.languageLevelId
+        this.compilerOutput = javaSettingsData.compilerOutput?.let { toAbsolutePath(it, workspacePath).toIntellijUri(virtualFileUrlManager) }
+        this.compilerOutputForTests = javaSettingsData.compilerOutputForTests?.let { toAbsolutePath(it, workspacePath).toIntellijUri(virtualFileUrlManager) }
     }
 
 private fun toDataClass(entity: JavaModuleSettingsEntity, workspacePath: Path): JavaSettingsData =
