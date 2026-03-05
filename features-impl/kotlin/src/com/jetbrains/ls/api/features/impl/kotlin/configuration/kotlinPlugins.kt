@@ -14,6 +14,7 @@ internal val kotlinFeature: PluginMainDescriptor = makePlugin(
         "kotlin.code-insight.inspections.shared" to "kotlin.code-insight.inspections.shared.xml",
         "ls.kotlin.searchingBase" to "META-INF/searching-base.xml",
         "features/kotlin/usages" to "META-INF/language-server/features/kotlin/usages.xml",
+        "features/kotlin/import" to "META-INF/language-server/features/kotlin/workspace-import.xml",
         "intellij.kotlin.searching" to "intellij.kotlin.searching.xml",
         "ls.kotlin.formatter" to "META-INF/formatter.xml",
         "intellij.kotlin.codeInsight.base" to "intellij.kotlin.codeInsight.base.xml",

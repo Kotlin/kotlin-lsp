@@ -1,0 +1,9 @@
+<idea-plugin>
+  <extensions defaultExtensionNs="com.intellij">
+    <moduleService serviceInterface="com.intellij.openapi.externalSystem.ExternalSystemModulePropertyManager"
+                   serviceImplementation="com.intellij.openapi.externalSystem.service.project.ExternalSystemModulePropertyManagerBridge"/>
+
+    <applicationService serviceInterface="com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkProvider"
+                        serviceImplementation="com.intellij.openapi.externalSystem.service.execution.DefaultExternalSystemJdkProvider"/>
+  </extensions>
+</idea-plugin>
