@@ -180,7 +180,7 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/lib/src/test"
+                    "path": "<WORKSPACE>/lib/src/integrationTest"
                 }
             ]
         },

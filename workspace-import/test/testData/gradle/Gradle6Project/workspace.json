@@ -28,7 +28,7 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/src/main/java",
+                    "path": "<WORKSPACE>/src/main",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/src/main/java",

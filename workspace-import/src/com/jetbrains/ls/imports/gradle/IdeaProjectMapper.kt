@@ -227,13 +227,9 @@ internal class IdeaProjectMapper {
                 )
             }
         }
-        var commonRoot = findRootForSourceRoots(sourceRoots)
-        if (commonRoot.isEmpty()) {
-            commonRoot = if (isTest) "$moduleRoot/src/test" else "$moduleRoot/src/main"
-        }
         return listOf(
             ContentRootData(
-                commonRoot,
+                findRootForSourceRoots(name, moduleRoot, sourceRoots),
                 emptyList(),
                 excludes.toMutableList(),
                 sourceRoots = sourceRoots
@@ -251,7 +247,10 @@ internal class IdeaProjectMapper {
         return if (isTest) "$prefix-test" else "$prefix-source"
     }
 
-    private fun findRootForSourceRoots(sourceRoots: List<SourceRootData>): String {
+    private fun findRootForSourceRoots(sourceSetName: String, moduleRoot:File, sourceRoots: List<SourceRootData>): String {
+        if (sourceRoots.isEmpty() || sourceRoots.size == 1) {
+            return  "${moduleRoot.path}/src/$sourceSetName"
+        }
         return findCommonPrefix(sourceRoots.map { it.path })
     }
 

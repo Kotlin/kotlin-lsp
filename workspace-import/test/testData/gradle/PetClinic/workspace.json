@@ -488,7 +488,7 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/src/main"
+                    "path": "<WORKSPACE>/src/aot"
                 }
             ]
         },
@@ -1194,7 +1194,7 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/src/test"
+                    "path": "<WORKSPACE>/src/aotTest"
                 }
             ]
         },

@@ -84,7 +84,7 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/src/main/kotlin",
+                    "path": "<WORKSPACE>/app/src/main",
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/app/src/main/kotlin",
