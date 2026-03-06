@@ -68,17 +68,6 @@ import kotlin.io.path.div
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
-    if (args.firstOrNull() == "run") {
-        println(buildString {
-            "IJ_JAVA_OPTIONS".let { k ->
-                appendLine("$k=${System.getenv(k)}")
-            }
-            appendLine("idea.home.path=${PathManager.getHomeDir()}")
-            appendLine("idea.config.path=${PathManager.getConfigDir()}")
-            appendLine("idea.system.path=${PathManager.getSystemDir()}")
-            appendLine()
-        })
-    }
     SystemProperties.setProperty("idea.platform.prefix", "LanguageServer")
     when (val command = parseArguments(args)) {
         is KotlinLspCommand.Help -> {
@@ -113,7 +102,23 @@ fun LSConfiguration.lowMemoryHooks(): List<context(ChangeScope) () -> Unit> =
     }
 
 private fun run(runConfig: KotlinLspServerRunConfig) {
+    val stdout = System.out
     val mode = runConfig.mode
+
+    if (mode == KotlinLspServerMode.Stdio) {
+        System.setOut(System.err)
+    }
+
+    println(buildString {
+        "IJ_JAVA_OPTIONS".let { k ->
+            appendLine("$k=${System.getenv(k)}")
+        }
+        appendLine("idea.home.path=${PathManager.getHomeDir()}")
+        appendLine("idea.config.path=${PathManager.getConfigDir()}")
+        appendLine("idea.system.path=${PathManager.getSystemDir()}")
+        appendLine()
+    })
+
     initKotlinLspLogger(
         writeToStdout = mode != KotlinLspServerMode.Stdio,
         defaultLogLevel = runConfig.defaultLogLevel,
@@ -181,8 +186,6 @@ private fun run(runConfig: KotlinLspServerRunConfig) {
             }
             when (mode) {
                 KotlinLspServerMode.Stdio -> {
-                    val stdout = System.out
-                    System.setOut(System.err)
                     stdioConnection(System.`in`, stdout, body)
                 }
 
