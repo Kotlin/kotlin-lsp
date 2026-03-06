@@ -4,12 +4,15 @@ package com.jetbrains.ls.imports.tests.integration.gradle
 import com.intellij.ide.starter.extended.data.TestCases
 import com.intellij.workspaceModel.integrationTests.data.gradle.gradleTsunamiSecurityScanner.gradleTsunamiSecurityScannerModulesData
 import com.jetbrains.ls.imports.tests.integration.gradleTest
+import com.jetbrains.ls.imports.tests.integration.withIgnoringGradleDistributiveChecksum
 import com.jetbrains.ls.imports.tests.integration.withIgnoringNonClassesRoots
 import org.junit.jupiter.api.Test
 
 class ImportGradleTsunamiSecurityScannerTest {
     @Test
     fun importGradleTsunamiSecurityScanner() {
-        gradleTest(TestCases.IU.GradleTsunamiSecurityScanner, gradleTsunamiSecurityScannerModulesData, ::withIgnoringNonClassesRoots)
+        gradleTest(TestCases.IU.GradleTsunamiSecurityScanner, gradleTsunamiSecurityScannerModulesData) {
+            withIgnoringGradleDistributiveChecksum(withIgnoringNonClassesRoots(it))
+        }
     }
 }

@@ -50,6 +50,7 @@ import org.junit.jupiter.api.fail
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 
+private val gradleDistributiveChecksumRegex: Regex = "/dists/gradle-[^/]+/([a-z0-9]{20,})(?=/)".toRegex()
 
 fun withIgnoringNonClassesRoots(list: List<ModuleEntityDto>): List<ModuleEntityDto> {
     return list.map { module ->
@@ -57,6 +58,24 @@ fun withIgnoringNonClassesRoots(list: List<ModuleEntityDto>): List<ModuleEntityD
             libraries = module.libraries.map { lib ->
                 lib.copy(
                     roots = lib.roots.filter { it.type.name == "CLASSES" }
+                )
+            }
+        )
+    }
+}
+
+// This is necessary because the hash in the Gradle distribution path is based on the URL from which the artifact was downloaded,
+// and independent of the contents of the artifact.
+fun withIgnoringGradleDistributiveChecksum(list: List<ModuleEntityDto>): List<ModuleEntityDto> {
+    return list.map { module ->
+        module.copy(
+            libraries = module.libraries.map { lib ->
+                lib.copy(
+                    roots = lib.roots.map {
+                        it.copy(
+                            url = gradleDistributiveChecksumRegex.replaceFirst(it.url, "DISTRIBUTIVE_SOURCE_HASH")
+                        )
+                    }
                 )
             }
         )

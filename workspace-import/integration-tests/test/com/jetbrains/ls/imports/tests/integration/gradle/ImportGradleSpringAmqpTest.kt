@@ -4,12 +4,15 @@ package com.jetbrains.ls.imports.tests.integration.gradle
 import com.intellij.ide.starter.extended.data.TestCases
 import com.intellij.workspaceModel.integrationTests.data.gradle.gradleSpringAmqp.gradleSpringAmqpModulesData
 import com.jetbrains.ls.imports.tests.integration.gradleTest
+import com.jetbrains.ls.imports.tests.integration.withIgnoringGradleDistributiveChecksum
 import com.jetbrains.ls.imports.tests.integration.withIgnoringNonClassesRoots
 import org.junit.jupiter.api.Test
 
 class ImportGradleSpringAmqpTest {
     @Test
     fun importGradleSpringAmqp() {
-        gradleTest(TestCases.IU.GradleSpringAmqp, gradleSpringAmqpModulesData, ::withIgnoringNonClassesRoots)
+        gradleTest(TestCases.IU.GradleSpringAmqp, gradleSpringAmqpModulesData) {
+            withIgnoringGradleDistributiveChecksum(withIgnoringNonClassesRoots(it))
+        }
     }
 }

@@ -4,12 +4,15 @@ package com.jetbrains.ls.imports.tests.integration.gradle
 import com.intellij.ide.starter.extended.data.TestCases
 import com.intellij.workspaceModel.integrationTests.data.gradle.gradleOkHttp.gradleOkHttpModulesData
 import com.jetbrains.ls.imports.tests.integration.gradleTest
+import com.jetbrains.ls.imports.tests.integration.withIgnoringGradleDistributiveChecksum
 import com.jetbrains.ls.imports.tests.integration.withIgnoringNonClassesRoots
 import org.junit.jupiter.api.Test
 
 class ImportGradleOkHttpTest {
     @Test
     fun importGradleOkHttp() {
-        gradleTest(TestCases.IU.GradleOkHttp, gradleOkHttpModulesData, ::withIgnoringNonClassesRoots)
+        gradleTest(TestCases.IU.GradleOkHttp, gradleOkHttpModulesData) {
+            withIgnoringGradleDistributiveChecksum(withIgnoringNonClassesRoots(it))
+        }
     }
 }

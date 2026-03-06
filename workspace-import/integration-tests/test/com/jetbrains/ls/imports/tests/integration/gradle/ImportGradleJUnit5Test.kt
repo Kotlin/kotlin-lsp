@@ -4,12 +4,15 @@ package com.jetbrains.ls.imports.tests.integration.gradle
 import com.intellij.ide.starter.extended.data.TestCases
 import com.intellij.workspaceModel.integrationTests.data.gradle.jUnit5.gradleJUnit5ModulesData
 import com.jetbrains.ls.imports.tests.integration.gradleTest
+import com.jetbrains.ls.imports.tests.integration.withIgnoringGradleDistributiveChecksum
 import com.jetbrains.ls.imports.tests.integration.withIgnoringNonClassesRoots
 import org.junit.jupiter.api.Test
 
 class ImportGradleJUnit5Test {
     @Test
     fun importGradleJUnit5() {
-        gradleTest(TestCases.IU.GradleJUnit5, gradleJUnit5ModulesData(), ::withIgnoringNonClassesRoots)
+        gradleTest(TestCases.IU.GradleJUnit5, gradleJUnit5ModulesData()) {
+            withIgnoringGradleDistributiveChecksum(withIgnoringNonClassesRoots(it))
+        }
     }
 }
