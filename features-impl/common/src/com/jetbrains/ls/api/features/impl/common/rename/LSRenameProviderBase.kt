@@ -96,14 +96,14 @@ abstract class LSRenameProviderBase(
 
     context(server: LSServer)
     private suspend fun doRename(context: Context): List<FileChange>? {
-        val processor = readAction {
+        val renamer = readAction {
             val target = context.target
             if (!target.isValid) return@readAction null
             Renamer(target.project, target, context.newName, false, false)
         } ?: return null
 
         val renames = try {
-            renameAndGetChangedFiles(processor).mapNotNull { (oldUri, newUri) ->
+            renameAndGetChangedFiles(renamer).mapNotNull { (oldUri, newUri) ->
                 if (oldUri == context.uriToSkip) return@mapNotNull null
                 RenameFile(DocumentUri(oldUri), DocumentUri(newUri))
             }
@@ -128,7 +128,7 @@ abstract class LSRenameProviderBase(
         }
 
         val edits = readAction {
-            processor.originals.map { (_, fileToOriginalText) ->
+            renamer.originals.map { (_, fileToOriginalText) ->
                 val (file, original) = fileToOriginalText
                 val uri = DocumentUri(file.virtualFile.uri)
                 val version = server.documents.getVersion(uri.uri)

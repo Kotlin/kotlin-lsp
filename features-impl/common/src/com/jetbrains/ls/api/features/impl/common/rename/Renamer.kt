@@ -71,6 +71,7 @@ internal class Renamer(
         get() = primaryElement.containingFile ?: throw IllegalStateException("Primary element must have containing file")
     private val usages: Array<UsageInfo>
 
+    // TODO: Use backing fields once they stabilize
     val originals: Map<String, Pair<PsiFile, String>> get() = _originals
     private val _originals: MutableMap<String, Pair<PsiFile, String>> = mutableMapOf()
 
