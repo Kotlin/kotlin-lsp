@@ -4,10 +4,8 @@ package com.jetbrains.ls.api.features.impl.common.rename
 import com.intellij.model.psi.PsiSymbolService
 import com.intellij.model.psi.impl.targetSymbols
 import com.intellij.openapi.application.EDT
-import com.intellij.openapi.application.ex.ApplicationUtil
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.application.writeIntentReadAction
-import com.intellij.openapi.diagnostic.LogLevel
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
@@ -47,11 +45,6 @@ abstract class LSRenameProviderBase(
     override val supportedLanguages: Set<LSLanguage>,
 ) : LSRenameProvider {
     companion object {
-        init {
-            // Suppress irrelevant "Can't invokeAndWait from WT to EDT: probably leads to deadlock" messages
-            ApplicationUtil.LOG.setLevel(LogLevel.OFF)
-        }
-
         private val LOG = logger<LSRenameProviderBase>()
     }
 
@@ -103,24 +96,15 @@ abstract class LSRenameProviderBase(
 
     context(server: LSServer)
     private suspend fun doRename(context: Context): List<FileChange>? {
-        val originals = mutableMapOf<PsiFile, String>()
-        val renames = mutableListOf<RenameFile>()
-        val target = context.target
-        val newName = context.newName
         val processor = readAction {
+            val target = context.target
             if (!target.isValid) return@readAction null
-            target.containingFile?.let {
-                originals[it] = it.text
-            }
-
-            val processor = Renamer(target.project, target, newName, false, false)
-            processor.usages.map { it.file }.distinct().filterNotNull().forEach { originals[it] = it.text }
-            processor
+            Renamer(target.project, target, context.newName, false, false)
         } ?: return null
 
-        try {
-            renameAndGetChangedFiles(processor).mapNotNullTo(renames) { (oldUri, newUri) ->
-                if (oldUri == context.uriToSkip) return@mapNotNullTo null
+        val renames = try {
+            renameAndGetChangedFiles(processor).mapNotNull { (oldUri, newUri) ->
+                if (oldUri == context.uriToSkip) return@mapNotNull null
                 RenameFile(DocumentUri(oldUri), DocumentUri(newUri))
             }
         } catch (ex: Throwable) {
@@ -144,7 +128,8 @@ abstract class LSRenameProviderBase(
         }
 
         val edits = readAction {
-            originals.map { (file, original) ->
+            processor.originals.map { (_, fileToOriginalText) ->
+                val (file, original) = fileToOriginalText
                 val uri = DocumentUri(file.virtualFile.uri)
                 val version = server.documents.getVersion(uri.uri)
                     ?: 0 // According to LSP spec, it should be null, but our serialization would drop it, causing an error on the LSP side. Zero seems to work.

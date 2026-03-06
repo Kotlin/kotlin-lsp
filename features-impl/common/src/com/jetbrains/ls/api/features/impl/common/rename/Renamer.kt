@@ -38,6 +38,9 @@ import com.intellij.refactoring.util.RelatedUsageInfo
 import com.intellij.usageView.UsageInfo
 import com.intellij.usageView.UsageViewUtil
 import com.intellij.util.containers.MultiMap
+import com.jetbrains.lsp.implementation.throwLspError
+import com.jetbrains.lsp.protocol.ErrorCodes
+import com.jetbrains.lsp.protocol.RenameRequestType
 
 /**
  * A re-implementation of [BaseRefactoringProcessor] without UI dependencies*.
@@ -66,7 +69,10 @@ internal class Renamer(
     private val refactoringScope: SearchScope = GlobalSearchScope.projectScope(project)
     private val file: PsiFile
         get() = primaryElement.containingFile ?: throw IllegalStateException("Primary element must have containing file")
-    val usages: Array<UsageInfo>
+    private val usages: Array<UsageInfo>
+
+    val originals: Map<String, Pair<PsiFile, String>> get() = _originals
+    private val _originals: MutableMap<String, Pair<PsiFile, String>> = mutableMapOf()
 
     init {
         RenameUtil.assertNonCompileElement(primaryElement)
@@ -175,8 +181,8 @@ internal class Renamer(
         }
         usagesIn = usagesSet.toTypedArray<UsageInfo>()
 
-        if (!PsiElementRenameHandler.canRename(project, null, primaryElement)) {
-            return
+        PsiElementRenameHandler.getRenameErrorMessage(project, null, primaryElement)?.also {
+            throwLspError(RenameRequestType, it, Unit, ErrorCodes.InvalidParams)
         }
 
         execute(usagesIn)
@@ -284,6 +290,7 @@ internal class Renamer(
     }
 
     private fun execute(usages: Array<UsageInfo>) {
+        saveOriginalFileTexts(usages)
         val usageInfos: MutableCollection<UsageInfo> = linkedSetOf(*usages)
         doRefactoring(usageInfos)
         SuggestedRefactoringProvider.getInstance(project).reset()
@@ -341,6 +348,19 @@ internal class Renamer(
             }
         }
         return usageInfoSet.toTypedArray<UsageInfo>()
+    }
+
+    private fun saveOriginalFileTexts(infos: Array<UsageInfo>) {
+        _originals.clear()
+        addFiles(infos.mapNotNull { it.file })
+        addFiles(allRenames.keys.mapNotNull { it.containingFile })
+    }
+
+    private fun addFiles(list: List<PsiFile>) {
+        list.mapNotNull {  file  ->
+            val virtualFile = file.virtualFile ?: return@mapNotNull null
+            file to virtualFile.url
+        }.distinctBy { it.second }.forEach { _originals[it.second] = it.first to it.first.text }
     }
 
     companion object {
