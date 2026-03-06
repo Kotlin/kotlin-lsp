@@ -8,14 +8,15 @@ import {
     ServerOptions,
     State,
     StateChangeEvent,
-    StreamInfo,
-    TransportKind
+    StreamInfo
 } from 'vscode-languageclient/node';
 import {chmodSync} from 'fs';
 import * as net from "node:net"
-import * as os from 'os';
+import * as os from 'node:os';
+import {spawn} from 'node:child_process';
 import {getContext, getOutputChannel, logInfo} from "./extension"
 import {middleware} from "./middleware";
+import * as readline from 'node:readline';
 
 let _client: LanguageClient | undefined;
 
@@ -190,7 +191,7 @@ async function getRunningJavaServerLspOptions(): Promise<ServerOptions | null> {
 
     const context = getContext()
     const args: string[] = []
-    args.push('run', '--client');
+    args.push('run', '--socket', '0');
     if (context.storageUri) {
         args.push('--system-path', context.storageUri.fsPath)
     }
@@ -203,17 +204,59 @@ async function getRunningJavaServerLspOptions(): Promise<ServerOptions | null> {
     logInfo(`  VM opts: ${JSON.stringify(userJvmOptions)}`);
     logInfo('');
 
-    return <ServerOptions>{
-        command: launcherPath,
-        args: args,
-        options: {
-            env: env,
-        },
-        transport: {
-            kind: TransportKind.socket,
-            port: 9998
+    const serverProcess = spawn(launcherPath, args, {
+        env,
+        stdio: ['ignore', 'pipe', 'ignore'],
+    });
+
+    const port = await new Promise<number>((resolve, reject) => {
+        const timeoutMs = 10_000;
+
+        const cleanup = () => {
+            serverProcess.removeAllListeners('exit');
+            serverProcess.removeAllListeners('error');
+
+            clearTimeout(timer);
         }
-    };
+
+        const onExit = (code: number | null, signal: NodeJS.Signals | null) => {
+            reject(new Error(`Language server process exited before announcing port (code=${code}, signal=${signal})`));
+        };
+
+        const timer = setTimeout(() => {
+            cleanup();
+            serverProcess.kill();
+            reject(new Error("Timed out waiting for language server port announcement"));
+        }, timeoutMs);
+
+        const rl = readline.createInterface({
+            input: serverProcess.stdout,
+            terminal: false
+        });
+
+        rl.on('line', (line: string) => {
+            if (line.indexOf('Server is listening on ') >= 0) {
+                const pos = line.lastIndexOf(':');
+                if (pos > 0) {
+                    const portString = line.substring(pos + 1);
+                    const parsedPort = Number(portString);
+                    if (Number.isInteger(parsedPort)) {
+                        cleanup();
+                        rl.close();
+                        serverProcess.stdout.resume();
+                        resolve(parsedPort);
+                    }
+                }
+            }
+        });
+
+        serverProcess.once('error', reject);
+        serverProcess.once('exit', onExit);
+    });
+
+    logInfo(`Language server is listening on port ${port}`);
+
+    return await connectToLocalLspServer(port);
 }
 
 const jvmOptionsSettingName = 'kotlinLSP.additionalJvmArgs';

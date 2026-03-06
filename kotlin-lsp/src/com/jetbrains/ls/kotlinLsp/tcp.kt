@@ -31,7 +31,7 @@ private val LOG = logger<LspClient>()
 suspend fun tcpServer(config: TcpConnectionConfig.Server, server: suspend CoroutineScope.(LspConnection) -> Unit) {
     SelectorManager(Dispatchers.IO).use { selectorManager ->
         aSocket(selectorManager).tcp().bind(config.host, config.port).use { serverSocket ->
-            LOG.info("Server is listening on ${serverSocket.localAddress}")
+            println("Server is listening on ${serverSocket.localAddress}")
 
             supervisorScope {
                 var hadClient = false
