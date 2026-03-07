@@ -88,8 +88,13 @@ fun main(args: Array<String>) {
 
         is KotlinLspCommand.RunLsp -> {
             val runConfig = command.config
-            run(runConfig)
-            exitProcess(0)
+            try {
+                run(runConfig)
+                exitProcess(0)
+            } catch (e: Throwable) {
+                e.printStackTrace(System.err)
+                exitProcess(1)
+            }
         }
     }
 }
