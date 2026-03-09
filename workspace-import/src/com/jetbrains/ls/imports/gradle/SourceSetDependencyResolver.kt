@@ -115,7 +115,7 @@ internal class SourceSetDependencyResolver {
         if (isTest) {
             dependencies.add(
                 DependencyData.Module(
-                    module.getFqdn() + ".main",
+                    module.name + ".main",
                     DependencyDataScope.COMPILE
                 )
             )

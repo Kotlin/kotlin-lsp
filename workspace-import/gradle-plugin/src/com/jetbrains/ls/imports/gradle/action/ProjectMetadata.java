@@ -13,12 +13,12 @@ import java.util.Set;
 
 public final class ProjectMetadata implements Serializable {
 
-    private final @NonNull List<IdeaProject> includedProjects;
+    private final @NonNull List<? extends IdeaProject> includedProjects;
     private final @NonNull Map<String, KotlinModule> kotlinModules;
     private final @NonNull Map<String, Set<@NonNull ModuleSourceSet>> sourceSets;
 
     public ProjectMetadata(
-            @NonNull List<IdeaProject> includedProjects,
+            @NonNull List<? extends IdeaProject> includedProjects,
             @NonNull Map<@NonNull String, @NonNull KotlinModule> kotlinModules,
             @NonNull Map<@NonNull String, @NonNull Set<@NonNull ModuleSourceSet>> sourceSets
     ) {
@@ -27,7 +27,7 @@ public final class ProjectMetadata implements Serializable {
         this.sourceSets = sourceSets;
     }
 
-    public @NonNull List<IdeaProject> getIncludedProjects() {
+    public @NonNull List<? extends IdeaProject> getIncludedProjects() {
         return includedProjects;
     }
 

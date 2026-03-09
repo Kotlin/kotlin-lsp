@@ -153,7 +153,6 @@ internal class IdeaProjectMapper {
         javaSettingsConsumer: (JavaSettingsData) -> Unit,
         sdkConsumer: (SdkData) -> Unit
     ): Map<String, ModuleData> {
-        val moduleName = module.getFqdn()
         val modules = mutableMapOf<String, ModuleData>()
         val moduleSdk = getSdkData(module)
         if (moduleSdk != null) {
@@ -164,8 +163,8 @@ internal class IdeaProjectMapper {
         } else {
             DependencyData.InheritedSdk
         }
-        modules[moduleName] = ModuleData(
-            name = moduleName,
+        modules[module.name] = ModuleData(
+            name = module.name,
             dependencies = listOf(
                 DependencyData.ModuleSource,
                 sdkDependencyData
@@ -178,9 +177,9 @@ internal class IdeaProjectMapper {
         if (javaSettings != null) {
             javaSettingsConsumer(javaSettings)
         }
-        val associatedSourceSets = metadata.sourceSets[moduleName]
+        val associatedSourceSets = metadata.sourceSets[module.name]
         if (associatedSourceSets.isNullOrEmpty()) {
-            LOG.info("$moduleName has an empty set of source sets")
+            LOG.info("${module.name} has an empty set of source sets")
             return modules
         }
 
@@ -190,14 +189,14 @@ internal class IdeaProjectMapper {
                     if (sourceSet.hasUnresolvedDependencies()) {
                         addAll(dependencyResolver.resolveDependenciesFromIdeaModule(module, sourceSet))
                     } else {
-                        addAll(dependencyResolver.resolveDependencies(moduleName, sourceSet))
+                        addAll(dependencyResolver.resolveDependencies(module.name, sourceSet))
                     }
                     add(DependencyData.ModuleSource)
                     add(sdkDependencyData)
                 }
 
-            modules["$moduleName.${sourceSet.name}"] = ModuleData(
-                name = "$moduleName.${sourceSet.name}",
+            modules["${module.name}.${sourceSet.name}"] = ModuleData(
+                name = "${module.name}.${sourceSet.name}",
                 dependencies = sourceSetDependencies,
                 contentRoots = sourceSet.toContentRootData(
                     module.gradleProject.projectDirectory,
@@ -292,21 +291,36 @@ internal class IdeaProjectMapper {
         if (module.javaLanguageSettings.isSpecified()) {
             val targetJavaVersion = module.javaLanguageSettings?.targetBytecodeVersion?.name
                 ?: sourceSet?.toolchainVersion?.toString() ?: return null
-            var moduleName = module.getFqdn()
+            var moduleName = module.name
             if (sourceSet != null) {
                 moduleName += ".${sourceSet.name}"
             }
-            return JavaSettingsData(
-                module = moduleName,
-                inheritedCompilerOutput = module.compilerOutput?.inheritOutputDirs ?: false,
-                compilerOutput = module.compilerOutput?.outputDir?.path,
-                compilerOutputForTests = module.compilerOutput?.testOutputDir?.path,
-                languageLevelId = "JDK_${targetJavaVersion.removePrefix("VERSION_")}",
-                manifestAttributes = emptyMap(),
-                excludeOutput = false
-            )
+            return getJavaSettingsData(moduleName, module, targetJavaVersion)
+        }
+        // project java settings should be used for the buildSrc project
+        if (module.name.contains("buildSrc") && module.project.javaLanguageSettings.isSpecified()) {
+            var moduleName = module.name
+            if (sourceSet != null) {
+                moduleName += ".${sourceSet.name}"
+            }
+            return getJavaSettingsData(moduleName, module, module.project.javaLanguageSettings?.targetBytecodeVersion?.name)
         }
         return null
+    }
+
+    private fun getJavaSettingsData(moduleName: String, module: IdeaModule, targetJavaVersion: String?): JavaSettingsData? {
+        if (targetJavaVersion == null) {
+            return null
+        }
+        return JavaSettingsData(
+            module = moduleName,
+            inheritedCompilerOutput = module.compilerOutput?.inheritOutputDirs ?: false,
+            compilerOutput = module.compilerOutput?.outputDir?.path,
+            compilerOutputForTests = module.compilerOutput?.testOutputDir?.path,
+            languageLevelId = "JDK_${targetJavaVersion.removePrefix("VERSION_")}",
+            manifestAttributes = emptyMap(),
+            excludeOutput = false
+        )
     }
 
     private fun IdeaJavaLanguageSettings?.isSpecified(): Boolean {
