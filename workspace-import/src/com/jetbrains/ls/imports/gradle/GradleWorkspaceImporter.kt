@@ -16,14 +16,16 @@ import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.findTheMostCompatibleJdk
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.getInitScriptPath
 import com.jetbrains.ls.imports.gradle.action.ProjectMetadataBuilder
+import com.jetbrains.ls.imports.gradle.util.GradleOutputStream
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter.postProcessWorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData
 import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
 import org.gradle.tooling.GradleConnector
+import org.gradle.tooling.events.OperationType
+import org.gradle.tooling.events.ProgressEvent
 import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
-import kotlin.io.path.Path
 import kotlin.io.path.div
 import kotlin.io.path.exists
 
@@ -88,6 +90,12 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                             )
                         }
                     }
+                    .setStandardOutput(GradleOutputStream { line -> progress.onStdOutput(line) })
+                    .setStandardError(GradleOutputStream { line -> progress.onErrorOutput(line) })
+                    .addProgressListener(
+                        GradleProgressListener { line -> progress.onStdOutput(line) },
+                        setOf(OperationType.GENERIC, OperationType.FILE_DOWNLOAD, OperationType.PROJECT_CONFIGURATION)
+                    )
                     .withCancellationToken(GradleConnector.newCancellationTokenSource().token())
                     val jdkToUse = findTheMostCompatibleJdk(project, projectDirectory)
                     if (jdkToUse != null) {
@@ -112,6 +120,12 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                 ignoreDuplicateLibsAndSdks = true,
             )
             fixMissingProjectSdk(defaultSdkPath, virtualFileUrlManager)
+        }
+    }
+
+    private class GradleProgressListener(private val lineConsumer: (line: String) -> Unit) : org.gradle.tooling.events.ProgressListener {
+        override fun statusChanged(event: ProgressEvent) {
+            lineConsumer(event.displayName)
         }
     }
 }
