@@ -17,7 +17,6 @@ import com.jetbrains.ls.imports.json.SourceRootData
 import com.jetbrains.ls.imports.json.WorkspaceData
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import org.gradle.tooling.model.HierarchicalElement
 import org.gradle.tooling.model.idea.IdeaJavaLanguageSettings
 import org.gradle.tooling.model.idea.IdeaModule
 import org.gradle.tooling.model.idea.IdeaProject
@@ -29,6 +28,7 @@ internal class IdeaProjectMapper {
 
     private val LOG = logger<IdeaProjectMapper>()
     private val dependencyResolver: SourceSetDependencyResolver = SourceSetDependencyResolver()
+    private val projectJdkCache: MutableMap<String, SdkData?> = mutableMapOf()
 
     fun toWorkspaceData(metadata: ProjectMetadata): WorkspaceData {
         val sdks: MutableList<SdkData> = mutableListOf()
@@ -37,6 +37,7 @@ internal class IdeaProjectMapper {
 
         val allGradleModules: List<IdeaModule> = metadata.includedProjects.flatMap { it.modules }
         dependencyResolver.init(allGradleModules, metadata.sourceSets)
+        fillProjectJdkCache(metadata.includedProjects)
 
         allGradleModules
             .map {
@@ -49,6 +50,8 @@ internal class IdeaProjectMapper {
             }
             .forEach { modules.putAll(it) }
 
+        sdks.addAll(projectJdkCache.values.filterNotNull())
+
         return WorkspaceData(
             modules = modules.values.toList(),
             libraries = dependencyResolver.getProjectDependencies(),
@@ -58,6 +61,11 @@ internal class IdeaProjectMapper {
         )
     }
 
+    private fun fillProjectJdkCache(includedProjects: List<IdeaProject>) {
+        for (project in includedProjects) {
+            projectJdkCache[project.name] = project.getProjectJdk()
+        }
+    }
 
     private val mainSourceSetSuffix: String = ".main"
     private val testSourceSetSuffix: String = ".test"
@@ -166,7 +174,7 @@ internal class IdeaProjectMapper {
                 ContentRootData(module.gradleProject.projectDirectory.path)
             )
         )
-        val javaSettings = getJavaSettingsData(module, module)
+        val javaSettings = getJavaSettingsData(module, null)
         if (javaSettings != null) {
             javaSettingsConsumer(javaSettings)
         }
@@ -196,10 +204,9 @@ internal class IdeaProjectMapper {
                     sourceSet.isTest()
                 )
             )
-            if (javaSettings != null) {
-                javaSettingsConsumer(
-                    javaSettings.copy(module = "$moduleName.${sourceSet.name}")
-                )
+            val sourceSetJavaSettings = getJavaSettingsData(module, sourceSet)
+            if (sourceSetJavaSettings != null) {
+                javaSettingsConsumer(sourceSetJavaSettings)
             }
         }
         return modules
@@ -281,32 +288,25 @@ internal class IdeaProjectMapper {
             .any { Path.of(it.path).exists() }
     }
 
-    private fun getJavaSettingsData(module: IdeaModule, javaInformationSource: HierarchicalElement): JavaSettingsData? {
-        if (javaInformationSource is IdeaModule && javaInformationSource.javaLanguageSettings.isSpecified()) {
+    private fun getJavaSettingsData(module: IdeaModule, sourceSet: ModuleSourceSet?): JavaSettingsData? {
+        if (module.javaLanguageSettings.isSpecified()) {
+            val targetJavaVersion = module.javaLanguageSettings?.targetBytecodeVersion?.name
+                ?: sourceSet?.toolchainVersion?.toString() ?: return null
+            var moduleName = module.getFqdn()
+            if (sourceSet != null) {
+                moduleName += ".${sourceSet.name}"
+            }
             return JavaSettingsData(
-                module = module.getFqdn(),
+                module = moduleName,
                 inheritedCompilerOutput = module.compilerOutput?.inheritOutputDirs ?: false,
                 compilerOutput = module.compilerOutput?.outputDir?.path,
                 compilerOutputForTests = module.compilerOutput?.testOutputDir?.path,
-                languageLevelId = javaInformationSource.javaLanguageSettings?.targetBytecodeVersion?.name?.replace("VERSION", "JDK"),
+                languageLevelId = "JDK_${targetJavaVersion.removePrefix("VERSION_")}",
                 manifestAttributes = emptyMap(),
                 excludeOutput = false
             )
-        } else if (javaInformationSource is IdeaProject) {
-            if (javaInformationSource.javaLanguageSettings.isSpecified()) {
-                return JavaSettingsData(
-                    module = module.getFqdn(),
-                    inheritedCompilerOutput = module.compilerOutput?.inheritOutputDirs ?: false,
-                    compilerOutput = module.compilerOutput?.outputDir?.path,
-                    compilerOutputForTests = module.compilerOutput?.testOutputDir?.path,
-                    languageLevelId = javaInformationSource.javaLanguageSettings?.targetBytecodeVersion?.name?.replace("VERSION", "JDK"),
-                    manifestAttributes = emptyMap(),
-                    excludeOutput = false
-                )
-            }
         }
-        val parent = javaInformationSource.parent ?: return null
-        return getJavaSettingsData(module, parent)
+        return null
     }
 
     private fun IdeaJavaLanguageSettings?.isSpecified(): Boolean {
@@ -316,6 +316,10 @@ internal class IdeaProjectMapper {
     private fun getSdkData(module: IdeaModule): SdkData? {
         return if (module.javaLanguageSettings.isSpecified()) {
             val jdkSettings = module.javaLanguageSettings?.jdk ?: return null
+            val projectJdk = projectJdkCache.computeIfAbsent(module.project.name) { module.project.getProjectJdk() }
+            if (jdkSettings.javaVersion.name == projectJdk?.name) {
+                return null
+            }
             SdkData(
                 name = module.jdkName,
                 type = "jdk",
@@ -326,6 +330,16 @@ internal class IdeaProjectMapper {
         } else {
             null
         }
+    }
+
+    private fun IdeaProject.getProjectJdk(): SdkData {
+        return SdkData(
+            name = jdkName,
+            type = "jdk",
+            homePath = javaLanguageSettings?.jdk?.javaHome?.path,
+            version = javaLanguageSettings?.jdk?.javaVersion?.majorVersion?.let { "JDK_$it" },
+            additionalData = ""
+        )
     }
 
     @Serializable

@@ -3,6 +3,7 @@ package com.jetbrains.ls.imports.gradle.model.impl;
 
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.io.File;
 import java.util.Set;
@@ -18,6 +19,7 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
     private final @NonNull Set<@NonNull File> compileClasspath;
     private final @NonNull Set<@NonNull File> sourceSetOutput;
     private final boolean hasUnresolvedDependencies;
+    private final @Nullable Integer toolchainVersion;
 
     public ModuleSourceSetImpl(
             @NonNull String name,
@@ -27,7 +29,8 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
             @NonNull Set<@NonNull File> runtimeClasspath,
             @NonNull Set<@NonNull File> compileClasspath,
             @NonNull Set<@NonNull File> sourceSetOutput,
-            boolean hasUnresolvedDependencies
+            boolean hasUnresolvedDependencies,
+            @Nullable Integer toolchainVersion
     ) {
         this.name = name;
         this.sources = sources;
@@ -37,6 +40,7 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
         this.compileClasspath = compileClasspath;
         this.sourceSetOutput = sourceSetOutput;
         this.hasUnresolvedDependencies = hasUnresolvedDependencies;
+        this.toolchainVersion = toolchainVersion;
     }
 
     @Override
@@ -77,5 +81,10 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
     @Override
     public boolean hasUnresolvedDependencies() {
         return hasUnresolvedDependencies;
+    }
+
+    @Override
+    public @Nullable Integer getToolchainVersion() {
+        return toolchainVersion;
     }
 }

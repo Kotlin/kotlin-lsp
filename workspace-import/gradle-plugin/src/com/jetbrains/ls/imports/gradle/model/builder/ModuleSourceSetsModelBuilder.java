@@ -10,11 +10,15 @@ import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.api.plugins.ExtensionContainer;
+import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.bundling.Jar;
+import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.tooling.provider.model.ToolingModelBuilder;
+import org.gradle.util.GradleVersion;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -70,6 +74,19 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
             Set<File> compilationUnits = sourceSet.getOutput().getFiles();
             producedArtifacts.addAll(compilationUnits);
 
+            Integer targetBytecodeLevel = null;
+            if (GradleVersion.current().compareTo(GradleVersion.version("6.7")) >= 0) {
+                JavaPluginExtension javaExtension = project.getExtensions()
+                        .findByType(JavaPluginExtension.class);
+                if (javaExtension != null) {
+                    Property<JavaLanguageVersion> languageVersionProperty = javaExtension.getToolchain()
+                            .getLanguageVersion();
+                    if (languageVersionProperty.isPresent()) {
+                        targetBytecodeLevel = languageVersionProperty.get().asInt();
+                    }
+                }
+            }
+
             String sourceSetName = sourceSet.getName();
             Set<File> runtimeDependencies = resolveFileCollectionFiles(sourceSetName, sourceSet.getRuntimeClasspath());
             Set<File> compileDependencies = resolveFileCollectionFiles(sourceSetName, sourceSet.getCompileClasspath());
@@ -81,7 +98,8 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
                     runtimeDependencies == null ? Collections.emptySet() : runtimeDependencies,
                     compileDependencies == null ? Collections.emptySet() : compileDependencies,
                     producedArtifacts,
-                    runtimeDependencies == null || compileDependencies == null
+                    runtimeDependencies == null || compileDependencies == null,
+                    targetBytecodeLevel
             ));
         }
         return result;

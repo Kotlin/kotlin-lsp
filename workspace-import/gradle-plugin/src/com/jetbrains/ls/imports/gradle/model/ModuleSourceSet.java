@@ -2,6 +2,7 @@
 package com.jetbrains.ls.imports.gradle.model;
 
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.io.File;
 import java.io.Serializable;
@@ -25,4 +26,6 @@ public interface ModuleSourceSet extends Serializable {
     @NonNull Set<@NonNull File> getSourceSetOutput();
 
     boolean hasUnresolvedDependencies();
+
+    @Nullable Integer getToolchainVersion();
 }
