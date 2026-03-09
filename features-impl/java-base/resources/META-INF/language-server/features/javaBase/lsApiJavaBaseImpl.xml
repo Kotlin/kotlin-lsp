@@ -4,6 +4,10 @@
                     beanClass="com.intellij.lang.LanguageExtensionPoint" dynamic="true">
       <with attribute="implementationClass" implements="com.intellij.modcompletion.ModCompletionItemProvider"/>
     </extensionPoint>
+    <extensionPoint qualifiedName="com.intellij.modcompletion.completionItemFilter"
+                    beanClass="com.intellij.lang.LanguageExtensionPoint" dynamic="true">
+      <with attribute="implementationClass" implements="com.intellij.modcompletion.ModCompletionItemFilter"/>
+    </extensionPoint>
     <extensionPoint qualifiedName="com.intellij.java.errorFixProvider" dynamic="true" 
                     interface="com.intellij.codeInsight.daemon.impl.analysis.JavaErrorFixProvider"/>
     <extensionPoint qualifiedName="com.intellij.codeInsight.changeVariableTypeQuickFixProvider" interface="com.intellij.codeInsight.quickfix.ChangeVariableTypeQuickFixProvider" dynamic="true"/>
