@@ -23,12 +23,17 @@ import org.gradle.tooling.GradleConnector
 import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
+import kotlin.io.path.Path
 import kotlin.io.path.div
 import kotlin.io.path.exists
 
 private val LOG = logger<GradleWorkspaceImporter>()
 
 object GradleWorkspaceImporter : WorkspaceImporter {
+    const val LSP_GRADLE_PROJECT_OFFLINE_PROPERTY: String = "com.jetbrains.ls.imports.gradle.offline"
+    const val LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY: String = "com.jetbrains.ls.imports.gradle.gradleUserHome"
+    const val LSP_GRADLE_PROJECT_SELF_CONTAINED_INIT_SCRIPT: String = "com.jetbrains.ls.imports.gradle.selfContainedInitScript"
+    const val LSP_GRADLE_PROJECT_SELF_CONTAINED_PROXY_URL_PROPERTY: String = "com.jetbrains.ls.imports.gradle.selfContainedProxyUrl"
 
     private fun isApplicableDirectory(projectDirectory: Path): Boolean {
         return listOf(
@@ -52,13 +57,38 @@ object GradleWorkspaceImporter : WorkspaceImporter {
 
         val gradleProjectData = GradleConnector.newConnector()
             .forProjectDirectory(projectDirectory.toFile())
+            .also { gradleConnector ->
+                System.getProperty(LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY)?.let {
+                    if (it.isNotBlank()) {
+                        val gradleUserHome = Path.of(it)
+                        check(gradleUserHome.exists())
+                        gradleConnector.useGradleUserHomeDir(gradleUserHome.toFile())
+                    }
+
+                }
+            }
             .connect()
             .use {
                 val initScriptPath = getInitScriptPath()
                 try {
                     val builder = it.action(ProjectMetadataBuilder())
                         .addArguments("--stacktrace", "--init-script", initScriptPath.absolutePathString())
-                        .withCancellationToken(GradleConnector.newCancellationTokenSource().token())
+                        .also { builder ->
+                        if (System.getProperty(LSP_GRADLE_PROJECT_OFFLINE_PROPERTY)?.toBoolean() == true) {
+                            System.getProperty(LSP_GRADLE_PROJECT_SELF_CONTAINED_INIT_SCRIPT)?.let { initScript ->
+                                builder.addArguments(
+                                    "--init-script",
+                                    Path.of(initScript).toString()
+                                )
+                            }?.setEnvironmentVariables(
+                                mapOf(
+                                    "SELF_CONTAINED_PROXY_URL" to System.getProperty(LSP_GRADLE_PROJECT_SELF_CONTAINED_PROXY_URL_PROPERTY),
+                                    "GRADLE_USER_HOME" to System.getProperty(LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY)
+                                )
+                            )
+                        }
+                    }
+                    .withCancellationToken(GradleConnector.newCancellationTokenSource().token())
                     val jdkToUse = findTheMostCompatibleJdk(project, projectDirectory)
                     if (jdkToUse != null) {
                         builder.setJavaHome(File(jdkToUse))
