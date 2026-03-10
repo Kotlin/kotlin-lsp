@@ -1761,9 +1761,7 @@
     "excludeDirs": [],
     "outputDir": "",
     "testOutputDir": "",
-    "facetNames": [
-      "Web"
-    ],
+    "facetNames" : [ ],
     "totalDependenciesNumber": 66,
     "libraries": [
       {
@@ -3586,9 +3584,7 @@
     "excludeDirs": [],
     "outputDir": "",
     "testOutputDir": "",
-    "facetNames": [
-      "Web"
-    ],
+    "facetNames" : [ ],
     "totalDependenciesNumber": 70,
     "libraries": [
       {
@@ -5523,9 +5519,7 @@
     "excludeDirs": [],
     "outputDir": "",
     "testOutputDir": "",
-    "facetNames": [
-      "Web"
-    ],
+    "facetNames" : [ ],
     "totalDependenciesNumber": 97,
     "libraries": [
       {
@@ -9353,9 +9347,7 @@
     "excludeDirs": [],
     "outputDir": "",
     "testOutputDir": "",
-    "facetNames": [
-      "Web"
-    ],
+    "facetNames" : [ ],
     "totalDependenciesNumber": 68,
     "libraries": [
       {
@@ -15611,9 +15603,7 @@
     "excludeDirs": [],
     "outputDir": "",
     "testOutputDir": "",
-    "facetNames": [
-      "Web"
-    ],
+    "facetNames" : [ ],
     "totalDependenciesNumber": 68,
     "libraries": [
       {
@@ -17492,9 +17482,7 @@
     "excludeDirs": [],
     "outputDir": "",
     "testOutputDir": "",
-    "facetNames": [
-      "Web"
-    ],
+    "facetNames" : [ ],
     "totalDependenciesNumber": 68,
     "libraries": [
       {
@@ -20888,9 +20876,7 @@
     "excludeDirs": [],
     "outputDir": "",
     "testOutputDir": "",
-    "facetNames": [
-      "Web"
-    ],
+    "facetNames" : [ ],
     "totalDependenciesNumber": 68,
     "libraries": [
       {
@@ -22769,9 +22755,7 @@
     "excludeDirs": [],
     "outputDir": "",
     "testOutputDir": "",
-    "facetNames": [
-      "Web"
-    ],
+    "facetNames" : [ ],
     "totalDependenciesNumber": 68,
     "libraries": [
       {
@@ -24650,9 +24634,7 @@
     "excludeDirs": [],
     "outputDir": "",
     "testOutputDir": "",
-    "facetNames": [
-      "Web"
-    ],
+    "facetNames" : [ ],
     "totalDependenciesNumber": 57,
     "libraries": [
       {
@@ -27542,9 +27524,7 @@
     "excludeDirs": [],
     "outputDir": "",
     "testOutputDir": "",
-    "facetNames": [
-      "Web"
-    ],
+    "facetNames" : [ ],
     "totalDependenciesNumber": 78,
     "libraries": [
       {
@@ -30826,9 +30806,7 @@
     "excludeDirs": [],
     "outputDir": "",
     "testOutputDir": "",
-    "facetNames": [
-      "Web"
-    ],
+    "facetNames" : [ ],
     "totalDependenciesNumber": 66,
     "libraries": [
       {
@@ -32651,9 +32629,7 @@
     "excludeDirs": [],
     "outputDir": "",
     "testOutputDir": "",
-    "facetNames": [
-      "Web"
-    ],
+    "facetNames" : [ ],
     "totalDependenciesNumber": 71,
     "libraries": [
       {
@@ -34616,9 +34592,7 @@
     "excludeDirs": [],
     "outputDir": "",
     "testOutputDir": "",
-    "facetNames": [
-      "Web"
-    ],
+    "facetNames" : [ ],
     "totalDependenciesNumber": 87,
     "libraries": [
       {
@@ -37029,9 +37003,7 @@
     "excludeDirs": [],
     "outputDir": "",
     "testOutputDir": "",
-    "facetNames": [
-      "Web"
-    ],
+    "facetNames" : [ ],
     "totalDependenciesNumber": 63,
     "libraries": [
       {
