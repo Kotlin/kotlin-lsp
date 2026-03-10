@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features.impl.common.diagnostics
 
 import com.intellij.codeHighlighting.HighlightDisplayLevel
+import com.intellij.codeInsight.daemon.ProblemHighlightFilter
 import com.intellij.codeInsight.intention.IntentionAction
 import com.intellij.codeInspection.GlobalInspectionTool
 import com.intellij.codeInspection.GlobalSimpleInspectionTool
@@ -89,6 +90,7 @@ class LSCommonInspectionDiagnosticProvider(
                 val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
                 val document = virtualFile.findDocument() ?: return@readAction emptyList()
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
+                if (!ProblemHighlightFilter.shouldHighlightFile(psiFile)) return@readAction emptyList()
 
                 // TODO(bartekpacia): centralize common logging so it's not repeated N times across all LS*Providers
                 LOG.debug("request textDocument/diagnostic for ${virtualFile.name}")
