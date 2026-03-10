@@ -7,18 +7,30 @@ import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.platform.workspace.storage.EntityStorage
+import com.intellij.platform.workspace.storage.MutableEntityStorage
+import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.io.delete
 import com.intellij.util.system.OS
+import com.jetbrains.ls.imports.api.WorkspaceEntitySource
+import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
+import com.jetbrains.ls.imports.json.WorkspaceData
+import com.jetbrains.ls.imports.json.importWorkspaceData
+import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
 import com.jetbrains.ls.imports.utils.runWithErrorReporting
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromStream
+import java.io.InputStream
 import java.nio.file.Path
-import kotlin.io.path.absolutePathString
 import kotlin.io.path.createTempFile
 import kotlin.io.path.div
 import kotlin.io.path.exists
+import kotlin.io.path.inputStream
 import kotlin.io.path.writeText
 
 private val LOG = logger<MavenWorkspaceImporter>()
@@ -30,6 +42,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
     const val LSP_MAVEN_PROJECT_OFFLINE_PROPERTY: String = "com.jetbrains.ls.imports.maven.offline"
     const val LSP_MAVEN_PROJECT_MAVEN_USER_HOME_PROPERTY: String = "com.jetbrains.ls.imports.maven.mavenUserHome"
     const val LSP_MAVEN_PROJECT_MAVEN_OPTS_PROPERTY: String = "com.jetbrains.ls.imports.maven.opts"
+
 
     fun useMavenAndJava(mavenHome: Path, javaHome: Path) {
         System.setProperty(JB_MAVEN_HOME, mavenHome.toString())
@@ -61,6 +74,104 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         }
         LOG.info("Using Maven: $execPath (JAVA_HOME=${javaHome ?: "unspecified"})")
 
+
+        val offlineOpts = if(System.getProperty(LSP_MAVEN_PROJECT_OFFLINE_PROPERTY).toBoolean()) listOf("-o") else emptyList()
+        installMavenPlugin(execPath, javaHome, projectDirectory, progress, offlineOpts)
+
+
+        try {
+            val workspaceResult = runMavenPluginGoal(execPath, javaHome, projectDirectory, "info", progress)
+            when (workspaceResult) {
+                is ErrorResult -> throw workspaceResult.e
+                is SuccessResult -> return MutableEntityStorage.create().apply {
+                    importWorkspaceData(
+                        JsonWorkspaceImporter.postProcessWorkspaceData(
+                            workspaceResult.workspaceData,
+                            projectDirectory,
+                            progress
+                        ),
+                        projectDirectory,
+                        WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager)),
+                        virtualFileUrlManager
+                    )
+                    fixMissingProjectSdk(defaultSdkPath, virtualFileUrlManager)
+                }
+            }
+        } finally {
+
+        }
+    }
+
+    private suspend fun runMavenPluginGoal(
+        execPath: Path?,
+        javaHome: String?,
+        projectDirectory: Path,
+        goal: String,
+        progress: WorkspaceImportProgressReporter,
+        additionalParams: List<String> = emptyList()
+    ): MavenRunResult {
+
+        val mavenUserHomeProperty = System.getProperty(LSP_MAVEN_PROJECT_MAVEN_USER_HOME_PROPERTY)
+        val mavenOpts = System.getProperty(LSP_MAVEN_PROJECT_MAVEN_OPTS_PROPERTY)
+        val workspaceJsonFile = createTempFile("workspace", ".json")
+        try {
+            val command = listOf(
+                execPath.toString(),
+                "com.jetbrains.ls:imports-maven-plugin:$goal",
+                "-f",
+                "pom.xml",
+                "-DoutputFile=${workspaceJsonFile.toAbsolutePath()}"
+            )
+            ProcessBuilder(command + additionalParams)
+                .apply {
+                    javaHome?.let {
+                        environment()["JAVA_HOME"] = it
+                    }
+                    if(System.getProperty("maven.importer.debug").toBoolean()) {
+                        val agentLibOpt = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"
+                        val currentMavenOpts = environment()["MAVEN_OPTS"]
+                        environment()["MAVEN_OPTS"] = if (currentMavenOpts.isNullOrEmpty()) {
+                            agentLibOpt
+                        } else {
+                            "$currentMavenOpts $agentLibOpt"
+                        }
+                    }
+                    mavenUserHomeProperty?.let {
+                        environment()["MAVEN_USER_HOME"] = it
+                    }
+                    mavenOpts?.let {
+                        environment()["MAVEN_OPTS"] = it
+                    }
+
+                }
+                .directory(projectDirectory.toFile())
+                .runWithErrorReporting("Maven", progress)
+
+            return SuccessResult(workspaceJsonFile.inputStream().use<InputStream, WorkspaceData> { stream ->
+                @OptIn(ExperimentalSerializationApi::class)
+                Json.decodeFromStream<WorkspaceData>(stream)
+
+            })
+        } catch (e: SerializationException) {
+            return ErrorResult(
+                WorkspaceImportException(
+                    "Error parsing workspace.json",
+                    "Error parsing workspace.json:\n ${e.message ?: e.stackTraceToString()}",
+                    e
+                )
+            )
+        } finally {
+            workspaceJsonFile.delete()
+        }
+
+    }
+
+    private suspend fun installMavenPlugin(
+        execPath: Path?,
+        javaHome: String?,
+        projectDirectory: Path,
+        progress: WorkspaceImportProgressReporter
+    ) {
         val pomResourcePath = "/META-INF/maven/com.jetbrains.ls/imports.maven.plugin/pom.xml"
         val pluginJar = PathManager.getResourceRoot(this::class.java, pomResourcePath)
             ?: error("Corrupted installation: maven plugin jar not found")
@@ -68,30 +179,20 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         val pluginPom = javaClass.getResource(pomResourcePath)?.readText()?.takeIf { it.isNotEmpty() }
             ?: error("Corrupted installation: maven plugin pom.xml not found")
 
-        val mavenUserHomeProperty = System.getProperty(LSP_MAVEN_PROJECT_MAVEN_USER_HOME_PROPERTY)
-        val mavenOfflineMode = System.getProperty(LSP_MAVEN_PROJECT_OFFLINE_PROPERTY).toBoolean()
-        val mavenOpts = System.getProperty(LSP_MAVEN_PROJECT_MAVEN_OPTS_PROPERTY)
-
         val mavenPluginPomFile = createTempFile("mavenPlugin-pom", ".xml")
+        val mavenUserHomeProperty = System.getProperty(LSP_MAVEN_PROJECT_MAVEN_USER_HOME_PROPERTY)
+        val mavenOpts = System.getProperty(LSP_MAVEN_PROJECT_MAVEN_OPTS_PROPERTY)
         try {
             mavenPluginPomFile.writeText(pluginPom)
             ProcessBuilder(
-                *listOf(
-                    execPath.toString(),
-                    "install:install-file",
-                    "-Dfile=$pluginJar",
-                    "-DpomFile=$mavenPluginPomFile",
-                    "-DgroupId=com.jetbrains.ls",
-                    "-DartifactId=imports-maven-plugin",
-                    "-Dversion=0.99",
-                    "-Dpackaging=maven-plugin",
-                ).let {
-                    if (mavenOfflineMode) {
-                        it.plus("-o")
-                    } else {
-                        it
-                    }
-                }.toTypedArray()
+                execPath.toString(),
+                "install:install-file",
+                "-Dfile=$pluginJar",
+                "-DpomFile=$mavenPluginPomFile",
+                "-DgroupId=com.jetbrains.ls",
+                "-DartifactId=imports-maven-plugin",
+                "-Dversion=0.99",
+                "-Dpackaging=maven-plugin"
             )
                 .apply {
                     javaHome?.let {
@@ -109,53 +210,9 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         } finally {
             mavenPluginPomFile.delete()
         }
-
-        val workspaceJsonFile = createTempFile("workspace", ".json")
-        try {
-            ProcessBuilder(
-                *listOf(
-                    execPath.toString(),
-                    "com.jetbrains.ls:imports-maven-plugin:info",
-                    "-f",
-                    "pom.xml",
-                    "-DoutputFile=${workspaceJsonFile.toAbsolutePath()}"
-                ).let {
-                    if (mavenOfflineMode) {
-                        it.plus("-o")
-                    } else {
-                        it
-                    }
-                }.toTypedArray()
-            )
-                .apply {
-                    javaHome?.let {
-                        environment()["JAVA_HOME"] = it
-                    }
-                    mavenUserHomeProperty?.let {
-                        environment()["MAVEN_USER_HOME"] = it
-                    }
-                    mavenOpts?.let {
-                        environment()["MAVEN_OPTS"] = it
-                    }
-                    if(System.getProperty("maven.importer.debug").toBoolean()) {
-                        val agentLibOpt = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"
-                        val currentMavenOpts = environment()["MAVEN_OPTS"]
-                        environment()["MAVEN_OPTS"] = if (currentMavenOpts.isNullOrEmpty()) {
-                            agentLibOpt
-                        } else {
-                            "$currentMavenOpts $agentLibOpt"
-                        }
-                    }
-
-                }
-                .directory(projectDirectory.toFile())
-                .runWithErrorReporting("Maven", progress)
-
-            return JsonWorkspaceImporter.importWorkspaceJson(
-                workspaceJsonFile, projectDirectory, defaultSdkPath, virtualFileUrlManager, progress
-            )
-        } finally {
-            workspaceJsonFile.delete()
-        }
     }
 }
+
+private sealed interface MavenRunResult
+private class SuccessResult(val workspaceData: WorkspaceData) : MavenRunResult
+private class ErrorResult(val e: Throwable) : MavenRunResult
