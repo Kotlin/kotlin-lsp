@@ -8,12 +8,12 @@
   <requiredMavenVersion>3.2.3</requiredMavenVersion>
   <mojos>
     <mojo>
-      <goal>info</goal>
+      <goal>model-with-deps</goal>
       <requiresDirectInvocation>true</requiresDirectInvocation>
       <requiresProject>false</requiresProject>
       <aggregator>true</aggregator>
       <requiresOnline>false</requiresOnline>
-      <implementation>com.jetbrains.ls.imports.maven.InfoMojo</implementation>
+      <implementation>com.jetbrains.ls.imports.maven.StructureWithDependenciesMojo</implementation>
       <instantiationStrategy>per-lookup</instantiationStrategy>
       <executionStrategy>once-per-session</executionStrategy>
       <requiresDependencyResolution>test</requiresDependencyResolution>

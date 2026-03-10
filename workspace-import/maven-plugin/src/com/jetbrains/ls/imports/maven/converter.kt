@@ -1,6 +1,16 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.maven
 
+import com.jetbrains.ls.imports.maven.model.LanguageLevels
+import com.jetbrains.ls.imports.maven.model.MavenImportDependency
+import com.jetbrains.ls.imports.maven.model.MavenImportDependencyWithArtifact
+import com.jetbrains.ls.imports.maven.model.MavenModuleData
+import com.jetbrains.ls.imports.maven.model.MavenProjectImportData
+import com.jetbrains.ls.imports.maven.model.MavenTreeModuleImportData
+import com.jetbrains.ls.imports.maven.model.NameItem
+import com.jetbrains.ls.imports.maven.model.StandardMavenModuleType
+import com.jetbrains.ls.imports.maven.model.containsMain
+import com.jetbrains.ls.imports.maven.model.containsTest
 import kotlinx.serialization.json.Json
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.model.Dependency
@@ -293,9 +303,6 @@ private fun MutableSet<SourceRootData>.addBuildHelperRoots(
 }
 
 
-private fun findPlugin(project: MavenProject, groupId: String, artifactId: String): Plugin? {
-    return project.buildPlugins.find { it.groupId == groupId && it.artifactId == artifactId }
-}
 
 private fun MutableSet<SourceRootData>.addModelloGeneratedSources(
     project: MavenProject,
@@ -345,13 +352,6 @@ private fun MutableSet<SourceRootData>.addCompilerGeneratedSources(
             }
         }
     }
-}
-
-private fun toAbsolutePath(project: MavenProject, path: String): String {
-    val p = Path(path)
-    if (p.isAbsolute) return path
-    if (project.basedir != null) return project.basedir.toPath().resolve(path).absolutePathString()
-    return p.absolutePathString()
 }
 
 private fun MutableSet<SourceRootData>.addGeneratedDirProperty(
@@ -522,14 +522,6 @@ private fun getModuleName(data: MavenProjectImportData, isTestJar: Boolean): Str
     return submodule?.moduleName ?: data.module.moduleName
 }
 
-
-fun getArtifactPath(artifact: Artifact, newClassifier: String?): Path {
-    if (newClassifier.isNullOrEmpty()) return artifact.file.toPath()
-    val currentPath = artifact.file.toPath()
-    val file = currentPath.fileName.toString()
-    val newFileName = fileNameWithNewClassifier(file, artifact.classifier, newClassifier)
-    return currentPath.parent.resolve(newFileName)
-}
 
 fun fileNameWithNewClassifier(
     fileName: String,
@@ -778,223 +770,6 @@ private fun createAttachArtifactDependency(
     return if (create) MavenImportDependency.AttachedJar(getAttachedJarsLibName(artifact), roots, scope) else null
 }
 
-private fun getAttachedJarsLibName(artifact: Artifact): String {
-    val id = "${artifact.groupId}:${artifact.artifactId}:${artifact.version}"
-    return "Maven: ATTACHED-JAR: $id"
-}
-
-private fun getLanguageLevels(project: MavenProject): LanguageLevels {
-    // Replicate the IDEA Maven importer behavior from MavenImportUtil and MavenProjectImportContextProvider
-    val setUpSourceLevel = getSourceLanguageLevel(project)
-    val setUpTestSourceLevel = getTestSourceLanguageLevel(project)
-    val setUpTargetLevel = getTargetLanguageLevel(project)
-    val setUpTestTargetLevel = getTestTargetLanguageLevel(project)
-
-    val sourceLevel = getLanguageLevel(project) { setUpSourceLevel }
-    val testSourceLevel = getLanguageLevel(project) { setUpTestSourceLevel }
-    val targetLevel = getLanguageLevel(project) { setUpTargetLevel }
-    val testTargetLevel = getLanguageLevel(project) { setUpTestTargetLevel }
-
-    return LanguageLevels(sourceLevel, testSourceLevel, targetLevel, testTargetLevel)
-}
-
-private fun getLanguageLevel(mavenProject: MavenProject, supplier: () -> String?): String {
-    var level: String? = null
-
-    val cfg = getPluginGoalConfiguration(mavenProject, "com.googlecode", "maven-idea-plugin", "idea")
-    if (cfg != null) {
-        level = cfg.getChild("jdkLevel")?.value?.trim()
-        if (level != null) {
-            level = when (level) {
-                "JDK_1_3" -> "1.3"
-                "JDK_1_4" -> "1.4"
-                "JDK_1_5" -> "1.5"
-                "JDK_1_6" -> "1.6"
-                "JDK_1_7" -> "1.7"
-                else -> level
-            }
-        }
-    }
-
-    if (level == null) {
-        level = supplier()
-    }
-
-    if (level == null) {
-        level = getDefaultLevel(mavenProject)
-    }
-
-    val feature = parseJavaFeatureNumber(level)
-    if (feature != null && feature >= 11) {
-        level = adjustPreviewLanguageLevel(mavenProject, level)
-    }
-
-    return level
-}
-
-private fun getDefaultLevel(mavenProject: MavenProject): String {
-    val plugin = findCompilerPlugin(mavenProject)
-    if (plugin != null && plugin.version != null) {
-        if (compareVersions("3.11.0", plugin.version) <= 0) {
-            return "1.8"
-        }
-        if (compareVersions("3.9.0", plugin.version) <= 0) {
-            return "1.7"
-        }
-        if (compareVersions("3.8.0", plugin.version) <= 0) {
-            return "1.6"
-        }
-    }
-    return "1.5"
-}
-
-private fun compareVersions(v1: String, v2: String): Int {
-    val components1 = v1.split('.').mapNotNull { it.toIntOrNull() }
-    val components2 = v2.split('.').mapNotNull { it.toIntOrNull() }
-    for (i in 0 until maxOf(components1.size, components2.size)) {
-        val c1 = components1.getOrElse(i) { 0 }
-        val c2 = components2.getOrElse(i) { 0 }
-        if (c1 != c2) return c1.compareTo(c2)
-    }
-    return 0
-}
-
-private fun adjustPreviewLanguageLevel(mavenProject: MavenProject, level: String): String {
-    val enablePreviewProperty = mavenProject.properties.getProperty("maven.compiler.enablePreview")
-    if (enablePreviewProperty.toBoolean()) {
-        return "$level-preview"
-    }
-
-    val compilerPlugin =
-        findCompilerPlugin(mavenProject)
-    val compilerConfiguration = compilerPlugin?.configuration as? Xpp3Dom
-    if (compilerConfiguration != null) {
-        val enablePreviewParameter = compilerConfiguration.getChild("enablePreview")?.value?.trim()
-        if (enablePreviewParameter.toBoolean()) {
-            return "$level-preview"
-        }
-
-        val compilerArgs = compilerConfiguration.getChild("compilerArgs")
-        if (compilerArgs != null) {
-            if (isPreviewText(compilerArgs) ||
-                compilerArgs.children.any { isPreviewText(it) }
-            ) {
-                return "$level-preview"
-            }
-        }
-    }
-
-    return level
-}
-
-private fun isPreviewText(child: Xpp3Dom): Boolean {
-    return "--enable-preview" == child.value?.trim()
-}
-
-private fun parseJavaFeatureNumber(level: String?): Int? {
-    if (level.isNullOrBlank()) return null
-    val trimmed = level.trim()
-    // Accept common forms:
-    // - "1.8" / "1.7" etc
-    // - "8", "11", "17"
-    // - "17.0" / "17.0.1" (take the feature component)
-    val parts = trimmed.split('.', '-', '_')
-    if (parts.isEmpty()) return null
-    return if (parts[0] == "1" && parts.size >= 2) {
-        parts[1].toIntOrNull()
-    } else {
-        parts[0].toIntOrNull()
-    }
-}
-
-private fun getSourceLanguageLevel(project: MavenProject, executionId: String? = null): String? {
-    return getCompilerProp(project, "release", executionId) ?: getCompilerProp(project, "source", executionId)
-}
-
-private fun getTestSourceLanguageLevel(project: MavenProject): String? {
-    return getCompilerProp(project, "testSource") ?: getSourceLanguageLevel(project)
-}
-
-private fun getTargetLanguageLevel(project: MavenProject, executionId: String? = null): String? {
-    return getCompilerProp(project, "release", executionId) ?: getCompilerProp(project, "target", executionId)
-}
-
-private fun getTestTargetLanguageLevel(project: MavenProject): String? {
-    return getCompilerProp(project, "testTarget") ?: getTargetLanguageLevel(project)
-}
-
-private fun getCompilerProp(project: MavenProject, prop: String, executionId: String? = null): String? {
-    if ("release" == prop || isReleaseCompilerProp(project)) {
-        val release = doGetCompilerProp(project, "release", executionId)
-        if (release != null) return release
-    }
-    return doGetCompilerProp(project, prop, executionId)
-}
-
-private fun isReleaseCompilerProp(project: MavenProject): Boolean {
-    val plugin = findCompilerPlugin(project)
-    val version = plugin?.version ?: return false
-    return compareVersions("3.6", version) >= 0
-}
-
-private fun doGetCompilerProp(project: MavenProject, prop: String, executionId: String? = null): String? {
-    val plugin = findCompilerPlugin(project)
-        ?: return project.properties.getProperty("maven.compiler.$prop")
-
-    if (executionId != null) {
-        val execution = plugin.executions.find { it.id == executionId }
-        val config = execution?.configuration as? Xpp3Dom
-        if (config != null) {
-            config.getChild(prop)?.value?.let { return it }
-            if (prop == "source" || prop == "target") {
-                config.getChild("compilerArgument")?.value?.let { arg ->
-                    if (arg.startsWith("-source ") && prop == "source") return arg.substring("-source ".length).trim()
-                    if (arg.startsWith("-target ") && prop == "target") return arg.substring("-target ".length).trim()
-                }
-            }
-        }
-    }
-
-    val pluginConfig = plugin.configuration as? Xpp3Dom
-    if (pluginConfig != null) {
-        pluginConfig.getChild(prop)?.value?.let { return it }
-        if (prop == "source" || prop == "target") {
-            pluginConfig.getChild("compilerArgument")?.value?.let { arg ->
-                if (arg.startsWith("-source ") && prop == "source") return arg.substring("-source ".length).trim()
-                if (arg.startsWith("-target ") && prop == "target") return arg.substring("-target ".length).trim()
-            }
-        }
-    }
-
-    return project.properties.getProperty("maven.compiler.$prop")
-}
-
-private fun getNonDefaultCompilerExecutions(project: MavenProject): List<String> {
-    val plugin = findCompilerPlugin(project) ?: return emptyList()
-
-    return plugin.executions
-        .filter { it.id != "default-compile" && it.id != "default-testCompile" }
-        .filter { (it.configuration as? Xpp3Dom)?.getChild("compileSourceRoots") != null }
-        .map { it.id }
-}
-
-private fun mainAndTestCompilerArgsDiffer(project: MavenProject): Boolean {
-    val plugin = findCompilerPlugin(project) ?: return false
-    val executions = plugin.executions
-    if (executions == null || executions.isEmpty()) return false
-    val compilerArgs = (executions.find { it.id == "default-compile" }?.configuration as? Xpp3Dom)?.getChild("compilerArgs")
-    val testCompilerArgs = (executions.find { it.id == "default-testCompile"}?.configuration as? Xpp3Dom)?.getChild("compilerArgs")
-    return compilerArgs != testCompilerArgs
-}
-
-private fun findCompilerPlugin(project: MavenProject): Plugin? =
-    findPlugin(project, "org.apache.maven.plugins","maven-compiler-plugin")
-
-private fun getPluginGoalConfiguration(project: MavenProject, groupId: String, artifactId: String, goal: String): Xpp3Dom? {
-    val plugin = project.buildPlugins.find { it.groupId == groupId && it.artifactId == artifactId } ?: return null
-    val execution = plugin.executions.find { it.goals.contains(goal) }
-    return (execution?.configuration ?: plugin.configuration) as? Xpp3Dom
-}
 
 private fun MavenProject.extractKotlinSettings(
     moduleData: MavenModuleData,
@@ -1091,164 +866,4 @@ private fun Plugin.kotlinSourceDirs(execution: String): Set<String>? {
         ?.getChildren("sourceDir")
         ?.mapNotNull { it.value }
         ?.toSet()
-}
-
-private fun isValidName(name: String?): Boolean {
-    if (name.isNullOrBlank()) return false
-    if (name == "Unknown") return false
-
-    for (element in name) {
-        if (!(element.isDigit() || element.isLetter() || element == '-' || element == '_' || element == '.')) {
-            return false
-        }
-    }
-    return true
-}
-
-private val StandardMavenModuleType.containsMain: Boolean
-    get() = when (this) {
-        StandardMavenModuleType.SINGLE_MODULE,
-        StandardMavenModuleType.MAIN_ONLY,
-        StandardMavenModuleType.MAIN_ONLY_ADDITIONAL -> true
-
-        else -> false
-    }
-
-private val StandardMavenModuleType.containsTest: Boolean
-    get() = when (this) {
-        StandardMavenModuleType.SINGLE_MODULE,
-        StandardMavenModuleType.TEST_ONLY -> true
-
-        else -> false
-    }
-
-internal enum class StandardMavenModuleType {
-    AGGREGATOR,
-    SINGLE_MODULE,
-    COMPOUND_MODULE,
-    MAIN_ONLY,
-    MAIN_ONLY_ADDITIONAL,
-    TEST_ONLY
-}
-
-internal data class MavenModuleData(
-    val moduleName: String,
-    val type: StandardMavenModuleType,
-    val sourceLanguageLevel: String?,
-)
-
-interface MavenImportDependencyWithArtifact {
-    val artifact: Artifact
-    val scope: DependencyDataScope
-}
-
-internal sealed class MavenImportDependency(val scope: DependencyDataScope) {
-    class Module(val moduleName: String, scope: DependencyDataScope, val isTestJar: Boolean) : MavenImportDependency(scope)
-    class Library(override val artifact: Artifact, scope: DependencyDataScope) : MavenImportDependency(scope),
-        MavenImportDependencyWithArtifact
-
-    class System(override val artifact: Artifact, scope: DependencyDataScope) : MavenImportDependency(scope),
-        MavenImportDependencyWithArtifact
-
-    class AttachedJar(val name: String, val roots: List<Pair<String, String>>, scope: DependencyDataScope) : MavenImportDependency(scope)
-}
-
-internal class MavenTreeModuleImportData(
-    val mavenProject: MavenProject,
-    val moduleData: MavenModuleData,
-    val dependencies: List<MavenImportDependency>,
-) {
-    val javaSettings: JavaSettingsData
-        get() {
-            val level = moduleData.sourceLanguageLevel
-            val isPreview = level?.endsWith("-preview") == true
-            val rawLevel = level?.removeSuffix("-preview")
-            val feature = parseJavaFeatureNumber(rawLevel)
-            val jdkLevel = when {
-                feature == null -> null
-                feature <= 8 -> "JDK_1_$feature"
-                else -> "JDK_$feature"
-            }
-            val finalJdkLevel = if (isPreview) {
-                jdkLevel?.let { "${it}_PREVIEW" }
-            } else {
-                jdkLevel
-            }
-            val outputDir = mavenProject.build?.outputDirectory?.let { toAbsolutePath(mavenProject, it) }
-            val testOutputDir = mavenProject.build?.testOutputDirectory?.let { toAbsolutePath(mavenProject, it) }
-
-            val (compilerOutput, compilerOutputForTests) = when (moduleData.type) {
-                StandardMavenModuleType.SINGLE_MODULE -> outputDir to testOutputDir
-                StandardMavenModuleType.MAIN_ONLY,
-                StandardMavenModuleType.MAIN_ONLY_ADDITIONAL -> outputDir to null
-                StandardMavenModuleType.TEST_ONLY -> testOutputDir to testOutputDir
-                else -> null to null
-            }
-            return JavaSettingsData(
-                module = moduleData.moduleName,
-                inheritedCompilerOutput = false,
-                excludeOutput = false,
-                compilerOutput = compilerOutput,
-                compilerOutputForTests = compilerOutputForTests,
-                languageLevelId = finalJdkLevel,
-                manifestAttributes = emptyMap()
-            )
-        }
-}
-
-private data class LanguageLevels(
-    val sourceLevel: String?,
-    val testSourceLevel: String?,
-    val targetLevel: String?,
-    val testTargetLevel: String?,
-) {
-    fun mainAndTestLevelsDiffer(): Boolean {
-        return (testSourceLevel != null && testSourceLevel != sourceLevel)
-                || (testTargetLevel != null && testTargetLevel != targetLevel)
-    }
-}
-
-
-private class MavenProjectImportData(
-    val mavenProject: MavenProject,
-    val module: MavenModuleData,
-    val submodules: List<MavenModuleData>,
-) {
-    val defaultMainSubmodule = submodules.firstOrNull { it.type == StandardMavenModuleType.MAIN_ONLY }
-    val mainSubmodules =
-        submodules.filter { it.type == StandardMavenModuleType.MAIN_ONLY || it.type == StandardMavenModuleType.MAIN_ONLY_ADDITIONAL }
-    val testSubmodules = submodules.filter { it.type == StandardMavenModuleType.TEST_ONLY }
-}
-
-private class NameItem(
-    val project: MavenProject,
-    val existingName: String? = null
-) : Comparable<NameItem> {
-    val originalName: String = calcOriginalName()
-    val groupId: String = project.groupId.takeIf { isValidName(it) } ?: ""
-    var number: Int = -1
-    var hasDuplicatedGroup: Boolean = false
-
-    private fun calcOriginalName(): String =
-        existingName ?: getDefaultModuleName()
-
-    private fun getDefaultModuleName(): String =
-        project.artifactId.takeIf { isValidName(it) } ?: project.basedir.name
-
-    fun getResultName(): String {
-        if (existingName != null) return existingName
-
-        if (number == -1) return originalName
-        var result = "$originalName (${number + 1})"
-        if (!hasDuplicatedGroup && groupId.isNotEmpty()) {
-            result += " ($groupId)"
-        }
-        return result
-    }
-
-    override fun compareTo(other: NameItem): Int {
-        val path1 = project.basedir?.absolutePath ?: ""
-        val path2 = other.project.basedir?.absolutePath ?: ""
-        return path1.compareTo(path2, ignoreCase = true)
-    }
 }

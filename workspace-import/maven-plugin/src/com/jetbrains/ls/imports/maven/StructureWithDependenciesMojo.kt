@@ -23,7 +23,7 @@ import java.io.PrintStream
  * mvn com.jetbrains.ls:imports-maven-plugin:info -f pom.xml -DoutputFile=workspace.json
  * ```
  */
-class InfoMojo : AbstractMojo() {
+class StructureWithDependenciesMojo : AbstractMojo() {
     private lateinit var project: MavenProject
     private lateinit var repositorySystem: RepositorySystem
     private lateinit var repositorySystemSession: RepositorySystemSession

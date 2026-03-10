@@ -79,26 +79,25 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         installMavenPlugin(execPath, javaHome, projectDirectory, progress, offlineOpts)
 
 
-        try {
-            val workspaceResult = runMavenPluginGoal(execPath, javaHome, projectDirectory, "info", progress)
-            when (workspaceResult) {
-                is ErrorResult -> throw workspaceResult.e
-                is SuccessResult -> return MutableEntityStorage.create().apply {
-                    importWorkspaceData(
-                        JsonWorkspaceImporter.postProcessWorkspaceData(
-                            workspaceResult.workspaceData,
-                            projectDirectory,
-                            progress
-                        ),
-                        projectDirectory,
-                        WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager)),
-                        virtualFileUrlManager
-                    )
-                    fixMissingProjectSdk(defaultSdkPath, virtualFileUrlManager)
-                }
-            }
-        } finally {
+        val modelWithDeps = runMavenPluginGoal(execPath, javaHome, projectDirectory, "model-with-deps", progress)
+        val modelWithGeneratedSources = runMavenPluginGoal(execPath, javaHome, projectDirectory, "gen-sources", progress)
+        val mergedModels = mergeResults(modelWithDeps, modelWithGeneratedSources)
 
+        when (mergedModels) {
+            is ErrorResult -> throw mergedModels.e
+            is SuccessResult -> return MutableEntityStorage.create().apply {
+                importWorkspaceData(
+                    JsonWorkspaceImporter.postProcessWorkspaceData(
+                        mergedModels.workspaceData,
+                        projectDirectory,
+                        progress
+                    ),
+                    projectDirectory,
+                    WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager)),
+                    virtualFileUrlManager
+                )
+                fixMissingProjectSdk(defaultSdkPath, virtualFileUrlManager)
+            }
         }
     }
 
@@ -160,6 +159,8 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                     e
                 )
             )
+        } catch (e: WorkspaceImportException) {
+            return ErrorResult(e)
         } finally {
             workspaceJsonFile.delete()
         }
@@ -213,6 +214,3 @@ object MavenWorkspaceImporter : WorkspaceImporter {
     }
 }
 
-private sealed interface MavenRunResult
-private class SuccessResult(val workspaceData: WorkspaceData) : MavenRunResult
-private class ErrorResult(val e: Throwable) : MavenRunResult
