@@ -1,881 +1,805 @@
 {
-    "modules": [
+  "modules": [
+    {
+      "name": "multi-project-example",
+      "dependencies": [
         {
-            "name": "multi-project-example",
-            "dependencies": [
-                {
-                    "type": "moduleSource"
-                },
-                {
-                    "type": "inheritedSdk"
-                }
-            ],
-            "contentRoots": [
-                {
-                    "path": "<WORKSPACE>/"
-                }
-            ]
+          "type": "moduleSource"
         },
         {
-            "name": "multi-project-example.api",
-            "dependencies": [
-                {
-                    "type": "moduleSource"
-                },
-                {
-                    "type": "inheritedSdk"
-                }
-            ],
-            "contentRoots": [
-                {
-                    "path": "<WORKSPACE>/api"
-                }
-            ]
-        },
-        {
-            "name": "multi-project-example.api.main",
-            "dependencies": [
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "module",
-                    "name": "multi-project-example.core.main",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains:annotations:13.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "moduleSource"
-                },
-                {
-                    "type": "inheritedSdk"
-                }
-            ],
-            "contentRoots": [
-                {
-                    "path": "<WORKSPACE>/api/src/main",
-                    "sourceRoots": [
-                        {
-                            "path": "<WORKSPACE>/api/src/main/java",
-                            "type": "java-source"
-                        },
-                        {
-                            "path": "<WORKSPACE>/api/src/main/kotlin",
-                            "type": "kotlin-source"
-                        },
-                        {
-                            "path": "<WORKSPACE>/api/src/main/resources",
-                            "type": "java-resource"
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "name": "multi-project-example.api.test",
-            "dependencies": [
-                {
-                    "type": "module",
-                    "name": "multi-project-example.api.main",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "module",
-                    "name": "multi-project-example.core.main",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains:annotations:13.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "moduleSource"
-                },
-                {
-                    "type": "inheritedSdk"
-                }
-            ],
-            "contentRoots": [
-                {
-                    "path": "<WORKSPACE>/api/src/test",
-                    "sourceRoots": [
-                        {
-                            "path": "<WORKSPACE>/api/src/test/java",
-                            "type": "java-test"
-                        },
-                        {
-                            "path": "<WORKSPACE>/api/src/test/kotlin",
-                            "type": "kotlin-test"
-                        },
-                        {
-                            "path": "<WORKSPACE>/api/src/test/resources",
-                            "type": "java-test-resource"
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "name": "multi-project-example.core",
-            "dependencies": [
-                {
-                    "type": "moduleSource"
-                },
-                {
-                    "type": "inheritedSdk"
-                }
-            ],
-            "contentRoots": [
-                {
-                    "path": "<WORKSPACE>/core"
-                }
-            ]
-        },
-        {
-            "name": "multi-project-example.core.main",
-            "dependencies": [
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains:annotations:13.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "moduleSource"
-                },
-                {
-                    "type": "inheritedSdk"
-                }
-            ],
-            "contentRoots": [
-                {
-                    "path": "<WORKSPACE>/core/src/main",
-                    "sourceRoots": [
-                        {
-                            "path": "<WORKSPACE>/core/src/main/java",
-                            "type": "java-source"
-                        },
-                        {
-                            "path": "<WORKSPACE>/core/src/main/kotlin",
-                            "type": "kotlin-source"
-                        },
-                        {
-                            "path": "<WORKSPACE>/core/src/main/resources",
-                            "type": "java-resource"
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "name": "multi-project-example.core.test",
-            "dependencies": [
-                {
-                    "type": "module",
-                    "name": "multi-project-example.core.main",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains:annotations:13.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "moduleSource"
-                },
-                {
-                    "type": "inheritedSdk"
-                }
-            ],
-            "contentRoots": [
-                {
-                    "path": "<WORKSPACE>/core/src/test",
-                    "sourceRoots": [
-                        {
-                            "path": "<WORKSPACE>/core/src/test/java",
-                            "type": "java-test"
-                        },
-                        {
-                            "path": "<WORKSPACE>/core/src/test/kotlin",
-                            "type": "kotlin-test"
-                        },
-                        {
-                            "path": "<WORKSPACE>/core/src/test/resources",
-                            "type": "java-test-resource"
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "name": "multi-project-example.main",
-            "dependencies": [
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains:annotations:13.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "moduleSource"
-                },
-                {
-                    "type": "inheritedSdk"
-                }
-            ],
-            "contentRoots": [
-                {
-                    "path": "<WORKSPACE>/src/main",
-                    "sourceRoots": [
-                        {
-                            "path": "<WORKSPACE>/src/main/java",
-                            "type": "java-source"
-                        },
-                        {
-                            "path": "<WORKSPACE>/src/main/kotlin",
-                            "type": "kotlin-source"
-                        },
-                        {
-                            "path": "<WORKSPACE>/src/main/resources",
-                            "type": "java-resource"
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "name": "multi-project-example.service",
-            "dependencies": [
-                {
-                    "type": "moduleSource"
-                },
-                {
-                    "type": "inheritedSdk"
-                }
-            ],
-            "contentRoots": [
-                {
-                    "path": "<WORKSPACE>/service"
-                }
-            ]
-        },
-        {
-            "name": "multi-project-example.service.main",
-            "dependencies": [
-                {
-                    "type": "module",
-                    "name": "multi-project-example.api.main",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-reflect:2.2.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains:annotations:13.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "module",
-                    "name": "multi-project-example.core.main",
-                    "scope": "provided"
-                },
-                {
-                    "type": "moduleSource"
-                },
-                {
-                    "type": "inheritedSdk"
-                }
-            ],
-            "contentRoots": [
-                {
-                    "path": "<WORKSPACE>/service/src/main",
-                    "sourceRoots": [
-                        {
-                            "path": "<WORKSPACE>/service/src/main/java",
-                            "type": "java-source"
-                        },
-                        {
-                            "path": "<WORKSPACE>/service/src/main/kotlin",
-                            "type": "kotlin-source"
-                        },
-                        {
-                            "path": "<WORKSPACE>/service/src/main/resources",
-                            "type": "java-resource"
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "name": "multi-project-example.service.test",
-            "dependencies": [
-                {
-                    "type": "module",
-                    "name": "multi-project-example.service.main",
-                    "scope": "compile"
-                },
-                {
-                    "type": "module",
-                    "name": "multi-project-example.api.main",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-reflect:2.2.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains:annotations:13.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "module",
-                    "name": "multi-project-example.core.main",
-                    "scope": "provided"
-                },
-                {
-                    "type": "moduleSource"
-                },
-                {
-                    "type": "inheritedSdk"
-                }
-            ],
-            "contentRoots": [
-                {
-                    "path": "<WORKSPACE>/service/src/test",
-                    "sourceRoots": [
-                        {
-                            "path": "<WORKSPACE>/service/src/test/java",
-                            "type": "java-test"
-                        },
-                        {
-                            "path": "<WORKSPACE>/service/src/test/kotlin",
-                            "type": "kotlin-test"
-                        },
-                        {
-                            "path": "<WORKSPACE>/service/src/test/resources",
-                            "type": "java-test-resource"
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "name": "multi-project-example.test",
-            "dependencies": [
-                {
-                    "type": "module",
-                    "name": "multi-project-example.main",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains:annotations:13.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "moduleSource"
-                },
-                {
-                    "type": "inheritedSdk"
-                }
-            ],
-            "contentRoots": [
-                {
-                    "path": "<WORKSPACE>/src/test",
-                    "sourceRoots": [
-                        {
-                            "path": "<WORKSPACE>/src/test/java",
-                            "type": "java-test"
-                        },
-                        {
-                            "path": "<WORKSPACE>/src/test/kotlin",
-                            "type": "kotlin-test"
-                        },
-                        {
-                            "path": "<WORKSPACE>/src/test/resources",
-                            "type": "java-test-resource"
-                        }
-                    ]
-                }
-            ]
+          "type": "sdk",
+          "name": "21",
+          "kind": "jdk"
         }
-    ],
-    "libraries": [
+      ],
+      "contentRoots": [
         {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-reflect:2.2.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-reflect/2.2.0/#####/kotlin-reflect-2.2.0.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-reflect/2.2.0/#####/kotlin-reflect-2.2.0-sources.jar",
-                    "type": "SOURCES"
-                }
-            ],
-            "properties": {
-                "attributes": {
-                    "groupId": "org.jetbrains.kotlin",
-                    "artifactId": "kotlin-reflect",
-                    "version": "2.2.0",
-                    "baseVersion": "2.2.0"
-                }
+          "path": "<WORKSPACE>/"
+        }
+      ]
+    },
+    {
+      "name": "multi-project-example.api",
+      "dependencies": [
+        {
+          "type": "moduleSource"
+        },
+        {
+          "type": "sdk",
+          "name": "21",
+          "kind": "jdk"
+        }
+      ],
+      "contentRoots": [
+        {
+          "path": "<WORKSPACE>/api"
+        }
+      ]
+    },
+    {
+      "name": "multi-project-example.api.main",
+      "dependencies": [
+        {
+          "type": "library",
+          "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+          "scope": "compile"
+        },
+        {
+          "type": "module",
+          "name": "multi-project-example.core.main",
+          "scope": "compile"
+        },
+        {
+          "type": "library",
+          "name": "Gradle: org.jetbrains:annotations:13.0",
+          "scope": "compile"
+        },
+        {
+          "type": "moduleSource"
+        },
+        {
+          "type": "sdk",
+          "name": "21",
+          "kind": "jdk"
+        }
+      ],
+      "contentRoots": [
+        {
+          "path": "<WORKSPACE>/api/src/main",
+          "sourceRoots": [
+            {
+              "path": "<WORKSPACE>/api/src/main/java",
+              "type": "java-source"
+            },
+            {
+              "path": "<WORKSPACE>/api/src/main/kotlin",
+              "type": "kotlin-source"
+            },
+            {
+              "path": "<WORKSPACE>/api/src/main/resources",
+              "type": "java-resource"
             }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "multi-project-example.api.test",
+      "dependencies": [
+        {
+          "type": "module",
+          "name": "multi-project-example.api.main",
+          "scope": "compile"
         },
         {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.2.0/#####/kotlin-stdlib-2.2.0.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.2.0/#####/kotlin-stdlib-2.2.0-sources.jar",
-                    "type": "SOURCES"
-                }
-            ],
-            "properties": {
-                "attributes": {
-                    "groupId": "org.jetbrains.kotlin",
-                    "artifactId": "kotlin-stdlib",
-                    "version": "2.2.0",
-                    "baseVersion": "2.2.0"
-                }
+          "type": "library",
+          "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+          "scope": "compile"
+        },
+        {
+          "type": "module",
+          "name": "multi-project-example.core.main",
+          "scope": "compile"
+        },
+        {
+          "type": "library",
+          "name": "Gradle: org.jetbrains:annotations:13.0",
+          "scope": "compile"
+        },
+        {
+          "type": "moduleSource"
+        },
+        {
+          "type": "sdk",
+          "name": "21",
+          "kind": "jdk"
+        }
+      ],
+      "contentRoots": [
+        {
+          "path": "<WORKSPACE>/api/src/test",
+          "sourceRoots": [
+            {
+              "path": "<WORKSPACE>/api/src/test/java",
+              "type": "java-test"
+            },
+            {
+              "path": "<WORKSPACE>/api/src/test/kotlin",
+              "type": "kotlin-test"
+            },
+            {
+              "path": "<WORKSPACE>/api/src/test/resources",
+              "type": "java-test-resource"
             }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "multi-project-example.core",
+      "dependencies": [
+        {
+          "type": "moduleSource"
         },
         {
-            "name": "Gradle: org.jetbrains:annotations:13.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0-sources.jar",
-                    "type": "SOURCES"
-                }
-            ],
-            "properties": {
-                "attributes": {
-                    "groupId": "org.jetbrains",
-                    "artifactId": "annotations",
-                    "version": "13.0",
-                    "baseVersion": "13.0"
-                }
+          "type": "sdk",
+          "name": "21",
+          "kind": "jdk"
+        }
+      ],
+      "contentRoots": [
+        {
+          "path": "<WORKSPACE>/core"
+        }
+      ]
+    },
+    {
+      "name": "multi-project-example.core.main",
+      "dependencies": [
+        {
+          "type": "library",
+          "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+          "scope": "compile"
+        },
+        {
+          "type": "library",
+          "name": "Gradle: org.jetbrains:annotations:13.0",
+          "scope": "compile"
+        },
+        {
+          "type": "moduleSource"
+        },
+        {
+          "type": "sdk",
+          "name": "21",
+          "kind": "jdk"
+        }
+      ],
+      "contentRoots": [
+        {
+          "path": "<WORKSPACE>/core/src/main",
+          "sourceRoots": [
+            {
+              "path": "<WORKSPACE>/core/src/main/java",
+              "type": "java-source"
+            },
+            {
+              "path": "<WORKSPACE>/core/src/main/kotlin",
+              "type": "kotlin-source"
+            },
+            {
+              "path": "<WORKSPACE>/core/src/main/resources",
+              "type": "java-resource"
             }
+          ]
         }
-    ],
-    "kotlinSettings": [
+      ]
+    },
+    {
+      "name": "multi-project-example.core.test",
+      "dependencies": [
         {
-            "name": "Kotlin",
-            "sourceRoots": [
-                "<WORKSPACE>/api/src/main/java",
-                "<WORKSPACE>/api/src/main/kotlin",
-                "<WORKSPACE>/api/src/main/resources"
-            ],
-            "configFileItems": [],
-            "module": "multi-project-example.api.main",
-            "useProjectSettings": false,
-            "implementedModuleNames": [],
-            "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [],
-            "productionOutputPath": null,
-            "testOutputPath": null,
-            "sourceSetNames": [],
-            "isTestModule": false,
-            "externalProjectId": "multi-project-example.api.main",
-            "isHmppEnabled": true,
-            "pureKotlinSourceFolders": [],
-            "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspaths\":[]}",
-            "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
-            "scriptTemplates": null,
-            "scriptTemplatesClasspath": null,
-            "outputDirectoryForJsLibraryFiles": null,
-            "targetPlatform": null,
-            "externalSystemRunTasks": [],
-            "version": 5,
-            "flushNeeded": false
+          "type": "module",
+          "name": "multi-project-example.core.main",
+          "scope": "compile"
         },
         {
-            "name": "Kotlin",
-            "sourceRoots": [
-                "<WORKSPACE>/api/src/test/java",
-                "<WORKSPACE>/api/src/test/kotlin",
-                "<WORKSPACE>/api/src/test/resources"
-            ],
-            "configFileItems": [],
-            "module": "multi-project-example.api.test",
-            "useProjectSettings": false,
-            "implementedModuleNames": [],
-            "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [
-                "multi-project-example.api.main"
-            ],
-            "productionOutputPath": null,
-            "testOutputPath": null,
-            "sourceSetNames": [],
-            "isTestModule": true,
-            "externalProjectId": "multi-project-example.api.test",
-            "isHmppEnabled": true,
-            "pureKotlinSourceFolders": [],
-            "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspaths\":[]}",
-            "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
-            "scriptTemplates": null,
-            "scriptTemplatesClasspath": null,
-            "outputDirectoryForJsLibraryFiles": null,
-            "targetPlatform": null,
-            "externalSystemRunTasks": [],
-            "version": 5,
-            "flushNeeded": false
+          "type": "library",
+          "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+          "scope": "compile"
         },
         {
-            "name": "Kotlin",
-            "sourceRoots": [
-                "<WORKSPACE>/core/src/main/java",
-                "<WORKSPACE>/core/src/main/kotlin",
-                "<WORKSPACE>/core/src/main/resources"
-            ],
-            "configFileItems": [],
-            "module": "multi-project-example.core.main",
-            "useProjectSettings": false,
-            "implementedModuleNames": [],
-            "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [],
-            "productionOutputPath": null,
-            "testOutputPath": null,
-            "sourceSetNames": [],
-            "isTestModule": false,
-            "externalProjectId": "multi-project-example.core.main",
-            "isHmppEnabled": true,
-            "pureKotlinSourceFolders": [],
-            "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspaths\":[]}",
-            "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
-            "scriptTemplates": null,
-            "scriptTemplatesClasspath": null,
-            "outputDirectoryForJsLibraryFiles": null,
-            "targetPlatform": null,
-            "externalSystemRunTasks": [],
-            "version": 5,
-            "flushNeeded": false
+          "type": "library",
+          "name": "Gradle: org.jetbrains:annotations:13.0",
+          "scope": "compile"
         },
         {
-            "name": "Kotlin",
-            "sourceRoots": [
-                "<WORKSPACE>/core/src/test/java",
-                "<WORKSPACE>/core/src/test/kotlin",
-                "<WORKSPACE>/core/src/test/resources"
-            ],
-            "configFileItems": [],
-            "module": "multi-project-example.core.test",
-            "useProjectSettings": false,
-            "implementedModuleNames": [],
-            "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [
-                "multi-project-example.core.main"
-            ],
-            "productionOutputPath": null,
-            "testOutputPath": null,
-            "sourceSetNames": [],
-            "isTestModule": true,
-            "externalProjectId": "multi-project-example.core.test",
-            "isHmppEnabled": true,
-            "pureKotlinSourceFolders": [],
-            "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspaths\":[]}",
-            "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
-            "scriptTemplates": null,
-            "scriptTemplatesClasspath": null,
-            "outputDirectoryForJsLibraryFiles": null,
-            "targetPlatform": null,
-            "externalSystemRunTasks": [],
-            "version": 5,
-            "flushNeeded": false
+          "type": "moduleSource"
         },
         {
-            "name": "Kotlin",
-            "sourceRoots": [
-                "<WORKSPACE>/src/main/java",
-                "<WORKSPACE>/src/main/kotlin",
-                "<WORKSPACE>/src/main/resources"
-            ],
-            "configFileItems": [],
-            "module": "multi-project-example.main",
-            "useProjectSettings": false,
-            "implementedModuleNames": [],
-            "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [],
-            "productionOutputPath": null,
-            "testOutputPath": null,
-            "sourceSetNames": [],
-            "isTestModule": false,
-            "externalProjectId": "multi-project-example.main",
-            "isHmppEnabled": true,
-            "pureKotlinSourceFolders": [],
-            "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspaths\":[\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-serialization-compiler-plugin-embeddable/2.2.0/#####/kotlin-serialization-compiler-plugin-embeddable-2.2.0.jar\"]}",
-            "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
-            "scriptTemplates": null,
-            "scriptTemplatesClasspath": null,
-            "outputDirectoryForJsLibraryFiles": null,
-            "targetPlatform": null,
-            "externalSystemRunTasks": [],
-            "version": 5,
-            "flushNeeded": false
-        },
-        {
-            "name": "Kotlin",
-            "sourceRoots": [
-                "<WORKSPACE>/service/src/main/java",
-                "<WORKSPACE>/service/src/main/kotlin",
-                "<WORKSPACE>/service/src/main/resources"
-            ],
-            "configFileItems": [],
-            "module": "multi-project-example.service.main",
-            "useProjectSettings": false,
-            "implementedModuleNames": [],
-            "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [],
-            "productionOutputPath": null,
-            "testOutputPath": null,
-            "sourceSetNames": [],
-            "isTestModule": false,
-            "externalProjectId": "multi-project-example.service.main",
-            "isHmppEnabled": true,
-            "pureKotlinSourceFolders": [],
-            "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspaths\":[]}",
-            "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
-            "scriptTemplates": null,
-            "scriptTemplatesClasspath": null,
-            "outputDirectoryForJsLibraryFiles": null,
-            "targetPlatform": null,
-            "externalSystemRunTasks": [],
-            "version": 5,
-            "flushNeeded": false
-        },
-        {
-            "name": "Kotlin",
-            "sourceRoots": [
-                "<WORKSPACE>/service/src/test/java",
-                "<WORKSPACE>/service/src/test/kotlin",
-                "<WORKSPACE>/service/src/test/resources"
-            ],
-            "configFileItems": [],
-            "module": "multi-project-example.service.test",
-            "useProjectSettings": false,
-            "implementedModuleNames": [],
-            "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [
-                "multi-project-example.service.main"
-            ],
-            "productionOutputPath": null,
-            "testOutputPath": null,
-            "sourceSetNames": [],
-            "isTestModule": true,
-            "externalProjectId": "multi-project-example.service.test",
-            "isHmppEnabled": true,
-            "pureKotlinSourceFolders": [],
-            "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspaths\":[]}",
-            "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
-            "scriptTemplates": null,
-            "scriptTemplatesClasspath": null,
-            "outputDirectoryForJsLibraryFiles": null,
-            "targetPlatform": null,
-            "externalSystemRunTasks": [],
-            "version": 5,
-            "flushNeeded": false
-        },
-        {
-            "name": "Kotlin",
-            "sourceRoots": [
-                "<WORKSPACE>/src/test/java",
-                "<WORKSPACE>/src/test/kotlin",
-                "<WORKSPACE>/src/test/resources"
-            ],
-            "configFileItems": [],
-            "module": "multi-project-example.test",
-            "useProjectSettings": false,
-            "implementedModuleNames": [],
-            "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [
-                "multi-project-example.main"
-            ],
-            "productionOutputPath": null,
-            "testOutputPath": null,
-            "sourceSetNames": [],
-            "isTestModule": true,
-            "externalProjectId": "multi-project-example.test",
-            "isHmppEnabled": true,
-            "pureKotlinSourceFolders": [],
-            "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspaths\":[\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-serialization-compiler-plugin-embeddable/2.2.0/#####/kotlin-serialization-compiler-plugin-embeddable-2.2.0.jar\"]}",
-            "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
-            "scriptTemplates": null,
-            "scriptTemplatesClasspath": null,
-            "outputDirectoryForJsLibraryFiles": null,
-            "targetPlatform": null,
-            "externalSystemRunTasks": [],
-            "version": 5,
-            "flushNeeded": false
+          "type": "sdk",
+          "name": "21",
+          "kind": "jdk"
         }
-    ],
-    "javaSettings": [
+      ],
+      "contentRoots": [
         {
-            "module": "multi-project-example",
-            "inheritedCompilerOutput": false,
-            "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
-            "languageLevelId": "JDK_21",
-            "manifestAttributes": {}
-        },
-        {
-            "module": "multi-project-example.api",
-            "inheritedCompilerOutput": false,
-            "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
-            "languageLevelId": "JDK_21",
-            "manifestAttributes": {}
-        },
-        {
-            "module": "multi-project-example.api.main",
-            "inheritedCompilerOutput": false,
-            "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
-            "languageLevelId": "JDK_21",
-            "manifestAttributes": {}
-        },
-        {
-            "module": "multi-project-example.api.test",
-            "inheritedCompilerOutput": false,
-            "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
-            "languageLevelId": "JDK_21",
-            "manifestAttributes": {}
-        },
-        {
-            "module": "multi-project-example.core",
-            "inheritedCompilerOutput": false,
-            "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
-            "languageLevelId": "JDK_21",
-            "manifestAttributes": {}
-        },
-        {
-            "module": "multi-project-example.core.main",
-            "inheritedCompilerOutput": false,
-            "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
-            "languageLevelId": "JDK_21",
-            "manifestAttributes": {}
-        },
-        {
-            "module": "multi-project-example.core.test",
-            "inheritedCompilerOutput": false,
-            "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
-            "languageLevelId": "JDK_21",
-            "manifestAttributes": {}
-        },
-        {
-            "module": "multi-project-example.main",
-            "inheritedCompilerOutput": false,
-            "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
-            "languageLevelId": "JDK_21",
-            "manifestAttributes": {}
-        },
-        {
-            "module": "multi-project-example.service",
-            "inheritedCompilerOutput": false,
-            "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
-            "languageLevelId": "JDK_21",
-            "manifestAttributes": {}
-        },
-        {
-            "module": "multi-project-example.service.main",
-            "inheritedCompilerOutput": false,
-            "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
-            "languageLevelId": "JDK_21",
-            "manifestAttributes": {}
-        },
-        {
-            "module": "multi-project-example.service.test",
-            "inheritedCompilerOutput": false,
-            "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
-            "languageLevelId": "JDK_21",
-            "manifestAttributes": {}
-        },
-        {
-            "module": "multi-project-example.test",
-            "inheritedCompilerOutput": false,
-            "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
-            "languageLevelId": "JDK_21",
-            "manifestAttributes": {}
+          "path": "<WORKSPACE>/core/src/test",
+          "sourceRoots": [
+            {
+              "path": "<WORKSPACE>/core/src/test/java",
+              "type": "java-test"
+            },
+            {
+              "path": "<WORKSPACE>/core/src/test/kotlin",
+              "type": "kotlin-test"
+            },
+            {
+              "path": "<WORKSPACE>/core/src/test/resources",
+              "type": "java-test-resource"
+            }
+          ]
         }
-    ]
+      ]
+    },
+    {
+      "name": "multi-project-example.main",
+      "dependencies": [
+        {
+          "type": "library",
+          "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+          "scope": "compile"
+        },
+        {
+          "type": "library",
+          "name": "Gradle: org.jetbrains:annotations:13.0",
+          "scope": "compile"
+        },
+        {
+          "type": "moduleSource"
+        },
+        {
+          "type": "sdk",
+          "name": "21",
+          "kind": "jdk"
+        }
+      ],
+      "contentRoots": [
+        {
+          "path": "<WORKSPACE>/src/main",
+          "sourceRoots": [
+            {
+              "path": "<WORKSPACE>/src/main/java",
+              "type": "java-source"
+            },
+            {
+              "path": "<WORKSPACE>/src/main/kotlin",
+              "type": "kotlin-source"
+            },
+            {
+              "path": "<WORKSPACE>/src/main/resources",
+              "type": "java-resource"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "multi-project-example.service",
+      "dependencies": [
+        {
+          "type": "moduleSource"
+        },
+        {
+          "type": "sdk",
+          "name": "21",
+          "kind": "jdk"
+        }
+      ],
+      "contentRoots": [
+        {
+          "path": "<WORKSPACE>/service"
+        }
+      ]
+    },
+    {
+      "name": "multi-project-example.service.main",
+      "dependencies": [
+        {
+          "type": "module",
+          "name": "multi-project-example.api.main",
+          "scope": "compile"
+        },
+        {
+          "type": "library",
+          "name": "Gradle: org.jetbrains.kotlin:kotlin-reflect:2.2.0",
+          "scope": "compile"
+        },
+        {
+          "type": "library",
+          "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+          "scope": "compile"
+        },
+        {
+          "type": "library",
+          "name": "Gradle: org.jetbrains:annotations:13.0",
+          "scope": "compile"
+        },
+        {
+          "type": "module",
+          "name": "multi-project-example.core.main",
+          "scope": "provided"
+        },
+        {
+          "type": "moduleSource"
+        },
+        {
+          "type": "sdk",
+          "name": "21",
+          "kind": "jdk"
+        }
+      ],
+      "contentRoots": [
+        {
+          "path": "<WORKSPACE>/service/src/main",
+          "sourceRoots": [
+            {
+              "path": "<WORKSPACE>/service/src/main/java",
+              "type": "java-source"
+            },
+            {
+              "path": "<WORKSPACE>/service/src/main/kotlin",
+              "type": "kotlin-source"
+            },
+            {
+              "path": "<WORKSPACE>/service/src/main/resources",
+              "type": "java-resource"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "multi-project-example.service.test",
+      "dependencies": [
+        {
+          "type": "module",
+          "name": "multi-project-example.service.main",
+          "scope": "compile"
+        },
+        {
+          "type": "module",
+          "name": "multi-project-example.api.main",
+          "scope": "compile"
+        },
+        {
+          "type": "library",
+          "name": "Gradle: org.jetbrains.kotlin:kotlin-reflect:2.2.0",
+          "scope": "compile"
+        },
+        {
+          "type": "library",
+          "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+          "scope": "compile"
+        },
+        {
+          "type": "library",
+          "name": "Gradle: org.jetbrains:annotations:13.0",
+          "scope": "compile"
+        },
+        {
+          "type": "module",
+          "name": "multi-project-example.core.main",
+          "scope": "provided"
+        },
+        {
+          "type": "moduleSource"
+        },
+        {
+          "type": "sdk",
+          "name": "21",
+          "kind": "jdk"
+        }
+      ],
+      "contentRoots": [
+        {
+          "path": "<WORKSPACE>/service/src/test",
+          "sourceRoots": [
+            {
+              "path": "<WORKSPACE>/service/src/test/java",
+              "type": "java-test"
+            },
+            {
+              "path": "<WORKSPACE>/service/src/test/kotlin",
+              "type": "kotlin-test"
+            },
+            {
+              "path": "<WORKSPACE>/service/src/test/resources",
+              "type": "java-test-resource"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "multi-project-example.test",
+      "dependencies": [
+        {
+          "type": "module",
+          "name": "multi-project-example.main",
+          "scope": "compile"
+        },
+        {
+          "type": "library",
+          "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+          "scope": "compile"
+        },
+        {
+          "type": "library",
+          "name": "Gradle: org.jetbrains:annotations:13.0",
+          "scope": "compile"
+        },
+        {
+          "type": "moduleSource"
+        },
+        {
+          "type": "sdk",
+          "name": "21",
+          "kind": "jdk"
+        }
+      ],
+      "contentRoots": [
+        {
+          "path": "<WORKSPACE>/src/test",
+          "sourceRoots": [
+            {
+              "path": "<WORKSPACE>/src/test/java",
+              "type": "java-test"
+            },
+            {
+              "path": "<WORKSPACE>/src/test/kotlin",
+              "type": "kotlin-test"
+            },
+            {
+              "path": "<WORKSPACE>/src/test/resources",
+              "type": "java-test-resource"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "libraries": [
+    {
+      "name": "Gradle: org.jetbrains.kotlin:kotlin-reflect:2.2.0",
+      "type": "COMPILE",
+      "roots": [
+        {
+          "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-reflect/2.2.0/#####/kotlin-reflect-2.2.0.jar"
+        },
+        {
+          "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-reflect/2.2.0/#####/kotlin-reflect-2.2.0-sources.jar",
+          "type": "SOURCES"
+        }
+      ],
+      "properties": {
+        "attributes": {
+          "groupId": "org.jetbrains.kotlin",
+          "artifactId": "kotlin-reflect",
+          "version": "2.2.0",
+          "baseVersion": "2.2.0"
+        }
+      }
+    },
+    {
+      "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+      "type": "COMPILE",
+      "roots": [
+        {
+          "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.2.0/#####/kotlin-stdlib-2.2.0.jar"
+        },
+        {
+          "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.2.0/#####/kotlin-stdlib-2.2.0-sources.jar",
+          "type": "SOURCES"
+        }
+      ],
+      "properties": {
+        "attributes": {
+          "groupId": "org.jetbrains.kotlin",
+          "artifactId": "kotlin-stdlib",
+          "version": "2.2.0",
+          "baseVersion": "2.2.0"
+        }
+      }
+    },
+    {
+      "name": "Gradle: org.jetbrains:annotations:13.0",
+      "type": "COMPILE",
+      "roots": [
+        {
+          "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0.jar"
+        },
+        {
+          "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0-sources.jar",
+          "type": "SOURCES"
+        }
+      ],
+      "properties": {
+        "attributes": {
+          "groupId": "org.jetbrains",
+          "artifactId": "annotations",
+          "version": "13.0",
+          "baseVersion": "13.0"
+        }
+      }
+    }
+  ],
+  "sdks": [
+    {
+      "name": "21",
+      "type": "jdk",
+      "version": "JDK_21",
+      "homePath": "<HOME>/.jdks/jbr-21.0.4",
+      "roots": [],
+      "additionalData": ""
+    }
+  ],
+  "kotlinSettings": [
+    {
+      "name": "Kotlin",
+      "sourceRoots": [
+        "<WORKSPACE>/api/src/main/java",
+        "<WORKSPACE>/api/src/main/kotlin",
+        "<WORKSPACE>/api/src/main/resources"
+      ],
+      "configFileItems": [],
+      "module": "multi-project-example.api.main",
+      "useProjectSettings": false,
+      "implementedModuleNames": [],
+      "dependsOnModuleNames": [],
+      "additionalVisibleModuleNames": [],
+      "productionOutputPath": null,
+      "testOutputPath": null,
+      "sourceSetNames": [],
+      "isTestModule": false,
+      "externalProjectId": "multi-project-example.api.main",
+      "isHmppEnabled": true,
+      "pureKotlinSourceFolders": [],
+      "kind": "default",
+      "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspaths\":[]}",
+      "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
+      "scriptTemplates": null,
+      "scriptTemplatesClasspath": null,
+      "outputDirectoryForJsLibraryFiles": null,
+      "targetPlatform": null,
+      "externalSystemRunTasks": [],
+      "version": 5,
+      "flushNeeded": false
+    },
+    {
+      "name": "Kotlin",
+      "sourceRoots": [
+        "<WORKSPACE>/api/src/test/java",
+        "<WORKSPACE>/api/src/test/kotlin",
+        "<WORKSPACE>/api/src/test/resources"
+      ],
+      "configFileItems": [],
+      "module": "multi-project-example.api.test",
+      "useProjectSettings": false,
+      "implementedModuleNames": [],
+      "dependsOnModuleNames": [],
+      "additionalVisibleModuleNames": [
+        "multi-project-example.api.main"
+      ],
+      "productionOutputPath": null,
+      "testOutputPath": null,
+      "sourceSetNames": [],
+      "isTestModule": true,
+      "externalProjectId": "multi-project-example.api.test",
+      "isHmppEnabled": true,
+      "pureKotlinSourceFolders": [],
+      "kind": "default",
+      "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspaths\":[]}",
+      "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
+      "scriptTemplates": null,
+      "scriptTemplatesClasspath": null,
+      "outputDirectoryForJsLibraryFiles": null,
+      "targetPlatform": null,
+      "externalSystemRunTasks": [],
+      "version": 5,
+      "flushNeeded": false
+    },
+    {
+      "name": "Kotlin",
+      "sourceRoots": [
+        "<WORKSPACE>/core/src/main/java",
+        "<WORKSPACE>/core/src/main/kotlin",
+        "<WORKSPACE>/core/src/main/resources"
+      ],
+      "configFileItems": [],
+      "module": "multi-project-example.core.main",
+      "useProjectSettings": false,
+      "implementedModuleNames": [],
+      "dependsOnModuleNames": [],
+      "additionalVisibleModuleNames": [],
+      "productionOutputPath": null,
+      "testOutputPath": null,
+      "sourceSetNames": [],
+      "isTestModule": false,
+      "externalProjectId": "multi-project-example.core.main",
+      "isHmppEnabled": true,
+      "pureKotlinSourceFolders": [],
+      "kind": "default",
+      "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspaths\":[]}",
+      "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
+      "scriptTemplates": null,
+      "scriptTemplatesClasspath": null,
+      "outputDirectoryForJsLibraryFiles": null,
+      "targetPlatform": null,
+      "externalSystemRunTasks": [],
+      "version": 5,
+      "flushNeeded": false
+    },
+    {
+      "name": "Kotlin",
+      "sourceRoots": [
+        "<WORKSPACE>/core/src/test/java",
+        "<WORKSPACE>/core/src/test/kotlin",
+        "<WORKSPACE>/core/src/test/resources"
+      ],
+      "configFileItems": [],
+      "module": "multi-project-example.core.test",
+      "useProjectSettings": false,
+      "implementedModuleNames": [],
+      "dependsOnModuleNames": [],
+      "additionalVisibleModuleNames": [
+        "multi-project-example.core.main"
+      ],
+      "productionOutputPath": null,
+      "testOutputPath": null,
+      "sourceSetNames": [],
+      "isTestModule": true,
+      "externalProjectId": "multi-project-example.core.test",
+      "isHmppEnabled": true,
+      "pureKotlinSourceFolders": [],
+      "kind": "default",
+      "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspaths\":[]}",
+      "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
+      "scriptTemplates": null,
+      "scriptTemplatesClasspath": null,
+      "outputDirectoryForJsLibraryFiles": null,
+      "targetPlatform": null,
+      "externalSystemRunTasks": [],
+      "version": 5,
+      "flushNeeded": false
+    },
+    {
+      "name": "Kotlin",
+      "sourceRoots": [
+        "<WORKSPACE>/src/main/java",
+        "<WORKSPACE>/src/main/kotlin",
+        "<WORKSPACE>/src/main/resources"
+      ],
+      "configFileItems": [],
+      "module": "multi-project-example.main",
+      "useProjectSettings": false,
+      "implementedModuleNames": [],
+      "dependsOnModuleNames": [],
+      "additionalVisibleModuleNames": [],
+      "productionOutputPath": null,
+      "testOutputPath": null,
+      "sourceSetNames": [],
+      "isTestModule": false,
+      "externalProjectId": "multi-project-example.main",
+      "isHmppEnabled": true,
+      "pureKotlinSourceFolders": [],
+      "kind": "default",
+      "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspaths\":[\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-serialization-compiler-plugin-embeddable/2.2.0/#####/kotlin-serialization-compiler-plugin-embeddable-2.2.0.jar\"]}",
+      "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
+      "scriptTemplates": null,
+      "scriptTemplatesClasspath": null,
+      "outputDirectoryForJsLibraryFiles": null,
+      "targetPlatform": null,
+      "externalSystemRunTasks": [],
+      "version": 5,
+      "flushNeeded": false
+    },
+    {
+      "name": "Kotlin",
+      "sourceRoots": [
+        "<WORKSPACE>/service/src/main/java",
+        "<WORKSPACE>/service/src/main/kotlin",
+        "<WORKSPACE>/service/src/main/resources"
+      ],
+      "configFileItems": [],
+      "module": "multi-project-example.service.main",
+      "useProjectSettings": false,
+      "implementedModuleNames": [],
+      "dependsOnModuleNames": [],
+      "additionalVisibleModuleNames": [],
+      "productionOutputPath": null,
+      "testOutputPath": null,
+      "sourceSetNames": [],
+      "isTestModule": false,
+      "externalProjectId": "multi-project-example.service.main",
+      "isHmppEnabled": true,
+      "pureKotlinSourceFolders": [],
+      "kind": "default",
+      "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspaths\":[]}",
+      "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
+      "scriptTemplates": null,
+      "scriptTemplatesClasspath": null,
+      "outputDirectoryForJsLibraryFiles": null,
+      "targetPlatform": null,
+      "externalSystemRunTasks": [],
+      "version": 5,
+      "flushNeeded": false
+    },
+    {
+      "name": "Kotlin",
+      "sourceRoots": [
+        "<WORKSPACE>/service/src/test/java",
+        "<WORKSPACE>/service/src/test/kotlin",
+        "<WORKSPACE>/service/src/test/resources"
+      ],
+      "configFileItems": [],
+      "module": "multi-project-example.service.test",
+      "useProjectSettings": false,
+      "implementedModuleNames": [],
+      "dependsOnModuleNames": [],
+      "additionalVisibleModuleNames": [
+        "multi-project-example.service.main"
+      ],
+      "productionOutputPath": null,
+      "testOutputPath": null,
+      "sourceSetNames": [],
+      "isTestModule": true,
+      "externalProjectId": "multi-project-example.service.test",
+      "isHmppEnabled": true,
+      "pureKotlinSourceFolders": [],
+      "kind": "default",
+      "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspaths\":[]}",
+      "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
+      "scriptTemplates": null,
+      "scriptTemplatesClasspath": null,
+      "outputDirectoryForJsLibraryFiles": null,
+      "targetPlatform": null,
+      "externalSystemRunTasks": [],
+      "version": 5,
+      "flushNeeded": false
+    },
+    {
+      "name": "Kotlin",
+      "sourceRoots": [
+        "<WORKSPACE>/src/test/java",
+        "<WORKSPACE>/src/test/kotlin",
+        "<WORKSPACE>/src/test/resources"
+      ],
+      "configFileItems": [],
+      "module": "multi-project-example.test",
+      "useProjectSettings": false,
+      "implementedModuleNames": [],
+      "dependsOnModuleNames": [],
+      "additionalVisibleModuleNames": [
+        "multi-project-example.main"
+      ],
+      "productionOutputPath": null,
+      "testOutputPath": null,
+      "sourceSetNames": [],
+      "isTestModule": true,
+      "externalProjectId": "multi-project-example.test",
+      "isHmppEnabled": true,
+      "pureKotlinSourceFolders": [],
+      "kind": "default",
+      "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[],\"pluginClasspaths\":[\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-serialization-compiler-plugin-embeddable/2.2.0/#####/kotlin-serialization-compiler-plugin-embeddable-2.2.0.jar\"]}",
+      "additionalArguments": "-Xreturn-value-checker=check -Xcontext-parameters",
+      "scriptTemplates": null,
+      "scriptTemplatesClasspath": null,
+      "outputDirectoryForJsLibraryFiles": null,
+      "targetPlatform": null,
+      "externalSystemRunTasks": [],
+      "version": 5,
+      "flushNeeded": false
+    }
+  ]
 }

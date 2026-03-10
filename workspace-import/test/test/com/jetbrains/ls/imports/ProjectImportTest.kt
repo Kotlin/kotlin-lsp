@@ -13,7 +13,7 @@ import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
 import com.jetbrains.ls.imports.api.EmptyWorkspaceProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
-import com.jetbrains.ls.imports.json.JavaSettingsData
+import com.jetbrains.ls.imports.json.DependencyData
 import com.jetbrains.ls.imports.json.WorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData
 import com.jetbrains.ls.imports.json.toJson
@@ -50,28 +50,28 @@ class ProjectImportTest {
     fun tearDown() { DETECT_PROJECT_SDK = true }
 
     @Test
-    fun newIJKotlinGradle() = doGradleTest("NewIJKotlinGradle")
+    fun newIJKotlinGradle() = doGradleTest("NewIJKotlinGradle", ::withIgnoredJdk)
 
     @Test
-    fun petClinic() = doGradleTest("PetClinic")
+    fun petClinic() = doGradleTest("PetClinic", ::withIgnoredJdk)
 
     @Test
-    fun multiProjectKotlinDSL() = doGradleTest("MultiProjectKotlinDSL", ::withIgnoringTargetLanguageLevelOnTeamCity)
+    fun multiProjectKotlinDSL() = doGradleTest("MultiProjectKotlinDSL", ::withIgnoredJdk)
 
     @Test
-    fun multiProjectGroovyDSL() = doGradleTest("MultiProjectGroovyDSL", ::withIgnoringTargetLanguageLevelOnTeamCity)
+    fun multiProjectGroovyDSL() = doGradleTest("MultiProjectGroovyDSL", ::withIgnoredJdk)
 
     @Test
-    fun customSourceSets() = doGradleTest("CustomSourceSets", ::withIgnoringTargetLanguageLevelOnTeamCity)
+    fun customSourceSets() = doGradleTest("CustomSourceSets", ::withIgnoredJdk)
 
     @Test
-    fun dependencies() = doGradleTest("Dependencies", ::withIgnoringTargetLanguageLevelOnTeamCity)
+    fun dependencies() = doGradleTest("Dependencies", ::withIgnoredJdk)
 
     @Test
-    fun gradle6Project() = doGradleTest("Gradle6Project")
+    fun gradle6Project() = doGradleTest("Gradle6Project", ::withIgnoredJdk)
 
     @Test
-    fun gradle7Project() = doGradleTest("Gradle7Project")
+    fun gradle7Project() = doGradleTest("Gradle7Project", ::withIgnoredJdk)
 
     @Test
     fun empty() = doGradleTest("Empty")
@@ -79,7 +79,7 @@ class ProjectImportTest {
     @Test
     fun nonExistentDependency() {
         // TODO: Check that missing dependencies are reported
-        doGradleTest("NonExistentDependency", ::withIgnoringTargetLanguageLevelOnTeamCity)
+        doGradleTest("NonExistentDependency", ::withIgnoredJdk)
     }
 
     @Test
@@ -165,31 +165,37 @@ class ProjectImportTest {
     /**
      * If there is no explicitly defined java version in a Gradle project, Gradle will use the version from JAVA_HOME.
      * JAVA_HOME may differ between environments, thus it's simply to ignore the target java version for such projects.
+     * Todo LSP-790
      */
-    private fun withIgnoringTargetLanguageLevelOnTeamCity(data: WorkspaceData): WorkspaceData {
-        return if (System.getenv("TEAMCITY_VERSION") != null) {
-            withIgnoringTargetLanguageLevel(data)
-        } else {
-            data
-        }
-    }
-
-    private fun withIgnoringTargetLanguageLevel(data: WorkspaceData): WorkspaceData {
+    private fun withIgnoredJdk(data: WorkspaceData): WorkspaceData {
         return WorkspaceData(
-            data.modules,
+            data.modules.map { module ->
+                module.copy(
+                    dependencies = module.dependencies.map { dependency ->
+                        return@map if (dependency is DependencyData.Sdk) {
+                            dependency.copy(
+                                name = "ignored"
+                            )
+                        } else {
+                            dependency
+                        }
+                    }
+                )
+            },
             data.libraries,
-            data.sdks,
+            data.sdks.map {
+                it.copy(
+                    version = "ignored",
+                    name = "ignored",
+                    roots = emptyList(),
+                    homePath = "/"
+                )
+            },
             data.kotlinSettings,
             data.javaSettings.map {
                 assertNotNull(it.languageLevelId, "Module language level should never be null!")
-                JavaSettingsData(
-                    module = it.module,
-                    inheritedCompilerOutput = it.inheritedCompilerOutput,
-                    excludeOutput = it.excludeOutput,
-                    compilerOutput = it.compilerOutput,
-                    compilerOutputForTests = it.compilerOutputForTests,
-                    languageLevelId = "ignored",
-                    manifestAttributes = it.manifestAttributes
+                it.copy(
+                    languageLevelId = "ignored"
                 )
             }
         )
