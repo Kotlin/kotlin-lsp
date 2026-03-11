@@ -42,7 +42,8 @@ The best way to track current capabilities and what is going to be supported in 
   * [ ] Gradle KMP project import
   * [x] JSON-based build system agnostic import
     * [ ] Quickstart for JSON
-  * [ ] Maven/Amper import
+  * [x] Maven
+  * [ ] Amper import
   * [ ] Dumb mode for no build system at all
 * [x] Highlighting
   * [x] Semantic highlighting
@@ -67,7 +68,7 @@ The best way to track current capabilities and what is going to be supported in 
 * [ ] KDoc support
   * [x] In-project documentation hovers
   * [ ] Dependencies/Java documentation hovers from `source.jar`
-* [ ] Code formatting
+* [x] Code formatting
 * [ ] Fully-featured Windows support
 * [x] Reactive updates from the filesystem
 * [x] Document symbols (Outline) 
