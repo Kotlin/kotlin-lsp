@@ -1,147 +1,143 @@
 {
-    "modules": [
+  "modules": [
+    {
+      "name": "simple-maven",
+      "dependencies": [
         {
-            "name": "simple-maven",
-            "dependencies": [
-                {
-                    "type": "inheritedSdk"
-                },
-                {
-                    "type": "moduleSource"
-                },
-                {
-                    "type": "library",
-                    "name": "Maven: org.jetbrains.kotlin:kotlin-stdlib:1.9.20",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Maven: org.jetbrains:annotations:13.0",
-                    "scope": "compile"
-                }
-            ],
-            "contentRoots": [
-                {
-                    "path": "<WORKSPACE>/",
-                    "sourceRoots": [
-                        {
-                            "path": "<WORKSPACE>/src/main/kotlin",
-                            "type": "java-source"
-                        },
-                        {
-                            "path": "<WORKSPACE>/src/main/resources",
-                            "type": "java-resource"
-                        },
-                        {
-                            "path": "<WORKSPACE>/src/test/java",
-                            "type": "java-test"
-                        },
-                        {
-                            "path": "<WORKSPACE>/src/test/resources",
-                            "type": "java-test-resource"
-                        },
-                        {
-                            "path": "<WORKSPACE>/src/test/kotlin",
-                            "type": "java-test"
-                        }
-                    ]
-                }
-            ]
-        }
-    ],
-    "libraries": [
-        {
-            "name": "Maven: org.jetbrains.kotlin:kotlin-stdlib:1.9.20",
-            "type": "repository",
-            "roots": [
-                {
-                    "path": "<MAVEN_REPO>/org/jetbrains/kotlin/kotlin-stdlib/1.9.20/kotlin-stdlib-1.9.20-javadoc.jar",
-                    "type": "JAVADOC"
-                },
-                {
-                    "path": "<MAVEN_REPO>/org/jetbrains/kotlin/kotlin-stdlib/1.9.20/kotlin-stdlib-1.9.20-sources.jar",
-                    "type": "SOURCES"
-                },
-                {
-                    "path": "<MAVEN_REPO>/org/jetbrains/kotlin/kotlin-stdlib/1.9.20/kotlin-stdlib-1.9.20.jar"
-                }
-            ],
-            "properties": {
-                "attributes": {
-                    "groupId": "org.jetbrains.kotlin",
-                    "artifactId": "kotlin-stdlib",
-                    "version": "1.9.20",
-                    "baseVersion": "1.9.20"
-                }
-            }
+          "type": "inheritedSdk"
         },
         {
-            "name": "Maven: org.jetbrains:annotations:13.0",
-            "type": "repository",
-            "roots": [
-                {
-                    "path": "<MAVEN_REPO>/org/jetbrains/annotations/13.0/annotations-13.0-javadoc.jar",
-                    "type": "JAVADOC"
-                },
-                {
-                    "path": "<MAVEN_REPO>/org/jetbrains/annotations/13.0/annotations-13.0-sources.jar",
-                    "type": "SOURCES"
-                },
-                {
-                    "path": "<MAVEN_REPO>/org/jetbrains/annotations/13.0/annotations-13.0.jar"
-                }
-            ],
-            "properties": {
-                "attributes": {
-                    "groupId": "org.jetbrains",
-                    "artifactId": "annotations",
-                    "version": "13.0",
-                    "baseVersion": "13.0"
-                }
+          "type": "moduleSource"
+        },
+        {
+          "type": "library",
+          "name": "Maven: org.jetbrains.kotlin:kotlin-stdlib:1.9.20",
+          "scope": "compile"
+        },
+        {
+          "type": "library",
+          "name": "Maven: org.jetbrains:annotations:13.0",
+          "scope": "compile"
+        }
+      ],
+      "contentRoots": [
+        {
+          "path": "<WORKSPACE>/",
+          "sourceRoots": [
+            {
+              "path": "<WORKSPACE>/src/main/kotlin",
+              "type": "java-source"
+            },
+            {
+              "path": "<WORKSPACE>/src/main/resources",
+              "type": "java-resource"
+            },
+            {
+              "path": "<WORKSPACE>/src/test/java",
+              "type": "java-test"
+            },
+            {
+              "path": "<WORKSPACE>/src/test/resources",
+              "type": "java-test-resource"
             }
+          ]
         }
-    ],
-    "kotlinSettings": [
+      ]
+    }
+  ],
+  "libraries": [
+    {
+      "name": "Maven: org.jetbrains.kotlin:kotlin-stdlib:1.9.20",
+      "type": "repository",
+      "roots": [
         {
-            "name": "Kotlin",
-            "sourceRoots": [
-                "<WORKSPACE>/src/main/kotlin",
-                "<WORKSPACE>/src/test/kotlin"
-            ],
-            "configFileItems": [],
-            "module": "simple-maven",
-            "useProjectSettings": false,
-            "implementedModuleNames": [],
-            "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [],
-            "productionOutputPath": null,
-            "testOutputPath": null,
-            "sourceSetNames": [],
-            "isTestModule": false,
-            "externalProjectId": "com.example:simple-maven:1.0-SNAPSHOT",
-            "isHmppEnabled": true,
-            "pureKotlinSourceFolders": [],
-            "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[\"plugin:kotlinx-serialization:sampleOption=true\",\"plugin:kotlinx-serialization:moreOptions=false\"],\"pluginClasspaths\":[\"<MAVEN_REPO>/org/jetbrains/kotlin/kotlin-serialization-compiler-plugin/1.9.20/kotlin-serialization-compiler-plugin-1.9.20.jar\"]}",
-            "additionalArguments": "-Xjvm-default=all -Xlambdas=class",
-            "scriptTemplates": null,
-            "scriptTemplatesClasspath": null,
-            "outputDirectoryForJsLibraryFiles": null,
-            "targetPlatform": null,
-            "externalSystemRunTasks": [],
-            "version": 5,
-            "flushNeeded": false
-        }
-    ],
-    "javaSettings": [
+          "path": "<MAVEN_REPO>/org/jetbrains/kotlin/kotlin-stdlib/1.9.20/kotlin-stdlib-1.9.20-javadoc.jar",
+          "type": "JAVADOC"
+        },
         {
-            "module": "simple-maven",
-            "inheritedCompilerOutput": false,
-            "excludeOutput": false,
-            "compilerOutput": "<WORKSPACE>/target/classes",
-            "compilerOutputForTests": "<WORKSPACE>/target/test-classes",
-            "languageLevelId": "JDK_17",
-            "manifestAttributes": {}
+          "path": "<MAVEN_REPO>/org/jetbrains/kotlin/kotlin-stdlib/1.9.20/kotlin-stdlib-1.9.20-sources.jar",
+          "type": "SOURCES"
+        },
+        {
+          "path": "<MAVEN_REPO>/org/jetbrains/kotlin/kotlin-stdlib/1.9.20/kotlin-stdlib-1.9.20.jar"
         }
-    ]
+      ],
+      "properties": {
+        "attributes": {
+          "groupId": "org.jetbrains.kotlin",
+          "artifactId": "kotlin-stdlib",
+          "version": "1.9.20",
+          "baseVersion": "1.9.20"
+        }
+      }
+    },
+    {
+      "name": "Maven: org.jetbrains:annotations:13.0",
+      "type": "repository",
+      "roots": [
+        {
+          "path": "<MAVEN_REPO>/org/jetbrains/annotations/13.0/annotations-13.0-javadoc.jar",
+          "type": "JAVADOC"
+        },
+        {
+          "path": "<MAVEN_REPO>/org/jetbrains/annotations/13.0/annotations-13.0-sources.jar",
+          "type": "SOURCES"
+        },
+        {
+          "path": "<MAVEN_REPO>/org/jetbrains/annotations/13.0/annotations-13.0.jar"
+        }
+      ],
+      "properties": {
+        "attributes": {
+          "groupId": "org.jetbrains",
+          "artifactId": "annotations",
+          "version": "13.0",
+          "baseVersion": "13.0"
+        }
+      }
+    }
+  ],
+  "kotlinSettings": [
+    {
+      "name": "Kotlin",
+      "sourceRoots": [
+        "<WORKSPACE>/src/main/kotlin",
+        "<WORKSPACE>/src/test/kotlin"
+      ],
+      "configFileItems": [],
+      "module": "simple-maven",
+      "useProjectSettings": false,
+      "implementedModuleNames": [],
+      "dependsOnModuleNames": [],
+      "additionalVisibleModuleNames": [],
+      "productionOutputPath": null,
+      "testOutputPath": null,
+      "sourceSetNames": [],
+      "isTestModule": false,
+      "externalProjectId": "com.example:simple-maven:1.0-SNAPSHOT",
+      "isHmppEnabled": true,
+      "pureKotlinSourceFolders": [],
+      "kind": "default",
+      "compilerArguments": "J{\"jvmTarget\":\"17\",\"pluginOptions\":[\"plugin:kotlinx-serialization:sampleOption=true\",\"plugin:kotlinx-serialization:moreOptions=false\"],\"pluginClasspaths\":[\"<MAVEN_REPO>/org/jetbrains/kotlin/kotlin-serialization-compiler-plugin/1.9.20/kotlin-serialization-compiler-plugin-1.9.20.jar\"]}",
+      "additionalArguments": "-Xjvm-default=all -Xlambdas=class",
+      "scriptTemplates": null,
+      "scriptTemplatesClasspath": null,
+      "outputDirectoryForJsLibraryFiles": null,
+      "targetPlatform": null,
+      "externalSystemRunTasks": [],
+      "version": 5,
+      "flushNeeded": false
+    }
+  ],
+  "javaSettings": [
+    {
+      "module": "simple-maven",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": "<WORKSPACE>/target/classes",
+      "compilerOutputForTests": "<WORKSPACE>/target/test-classes",
+      "languageLevelId": "JDK_17",
+      "manifestAttributes": {}
+    }
+  ]
 }

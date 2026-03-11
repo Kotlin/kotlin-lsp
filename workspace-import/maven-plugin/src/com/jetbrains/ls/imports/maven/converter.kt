@@ -26,7 +26,6 @@ import org.eclipse.aether.resolution.DependencyRequest
 import org.eclipse.aether.resolution.DependencyResolutionException
 import org.eclipse.aether.resolution.DependencyResult
 import org.eclipse.aether.util.artifact.JavaScopes
-import java.nio.file.Path
 import java.util.Locale
 import kotlin.io.path.Path
 import kotlin.io.path.absolute
@@ -59,9 +58,10 @@ fun MavenProject.toWorkspaceData(
 }
 
 
-private fun getAllModules(topLevelProject: MavenProject): List<MavenTreeModuleImportData> {
+internal fun getAllModules(topLevelProject: MavenProject): List<MavenTreeModuleImportData> {
     val moduleNames = mapModuleNames(topLevelProject)
-    val projects = listOf(topLevelProject) + (topLevelProject.collectedProjects ?: emptyList())
+    val projects = (listOf(topLevelProject) + (topLevelProject.collectedProjects ?: emptyList()))
+        .map { it.deepestExecutionProject() }
 
     val allModules = mutableListOf<MavenProjectImportData>()
     val moduleImportDataByMavenId = mutableMapOf<String, MavenProjectImportData>()
@@ -190,6 +190,7 @@ private fun dependencyData(importDependencies: List<MavenImportDependency>): Lis
     }
 }
 
+
 private fun sourceRootData(
     module: MavenModuleData,
     project: MavenProject,
@@ -212,11 +213,11 @@ private fun sourceRootData(
         kotlinSettings?.testSourceRoots
             ?.filter { belongsToProject(it) }
             ?.forEach { add(SourceRootData(it, "java-test")) }
-        addBuildHelperRoots(project, "add-test-source", "sources", "java-test")
-        addBuildHelperRoots(project, "add-test-resource", "resources","java-test-resource")
-        addCompilerGeneratedSources(project, "compiler:testCompile","java-test")
-        addAntlr4GeneratedSources(project, "java-test")
-        addModelloGeneratedSources(project, "java-test")
+//        addBuildHelperRoots(project, "add-test-source", "sources", "java-test")
+//        addBuildHelperRoots(project, "add-test-resource", "resources","java-test-resource")
+//        addCompilerGeneratedSources(project, "compiler:testCompile","java-test")
+//        addAntlr4GeneratedSources(project, "java-test")
+//        addModelloGeneratedSources(project, "java-test")
     } else {
         if (module.type.containsMain) {
             project.compileSourceRoots
@@ -229,12 +230,12 @@ private fun sourceRootData(
             kotlinSettings?.compileSourceRoots?.forEach {
                 add(SourceRootData(it, "java-source"))
             }
-            addBuildHelperRoots(project, "add-source", "sources","java-source")
-            addBuildHelperRoots(project, "add-resource", "resources","java-resource")
-            addModelloGeneratedSources(project, "java-source")
-            addCompilerGeneratedSources(project, "compiler:compile","java-source")
-            addAntlr4GeneratedSources(project, "java-source")
-            addGeneratedDirProperty(project, "java-source")
+//            addBuildHelperRoots(project, "add-source", "sources","java-source")
+//            addBuildHelperRoots(project, "add-resource", "resources","java-resource")
+//            addModelloGeneratedSources(project, "java-source")
+//            addCompilerGeneratedSources(project, "compiler:compile","java-source")
+//            addAntlr4GeneratedSources(project, "java-source")
+            //addGeneratedDirProperty(project, "java-source")
         }
         if (module.type.containsTest) {
             project.testCompileSourceRoots
@@ -249,11 +250,11 @@ private fun sourceRootData(
             kotlinSettings?.testSourceRoots
                 ?.filter { belongsToProject(it) }
                 ?.forEach { add(SourceRootData(it, "java-test")) }
-            addBuildHelperRoots(project, "add-test-source", "sources", "java-test")
-            addBuildHelperRoots(project, "add-test-resource", "resources","java-test-resource")
-            addCompilerGeneratedSources(project, "compiler:testCompile","java-source")
-            addAntlr4GeneratedSources(project, "java-test")
-            addModelloGeneratedSources(project, "java-test")
+//            addBuildHelperRoots(project, "add-test-source", "sources", "java-test")
+//            addBuildHelperRoots(project, "add-test-resource", "resources","java-test-resource")
+//            addCompilerGeneratedSources(project, "compiler:testCompile","java-source")
+//            addAntlr4GeneratedSources(project, "java-test")
+//            addModelloGeneratedSources(project, "java-test")
         }
     }
 }.toList()
@@ -301,7 +302,6 @@ private fun MutableSet<SourceRootData>.addBuildHelperRoots(
         }
     }
 }
-
 
 
 private fun MutableSet<SourceRootData>.addModelloGeneratedSources(
@@ -368,12 +368,12 @@ private fun contentRootData(
     project: MavenProject,
     moduleData: MavenModuleData,
     sourceRoots: List<SourceRootData>
-): List<ContentRootData>  {
+): List<ContentRootData> {
     val baseDir = project.basedir?.absolutePath ?: ""
 
     val type = moduleData.type
     if (type != StandardMavenModuleType.MAIN_ONLY &&
-        type != StandardMavenModuleType.MAIN_ONLY_ADDITIONAL  &&
+        type != StandardMavenModuleType.MAIN_ONLY_ADDITIONAL &&
         type != StandardMavenModuleType.TEST_ONLY
     ) {
         return listOf(ContentRootData(path = baseDir, sourceRoots = sourceRoots))
@@ -385,7 +385,7 @@ private fun contentRootData(
 
     val standardPaths = (project.compileSourceRoots.orEmpty() + project.resources.orEmpty().map { it.directory }).toSet()
 
-    val standardContentRoots= sourceRoots
+    val standardContentRoots = sourceRoots
         .filter { it.path in standardPaths }
         .takeIf { it.isNotEmpty() }
         ?.map { ContentRootData(path = it.path, sourceRoots = listOf(it)) }
@@ -398,7 +398,7 @@ private fun contentRootData(
             ?.let { listOf(ContentRootData(path = baseDir, sourceRoots = it)) }
             ?: emptyList()
 
-    return  standardContentRoots + nonStandardContentRoots
+    return standardContentRoots + nonStandardContentRoots
 }
 
 private fun getModuleImportData(
@@ -561,24 +561,24 @@ private fun collectLibraries(
         .map { it.artifact }
         .distinct()
 
-        val dependenciesToResolve = allArtifacts.map { artifact ->
-            Dependency().apply {
-                groupId = artifact.groupId
-                artifactId = artifact.artifactId
-                version = artifact.version
-                classifier = artifact.classifier
-                type = artifact.type
-                scope = artifact.scope
-            }
+    val dependenciesToResolve = allArtifacts.map { artifact ->
+        Dependency().apply {
+            groupId = artifact.groupId
+            artifactId = artifact.artifactId
+            version = artifact.version
+            classifier = artifact.classifier
+            type = artifact.type
+            scope = artifact.scope
         }
-        dependenciesToResolve.resolveDependencies(
-            "Project Libraries",
-            remoteRepositories,
-            repositorySystem,
-            repositorySystemSession,
-            true,
-            true
-        )
+    }
+    dependenciesToResolve.resolveDependencies(
+        "Project Libraries",
+        remoteRepositories,
+        repositorySystem,
+        repositorySystemSession,
+        true,
+        true
+    )
 
     val libraries = allArtifacts.map { artifact ->
         val libName = createLibName(artifact)
@@ -812,11 +812,12 @@ private fun MavenProject.extractKotlinSettings(
     )
 
     val sourceRoots = when (moduleData.type) {
-            StandardMavenModuleType.MAIN_ONLY,
-            StandardMavenModuleType.MAIN_ONLY_ADDITIONAL -> kotlinCompileSourceRoots
-            StandardMavenModuleType.TEST_ONLY -> kotlinTestSourceRoots
-            else -> kotlinCompileSourceRoots + kotlinTestSourceRoots
-        }
+        StandardMavenModuleType.MAIN_ONLY,
+        StandardMavenModuleType.MAIN_ONLY_ADDITIONAL -> kotlinCompileSourceRoots
+
+        StandardMavenModuleType.TEST_ONLY -> kotlinTestSourceRoots
+        else -> kotlinCompileSourceRoots + kotlinTestSourceRoots
+    }
 
     val jvmTarget = config?.getChild("jvmTarget")?.value
     val compilerArgs = config?.getChild("args")?.children?.map { it.value } ?: emptyList()

@@ -4,7 +4,7 @@
   "imlFilePath" : ".idea/ScriptCommands.iml",
   "contentDirs" : [ "" ],
   "sourceDirs" : [ "src/main/java", "target/generated-sources/antlr4" ],
-  "testSourceDirs" : [ "src/test/java", "target/generated-sources/antlr4" ],
+  "testSourceDirs" : [ "src/test/java" ],
   "resourceDirs" : [ "src/main/resources" ],
   "testResourceDirs" : [ "src/test/resources" ],
   "generatedSourceDirs" : [ ],

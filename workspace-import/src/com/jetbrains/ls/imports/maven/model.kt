@@ -1,6 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.maven
 
+import com.jetbrains.ls.imports.json.ModuleData
 import com.jetbrains.ls.imports.json.WorkspaceData
 
 internal sealed interface MavenRunResult
@@ -22,5 +23,18 @@ internal fun mergeResults(
 }
 
 private fun mergeModels(deps: WorkspaceData, genSources: WorkspaceData): WorkspaceData {
-    return deps
+    val sourcesModules = genSources.modules.associateBy { it.name }
+    return deps.copy(
+        modules = deps.modules.map { module ->
+            module.copyWithReplacedSources(sourcesModules[module.name])
+        }
+    )
+}
+
+private fun ModuleData.copyWithReplacedSources(sourceData: ModuleData?): ModuleData {
+    if (sourceData == null) return this
+
+    return this.copy(
+        contentRoots = sourceData.contentRoots
+    )
 }

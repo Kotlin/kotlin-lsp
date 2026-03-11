@@ -79,8 +79,8 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         installMavenPlugin(execPath, javaHome, projectDirectory, progress, offlineOpts)
 
 
-        val modelWithDeps = runMavenPluginGoal(execPath, javaHome, projectDirectory, "model-with-deps", progress)
-        val modelWithGeneratedSources = runMavenPluginGoal(execPath, javaHome, projectDirectory, "gen-sources", progress)
+        val modelWithDeps = runMavenPluginGoal(execPath, javaHome, projectDirectory, "model-with-deps", progress, offlineOpts)
+        val modelWithGeneratedSources = runMavenPluginGoal(execPath, javaHome, projectDirectory, "gen-sources", progress,offlineOpts)
         val mergedModels = mergeResults(modelWithDeps, modelWithGeneratedSources)
 
         when (mergedModels) {
@@ -119,7 +119,13 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                 "com.jetbrains.ls:imports-maven-plugin:$goal",
                 "-f",
                 "pom.xml",
-                "-DoutputFile=${workspaceJsonFile.toAbsolutePath()}"
+                "-DoutputFile=${workspaceJsonFile.toAbsolutePath()}",
+                "-Denforcer.skip=true",
+                "-DskipTests=true",
+                "-Dmaven.enforcer.skip=true",
+                "-Denforcer.skip=true",
+                "-Dair.check.skip-enforcer=true"
+
             )
             ProcessBuilder(command + additionalParams)
                 .apply {
@@ -171,7 +177,8 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         execPath: Path?,
         javaHome: String?,
         projectDirectory: Path,
-        progress: WorkspaceImportProgressReporter
+        progress: WorkspaceImportProgressReporter,
+        additionalParams: List<String> = emptyList()
     ) {
         val pomResourcePath = "/META-INF/maven/com.jetbrains.ls/imports.maven.plugin/pom.xml"
         val pluginJar = PathManager.getResourceRoot(this::class.java, pomResourcePath)
@@ -185,7 +192,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         val mavenOpts = System.getProperty(LSP_MAVEN_PROJECT_MAVEN_OPTS_PROPERTY)
         try {
             mavenPluginPomFile.writeText(pluginPom)
-            ProcessBuilder(
+            val command = listOf(
                 execPath.toString(),
                 "install:install-file",
                 "-Dfile=$pluginJar",
@@ -195,6 +202,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                 "-Dversion=0.99",
                 "-Dpackaging=maven-plugin"
             )
+            ProcessBuilder(command + additionalParams)
                 .apply {
                     javaHome?.let {
                         environment()["JAVA_HOME"] = it

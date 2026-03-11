@@ -248,7 +248,7 @@
   "moduleTypeId" : "JAVA_MODULE",
   "imlFilePath" : ".idea/gson.iml",
   "contentDirs" : [ "gson" ],
-  "sourceDirs" : [ "gson/src/main/java" ],
+  "sourceDirs" : [ "gson/src/main/java", "gson/target/generated-sources/java-templates" ],
   "testSourceDirs" : [ "gson/src/test/java" ],
   "resourceDirs" : [ "gson/src/main/resources" ],
   "testResourceDirs" : [ "gson/src/test/resources" ],

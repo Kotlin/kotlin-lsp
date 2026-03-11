@@ -50,5 +50,43 @@
         </requirement>
       </requirements>
     </mojo>
+    <mojo>
+      <goal>gen-sources</goal>
+      <requiresDirectInvocation>true</requiresDirectInvocation>
+      <requiresProject>true</requiresProject>
+      <aggregator>true</aggregator>
+      <requiresOnline>false</requiresOnline>
+      <executePhase>generate-sources</executePhase>
+      <implementation>com.jetbrains.ls.imports.maven.ProcessSourcesMojo</implementation>
+      <instantiationStrategy>per-lookup</instantiationStrategy>
+      <executionStrategy>once-per-session</executionStrategy>
+      <requiresDependencyResolution>none</requiresDependencyResolution>
+      <threadSafe>false</threadSafe>
+      <parameters>
+        <parameter>
+          <name>outputFile</name>
+          <type>java.lang.String</type>
+          <required>false</required>
+          <editable>true</editable>
+        </parameter>
+        <parameter>
+          <name>project</name>
+          <type>org.apache.maven.project.MavenProject</type>
+          <required>true</required>
+          <editable>false</editable>
+        </parameter>
+        <parameter>
+          <name>session</name>
+          <type>org.apache.maven.execution.MavenSession</type>
+          <required>true</required>
+          <editable>false</editable>
+        </parameter>
+      </parameters>
+      <configuration>
+        <outputFile implementation="java.lang.String">${outputFile}</outputFile>
+        <project implementation="org.apache.maven.project.MavenProject" default-value="${project}"/>
+        <session implementation="org.apache.maven.execution.MavenSession" default-value="${session}"/>
+      </configuration>
+    </mojo>
   </mojos>
 </plugin>

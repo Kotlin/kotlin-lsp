@@ -2,13 +2,17 @@
 package com.jetbrains.ls.imports.maven
 
 import com.jetbrains.ls.imports.maven.model.LanguageLevels
-import com.jetbrains.ls.imports.maven.model.StandardMavenModuleType
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.Json
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.model.Plugin
 import org.apache.maven.project.MavenProject
 import org.codehaus.plexus.util.xml.Xpp3Dom
+import java.io.BufferedOutputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.io.PrintStream
 import java.nio.file.Path
-import kotlin.collections.find
 import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
 
@@ -218,12 +222,12 @@ internal fun mainAndTestCompilerArgsDiffer(project: MavenProject): Boolean {
     val executions = plugin.executions
     if (executions == null || executions.isEmpty()) return false
     val compilerArgs = (executions.find { it.id == "default-compile" }?.configuration as? Xpp3Dom)?.getChild("compilerArgs")
-    val testCompilerArgs = (executions.find { it.id == "default-testCompile"}?.configuration as? Xpp3Dom)?.getChild("compilerArgs")
+    val testCompilerArgs = (executions.find { it.id == "default-testCompile" }?.configuration as? Xpp3Dom)?.getChild("compilerArgs")
     return compilerArgs != testCompilerArgs
 }
 
 internal fun findCompilerPlugin(project: MavenProject): Plugin? =
-    findPlugin(project, "org.apache.maven.plugins","maven-compiler-plugin")
+    findPlugin(project, "org.apache.maven.plugins", "maven-compiler-plugin")
 
 internal fun getPluginGoalConfiguration(project: MavenProject, groupId: String, artifactId: String, goal: String): Xpp3Dom? {
     val plugin = project.buildPlugins.find { it.groupId == groupId && it.artifactId == artifactId } ?: return null
@@ -261,3 +265,25 @@ internal fun toAbsolutePath(project: MavenProject, path: String): String {
     if (project.basedir != null) return project.basedir.toPath().resolve(path).absolutePathString()
     return p.absolutePathString()
 }
+
+@Suppress("IO_FILE_USAGE")
+internal fun printJsonDataIntoFile(data: WorkspaceData, file: File) {
+    PrintStream(BufferedOutputStream(FileOutputStream(file))).use { print ->
+        @OptIn(ExperimentalSerializationApi::class)
+        val json = Json {
+            prettyPrint = true
+            prettyPrintIndent = " "
+            encodeDefaults = false
+        }
+
+        val jsonString = json.encodeToString(data)
+        print.println(jsonString)
+        print.flush()
+    }
+}
+
+tailrec fun MavenProject.deepestExecutionProject(): MavenProject {
+    if (executionProject == null || executionProject === this) return this
+    return executionProject.deepestExecutionProject()
+}
+
