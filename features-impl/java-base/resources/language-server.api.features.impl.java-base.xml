@@ -2,5 +2,7 @@
   <dependencies>
     <module name="intellij.java.impl"/>
     <module name="intellij.java.backend"/>
+
+    <module name="language-server.analyzer.java"/>
   </dependencies>
 </idea-plugin>

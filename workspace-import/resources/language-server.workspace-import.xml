@@ -1,2 +1,5 @@
 <idea-plugin>
+  <dependencies>
+    <module name="language-server.analyzer.kotlin"/>
+  </dependencies>
 </idea-plugin>
