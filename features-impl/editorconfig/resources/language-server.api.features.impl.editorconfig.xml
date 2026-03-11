@@ -1,0 +1,6 @@
+<idea-plugin>
+  <dependencies>
+    <module name="intellij.editorconfig.backend"/>
+    <module name="intellij.editorconfig.common"/>
+  </dependencies>
+</idea-plugin>
