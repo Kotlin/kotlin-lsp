@@ -268,8 +268,7 @@ class SavingProgressReporter : WorkspaceImportProgressReporter {
     }
 
 }
-
-private fun normalize(modules: List<ModuleEntityDto>): List<ModuleEntityDto> =
+ fun normalize(modules: List<ModuleEntityDto>): List<ModuleEntityDto> =
     modules.map { normalize(it) }.sortedBy { it.name }
 
 private fun normalize(m: ModuleEntityDto): ModuleEntityDto = m.copy(

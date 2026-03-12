@@ -86,6 +86,7 @@ jvm_library(
     "@community//platform/testFramework/core:core_test_lib",
     "@community//java/java-runtime:rt",
     "@community//java/java-runtime:rt_test_lib",
+    "@lib//:junit5Params",
   ],
   runtime_deps = [
     ":integration-tests",

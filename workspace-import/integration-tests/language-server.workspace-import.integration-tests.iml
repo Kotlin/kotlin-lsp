@@ -60,5 +60,6 @@
     <orderEntry type="module" module-name="language-server.workspace-import.test" scope="TEST" />
     <orderEntry type="module" module-name="intellij.platform.testFramework.core" scope="TEST" />
     <orderEntry type="module" module-name="intellij.java.rt" scope="TEST" />
+    <orderEntry type="library" scope="TEST" name="JUnit5Params" level="project" />
   </component>
 </module>
