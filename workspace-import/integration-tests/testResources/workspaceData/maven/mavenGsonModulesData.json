@@ -18,18 +18,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/auto/value/auto-value-annotations/1.10.4/auto-value-annotations-1.10.4-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/auto/value/auto-value-annotations/1.10.4/auto-value-annotations-1.10.4-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/auto/value/auto-value-annotations/1.10.4/auto-value-annotations-1.10.4.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -41,18 +29,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -64,18 +40,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/errorprone/error_prone_annotations/2.24.1/error_prone_annotations-2.24.1-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/errorprone/error_prone_annotations/2.24.1/error_prone_annotations-2.24.1-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/errorprone/error_prone_annotations/2.24.1/error_prone_annotations-2.24.1.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -87,18 +51,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/guava/failureaccess/1.0.2/failureaccess-1.0.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/guava/failureaccess/1.0.2/failureaccess-1.0.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/guava/failureaccess/1.0.2/failureaccess-1.0.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -132,18 +84,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/j2objc/j2objc-annotations/2.8/j2objc-annotations-2.8-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/j2objc/j2objc-annotations/2.8/j2objc-annotations-2.8-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/j2objc/j2objc-annotations/2.8/j2objc-annotations-2.8.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -155,18 +95,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/truth/truth/1.4.0/truth-1.4.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/truth/truth/1.4.0/truth-1.4.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/truth/truth/1.4.0/truth-1.4.0.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -178,18 +106,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.13.2/junit-4.13.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.13.2/junit-4.13.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.13.2/junit-4.13.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -201,18 +117,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -224,18 +128,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/checkerframework/checker-qual/3.42.0/checker-qual-3.42.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/checkerframework/checker-qual/3.42.0/checker-qual-3.42.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/checkerframework/checker-qual/3.42.0/checker-qual-3.42.0.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -247,18 +139,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -270,18 +150,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -293,18 +161,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -316,18 +172,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-params/5.10.2/junit-jupiter-params-5.10.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-params/5.10.2/junit-jupiter-params-5.10.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter-params/5.10.2/junit-jupiter-params-5.10.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -339,18 +183,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter/5.10.2/junit-jupiter-5.10.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter/5.10.2/junit-jupiter-5.10.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/jupiter/junit-jupiter/5.10.2/junit-jupiter-5.10.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -362,18 +194,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -385,18 +205,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -408,18 +216,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -431,18 +227,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm/9.6/asm-9.6-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm/9.6/asm-9.6-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm/9.6/asm-9.6.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -479,18 +263,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/auto/value/auto-value-annotations/1.10.4/auto-value-annotations-1.10.4-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/auto/value/auto-value-annotations/1.10.4/auto-value-annotations-1.10.4-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/auto/value/auto-value-annotations/1.10.4/auto-value-annotations-1.10.4.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -502,18 +274,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -525,18 +285,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/errorprone/error_prone_annotations/2.24.1/error_prone_annotations-2.24.1-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/errorprone/error_prone_annotations/2.24.1/error_prone_annotations-2.24.1-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/errorprone/error_prone_annotations/2.24.1/error_prone_annotations-2.24.1.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -548,18 +296,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/guava/failureaccess/1.0.2/failureaccess-1.0.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/guava/failureaccess/1.0.2/failureaccess-1.0.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/guava/failureaccess/1.0.2/failureaccess-1.0.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -571,18 +307,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/guava/guava-testlib/33.0.0-jre/guava-testlib-33.0.0-jre-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/guava/guava-testlib/33.0.0-jre/guava-testlib-33.0.0-jre-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/guava/guava-testlib/33.0.0-jre/guava-testlib-33.0.0-jre.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -616,18 +340,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/j2objc/j2objc-annotations/2.8/j2objc-annotations-2.8-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/j2objc/j2objc-annotations/2.8/j2objc-annotations-2.8-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/j2objc/j2objc-annotations/2.8/j2objc-annotations-2.8.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -639,18 +351,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/truth/truth/1.4.0/truth-1.4.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/truth/truth/1.4.0/truth-1.4.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/truth/truth/1.4.0/truth-1.4.0.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -662,18 +362,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.13.2/junit-4.13.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.13.2/junit-4.13.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.13.2/junit-4.13.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -685,18 +373,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/checkerframework/checker-qual/3.42.0/checker-qual-3.42.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/checkerframework/checker-qual/3.42.0/checker-qual-3.42.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/checkerframework/checker-qual/3.42.0/checker-qual-3.42.0.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -708,18 +384,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -731,18 +395,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm/9.6/asm-9.6-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm/9.6/asm-9.6-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm/9.6/asm-9.6.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -774,18 +426,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/errorprone/error_prone_annotations/2.24.1/error_prone_annotations-2.24.1-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/errorprone/error_prone_annotations/2.24.1/error_prone_annotations-2.24.1-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/errorprone/error_prone_annotations/2.24.1/error_prone_annotations-2.24.1.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -797,12 +437,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/javax/annotation/jsr250-api/1.0/jsr250-api-1.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/javax/annotation/jsr250-api/1.0/jsr250-api-1.0.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -814,18 +448,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.13.2/junit-4.13.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.13.2/junit-4.13.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.13.2/junit-4.13.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -837,18 +459,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -885,18 +495,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-annotations/2.16.1/jackson-annotations-2.16.1-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-annotations/2.16.1/jackson-annotations-2.16.1-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-annotations/2.16.1/jackson-annotations-2.16.1.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -908,18 +506,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-core/2.16.1/jackson-core-2.16.1-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-core/2.16.1/jackson-core-2.16.1-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-core/2.16.1/jackson-core-2.16.1.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -931,18 +517,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-databind/2.16.1/jackson-databind-2.16.1-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-databind/2.16.1/jackson-databind-2.16.1-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/fasterxml/jackson/core/jackson-databind/2.16.1/jackson-databind-2.16.1.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -954,18 +528,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/auto/value/auto-value-annotations/1.8.1/auto-value-annotations-1.8.1-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/auto/value/auto-value-annotations/1.8.1/auto-value-annotations-1.8.1-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/auto/value/auto-value-annotations/1.8.1/auto-value-annotations-1.8.1.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -977,18 +539,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/caliper/caliper-api/1.0-beta-3/caliper-api-1.0-beta-3-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/caliper/caliper-api/1.0-beta-3/caliper-api-1.0-beta-3-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/caliper/caliper-api/1.0-beta-3/caliper-api-1.0-beta-3.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1000,18 +550,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/caliper/caliper-core/1.0-beta-3/caliper-core-1.0-beta-3-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/caliper/caliper-core/1.0-beta-3/caliper-core-1.0-beta-3-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/caliper/caliper-core/1.0-beta-3/caliper-core-1.0-beta-3.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1023,18 +561,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/caliper/caliper-runner/1.0-beta-3/caliper-runner-1.0-beta-3-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/caliper/caliper-runner/1.0-beta-3/caliper-runner-1.0-beta-3-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/caliper/caliper-runner/1.0-beta-3/caliper-runner-1.0-beta-3.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1046,18 +572,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/caliper/caliper-util/1.0-beta-3/caliper-util-1.0-beta-3-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/caliper/caliper-util/1.0-beta-3/caliper-util-1.0-beta-3-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/caliper/caliper-util/1.0-beta-3/caliper-util-1.0-beta-3.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1069,18 +583,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/caliper/caliper-worker-jvm/1.0-beta-3/caliper-worker-jvm-1.0-beta-3-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/caliper/caliper-worker-jvm/1.0-beta-3/caliper-worker-jvm-1.0-beta-3-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/caliper/caliper-worker-jvm/1.0-beta-3/caliper-worker-jvm-1.0-beta-3.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1092,18 +594,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/caliper/caliper-worker/1.0-beta-3/caliper-worker-1.0-beta-3-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/caliper/caliper-worker/1.0-beta-3/caliper-worker-1.0-beta-3-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/caliper/caliper-worker/1.0-beta-3/caliper-worker-1.0-beta-3.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1115,18 +605,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/caliper/caliper/1.0-beta-3/caliper-1.0-beta-3-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/caliper/caliper/1.0-beta-3/caliper-1.0-beta-3-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/caliper/caliper/1.0-beta-3/caliper-1.0-beta-3.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1138,18 +616,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1161,18 +627,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/code/java-allocation-instrumenter/java-allocation-instrumenter/3.3.0/java-allocation-instrumenter-3.3.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/code/java-allocation-instrumenter/java-allocation-instrumenter/3.3.0/java-allocation-instrumenter-3.3.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/code/java-allocation-instrumenter/java-allocation-instrumenter/3.3.0/java-allocation-instrumenter-3.3.0.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1184,18 +638,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/dagger/dagger-producers/2.22.1/dagger-producers-2.22.1-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/dagger/dagger-producers/2.22.1/dagger-producers-2.22.1-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/dagger/dagger-producers/2.22.1/dagger-producers-2.22.1.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1207,18 +649,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/dagger/dagger/2.22.1/dagger-2.22.1-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/dagger/dagger/2.22.1/dagger-2.22.1-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/dagger/dagger/2.22.1/dagger-2.22.1.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1230,18 +660,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/errorprone/error_prone_annotations/2.24.1/error_prone_annotations-2.24.1-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/errorprone/error_prone_annotations/2.24.1/error_prone_annotations-2.24.1-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/errorprone/error_prone_annotations/2.24.1/error_prone_annotations-2.24.1.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1253,18 +671,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/guava/failureaccess/1.0.1/failureaccess-1.0.1-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/guava/failureaccess/1.0.1/failureaccess-1.0.1-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/guava/failureaccess/1.0.1/failureaccess-1.0.1.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1298,18 +704,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/j2objc/j2objc-annotations/1.3/j2objc-annotations-1.3-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/j2objc/j2objc-annotations/1.3/j2objc-annotations-1.3-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/j2objc/j2objc-annotations/1.3/j2objc-annotations-1.3.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1321,18 +715,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/squareup/okhttp/okhttp/2.7.5/okhttp-2.7.5-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/squareup/okhttp/okhttp/2.7.5/okhttp-2.7.5-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/squareup/okhttp/okhttp/2.7.5/okhttp-2.7.5.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1344,18 +726,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/squareup/okio/okio/1.6.0/okio-1.6.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/squareup/okio/okio/1.6.0/okio-1.6.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/squareup/okio/okio/1.6.0/okio-1.6.0.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1367,18 +737,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/sun/jersey/jersey-client/1.19.4/jersey-client-1.19.4-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/sun/jersey/jersey-client/1.19.4/jersey-client-1.19.4-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/sun/jersey/jersey-client/1.19.4/jersey-client-1.19.4.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1390,18 +748,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/sun/jersey/jersey-core/1.19.4/jersey-core-1.19.4-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/sun/jersey/jersey-core/1.19.4/jersey-core-1.19.4-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/sun/jersey/jersey-core/1.19.4/jersey-core-1.19.4.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1413,18 +759,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/javax/annotation/javax.annotation-api/1.3.2/javax.annotation-api-1.3.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/javax/annotation/javax.annotation-api/1.3.2/javax.annotation-api-1.3.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/javax/annotation/javax.annotation-api/1.3.2/javax.annotation-api-1.3.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1436,18 +770,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/javax/inject/javax.inject/1/javax.inject-1-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/javax/inject/javax.inject/1/javax.inject-1-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/javax/inject/javax.inject/1/javax.inject-1.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1459,18 +781,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/javax/ws/rs/jsr311-api/1.1.1/jsr311-api-1.1.1-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/javax/ws/rs/jsr311-api/1.1.1/jsr311-api-1.1.1-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/javax/ws/rs/jsr311-api/1.1.1/jsr311-api-1.1.1.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1482,18 +792,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/joda-time/joda-time/2.10.10/joda-time-2.10.10-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/joda-time/joda-time/2.10.10/joda-time-2.10.10-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/joda-time/joda-time/2.10.10/joda-time-2.10.10.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1505,18 +803,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/checkerframework/checker-compat-qual/2.5.3/checker-compat-qual-2.5.3-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/checkerframework/checker-compat-qual/2.5.3/checker-compat-qual-2.5.3-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/checkerframework/checker-compat-qual/2.5.3/checker-compat-qual-2.5.3.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1539,18 +825,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm-analysis/7.2/asm-analysis-7.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm-analysis/7.2/asm-analysis-7.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm-analysis/7.2/asm-analysis-7.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1562,18 +836,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm-commons/7.2/asm-commons-7.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm-commons/7.2/asm-commons-7.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm-commons/7.2/asm-commons-7.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1585,18 +847,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm-tree/7.2/asm-tree-7.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm-tree/7.2/asm-tree-7.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm-tree/7.2/asm-tree-7.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1608,18 +858,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm-util/7.2/asm-util-7.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm-util/7.2/asm-util-7.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm-util/7.2/asm-util-7.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1687,18 +925,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/auto/value/auto-value-annotations/1.10.4/auto-value-annotations-1.10.4-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/auto/value/auto-value-annotations/1.10.4/auto-value-annotations-1.10.4-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/auto/value/auto-value-annotations/1.10.4/auto-value-annotations-1.10.4.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1710,18 +936,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1733,18 +947,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/errorprone/error_prone_annotations/2.24.1/error_prone_annotations-2.24.1-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/errorprone/error_prone_annotations/2.24.1/error_prone_annotations-2.24.1-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/errorprone/error_prone_annotations/2.24.1/error_prone_annotations-2.24.1.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1756,18 +958,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/guava/failureaccess/1.0.2/failureaccess-1.0.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/guava/failureaccess/1.0.2/failureaccess-1.0.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/guava/failureaccess/1.0.2/failureaccess-1.0.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1779,18 +969,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/guava/guava/33.0.0-jre/guava-33.0.0-jre-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/guava/guava/33.0.0-jre/guava-33.0.0-jre-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/guava/guava/33.0.0-jre/guava-33.0.0-jre.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1813,18 +991,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/j2objc/j2objc-annotations/2.8/j2objc-annotations-2.8-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/j2objc/j2objc-annotations/2.8/j2objc-annotations-2.8-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/j2objc/j2objc-annotations/2.8/j2objc-annotations-2.8.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1836,18 +1002,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/protobuf/protobuf-java/3.25.2/protobuf-java-3.25.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/protobuf/protobuf-java/3.25.2/protobuf-java-3.25.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/protobuf/protobuf-java/3.25.2/protobuf-java-3.25.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1859,18 +1013,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/truth/truth/1.4.0/truth-1.4.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/truth/truth/1.4.0/truth-1.4.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/truth/truth/1.4.0/truth-1.4.0.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1882,18 +1024,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.13.2/junit-4.13.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.13.2/junit-4.13.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.13.2/junit-4.13.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1905,18 +1035,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/checkerframework/checker-qual/3.41.0/checker-qual-3.41.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/checkerframework/checker-qual/3.41.0/checker-qual-3.41.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/checkerframework/checker-qual/3.41.0/checker-qual-3.41.0.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1928,18 +1046,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1951,18 +1057,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm/9.6/asm-9.6-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm/9.6/asm-9.6-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm/9.6/asm-9.6.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -1999,18 +1093,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/auto/value/auto-value-annotations/1.10.4/auto-value-annotations-1.10.4-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/auto/value/auto-value-annotations/1.10.4/auto-value-annotations-1.10.4-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/auto/value/auto-value-annotations/1.10.4/auto-value-annotations-1.10.4.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -2022,18 +1104,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -2045,18 +1115,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/errorprone/error_prone_annotations/2.24.1/error_prone_annotations-2.24.1-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/errorprone/error_prone_annotations/2.24.1/error_prone_annotations-2.24.1-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/errorprone/error_prone_annotations/2.24.1/error_prone_annotations-2.24.1.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -2068,18 +1126,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/guava/failureaccess/1.0.2/failureaccess-1.0.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/guava/failureaccess/1.0.2/failureaccess-1.0.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/guava/failureaccess/1.0.2/failureaccess-1.0.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -2113,18 +1159,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/j2objc/j2objc-annotations/2.8/j2objc-annotations-2.8-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/j2objc/j2objc-annotations/2.8/j2objc-annotations-2.8-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/j2objc/j2objc-annotations/2.8/j2objc-annotations-2.8.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -2136,18 +1170,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/truth/truth/1.4.0/truth-1.4.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/com/google/truth/truth/1.4.0/truth-1.4.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/com/google/truth/truth/1.4.0/truth-1.4.0.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -2159,18 +1181,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.13.2/junit-4.13.2-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.13.2/junit-4.13.2-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.13.2/junit-4.13.2.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -2182,18 +1192,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/checkerframework/checker-qual/3.42.0/checker-qual-3.42.0-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/checkerframework/checker-qual/3.42.0/checker-qual-3.42.0-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/checkerframework/checker-qual/3.42.0/checker-qual-3.42.0.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -2205,18 +1203,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -2228,18 +1214,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm/9.6/asm-9.6-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm/9.6/asm-9.6-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/ow2/asm/asm/9.6/asm-9.6.jar!/",
       "type" : {
         "name" : "CLASSES"

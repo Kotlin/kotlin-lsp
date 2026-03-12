@@ -6,14 +6,22 @@ import com.intellij.platform.testFramework.core.FileComparisonFailedError
 import com.intellij.workspaceModel.performanceTesting.helpers.JsonSerializer
 import com.jetbrains.ls.imports.tests.integration.LspTestData
 import com.jetbrains.ls.imports.tests.integration.normalize
+import com.jetbrains.ls.imports.tests.integration.withIgnoringNonClassesRoots
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import kotlin.io.path.readText
 
+
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+@ParameterizedTest(name = "{0}")
+@EnumSource(LspTestData::class)
+private annotation class LspExpectedWorkspaceDataTest
+
 @DoNotReportToAllure
 class ExpectedDataValidationTest {
-    @ParameterizedTest(name = "{0}.json")
-    @EnumSource(LspTestData::class)
+
+    @LspExpectedWorkspaceDataTest
     fun `expected json file should be pretty`(testData: LspTestData) {
         val expected = testData.getFile()!!.readText()
         val actual = JsonSerializer.serializePretty(normalize(testData.getStructure().modules))
@@ -26,4 +34,18 @@ class ExpectedDataValidationTest {
         }
     }
 
+
+    @LspExpectedWorkspaceDataTest
+    fun `expected json file should not contain JAVADOC and SOURCES libraries`(testData: LspTestData) {
+        val expected = testData.getFile()!!.readText()
+        val modules = withIgnoringNonClassesRoots(normalize(testData.getStructure().modules))
+        val actual = JsonSerializer.serializePretty(modules)
+        if (expected != actual) {
+            throw FileComparisonFailedError(
+                "Json Should not contain JAVADOC and SOURCES", expected, actual,
+                testData.getFile()!!.toString(),
+                null
+            )
+        }
+    }
 }

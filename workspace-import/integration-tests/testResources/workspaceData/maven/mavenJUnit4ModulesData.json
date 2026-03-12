@@ -18,18 +18,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.12/junit-4.12-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.12/junit-4.12-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.12/junit-4.12.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -41,18 +29,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/net/bytebuddy/byte-buddy-agent/1.6.5/byte-buddy-agent-1.6.5-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/net/bytebuddy/byte-buddy-agent/1.6.5/byte-buddy-agent-1.6.5-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/net/bytebuddy/byte-buddy-agent/1.6.5/byte-buddy-agent-1.6.5.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -64,18 +40,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/net/bytebuddy/byte-buddy/1.6.5/byte-buddy-1.6.5-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/net/bytebuddy/byte-buddy/1.6.5/byte-buddy-1.6.5-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/net/bytebuddy/byte-buddy/1.6.5/byte-buddy-1.6.5.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -87,18 +51,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -110,18 +62,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/mockito/mockito-all/1.10.19/mockito-all-1.10.19-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/mockito/mockito-all/1.10.19/mockito-all-1.10.19-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/mockito/mockito-all/1.10.19/mockito-all-1.10.19.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -133,18 +73,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/mockito/mockito-core/2.7.9/mockito-core-2.7.9-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/mockito/mockito-core/2.7.9/mockito-core-2.7.9-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/mockito/mockito-core/2.7.9/mockito-core-2.7.9.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -156,18 +84,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/objenesis/objenesis/2.5/objenesis-2.5-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/objenesis/objenesis/2.5/objenesis-2.5-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/objenesis/objenesis/2.5/objenesis-2.5.jar!/",
       "type" : {
         "name" : "CLASSES"

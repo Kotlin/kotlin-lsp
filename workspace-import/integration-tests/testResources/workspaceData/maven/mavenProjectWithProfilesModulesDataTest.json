@@ -18,18 +18,6 @@
     "exported" : false,
     "scope" : "COMPILE",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/commons-lang/commons-lang/2.4/commons-lang-2.4-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/commons-lang/commons-lang/2.4/commons-lang-2.4-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/commons-lang/commons-lang/2.4/commons-lang-2.4.jar!/",
       "type" : {
         "name" : "CLASSES"

@@ -18,18 +18,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.12/junit-4.12-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.12/junit-4.12-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/junit/junit/4.12/junit-4.12.jar!/",
       "type" : {
         "name" : "CLASSES"
@@ -41,18 +29,6 @@
     "exported" : false,
     "scope" : "TEST",
     "roots" : [ {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-javadoc.jar!/",
-      "type" : {
-        "name" : "JAVADOC"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
-      "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-sources.jar!/",
-      "type" : {
-        "name" : "SOURCES"
-      },
-      "inclusionOptions" : "ROOT_ITSELF"
-    }, {
       "url" : "jar://MAVEN_M3_REPOSITORY/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar!/",
       "type" : {
         "name" : "CLASSES"
