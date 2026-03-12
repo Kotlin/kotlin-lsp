@@ -58,5 +58,7 @@
     <orderEntry type="module" module-name="intellij.platform.backend.workspace" scope="TEST" />
     <orderEntry type="module" module-name="intellij.platform.ide.impl" scope="TEST" />
     <orderEntry type="module" module-name="language-server.workspace-import.test" scope="TEST" />
+    <orderEntry type="module" module-name="intellij.platform.testFramework.core" scope="TEST" />
+    <orderEntry type="module" module-name="intellij.java.rt" scope="TEST" />
   </component>
 </module>

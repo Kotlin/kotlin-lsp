@@ -82,6 +82,10 @@ jvm_library(
     "@community//platform/platform-impl:ide-impl",
     "//language-server/community/workspace-import/test",
     "//language-server/community/workspace-import/test:test_test_lib",
+    "@community//platform/testFramework/core",
+    "@community//platform/testFramework/core:core_test_lib",
+    "@community//java/java-runtime:rt",
+    "@community//java/java-runtime:rt_test_lib",
   ],
   runtime_deps = [
     ":integration-tests",

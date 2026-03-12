@@ -11,13 +11,11 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.impl.ProjectStoreFactory
+import com.intellij.platform.testFramework.core.FileComparisonFailedError
 import com.intellij.project.ProjectStoreOwner
 import com.intellij.workspaceModel.performanceTesting.extension.javaModuleSettings
 import com.intellij.workspaceModel.performanceTesting.extension.modules
 import com.intellij.workspaceModel.performanceTesting.helpers.JsonSerializer
-import com.intellij.workspaceModel.performanceTesting.validator.models.LibraryDependencyEntityDto
-import com.intellij.workspaceModel.performanceTesting.validator.models.LibraryRootEntityDto
-import com.intellij.workspaceModel.performanceTesting.validator.models.ModuleDependencyEntityDto
 import com.intellij.workspaceModel.performanceTesting.validator.models.ModuleEntityDto
 import com.intellij.workspaceModel.performanceTesting.validator.models.ModuleEntityDtoFactory.moduleEntityToModuleEntityDto
 import com.intellij.workspaceModel.performanceTesting.validator.models.ProjectStructureWithModules
@@ -91,7 +89,7 @@ fun gradleTest(
     System.setProperty("useNaiveGradleRepoSubstitution", "true")
     try {
         val projectDir = testCase.projectInfo.downloadAndUnpackProject() ?: fail("Cannot unpack project")
-        doTest(projectDir, projectStructureWithModules, GradleWorkspaceImporter, resultMapper)
+        doTest(projectDir, projectStructureWithModules, GradleWorkspaceImporter, null, resultMapper)
     } finally {
         System.clearProperty("useNaiveGradleRepoSubstitution")
     }
@@ -99,7 +97,7 @@ fun gradleTest(
 
 internal fun mavenTest(testCase: LspTestProjectFromGitHub, expected: LspTestData) {
     val projectDir = testCase.project.downloadAndUnpackProject()
-    mavenTest(projectDir, expected.getStructure(), ::withIgnoringNonClassesRoots)
+    mavenTest(projectDir, expected, ::withIgnoringNonClassesRoots)
 
 }
 
@@ -108,12 +106,12 @@ internal fun mavenTest(
     expected: LspTestData
 ) {
     val projectDir = testCase.projectInfo.downloadAndUnpackProject() ?: fail("Cannot unpack project")
-    mavenTest(projectDir, expected.getStructure(), ::withIgnoringNonClassesRoots)
+    mavenTest(projectDir, expected, ::withIgnoringNonClassesRoots)
 }
 
-internal fun mavenTest(
+private fun mavenTest(
     projectDir: Path,
-    projectStructureWithModules: ProjectStructureWithModules,
+    expected: LspTestData,
     resultMapper: (List<ModuleEntityDto>) -> List<ModuleEntityDto> = { it }
 ) {
     val mavenPath = downloadMavenBinaries()
@@ -121,7 +119,7 @@ internal fun mavenTest(
     System.setProperty("forceM3Placeholder", "true")
 
     try {
-        doTest(projectDir, projectStructureWithModules, MavenWorkspaceImporter, resultMapper)
+        doTest(projectDir, expected.getStructure(), MavenWorkspaceImporter, expected.getFile(), resultMapper)
     } finally {
         System.clearProperty("forceM3Placeholder")
     }
@@ -134,105 +132,115 @@ internal fun jpsTest(testCase: TestCase<out ProjectInfoSpec>, projectStructureWi
 
 private fun doTest(
     projectDir: Path,
-    projectStructureWithModules: ProjectStructureWithModules,
+    expectedStructure: ProjectStructureWithModules,
     importer: WorkspaceImporter,
+    expectedFileData: Path? = null,
     resultMapper: (List<ModuleEntityDto>) -> List<ModuleEntityDto> = { it }
-) {
-        runBlocking(Dispatchers.Default) {
-            withAnalyzer(isUnitTestMode = true) { analyzer ->
-                val currentSnapshot = WorkspaceModelSnapshot.empty()
-                val virtualFileUrlManager = currentSnapshot.virtualFileUrlManager
-                analyzer.withProject(
-                    analyzerProjectConfigForImport(
-                        fileSystems = AnalyzerFileSystems.default(),
-                        projectId = AnalyzerProjectId(),
-                        entities = currentSnapshot.entityStore,
-                        urlManager = virtualFileUrlManager,
-                        pluginSet = pluginSet(
-                            listOf(
-                                makePlugin(
-                                    "com.jetbrains.fleet.analyzer.test-import",
-                                    mapOf("com.jetbrains.fleet.analyzer.test-import" to "/META-INF/fleet/analyzer/test-import.xml")
-                                )
-                            ) + testPluginSet.allPlugins
-                        ),
-                        applicationInits = testApplicationInits,
-                        projectInits = testProjectInits,
+): List<ModuleEntityDto> = runBlocking(Dispatchers.Default) {
+    withAnalyzer(isUnitTestMode = true) { analyzer ->
+        val currentSnapshot = WorkspaceModelSnapshot.empty()
+        val virtualFileUrlManager = currentSnapshot.virtualFileUrlManager
+        return@withAnalyzer analyzer.withProject(
+            analyzerProjectConfigForImport(
+                fileSystems = AnalyzerFileSystems.default(),
+                projectId = AnalyzerProjectId(),
+                entities = currentSnapshot.entityStore,
+                urlManager = virtualFileUrlManager,
+                pluginSet = pluginSet(
+                    listOf(
+                        makePlugin(
+                            "com.jetbrains.fleet.analyzer.test-import",
+                            mapOf("com.jetbrains.fleet.analyzer.test-import" to "/META-INF/fleet/analyzer/test-import.xml")
+                        )
+                    ) + testPluginSet.allPlugins
+                ),
+                applicationInits = testApplicationInits,
+                projectInits = testProjectInits,
+            )
+        ) { analyzerProject ->
+            val originalProject = analyzerProject.project
+
+            val projectWithStore = TestProject(originalProject, projectDir)
+            val progressReporter = SavingProgressReporter()
+            val storage = try {
+                importer.importWorkspace(projectWithStore, projectDir, null, virtualFileUrlManager, progressReporter)
+                    ?: fail("Workspace import failed: $progressReporter")
+            } catch (e: WorkspaceImportException) {
+                fail(e.logMessage + progressReporter.toString())
+            }
+
+            val expectedModules = expectedStructure.modules
+            System.setProperty("com.intellij.workspaceModel.performanceTesting.extension", projectDir.absolutePathString())
+            val actualModules = try {
+                storage.modules.map { module ->
+                    moduleEntityToModuleEntityDto(
+                        module,
+                        storage.javaModuleSettings.firstOrNull { it.module == module },
+                        projectWithStore,
+                        storage,
+                        true
                     )
-                ) { analyzerProject ->
-                    val originalProject = analyzerProject.project
+                }.toList()
 
-                    val projectWithStore = object : Project by originalProject, ProjectStoreOwner {
-                        override val componentStore: IProjectStore =
-                            ApplicationManager.getApplication().service<ProjectStoreFactory>().createStore(this).also {
-                                it.setPath(projectDir)
-                            }
-
-                        override fun getPresentableUrl(): @SystemDependent @NonNls String? =
-                            originalProject.getPresentableUrl()
-
-                        override fun scheduleSave() {
-                            originalProject.scheduleSave()
-                        }
-
-                        override fun isDefault(): Boolean =
-                            originalProject.isDefault()
-
-                        override fun getComponent(name: String): BaseComponent? =
-                            originalProject.getComponent(name)
-
-                        override fun <T> getServiceForClient(serviceClass: Class<T?>): T? =
-                            originalProject.getServiceForClient(serviceClass)
-
-                        override fun <T> getServices(
-                            serviceClass: Class<T?>,
-                            client: ClientKind?
-                        ): @Unmodifiable List<T?> =
-                            originalProject.getServices(serviceClass, client)
-
-                        override fun <T> getServiceIfCreated(serviceClass: Class<T?>): T? =
-                            originalProject.getServiceIfCreated(serviceClass)
-
-                        override fun logError(error: Throwable, pluginId: PluginId) {
-                            originalProject.logError(error, pluginId)
-                        }
-                    }
-                    val progressReporter = SavingProgressReporter()
-                    val storage = try {
-                        importer.importWorkspace(projectWithStore, projectDir, null, virtualFileUrlManager, progressReporter)
-                            ?: fail("Workspace import failed: $progressReporter")
-                    } catch (e: WorkspaceImportException) {
-                        fail(e.logMessage + progressReporter.toString())
-                    }
+            } finally {
+                System.setProperty("com.intellij.workspaceModel.performanceTesting.extension", "")
+            }
 
 
-                    val expectedModules = projectStructureWithModules.modules
-                    System.setProperty("com.intellij.workspaceModel.performanceTesting.extension", projectDir.absolutePathString())
-                    val actualModules = try {
-
-                        storage.modules.map { module ->
-                            moduleEntityToModuleEntityDto(
-                                module,
-                                storage.javaModuleSettings.firstOrNull { it.module == module },
-                                projectWithStore,
-                                storage,
-                                true
-                            )
-                        }.toList()
-
-                    } finally {
-                        System.setProperty("com.intellij.workspaceModel.performanceTesting.extension", "")
-                    }
-
-                    reportDifferences(expectedModules, actualModules)
-
-                    assertEquals(
-                        JsonSerializer.serializePretty(normalize(resultMapper(expectedModules))),
-                        JsonSerializer.serializePretty(normalize(resultMapper(actualModules)))
+            val expected = JsonSerializer.serializePretty(normalize(resultMapper(expectedModules)))
+            val actual = JsonSerializer.serializePretty(normalize(resultMapper(actualModules)))
+            if (expectedFileData == null) {
+                assertEquals(expected, actual)
+            } else {
+                if (expected != actual) {
+                    throw FileComparisonFailedError(
+                        "Workspace Model does not match", expected, actual,
+                        expectedFileData.toString(),
+                        null
                     )
                 }
             }
+
+            actualModules
         }
+    }
+}
+
+
+class TestProject(val originalProject: Project, val projectDir: Path) : Project by originalProject, ProjectStoreOwner {
+    override val componentStore: IProjectStore =
+        ApplicationManager.getApplication().service<ProjectStoreFactory>().createStore(this).also {
+            it.setPath(projectDir)
+        }
+
+    override fun getPresentableUrl(): @SystemDependent @NonNls String? =
+        originalProject.getPresentableUrl()
+
+    override fun scheduleSave() {
+        originalProject.scheduleSave()
+    }
+
+    override fun isDefault(): Boolean =
+        originalProject.isDefault()
+
+    override fun getComponent(name: String): BaseComponent? =
+        originalProject.getComponent(name)
+
+    override fun <T> getServiceForClient(serviceClass: Class<T?>): T? =
+        originalProject.getServiceForClient(serviceClass)
+
+    override fun <T> getServices(
+        serviceClass: Class<T?>,
+        client: ClientKind?
+    ): @Unmodifiable List<T?> =
+        originalProject.getServices(serviceClass, client)
+
+    override fun <T> getServiceIfCreated(serviceClass: Class<T?>): T? =
+        originalProject.getServiceIfCreated(serviceClass)
+
+    override fun logError(error: Throwable, pluginId: PluginId) {
+        originalProject.logError(error, pluginId)
+    }
 }
 
 class SavingProgressReporter : WorkspaceImportProgressReporter {
@@ -243,10 +251,12 @@ class SavingProgressReporter : WorkspaceImportProgressReporter {
     }
 
     override fun onStdOutput(line: String) {
+        println(line)
         output.append(line).append("\n")
     }
 
     override fun onErrorOutput(line: String) {
+        System.err.println(line)
         output.append(line).append("\n")
     }
 
@@ -257,156 +267,6 @@ class SavingProgressReporter : WorkspaceImportProgressReporter {
                 "\r\n------------------------------------------"
     }
 
-}
-
-private fun reportDifferences(expected: List<ModuleEntityDto>, actual: List<ModuleEntityDto>) {
-    val expectedMap = expected.associateBy { it.name }
-    val actualMap = actual.associateBy { it.name }
-
-    val expectedNames = expectedMap.keys
-    val actualNames = actualMap.keys
-
-    val missingModules = expectedNames - actualNames
-    val extraModules = actualNames - expectedNames
-
-    for (name in missingModules.sorted()) {
-        System.err.println("Missing module: $name")
-    }
-    for (name in extraModules.sorted()) {
-        System.err.println("Extra module found: $name")
-    }
-
-    val commonNames = (expectedNames intersect actualNames).sorted()
-    for (name in commonNames) {
-        val expectedModule = expectedMap[name]!!
-        val actualModule = actualMap[name]!!
-        compareModules(expectedModule, actualModule)
-    }
-}
-
-private fun compareModules(expected: ModuleEntityDto, actual: ModuleEntityDto) {
-    val prefix = "[Module ${expected.name}]"
-
-    if (expected.moduleTypeId != actual.moduleTypeId) {
-        System.err.println("$prefix moduleTypeId: expected <${expected.moduleTypeId}> but was <${actual.moduleTypeId}>")
-    }
-
-    compareSets(expected.contentDirs, actual.contentDirs, "$prefix contentDirs")
-    compareSets(expected.sourceDirs, actual.sourceDirs, "$prefix sourceDirs")
-    compareSets(expected.testSourceDirs, actual.testSourceDirs, "$prefix testSourceDirs")
-    compareSets(expected.resourceDirs, actual.resourceDirs, "$prefix resourceDirs")
-    compareSets(expected.testResourceDirs, actual.testResourceDirs, "$prefix testResourceDirs")
-    compareSets(expected.generatedSourceDirs, actual.generatedSourceDirs, "$prefix generatedSourceDirs")
-    compareSets(expected.excludeDirs, actual.excludeDirs, "$prefix excludeDirs")
-    if (actual.totalDependenciesNumber != expected.totalDependenciesNumber) {
-        System.err.println("$prefix totalDependenciesNumber: expected <${expected.totalDependenciesNumber}> but was <${actual.totalDependenciesNumber}>")
-    }
-
-    if (expected.outputDir != actual.outputDir) {
-        System.err.println("$prefix outputDir: expected <${expected.outputDir}> but was <${actual.outputDir}>")
-    }
-    if (expected.testOutputDir != actual.testOutputDir) {
-        System.err.println("$prefix testOutputDir: expected <${expected.testOutputDir}> but was <${actual.testOutputDir}>")
-    }
-
-    compareSets(expected.facetNames, actual.facetNames, "$prefix facetNames")
-
-    if (expected.jdkName != actual.jdkName) {
-        System.err.println("$prefix jdkName: expected <${expected.jdkName}> but was <${actual.jdkName}>")
-    }
-    if (expected.languageLevel != actual.languageLevel) {
-        System.err.println("$prefix languageLevel: expected <${expected.languageLevel}> but was <${actual.languageLevel}>")
-    }
-
-    compareLibraries(expected.libraries, actual.libraries, prefix)
-    compareModuleDependencies(expected.moduleDependencies, actual.moduleDependencies, prefix)
-}
-
-private fun compareSets(expected: Set<String>, actual: Set<String>, description: String) {
-    val missing = expected - actual
-    val extra = actual - expected
-
-    if (missing.isNotEmpty()) {
-        System.err.println("$description missing: $missing")
-    }
-    if (extra.isNotEmpty()) {
-        System.err.println("$description extra: $extra")
-    }
-}
-
-private fun compareLibraries(expected: List<LibraryDependencyEntityDto>, actual: List<LibraryDependencyEntityDto>, prefix: String) {
-    val expectedMap = expected.associateBy { it.name }
-    val actualMap = actual.associateBy { it.name }
-
-    val allNames = (expectedMap.keys + actualMap.keys).sorted()
-
-    for (name in allNames) {
-        val expLib = expectedMap[name]
-        val actLib = actualMap[name]
-
-        val libPrefix = "$prefix Library $name"
-        if (expLib == null) {
-            System.err.println("$prefix Extra library found: $name")
-        } else if (actLib == null) {
-            System.err.println("$prefix Missing library: $name")
-        } else {
-            if (expLib.exported != actLib.exported) {
-                System.err.println("$libPrefix exported: expected <${expLib.exported}> but was <${actLib.exported}>")
-            }
-            if (expLib.scope != actLib.scope) {
-                System.err.println("$libPrefix scope: expected <${expLib.scope}> but was <${actLib.scope}>")
-            }
-            compareLibraryRoots(expLib.roots, actLib.roots, libPrefix)
-        }
-    }
-}
-
-private fun compareLibraryRoots(expected: List<LibraryRootEntityDto>, actual: List<LibraryRootEntityDto>, prefix: String) {
-    val expectedSet = expected.toSet()
-    val actualSet = actual.toSet()
-
-    val missing = expectedSet - actualSet
-    val extra = actualSet - expectedSet
-
-    if (missing.isNotEmpty()) {
-        System.err.println("$prefix missing roots: $missing")
-    }
-    if (extra.isNotEmpty()) {
-        System.err.println("$prefix extra roots: $extra")
-    }
-}
-
-private fun compareModuleDependencies(
-    expected: List<ModuleDependencyEntityDto>,
-    actual: List<ModuleDependencyEntityDto>,
-    prefix: String
-) {
-    val expectedMap = expected.associateBy { it.name }
-    val actualMap = actual.associateBy { it.name }
-
-    val allNames = (expectedMap.keys + actualMap.keys).sorted()
-
-    for (name in allNames) {
-        val expDep = expectedMap[name]
-        val actDep = actualMap[name]
-
-        val depPrefix = "$prefix ModuleDependency $name"
-        if (expDep == null) {
-            System.err.println("$prefix Extra module dependency found: $name")
-        } else if (actDep == null) {
-            System.err.println("$prefix Missing module dependency: $name")
-        } else {
-            if (expDep.exported != actDep.exported) {
-                System.err.println("$depPrefix exported: expected <${expDep.exported}> but was <${actDep.exported}>")
-            }
-            if (expDep.scope != actDep.scope) {
-                System.err.println("$depPrefix scope: expected <${expDep.scope}> but was <${actDep.scope}>")
-            }
-            if (expDep.productionOnTest != actDep.productionOnTest) {
-                System.err.println("$depPrefix productionOnTest: expected <${expDep.productionOnTest}> but was <${actDep.productionOnTest}>")
-            }
-        }
-    }
 }
 
 private fun normalize(modules: List<ModuleEntityDto>): List<ModuleEntityDto> =
