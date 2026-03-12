@@ -11,12 +11,18 @@ import {
     StreamInfo
 } from 'vscode-languageclient/node';
 import {chmodSync} from 'fs';
-import * as net from "node:net"
+import * as net from 'node:net'
 import * as os from 'node:os';
-import {spawn} from 'node:child_process';
+import {spawn, type ChildProcessByStdio} from 'node:child_process';
 import {getContext, getOutputChannel, logInfo} from "./extension"
 import {middleware} from "./middleware";
 import * as readline from 'node:readline';
+import {type Readable} from 'node:stream';
+
+const BUNDLED_SERVER_START_TIMEOUT_MS = 60_000;
+const BUNDLED_SERVER_CONNECTION_TIMEOUT_MS = 10_000;
+const LOCAL_SERVER_CONNECTION_TIMEOUT_MS = 10_000;
+const CONNECTION_RETRY_DELAY_MS = 100;
 
 let _client: LanguageClient | undefined;
 
@@ -97,53 +103,122 @@ function getLauncherPath(): string {
     return launcherPath
 }
 
-async function createServerOptions(): Promise<ServerOptions | null> {
+function getServerOptions(): ServerOptions {
     const config = workspace.getConfiguration('kotlinLSP.dev');
     const predefinedPort = config.get<number>('serverPort', -1);
-    if (predefinedPort != -1) {
-        return await connectToLocalLspServer(predefinedPort);
+    if (predefinedPort == -1) {
+        return getStreamInfoForBundledServer
     } else {
-        return await getRunningJavaServerLspOptions()
+        return () => getStreamInfoForRunningServer(predefinedPort, LOCAL_SERVER_CONNECTION_TIMEOUT_MS);
     }
 }
 
-/**
- * Connects to an LSP server on the specified port with retry logic.
- * Waits for the server to become available, retrying multiple times if necessary.
- *
- * @param port - The port number to connect to
- * @returns A function that returns a Promise resolving to StreamInfo, or null if connection fails
- */
-async function connectToLocalLspServer(port: number): Promise<(() => Promise<StreamInfo>) | null> {
-    const maxRetries = 50;
-    const retryDelayMs = 1000;
+async function getStreamInfoForBundledServer(): Promise<StreamInfo> {
+    const serverProcess = startBundledServer();
+    try {
+        const port = await getPortForBundledServer(serverProcess);
+        return await getStreamInfoForRunningServer(port, BUNDLED_SERVER_CONNECTION_TIMEOUT_MS);
+    } catch (e) {
+        serverProcess.kill();
+        throw e;
+    }
+}
 
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
+function startBundledServer(): ChildProcessByStdio<null, Readable, null> {
+    const launcherPath = getLauncherPath();
+
+    const context = getContext()
+    const args: string[] = []
+    args.push('run', '--socket', '0');
+    if (context.storageUri) {
+        args.push('--system-path', context.storageUri.fsPath)
+    }
+    const userJvmOptions = getUserJvmOptions()
+    const env = buildJvmOptionsEnv(process.env, userJvmOptions)
+
+    logInfo('Starting language server');
+    logInfo(`  command: ${launcherPath}`);
+    logInfo(`  args   : ${JSON.stringify(args)}`);
+    logInfo(`  VM opts: ${JSON.stringify(userJvmOptions)}`);
+    logInfo('');
+
+    return spawn(launcherPath, args, {
+        env,
+        stdio: ['ignore', 'pipe', 'ignore'],
+    });
+}
+
+function getPortForBundledServer(serverProcess: ChildProcessByStdio<null, Readable, null>): Promise<number> {
+    return new Promise<number>((resolve, reject) => {
+
+        const cleanup = () => {
+            serverProcess.removeAllListeners('exit');
+            serverProcess.removeAllListeners('error');
+
+            clearTimeout(timer);
+        }
+
+        const onExit = (code: number | null, signal: NodeJS.Signals | null) => {
+            reject(new Error(`Language server process exited before announcing port (code=${code}, signal=${signal})`));
+        };
+
+        const timer = setTimeout(() => {
+            cleanup();
+            serverProcess.kill();
+            reject(new Error("Timed out waiting for language server port announcement"));
+        }, BUNDLED_SERVER_START_TIMEOUT_MS);
+
+        const rl = readline.createInterface({
+            input: serverProcess.stdout,
+            terminal: false
+        });
+
+        rl.on('line', (line: string) => {
+            if (line.indexOf('Server is listening on ') >= 0) {
+                const pos = line.lastIndexOf(':');
+                if (pos > 0) {
+                    const portString = line.substring(pos + 1);
+                    const parsedPort = Number(portString);
+                    if (Number.isInteger(parsedPort)) {
+                        cleanup();
+                        rl.close();
+                        serverProcess.stdout.resume();
+                        resolve(parsedPort);
+                    }
+                }
+            }
+        });
+
+        serverProcess.once('error', reject);
+        serverProcess.once('exit', onExit);
+    });
+}
+
+async function getStreamInfoForRunningServer(port: number, timeoutMs: number): Promise<StreamInfo> {
+    let timeout = timeoutMs;
+    const deadline = Date.now() + timeoutMs;
+
+    let error: unknown = null;
+    while (timeout > 0) {
         try {
-            const socket = net.connect({port});
-            await new Promise<void>((resolve, reject) => {
-                socket.once('connect', () => resolve());
-                socket.once('error', (err) => reject(err));
-            });
-            const result: StreamInfo = {
-                writer: socket,
-                reader: socket
-            };
-            return () => Promise.resolve(result);
-        } catch (error) {
-            if (attempt < maxRetries - 1) {
-                logInfo(`Waiting for server on port ${port}... (attempt ${attempt + 1}/${maxRetries})`);
-                await new Promise(resolve => setTimeout(resolve, retryDelayMs));
-            } else {
-                vscode.window.showErrorMessage(
-                        `Failed to connect to LSP server on port ${port} after ${maxRetries} attempts. ` +
-                        `Please ensure the server is running.`
-                );
-                return null;
+            const socket = await connectToPort(port, timeout);
+            return {reader: socket, writer: socket};
+        } catch (e) {
+            logInfo(`Failed to connect to LSP server on port ${port}: ${e}`);
+            error ??= e;
+            await new Promise(resolve => setTimeout(resolve, CONNECTION_RETRY_DELAY_MS))
+            timeout = deadline - Date.now();
+            if (timeout > 0) {
+                logInfo(`Retrying connection to LSP server`);
             }
         }
     }
-    return null;
+
+    if (error) {
+        throw error;
+    }
+
+    throw new Error(`Failed to connect to LSP server on port ${port}`);
 }
 
 function buildDocumentSelector(): LanguageClientOptions['documentSelector'] {
@@ -179,85 +254,12 @@ async function createLspClient(): Promise<LanguageClient | null> {
             supportHtml: true,
         }
     };
-    let serverOptions = await createServerOptions()
+    let serverOptions = await getServerOptions()
     if (!serverOptions) return null
     const displayName = vscode.extensions.getExtension(getContext().extension.id)?.packageJSON?.displayName ?? 'Kotlin LSP (fallback)'
     return new LanguageClient('kotlinLSP', displayName, serverOptions, clientOptions);
 }
 
-
-async function getRunningJavaServerLspOptions(): Promise<ServerOptions | null> {
-    const launcherPath = getLauncherPath();
-
-    const context = getContext()
-    const args: string[] = []
-    args.push('run', '--socket', '0');
-    if (context.storageUri) {
-        args.push('--system-path', context.storageUri.fsPath)
-    }
-    const userJvmOptions = getUserJvmOptions()
-    const env = buildJvmOptionsEnv(process.env, userJvmOptions)
-
-    logInfo('Starting language server');
-    logInfo(`  command: ${launcherPath}`);
-    logInfo(`  args   : ${JSON.stringify(args)}`);
-    logInfo(`  VM opts: ${JSON.stringify(userJvmOptions)}`);
-    logInfo('');
-
-    const serverProcess = spawn(launcherPath, args, {
-        env,
-        stdio: ['ignore', 'pipe', 'ignore'],
-    });
-
-    const port = await new Promise<number>((resolve, reject) => {
-        const timeoutMs = 10_000;
-
-        const cleanup = () => {
-            serverProcess.removeAllListeners('exit');
-            serverProcess.removeAllListeners('error');
-
-            clearTimeout(timer);
-        }
-
-        const onExit = (code: number | null, signal: NodeJS.Signals | null) => {
-            reject(new Error(`Language server process exited before announcing port (code=${code}, signal=${signal})`));
-        };
-
-        const timer = setTimeout(() => {
-            cleanup();
-            serverProcess.kill();
-            reject(new Error("Timed out waiting for language server port announcement"));
-        }, timeoutMs);
-
-        const rl = readline.createInterface({
-            input: serverProcess.stdout,
-            terminal: false
-        });
-
-        rl.on('line', (line: string) => {
-            if (line.indexOf('Server is listening on ') >= 0) {
-                const pos = line.lastIndexOf(':');
-                if (pos > 0) {
-                    const portString = line.substring(pos + 1);
-                    const parsedPort = Number(portString);
-                    if (Number.isInteger(parsedPort)) {
-                        cleanup();
-                        rl.close();
-                        serverProcess.stdout.resume();
-                        resolve(parsedPort);
-                    }
-                }
-            }
-        });
-
-        serverProcess.once('error', reject);
-        serverProcess.once('exit', onExit);
-    });
-
-    logInfo(`Language server is listening on port ${port}`);
-
-    return await connectToLocalLspServer(port);
-}
 
 const jvmOptionsSettingName = 'kotlinLSP.additionalJvmArgs';
 
@@ -288,4 +290,30 @@ function shellQuoteIfNeeded(arg: string): string {
     // Escape special characters
     const escaped = arg.replace(/(["\\$`])/g, '\\$1')
     return `"${escaped}"`
+}
+
+function connectToPort(port: number, timeoutMs: number): Promise<net.Socket> {
+    return new Promise((resolve, reject) => {
+        const socket = net.connect({port});
+
+        const timer = setTimeout(() => {
+            socket.destroy();
+            reject(new Error(`Timed out connecting to port ${port}`));
+        }, timeoutMs);
+
+        const cleanup = () => {
+            clearTimeout(timer);
+            socket.removeAllListeners();
+        };
+
+        socket.once('connect', () => {
+            cleanup();
+            resolve(socket);
+        });
+
+        socket.once('error', (err) => {
+            cleanup();
+            reject(err);
+        });
+    });
 }
