@@ -49,6 +49,7 @@ jvm_library(
     "@community//plugins/kotlin/base/plugin",
     "@community//libraries/jspecify",
     "//language-server/community/workspace-import/gradle-plugin",
+    "//language-server/community/workspace-import/maven-plugin",
     "@ultimate_lib//:gradle_tooling_a_p_i",
     "//language-server/analyzer.kotlin",
     "//language-server/api.impl.analyzer",
@@ -88,6 +89,7 @@ jvm_library(
     "@community//plugins/kotlin/base/plugin:plugin_test_lib",
     "@community//libraries/jspecify:jspecify_test_lib",
     "//language-server/community/workspace-import/gradle-plugin:gradle-plugin_test_lib",
+    "//language-server/community/workspace-import/maven-plugin:maven-plugin_test_lib",
     "//language-server/analyzer.kotlin:analyzer.kotlin_test_lib",
     "//language-server/api.impl.analyzer:api.impl.analyzer_test_lib",
   ]

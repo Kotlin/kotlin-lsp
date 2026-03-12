@@ -15,6 +15,7 @@ import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
 import com.jetbrains.ls.imports.utils.runWithErrorReporting
 import java.nio.file.Path
+import kotlin.io.path.absolutePathString
 import kotlin.io.path.createTempFile
 import kotlin.io.path.div
 import kotlin.io.path.exists
@@ -26,6 +27,9 @@ private const val JB_MAVEN_HOME: String = "JB_MAVEN_HOME"
 private const val JB_MAVEN_JAVA_HOME: String = "JB_MAVEN_JAVA_HOME"
 
 object MavenWorkspaceImporter : WorkspaceImporter {
+    const val LSP_MAVEN_PROJECT_OFFLINE_PROPERTY: String = "com.jetbrains.ls.imports.maven.offline"
+    const val LSP_MAVEN_PROJECT_MAVEN_USER_HOME_PROPERTY: String = "com.jetbrains.ls.imports.maven.mavenUserHome"
+    const val LSP_MAVEN_PROJECT_MAVEN_OPTS_PROPERTY: String = "com.jetbrains.ls.imports.maven.opts"
 
     fun useMavenAndJava(mavenHome: Path, javaHome: Path) {
         System.setProperty(JB_MAVEN_HOME, mavenHome.toString())
@@ -64,22 +68,40 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         val pluginPom = javaClass.getResource(pomResourcePath)?.readText()?.takeIf { it.isNotEmpty() }
             ?: error("Corrupted installation: maven plugin pom.xml not found")
 
+        val mavenUserHomeProperty = System.getProperty(LSP_MAVEN_PROJECT_MAVEN_USER_HOME_PROPERTY)
+        val mavenOfflineMode = System.getProperty(LSP_MAVEN_PROJECT_OFFLINE_PROPERTY).toBoolean()
+        val mavenOpts = System.getProperty(LSP_MAVEN_PROJECT_MAVEN_OPTS_PROPERTY)
+
         val mavenPluginPomFile = createTempFile("mavenPlugin-pom", ".xml")
         try {
             mavenPluginPomFile.writeText(pluginPom)
             ProcessBuilder(
-                execPath.toString(),
-                "install:install-file",
-                "-Dfile=$pluginJar",
-                "-DpomFile=$mavenPluginPomFile",
-                "-DgroupId=com.jetbrains.ls",
-                "-DartifactId=imports-maven-plugin",
-                "-Dversion=0.99",
-                "-Dpackaging=maven-plugin"
+                *listOf(
+                    execPath.toString(),
+                    "install:install-file",
+                    "-Dfile=$pluginJar",
+                    "-DpomFile=$mavenPluginPomFile",
+                    "-DgroupId=com.jetbrains.ls",
+                    "-DartifactId=imports-maven-plugin",
+                    "-Dversion=0.99",
+                    "-Dpackaging=maven-plugin",
+                ).let {
+                    if (mavenOfflineMode) {
+                        it.plus("-o")
+                    } else {
+                        it
+                    }
+                }.toTypedArray()
             )
                 .apply {
                     javaHome?.let {
                         environment()["JAVA_HOME"] = it
+                    }
+                    mavenUserHomeProperty?.let {
+                        environment()["MAVEN_USER_HOME"] = it
+                    }
+                    mavenOpts?.let {
+                        environment()["MAVEN_OPTS"] = it
                     }
                 }
                 .directory(projectDirectory.toFile())
@@ -91,18 +113,38 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         val workspaceJsonFile = createTempFile("workspace", ".json")
         try {
             ProcessBuilder(
-                execPath.toString(),
-                "com.jetbrains.ls:imports-maven-plugin:info",
-                "-f",
-                "pom.xml",
-                "-DoutputFile=${workspaceJsonFile.toAbsolutePath()}"
+                *listOf(
+                    execPath.toString(),
+                    "com.jetbrains.ls:imports-maven-plugin:info",
+                    "-f",
+                    "pom.xml",
+                    "-DoutputFile=${workspaceJsonFile.toAbsolutePath()}"
+                ).let {
+                    if (mavenOfflineMode) {
+                        it.plus("-o")
+                    } else {
+                        it
+                    }
+                }.toTypedArray()
             )
                 .apply {
                     javaHome?.let {
                         environment()["JAVA_HOME"] = it
                     }
+                    mavenUserHomeProperty?.let {
+                        environment()["MAVEN_USER_HOME"] = it
+                    }
+                    mavenOpts?.let {
+                        environment()["MAVEN_OPTS"] = it
+                    }
                     if(System.getProperty("maven.importer.debug").toBoolean()) {
-                        environment()["MAVEN_OPTS"] = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"
+                        val agentLibOpt = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"
+                        val currentMavenOpts = environment()["MAVEN_OPTS"]
+                        environment()["MAVEN_OPTS"] = if (currentMavenOpts.isNullOrEmpty()) {
+                            agentLibOpt
+                        } else {
+                            "$currentMavenOpts $agentLibOpt"
+                        }
                     }
 
                 }
