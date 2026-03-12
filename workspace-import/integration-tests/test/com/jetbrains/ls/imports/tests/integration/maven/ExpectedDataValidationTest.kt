@@ -48,4 +48,18 @@ class ExpectedDataValidationTest {
             )
         }
     }
+
+    @LspExpectedWorkspaceDataTest
+    fun `expected json file should be normalized`(testData: LspTestData) {
+        val expected = testData.getFile()!!.readText()
+        val modules = normalize(testData.getStructure().modules)
+        val actual = JsonSerializer.serializePretty(modules)
+        if (expected != actual) {
+            throw FileComparisonFailedError(
+                "Json should be normalized. Reorder entries if required", expected, actual,
+                testData.getFile()!!.toString(),
+                null
+            )
+        }
+    }
 }
