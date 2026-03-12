@@ -214,7 +214,7 @@
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"21\",\"pluginOptions\":[],\"pluginClasspath\":[]}",
+            "compilerArguments": "J{\"jvmTarget\":\"21\",\"pluginOptions\":[],\"pluginClasspaths\":[]}",
             "additionalArguments": null,
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
@@ -236,7 +236,9 @@
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [],
+            "additionalVisibleModuleNames": [
+                "NonExistentDependency.main"
+            ],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],
@@ -245,7 +247,7 @@
             "isHmppEnabled": true,
             "pureKotlinSourceFolders": [],
             "kind": "default",
-            "compilerArguments": "J{\"jvmTarget\":\"21\",\"pluginOptions\":[],\"pluginClasspath\":[]}",
+            "compilerArguments": "J{\"jvmTarget\":\"21\",\"pluginOptions\":[],\"pluginClasspaths\":[]}",
             "additionalArguments": null,
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
