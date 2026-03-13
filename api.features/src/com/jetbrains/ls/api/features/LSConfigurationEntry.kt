@@ -31,8 +31,15 @@ fun interface ProjectInitEntry : LSConfigurationEntry {
     fun AnalyzerContainerBuilder.initProject(project: Project, type: AnalyzerContainerType)
 }
 
+typealias WorkspaceImporterPriority = Int
+
+const val IMPORTER_PRIORITY_DEFAULT: WorkspaceImporterPriority = 100
+const val IMPORTER_PRIORITY_HIGH: WorkspaceImporterPriority = 1000
+const val IMPORTER_PRIORITY_LOW: WorkspaceImporterPriority = 10
+
 class WorkspaceImporterEntry(
     val importer: WorkspaceImporter,
+    val priority: WorkspaceImporterPriority = IMPORTER_PRIORITY_DEFAULT,
 ): LSConfigurationEntry
 
 fun interface RhizomeEntityTypeEntry : LSConfigurationEntry {

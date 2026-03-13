@@ -13,6 +13,7 @@ import com.intellij.platform.workspace.jps.entities.InheritedSdkDependency
 import com.intellij.platform.workspace.jps.entities.ModuleEntity
 import com.intellij.platform.workspace.jps.entities.SdkDependency
 import com.intellij.platform.workspace.jps.entities.SdkEntity
+import com.intellij.platform.workspace.jps.entities.SdkEntityBuilder
 import com.intellij.platform.workspace.jps.entities.SdkRoot
 import com.intellij.platform.workspace.jps.entities.SdkRootTypeId
 import com.intellij.platform.workspace.jps.entities.modifyModuleEntity
@@ -124,9 +125,10 @@ fun createSdkEntity(
     roots: List<URI>,
     urlManager: VirtualFileUrlManager,
     source: EntitySource,
-    storage: MutableEntityStorage
+    storage: MutableEntityStorage,
+    builder: SdkEntityBuilder.() -> Unit = {}
 ): SdkEntity {
-    val builder = SdkEntity(
+    val entity = SdkEntity(
         name = name,
         type = type.name,
         roots = if (roots.isEmpty()) emptyList() else buildList {
@@ -155,7 +157,8 @@ fun createSdkEntity(
         additionalData = "",
         entitySource = source
     )
-    val jdk = storage addEntity builder
+    builder(entity)
+    val jdk = storage addEntity entity
     return jdk
 }
 

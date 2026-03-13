@@ -26,7 +26,9 @@ private object DefaultJdkEntitySource : EntitySource
 @TestOnly
 var DETECT_PROJECT_SDK: Boolean = true
 
-internal fun MutableEntityStorage.fixMissingProjectSdk(
+val DEFAULT_JDK_NAME: String = "Java SDK"
+
+fun MutableEntityStorage.fixMissingProjectSdk(
     defaultSdkPath: Path?,
     virtualFileUrlManager: VirtualFileUrlManager,
 ) {
@@ -38,7 +40,7 @@ internal fun MutableEntityStorage.fixMissingProjectSdk(
                 when (moduleDependencyItem) {
                     is InheritedSdkDependency -> {
                         existingSdk = existingSdk ?: createSdkEntity(
-                            name = "Java SDK",
+                            name = DEFAULT_JDK_NAME,
                             type = JavaSdk.getInstance(),
                             roots = sdkRoots(defaultSdkPath),
                             urlManager = virtualFileUrlManager,

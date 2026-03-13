@@ -99,7 +99,9 @@ fun LSConfiguration(
             .toList(),
         languages = configurations.flatMap { it.languages },
         workspaceImporters = configurations.asSequence().flatMap { it.entries }
-            .filterIsInstance<WorkspaceImporterEntry>().map { it.importer }
+            .filterIsInstance<WorkspaceImporterEntry>()
+            .sortedByDescending { it.priority }
+            .map { it.importer }
             .toList()
     )
 }
