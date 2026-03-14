@@ -37,10 +37,55 @@ jvm_library(
 
 jvm_library(
   name = "api.core_test_lib",
+  module_name = "language-server.api.core",
+  visibility = ["//visibility:public"],
+  srcs = glob([], allow_empty = True),
+  kotlinc_opts = ":custom_api.core",
+  runtime_deps = [
+    ":api.core",
+    "@community//platform/core-api:core_test_lib",
+    "@community//platform/util:util_test_lib",
+    "@community//platform/workspace/storage:storage_test_lib",
+    "@community//platform/workspace/jps:jps_test_lib",
+    "@community//fleet/lsp.protocol:lsp.protocol_test_lib",
+    "@lib//:junit5",
+    "@lib//:junit5Jupiter",
+    "@community//platform/testFramework",
+    "@community//platform/testFramework:testFramework_test_lib",
+    "@community//platform/lang-core:lang-core_test_lib",
+    "@community//platform/projectModel-api:projectModel_test_lib",
+    "@community//platform/projectModel-impl:projectModel-impl_test_lib",
+  ]
+)
+### auto-generated section `build language-server.api.core` end
+
+### auto-generated section `iml language-server.api.core` start
+exports_files([
+  "language-server.api.core.iml",
+], visibility = ["//visibility:public"])
+### auto-generated section `iml language-server.api.core` end
+
+### auto-generated section `build language-server.api.core.tests` start
+create_kotlinc_options(
+  name = "custom_language-server-api-core-tests",
+  x_context_parameters = True
+)
+
+jvm_library(
+  name = "language-server-api-core-tests",
+  visibility = ["//visibility:public"],
+  srcs = glob([], allow_empty = True)
+)
+
+jvm_library(
+  name = "language-server-api-core-tests_test_lib",
   visibility = ["//visibility:public"],
   srcs = glob(["test/**/*.kt", "test/**/*.java", "test/**/*.form"], allow_empty = True),
-  kotlinc_opts = ":custom_api.core",
-  associates = [":api.core"],
+  kotlinc_opts = ":custom_language-server-api-core-tests",
+  associates = [
+    "//language-server/community/api.core",
+    "//language-server/community/api.core:api.core_test_lib",
+  ],
   deps = [
     "@lib//:kotlin-stdlib",
     "@community//platform/core-api:core",
@@ -63,12 +108,22 @@ jvm_library(
     "@community//platform/projectModel-api:projectModel_test_lib",
     "@community//platform/projectModel-impl",
     "@community//platform/projectModel-impl:projectModel-impl_test_lib",
-  ]
+  ],
+  runtime_deps = [":language-server-api-core-tests"]
 )
-### auto-generated section `build language-server.api.core` end
+### auto-generated section `build language-server.api.core.tests` end
 
-### auto-generated section `iml language-server.api.core` start
+### auto-generated section `iml language-server.api.core.tests` start
 exports_files([
-  "language-server.api.core.iml",
+  "language-server.api.core.tests.iml",
 ], visibility = ["//visibility:public"])
-### auto-generated section `iml language-server.api.core` end
+### auto-generated section `iml language-server.api.core.tests` end
+
+### auto-generated section `test language-server.api.core.tests` start
+load("@community//build:tests-options.bzl", "jps_test")
+
+jps_test(
+  name = "language-server-api-core-tests_test",
+  runtime_deps = [":language-server-api-core-tests_test_lib"]
+)
+### auto-generated section `test language-server.api.core.tests` end
