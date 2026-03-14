@@ -184,7 +184,7 @@
     "@types/vscode": "^1.96.0",
     "ts-loader": "^9.5.2",
     "typescript": "^5.7.2",
-    "vscode-tmgrammar-test": "^0.1.3",
+    "textmate-grammar-test": "^0.6.0",
     "webpack": "^5.100.2",
     "webpack-cli": "^6.0.1"
   },
@@ -198,7 +198,7 @@
     "package": "webpack --mode production --devtool hidden-source-map",
     "apply-intellij": "node apply-intellij.js",
     "unpack-server": "rm -rf server && mkdir -p server && case \"$LSP_ZIP_PATH\" in *.tar.gz) tar -xzf \"$LSP_ZIP_PATH\" --strip-components=1 -C server ;; *.zip) unzip -q -o -- \"$LSP_ZIP_PATH\" -d server ;; *.sit) mkdir server.tmp && unzip -q -o -- \"$LSP_ZIP_PATH\" -d server.tmp && rmdir server && mv server.tmp/* server && rm -rf server.tmp ;; *) echo \"Unsupported archive type: $LSP_ZIP_PATH\"; exit 1 ;; esac",
-    "test": "vscode-tmgrammar-snap --grammar syntaxes/kotlin.tmLanguage.json --scope source.kotlin testSources/tokenization/*.kt",
-    "updateGrammarTests": "vscode-tmgrammar-snap --grammar syntaxes/kotlin.tmLanguage.json --scope source.kotlin --updateSnapshot testSources/tokenization/*.kt"
+    "test": "textmate-grammar-snap --grammar syntaxes/kotlin.tmLanguage.json --scope source.kotlin testSources/tokenization/*.kt",
+    "updateGrammarTests": "textmate-grammar-snap --grammar syntaxes/kotlin.tmLanguage.json --scope source.kotlin --updateSnapshot testSources/tokenization/*.kt"
   }
 }
