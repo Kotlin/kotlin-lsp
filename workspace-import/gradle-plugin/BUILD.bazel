@@ -66,3 +66,9 @@ jvm_library(
   ]
 )
 ### auto-generated section `build language-server.workspace-import.gradle-plugin` end
+
+### auto-generated section `iml language-server.workspace-import.gradle-plugin` start
+exports_files([
+  "language-server.workspace-import.gradle-plugin.iml",
+], visibility = ["//visibility:public"])
+### auto-generated section `iml language-server.workspace-import.gradle-plugin` end

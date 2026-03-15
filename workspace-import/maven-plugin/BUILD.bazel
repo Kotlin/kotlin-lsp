@@ -57,3 +57,9 @@ jvm_library(
   ]
 )
 ### auto-generated section `build language-server.workspace-import.maven-plugin` end
+
+### auto-generated section `iml language-server.workspace-import.maven-plugin` start
+exports_files([
+  "language-server.workspace-import.maven-plugin.iml",
+], visibility = ["//visibility:public"])
+### auto-generated section `iml language-server.workspace-import.maven-plugin` end

@@ -66,3 +66,9 @@ jvm_library(
   ]
 )
 ### auto-generated section `build language-server.api.core` end
+
+### auto-generated section `iml language-server.api.core` start
+exports_files([
+  "language-server.api.core.iml",
+], visibility = ["//visibility:public"])
+### auto-generated section `iml language-server.api.core` end

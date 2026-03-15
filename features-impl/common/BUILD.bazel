@@ -104,3 +104,9 @@ jvm_library(
   ]
 )
 ### auto-generated section `build language-server.api.features.impl.common` end
+
+### auto-generated section `iml language-server.api.features.impl.common` start
+exports_files([
+  "language-server.api.features.impl.common.iml",
+], visibility = ["//visibility:public"])
+### auto-generated section `iml language-server.api.features.impl.common` end

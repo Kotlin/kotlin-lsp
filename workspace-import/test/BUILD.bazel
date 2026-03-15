@@ -70,6 +70,12 @@ jvm_library(
 )
 ### auto-generated section `build language-server.workspace-import.test` end
 
+### auto-generated section `iml language-server.workspace-import.test` start
+exports_files([
+  "language-server.workspace-import.test.iml",
+], visibility = ["//visibility:public"])
+### auto-generated section `iml language-server.workspace-import.test` end
+
 ### auto-generated section `test language-server.workspace-import.test` start
 load("@community//build:tests-options.bzl", "jps_test")
 

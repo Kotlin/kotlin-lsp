@@ -59,3 +59,9 @@ jvm_library(
   runtime_deps = [":test"]
 )
 ### auto-generated section `build language-server.api.features.test` end
+
+### auto-generated section `iml language-server.api.features.test` start
+exports_files([
+  "language-server.api.features.test.iml",
+], visibility = ["//visibility:public"])
+### auto-generated section `iml language-server.api.features.test` end

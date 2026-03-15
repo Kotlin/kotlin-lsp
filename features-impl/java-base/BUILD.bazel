@@ -72,3 +72,9 @@ jvm_library(
   ]
 )
 ### auto-generated section `build language-server.api.features.impl.java-base` end
+
+### auto-generated section `iml language-server.api.features.impl.java-base` start
+exports_files([
+  "language-server.api.features.impl.java-base.iml",
+], visibility = ["//visibility:public"])
+### auto-generated section `iml language-server.api.features.impl.java-base` end
