@@ -8,4 +8,9 @@ object ExtractActionKind {
      * Action kind to extract variable via a hot key
      */
     val RefactorExtractVariable: CodeActionKind = CodeActionKind("refactor.extract.variable")
+
+    /**
+     * Action kind to extract method via a hot key
+     */
+    val RefactorExtractFunction: CodeActionKind = CodeActionKind("refactor.extract.function")
 }
