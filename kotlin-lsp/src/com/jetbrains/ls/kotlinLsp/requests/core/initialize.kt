@@ -38,6 +38,7 @@ import com.jetbrains.lsp.protocol.FileOperations
 import com.jetbrains.lsp.protocol.Initialize
 import com.jetbrains.lsp.protocol.InitializeParams
 import com.jetbrains.lsp.protocol.InitializeResult
+import com.jetbrains.lsp.protocol.Initialized
 import com.jetbrains.lsp.protocol.InlayHintRegistrationOptions
 import com.jetbrains.lsp.protocol.LSP
 import com.jetbrains.lsp.protocol.LogMessageNotificationType
@@ -88,7 +89,7 @@ internal fun LspHandlersBuilder.initializeRequest(workspaceImporters: List<Works
         val folders = workspaceFolderPaths(initParams)
 
         change {
-            InitializeParamsEntity.new(initParams)
+            InitializeParamsEntity.new(initParams, lspClient)
         }
 
         if (initParams.lspInitializationOptions?.skipImport != true) {
@@ -179,6 +180,14 @@ internal fun LspHandlersBuilder.initializeRequest(workspaceImporters: List<Works
         )
         LOG.info("InitializeResult:\n${LSP.json.encodeToString(InitializeResult.serializer(), result)}")
         result
+    }
+}
+
+internal fun LspHandlersBuilder.initializedNotification() {
+    notification(Initialized) {
+        change {
+            InitializeParamsEntity.markClientInitialized()
+        }
     }
 }
 

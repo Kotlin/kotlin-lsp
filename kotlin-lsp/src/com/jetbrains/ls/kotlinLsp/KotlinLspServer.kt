@@ -39,6 +39,7 @@ import com.jetbrains.ls.kotlinLsp.connection.Client
 import com.jetbrains.ls.kotlinLsp.logging.initKotlinLspLogger
 import com.jetbrains.ls.kotlinLsp.requests.core.fileUpdateRequests
 import com.jetbrains.ls.kotlinLsp.requests.core.initializeRequest
+import com.jetbrains.ls.kotlinLsp.requests.core.initializedNotification
 import com.jetbrains.ls.kotlinLsp.requests.core.setTraceNotification
 import com.jetbrains.ls.kotlinLsp.requests.core.shutdownRequest
 import com.jetbrains.ls.kotlinLsp.requests.features
@@ -337,6 +338,7 @@ fun createLspHandlers(config: LSConfiguration, exitSignal: CompletableDeferred<U
     with(config) {
         return lspHandlers {
             initializeRequest(workspaceImporters)
+            initializedNotification()
             setTraceNotification()
             shutdownRequest(exitSignal)
             fileUpdateRequests()
