@@ -11,6 +11,7 @@ import com.jetbrains.ls.api.features.commands.LSCommand
 import com.jetbrains.ls.api.features.completion.LSCompletion
 import com.jetbrains.ls.api.features.definition.LSDefinition
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnostic
+import com.jetbrains.ls.api.features.foldingRange.LSFoldingRange
 import com.jetbrains.ls.api.features.formatting.LSDocumentFormatting
 import com.jetbrains.ls.api.features.hover.LSHover
 import com.jetbrains.ls.api.features.implementation.LSImplementation
@@ -34,6 +35,7 @@ import com.jetbrains.lsp.protocol.CompletionResult
 import com.jetbrains.lsp.protocol.DefinitionRequestType
 import com.jetbrains.lsp.protocol.Diagnostics.DocumentDiagnosticRequestType
 import com.jetbrains.lsp.protocol.DocumentSymbolRequest
+import com.jetbrains.lsp.protocol.FoldingRangeRequestType
 import com.jetbrains.lsp.protocol.FormattingRequestType
 import com.jetbrains.lsp.protocol.HoverRequestType
 import com.jetbrains.lsp.protocol.Implementation.ImplementationRequest
@@ -77,6 +79,7 @@ internal fun LspHandlersBuilder.features() {
     request(SemanticTokensRangeRequest) { LSSemanticTokens.semanticTokensRange(it) }
     requestTraced(WorkspaceSymbolRequest) { LSWorkspaceSymbols.getSymbols(it) }
     requestTraced(DocumentSymbolRequest) { LSDocumentSymbols.getSymbols(it) }
+    requestTraced(FoldingRangeRequestType) { LSFoldingRange.getFoldingRange(it) }
     request(SignatureHelpRequest) { LSSignatureHelp.getSignatureHelp(it) }
     request(RenameRequestType) { LSRename.rename(it) }
     request(WillRenameFiles) { LSRename.renameFile(it) }

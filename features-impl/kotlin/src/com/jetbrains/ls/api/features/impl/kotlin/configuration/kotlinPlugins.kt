@@ -18,6 +18,7 @@ internal val kotlinFeature: PluginMainDescriptor = makePlugin(
         "intellij.kotlin.searching" to "intellij.kotlin.searching.xml",
         "ls.kotlin.formatter" to "META-INF/formatter.xml",
         "intellij.kotlin.codeInsight.base" to "intellij.kotlin.codeInsight.base.xml",
+        "intellij.kotlin.base.codeInsight.minimal" to "intellij.kotlin.base.codeInsight.minimal.xml",
     ),
     emptyModules = listOf(
         "intellij.kotlin.base.externalSystem",

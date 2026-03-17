@@ -1,6 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.kotlin.configuration
 
+import com.intellij.psi.PsiComment
 import com.jetbrains.analyzer.kotlin.initKotlinApplicationContainer
 import com.jetbrains.analyzer.kotlin.initKotlinProjectContainer
 import com.jetbrains.analyzer.kotlin.initKotlinWorkspaceModelCaches
@@ -15,6 +16,7 @@ import com.jetbrains.ls.api.features.impl.common.definitions.LSCommonDefinitionP
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionDiagnosticProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionFixesCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonSyntaxErrorDiagnosticProvider
+import com.jetbrains.ls.api.features.impl.common.foldingRange.LSCommonFoldingRangeProvider
 import com.jetbrains.ls.api.features.impl.common.formatting.LSCommonFormattingProvider
 import com.jetbrains.ls.api.features.impl.common.implementation.LSCommonImplementationProvider
 import com.jetbrains.ls.api.features.impl.common.references.LSCommonReferencesProvider
@@ -46,6 +48,8 @@ import com.jetbrains.ls.api.features.impl.kotlin.symbols.LSKotlinDocumentSymbolP
 import com.jetbrains.ls.api.features.impl.kotlin.symbols.LSKotlinWorkspaceSymbolProvider
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceModelEntity
+import com.jetbrains.lsp.protocol.FoldingRangeKind
+import org.jetbrains.kotlin.psi.KtImportList
 
 val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
     entries = listOf(
@@ -97,6 +101,13 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSCommonImplementationProvider(setOf(LSKotlinLanguage)),
         LSCommonTypeDefinitionProvider(setOf(LSKotlinLanguage)),
         LSKotlinInlayHintsProvider,
+        LSCommonFoldingRangeProvider(setOf(LSKotlinLanguage)) {
+            when (it) {
+                is PsiComment -> FoldingRangeKind.Comment
+                is KtImportList -> FoldingRangeKind.Imports
+                else -> FoldingRangeKind.Region
+            }
+        },
     ),
     plugins = listOf(
         kotlinPlugin,

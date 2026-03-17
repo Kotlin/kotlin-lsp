@@ -171,6 +171,7 @@ internal fun LspHandlersBuilder.initializeRequest(workspaceImporters: List<Works
                 inlayHintProvider = OrBoolean.of(
                     InlayHintRegistrationOptions(resolveProvider = true)
                 ),
+                foldingRangeProvider = OrBoolean(true),
                 typeHierarchyProvider = OrBoolean(true),
             ),
             serverInfo = InitializeResult.ServerInfo(

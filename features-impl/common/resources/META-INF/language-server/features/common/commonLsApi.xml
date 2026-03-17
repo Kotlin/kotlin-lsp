@@ -6,7 +6,13 @@
     <extensionPoint qualifiedName="ls.completionItemKindProvider" beanClass="com.intellij.lang.LanguageExtensionPoint" dynamic="true">
       <with attribute="implementationClass" implements="com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider"/>
     </extensionPoint>
+    <extensionPoint qualifiedName="com.intellij.customFoldingProvider" interface="com.intellij.lang.folding.CustomFoldingProvider" dynamic="true"/>
   </extensionPoints>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <applicationService serviceInterface="com.intellij.codeInsight.folding.JavaCodeFoldingSettings"
+                        serviceImplementation="com.intellij.codeInsight.folding.impl.JavaCodeFoldingSettingsBase"/>
+  </extensions>
 
   <extensions defaultExtensionNs="ls">
     <completionItemKindProvider language=""
