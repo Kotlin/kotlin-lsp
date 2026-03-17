@@ -1,0 +1,6 @@
+- name: dist.all/lib/language-server.api.features.jar
+  modules:
+  - name: language-server.api.features
+  library: java-diff-utils
+  files:
+  - name: $MAVEN_REPOSITORY$/io/github/java-diff-utils/java-diff-utils/4/java-diff-utils-4.jar

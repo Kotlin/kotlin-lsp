@@ -9,11 +9,17 @@ jps_test(
 
 ### auto-generated section `build language-server.api.core` start
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
-load("@rules_jvm//:jvm.bzl", "jvm_library")
+load("@rules_jvm//:jvm.bzl", "jvm_library", "resourcegroup")
 
 create_kotlinc_options(
   name = "custom_api.core",
   x_context_parameters = True
+)
+
+resourcegroup(
+  name = "api.core_resources",
+  srcs = glob(["resources/**/*"]),
+  strip_prefix = "resources"
 )
 
 jvm_library(
@@ -21,6 +27,7 @@ jvm_library(
   module_name = "language-server.api.core",
   visibility = ["//visibility:public"],
   srcs = glob(["src/**/*.kt", "src/**/*.java", "src/**/*.form", "gen/**/*.kt", "gen/**/*.java"], allow_empty = True),
+  resources = [":api.core_resources"],
   kotlinc_opts = ":custom_api.core",
   deps = [
     "@lib//:kotlin-stdlib",

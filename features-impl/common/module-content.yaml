@@ -1,0 +1,3 @@
+- name: dist.all/lib/language-server.api.features.impl.common.jar
+  modules:
+  - name: language-server.api.features.impl.common

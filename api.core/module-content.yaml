@@ -1,0 +1,3 @@
+- name: dist.all/lib/language-server.api.core.jar
+  modules:
+  - name: language-server.api.core
