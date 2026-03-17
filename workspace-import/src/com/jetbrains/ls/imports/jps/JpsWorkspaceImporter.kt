@@ -38,6 +38,8 @@ import com.intellij.platform.workspace.jps.entities.SourceRootTypeId
 import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
+import com.intellij.util.containers.nullize
+import com.intellij.util.lang.JavaVersion
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
@@ -317,10 +319,14 @@ object JpsWorkspaceImporter : WorkspaceImporter {
         val detectedSdks = findJdks(projectDirectory)
         if (detectedSdks.isEmpty()) return emptyList()
         return sdks.map { sdkName ->
-            val sdk = detectedSdks.find {
-                val suggestedName = it.versionInfo?.suggestedName()
-                suggestedName != null && sdkName.contains(suggestedName, ignoreCase = true)
-            } ?: detectedSdks.maxBy { it.versionInfo?.version?.feature ?: 0 }
+            val zeroVersion = JavaVersion.compose(0, 0, 0)
+            val sdk = (detectedSdks.filter { sdk ->
+                sdk.versionInfo?.suggestedName().let { suggestedName ->
+                    suggestedName != null && sdkName.contains(suggestedName, ignoreCase = true)
+                }
+            }.nullize() ?: detectedSdks).maxBy {
+                it.versionInfo?.version ?: zeroVersion
+            }
             LOG.info("Detected SDK [$sdkName]: ${sdk.path}")
             val classRoots = JavaSdkImpl.findClasses(Path.of(sdk.path), false)
                 .map { (it.replace("!/", "!/modules/")) }
