@@ -45,8 +45,6 @@ fun initKotlinLspLogger(writeToStdout: Boolean, defaultLogLevel: LogLevel, logCa
     }
 
     Logger.setFactory { category -> LspLogger(category, writeToStdout) }
-    com.intellij.serviceContainer.checkServiceFromWriteAccess = false
-    com.intellij.codeInsight.multiverse.logMultiverseState = false
 }
 
 /**
