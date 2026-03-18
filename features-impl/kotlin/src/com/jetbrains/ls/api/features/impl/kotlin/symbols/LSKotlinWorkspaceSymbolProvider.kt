@@ -27,7 +27,8 @@ internal object LSKotlinWorkspaceSymbolProvider : LSWorkspaceSymbolProviderBase(
     context(server: LSServer, analysisContext: LSAnalysisContext)
     override fun createWorkspaceSymbol(
         item: NavigationItem,
-        contributor: ChooseByNameContributor
+        contributor: ChooseByNameContributor,
+        qualifiedQuery: Boolean
     ): WorkspaceSymbol? {
         val ktNamedDeclaration = when (item) {
             is PsiElementNavigationItem -> item.targetElement as? KtNamedDeclaration
@@ -35,7 +36,7 @@ internal object LSKotlinWorkspaceSymbolProvider : LSWorkspaceSymbolProviderBase(
             else -> null
         } ?: return null
         return WorkspaceSymbol(
-            item.name ?: return null,
+            (if (qualifiedQuery) ktNamedDeclaration.fqName?.asString() else null) ?: item.name ?: return null,
             kind = ktNamedDeclaration.getKind() ?: return null,
             tags = null, // todo handle deprecations
             containerName = ktNamedDeclaration.getClosestContainerQualifiedName(),

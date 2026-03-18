@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features.impl.common.symbols
 
 import com.intellij.navigation.ChooseByNameContributor
+import com.intellij.navigation.GotoClassContributor
 import com.intellij.navigation.NavigationItem
 import com.intellij.openapi.application.readAction
 import com.jetbrains.ls.api.core.LSAnalysisContext
@@ -21,7 +22,7 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
     abstract fun getContributors(): List<ChooseByNameContributor>
 
     context(server: LSServer, analysisContext: LSAnalysisContext)
-    abstract fun createWorkspaceSymbol(item: NavigationItem, contributor: ChooseByNameContributor): WorkspaceSymbol?
+    abstract fun createWorkspaceSymbol(item: NavigationItem, contributor: ChooseByNameContributor, qualifiedQuery: Boolean = false): WorkspaceSymbol?
 
     context(server: LSServer, handlerContext: LspHandlerContext)
     final override fun getWorkspaceSymbols(params: WorkspaceSymbolParams): Flow<WorkspaceSymbol> = channelFlow {
@@ -40,13 +41,33 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
         query: String,
         channel: SendChannel<WorkspaceSymbol>
     ) {
+        var qualifiedName : String? = null
+        var shortName: String = query
+        if (contributor is GotoClassContributor) {
+            val separators = listOf(".") + listOfNotNull(contributor.qualifiedNameSeparator)
+            for (separator in separators) {
+                val idx = query.lastIndexOf(separator)
+                if (idx >= 0) {
+                    qualifiedName = query
+                    shortName = query.substring(idx+separator.length)
+                    break
+                }
+            }
+        }
         val names = readAction { contributor.getNames(project, /* includeNonProjectItems = */ false) }
         if (names.isEmpty()) return
         for (name in names) {
-            if (query.isEmpty() || name.contains(query, ignoreCase = true)/*TODO some fancy fuzzy search should probably be here*/) {
-                val items = readAction { contributor.getItemsByName(name, query, project, /* includeNonProjectItems = */ false) }
+            if (shortName.isEmpty() || name.contains(shortName, ignoreCase = true)/*TODO some fancy fuzzy search should probably be here*/) {
+                val items = readAction { 
+                    val result = contributor.getItemsByName(name, shortName, project, /* includeNonProjectItems = */ false)
+                    if (qualifiedName != null && contributor is GotoClassContributor) {
+                        result.filter { contributor.getQualifiedName(it)?.contains(qualifiedName, ignoreCase = true) == true }
+                    } else {
+                        result.toList()
+                    }
+                }
                 for (item in items) {
-                    readAction { createWorkspaceSymbol(item, contributor) }?.let { channel.send(it) }
+                    readAction { createWorkspaceSymbol(item, contributor, qualifiedName != null) }?.let { channel.send(it) }
                 }
             }
         }
