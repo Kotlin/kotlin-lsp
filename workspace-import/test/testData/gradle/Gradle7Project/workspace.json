@@ -8,7 +8,7 @@
         },
         {
           "type": "sdk",
-          "name": "11",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -26,7 +26,7 @@
         },
         {
           "type": "sdk",
-          "name": "11",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -95,7 +95,7 @@
         },
         {
           "type": "sdk",
-          "name": "11",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -278,12 +278,41 @@
   ],
   "sdks": [
     {
-      "name": "11",
+      "name": "ignored",
       "type": "jdk",
-      "version": "JDK_11",
-      "homePath": "<HOME>/.jdks/corretto-11.0.25",
+      "version": "ignored",
+      "homePath": "/",
       "roots": [],
       "additionalData": ""
+    }
+  ],
+  "javaSettings": [
+    {
+      "module": "untitled",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
+    },
+    {
+      "module": "untitled.main",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
+    },
+    {
+      "module": "untitled.test",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
     }
   ]
 }

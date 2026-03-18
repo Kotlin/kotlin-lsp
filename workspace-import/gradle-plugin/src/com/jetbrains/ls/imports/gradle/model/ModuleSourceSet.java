@@ -28,4 +28,9 @@ public interface ModuleSourceSet extends Serializable {
     boolean hasUnresolvedDependencies();
 
     @Nullable Integer getToolchainVersion();
+
+    @Nullable String getSourceCompatibility();
+
+    @Nullable String getTargetCompatibility();
+
 }

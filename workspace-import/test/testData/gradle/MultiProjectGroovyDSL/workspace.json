@@ -8,7 +8,7 @@
         },
         {
           "type": "sdk",
-          "name": "21",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -26,7 +26,7 @@
         },
         {
           "type": "sdk",
-          "name": "21",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -59,7 +59,7 @@
         },
         {
           "type": "sdk",
-          "name": "21",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -111,7 +111,7 @@
         },
         {
           "type": "sdk",
-          "name": "21",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -143,7 +143,7 @@
         },
         {
           "type": "sdk",
-          "name": "21",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -171,7 +171,7 @@
         },
         {
           "type": "sdk",
-          "name": "21",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -218,7 +218,7 @@
         },
         {
           "type": "sdk",
-          "name": "21",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -250,7 +250,7 @@
         },
         {
           "type": "sdk",
-          "name": "21",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -293,7 +293,7 @@
         },
         {
           "type": "sdk",
-          "name": "21",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -355,7 +355,7 @@
         },
         {
           "type": "sdk",
-          "name": "21",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -447,10 +447,10 @@
   ],
   "sdks": [
     {
-      "name": "21",
+      "name": "ignored",
       "type": "jdk",
-      "version": "JDK_21",
-      "homePath": "<HOME>/.jdks/jbr-21.0.4",
+      "version": "ignored",
+      "homePath": "/",
       "roots": [],
       "additionalData": ""
     }
@@ -647,6 +647,89 @@
       "externalSystemRunTasks": [],
       "version": 5,
       "flushNeeded": false
+    }
+  ],
+  "javaSettings": [
+    {
+      "module": "multi-project-example.api",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
+    },
+    {
+      "module": "multi-project-example.api.main",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
+    },
+    {
+      "module": "multi-project-example.api.test",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
+    },
+    {
+      "module": "multi-project-example.core",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
+    },
+    {
+      "module": "multi-project-example.core.main",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
+    },
+    {
+      "module": "multi-project-example.core.test",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
+    },
+    {
+      "module": "multi-project-example.service",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
+    },
+    {
+      "module": "multi-project-example.service.main",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
+    },
+    {
+      "module": "multi-project-example.service.test",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
     }
   ]
 }

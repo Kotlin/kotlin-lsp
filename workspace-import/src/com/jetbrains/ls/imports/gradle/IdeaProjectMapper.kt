@@ -173,16 +173,15 @@ internal class IdeaProjectMapper {
                 ContentRootData(module.gradleProject.projectDirectory.path)
             )
         )
-        val javaSettings = getJavaSettingsData(module, null)
-        if (javaSettings != null) {
-            javaSettingsConsumer(javaSettings)
-        }
         val associatedSourceSets = metadata.sourceSets[module.name]
         if (associatedSourceSets.isNullOrEmpty()) {
             LOG.info("${module.name} has an empty set of source sets")
             return modules
         }
-
+        val javaSettings = getJavaSettingsData(module, associatedSourceSets)
+        if (javaSettings != null) {
+            javaSettingsConsumer(javaSettings)
+        }
         associatedSourceSets.forEach { sourceSet ->
             val sourceSetDependencies = mutableListOf<DependencyData>()
                 .apply {
@@ -203,9 +202,12 @@ internal class IdeaProjectMapper {
                     sourceSet.isTest()
                 )
             )
-            val sourceSetJavaSettings = getJavaSettingsData(module, sourceSet)
-            if (sourceSetJavaSettings != null) {
-                javaSettingsConsumer(sourceSetJavaSettings)
+            if (javaSettings != null) {
+                javaSettingsConsumer(
+                    javaSettings.copy(
+                        module = "${module.name}.${sourceSet.name}"
+                    )
+                )
             }
         }
         return modules
@@ -287,25 +289,40 @@ internal class IdeaProjectMapper {
             .any { Path.of(it.path).exists() }
     }
 
-    private fun getJavaSettingsData(module: IdeaModule, sourceSet: ModuleSourceSet?): JavaSettingsData? {
-        if (module.javaLanguageSettings.isSpecified()) {
-            val targetJavaVersion = module.javaLanguageSettings?.targetBytecodeVersion?.name
-                ?: sourceSet?.toolchainVersion?.toString() ?: return null
-            var moduleName = module.name
-            if (sourceSet != null) {
-                moduleName += ".${sourceSet.name}"
-            }
-            return getJavaSettingsData(moduleName, module, targetJavaVersion)
-        }
+    private fun getJavaSettingsData(module: IdeaModule, sourceSets: Set<ModuleSourceSet>): JavaSettingsData? {
         // project java settings should be used for the buildSrc project
         if (module.name.contains("buildSrc") && module.project.javaLanguageSettings.isSpecified()) {
-            var moduleName = module.name
-            if (sourceSet != null) {
-                moduleName += ".${sourceSet.name}"
+            return getJavaSettingsData(module.name, module, module.project.javaLanguageSettings?.targetBytecodeVersion?.name)
+        }
+        sourceSets.forEach { sourceSet ->
+            if (sourceSet.isToolchainSpecified()) {
+                val targetJavaVersion = sourceSet.toolchainVersion.toString()
+                return getJavaSettingsData(module.name, module, targetJavaVersion)
             }
-            return getJavaSettingsData(moduleName, module, module.project.javaLanguageSettings?.targetBytecodeVersion?.name)
+            if (sourceSet.isCompileTaskSpecified()) {
+                val targetJavaVersion = sourceSet.targetCompatibility ?: sourceSet.sourceCompatibility
+                return getJavaSettingsData(module.name, module, targetJavaVersion!!)
+            }
+        }
+        if (module.javaLanguageSettings.isSpecified()) {
+            val targetJavaVersion = module.javaLanguageSettings?.targetBytecodeVersion?.name ?: return null
+            return getJavaSettingsData(module.name, module, targetJavaVersion)
         }
         return null
+    }
+
+    private fun ModuleSourceSet?.isToolchainSpecified(): Boolean {
+        if (this == null) {
+            return false
+        }
+        return toolchainVersion != null
+    }
+
+    private fun ModuleSourceSet?.isCompileTaskSpecified(): Boolean {
+        if (this == null) {
+            return false
+        }
+        return sourceCompatibility != null || targetCompatibility != null
     }
 
     private fun getJavaSettingsData(moduleName: String, module: IdeaModule, targetJavaVersion: String?): JavaSettingsData? {

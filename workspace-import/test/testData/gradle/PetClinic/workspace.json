@@ -8,7 +8,7 @@
         },
         {
           "type": "sdk",
-          "name": "21",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -486,7 +486,7 @@
         },
         {
           "type": "sdk",
-          "name": "21",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -1194,7 +1194,7 @@
         },
         {
           "type": "sdk",
-          "name": "21",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -1677,7 +1677,7 @@
         },
         {
           "type": "sdk",
-          "name": "21",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -2400,7 +2400,7 @@
         },
         {
           "type": "sdk",
-          "name": "21",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -5323,12 +5323,59 @@
   ],
   "sdks": [
     {
-      "name": "21",
+      "name": "ignored",
       "type": "jdk",
-      "version": "JDK_21",
-      "homePath": "<HOME>/.jdks/jbr-21.0.4",
+      "version": "ignored",
+      "homePath": "/",
       "roots": [],
       "additionalData": ""
+    }
+  ],
+  "javaSettings": [
+    {
+      "module": "PetClinic",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
+    },
+    {
+      "module": "PetClinic.aot",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
+    },
+    {
+      "module": "PetClinic.aotTest",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
+    },
+    {
+      "module": "PetClinic.main",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
+    },
+    {
+      "module": "PetClinic.test",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
     }
   ]
 }

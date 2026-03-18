@@ -1261,12 +1261,7 @@
       "type": "jdk",
       "version": "JDK_21",
       "homePath": "<HOME>/.jdks/jbr-21.0.4",
-      "roots": [
-        {
-          "url": "jrt://<HOME>/.jdks/jbr-21.0.4!/modules/java.base",
-          "type": "classPath",
-          "roots": [],
-          "additionalData": ""
+      "roots": []
     }
   ],
   "kotlinSettings": [

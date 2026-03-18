@@ -16,6 +16,7 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.bundling.Jar;
+import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.tooling.provider.model.ToolingModelBuilder;
 import org.gradle.util.GradleVersion;
@@ -87,6 +88,16 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
                 }
             }
 
+            String compileTaskName = sourceSet.getCompileJavaTaskName();
+            Task javaCompileTask = taskContainer.findByName(compileTaskName);
+            String sourceCompatibility = null;
+            String targetCompatibility = null;
+            if (javaCompileTask instanceof JavaCompile) {
+                JavaCompile javaCompile = (JavaCompile) javaCompileTask;
+                sourceCompatibility = javaCompile.getSourceCompatibility();
+                targetCompatibility = javaCompile.getTargetCompatibility();
+            }
+
             String sourceSetName = sourceSet.getName();
             Set<File> runtimeDependencies = resolveFileCollectionFiles(sourceSetName, sourceSet.getRuntimeClasspath());
             Set<File> compileDependencies = resolveFileCollectionFiles(sourceSetName, sourceSet.getCompileClasspath());
@@ -99,7 +110,9 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
                     compileDependencies == null ? Collections.emptySet() : compileDependencies,
                     producedArtifacts,
                     runtimeDependencies == null || compileDependencies == null,
-                    targetBytecodeLevel
+                    targetBytecodeLevel,
+                    sourceCompatibility,
+                    targetCompatibility
             ));
         }
         return result;

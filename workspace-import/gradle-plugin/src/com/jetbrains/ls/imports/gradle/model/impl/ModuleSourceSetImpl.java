@@ -20,6 +20,8 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
     private final @NonNull Set<@NonNull File> sourceSetOutput;
     private final boolean hasUnresolvedDependencies;
     private final @Nullable Integer toolchainVersion;
+    private final @Nullable String sourceCompatibility;
+    private final @Nullable String targetCompatibility;
 
     public ModuleSourceSetImpl(
             @NonNull String name,
@@ -30,7 +32,9 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
             @NonNull Set<@NonNull File> compileClasspath,
             @NonNull Set<@NonNull File> sourceSetOutput,
             boolean hasUnresolvedDependencies,
-            @Nullable Integer toolchainVersion
+            @Nullable Integer toolchainVersion,
+            @Nullable String sourceCompatibility,
+            @Nullable String targetCompatibility
     ) {
         this.name = name;
         this.sources = sources;
@@ -41,6 +45,8 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
         this.sourceSetOutput = sourceSetOutput;
         this.hasUnresolvedDependencies = hasUnresolvedDependencies;
         this.toolchainVersion = toolchainVersion;
+        this.sourceCompatibility = sourceCompatibility;
+        this.targetCompatibility = targetCompatibility;
     }
 
     @Override
@@ -86,5 +92,15 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
     @Override
     public @Nullable Integer getToolchainVersion() {
         return toolchainVersion;
+    }
+
+    @Override
+    public @Nullable String getSourceCompatibility() {
+        return sourceCompatibility;
+    }
+
+    @Override
+    public @Nullable String getTargetCompatibility() {
+        return targetCompatibility;
     }
 }

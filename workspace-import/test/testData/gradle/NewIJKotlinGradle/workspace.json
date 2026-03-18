@@ -8,7 +8,7 @@
         },
         {
           "type": "sdk",
-          "name": "25",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -26,7 +26,7 @@
         },
         {
           "type": "sdk",
-          "name": "25",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -84,7 +84,7 @@
         },
         {
           "type": "sdk",
-          "name": "25",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -153,7 +153,7 @@
         },
         {
           "type": "sdk",
-          "name": "25",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -181,7 +181,7 @@
         },
         {
           "type": "sdk",
-          "name": "25",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -409,7 +409,7 @@
         },
         {
           "type": "sdk",
-          "name": "25",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -670,7 +670,7 @@
         },
         {
           "type": "sdk",
-          "name": "25",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -688,7 +688,7 @@
         },
         {
           "type": "sdk",
-          "name": "25",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -736,7 +736,7 @@
         },
         {
           "type": "sdk",
-          "name": "25",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -844,7 +844,7 @@
         },
         {
           "type": "sdk",
-          "name": "25",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -1892,10 +1892,10 @@
   ],
   "sdks": [
     {
-      "name": "25",
+      "name": "ignored",
       "type": "jdk",
-      "version": "JDK_25",
-      "homePath": "<HOME>/.jdks/corretto-25",
+      "version": "ignored",
+      "homePath": "/",
       "roots": [],
       "additionalData": ""
     }
@@ -2059,12 +2059,39 @@
   ],
   "javaSettings": [
     {
+      "module": "NewIJKotlinGradle.app",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
+    },
+    {
+      "module": "NewIJKotlinGradle.app.main",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
+    },
+    {
+      "module": "NewIJKotlinGradle.app.test",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
+    },
+    {
       "module": "NewIJKotlinGradle.buildSrc",
       "inheritedCompilerOutput": false,
       "excludeOutput": false,
       "compilerOutput": null,
       "compilerOutputForTests": null,
-      "languageLevelId": "JDK_21",
+      "languageLevelId": "ignored",
       "manifestAttributes": {}
     },
     {
@@ -2073,7 +2100,7 @@
       "excludeOutput": false,
       "compilerOutput": null,
       "compilerOutputForTests": null,
-      "languageLevelId": "JDK_21",
+      "languageLevelId": "ignored",
       "manifestAttributes": {}
     },
     {
@@ -2082,7 +2109,34 @@
       "excludeOutput": false,
       "compilerOutput": null,
       "compilerOutputForTests": null,
-      "languageLevelId": "JDK_21",
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
+    },
+    {
+      "module": "NewIJKotlinGradle.utils",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
+    },
+    {
+      "module": "NewIJKotlinGradle.utils.main",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
+    },
+    {
+      "module": "NewIJKotlinGradle.utils.test",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
       "manifestAttributes": {}
     }
   ]
