@@ -230,13 +230,6 @@ private suspend fun handleRequests(
 }
 
 private fun initIdeaPaths(systemPath: Path?) {
-    (PluginManagerCore::class.java.classLoader as PathClassLoader).classPath.addFiles(buildList {
-        PathManager.getLibDir().let { libDir ->
-            add(libDir / "language-server.analyzer.jar")
-            add(libDir / "language-server.analyzer.filewatcher.jar")
-        }
-    })
-
     val serverClass = Class.forName("com.jetbrains.ls.kotlinLsp.KotlinLspServerKt")
     val jarPath = PathManager.getJarForClass(serverClass)?.toAbsolutePath()
     val jarPathStr = jarPath?.let { FileUtilRt.toSystemIndependentName(jarPath.toString()) } ?: ""
