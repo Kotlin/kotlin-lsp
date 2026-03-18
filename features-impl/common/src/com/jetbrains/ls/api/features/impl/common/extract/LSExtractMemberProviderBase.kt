@@ -22,13 +22,17 @@ import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.commands.document.LSDocumentCommandExecutor
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
 import com.jetbrains.lsp.implementation.LspHandlerContext
+import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.protocol.CodeAction
 import com.jetbrains.lsp.protocol.CodeActionKind
 import com.jetbrains.lsp.protocol.CodeActionParams
 import com.jetbrains.lsp.protocol.Command
 import com.jetbrains.lsp.protocol.DocumentUri
 import com.jetbrains.lsp.protocol.LSP
+import com.jetbrains.lsp.protocol.MessageType
 import com.jetbrains.lsp.protocol.Range
+import com.jetbrains.lsp.protocol.ShowMessageNotificationType
+import com.jetbrains.lsp.protocol.ShowMessageParams
 import com.jetbrains.lsp.protocol.TextEdit
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -59,14 +63,30 @@ abstract class LSExtractMemberProviderBase<Context> : LSCodeActionProvider, LSCo
                         documentUri: DocumentUri,
                         otherArgs: List<JsonElement>
                     ): List<TextEdit> {
-                        return server.withWriteAnalysisContextAndFileSettings(documentUri.uri) {
-                            val (file, data) = readAction {
-                                val virtualFile = documentUri.findVirtualFile() ?: return@readAction null
-                                val data = otherArgs.firstOrNull()?.let { LSP.json.decodeFromJsonElement(ExtractData.serializer(), it) }
-                                    ?: return@readAction null
-                                virtualFile to data
-                            } ?: return@withWriteAnalysisContextAndFileSettings emptyList()
-                            computeExtractEdits(file, data)
+                        val payload = otherArgs.firstOrNull()?.let {
+                            LSP.json.decodeFromJsonElement(Payload.serializer(), it)
+                        } ?: return emptyList()
+
+                        when (payload) {
+                            is Payload.Error -> {
+                                lspClient.notify(
+                                    ShowMessageNotificationType,
+                                    ShowMessageParams(
+                                        MessageType.Error,
+                                        payload.message,
+                                    )
+                                )
+                                return emptyList()
+                            }
+                            is Payload.Data -> {
+                                return server.withWriteAnalysisContextAndFileSettings(documentUri.uri) {
+                                    val (file, data) = readAction {
+                                        val virtualFile = documentUri.findVirtualFile() ?: return@readAction null
+                                        virtualFile to payload
+                                    } ?: return@withWriteAnalysisContextAndFileSettings emptyList()
+                                    computeExtractEdits(file, data)
+                                }
+                            }
                         }
                     }
                 },
@@ -79,39 +99,61 @@ abstract class LSExtractMemberProviderBase<Context> : LSCodeActionProvider, LSCo
     context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val documentUri = params.textDocument.uri
-        val result = server.withAnalysisContext {
+        val choicesResult = server.withAnalysisContext {
             readAction {
                 val virtualFile = documentUri.findVirtualFile() ?: return@readAction null
                 val document = virtualFile.findDocument() ?: return@readAction null
-                val choicesResult = getChoices(virtualFile, params.range.toTextRange(document)) ?: return@readAction null
-                val selectionRange = choicesResult.selection.toLspRange(document)
-                choicesResult.choices to selectionRange
+                getChoices(virtualFile, params.range.toTextRange(document))
             }
         } ?: return@flow
 
-        for (choice in result.first) {
-            emit(
-                CodeAction(
-                    title = choice,
-                    kind = extractActionKind,
-                    command = Command(
-                        title = choice,
-                        command = commandName,
-                        arguments = listOf<JsonElement>(
-                            LSP.json.encodeToJsonElement<DocumentUri>(documentUri),
-                            LSP.json.encodeToJsonElement<ExtractData>(
-                                ExtractData.serializer(),
-                                ExtractData(result.second, choice)
+        when (choicesResult) {
+            is ChoicesResult.Choices -> {
+                val selectionRange = server.withAnalysisContext {
+                    readAction {
+                        val virtualFile = documentUri.findVirtualFile() ?: return@readAction null
+                        val document = virtualFile.findDocument() ?: return@readAction null
+                        choicesResult.selection.toLspRange(document)
+                    }
+                } ?: return@flow
+                for (choice in choicesResult.choices) {
+                    emit(
+                        CodeAction(
+                            title = choice,
+                            kind = extractActionKind,
+                            command = Command(
+                                title = choice,
+                                command = commandName,
+                                arguments = listOf<JsonElement>(
+                                    LSP.json.encodeToJsonElement<DocumentUri>(documentUri),
+                                    LSP.json.encodeToJsonElement(Payload.serializer(), Payload.Data(selectionRange, choice)),
+                                ),
+                            )
+                        )
+                    )
+                }
+            }
+            is ChoicesResult.Error -> {
+                emit(
+                    CodeAction(
+                        title = choicesResult.defaultTitle,
+                        kind = extractActionKind,
+                        command = Command(
+                            title = choicesResult.defaultTitle,
+                            command = commandName,
+                            arguments = listOf<JsonElement>(
+                                LSP.json.encodeToJsonElement<DocumentUri>(documentUri),
+                                LSP.json.encodeToJsonElement(Payload.serializer(), Payload.Error(choicesResult.errorMessage)),
                             ),
-                        ),
+                        )
                     )
                 )
-            )
+            }
         }
     }
 
     context(server: LSServer, analysisContext: LSAnalysisContext)
-    private suspend fun computeExtractEdits(file: VirtualFile, data: ExtractData): List<TextEdit> {
+    private suspend fun computeExtractEdits(file: VirtualFile, data: Payload.Data): List<TextEdit> {
         val (writeContext, oldDocumentText) = readAction {
             val document = file.findDocument() ?: return@readAction null
             val selection = data.selection.toTextRange(document)
@@ -134,7 +176,10 @@ abstract class LSExtractMemberProviderBase<Context> : LSCodeActionProvider, LSCo
 
     /**
      * Calculates the available extraction types in the given [selectedRange] and the adjusted selection.
-     * @return null if it is impossible to extract in the given position, [ChoicesResult] with displayable choices and adjusted selection otherwise
+     * @return null if it is impossible to extract in the given position,
+     * [com.jetbrains.ls.api.features.impl.common.extract.LSExtractMemberProviderBase.ChoicesResult.Choices] when extraction is possible,
+     * or [com.jetbrains.ls.api.features.impl.common.extract.LSExtractMemberProviderBase.ChoicesResult.Error] if the extraction is impossible and
+     * the error should be displayed to the user.
      */
     @RequiresReadLock
     context(analysisContext: LSAnalysisContext)
@@ -156,10 +201,20 @@ abstract class LSExtractMemberProviderBase<Context> : LSCodeActionProvider, LSCo
     context(server: LSServer, analysisContext: LSAnalysisContext)
     protected abstract suspend fun doExtract(context: Context)
 
-    protected data class ChoicesResult(val choices: List<String>, val selection: TextRange)
+    protected sealed interface ChoicesResult {
+        data class Choices(val choices: List<String>, val selection: TextRange) : ChoicesResult
+        data class Error(val defaultTitle: String, val errorMessage: String) : ChoicesResult
+    }
 
     @Serializable
-    data class ExtractData(val selection: Range, val choice: String)
+    private sealed interface Payload {
+        @Serializable
+        data class Data(val selection: Range, val choice: String) : Payload
+
+        @Serializable
+        data class Error(val message: String) : Payload
+    }
+
     companion object{
         private val LOG = Logger.getInstance(LSExtractMemberProviderBase::class.java)
     }
