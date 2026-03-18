@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features.impl.kotlin.completion
 
 import com.intellij.psi.PsiElement
+import com.jetbrains.ls.api.features.completion.LSCompletionCandidate
 import com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider
 import com.jetbrains.lsp.protocol.CompletionItemKind
 import org.jetbrains.kotlin.asJava.unwrapped
@@ -16,31 +17,33 @@ import org.jetbrains.kotlin.psi.KtTypeParameter
 import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 
 internal class LSKotlinCompletionItemKindProvider : LSCompletionItemKindProvider {
-  override fun getKind(psi: PsiElement): CompletionItemKind? =
-    when (val psi = psi.unwrapped) {
-      is KtConstructor<*> -> CompletionItemKind.Constructor
-      is KtFunction -> when {
-        psi.hasModifier(KtTokens.OPERATOR_KEYWORD) -> CompletionItemKind.Operator
-        psi.containingClassOrObject != null -> CompletionItemKind.Method
-        else -> CompletionItemKind.Function
-      }
+  override fun getKind(completionItem: LSCompletionCandidate): CompletionItemKind? {
+      val psi = completionItem.result as? PsiElement ?: return null
+      return when (val psi = psi.unwrapped) {
+          is KtConstructor<*> -> CompletionItemKind.Constructor
+          is KtFunction -> when {
+              psi.hasModifier(KtTokens.OPERATOR_KEYWORD) -> CompletionItemKind.Operator
+              psi.containingClassOrObject != null -> CompletionItemKind.Method
+              else -> CompletionItemKind.Function
+          }
 
-      is KtProperty -> when {
-        psi.hasModifier(KtTokens.CONST_KEYWORD) -> CompletionItemKind.Constant
-        psi.isLocal -> CompletionItemKind.Variable
-        else -> CompletionItemKind.Property
-      }
+          is KtProperty -> when {
+              psi.hasModifier(KtTokens.CONST_KEYWORD) -> CompletionItemKind.Constant
+              psi.isLocal -> CompletionItemKind.Variable
+              else -> CompletionItemKind.Property
+          }
 
-      is KtParameter -> CompletionItemKind.Variable
-      is KtClass -> when {
-        psi.isData() -> CompletionItemKind.Struct
-        psi.isInterface() -> CompletionItemKind.Interface
-        psi.isEnum() -> CompletionItemKind.Enum
-        psi is KtEnumEntry -> CompletionItemKind.EnumMember
-        else -> CompletionItemKind.Class
-      }
+          is KtParameter -> CompletionItemKind.Variable
+          is KtClass -> when {
+              psi.isData() -> CompletionItemKind.Struct
+              psi.isInterface() -> CompletionItemKind.Interface
+              psi.isEnum() -> CompletionItemKind.Enum
+              psi is KtEnumEntry -> CompletionItemKind.EnumMember
+              else -> CompletionItemKind.Class
+          }
 
-      is KtTypeParameter -> CompletionItemKind.TypeParameter
-      else -> null
-    }
+          is KtTypeParameter -> CompletionItemKind.TypeParameter
+          else -> null
+      }
+  }
   }

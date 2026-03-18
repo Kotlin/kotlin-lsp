@@ -3,12 +3,15 @@ package com.jetbrains.ls.api.features.impl.common.completion
 
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.jetbrains.ls.api.features.completion.LSCompletionCandidate
 import com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider
 import com.jetbrains.lsp.protocol.CompletionItemKind
 
 internal class LSAnyCompletionItemKindProvider : LSCompletionItemKindProvider {
-    override fun getKind(element: PsiElement): CompletionItemKind? = when (element) {
-        is PsiFile -> CompletionItemKind.File
-        else -> null
+    override fun getKind(completionItem: LSCompletionCandidate): CompletionItemKind? {
+        return when (completionItem.result as? PsiElement) {
+            is PsiFile -> CompletionItemKind.File
+            else -> null
+        }
     }
 }
