@@ -36,6 +36,7 @@ typealias WorkspaceImporterPriority = Int
 const val IMPORTER_PRIORITY_DEFAULT: WorkspaceImporterPriority = 100
 const val IMPORTER_PRIORITY_HIGH: WorkspaceImporterPriority = 1000
 const val IMPORTER_PRIORITY_LOW: WorkspaceImporterPriority = 10
+const val IMPORTER_PRIORITY_LOWEST: WorkspaceImporterPriority = 0
 
 class WorkspaceImporterEntry(
     val importer: WorkspaceImporter,
