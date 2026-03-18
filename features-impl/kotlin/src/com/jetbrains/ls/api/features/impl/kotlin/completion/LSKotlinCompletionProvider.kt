@@ -2,10 +2,7 @@
 package com.jetbrains.ls.api.features.impl.kotlin.completion
 
 import com.intellij.codeInsight.completion.PrefixMatcher
-import com.intellij.codeInsight.completion.createCompletionProcess
 import com.intellij.codeInsight.completion.impl.CamelHumpMatcher
-import com.intellij.codeInsight.completion.insertCompletion
-import com.intellij.codeInsight.completion.performCompletion
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementPresentation
 import com.intellij.openapi.application.edtWriteAction
@@ -15,6 +12,9 @@ import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiFile
+import com.jetbrains.analyzer.codeServer.createCompletionProcess
+import com.jetbrains.analyzer.codeServer.insertCompletion
+import com.jetbrains.analyzer.codeServer.performCompletion
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
