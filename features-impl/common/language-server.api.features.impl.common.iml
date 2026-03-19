@@ -65,5 +65,6 @@
     <orderEntry type="module" module-name="fleet.rhizomedb" />
     <orderEntry type="module" module-name="language-server.dap.platform" />
     <orderEntry type="module" module-name="fleet.rhizomedb.transactor" />
+    <orderEntry type="module" module-name="intellij.platform.ide.core.impl" />
   </component>
 </module>
