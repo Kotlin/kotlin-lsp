@@ -3,6 +3,68 @@
 This file contains TeamCity auto-generated download links that are updated on a weekly basis.
 These are pre-alpha builds that are built directly from `master` branch after the initial acceptance.
 
+### v262.2310.0
+- :test_tube: **Kotlin LSP for VS Code Extension**
+  Includes Kotlin Language Server bundled for use with Visual Studio Code
+    * [Download for macOS-x64](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-mac-x64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-mac-x64.vsix.sha256)
+    * [Download for macOS-arm64](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-mac-aarch64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-mac-aarch64.vsix.sha256)
+    * [Download for Linux-x64](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-linux-x64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-linux-x64.vsix.sha256)
+    * [Download for Linux-arm64](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-linux-aarch64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-linux-aarch64.vsix.sha256)
+    * [Download for Windows-x64](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-win-x64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-win-x64.vsix.sha256)
+    * [Download for Windows-arm64](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-win-aarch64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-win-aarch64.vsix.sha256)
+
+
+- :card_index_dividers: **Standalone Kotlin LSP ZIP Archive**
+  Standalone Kotlin Language Server version for editors other than VS Code
+    * [Download for macOS-x64](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-mac-x64.zip)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-mac-x64.zip.sha256)
+    * [Download for macOS-arm64](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-mac-aarch64.zip)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-mac-aarch64.zip.sha256)
+    * [Download for Linux-x64](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-linux-x64.zip)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-linux-x64.zip.sha256)
+    * [Download for Linux-arm64](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-linux-aarch64.zip)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-linux-aarch64.zip.sha256)
+    * [Download for Windows-x64](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-win-x64.zip)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-win-x64.zip.sha256)
+    * [Download for Windows-arm64](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-win-aarch64.zip)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.2310.0/kotlin-lsp-262.2310.0-win-aarch64.zip.sha256)
+
+##### Changelog
+
+> [!IMPORTANT]
+> This is the second hotfix release for [v262.1668.0](https://github.com/Kotlin/kotlin-lsp/releases/edit/kotlin-lsp%2Fv262.1668.0).
+>
+> The second fix is related to disabling faulty parts of a JVM DAP adapter (which is currently a WIP).
+> 
+> The changelog below comes from the v262.1668.0 release and is repeated here for clarity.
+
+
+#### 🔧 Kotlin 2.3.0 support
+
+* [Kotlin 2.3.0](https://kotlinlang.org/docs/whatsnew23.html) is out and supported by Kotlin LSP :tada:
+
+#### 🛠 LSP capabilities
+
+* Import of Maven projects is now supported
+* Import of Gradle projects is now more robust
+* "Go to Type Definition" (`typeDefinition`) for Kotlin symbols
+* "Go to Implementation" (`implementation`) for Kotlin symbols
+* New code actions are supported:
+    * "Add names to call arguments"
+    * "Specify type explicitly"
+    * "Add import" quick fixes for unresolved references
+* New inspections from the IntelliJ Kotlin Plugin:
+    * [KTIJ-32563](https://youtrack.jetbrains.com/issue/KTIJ-32563): Detects inefficient/redundant operations on `Flow` from `kotlinx.coroutines`
+    * [KTIJ-35457](https://youtrack.jetbrains.com/issue/KTIJ-35457), [KTIJ-35456](https://youtrack.jetbrains.com/issue/KTIJ-35456): Inspections for migrating to [new experimental name-based destructuring](https://github.com/Kotlin/KEEP/blob/main/proposals/KEEP-0438-name-based-destructuring.md) (KEEP-0438)
+    * [KTIJ-35642](https://youtrack.jetbrains.com/issue/KTIJ-35642): Suggests converting properties with getters to use explicit backing fields (Kotlin 2.0+)
+* Compiler plugins like `kotlinx.serialization` and `AllOpen` are now fully supported
+
+#### ✨ UX improvements
+
+* "Go to Symbol" now works faster due to improved performance of "Workspace Symbols" requests
+* Distribution size has been reduced by > 30% (from 600 MB down to 400 MB)
+* Various other performance improvements
+
+#### 🐛 Bug fixes
+
+* Fixed caret misplacement and exceptions after invoking code completion
+* Angular brackets are no longer highlighted as unmatched in the editor
+* Various memory leaks fixed
+
 ### v262.1817.0
 - :test_tube: **Kotlin LSP for VS Code Extension**
   Includes Kotlin Language Server bundled for use with Visual Studio Code
