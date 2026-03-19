@@ -33,6 +33,16 @@ import kotlin.io.path.exists
 private val LOG = logger<GradleWorkspaceImporter>()
 
 object GradleWorkspaceImporter : WorkspaceImporter {
+    private const val IDEA_SYNC_ACTIVE_PROPERTY: String = "idea.sync.active"
+    private const val KOTLIN_LSP_IMPORT_PROPERTY: String = "com.jetbrains.ls.imports.gradle"
+    private val IMPORTER_PROPERTIES: Map<String, String> = mapOf(
+        // This imitates how IntelliJ invokes gradle during sync.
+        // Some builds/plugins depend on this property to configure their build for sync.
+        IDEA_SYNC_ACTIVE_PROPERTY to "true",
+        // Since this is not actually IntelliJ, offer an alternative identification.
+        KOTLIN_LSP_IMPORT_PROPERTY to "true",
+    )
+
     const val LSP_GRADLE_JAVA_HOME_PROPERTY: String = "com.jetbrains.ls.imports.gradle.java.home"
     const val LSP_GRADLE_PROJECT_OFFLINE_PROPERTY: String = "com.jetbrains.ls.imports.gradle.offline"
     const val LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY: String = "com.jetbrains.ls.imports.gradle.gradleUserHome"
@@ -77,6 +87,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                 try {
                     val builder = it.action(ProjectMetadataBuilder())
                         .addArguments("--stacktrace", "--init-script", initScriptPath.absolutePathString())
+                        .withSystemProperties(IMPORTER_PROPERTIES)
                         .forTasks(PREPARE_KOTLIN_IDEA_IMPORT_TASK_NAME)
                         .also { builder ->
                             if (System.getProperty(LSP_GRADLE_PROJECT_OFFLINE_PROPERTY)?.toBoolean() == true) {
