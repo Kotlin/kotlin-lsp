@@ -139,6 +139,7 @@ create_kotlinc_options(
 
 jvm_library(
   name = "language-server-kotlin-lsp-tests",
+  module_name = "language-server.kotlin-lsp.tests",
   visibility = ["//visibility:public"],
   srcs = glob([], allow_empty = True)
 )

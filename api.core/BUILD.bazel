@@ -80,6 +80,7 @@ create_kotlinc_options(
 
 jvm_library(
   name = "language-server-api-core-tests",
+  module_name = "language-server.api.core.tests",
   visibility = ["//visibility:public"],
   srcs = glob([], allow_empty = True)
 )
