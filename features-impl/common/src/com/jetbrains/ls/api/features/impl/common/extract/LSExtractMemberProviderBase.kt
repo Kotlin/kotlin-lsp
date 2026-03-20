@@ -199,7 +199,7 @@ abstract class LSExtractMemberProviderBase<Context> : LSCodeActionProvider, LSCo
                 LOG.error("Wasn't able to initialize PostProcessReformattingAspect")
             }
             val reference = doExtract(writeContext) ?: return@withWritableFile null
-            TextRange(reference.startOffset, reference.startOffset)
+            readAction { TextRange(reference.startOffset, reference.startOffset) }
         }
 
         return readAction {
