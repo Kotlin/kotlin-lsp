@@ -188,7 +188,7 @@ class ProjectImportTest {
                     version = "ignored",
                     name = "ignored",
                     roots = emptyList(),
-                    homePath = "/"
+                    homePath = null
                 )
             },
             data.kotlinSettings,
