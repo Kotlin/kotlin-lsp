@@ -8,7 +8,7 @@
         },
         {
           "type": "sdk",
-          "name": "21",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -126,7 +126,7 @@
         },
         {
           "type": "sdk",
-          "name": "21",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -378,7 +378,7 @@
         },
         {
           "type": "sdk",
-          "name": "21",
+          "name": "ignored",
           "kind": "jdk"
         }
       ],
@@ -1257,11 +1257,12 @@
   ],
   "sdks": [
     {
-      "name": "21",
+      "name": "ignored",
       "type": "jdk",
-      "version": "JDK_21",
-      "homePath": "<HOME>/.jdks/jbr-21.0.4",
-      "roots": []
+      "version": "ignored",
+      "homePath": "/",
+      "roots": [],
+      "additionalData": ""
     }
   ],
   "kotlinSettings": [
@@ -1328,6 +1329,35 @@
       "externalSystemRunTasks": [],
       "version": 5,
       "flushNeeded": false
+    }
+  ],
+  "javaSettings": [
+    {
+      "module": "kotlin-dependency-example",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
+    },
+    {
+      "module": "kotlin-dependency-example.main",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
+    },
+    {
+      "module": "kotlin-dependency-example.test",
+      "inheritedCompilerOutput": false,
+      "excludeOutput": false,
+      "compilerOutput": null,
+      "compilerOutputForTests": null,
+      "languageLevelId": "ignored",
+      "manifestAttributes": {}
     }
   ]
 }
