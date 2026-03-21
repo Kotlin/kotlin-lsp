@@ -32,6 +32,16 @@ import kotlin.io.path.exists
 private val LOG = logger<GradleWorkspaceImporter>()
 
 object GradleWorkspaceImporter : WorkspaceImporter {
+    private const val IDEA_SYNC_ACTIVE_PROPERTY = "idea.sync.active"
+    private const val KOTLIN_LSP_IMPORT_PROPERTY = "com.jetbrains.ls.imports.gradle"
+    private val IMPORTER_PROPERTIES = mapOf(
+        // This imitates how IntelliJ invokes gradle during sync.
+        // Some builds/plugins depend on this property to configure their build for sync
+        IDEA_SYNC_ACTIVE_PROPERTY to "true",
+        // Since this is not actually IntelliJ, offer an alternative identification
+        KOTLIN_LSP_IMPORT_PROPERTY to "true"
+    )
+
     const val LSP_GRADLE_PROJECT_OFFLINE_PROPERTY: String = "com.jetbrains.ls.imports.gradle.offline"
     const val LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY: String = "com.jetbrains.ls.imports.gradle.gradleUserHome"
     const val LSP_GRADLE_PROJECT_SELF_CONTAINED_INIT_SCRIPT: String = "com.jetbrains.ls.imports.gradle.selfContainedInitScript"
@@ -75,6 +85,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                 try {
                     val builder = it.action(ProjectMetadataBuilder())
                         .addArguments("--stacktrace", "--init-script", initScriptPath.absolutePathString())
+                        .withSystemProperties(IMPORTER_PROPERTIES)
                         .also { builder ->
                         if (System.getProperty(LSP_GRADLE_PROJECT_OFFLINE_PROPERTY)?.toBoolean() == true) {
                             System.getProperty(LSP_GRADLE_PROJECT_SELF_CONTAINED_INIT_SCRIPT)?.let { initScript ->
