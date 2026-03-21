@@ -7,8 +7,10 @@ import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.jetbrains.analyzer.bootstrap.AnalyzerContext
 import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.core.util.workspaceFolderPaths
+import com.jetbrains.ls.api.core.util.toLspUri
+import com.jetbrains.ls.api.core.util.toPath
 import com.jetbrains.ls.api.features.LSConfiguration
+import com.jetbrains.ls.api.features.WorkspaceImporterEntry
 import com.jetbrains.ls.api.features.codeActions.LSCodeActions
 import com.jetbrains.ls.api.features.completion.LSCompletionProvider
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokens
@@ -20,7 +22,6 @@ import com.jetbrains.ls.imports.api.applyChangesWithDeduplication
 import com.jetbrains.ls.kotlinLsp.connection.Client
 import com.jetbrains.ls.kotlinLsp.util.sendSystemInfoToClient
 import com.jetbrains.ls.snapshot.api.impl.core.InitializeParamsEntity
-import com.jetbrains.ls.snapshot.api.impl.core.lspInitializationOptions
 import com.jetbrains.lsp.implementation.LspClient
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.LspHandlersBuilder
@@ -53,23 +54,26 @@ import com.jetbrains.lsp.protocol.ShowMessageNotificationType
 import com.jetbrains.lsp.protocol.ShowMessageParams
 import com.jetbrains.lsp.protocol.SignatureHelpRegistrationOptions
 import com.jetbrains.lsp.protocol.TextDocumentSyncKind
+import com.jetbrains.lsp.protocol.URI
 import com.jetbrains.lsp.protocol.WorkDoneProgress
 import com.jetbrains.lsp.protocol.WorkDoneProgress.Report
+import com.jetbrains.lsp.protocol.WorkDoneProgressParams
 import com.jetbrains.lsp.protocol.WorkspaceFoldersServerCapabilities
 import com.jetbrains.lsp.protocol.WorkspaceSymbolRegistrationOptions
 import fleet.kernel.change
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.decodeFromJsonElement
 import java.nio.file.Path
 
 private val LOG: Logger by lazy { fileLogger() }
 
 context(_: LSServer, configuration: LSConfiguration)
-internal fun LspHandlersBuilder.initializeRequest(workspaceImporters: List<WorkspaceImporter>) {
+internal fun LspHandlersBuilder.initializeRequest() {
     request(Initialize) { initParams ->
         Client.update { it.copy(trace = initParams.trace) }
         // TODO: LSP-223 take into account client capabilities
@@ -86,15 +90,28 @@ internal fun LspHandlersBuilder.initializeRequest(workspaceImporters: List<Works
             }"
         )
 
-        val folders = workspaceFolderPaths(initParams)
+        @Suppress("DEPRECATION")
+        val folders = with(initParams) {
+            workspaceFolders?.map { it.uri }
+                ?: rootUri?.let { listOf(it.uri) }
+                ?: rootPath?.let { listOf(Path.of(it).toLspUri()) }
+        } ?: emptyList()
 
         change {
             InitializeParamsEntity.new(initParams, lspClient)
         }
 
-        if (initParams.lspInitializationOptions?.skipImport != true) {
-            indexFolders(folders, workspaceImporters, initParams)
-        }
+        val initializationOptions = InitializationOptions.get(initParams)
+
+        val workspaceImporters = configuration.entries.asSequence()
+            .filterIsInstance<WorkspaceImporterEntry>()
+            .run {
+                // move all empty importers to the end
+                filter { it.importer !is EmptyWorkspaceImporter } +
+                        filter { it.importer is EmptyWorkspaceImporter }
+            }.associate { it.id to it.importer }
+
+        indexFolders(folders, workspaceImporters, initializationOptions, initParams)
 
         // TODO: LSP-226 determine capabilities based on registered configuration entries (LSConfigurationEntry)
         // TODO: LSP-227 register capabilities dynamically for each language separately
@@ -203,28 +220,52 @@ private suspend fun LspClient.sendRunConfigurationInfoToClient() {
 
 context(server: LSServer, handlerContext: LspHandlerContext)
 private suspend fun indexFolders(
-    folders: List<Path>,
-    workspaceImporters: List<WorkspaceImporter>,
-    params: InitializeParams,
+    folders: List<URI>,
+    importers: Map<String, WorkspaceImporter>,
+    initializationOptions: InitializationOptions,
+    progressParams: WorkDoneProgressParams,
 ) {
-    val defaultSdkPath = defaultSdkPath(params.initializationOptions)
-    lspClient.withProgress(params, beginTitle = "Initializing project") { progress ->
-        val emptyWorkspaceImporters = workspaceImporters.asSequence()
-            .filterIsInstance<EmptyWorkspaceImporter>()
+    if (folders.isNotEmpty() && folders.all { initializationOptions.buildTools[it] == "" }) {
+        return // empty build tool for all folders
+    }
+    val defaultSdkPath = initializationOptions.defaultSdk
+        ?.takeIf { it.isNotBlank() }
+        ?.let { Path.of(it) }
+    lspClient.withProgress(progressParams, beginTitle = "Initializing project") { progress ->
         server.workspaceStructure.updateWorkspaceModelDirectly { virtualFileUrlManager, storage ->
             if (folders.isNotEmpty()) {
                 for (folder in folders) {
-                    initFolder(folder, workspaceImporters, progress, defaultSdkPath, virtualFileUrlManager, storage)
+                    val path = folder.toPath() ?: run {
+                        LOG.warn("Failed to get folder path for URI: $folder")
+                        continue
+                    }
+                    val selectedImporters = when (val importerId = initializationOptions.buildTools[folder]) {
+                        null, "*" -> importers
+                        "" -> emptyMap()
+                        else -> importers[importerId]?.let {
+                            mapOf(importerId to it)
+                        } ?: run {
+                            LOG.warn("Unknown build tool '$importerId' for ${folder.uri}, available tools: ${importers.keys}")
+                            continue
+                        }
+                    }
+                    if (selectedImporters.isEmpty()) {
+                        LOG.info("No build tools selected for ${folder.uri}, available tools: ${importers.keys}")
+                        continue
+                    }
+                    initFolder(path, selectedImporters, progress, defaultSdkPath, virtualFileUrlManager, storage)
                 }
             } else {
-                val emptyStorage = emptyWorkspaceImporters.map { importer ->
-                    importer.createEmptyWorkspace(defaultSdkPath, virtualFileUrlManager)
-                }.firstOrNull()
+                val emptyStorage = importers.asSequence()
+                    .filterIsInstance<EmptyWorkspaceImporter>()
+                    .map { importer ->
+                        importer.createEmptyWorkspace(defaultSdkPath, virtualFileUrlManager)
+                    }.firstOrNull()
                 if (emptyStorage != null) {
-                    progress.report(Report(message = "Using light mode"))
+                    progress.report(Report(message = "Creating empty workspace"))
                     storage.applyChangesWithDeduplication(emptyStorage)
                 } else {
-                    progress.report(Report(message = "Skipping import (light mode not supported)"))
+                    progress.report(Report(message = "Skipping empty workspace creation (not available)"))
                 }
             }
             progress.report(Report(message = "Indexing..."))
@@ -237,7 +278,7 @@ private suspend fun indexFolders(
 context(handlerContext: LspHandlerContext)
 private suspend fun initFolder(
     folder: Path,
-    workspaceImporters: List<WorkspaceImporter>,
+    importers: Map<String, WorkspaceImporter>,
     progress: ProgressReporter,
     defaultSdkPath: Path?,
     virtualFileUrlManager: VirtualFileUrlManager,
@@ -245,7 +286,7 @@ private suspend fun initFolder(
 ) {
     val project = AnalyzerContext.current
     progress.report(Report(message = "Importing folder $folder"))
-    for (importer in workspaceImporters) {
+    for ((importerId, importer) in importers) {
         val unresolved = mutableSetOf<String>()
         val importProgress = object : WorkspaceImportProgressReporter {
             override fun onUnresolvedDependency(depName: String) {
@@ -255,7 +296,7 @@ private suspend fun initFolder(
             override fun onErrorOutput(line: String) {}
 
         }
-        LOG.info("Trying to import using ${importer.javaClass.simpleName}")
+        LOG.info("Trying to import using $importerId")
         val imported = try {
             withContext(Dispatchers.IO) {
                 importer.importWorkspace(project.project, folder, defaultSdkPath, virtualFileUrlManager, importProgress)
@@ -296,11 +337,24 @@ private suspend fun initFolder(
     }
 }
 
-private fun defaultSdkPath(initOptions: JsonElement?): Path? = initOptions
-    ?.let { it as? JsonObject }
-    ?.get("defaultJdk")
-    ?.let { it as? JsonPrimitive }
-    ?.takeIf { it.isString }
-    ?.content
-    ?.takeIf { it.isNotBlank() }
-    ?.let { return Path.of(it) }
+@Serializable
+data class InitializationOptions(
+    val defaultSdk: String? = null,
+    /** Null means - default order, empty list - no import **/
+    val buildTools: Map<URI, String?> = emptyMap(),
+) {
+    companion object {
+        private val json = Json { ignoreUnknownKeys = true }
+
+        fun get(initOptions: InitializeParams): InitializationOptions =
+            initOptions.initializationOptions?.let {
+                try {
+                    json.decodeFromJsonElement<InitializationOptions>(it)
+                } catch (ex: Exception) {
+                    LOG.warn("Failed to parse initialization options: $it", ex)
+                    null
+                }
+            } ?: InitializationOptions()
+
+    }
+}

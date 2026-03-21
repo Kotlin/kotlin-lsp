@@ -25,7 +25,6 @@ import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.lsp.protocol.DocumentUri
-import com.jetbrains.lsp.protocol.InitializeParams
 import com.jetbrains.lsp.protocol.Position
 import com.jetbrains.lsp.protocol.Range
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
@@ -161,11 +160,3 @@ fun createSdkEntity(
     val jdk = storage addEntity entity
     return jdk
 }
-
-@Suppress("DEPRECATION")
-fun workspaceFolderPaths(params: InitializeParams): List<Path> =
-    params.workspaceFolders?.mapNotNull { it.uri.toPath() }
-        ?: params.rootUri?.let { listOfNotNull(it.uri.toPath()) }
-        ?: params.rootPath?.let { listOf(Path.of(it)) }
-        ?: emptyList()
-

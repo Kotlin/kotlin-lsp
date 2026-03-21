@@ -65,29 +65,29 @@
     ],
     "configuration": [
       {
-        "title": "Kotlin by JetBrains",
+        "title": "IntelliJ Language Server",
         "properties": {
-          "kotlinLSP.dev.serverPort": {
+          "intellij.dev.serverPort": {
             "type": "number",
             "default": -1,
-            "description": "Port for the locally started Kotlin Language Server to listen on. -1 to start the bundled LSP"
+            "description": "Port for the locally started server to listen on. -1 to start the bundled server"
           },
-          "kotlinLSP.jrePathToRunLsp": {
-            "type": "string",
-            "default": null,
-            "description": "Path of the JRE used to run the Kotlin LSP. Requires version 21 or higher. If unspecified, the bundled JetBrains Runtime is used."
-          },
-          "kotlinLSP.additionalJvmArgs": {
+          "intellij.additionalJvmArgs": {
             "type": "array",
             "default": [],
             "description": "Additional JVM arguments to pass to the LSP server"
           },
-          "kotlinLSP.jdkForSymbolResolution": {
+          "intellij.buildTool": {
+            "type": "string",
+            "default": null,
+            "description": "A build tool to use for a server, workspace, folder (null = any, \"\" = none)"
+          },
+          "intellij.jdkForSymbolResolution": {
             "type": "string",
             "default": null,
             "description": "Path of the JDK for symbol resolution"
           },
-          "kotlinLSP.trace.server": {
+          "intellij.trace.server": {
             "scope": "window",
             "type": "string",
             "enum": [

@@ -1,5 +1,5 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
-package com.jetbrains.ls.imports.light
+package com.jetbrains.ls.imports.generic
 
 import com.intellij.openapi.project.Project
 import com.intellij.platform.workspace.jps.entities.ContentRootEntity
@@ -40,7 +40,7 @@ import kotlin.io.path.listDirectoryEntries
  * Builds a minimal workspace model for projects without a recognized build system.
  * Mirrors the logic of initLightEditMode but operates on a fresh MutableEntityStorage and does not use updateWorkspaceModel.
  */
-object LightWorkspaceImporter : EmptyWorkspaceImporter {
+object GenericWorkspaceImporter : EmptyWorkspaceImporter {
     override suspend fun importWorkspace(
         project: Project,
         projectDirectory: Path,
@@ -48,17 +48,17 @@ object LightWorkspaceImporter : EmptyWorkspaceImporter {
         virtualFileUrlManager: VirtualFileUrlManager,
         progress : WorkspaceImportProgressReporter
     ): EntityStorage {
-        return createLightWorkspace(projectDirectory, virtualFileUrlManager, defaultSdkPath)
+        return initWorkspace(projectDirectory, virtualFileUrlManager, defaultSdkPath)
     }
 
     override fun createEmptyWorkspace(
         defaultSdkPath: Path?,
         virtualFileUrlManager: VirtualFileUrlManager
     ): EntityStorage {
-        return createLightWorkspace(null, virtualFileUrlManager, defaultSdkPath)
+        return initWorkspace(null, virtualFileUrlManager, defaultSdkPath)
     }
 
-    private fun createLightWorkspace(
+    private fun initWorkspace(
         projectDirectory: Path?,
         virtualFileUrlManager: VirtualFileUrlManager,
         defaultSdkPath: Path?

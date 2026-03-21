@@ -13,7 +13,7 @@ import {
 import {chmodSync} from 'fs';
 import * as net from 'node:net'
 import * as os from 'node:os';
-import {spawn, type ChildProcessByStdio} from 'node:child_process';
+import {type ChildProcessByStdio, spawn} from 'node:child_process';
 import {getContext, getOutputChannel, logInfo} from "./extension"
 import {middleware} from "./middleware";
 import * as readline from 'node:readline';
@@ -24,6 +24,12 @@ const BUNDLED_SERVER_CONNECTION_TIMEOUT_MS = 10_000;
 const LOCAL_SERVER_CONNECTION_TIMEOUT_MS = 10_000;
 const CONNECTION_RETRY_DELAY_MS = 100;
 
+const LANGUAGE_CLIENT_ID = 'intellij';
+const OPT_DEV_SERVER_PORT = 'intellij.dev.serverPort';
+const OPT_JVM_ARGS = 'intellij.additionalJvmArgs';
+const OPT_DEFAULT_WORKSPACE_SDK = 'intellij.jdkForSymbolResolution';
+const OPT_BUILD_TOOL = 'intellij.buildTool';
+
 let _client: LanguageClient | undefined;
 
 const clientSubscriptions: ((client: LanguageClient, stateChange: StateChangeEvent) => void)[] = [];
@@ -33,7 +39,7 @@ export function initLspClient() {
          Disposable.create(async () => await stopLspClient()),
          vscode.commands.registerCommand('jetbrains.kotlin.restartLsp', async () => {
             await startLspClient();
-            await vscode.window.showInformationMessage('Kotlin LSP restarted');
+            await vscode.window.showInformationMessage(extensionDisplayName() + ' restarted');
         }),
     );
 }
@@ -91,6 +97,20 @@ export async function stopLspClient(): Promise<void> {
     _client = undefined
 }
 
+function packageJson(): any | undefined {
+    return vscode.extensions.getExtension(getContext().extension.id)?.packageJSON
+}
+
+function extensionDisplayName(): string {
+    return packageJson()?.displayName ?? 'IntelliJ Language Server (fallback)'
+}
+
+function configOption<T>(name: string, scope?: vscode.ConfigurationScope): T | undefined {
+    return workspace.getConfiguration(undefined, scope).get(name)
+            ?? workspace.getConfiguration(undefined, scope).get( // TODO drop fallback
+                    name.replace('intellij.', 'kotlinLSP.'))
+}
+
 function getLauncherPath(): string {
     const relative = path.join('server', 'bin')
     const launcherName = os.platform() === 'win32'
@@ -104,8 +124,7 @@ function getLauncherPath(): string {
 }
 
 function getServerOptions(): ServerOptions {
-    const config = workspace.getConfiguration('kotlinLSP.dev');
-    const predefinedPort = config.get<number>('serverPort', -1);
+    const predefinedPort = configOption<number>(OPT_DEV_SERVER_PORT) ?? -1;
     if (predefinedPort == -1) {
         return getStreamInfoForBundledServer
     } else {
@@ -222,8 +241,7 @@ async function getStreamInfoForRunningServer(port: number, timeoutMs: number): P
 }
 
 function buildDocumentSelector(): LanguageClientOptions['documentSelector'] {
-    const ext = vscode.extensions.getExtension(getContext().extension.id);
-    const contributedLanguageIds: string[] = (ext?.packageJSON?.contributes?.languages ?? [])
+    const contributedLanguageIds: string[] = (packageJson()?.contributes?.languages ?? [])
         .map((l: { id: string }) => l.id);
     logInfo(`Serving languages: ${contributedLanguageIds.join(', ')}`);
 
@@ -242,30 +260,32 @@ function buildDocumentSelector(): LanguageClientOptions['documentSelector'] {
 }
 
 async function createLspClient(): Promise<LanguageClient | null> {
+    const folders = workspace.workspaceFolders ?? []
     const clientOptions: LanguageClientOptions = {
         documentSelector: buildDocumentSelector(),
         progressOnInitialization: true,
         outputChannel: getOutputChannel(),
         initializationOptions: {
-            defaultJdk: workspace.getConfiguration().get('kotlinLSP.jdkForSymbolResolution')
+            defaultSdk: configOption(OPT_DEFAULT_WORKSPACE_SDK),
+            buildTools: Object.fromEntries(
+                    folders.map(folder => [
+                        folder.uri.toString(),
+                        configOption<string>(OPT_BUILD_TOOL, folder.uri),
+                    ])
+            ),
         },
         middleware: middleware,
         markdown: {
             supportHtml: true,
         }
     };
-    let serverOptions = await getServerOptions()
+    let serverOptions = getServerOptions()
     if (!serverOptions) return null
-    const displayName = vscode.extensions.getExtension(getContext().extension.id)?.packageJSON?.displayName ?? 'Kotlin LSP (fallback)'
-    return new LanguageClient('kotlinLSP', displayName, serverOptions, clientOptions);
+    return new LanguageClient(LANGUAGE_CLIENT_ID, extensionDisplayName(), serverOptions, clientOptions);
 }
 
-
-const jvmOptionsSettingName = 'kotlinLSP.additionalJvmArgs';
-
-function getUserJvmOptions() : string[] {
-    const settings = vscode.workspace.getConfiguration().get<string[]>(jvmOptionsSettingName)
-    return settings ?? []
+function getUserJvmOptions(): string[] {
+    return configOption<string[]>(OPT_JVM_ARGS) ?? []
 }
 
 function buildJvmOptionsEnv(baseEnv: NodeJS.ProcessEnv, extraOptions: string[]): NodeJS.ProcessEnv {

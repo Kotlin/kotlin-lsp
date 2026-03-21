@@ -9,7 +9,6 @@ import com.jetbrains.ls.api.features.dap.DapPluginsProvider
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.language.matches
-import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 import com.jetbrains.lsp.protocol.URI
 
@@ -18,7 +17,6 @@ class LSConfiguration(
     val plugins: List<PluginMainDescriptor>,
     val dapPlugins: List<PluginMainDescriptor>,
     val languages: List<LSLanguage>,
-    val workspaceImporters: List<WorkspaceImporter>,
 ) {
     val allCommandDescriptors: List<LSCommandDescriptor> = entries<LSCommandDescriptorProvider>().flatMap { it.commandDescriptors }
 
@@ -98,11 +96,6 @@ fun LSConfiguration(
             .filterIsInstance<DapPluginsProvider>().flatMap { it.plugins }
             .toList(),
         languages = configurations.flatMap { it.languages },
-        workspaceImporters = configurations.asSequence().flatMap { it.entries }
-            .filterIsInstance<WorkspaceImporterEntry>()
-            .sortedByDescending { it.priority }
-            .map { it.importer }
-            .toList()
     )
 }
 
