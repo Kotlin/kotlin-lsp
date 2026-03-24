@@ -10,10 +10,11 @@
     "rootDir": "src",
     "sourceMap": true,
     "composite": true,
-    "tsBuildInfoFile": "out/tsconfig.tsbuildinfo"
+    "tsBuildInfoFile": "out/tsconfig.tsbuildinfo",
+    "esModuleInterop": true
   },
   "include": [
-    "src", "test"
+    "src"
   ],
   "exclude": [
     "node_modules",

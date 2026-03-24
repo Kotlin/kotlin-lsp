@@ -6,17 +6,10 @@
     "brackets": [
         ["{", "}"],
         ["[", "]"],
-        ["(", ")"],
-        ["<", ">"]
+        ["(", ")"]
     ],
     "autoClosingPairs": [
-        ["{", "}"],
-        ["[", "]"],
-        ["(", ")"],
-        ["\"", "\""],
-        ["'", "'"],
-        ["<", ">"],
-        ["`", "`"]
+      ["!don't remove!", "needed to prevent autoclosing of brackets"]
     ],
     "surroundingPairs": [
         ["{", "}"],

@@ -98,7 +98,7 @@ export async function stopLspClient(): Promise<void> {
     _client = undefined
 }
 
-function packageJson(): any | undefined {
+export function packageJson(): any | undefined {
     return vscode.extensions.getExtension(getContext().extension.id)?.packageJSON
 }
 

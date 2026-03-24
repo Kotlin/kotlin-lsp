@@ -236,13 +236,19 @@
     "@types/node": "^22.13.8",
     "@types/vscode": "^1.96.0",
     "ts-loader": "^9.5.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.2",
     "vscode-tmgrammar-test": "^0.1.3",
     "webpack": "^5.100.2",
     "webpack-cli": "^6.0.1"
   },
   "dependencies": {
-    "vscode-languageclient": "9.0.1"
+    "@tree-sitter-grammars/tree-sitter-kotlin": "^1.1.0",
+    "tree-sitter-go": "^0.25.0",
+    "tree-sitter-java": "^0.23.5",
+    "tree-sitter-sql": "^0.1.0",
+    "vscode-languageclient": "9.0.1",
+    "web-tree-sitter": "^0.26.8"
   },
   "scripts": {
     "compile": "webpack --mode development",
@@ -251,7 +257,9 @@
     "package": "webpack --mode production --devtool hidden-source-map",
     "apply-intellij": "node apply-intellij.js",
     "unpack-server": "rm -rf server && mkdir -p server && case \"$LSP_ZIP_PATH\" in *.tar.gz) tar -xzf \"$LSP_ZIP_PATH\" --strip-components=1 -C server ;; *.zip) unzip -q -o -- \"$LSP_ZIP_PATH\" -d server ;; *.sit) mkdir server.tmp && unzip -q -o -- \"$LSP_ZIP_PATH\" -d server.tmp && rmdir server && mv server.tmp/* server && rm -rf server.tmp ;; *) echo \"Unsupported archive type: $LSP_ZIP_PATH\"; exit 1 ;; esac",
-    "test": "vscode-tmgrammar-snap --grammar syntaxes/kotlin.tmLanguage.json --scope source.kotlin testSources/tokenization/*.kt",
+    "test": "npm run test:grammar && npm run test:unit",
+    "test:grammar": "vscode-tmgrammar-snap --grammar syntaxes/kotlin.tmLanguage.json --scope source.kotlin testSources/tokenization/*.kt",
+    "test:unit": "node --import tsx --test src/**/*.test.ts",
     "updateGrammarTests": "vscode-tmgrammar-snap --grammar syntaxes/kotlin.tmLanguage.json --scope source.kotlin --updateSnapshot testSources/tokenization/*.kt"
   }
 }

@@ -1,12 +1,11 @@
 import * as path from 'path';
-import {commands, type ExtensionContext, extensions, type OutputChannel, Uri, window, workspace,} from "vscode"
-import {registerDecompiler, registerOpeningJars} from "./decompiler"
+import {commands, type ExtensionContext, extensions, type OutputChannel, Uri, window, workspace,} from 'vscode'
+import {registerDecompiler, registerOpeningJars} from './decompiler'
 import {initLspClient, startLspClient} from './lspClient';
 import {registerStatusBarItem} from './statusBar';
-import {registerDapServer} from "./dap"
-import {registerDatabase} from "./database"
-import {registerDebugJava} from "./debugjava"
-import {registerFileTemplates} from "./fileTemplates"
+import {registerDapServer} from './dap'
+import {registerDatabase} from './database'
+import {registerFileTemplates} from './fileTemplates'
 
 let _context: ExtensionContext | undefined
 let _outputChannel: OutputChannel | undefined;
@@ -43,21 +42,26 @@ function registerExportWorkspaceToJsonCommand(context: ExtensionContext) {
         }
     }));
 }
-
+const dynamicModulesContext = (require as any).context('.', true, /^\.\/[A-Za-z0-9_-]+\/module\.ts$/);
 
 export async function activate(context: ExtensionContext) {
-    _context = context
-    initOutputChannel(context)
-    registerDecompiler(context)
-    registerOpeningJars()
+    _context = context;
+    initOutputChannel(context);
+    registerDecompiler(context);
+    registerOpeningJars();
     registerDapServer(context);
-    registerDebugJava(context)
     registerDatabase(context);
-    registerExportWorkspaceToJsonCommand(context)
-    registerStatusBarItem()
-    registerFileTemplates(context)
-    initLspClient()
-    await startLspClient()
+    registerExportWorkspaceToJsonCommand(context);
+    registerStatusBarItem();
+    registerFileTemplates(context);
+
+    for (let key of dynamicModulesContext.keys()) {
+        const module = dynamicModulesContext(key) as any;
+        await module.default(context);
+    }
+
+    initLspClient();
+    await startLspClient();
 }
 
 function initOutputChannel(context: ExtensionContext) {
