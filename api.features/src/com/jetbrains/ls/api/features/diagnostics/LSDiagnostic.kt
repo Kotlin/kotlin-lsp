@@ -39,4 +39,19 @@ object LSDiagnostic {
             relatedDocuments = null,
         )
     }
+
+    context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
+    suspend fun getCompilationErrors(params: DocumentDiagnosticParams): DocumentDiagnosticReport {
+        val diagnostics = LSConcurrentResponseHandler.respondDirectlyWithResultsCollectedConcurrently(
+            providers = configuration.entriesFor<LSCompilationDiagnosticProvider>(params.textDocument),
+            getResults = { diagnosticProvider -> diagnosticProvider.getDiagnostics(params) },
+        ).map { it.copy(data = null) }
+
+        return DocumentDiagnosticReport(
+            DocumentDiagnosticReportKind.Full,
+            resultId = null,
+            items = diagnostics,
+            relatedDocuments = null,
+        )
+    }
 }

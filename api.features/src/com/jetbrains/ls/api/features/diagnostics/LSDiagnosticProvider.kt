@@ -16,3 +16,5 @@ interface LSDiagnosticProvider : LSLanguageSpecificConfigurationEntry {
     context(server: LSServer, handlerContext: LspHandlerContext)
     fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic>
 }
+
+interface LSCompilationDiagnosticProvider : LSDiagnosticProvider

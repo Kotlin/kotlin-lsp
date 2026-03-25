@@ -12,7 +12,7 @@ import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
-import com.jetbrains.ls.api.features.diagnostics.LSDiagnosticProvider
+import com.jetbrains.ls.api.features.diagnostics.LSCompilationDiagnosticProvider
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.utils.isSource
@@ -29,7 +29,7 @@ import org.jetbrains.kotlin.analysis.api.components.KaDiagnosticCheckerFilter
 import org.jetbrains.kotlin.analysis.api.diagnostics.KaDiagnosticWithPsi
 import org.jetbrains.kotlin.psi.KtFile
 
-internal object LSKotlinCompilerDiagnosticsProvider : LSDiagnosticProvider {
+internal object LSKotlinCompilerDiagnosticsProvider : LSCompilationDiagnosticProvider {
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
 
     context(server: LSServer, handlerContext: LspHandlerContext)
