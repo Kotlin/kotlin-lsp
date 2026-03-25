@@ -1,0 +1,32 @@
+{
+    "modules": [
+        {
+            "name": "SystemPropertiesCheckerProject",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "17",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/"
+                }
+            ]
+        }
+    ],
+    "sdks": [
+        {
+            "name": "17",
+            "type": "jdk",
+            "version": "JDK_17",
+            "homePath": null,
+            "roots": [],
+            "additionalData": ""
+        }
+    ]
+}
