@@ -57,7 +57,9 @@ class LSCommonReferencesProvider(
                         }
                         true
                     }),
-                    handler.findUsagesOptions
+                    handler.findUsagesOptions.apply { 
+                        isSearchForTextOccurrences = false
+                    }
                 )
             }
         }
