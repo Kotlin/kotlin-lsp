@@ -37,10 +37,15 @@ jvm_library(
   resources = [":gradle-plugin_resources"],
   kotlinc_opts = ":custom_gradle-plugin",
   deps = [
-    "@lib//:org-codehaus-groovy-groovy",
-    "@ultimate_lib//:gradle-provided",
     "@lib//:kotlin-stdlib",
     "@ultimate_lib//:javax-inject-provided",
+    "@lib//:org-codehaus-groovy-groovy",
+    "@ultimate_lib//:gradle-provided",
+    "@lib//:kotlin-gradle-plugin-idea",
+    "@lib//:kotlin-tooling-core",
+    "@lib//:kotlin-gradle-plugin-idea-proto",
+    "@lib//:jetbrains-annotations",
+    "@ultimate_lib//:slf4j-api-provided",
     ":community_libraries_jspecify_provided",
     ":community_libraries_kotlinx_serialization_core_provided",
     ":community_libraries_kotlinx_serialization_json_provided",
@@ -55,6 +60,7 @@ jvm_library(
   kotlinc_opts = ":custom_gradle-plugin",
   runtime_deps = [
     ":gradle-plugin",
+    "@ultimate_lib//:javax-inject-provided",
     "@ultimate_lib//:gradle-provided",
     "@community//libraries/jspecify",
     "@community//libraries/jspecify:jspecify_test_lib",
@@ -62,7 +68,11 @@ jvm_library(
     "@community//libraries/kotlinx/serialization/core:core_test_lib",
     "@community//libraries/kotlinx/serialization/json",
     "@community//libraries/kotlinx/serialization/json:json_test_lib",
-    "@ultimate_lib//:javax-inject-provided",
+    "@ultimate_lib//:slf4j-api-provided",
+    "@lib//:slf4j-jdk14",
+    "@lib//:junit5",
+    "@lib//:kotlin-test",
+    "@lib//:kotlin-test-junit5",
   ]
 )
 ### auto-generated section `build language-server.workspace-import.gradle-plugin` end

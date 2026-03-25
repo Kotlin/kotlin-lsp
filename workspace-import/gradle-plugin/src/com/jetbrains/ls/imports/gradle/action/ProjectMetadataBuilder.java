@@ -3,11 +3,13 @@ package com.jetbrains.ls.imports.gradle.action;
 
 import com.jetbrains.ls.imports.gradle.model.ExternalModuleDependency;
 import com.jetbrains.ls.imports.gradle.model.ExternalModuleDependencySet;
+import com.jetbrains.ls.imports.gradle.model.AndroidProject;
 import com.jetbrains.ls.imports.gradle.model.InternalIdeaModule;
 import com.jetbrains.ls.imports.gradle.model.InternalIdeaProject;
 import com.jetbrains.ls.imports.gradle.model.KotlinModule;
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet;
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSets;
+import com.jetbrains.ls.imports.gradle.utils.ProxyUtil;
 import org.gradle.tooling.BuildAction;
 import org.gradle.tooling.BuildController;
 import org.gradle.tooling.Failure;
@@ -19,6 +21,9 @@ import org.gradle.tooling.model.gradle.GradleBuild;
 import org.gradle.tooling.model.idea.IdeaModule;
 import org.gradle.tooling.model.idea.IdeaProject;
 import org.gradle.util.GradleVersion;
+import org.jetbrains.kotlin.gradle.idea.serialize.IdeaKotlinSerializationContext;
+import org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinDependency;
+import org.jetbrains.kotlin.tooling.core.Extras;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -42,13 +47,15 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
         Map<String, KotlinModule> kotlinModules = new HashMap<>();
         Map<String, Set<ModuleSourceSet>> sourceSets = new HashMap<>();
         Map<String, Set<ExternalModuleDependency>> externalModuleDependencySet = new HashMap<>();
+        Map<String, AndroidProject> androidProjects = new HashMap<>();
         List<InternalIdeaProject> ideaProjects = fetchProjects(controller);
-        resolveModels(ideaProjects, controller, kotlinModules, sourceSets, externalModuleDependencySet);
+        resolveModels(ideaProjects, controller, kotlinModules, sourceSets, externalModuleDependencySet, androidProjects);
         return new ProjectMetadata(
                 ideaProjects,
                 kotlinModules,
                 sourceSets,
-                externalModuleDependencySet
+                externalModuleDependencySet,
+                androidProjects
         );
     }
 
@@ -57,7 +64,8 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
             @NonNull BuildController controller,
             @NonNull Map<@NonNull String, @NonNull KotlinModule> kotlinModules,
             @NonNull Map<@NonNull String, @NonNull Set<ModuleSourceSet>> sourceSets,
-            @NonNull Map<@NonNull String, @NonNull Set<ExternalModuleDependency>> externalModuleDependencySet
+            @NonNull Map<@NonNull String, @NonNull Set<ExternalModuleDependency>> externalModuleDependencySet,
+            @NonNull Map<@NonNull String, @NonNull AndroidProject> androidProjects
     ) {
         for (InternalIdeaProject project : ideaProjects) {
             for (InternalIdeaModule module : project.getModules()) {
@@ -81,6 +89,11 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
                         moduleFqdn,
                         moduleDependencies == null ? Collections.emptySet() : moduleDependencies.getDependencies()
                 );
+
+                AndroidProject androidProject = unwrapFetchedModel(controller.fetch(delegate, AndroidProject.class));
+                if (androidProject != null) {
+                    androidProjects.put(moduleFqdn, ProxyUtil.unpackProxy(ProjectMetadata.class.getClassLoader(), androidProject));
+                }
             }
         }
     }
@@ -191,5 +204,38 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
             return iterator.next();
         }
         return null;
+    }
+
+    /**
+     * The Gradle Tooling will infer the classpath of this action by traversing this class's dependencies.
+     * Some dependencies can be lost, since this class will only use some classes (e.g. IdeaKotlinDependency)
+     * inside a box (Set, Map, ...), which erases the generic types. The types need to be mentioned directly
+     * in a class, within its constant pool.
+     * This method, therefore, is just a dummy, ensuring that some dependency classes are mentioned.
+     */
+    @SuppressWarnings("unused")
+    private static void __use_dependency_classes(Object obj) {
+        /*
+          Used to declare custom dependencies in the Android model
+         */
+        if (obj instanceof IdeaKotlinDependency) {
+            return;
+        }
+
+        /*
+        Used for serializing Kotlin dependencies.
+         */
+        if (obj instanceof IdeaKotlinSerializationContext) {
+            return;
+        }
+
+        /*
+        Aux for 'IdeaKotlinDependency'
+         */
+        if (obj instanceof Extras) {
+            return;
+        }
+
+        throw new UnsupportedOperationException("This method shall never be executed");
     }
 }

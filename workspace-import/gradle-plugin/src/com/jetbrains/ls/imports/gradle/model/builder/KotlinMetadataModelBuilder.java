@@ -53,7 +53,7 @@ public final class KotlinMetadataModelBuilder implements ToolingModelBuilder {
         return null;
     }
 
-    private static @NonNull KotlinModule readCompilerSettings(@NonNull Task task) {
+    public static @NonNull KotlinModule readCompilerSettings(@NonNull Task task) {
         KotlinCompilerSettingsImpl compilerSettings = getKotlinCompilerSettings(task);
         return new KotlinModuleImpl(compilerSettings);
     }

@@ -3,6 +3,7 @@ package com.jetbrains.ls.imports.gradle.model.builder;
 
 import com.jetbrains.ls.imports.gradle.model.ExternalModuleDependency;
 import com.jetbrains.ls.imports.gradle.model.ExternalModuleDependencySet;
+import com.jetbrains.ls.imports.gradle.model.builder.android.AndroidUtilsKt;
 import com.jetbrains.ls.imports.gradle.model.impl.ExternalModuleDependencyImpl;
 import com.jetbrains.ls.imports.gradle.model.impl.ExternalModuleDependencySetImpl;
 import org.gradle.api.Action;
@@ -15,6 +16,7 @@ import org.gradle.api.artifacts.type.ArtifactTypeDefinition;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.tooling.provider.model.ToolingModelBuilder;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +34,12 @@ public final class ExternalModuleDependencySetModuleBuilder implements ToolingMo
     }
 
     @Override
-    public @NonNull Object buildAll(@NonNull String modelName, @NonNull Project project) {
+    public @Nullable Object buildAll(@NonNull String modelName, @NonNull Project project) {
+        /* Generically resolving dependencies in Android Projects is not allowed */
+        if(AndroidUtilsKt.isAndroidProject(project)) {
+            return null;
+        }
+
         Map<Integer, Dependency> dependencies = new HashMap<>();
         for (Configuration configuration : project.getConfigurations()) {
             for (Dependency dependency : configuration.getAllDependencies()) {

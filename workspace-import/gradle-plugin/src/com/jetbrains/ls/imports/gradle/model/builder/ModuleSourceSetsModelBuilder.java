@@ -3,6 +3,7 @@ package com.jetbrains.ls.imports.gradle.model.builder;
 
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet;
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSets;
+import com.jetbrains.ls.imports.gradle.model.builder.android.AndroidSourceSets;
 import com.jetbrains.ls.imports.gradle.model.impl.ModuleSourceSetImpl;
 import com.jetbrains.ls.imports.gradle.model.impl.ModuleSourceSetsImpl;
 import org.gradle.api.Project;
@@ -41,10 +42,24 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
     @Override
     public @Nullable Object buildAll(@NonNull String modelName, @NonNull Project project) {
         ExtensionContainer extensions = project.getExtensions();
+        Set<ModuleSourceSet> result = new HashSet<>();
+
+        /* Java-based import */
         SourceSetContainer sourceSets = extensions.findByType(SourceSetContainer.class);
         if (sourceSets != null) {
-            return new ModuleSourceSetsImpl(readSourceSets(sourceSets, project));
+            result.addAll(readSourceSets(sourceSets, project));
         }
+
+        /* Support for Android-based source sets */
+        Set<ModuleSourceSet> androidSourceSets = AndroidSourceSets.resolveAndroidSourceSets(project);
+        if (androidSourceSets != null) {
+            result.addAll(androidSourceSets);
+        }
+
+        if (!result.isEmpty()) {
+            return new ModuleSourceSetsImpl(result);
+        }
+
         return null;
     }
 
@@ -112,7 +127,8 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
                     runtimeDependencies == null || compileDependencies == null,
                     targetBytecodeLevel,
                     sourceCompatibility,
-                    targetCompatibility
+                    targetCompatibility,
+                    null
             ));
         }
         return result;

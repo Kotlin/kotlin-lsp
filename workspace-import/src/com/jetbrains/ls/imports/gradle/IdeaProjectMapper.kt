@@ -28,7 +28,6 @@ import kotlin.io.path.exists
 internal class IdeaProjectMapper {
 
     private val LOG = logger<IdeaProjectMapper>()
-    private val dependencyResolver: SourceSetDependencyResolver = SourceSetDependencyResolver()
     private val projectJdkCache: MutableMap<String, SdkData?> = mutableMapOf()
     private val projectJavaLanguageLevel: MutableMap<String, String?> = mutableMapOf()
 
@@ -38,16 +37,17 @@ internal class IdeaProjectMapper {
         val modules = mutableMapOf<String, ModuleData>()
 
         val allGradleModules: List<IdeaModule> = metadata.includedProjects.flatMap { it.modules }
-        dependencyResolver.init(allGradleModules, metadata.sourceSets, metadata.moduleDependencies)
+        val dependencyResolver = SourceSetDependencyResolver(metadata)
         fillProjectJdkCache(metadata.includedProjects)
 
         allGradleModules
             .map {
                 splitModulePerSourceSet(
-                    it,
-                    metadata,
-                    { moduleJavaSettings -> javaSettings.add(moduleJavaSettings) },
-                    { sdk -> sdks.add(sdk) }
+                    module = it,
+                    metadata = metadata,
+                    dependencyResolver = dependencyResolver,
+                    javaSettingsConsumer = { moduleJavaSettings -> javaSettings.add(moduleJavaSettings) },
+                    sdkConsumer = { sdk -> sdks.add(sdk) }
                 )
             }
             .forEach { modules.putAll(it) }
@@ -56,10 +56,10 @@ internal class IdeaProjectMapper {
 
         return WorkspaceData(
             modules = modules.values.toList(),
-            libraries = dependencyResolver.getProjectDependencies(),
+            libraries = dependencyResolver.getProjectLibraries(),
             sdks = sdks,
             javaSettings = javaSettings,
-            kotlinSettings = calculateKotlinSettings(modules, metadata.kotlinModules)
+            kotlinSettings = calculateKotlinSettings(modules, metadata.kotlinModules, metadata.sourceSets)
         )
     }
 
@@ -96,16 +96,26 @@ internal class IdeaProjectMapper {
 
     private fun calculateKotlinSettings(
         modules: Map<String, ModuleData>,
-        kotlinModules: Map<String, KotlinModule>
+        kotlinModules: Map<String, KotlinModule>,
+        sourceSets: Map<String, Set<ModuleSourceSet>>
     ): List<KotlinSettingsData> {
+
+        /* Index source sets by their module 'fqn' */
+        val sourceSetFqnIndex = buildMap {
+            sourceSets.forEach { (name, sourceSets) ->
+                sourceSets.forEach { sourceSet ->
+                    put("$name.${sourceSet.name}", sourceSet)
+                }
+            }
+        }
+
         val result = mutableListOf<KotlinSettingsData>()
         for ((name, moduleData) in modules) {
             if (!moduleData.hasValidSourceRoots()) {
                 continue
             }
-            val kotlinModuleKey = name.removeSuffix(mainSourceSetSuffix)
-                .removeSuffix(testSourceSetSuffix)
-            val kotlinModule = kotlinModules[kotlinModuleKey]
+            val kotlinModuleKey = name.removeSuffix(mainSourceSetSuffix).removeSuffix(testSourceSetSuffix)
+            val kotlinModule = sourceSetFqnIndex[name]?.kotlinModule ?: kotlinModules[kotlinModuleKey]
             if (kotlinModule == null) {
                 continue
             }
@@ -152,6 +162,7 @@ internal class IdeaProjectMapper {
     private fun splitModulePerSourceSet(
         module: IdeaModule,
         metadata: ProjectMetadata,
+        dependencyResolver: SourceSetDependencyResolver,
         javaSettingsConsumer: (JavaSettingsData) -> Unit,
         sdkConsumer: (SdkData) -> Unit
     ): Map<String, ModuleData> {
@@ -257,9 +268,19 @@ internal class IdeaProjectMapper {
         )
     }
 
+    private fun getSourceFolderType(file: File, isTest: Boolean): String {
+        val folderName = file.name
+        val prefix = when (folderName.lowercase()) {
+            "kotlin" -> "kotlin"
+            "groovy" -> "groovy"
+            else -> "java"
+        }
+        return if (isTest) "$prefix-test" else "$prefix-source"
+    }
+
     private fun findRootForSourceRoots(sourceSetName: String, moduleRoot:File, sourceRoots: List<SourceRootData>): String {
         if (sourceRoots.isEmpty() || sourceRoots.size == 1) {
-            return  "${moduleRoot.path}/src/$sourceSetName"
+            return "${moduleRoot.path}/src/$sourceSetName"
         }
         return findCommonPrefix(sourceRoots.map { it.path })
     }

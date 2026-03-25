@@ -31,18 +31,27 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 import java.nio.file.Path
+import kotlin.io.path.Path
+import kotlin.io.path.absolutePathString
 import kotlin.io.path.div
 import kotlin.io.path.exists
+import kotlin.io.path.pathString
+import kotlin.io.path.relativeTo
 
 abstract class AbstractProjectImportTest {
     protected abstract val testDataDir: Path
 
     @BeforeEach
-    open fun setUp() { DETECT_PROJECT_SDK = false }
+    open fun setUp() {
+        DETECT_PROJECT_SDK = false
+    }
 
     @AfterEach
-    open fun tearDown() { DETECT_PROJECT_SDK = true }
+    open fun tearDown() {
+        DETECT_PROJECT_SDK = true
+    }
 
     @Test
     fun newIJKotlinGradle() = doGradleTest("NewIJKotlinGradle", ::withIgnoredJdk)
@@ -79,6 +88,19 @@ abstract class AbstractProjectImportTest {
 
     @Test
     fun simpleMaven() = doMavenTest("SimpleMaven")
+
+    @Test
+    @EnabledIfEnvironmentVariable(named = "ANDROID_HOME", matches = ".*", disabledReason = "Android SDK is required")
+    fun androidMultiModule() = doGradleTest("AndroidMultiModule") { workspaceData ->
+        withIgnoredJdk(workspaceData).withSanitizedJarLibraryNames().withoutJavaSettings()
+    }
+
+    @Test
+    @EnabledIfEnvironmentVariable(named = "ANDROID_HOME", matches = ".*", disabledReason = "Android SDK is required")
+    fun androidDependingOnKotlinJvm() = doGradleTest("AndroidDependingOnKotlinJvm") { workspaceData ->
+        withIgnoredJdk(workspaceData).withSanitizedJarLibraryNames().withoutJavaSettings()
+    }
+
 
     protected fun doGradleTest(project: String, resultMapper: (WorkspaceData) -> WorkspaceData = { it }) {
         downloadGradleBinaries()
@@ -138,19 +160,32 @@ abstract class AbstractProjectImportTest {
     // 1. ~/.gradle/ paths contain random hashes
     // 2. on Windows kotlin compiler arguments contain double-escaped '\' (i.e. '\\\\')
     // 3. TC Windows agents use Z:\gradle\caches\
+    // 4. Files from env.ANDROID_HOME will be cropped
     protected fun cropJarPaths(jsonString: String): String {
-        val normSlashes = jsonString.replace("\\\\\\\\", "/").replace("\\\\", "/")
-        val normCaches =  """[^"]*gradle/caches/([^"]*?)/[^/.]*/([^/"]*\.jar[\\"])""".toRegex()
-            .replace(normSlashes) {
+        var result = jsonString
+        result = result.replace("\\\\\\\\", "/").replace("\\\\", "/")
+        result = """[^"]*gradle/caches/([^"]*?)/[^/.]*/([^/"]*\.jar[\\"])""".toRegex()
+            .replace(result) {
                 "<GRADLE_REPO>/${it.groupValues[1]}/#####/${it.groupValues[2]}"
             }
 
-        val normDist =  """[^"]*gradle/wrapper/dists/([^/]*)/[^/]*/([^"]*\.jar")""".toRegex()
-            .replace(normCaches) {
+        result = """[^"]*gradle/wrapper/dists/([^/]*)/[^/]*/([^"]*\.jar")""".toRegex()
+            .replace(result) {
                 "<GRADLE_DIST>/${it.groupValues[1]}/#####/${it.groupValues[2]}"
             }
 
-        return normDist
+        val androidHome = System.getenv("ANDROID_HOME")?.let(::Path)
+        val userHome = System.getProperty("user.home")?.let(::Path)
+
+        if (androidHome != null && userHome != null) {
+            val expectedAndroidHomeNotation = if (androidHome.startsWith(userHome)) {
+                "<HOME>/" + androidHome.relativeTo(userHome)
+            } else androidHome.pathString
+
+            result = result.replace(expectedAndroidHomeNotation, "<ANDROID_HOME>")
+        }
+
+        return result
     }
 
     /**
@@ -190,5 +225,25 @@ abstract class AbstractProjectImportTest {
                 )
             }
         )
+    }
+
+    /**
+     * Some 'adhoc' libraries were not resolved by coordinates, but as 'jars' directly.
+     * The jar path is used as part of the library name, which shall be sanitized for tests
+     */
+    private fun WorkspaceData.withSanitizedJarLibraryNames(): WorkspaceData {
+        val jarLibraryRegex = Regex("""Gradle: (?<path>.*\.jar)""")
+
+        return copy(
+            libraries = libraries.map { library ->
+                val match = jarLibraryRegex.matchEntire(library.name) ?: return@map library
+                val path = Path(match.groups["path"]!!.value)
+                library.copy(name = "Gradle: #####/${path.fileName}")
+            }
+        )
+    }
+
+    private fun WorkspaceData.withoutJavaSettings(): WorkspaceData {
+        return copy(javaSettings = emptyList())
     }
 }

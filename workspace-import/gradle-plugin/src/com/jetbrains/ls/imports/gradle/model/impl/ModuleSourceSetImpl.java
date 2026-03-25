@@ -1,6 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.gradle.model.impl;
 
+import com.jetbrains.ls.imports.gradle.model.KotlinModule;
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -22,6 +23,7 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
     private final @Nullable Integer toolchainVersion;
     private final @Nullable String sourceCompatibility;
     private final @Nullable String targetCompatibility;
+    private final @Nullable KotlinModule kotlinModule;
 
     public ModuleSourceSetImpl(
             @NonNull String name,
@@ -34,7 +36,8 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
             boolean hasUnresolvedDependencies,
             @Nullable Integer toolchainVersion,
             @Nullable String sourceCompatibility,
-            @Nullable String targetCompatibility
+            @Nullable String targetCompatibility,
+            @Nullable KotlinModule kotlinModule
     ) {
         this.name = name;
         this.sources = sources;
@@ -47,6 +50,7 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
         this.toolchainVersion = toolchainVersion;
         this.sourceCompatibility = sourceCompatibility;
         this.targetCompatibility = targetCompatibility;
+        this.kotlinModule = kotlinModule;
     }
 
     @Override
@@ -102,5 +106,10 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
     @Override
     public @Nullable String getTargetCompatibility() {
         return targetCompatibility;
+    }
+
+    @Override
+    public @Nullable KotlinModule getKotlinModule() {
+        return kotlinModule;
     }
 }

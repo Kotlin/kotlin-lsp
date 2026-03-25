@@ -33,4 +33,9 @@ public interface ModuleSourceSet extends Serializable {
 
     @Nullable String getTargetCompatibility();
 
+    /**
+     * @return A dedicated module if directly associated with the source set.
+     * Note: This might return null, relying on a 'project level' KotlinModule to be provided
+     */
+    @Nullable KotlinModule getKotlinModule();
 }

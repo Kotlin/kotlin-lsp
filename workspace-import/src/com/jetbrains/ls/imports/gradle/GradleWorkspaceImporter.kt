@@ -15,7 +15,9 @@ import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.findTheMostCompatibleJdk
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.getInitScriptPath
+import com.jetbrains.ls.imports.gradle.action.ProjectMetadata
 import com.jetbrains.ls.imports.gradle.action.ProjectMetadataBuilder
+import com.jetbrains.ls.imports.gradle.model.builder.PREPARE_KOTLIN_IDEA_IMPORT_TASK_NAME
 import com.jetbrains.ls.imports.gradle.util.GradleOutputStream
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter.postProcessWorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData
@@ -75,28 +77,29 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                 try {
                     val builder = it.action(ProjectMetadataBuilder())
                         .addArguments("--stacktrace", "--init-script", initScriptPath.absolutePathString())
+                        .forTasks(PREPARE_KOTLIN_IDEA_IMPORT_TASK_NAME)
                         .also { builder ->
-                        if (System.getProperty(LSP_GRADLE_PROJECT_OFFLINE_PROPERTY)?.toBoolean() == true) {
-                            System.getProperty(LSP_GRADLE_PROJECT_SELF_CONTAINED_INIT_SCRIPT)?.let { initScript ->
-                                builder.addArguments(
-                                    "--init-script",
-                                    Path.of(initScript).toString()
+                            if (System.getProperty(LSP_GRADLE_PROJECT_OFFLINE_PROPERTY)?.toBoolean() == true) {
+                                System.getProperty(LSP_GRADLE_PROJECT_SELF_CONTAINED_INIT_SCRIPT)?.let { initScript ->
+                                    builder.addArguments(
+                                        "--init-script",
+                                        Path.of(initScript).toString()
+                                    )
+                                }?.setEnvironmentVariables(
+                                    mapOf(
+                                        "SELF_CONTAINED_PROXY_URL" to System.getProperty(LSP_GRADLE_PROJECT_SELF_CONTAINED_PROXY_URL_PROPERTY),
+                                        "GRADLE_USER_HOME" to System.getProperty(LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY)
+                                    )
                                 )
-                            }?.setEnvironmentVariables(
-                                mapOf(
-                                    "SELF_CONTAINED_PROXY_URL" to System.getProperty(LSP_GRADLE_PROJECT_SELF_CONTAINED_PROXY_URL_PROPERTY),
-                                    "GRADLE_USER_HOME" to System.getProperty(LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY)
-                                )
-                            )
+                            }
                         }
-                    }
-                    .setStandardOutput(GradleOutputStream { line -> progress.onStdOutput(line) })
-                    .setStandardError(GradleOutputStream { line -> progress.onErrorOutput(line) })
-                    .addProgressListener(
-                        GradleProgressListener { line -> progress.onStdOutput(line) },
-                        setOf(OperationType.GENERIC, OperationType.FILE_DOWNLOAD, OperationType.PROJECT_CONFIGURATION)
-                    )
-                    .withCancellationToken(GradleConnector.newCancellationTokenSource().token())
+                        .setStandardOutput(GradleOutputStream { line -> progress.onStdOutput(line) })
+                        .setStandardError(GradleOutputStream { line -> progress.onErrorOutput(line) })
+                        .addProgressListener(
+                            GradleProgressListener { line -> progress.onStdOutput(line) },
+                            setOf(OperationType.GENERIC, OperationType.FILE_DOWNLOAD, OperationType.PROJECT_CONFIGURATION)
+                        )
+                        .withCancellationToken(GradleConnector.newCancellationTokenSource().token())
                     val jdkToUse = findTheMostCompatibleJdk(project, projectDirectory)
                     if (jdkToUse != null) {
                         builder.setJavaHome(File(jdkToUse))

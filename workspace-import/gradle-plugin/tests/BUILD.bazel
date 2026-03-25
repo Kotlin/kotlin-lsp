@@ -1,0 +1,49 @@
+### auto-generated section `build language-server.workspace-import.gradle-plugin.tests` start
+load("@community//build:compiler-options.bzl", "create_kotlinc_options")
+load("@rules_jvm//:jvm.bzl", "jvm_library")
+
+create_kotlinc_options(
+  name = "custom_tests",
+  x_context_parameters = True
+)
+
+jvm_library(
+  name = "tests",
+  module_name = "language-server.workspace-import.gradle-plugin.tests",
+  visibility = ["//visibility:public"],
+  srcs = glob([], allow_empty = True)
+)
+
+jvm_library(
+  name = "tests_test_lib",
+  visibility = ["//visibility:public"],
+  srcs = glob(["test/**/*.kt", "test/**/*.java", "test/**/*.form"], allow_empty = True),
+  kotlinc_opts = ":custom_tests",
+  associates = [
+    "//language-server/community/workspace-import/gradle-plugin",
+    "//language-server/community/workspace-import/gradle-plugin:gradle-plugin_test_lib",
+  ],
+  deps = [
+    "@lib//:kotlin-stdlib",
+    "@lib//:junit5",
+    "@lib//:kotlin-test",
+    "@lib//:kotlin-test-junit5",
+  ],
+  runtime_deps = [":tests"]
+)
+### auto-generated section `build language-server.workspace-import.gradle-plugin.tests` end
+
+### auto-generated section `iml language-server.workspace-import.gradle-plugin.tests` start
+exports_files([
+  "language-server.workspace-import.gradle-plugin.tests.iml",
+], visibility = ["//visibility:public"])
+### auto-generated section `iml language-server.workspace-import.gradle-plugin.tests` end
+
+### auto-generated section `test language-server.workspace-import.gradle-plugin.tests` start
+load("@community//build:tests-options.bzl", "jps_test")
+
+jps_test(
+  name = "tests_test",
+  runtime_deps = [":tests_test_lib"]
+)
+### auto-generated section `test language-server.workspace-import.gradle-plugin.tests` end

@@ -52,6 +52,9 @@ jvm_library(
     "//language-server/community/workspace-import/gradle-plugin",
     "//language-server/community/workspace-import/maven-plugin",
     "@ultimate_lib//:gradle_tooling_a_p_i",
+    "@lib//:kotlin-gradle-plugin-idea",
+    "@lib//:kotlin-tooling-core",
+    "@lib//:kotlin-gradle-plugin-idea-proto",
     "//language-server/analyzer.kotlin",
     "//language-server/api.impl.analyzer",
   ]
