@@ -192,7 +192,17 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/lib/src/integrationTest"
+                    "path": "<WORKSPACE>/lib/src/integrationTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/lib/src/integrationTest/kotlin",
+                            "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/lib/src/integrationTest/resources",
+                            "type": "java-test-resource"
+                        }
+                    ]
                 }
             ]
         },
