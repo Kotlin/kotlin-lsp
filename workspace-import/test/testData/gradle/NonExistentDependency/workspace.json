@@ -1,277 +1,277 @@
 {
-  "modules": [
-    {
-      "name": "NonExistentDependency",
-      "dependencies": [
+    "modules": [
         {
-          "type": "moduleSource"
+            "name": "NonExistentDependency",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "ignored",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/"
+                }
+            ]
         },
         {
-          "type": "sdk",
-          "name": "ignored",
-          "kind": "jdk"
+            "name": "NonExistentDependency.main",
+            "dependencies": [
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.apache.commons:commons-lang3:3.12.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains:annotations:13.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: unresolved dependency - com.example.nonexistent nonexistent-library 1.0.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "ignored",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/src/main",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/src/main/java",
+                            "type": "java-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/main/kotlin",
+                            "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/main/resources",
+                            "type": "java-resource"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "NonExistentDependency.test",
+            "dependencies": [
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.apache.commons:commons-lang3:3.12.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains:annotations:13.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: unresolved dependency - com.example.nonexistent nonexistent-library 1.0.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "module",
+                    "name": "NonExistentDependency.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "ignored",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/src/test",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/src/test/java",
+                            "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/test/kotlin",
+                            "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/test/resources",
+                            "type": "java-test-resource"
+                        }
+                    ]
+                }
+            ]
         }
-      ],
-      "contentRoots": [
+    ],
+    "libraries": [
         {
-          "path": "<WORKSPACE>/"
-        }
-      ]
-    },
-    {
-      "name": "NonExistentDependency.main",
-      "dependencies": [
-        {
-          "type": "library",
-          "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
-          "scope": "compile"
-        },
-        {
-          "type": "library",
-          "name": "Gradle: org.apache.commons:commons-lang3:3.12.0",
-          "scope": "compile"
-        },
-        {
-          "type": "library",
-          "name": "Gradle: org.jetbrains:annotations:13.0",
-          "scope": "compile"
-        },
-        {
-          "type": "library",
-          "name": "Gradle: unresolved dependency - com.example.nonexistent nonexistent-library 1.0.0",
-          "scope": "compile"
-        },
-        {
-          "type": "moduleSource"
-        },
-        {
-          "type": "sdk",
-          "name": "ignored",
-          "kind": "jdk"
-        }
-      ],
-      "contentRoots": [
-        {
-          "path": "<WORKSPACE>/src/main",
-          "sourceRoots": [
-            {
-              "path": "<WORKSPACE>/src/main/java",
-              "type": "java-source"
-            },
-            {
-              "path": "<WORKSPACE>/src/main/kotlin",
-              "type": "kotlin-source"
-            },
-            {
-              "path": "<WORKSPACE>/src/main/resources",
-              "type": "java-resource"
+            "name": "Gradle: org.apache.commons:commons-lang3:3.12.0",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.commons/commons-lang3/3.12.0/#####/commons-lang3-3.12.0.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.commons/commons-lang3/3.12.0/#####/commons-lang3-3.12.0-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.apache.commons",
+                    "artifactId": "commons-lang3",
+                    "version": "3.12.0",
+                    "baseVersion": "3.12.0"
+                }
             }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "NonExistentDependency.test",
-      "dependencies": [
-        {
-          "type": "library",
-          "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
-          "scope": "compile"
         },
         {
-          "type": "library",
-          "name": "Gradle: org.apache.commons:commons-lang3:3.12.0",
-          "scope": "compile"
-        },
-        {
-          "type": "library",
-          "name": "Gradle: org.jetbrains:annotations:13.0",
-          "scope": "compile"
-        },
-        {
-          "type": "library",
-          "name": "Gradle: unresolved dependency - com.example.nonexistent nonexistent-library 1.0.0",
-          "scope": "compile"
-        },
-        {
-          "type": "module",
-          "name": "NonExistentDependency.main",
-          "scope": "compile"
-        },
-        {
-          "type": "moduleSource"
-        },
-        {
-          "type": "sdk",
-          "name": "ignored",
-          "kind": "jdk"
-        }
-      ],
-      "contentRoots": [
-        {
-          "path": "<WORKSPACE>/src/test",
-          "sourceRoots": [
-            {
-              "path": "<WORKSPACE>/src/test/java",
-              "type": "java-test"
-            },
-            {
-              "path": "<WORKSPACE>/src/test/kotlin",
-              "type": "kotlin-test"
-            },
-            {
-              "path": "<WORKSPACE>/src/test/resources",
-              "type": "java-test-resource"
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.2.0/#####/kotlin-stdlib-2.2.0.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.2.0/#####/kotlin-stdlib-2.2.0-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.jetbrains.kotlin",
+                    "artifactId": "kotlin-stdlib",
+                    "version": "2.2.0",
+                    "baseVersion": "2.2.0"
+                }
             }
-          ]
-        }
-      ]
-    }
-  ],
-  "libraries": [
-    {
-      "name": "Gradle: org.apache.commons:commons-lang3:3.12.0",
-      "type": "COMPILE",
-      "roots": [
-        {
-          "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.commons/commons-lang3/3.12.0/#####/commons-lang3-3.12.0.jar"
         },
         {
-          "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.commons/commons-lang3/3.12.0/#####/commons-lang3-3.12.0-sources.jar",
-          "type": "SOURCES"
-        }
-      ],
-      "properties": {
-        "attributes": {
-          "groupId": "org.apache.commons",
-          "artifactId": "commons-lang3",
-          "version": "3.12.0",
-          "baseVersion": "3.12.0"
-        }
-      }
-    },
-    {
-      "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",
-      "type": "COMPILE",
-      "roots": [
-        {
-          "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.2.0/#####/kotlin-stdlib-2.2.0.jar"
+            "name": "Gradle: org.jetbrains:annotations:13.0",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.jetbrains",
+                    "artifactId": "annotations",
+                    "version": "13.0",
+                    "baseVersion": "13.0"
+                }
+            }
         },
         {
-          "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.2.0/#####/kotlin-stdlib-2.2.0-sources.jar",
-          "type": "SOURCES"
+            "name": "Gradle: unresolved dependency - com.example.nonexistent nonexistent-library 1.0.0",
+            "type": "COMPILE",
+            "roots": []
         }
-      ],
-      "properties": {
-        "attributes": {
-          "groupId": "org.jetbrains.kotlin",
-          "artifactId": "kotlin-stdlib",
-          "version": "2.2.0",
-          "baseVersion": "2.2.0"
-        }
-      }
-    },
-    {
-      "name": "Gradle: org.jetbrains:annotations:13.0",
-      "type": "COMPILE",
-      "roots": [
+    ],
+    "sdks": [
         {
-          "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0.jar"
+            "name": "ignored",
+            "type": "jdk",
+            "version": "ignored",
+            "homePath": null,
+            "roots": [],
+            "additionalData": ""
+        }
+    ],
+    "kotlinSettings": [
+        {
+            "name": "Kotlin",
+            "sourceRoots": [
+                "<WORKSPACE>/src/main/java",
+                "<WORKSPACE>/src/main/kotlin",
+                "<WORKSPACE>/src/main/resources"
+            ],
+            "configFileItems": [],
+            "module": "NonExistentDependency.main",
+            "useProjectSettings": false,
+            "implementedModuleNames": [],
+            "dependsOnModuleNames": [],
+            "additionalVisibleModuleNames": [],
+            "productionOutputPath": null,
+            "testOutputPath": null,
+            "sourceSetNames": [],
+            "isTestModule": false,
+            "externalProjectId": "NonExistentDependency.main",
+            "isHmppEnabled": true,
+            "pureKotlinSourceFolders": [],
+            "kind": "default",
+            "compilerArguments": "J{\"jvmTarget\":\"21\",\"pluginOptions\":[],\"pluginClasspaths\":[]}",
+            "additionalArguments": null,
+            "scriptTemplates": null,
+            "scriptTemplatesClasspath": null,
+            "outputDirectoryForJsLibraryFiles": null,
+            "targetPlatform": null,
+            "externalSystemRunTasks": [],
+            "version": 5,
+            "flushNeeded": false
         },
         {
-          "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0-sources.jar",
-          "type": "SOURCES"
+            "name": "Kotlin",
+            "sourceRoots": [
+                "<WORKSPACE>/src/test/java",
+                "<WORKSPACE>/src/test/kotlin",
+                "<WORKSPACE>/src/test/resources"
+            ],
+            "configFileItems": [],
+            "module": "NonExistentDependency.test",
+            "useProjectSettings": false,
+            "implementedModuleNames": [],
+            "dependsOnModuleNames": [],
+            "additionalVisibleModuleNames": [
+                "NonExistentDependency.main"
+            ],
+            "productionOutputPath": null,
+            "testOutputPath": null,
+            "sourceSetNames": [],
+            "isTestModule": true,
+            "externalProjectId": "NonExistentDependency.test",
+            "isHmppEnabled": true,
+            "pureKotlinSourceFolders": [],
+            "kind": "default",
+            "compilerArguments": "J{\"jvmTarget\":\"21\",\"pluginOptions\":[],\"pluginClasspaths\":[]}",
+            "additionalArguments": null,
+            "scriptTemplates": null,
+            "scriptTemplatesClasspath": null,
+            "outputDirectoryForJsLibraryFiles": null,
+            "targetPlatform": null,
+            "externalSystemRunTasks": [],
+            "version": 5,
+            "flushNeeded": false
         }
-      ],
-      "properties": {
-        "attributes": {
-          "groupId": "org.jetbrains",
-          "artifactId": "annotations",
-          "version": "13.0",
-          "baseVersion": "13.0"
-        }
-      }
-    },
-    {
-      "name": "Gradle: unresolved dependency - com.example.nonexistent nonexistent-library 1.0.0",
-      "type": "COMPILE",
-      "roots": []
-    }
-  ],
-  "sdks": [
-    {
-      "name": "ignored",
-      "type": "jdk",
-      "version": "ignored",
-      "homePath": null,
-      "roots": [],
-      "additionalData": ""
-    }
-  ],
-  "kotlinSettings": [
-    {
-      "name": "Kotlin",
-      "sourceRoots": [
-        "<WORKSPACE>/src/main/java",
-        "<WORKSPACE>/src/main/kotlin",
-        "<WORKSPACE>/src/main/resources"
-      ],
-      "configFileItems": [],
-      "module": "NonExistentDependency.main",
-      "useProjectSettings": false,
-      "implementedModuleNames": [],
-      "dependsOnModuleNames": [],
-      "additionalVisibleModuleNames": [],
-      "productionOutputPath": null,
-      "testOutputPath": null,
-      "sourceSetNames": [],
-      "isTestModule": false,
-      "externalProjectId": "NonExistentDependency.main",
-      "isHmppEnabled": true,
-      "pureKotlinSourceFolders": [],
-      "kind": "default",
-      "compilerArguments": "J{\"jvmTarget\":\"21\",\"pluginOptions\":[],\"pluginClasspaths\":[]}",
-      "additionalArguments": null,
-      "scriptTemplates": null,
-      "scriptTemplatesClasspath": null,
-      "outputDirectoryForJsLibraryFiles": null,
-      "targetPlatform": null,
-      "externalSystemRunTasks": [],
-      "version": 5,
-      "flushNeeded": false
-    },
-    {
-      "name": "Kotlin",
-      "sourceRoots": [
-        "<WORKSPACE>/src/test/java",
-        "<WORKSPACE>/src/test/kotlin",
-        "<WORKSPACE>/src/test/resources"
-      ],
-      "configFileItems": [],
-      "module": "NonExistentDependency.test",
-      "useProjectSettings": false,
-      "implementedModuleNames": [],
-      "dependsOnModuleNames": [],
-      "additionalVisibleModuleNames": [
-        "NonExistentDependency.main"
-      ],
-      "productionOutputPath": null,
-      "testOutputPath": null,
-      "sourceSetNames": [],
-      "isTestModule": true,
-      "externalProjectId": "NonExistentDependency.test",
-      "isHmppEnabled": true,
-      "pureKotlinSourceFolders": [],
-      "kind": "default",
-      "compilerArguments": "J{\"jvmTarget\":\"21\",\"pluginOptions\":[],\"pluginClasspaths\":[]}",
-      "additionalArguments": null,
-      "scriptTemplates": null,
-      "scriptTemplatesClasspath": null,
-      "outputDirectoryForJsLibraryFiles": null,
-      "targetPlatform": null,
-      "externalSystemRunTasks": [],
-      "version": 5,
-      "flushNeeded": false
-    }
-  ]
+    ]
 }

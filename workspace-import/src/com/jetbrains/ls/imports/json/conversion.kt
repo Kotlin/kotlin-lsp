@@ -57,6 +57,8 @@ import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntityBuilder
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
+import kotlin.io.path.exists
+import kotlin.io.path.relativeTo
 
 private val LOG = fileLogger()
 
@@ -241,6 +243,7 @@ private fun toRelativePath(path: Path, workspacePath: Path): String {
     pathString = FileUtilRt.toSystemIndependentName(pathString)
     return pathString
 }
+
 
 
 fun MutableEntityStorage.importWorkspaceData(
@@ -475,8 +478,8 @@ private fun toAbsoluteKotlinCompilerArguments(json: String): String = when (OS.C
     else -> json.replace(MAVEN_PREFIX, "${m2Repo.toAbsolutePath()}/")
 }
 
-internal fun toAbsolutePath(path: String, workspacePath: Path): Path =
-    when {
+internal fun toAbsolutePath(path: String, workspacePath: Path): Path {
+    val interpolatedPath = when {
         path.startsWith(WORKSPACE_PREFIX) -> {
             val relativePath = path.removePrefix(WORKSPACE_PREFIX)
             if (relativePath.isEmpty()) workspacePath else workspacePath.resolve(relativePath)
@@ -494,3 +497,23 @@ internal fun toAbsolutePath(path: String, workspacePath: Path): Path =
 
         else -> Path.of(path)
     }
+    return repatriate(interpolatedPath, workspacePath)
+}
+
+internal fun repatriate(path: Path, workspacePath: Path): Path  {
+    val realWorkspacePath = workspacePath.toRealPath()
+    val absoluteWorkspacePath = realWorkspacePath.absolutePathString()
+
+    var p: Path? = path
+    while (p != null) {
+        if (p.exists()) {
+            val realPath = p.toRealPath().absolutePathString()
+            if (realPath == absoluteWorkspacePath) {
+                val relative = path.relativeTo(p)
+                return workspacePath.resolve(relative).normalize()
+            }
+        }
+        p = p.parent
+    }
+    return path
+}
