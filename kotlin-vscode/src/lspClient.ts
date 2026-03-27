@@ -114,7 +114,7 @@ function configOption<T>(name: string, scope?: vscode.ConfigurationScope): T | u
 function getLauncherPath(): string {
     const relative = path.join('server', 'bin')
     const launcherName = os.platform() === 'win32'
-            ? 'languageServer64.exe'
+            ? 'languageServer.exe'
             : 'languageServer'
     const launcherPath = path.join(getContext().asAbsolutePath(relative), launcherName);
     if (os.platform() !== 'win32') {
