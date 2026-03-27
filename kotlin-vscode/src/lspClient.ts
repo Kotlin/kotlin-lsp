@@ -144,6 +144,7 @@ async function getStreamInfoForBundledServer(): Promise<StreamInfo> {
 }
 
 function startBundledServer(): ChildProcessByStdio<null, Readable, null> {
+    const debugLaunch = false
     const launcherPath = getLauncherPath();
 
     const context = getContext()
@@ -153,18 +154,35 @@ function startBundledServer(): ChildProcessByStdio<null, Readable, null> {
         args.push('--system-path', context.storageUri.fsPath)
     }
     const userJvmOptions = getUserJvmOptions()
-    const env = buildJvmOptionsEnv(process.env, userJvmOptions)
+    const jvmOptions = buildJvmOptionsEnv(process.env, userJvmOptions)
+    const env: NodeJS.ProcessEnv = debugLaunch ? {
+        ...jvmOptions,
+        IJ_LAUNCHER_DEBUG: '1',
+    } : jvmOptions
 
     logInfo('Starting language server');
     logInfo(`  command: ${launcherPath}`);
     logInfo(`  args   : ${JSON.stringify(args)}`);
     logInfo(`  VM opts: ${JSON.stringify(userJvmOptions)}`);
+    if (debugLaunch) {
+        logInfo(`  env: ${JSON.stringify(env)}`);
+    }
     logInfo('');
 
-    return spawn(launcherPath, args, {
+    const serverProcess = spawn(launcherPath, args, {
         env,
         stdio: ['ignore', 'pipe', 'ignore'],
     });
+
+    if (debugLaunch) {
+        const rl = readline.createInterface({
+            input: serverProcess.stdout,
+            terminal: false,
+        });
+        rl.on('line', (line: string) => logInfo(`[launcher] ${line}`));
+        serverProcess.once('exit', () => rl.close());
+    }
+    return serverProcess
 }
 
 function getPortForBundledServer(serverProcess: ChildProcessByStdio<null, Readable, null>): Promise<number> {
