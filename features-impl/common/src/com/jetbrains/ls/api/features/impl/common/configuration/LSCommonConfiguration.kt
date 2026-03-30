@@ -3,7 +3,6 @@ package com.jetbrains.ls.api.features.impl.common.configuration
 
 import com.jetbrains.ls.api.features.impl.common.api.commonLsApiPlugin
 import com.jetbrains.ls.api.features.impl.common.decompiler.LSDecompileCommandDescriptorProvider
-import com.jetbrains.ls.api.features.impl.common.fileTemplates.LSInterpolateFileTemplateCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDescriptorProvider
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.api.features.lsApiPlugin
@@ -12,7 +11,6 @@ val LSCommonConfiguration: LSConfigurationPiece = LSConfigurationPiece(
     entries = listOf(
         LSDecompileCommandDescriptorProvider,
         LSApplyFixCommandDescriptorProvider,
-        LSInterpolateFileTemplateCommandDescriptorProvider,
     ),
     plugins = listOf(
         lsApiPlugin,

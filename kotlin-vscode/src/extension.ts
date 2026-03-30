@@ -6,7 +6,6 @@ import {registerStatusBarItem} from './statusBar';
 import {registerDapServer} from "./dap"
 import {registerDatabase} from "./database"
 import {registerDebugJava} from "./debugjava"
-import {registerFileTemplates} from "./fileTemplates"
 
 let _context: ExtensionContext | undefined
 let _outputChannel: OutputChannel | undefined;
@@ -55,7 +54,6 @@ export async function activate(context: ExtensionContext) {
     registerDatabase(context);
     registerExportWorkspaceToJsonCommand(context)
     registerStatusBarItem()
-    registerFileTemplates(context)
     initLspClient()
     await startLspClient()
 }
