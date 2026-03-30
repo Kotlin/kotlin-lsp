@@ -23,7 +23,11 @@ private fun parseElement(element: Element): XmlElement {
     }
         .takeIf { it.isNotEmpty() } ?: emptyList()
 
-    val text = element.textTrim.takeIf { it.isNotEmpty() }
+    val textNodes = element.content.filterIsInstance<Text>().joinToString("") { it.text }
+    if (children.isNotEmpty() && textNodes.isNotBlank()) {
+        throw IllegalArgumentException("Mixed text/element content is not supported for tag '${element.name}'")
+    }
+    val text = textNodes.takeIf { children.isEmpty() && it.isNotEmpty() }
 
     return XmlElement(
         tag = element.name,
@@ -40,6 +44,10 @@ internal fun toXml(xmlElement: XmlElement): String {
 }
 
 private fun toJDomElement(xmlElement: XmlElement): Element {
+    if (xmlElement.children.isNotEmpty() && !xmlElement.text.isNullOrBlank()) {
+        throw IllegalArgumentException("Mixed text/element content is not supported for tag '${xmlElement.tag}'")
+    }
+
     val element = Element(xmlElement.tag)
     xmlElement.attributes.forEach { (key, value) ->
         element.setAttribute(key, value)
