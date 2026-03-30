@@ -5326,56 +5326,9 @@
       "name": "ignored",
       "type": "jdk",
       "version": "ignored",
-      "homePath": "/",
+      "homePath": null,
       "roots": [],
       "additionalData": ""
-    }
-  ],
-  "javaSettings": [
-    {
-      "module": "PetClinic",
-      "inheritedCompilerOutput": false,
-      "excludeOutput": false,
-      "compilerOutput": null,
-      "compilerOutputForTests": null,
-      "languageLevelId": "ignored",
-      "manifestAttributes": {}
-    },
-    {
-      "module": "PetClinic.aot",
-      "inheritedCompilerOutput": false,
-      "excludeOutput": false,
-      "compilerOutput": null,
-      "compilerOutputForTests": null,
-      "languageLevelId": "ignored",
-      "manifestAttributes": {}
-    },
-    {
-      "module": "PetClinic.aotTest",
-      "inheritedCompilerOutput": false,
-      "excludeOutput": false,
-      "compilerOutput": null,
-      "compilerOutputForTests": null,
-      "languageLevelId": "ignored",
-      "manifestAttributes": {}
-    },
-    {
-      "module": "PetClinic.main",
-      "inheritedCompilerOutput": false,
-      "excludeOutput": false,
-      "compilerOutput": null,
-      "compilerOutputForTests": null,
-      "languageLevelId": "ignored",
-      "manifestAttributes": {}
-    },
-    {
-      "module": "PetClinic.test",
-      "inheritedCompilerOutput": false,
-      "excludeOutput": false,
-      "compilerOutput": null,
-      "compilerOutputForTests": null,
-      "languageLevelId": "ignored",
-      "manifestAttributes": {}
     }
   ]
 }

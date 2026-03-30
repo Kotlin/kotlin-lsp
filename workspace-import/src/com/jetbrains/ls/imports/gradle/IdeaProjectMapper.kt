@@ -29,6 +29,7 @@ internal class IdeaProjectMapper {
     private val LOG = logger<IdeaProjectMapper>()
     private val dependencyResolver: SourceSetDependencyResolver = SourceSetDependencyResolver()
     private val projectJdkCache: MutableMap<String, SdkData?> = mutableMapOf()
+    private val projectJavaLanguageLevel: MutableMap<String, String?> = mutableMapOf()
 
     fun toWorkspaceData(metadata: ProjectMetadata): WorkspaceData {
         val sdks: MutableList<SdkData> = mutableListOf()
@@ -178,9 +179,12 @@ internal class IdeaProjectMapper {
             LOG.info("${module.name} has an empty set of source sets")
             return modules
         }
-        val javaSettings = getJavaSettingsData(module, associatedSourceSets)
-        if (javaSettings != null) {
-            javaSettingsConsumer(javaSettings)
+        val projectJavaLevel = projectJavaLanguageLevel.computeIfAbsent(module.project.name) {
+            module.project.getJavaLanguageLevel()
+        }
+        val moduleJavaSettings = getModuleJavaSettingsData(module.name, module, projectJavaLevel, null)
+        if (moduleJavaSettings != null) {
+            javaSettingsConsumer(moduleJavaSettings)
         }
         associatedSourceSets.forEach { sourceSet ->
             val sourceSetDependencies = mutableListOf<DependencyData>()
@@ -202,15 +206,22 @@ internal class IdeaProjectMapper {
                     sourceSet.isTest()
                 )
             )
-            if (javaSettings != null) {
-                javaSettingsConsumer(
-                    javaSettings.copy(
-                        module = "${module.name}.${sourceSet.name}"
-                    )
-                )
+            val sourceSetJavaSettings = getModuleJavaSettingsData(
+                "${module.name}.${sourceSet.name}",
+                module,
+                projectJavaLevel,
+                sourceSet
+            )
+            if (sourceSetJavaSettings != null) {
+                javaSettingsConsumer(sourceSetJavaSettings)
             }
         }
         return modules
+    }
+
+    private fun IdeaProject.getJavaLanguageLevel(): String? {
+        return languageLevel?.level?.replace("JDK_", "")
+            ?: javaLanguageSettings?.languageLevel?.name?.replace("VERSION_", "")
     }
 
     private fun ModuleSourceSet.toContentRootData(moduleRoot: File, isTest: Boolean): List<ContentRootData> {
@@ -289,26 +300,27 @@ internal class IdeaProjectMapper {
             .any { Path.of(it.path).exists() }
     }
 
-    private fun getJavaSettingsData(module: IdeaModule, sourceSets: Set<ModuleSourceSet>): JavaSettingsData? {
+    private fun getModuleJavaSettingsData(
+        moduleName: String,
+        module: IdeaModule,
+        projectJavaLevel: String?,
+        sourceSet: ModuleSourceSet?
+    ): JavaSettingsData? {
         // project java settings should be used for the buildSrc project
-        if (module.name.contains("buildSrc") && module.project.javaLanguageSettings.isSpecified()) {
-            return getJavaSettingsData(module.name, module, module.project.javaLanguageSettings?.targetBytecodeVersion?.name)
+        val targetJavaVersion = when {
+            module.name.contains("buildSrc") && module.project.javaLanguageSettings.isSpecified() -> module.project.javaLanguageSettings
+                ?.targetBytecodeVersion
+                ?.name
+
+            sourceSet.isToolchainSpecified() -> sourceSet!!.toolchainVersion.toString()
+            sourceSet.isCompileTaskSpecified() -> sourceSet!!.targetCompatibility ?: sourceSet.sourceCompatibility
+            module.javaLanguageSettings.isSpecified() -> module.javaLanguageSettings?.targetBytecodeVersion?.name
+            else -> null
         }
-        sourceSets.forEach { sourceSet ->
-            if (sourceSet.isToolchainSpecified()) {
-                val targetJavaVersion = sourceSet.toolchainVersion.toString()
-                return getJavaSettingsData(module.name, module, targetJavaVersion)
-            }
-            if (sourceSet.isCompileTaskSpecified()) {
-                val targetJavaVersion = sourceSet.targetCompatibility ?: sourceSet.sourceCompatibility
-                return getJavaSettingsData(module.name, module, targetJavaVersion!!)
-            }
+        if (targetJavaVersion == projectJavaLevel) {
+            return null
         }
-        if (module.javaLanguageSettings.isSpecified()) {
-            val targetJavaVersion = module.javaLanguageSettings?.targetBytecodeVersion?.name ?: return null
-            return getJavaSettingsData(module.name, module, targetJavaVersion)
-        }
-        return null
+        return getJavaSettingsData(moduleName, module, targetJavaVersion)
     }
 
     private fun ModuleSourceSet?.isToolchainSpecified(): Boolean {

@@ -203,7 +203,7 @@
       "name": "ignored",
       "type": "jdk",
       "version": "ignored",
-      "homePath": "/",
+      "homePath": null,
       "roots": [],
       "additionalData": ""
     }
@@ -272,35 +272,6 @@
       "externalSystemRunTasks": [],
       "version": 5,
       "flushNeeded": false
-    }
-  ],
-  "javaSettings": [
-    {
-      "module": "NonExistentDependency",
-      "inheritedCompilerOutput": false,
-      "excludeOutput": false,
-      "compilerOutput": null,
-      "compilerOutputForTests": null,
-      "languageLevelId": "ignored",
-      "manifestAttributes": {}
-    },
-    {
-      "module": "NonExistentDependency.main",
-      "inheritedCompilerOutput": false,
-      "excludeOutput": false,
-      "compilerOutput": null,
-      "compilerOutputForTests": null,
-      "languageLevelId": "ignored",
-      "manifestAttributes": {}
-    },
-    {
-      "module": "NonExistentDependency.test",
-      "inheritedCompilerOutput": false,
-      "excludeOutput": false,
-      "compilerOutput": null,
-      "compilerOutputForTests": null,
-      "languageLevelId": "ignored",
-      "manifestAttributes": {}
     }
   ]
 }

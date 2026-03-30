@@ -1895,7 +1895,7 @@
       "name": "ignored",
       "type": "jdk",
       "version": "ignored",
-      "homePath": "/",
+      "homePath": null,
       "roots": [],
       "additionalData": ""
     }
@@ -2059,33 +2059,6 @@
   ],
   "javaSettings": [
     {
-      "module": "NewIJKotlinGradle.app",
-      "inheritedCompilerOutput": false,
-      "excludeOutput": false,
-      "compilerOutput": null,
-      "compilerOutputForTests": null,
-      "languageLevelId": "ignored",
-      "manifestAttributes": {}
-    },
-    {
-      "module": "NewIJKotlinGradle.app.main",
-      "inheritedCompilerOutput": false,
-      "excludeOutput": false,
-      "compilerOutput": null,
-      "compilerOutputForTests": null,
-      "languageLevelId": "ignored",
-      "manifestAttributes": {}
-    },
-    {
-      "module": "NewIJKotlinGradle.app.test",
-      "inheritedCompilerOutput": false,
-      "excludeOutput": false,
-      "compilerOutput": null,
-      "compilerOutputForTests": null,
-      "languageLevelId": "ignored",
-      "manifestAttributes": {}
-    },
-    {
       "module": "NewIJKotlinGradle.buildSrc",
       "inheritedCompilerOutput": false,
       "excludeOutput": false,
@@ -2105,33 +2078,6 @@
     },
     {
       "module": "NewIJKotlinGradle.buildSrc.test",
-      "inheritedCompilerOutput": false,
-      "excludeOutput": false,
-      "compilerOutput": null,
-      "compilerOutputForTests": null,
-      "languageLevelId": "ignored",
-      "manifestAttributes": {}
-    },
-    {
-      "module": "NewIJKotlinGradle.utils",
-      "inheritedCompilerOutput": false,
-      "excludeOutput": false,
-      "compilerOutput": null,
-      "compilerOutputForTests": null,
-      "languageLevelId": "ignored",
-      "manifestAttributes": {}
-    },
-    {
-      "module": "NewIJKotlinGradle.utils.main",
-      "inheritedCompilerOutput": false,
-      "excludeOutput": false,
-      "compilerOutput": null,
-      "compilerOutputForTests": null,
-      "languageLevelId": "ignored",
-      "manifestAttributes": {}
-    },
-    {
-      "module": "NewIJKotlinGradle.utils.test",
       "inheritedCompilerOutput": false,
       "excludeOutput": false,
       "compilerOutput": null,

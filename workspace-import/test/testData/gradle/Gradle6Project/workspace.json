@@ -281,38 +281,9 @@
       "name": "ignored",
       "type": "jdk",
       "version": "ignored",
-      "homePath": "/",
+      "homePath": null,
       "roots": [],
       "additionalData": ""
-    }
-  ],
-  "javaSettings": [
-    {
-      "module": "untitled1",
-      "inheritedCompilerOutput": false,
-      "excludeOutput": false,
-      "compilerOutput": null,
-      "compilerOutputForTests": null,
-      "languageLevelId": "ignored",
-      "manifestAttributes": {}
-    },
-    {
-      "module": "untitled1.main",
-      "inheritedCompilerOutput": false,
-      "excludeOutput": false,
-      "compilerOutput": null,
-      "compilerOutputForTests": null,
-      "languageLevelId": "ignored",
-      "manifestAttributes": {}
-    },
-    {
-      "module": "untitled1.test",
-      "inheritedCompilerOutput": false,
-      "excludeOutput": false,
-      "compilerOutput": null,
-      "compilerOutputForTests": null,
-      "languageLevelId": "ignored",
-      "manifestAttributes": {}
     }
   ]
 }
