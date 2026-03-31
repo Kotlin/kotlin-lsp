@@ -1,4 +1,4 @@
-<idea-plugin>
+<idea-plugin visibility="internal">
   <extensions defaultExtensionNs="ls">
     <fileForModificationFactory language="kotlin"
                                 implementationClass="com.jetbrains.ls.api.features.impl.kotlin.apiImpl.textEdits.KotlinFileForModificationFactory" />
