@@ -17,6 +17,7 @@ import com.jetbrains.ls.imports.json.SourceRootData
 import com.jetbrains.ls.imports.json.WorkspaceData
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.gradle.api.JavaVersion
 import org.gradle.tooling.model.idea.IdeaJavaLanguageSettings
 import org.gradle.tooling.model.idea.IdeaModule
 import org.gradle.tooling.model.idea.IdeaProject
@@ -221,7 +222,7 @@ internal class IdeaProjectMapper {
 
     private fun IdeaProject.getJavaLanguageLevel(): String? {
         return languageLevel?.level?.replace("JDK_", "")
-            ?: javaLanguageSettings?.languageLevel?.name?.replace("VERSION_", "")
+            ?: javaLanguageSettings?.languageLevel?.getJavaVersion()
     }
 
     private fun ModuleSourceSet.toContentRootData(moduleRoot: File, isTest: Boolean): List<ContentRootData> {
@@ -231,7 +232,7 @@ internal class IdeaProjectMapper {
                 sourceRoots.add(
                     SourceRootData(
                         sourceRootFolder.path,
-                        getSourceFolderType(sourceRootFolder, isTest)
+                        if (isTest) "java-test" else "java-source"
                     )
                 )
             }
@@ -254,16 +255,6 @@ internal class IdeaProjectMapper {
                 sourceRoots = sourceRoots
             )
         )
-    }
-
-    private fun getSourceFolderType(file: File, isTest: Boolean): String {
-        val folderName = file.name
-        val prefix = when (folderName.lowercase()) {
-            "kotlin" -> "kotlin"
-            "groovy" -> "groovy"
-            else -> "java"
-        }
-        return if (isTest) "$prefix-test" else "$prefix-source"
     }
 
     private fun findRootForSourceRoots(sourceSetName: String, moduleRoot:File, sourceRoots: List<SourceRootData>): String {
@@ -310,11 +301,11 @@ internal class IdeaProjectMapper {
         val targetJavaVersion = when {
             module.name.contains("buildSrc") && module.project.javaLanguageSettings.isSpecified() -> module.project.javaLanguageSettings
                 ?.targetBytecodeVersion
-                ?.name
+                ?.getJavaVersion()
 
             sourceSet.isToolchainSpecified() -> sourceSet!!.toolchainVersion.toString()
             sourceSet.isCompileTaskSpecified() -> sourceSet!!.targetCompatibility ?: sourceSet.sourceCompatibility
-            module.javaLanguageSettings.isSpecified() -> module.javaLanguageSettings?.targetBytecodeVersion?.name
+            module.javaLanguageSettings.isSpecified() -> module.javaLanguageSettings?.targetBytecodeVersion?.getJavaVersion()
             else -> null
         }
         if (targetJavaVersion == projectJavaLevel) {
@@ -337,6 +328,11 @@ internal class IdeaProjectMapper {
         return sourceCompatibility != null || targetCompatibility != null
     }
 
+    private fun JavaVersion.getJavaVersion() : String {
+        return name.replace("VERSION_", "")
+            .replace("_", ".")
+    }
+
     private fun getJavaSettingsData(moduleName: String, module: IdeaModule, targetJavaVersion: String?): JavaSettingsData? {
         if (targetJavaVersion == null) {
             return null
@@ -346,7 +342,7 @@ internal class IdeaProjectMapper {
             inheritedCompilerOutput = module.compilerOutput?.inheritOutputDirs ?: false,
             compilerOutput = module.compilerOutput?.outputDir?.path,
             compilerOutputForTests = module.compilerOutput?.testOutputDir?.path,
-            languageLevelId = "JDK_${targetJavaVersion.removePrefix("VERSION_")}",
+            languageLevelId = "JDK_${targetJavaVersion}",
             manifestAttributes = emptyMap(),
             excludeOutput = false
         )
