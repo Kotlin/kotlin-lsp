@@ -17,12 +17,17 @@ function merge(target, patch) {
 
     if (isObject(target) && isObject(patch)) {
         const result = {...target};
-        for (const key of Object.keys(patch)) {
-            if (key in target) {
-                result[key] = merge(target[key], patch[key]);
-            } else {
-                result[key] = patch[key];
-            }
+        for (const key in patch) {
+            result[key] = merge(target[key], patch[key]);
+        }
+        return result;
+    }
+
+    // merge(["a", "b", "c"], {"1": "B"}) -> ["a", "B", "c"]
+    if (Array.isArray(target) && isObject(patch)) {
+        const result = [...target];
+        for (const key in patch) {
+            result[+key] = merge(target[key], patch[key]);
         }
         return result;
     }
@@ -31,7 +36,7 @@ function merge(target, patch) {
 }
 
 function isObject(value) {
-    return value && typeof value === 'object' && !Array.isArray(value);
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function applyPatch(targetPath, patchPath, outputPath) {
