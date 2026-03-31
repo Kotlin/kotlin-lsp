@@ -22,7 +22,8 @@
   "main": "./dist/extension",
   "activationEvents": [
     "onCommand:jetbrains.activateLsp",
-    "onLanguage:kotlin"
+    "onLanguage:kotlin",
+    "workspaceContains:**/*.kt"
   ],
   "contributes": {
     "languages": [
