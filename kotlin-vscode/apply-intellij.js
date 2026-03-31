@@ -88,4 +88,8 @@ function copyOverlayDir(subdir) {
     copyOverlayDirectory(path.join(intellijVscodeDir, subdir), path.join(__dirname, subdir));
 }
 
-require(path.join(intellijVscodeDir, 'apply-intellij-impl.js'))(bundleType, patchPackageJson, copyOverlayDir);
+function copyFile(src, dest) {
+    fs.copyFileSync(path.join(intellijVscodeDir, src), path.join(__dirname, dest));
+}
+
+require(path.join(intellijVscodeDir, 'apply-intellij-impl.js'))(bundleType, patchPackageJson, copyOverlayDir, copyFile);
