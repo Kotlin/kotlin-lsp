@@ -140,12 +140,12 @@ abstract class AbstractProjectImportTest {
     // 3. TC Windows agents use Z:\gradle\caches\
     protected fun cropJarPaths(jsonString: String): String {
         val normSlashes = jsonString.replace("\\\\\\\\", "/").replace("\\\\", "/")
-        val normCaches =  """[^"]*\.gradle/caches/([^"]*?)/[^/.]*/([^/"]*\.jar[\\"])""".toRegex()
+        val normCaches =  """[^"]*gradle/caches/([^"]*?)/[^/.]*/([^/"]*\.jar[\\"])""".toRegex()
             .replace(normSlashes) {
                 "<GRADLE_REPO>/${it.groupValues[1]}/#####/${it.groupValues[2]}"
             }
 
-        val normDist =  """[^"]*\.gradle/wrapper/dists/([^/]*)/[^/]*/([^"]*\.jar")""".toRegex()
+        val normDist =  """[^"]*gradle/wrapper/dists/([^/]*)/[^/]*/([^"]*\.jar")""".toRegex()
             .replace(normCaches) {
                 "<GRADLE_DIST>/${it.groupValues[1]}/#####/${it.groupValues[2]}"
             }
