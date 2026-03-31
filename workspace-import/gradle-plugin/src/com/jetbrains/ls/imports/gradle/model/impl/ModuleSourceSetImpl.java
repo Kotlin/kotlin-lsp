@@ -19,6 +19,7 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
     private final @NotNull Set<@NotNull File> runtimeClasspath;
     private final @NotNull Set<@NotNull File> compileClasspath;
     private final @NotNull Set<@NotNull File> sourceSetOutput;
+    private final @NotNull Set<@NotNull String> friendSourceSets;
     private final boolean hasUnresolvedDependencies;
     private final @Nullable Integer toolchainVersion;
     private final @Nullable String sourceCompatibility;
@@ -33,6 +34,7 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
             @NotNull Set<@NotNull File> runtimeClasspath,
             @NotNull Set<@NotNull File> compileClasspath,
             @NotNull Set<@NotNull File> sourceSetOutput,
+            @NotNull Set<@NotNull String> friendSourceSets,
             boolean hasUnresolvedDependencies,
             @Nullable Integer toolchainVersion,
             @Nullable String sourceCompatibility,
@@ -46,6 +48,7 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
         this.runtimeClasspath = runtimeClasspath;
         this.compileClasspath = compileClasspath;
         this.sourceSetOutput = sourceSetOutput;
+        this.friendSourceSets = friendSourceSets;
         this.hasUnresolvedDependencies = hasUnresolvedDependencies;
         this.toolchainVersion = toolchainVersion;
         this.sourceCompatibility = sourceCompatibility;
@@ -86,6 +89,11 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
     @Override
     public @NotNull Set<@NotNull File> getSourceSetOutput() {
         return sourceSetOutput;
+    }
+
+    @Override
+    public @NotNull Set<@NotNull String> getFriendSourceSets() {
+        return friendSourceSets;
     }
 
     @Override

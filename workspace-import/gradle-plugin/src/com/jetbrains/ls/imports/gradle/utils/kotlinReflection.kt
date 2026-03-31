@@ -35,6 +35,13 @@ class KotlinTargetExtensionReflection(val project: Project, val reflected: Refle
 
 class KotlinCompilationReflection(val project: Project, val reflected: Reflected.Instance) {
 
+    val name: String? by lazy {
+        reflected.call("getName")?.unwrapAs<String>() ?: run {
+            project.logger.error("Failed to resolve 'name' in Kotlin compilation")
+            return@lazy null
+        }
+    }
+
     val compileTask: KotlinCompileTaskReflection? by lazy {
         val compileTask = reflected.call("getCompileTaskProvider")?.call("get") ?: run {
             project.logger.error("Failed to resolve 'compileTask' in Kotlin compilation")
@@ -51,6 +58,16 @@ class KotlinCompilationReflection(val project: Project, val reflected: Reflected
         }
 
         javaCompileTask.unwrapAs<JavaCompile>()
+    }
+
+    val allAssociatedCompilations: Collection<KotlinCompilationReflection>? by lazy {
+        reflected.call("getAllAssociatedCompilations")?.unwrapAs<Collection<*>>()?.mapNotNull { instance ->
+            if (instance == null) return@mapNotNull null
+            KotlinCompilationReflection(project, instance.reflected)
+        } ?: run {
+            project.logger.error("Failed to resolve 'allAssociatedCompilations' in Kotlin compilation")
+            return@lazy null
+        }
     }
 }
 

@@ -3192,7 +3192,9 @@
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [],
+            "additionalVisibleModuleNames": [
+                "My Application.app.debug"
+            ],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],
@@ -3250,7 +3252,9 @@
             "useProjectSettings": false,
             "implementedModuleNames": [],
             "dependsOnModuleNames": [],
-            "additionalVisibleModuleNames": [],
+            "additionalVisibleModuleNames": [
+                "My Application.library.debug"
+            ],
             "productionOutputPath": null,
             "testOutputPath": null,
             "sourceSetNames": [],

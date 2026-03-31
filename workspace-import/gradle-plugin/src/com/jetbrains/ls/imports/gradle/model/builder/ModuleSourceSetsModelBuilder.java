@@ -124,6 +124,7 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
                     runtimeDependencies == null ? Collections.emptySet() : runtimeDependencies,
                     compileDependencies == null ? Collections.emptySet() : compileDependencies,
                     producedArtifacts,
+                    Collections.emptySet(),
                     runtimeDependencies == null || compileDependencies == null,
                     targetBytecodeLevel,
                     sourceCompatibility,

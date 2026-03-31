@@ -31,14 +31,15 @@ fun Project.resolveAndroidSourceSets(): Set<ModuleSourceSet>? {
 
 private fun resolveAndroidVariant(variant: AndroidVariantReflection): Set<ModuleSourceSet>? {
     val main = variant.resolveToModuleSourceSet() ?: return null
-    val nested = variant.nestedComponents.orEmpty().mapNotNull { nested ->
-        nested.resolveToModuleSourceSet()
-    }
+    val nested = variant.nestedComponents.orEmpty()
+        .mapNotNull { nested -> nested.resolveToModuleSourceSet() }
 
     return setOf(main, *nested.toTypedArray())
 }
 
 private fun AndroidComponentReflection.resolveToModuleSourceSet(): ModuleSourceSet? {
+    val mainComponent = project.androidVariants?.selectActiveVariant() ?: return null
+
     val name = name ?: return null
     val kotlinCompilation = project.kotlin?.target?.getCompilation(name)
     val kotlinCompileTask = kotlinCompilation?.compileTask
@@ -48,7 +49,7 @@ private fun AndroidComponentReflection.resolveToModuleSourceSet(): ModuleSourceS
     val bootClasspath = project.androidComponents?.sdkComponents?.bootClasspath?.get()
         .orEmpty().map { it.asFile }.toSet()
 
-    val rClassJar = if(this is AndroidVariantReflection) setOfNotNull(resolveRClassJar()?.asFile?.orNull) else emptySet()
+    val rClassJar = if (this is AndroidVariantReflection) setOfNotNull(resolveRClassJar()?.asFile?.orNull) else emptySet()
 
     val compileClasspath: Set<File> = run {
         (compileConfiguration ?: return@run emptySet()).incoming.artifactView { view ->
@@ -68,6 +69,8 @@ private fun AndroidComponentReflection.resolveToModuleSourceSet(): ModuleSourceS
         /* runtimeClasspath = */emptySet(),
         /* compileClasspath = */bootClasspath + rClassJar + compileClasspath,
         /* sourceSetOutput = */setOfNotNull(),
+        /* friendSourceSets =*/  kotlinCompilation?.allAssociatedCompilations?.mapNotNull { it.name }.orEmpty().toSet() +
+                listOfNotNull(mainComponent.name.takeIf { it != name }),
         /* hasUnresolvedDependencies = */false,
         /* toolchainVersion = */javaExtension?.toolchain?.languageVersion?.orNull?.asInt(),
         /* sourceCompatibility = */javaCompileTask?.sourceCompatibility,

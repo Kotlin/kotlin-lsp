@@ -134,7 +134,9 @@ internal class IdeaProjectMapper {
                     useProjectSettings = false,
                     implementedModuleNames = emptyList(),
                     dependsOnModuleNames = emptyList(),
-                    additionalVisibleModuleNames = computeAdditionalVisibleModuleNames(name),
+                    additionalVisibleModuleNames = computeAdditionalVisibleModuleNames(name) +
+                            sourceSetFqnIndex[name]?.friendSourceSets.orEmpty()
+                                .map { friendModuleName -> moduleData.resolveSiblingName(friendModuleName) },
                     productionOutputPath = null,
                     testOutputPath = null,
                     sourceSetNames = emptyList(),
@@ -231,6 +233,10 @@ internal class IdeaProjectMapper {
         return modules
     }
 
+    private fun ModuleData.resolveSiblingName(mame: String): String {
+        return name.split(".").dropLast(1).joinToString(".") + "." + mame
+    }
+
     private fun IdeaProject.getJavaLanguageLevel(): String? {
         return languageLevel?.level?.replace("JDK_", "")
             ?: javaLanguageSettings?.languageLevel?.getJavaVersion()
@@ -278,7 +284,7 @@ internal class IdeaProjectMapper {
         return if (isTest) "$prefix-test" else "$prefix-source"
     }
 
-    private fun findRootForSourceRoots(sourceSetName: String, moduleRoot:File, sourceRoots: List<SourceRootData>): String {
+    private fun findRootForSourceRoots(sourceSetName: String, moduleRoot: File, sourceRoots: List<SourceRootData>): String {
         if (sourceRoots.isEmpty() || sourceRoots.size == 1) {
             return "${moduleRoot.path}/src/$sourceSetName"
         }
@@ -349,7 +355,7 @@ internal class IdeaProjectMapper {
         return sourceCompatibility != null || targetCompatibility != null
     }
 
-    private fun JavaVersion.getJavaVersion() : String {
+    private fun JavaVersion.getJavaVersion(): String {
         return name.replace("VERSION_", "")
             .replace("_", ".")
     }

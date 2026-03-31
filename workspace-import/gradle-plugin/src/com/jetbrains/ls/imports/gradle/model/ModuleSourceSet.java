@@ -25,6 +25,13 @@ public interface ModuleSourceSet extends Serializable {
 
     @NotNull Set<@NotNull File> getSourceSetOutput();
 
+    /**
+     * @return names of source sets (compilations) which are considered friends
+     * 'friends' are allowed to use 'internal' declarations from other models.
+     * Kotlin defines such friends using an 'associateWith' declaration between compilations.
+     */
+    @NotNull Set<@NotNull String> getFriendSourceSets();
+
     boolean hasUnresolvedDependencies();
 
     @Nullable Integer getToolchainVersion();
