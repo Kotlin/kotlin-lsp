@@ -1,6 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.gradle;
 
+import com.jetbrains.ls.imports.gradle.model.builder.ExternalModuleDependencySetModuleBuilder;
 import com.jetbrains.ls.imports.gradle.model.builder.KotlinMetadataModelBuilder;
 import com.jetbrains.ls.imports.gradle.model.builder.ModuleSourceSetsModelBuilder;
 import org.gradle.api.Plugin;
@@ -23,5 +24,6 @@ public final class IdeaGradleLspPlugin implements Plugin<Gradle> {
     public void apply(@NonNull Gradle target) {
         registry.register(new KotlinMetadataModelBuilder());
         registry.register(new ModuleSourceSetsModelBuilder());
+        registry.register(new ExternalModuleDependencySetModuleBuilder());
     }
 }

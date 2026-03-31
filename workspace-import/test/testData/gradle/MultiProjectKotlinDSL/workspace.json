@@ -73,7 +73,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/api/src/main/kotlin",
-                            "type": "kotlin-source"
+                            "type": "java-source"
                         },
                         {
                             "path": "<WORKSPACE>/api/src/main/resources",
@@ -125,7 +125,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/api/src/test/kotlin",
-                            "type": "kotlin-test"
+                            "type": "java-test"
                         },
                         {
                             "path": "<WORKSPACE>/api/src/test/resources",
@@ -185,7 +185,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/core/src/main/kotlin",
-                            "type": "kotlin-source"
+                            "type": "java-source"
                         },
                         {
                             "path": "<WORKSPACE>/core/src/main/resources",
@@ -232,7 +232,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/core/src/test/kotlin",
-                            "type": "kotlin-test"
+                            "type": "java-test"
                         },
                         {
                             "path": "<WORKSPACE>/core/src/test/resources",
@@ -274,7 +274,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/src/main/kotlin",
-                            "type": "kotlin-source"
+                            "type": "java-source"
                         },
                         {
                             "path": "<WORKSPACE>/src/main/resources",
@@ -349,7 +349,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/service/src/main/kotlin",
-                            "type": "kotlin-source"
+                            "type": "java-source"
                         },
                         {
                             "path": "<WORKSPACE>/service/src/main/resources",
@@ -411,7 +411,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/service/src/test/kotlin",
-                            "type": "kotlin-test"
+                            "type": "java-test"
                         },
                         {
                             "path": "<WORKSPACE>/service/src/test/resources",
@@ -458,7 +458,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/src/test/kotlin",
-                            "type": "kotlin-test"
+                            "type": "java-test"
                         },
                         {
                             "path": "<WORKSPACE>/src/test/resources",
@@ -490,6 +490,60 @@
                     "baseVersion": "2.2.0"
                 }
             }
+        },
+        {
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-script-runtime:2.2.0",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-script-runtime/2.2.0/#####/kotlin-script-runtime-2.2.0.jar"
+                }
+            ]
+        },
+        {
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-scripting-common:2.2.0",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-common/2.2.0/#####/kotlin-scripting-common-2.2.0.jar"
+                }
+            ]
+        },
+        {
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable:2.2.0",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-compiler-embeddable/2.2.0/#####/kotlin-scripting-compiler-embeddable-2.2.0.jar"
+                }
+            ]
+        },
+        {
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-scripting-compiler-impl-embeddable:2.2.0",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-compiler-impl-embeddable/2.2.0/#####/kotlin-scripting-compiler-impl-embeddable-2.2.0.jar"
+                }
+            ]
+        },
+        {
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-scripting-jvm:2.2.0",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-jvm/2.2.0/#####/kotlin-scripting-jvm-2.2.0.jar"
+                }
+            ]
+        },
+        {
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-serialization-compiler-plugin-embeddable:2.2.0",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-serialization-compiler-plugin-embeddable/2.2.0/#####/kotlin-serialization-compiler-plugin-embeddable-2.2.0.jar"
+                }
+            ]
         },
         {
             "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",

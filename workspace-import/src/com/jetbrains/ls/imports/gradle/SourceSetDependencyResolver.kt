@@ -4,6 +4,8 @@
 package com.jetbrains.ls.imports.gradle
 
 import com.intellij.openapi.diagnostic.logger
+import com.jetbrains.ls.imports.gradle.model.ExternalModuleDependency
+import com.jetbrains.ls.imports.gradle.model.ExternalModuleDependencySet
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet
 import com.jetbrains.ls.imports.json.DependencyData
 import com.jetbrains.ls.imports.json.DependencyDataScope
@@ -23,11 +25,15 @@ internal class SourceSetDependencyResolver {
 
     private val fileLibraryCache: MutableMap<File, DependencyData> = mutableMapOf()
     private val projectDependencies: MutableSet<LibraryData> = mutableSetOf()
-    private val knownModules: MutableSet<String> = mutableSetOf()
+    private val knownModules: MutableMap<String, IdeaModule> = mutableMapOf()
 
-    fun init(modules: List<IdeaModule>, moduleSourceSets: Map<String, Set<ModuleSourceSet>>) {
+    fun init(
+        modules: List<IdeaModule>,
+        moduleSourceSets: Map<String, Set<ModuleSourceSet>>,
+        moduleDependencies: Map<String, Set<ExternalModuleDependency>>
+    ) {
+        modules.forEach { knownModules[it.name] = it }
         moduleSourceSets.forEach { (moduleFqdn, sourceSets) ->
-            knownModules.add(moduleFqdn)
             for (sourceSet in sourceSets) {
                 for (producedArtifact in sourceSet.sourceSetOutput) {
                     fileLibraryCache[producedArtifact] = DependencyData.Module(
@@ -40,6 +46,15 @@ internal class SourceSetDependencyResolver {
         }
         for (module in modules) {
             populateCacheWithModuleLibraryDependencies(module)
+        }
+        moduleDependencies.forEach { (moduleName, dependencies) ->
+            dependencies.forEach { dependency ->
+                fileLibraryCache.computeIfAbsent(dependency.file) {
+                    val data = dependency.toLibraryData(moduleName)
+                    projectDependencies.add(data)
+                    dependency.toDependencyData()
+                }
+            }
         }
     }
 
@@ -110,7 +125,7 @@ internal class SourceSetDependencyResolver {
                     true
                 }
             }
-            .mapNotNull { getDependencyDataFromGradleModel(it) }
+            .mapNotNull { it.toDependencyData() }
             .toMutableList()
         if (isTest) {
             dependencies.add(
@@ -125,21 +140,42 @@ internal class SourceSetDependencyResolver {
 
     fun getProjectDependencies(): List<LibraryData> = projectDependencies.toList()
 
-    private fun getDependencyDataFromGradleModel(dependency: IdeaDependency): DependencyData? {
-        return when (dependency) {
+    private fun ExternalModuleDependency.toLibraryData(moduleName: String): LibraryData {
+        return LibraryData(
+            name = "Gradle: ${mavenCoordinates}",
+            module = moduleName,
+            type = "COMPILE",
+            roots = this.let {
+                val result = mutableListOf<LibraryRootData>()
+                it.file.run { if (exists()) result.add(LibraryRootData(path, "CLASSES")) }
+                result
+            }
+        )
+    }
+
+    private fun ExternalModuleDependency.toDependencyData(): DependencyData {
+        return DependencyData.Library(
+            "Gradle: ${mavenCoordinates}",
+            DependencyDataScope.RUNTIME,
+            false
+        )
+    }
+
+    private fun IdeaDependency.toDependencyData(): DependencyData? {
+        return when (this) {
             is IdeaSingleEntryLibraryDependency -> {
-                val libraryName = dependency.getLibraryName()
+                val libraryName = getLibraryName()
                 DependencyData.Library(
                     name = libraryName,
-                    scope = DependencyDataScope.valueOf(dependency.scope.scope),
-                    isExported = dependency.isExportedSafe()
+                    scope = DependencyDataScope.valueOf(scope.scope),
+                    isExported = isExportedSafe()
                 )
             }
 
             is IdeaModuleDependency -> DependencyData.Module(
-                name = (knownModules.find { it.endsWith(".${dependency.targetModuleName}") } ?: dependency.targetModuleName) + ".main",
-                scope = DependencyDataScope.valueOf(dependency.scope.scope),
-                isExported = dependency.isExportedSafe()
+                name = (knownModules.keys.find { it.endsWith(".${targetModuleName}") } ?: targetModuleName) + ".main",
+                scope = DependencyDataScope.valueOf(scope.scope),
+                isExported = isExportedSafe()
             )
 
             else -> null
@@ -162,6 +198,7 @@ internal class SourceSetDependencyResolver {
     private fun populateCacheWithModuleLibraryDependencies(module: IdeaModule) {
         module.dependencies
             .filterIsInstance<IdeaSingleEntryLibraryDependency>()
+            .distinctBy { it.file }
             .forEach { dependency ->
                 fileLibraryCache.computeIfAbsent(dependency.file) {
                     DependencyData.Library(
@@ -170,7 +207,7 @@ internal class SourceSetDependencyResolver {
                         dependency.isExportedSafe()
                     )
                 }
-                projectDependencies.add(getLibraryData(dependency, module))
+                projectDependencies.add(dependency.toLibraryData(module.name))
             }
     }
 
@@ -190,20 +227,20 @@ internal class SourceSetDependencyResolver {
         return null
     }
 
-    private fun getLibraryData(dependency: IdeaSingleEntryLibraryDependency, module: IdeaModule): LibraryData {
-        val libraryName = dependency.getLibraryName()
+    private fun IdeaSingleEntryLibraryDependency.toLibraryData(moduleName: String): LibraryData {
+        val libraryName = getLibraryName()
         return LibraryData(
             name = libraryName,
-            module = module.name,
-            type = dependency.scope.scope,
-            roots = dependency.let {
+            module = moduleName,
+            type = scope.scope,
+            roots = this.let {
                 val result = mutableListOf<LibraryRootData>()
                 it.file?.run { if (exists()) result.add(LibraryRootData(path, "CLASSES")) }
                 it.source?.run { if (exists()) result.add(LibraryRootData(path, "SOURCES")) }
                 it.javadoc?.run { if (exists()) result.add(LibraryRootData(path, "JAVADOC")) }
                 result
             },
-            properties = dependency.getProperties()
+            properties = getProperties()
         )
     }
 

@@ -60,7 +60,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/src/main/kotlin",
-                            "type": "kotlin-source"
+                            "type": "java-source"
                         },
                         {
                             "path": "<WORKSPACE>/src/main/resources",
@@ -117,7 +117,7 @@
                         },
                         {
                             "path": "<WORKSPACE>/src/test/kotlin",
-                            "type": "kotlin-test"
+                            "type": "java-test"
                         },
                         {
                             "path": "<WORKSPACE>/src/test/resources",
@@ -149,6 +149,51 @@
                     "baseVersion": "3.12.0"
                 }
             }
+        },
+        {
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-script-runtime:2.2.0",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-script-runtime/2.2.0/#####/kotlin-script-runtime-2.2.0.jar"
+                }
+            ]
+        },
+        {
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-scripting-common:2.2.0",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-common/2.2.0/#####/kotlin-scripting-common-2.2.0.jar"
+                }
+            ]
+        },
+        {
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable:2.2.0",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-compiler-embeddable/2.2.0/#####/kotlin-scripting-compiler-embeddable-2.2.0.jar"
+                }
+            ]
+        },
+        {
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-scripting-compiler-impl-embeddable:2.2.0",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-compiler-impl-embeddable/2.2.0/#####/kotlin-scripting-compiler-impl-embeddable-2.2.0.jar"
+                }
+            ]
+        },
+        {
+            "name": "Gradle: org.jetbrains.kotlin:kotlin-scripting-jvm:2.2.0",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-jvm/2.2.0/#####/kotlin-scripting-jvm-2.2.0.jar"
+                }
+            ]
         },
         {
             "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.0",

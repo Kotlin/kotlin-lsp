@@ -1,6 +1,8 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.gradle.action;
 
+import com.jetbrains.ls.imports.gradle.model.ExternalModuleDependency;
+import com.jetbrains.ls.imports.gradle.model.ExternalModuleDependencySet;
 import com.jetbrains.ls.imports.gradle.model.InternalIdeaModule;
 import com.jetbrains.ls.imports.gradle.model.InternalIdeaProject;
 import com.jetbrains.ls.imports.gradle.model.KotlinModule;
@@ -39,12 +41,14 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
     public @NonNull ProjectMetadata execute(@NonNull BuildController controller) {
         Map<String, KotlinModule> kotlinModules = new HashMap<>();
         Map<String, Set<ModuleSourceSet>> sourceSets = new HashMap<>();
+        Map<String, Set<ExternalModuleDependency>> externalModuleDependencySet = new HashMap<>();
         List<InternalIdeaProject> ideaProjects = fetchProjects(controller);
-        resolveModels(ideaProjects, controller, kotlinModules, sourceSets);
+        resolveModels(ideaProjects, controller, kotlinModules, sourceSets, externalModuleDependencySet);
         return new ProjectMetadata(
                 ideaProjects,
                 kotlinModules,
-                sourceSets
+                sourceSets,
+                externalModuleDependencySet
         );
     }
 
@@ -52,7 +56,8 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
             @NonNull List<@NonNull InternalIdeaProject> ideaProjects,
             @NonNull BuildController controller,
             @NonNull Map<@NonNull String, @NonNull KotlinModule> kotlinModules,
-            @NonNull Map<@NonNull String, @NonNull Set<ModuleSourceSet>> sourceSets
+            @NonNull Map<@NonNull String, @NonNull Set<ModuleSourceSet>> sourceSets,
+            @NonNull Map<@NonNull String, @NonNull Set<ExternalModuleDependency>> externalModuleDependencySet
     ) {
         for (InternalIdeaProject project : ideaProjects) {
             for (InternalIdeaModule module : project.getModules()) {
@@ -68,6 +73,14 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
                 }
                 ModuleSourceSets moduleSourceSets = unwrapFetchedModel(controller.fetch(delegate, ModuleSourceSets.class));
                 sourceSets.put(moduleFqdn, moduleSourceSets == null ? Collections.emptySet() : moduleSourceSets.getSourceSets());
+
+                ExternalModuleDependencySet moduleDependencies = unwrapFetchedModel(
+                        controller.fetch(delegate, ExternalModuleDependencySet.class)
+                );
+                externalModuleDependencySet.put(
+                        moduleFqdn,
+                        moduleDependencies == null ? Collections.emptySet() : moduleDependencies.getDependencies()
+                );
             }
         }
     }

@@ -38,7 +38,7 @@ internal class IdeaProjectMapper {
         val modules = mutableMapOf<String, ModuleData>()
 
         val allGradleModules: List<IdeaModule> = metadata.includedProjects.flatMap { it.modules }
-        dependencyResolver.init(allGradleModules, metadata.sourceSets)
+        dependencyResolver.init(allGradleModules, metadata.sourceSets, metadata.moduleDependencies)
         fillProjectJdkCache(metadata.includedProjects)
 
         allGradleModules
