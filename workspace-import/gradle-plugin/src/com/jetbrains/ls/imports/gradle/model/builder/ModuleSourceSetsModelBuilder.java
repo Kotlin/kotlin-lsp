@@ -21,8 +21,8 @@ import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.tooling.provider.model.ToolingModelBuilder;
 import org.gradle.util.GradleVersion;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.Collections;
@@ -35,12 +35,12 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
     private static final String TARGET_MODEL_NAME = ModuleSourceSets.class.getName();
 
     @Override
-    public boolean canBuild(@NonNull String modelName) {
+    public boolean canBuild(@NotNull String modelName) {
         return TARGET_MODEL_NAME.equals(modelName);
     }
 
     @Override
-    public @Nullable Object buildAll(@NonNull String modelName, @NonNull Project project) {
+    public @Nullable Object buildAll(@NotNull String modelName, @NotNull Project project) {
         ExtensionContainer extensions = project.getExtensions();
         Set<ModuleSourceSet> result = new HashSet<>();
 
@@ -63,9 +63,9 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
         return null;
     }
 
-    private static @NonNull Set<@NonNull ModuleSourceSet> readSourceSets(
-            @NonNull SourceSetContainer sourceSets,
-            @NonNull Project project
+    private static @NotNull Set<@NotNull ModuleSourceSet> readSourceSets(
+            @NotNull SourceSetContainer sourceSets,
+            @NotNull Project project
     ) {
         Set<ModuleSourceSet> result = new HashSet<>();
         TaskContainer taskContainer = project.getTasks();
@@ -134,9 +134,9 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
         return result;
     }
 
-    private static @Nullable Set<@NonNull File> resolveFileCollectionFiles(
-            @NonNull String sourceSetName,
-            @NonNull FileCollection collection
+    private static @Nullable Set<@NotNull File> resolveFileCollectionFiles(
+            @NotNull String sourceSetName,
+            @NotNull FileCollection collection
     ) {
         try {
             return collection.getFiles();

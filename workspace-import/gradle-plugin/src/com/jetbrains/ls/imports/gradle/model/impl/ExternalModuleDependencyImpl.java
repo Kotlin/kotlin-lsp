@@ -2,30 +2,30 @@
 package com.jetbrains.ls.imports.gradle.model.impl;
 
 import com.jetbrains.ls.imports.gradle.model.ExternalModuleDependency;
-import org.jspecify.annotations.NonNull;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
 public class ExternalModuleDependencyImpl implements ExternalModuleDependency {
 
-    private final @NonNull String mavenCoordinates;
-    private final @NonNull File file;
+    private final @NotNull String mavenCoordinates;
+    private final @NotNull File file;
 
     public ExternalModuleDependencyImpl(
-            @NonNull String mavenCoordinates,
-            @NonNull File file
+            @NotNull String mavenCoordinates,
+            @NotNull File file
     ) {
         this.mavenCoordinates = mavenCoordinates;
         this.file = file;
     }
 
     @Override
-    public @NonNull String getMavenCoordinates() {
+    public @NotNull String getMavenCoordinates() {
         return mavenCoordinates;
     }
 
     @Override
-    public @NonNull File getFile() {
+    public @NotNull File getFile() {
         return file;
     }
 }

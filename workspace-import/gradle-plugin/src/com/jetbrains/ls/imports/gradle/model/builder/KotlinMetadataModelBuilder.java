@@ -11,8 +11,8 @@ import org.gradle.api.internal.provider.DefaultProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.tooling.provider.model.ToolingModelBuilder;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -39,12 +39,12 @@ public final class KotlinMetadataModelBuilder implements ToolingModelBuilder {
     private static final String TARGET_MODEL_NAME = KotlinModule.class.getName();
 
     @Override
-    public boolean canBuild(@NonNull String modelName) {
+    public boolean canBuild(@NotNull String modelName) {
         return TARGET_MODEL_NAME.equals(modelName);
     }
 
     @Override
-    public Object buildAll(@NonNull String modelName, @NonNull Project project) {
+    public Object buildAll(@NotNull String modelName, @NotNull Project project) {
         TaskContainer tasks = project.getTasks();
         Task compileKotlinTask = tasks.findByName(COMPILE_TASK_NAME);
         if (compileKotlinTask != null) {
@@ -53,12 +53,12 @@ public final class KotlinMetadataModelBuilder implements ToolingModelBuilder {
         return null;
     }
 
-    public static @NonNull KotlinModule readCompilerSettings(@NonNull Task task) {
+    public static @NotNull KotlinModule readCompilerSettings(@NotNull Task task) {
         KotlinCompilerSettingsImpl compilerSettings = getKotlinCompilerSettings(task);
         return new KotlinModuleImpl(compilerSettings);
     }
 
-    private static @NonNull KotlinCompilerSettingsImpl getKotlinCompilerSettings(@NonNull Task task) {
+    private static @NotNull KotlinCompilerSettingsImpl getKotlinCompilerSettings(@NotNull Task task) {
         String jvmTarget = null;
         List<String> compilerArgs = Collections.emptyList();
         if (task.hasProperty(COMPILER_OPTIONS_PROPERTY_NAME)) {
@@ -74,7 +74,7 @@ public final class KotlinMetadataModelBuilder implements ToolingModelBuilder {
         );
     }
 
-    private static @NonNull List<String> getPluginOptions(@NonNull Task task) {
+    private static @NotNull List<String> getPluginOptions(@NotNull Task task) {
         if (!task.hasProperty(PLUGIN_OPTIONS_PROPERTY_NAME)) {
             return Collections.emptyList();
         }
@@ -89,7 +89,7 @@ public final class KotlinMetadataModelBuilder implements ToolingModelBuilder {
         return result;
     }
 
-    private static @NonNull List<String> extractPluginOption(@NonNull Object pluginOption) {
+    private static @NotNull List<String> extractPluginOption(@NotNull Object pluginOption) {
         try {
             Class<?> optionClass = pluginOption.getClass();
             return (List<String>) optionClass.getMethod("getArguments")
@@ -99,7 +99,7 @@ public final class KotlinMetadataModelBuilder implements ToolingModelBuilder {
         }
     }
 
-    private static @NonNull List<String> getPluginClasspath(@NonNull Task task) {
+    private static @NotNull List<String> getPluginClasspath(@NotNull Task task) {
         if (!task.hasProperty(PLUGIN_CLASSPATH_PROPERTY_NAME)) {
             return Collections.emptyList();
         }
@@ -116,7 +116,7 @@ public final class KotlinMetadataModelBuilder implements ToolingModelBuilder {
         return result;
     }
 
-    private static @Nullable String getJvmTarget(@NonNull Object compilerOptions) {
+    private static @Nullable String getJvmTarget(@NotNull Object compilerOptions) {
         DefaultProperty jvmTarget = (DefaultProperty) getProperty(compilerOptions, JVM_TARGET_PROPERTY_NAME);
         if (jvmTarget != null && jvmTarget.isPresent()) {
             String target = jvmTarget.get()
@@ -126,7 +126,7 @@ public final class KotlinMetadataModelBuilder implements ToolingModelBuilder {
         return null;
     }
 
-    private static @NonNull List<String> getCompilerArgs(@NonNull Object compilerOptions) {
+    private static @NotNull List<String> getCompilerArgs(@NotNull Object compilerOptions) {
         List<String> args = new ArrayList<>();
         ListProperty property = (ListProperty) getProperty(compilerOptions, FREE_COMPILER_ARGS_PROPERTY_NAME);
         if (property != null && property.isPresent()) {
@@ -138,7 +138,7 @@ public final class KotlinMetadataModelBuilder implements ToolingModelBuilder {
         return args;
     }
 
-    private static @Nullable Object getProperty(@NonNull Object object, @NonNull String field) {
+    private static @Nullable Object getProperty(@NotNull Object object, @NotNull String field) {
         try {
             Class<?> targetClass = object.getClass();
             Object checkResult = targetClass.getMethod(HAS_PROPERTY_METHOD_NAME, String.class)

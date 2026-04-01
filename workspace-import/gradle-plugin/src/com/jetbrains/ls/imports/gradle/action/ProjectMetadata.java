@@ -6,7 +6,7 @@ import com.jetbrains.ls.imports.gradle.model.AndroidProject;
 import com.jetbrains.ls.imports.gradle.model.KotlinModule;
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet;
 import org.gradle.tooling.model.idea.IdeaProject;
-import org.jspecify.annotations.NonNull;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
 import java.util.List;
@@ -15,18 +15,18 @@ import java.util.Set;
 
 public final class ProjectMetadata implements Serializable {
 
-    private final @NonNull List<? extends IdeaProject> includedProjects;
-    private final @NonNull Map<String, KotlinModule> kotlinModules;
-    private final @NonNull Map<String, Set<@NonNull ModuleSourceSet>> sourceSets;
-    private final @NonNull Map<String, @NonNull Set<ExternalModuleDependency>> moduleDependencies;
-    private final @NonNull Map<@NonNull String, @NonNull AndroidProject> androidProjects;
+    private final @NotNull List<? extends IdeaProject> includedProjects;
+    private final @NotNull Map<String, KotlinModule> kotlinModules;
+    private final @NotNull Map<String, Set<@NotNull ModuleSourceSet>> sourceSets;
+    private final @NotNull Map<String, @NotNull Set<ExternalModuleDependency>> moduleDependencies;
+    private final @NotNull Map<@NotNull String, @NotNull AndroidProject> androidProjects;
 
     public ProjectMetadata(
-            @NonNull List<? extends IdeaProject> includedProjects,
-            @NonNull Map<@NonNull String, @NonNull KotlinModule> kotlinModules,
-            @NonNull Map<@NonNull String, @NonNull Set<@NonNull ModuleSourceSet>> sourceSets,
-            @NonNull Map<String, @NonNull Set<ExternalModuleDependency>> moduleDependencies,
-            @NonNull Map<@NonNull String, @NonNull AndroidProject> androidProjects
+            @NotNull List<? extends IdeaProject> includedProjects,
+            @NotNull Map<@NotNull String, @NotNull KotlinModule> kotlinModules,
+            @NotNull Map<@NotNull String, @NotNull Set<@NotNull ModuleSourceSet>> sourceSets,
+            @NotNull Map<String, @NotNull Set<ExternalModuleDependency>> moduleDependencies,
+            @NotNull Map<@NotNull String, @NotNull AndroidProject> androidProjects
     ) {
         this.includedProjects = includedProjects;
         this.kotlinModules = kotlinModules;
@@ -35,23 +35,23 @@ public final class ProjectMetadata implements Serializable {
         this.androidProjects = androidProjects;
     }
 
-    public @NonNull List<? extends IdeaProject> getIncludedProjects() {
+    public @NotNull List<? extends IdeaProject> getIncludedProjects() {
         return includedProjects;
     }
 
-    public @NonNull Map<@NonNull String, @NonNull KotlinModule> getKotlinModules() {
+    public @NotNull Map<@NotNull String, @NotNull KotlinModule> getKotlinModules() {
         return kotlinModules;
     }
 
-    public @NonNull Map<@NonNull String, @NonNull Set<@NonNull ModuleSourceSet>> getSourceSets() {
+    public @NotNull Map<@NotNull String, @NotNull Set<@NotNull ModuleSourceSet>> getSourceSets() {
         return sourceSets;
     }
 
-    public @NonNull Map<@NonNull String, @NonNull Set<ExternalModuleDependency>> getModuleDependencies() {
+    public @NotNull Map<@NotNull String, @NotNull Set<ExternalModuleDependency>> getModuleDependencies() {
         return moduleDependencies;
     }
 
-    public @NonNull Map<@NonNull String, @NonNull AndroidProject> getAndroidProjects() {
+    public @NotNull Map<@NotNull String, @NotNull AndroidProject> getAndroidProjects() {
         return androidProjects;
     }
 }

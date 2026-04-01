@@ -15,8 +15,8 @@ import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.tooling.provider.model.ToolingModelBuilder;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,15 +26,15 @@ import java.util.stream.Collectors;
 
 public final class ExternalModuleDependencySetModuleBuilder implements ToolingModelBuilder {
 
-    private static final @NonNull String MODEL_NAME = ExternalModuleDependencySet.class.getCanonicalName();
+    private static final @NotNull String MODEL_NAME = ExternalModuleDependencySet.class.getCanonicalName();
 
     @Override
-    public boolean canBuild(@NonNull String modelName) {
+    public boolean canBuild(@NotNull String modelName) {
         return MODEL_NAME.equals(modelName);
     }
 
     @Override
-    public @Nullable Object buildAll(@NonNull String modelName, @NonNull Project project) {
+    public @Nullable Object buildAll(@NotNull String modelName, @NotNull Project project) {
         /* Generically resolving dependencies in Android Projects is not allowed */
         if(AndroidUtilsKt.isAndroidProject(project)) {
             return null;
@@ -59,11 +59,11 @@ public final class ExternalModuleDependencySetModuleBuilder implements ToolingMo
         return new ExternalModuleDependencySetImpl(resolvedDependencies);
     }
 
-    private static @NonNull Set<@NonNull ResolvedArtifactResult> resolveConfiguration(@NonNull Configuration configuration) {
+    private static @NotNull Set<@NotNull ResolvedArtifactResult> resolveConfiguration(@NotNull Configuration configuration) {
         return configuration.getIncoming()
                 .artifactView(new Action<ArtifactView.ViewConfiguration>() {
                     @Override
-                    public void execute(ArtifactView.@NonNull ViewConfiguration configuration) {
+                    public void execute(ArtifactView.@NotNull ViewConfiguration configuration) {
                         configuration.setLenient(true);
                         configuration.attributes(container -> {
                             container.attribute(Attribute.of("artifactType", String.class), ArtifactTypeDefinition.JAR_TYPE);
@@ -74,8 +74,8 @@ public final class ExternalModuleDependencySetModuleBuilder implements ToolingMo
                 .getArtifacts();
     }
 
-    private static @NonNull Set<@NonNull ExternalModuleDependency> mapResolvedDependencies(
-            @NonNull Set<@NonNull ResolvedArtifactResult> resolvedDependencies
+    private static @NotNull Set<@NotNull ExternalModuleDependency> mapResolvedDependencies(
+            @NotNull Set<@NotNull ResolvedArtifactResult> resolvedDependencies
     ) {
         return resolvedDependencies.stream()
                 .map(it -> new ExternalModuleDependencyImpl(

@@ -3,18 +3,18 @@ package com.jetbrains.ls.imports.gradle.model.impl;
 
 import com.jetbrains.ls.imports.gradle.model.KotlinCompilerSettings;
 import com.jetbrains.ls.imports.gradle.model.KotlinModule;
-import org.jspecify.annotations.NonNull;
+import org.jetbrains.annotations.NotNull;
 
 public class KotlinModuleImpl implements KotlinModule {
 
-    private final @NonNull KotlinCompilerSettings compilerSettings;
+    private final @NotNull KotlinCompilerSettings compilerSettings;
 
-    public KotlinModuleImpl(@NonNull KotlinCompilerSettings compilerSettings) {
+    public KotlinModuleImpl(@NotNull KotlinCompilerSettings compilerSettings) {
         this.compilerSettings = compilerSettings;
     }
 
     @Override
-    public @NonNull KotlinCompilerSettings getCompilerSettings() {
+    public @NotNull KotlinCompilerSettings getCompilerSettings() {
         return compilerSettings;
     }
 }

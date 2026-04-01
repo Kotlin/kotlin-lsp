@@ -2,23 +2,23 @@
 package com.jetbrains.ls.imports.gradle.model.impl;
 
 import com.jetbrains.ls.imports.gradle.model.KotlinCompilerSettings;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
 public final class KotlinCompilerSettingsImpl implements KotlinCompilerSettings {
 
     private final @Nullable String jvmTarget;
-    private final @NonNull List<@NonNull String> pluginOptions;
-    private final @NonNull List<@NonNull String> pluginClasspath;
-    private final @NonNull List<@NonNull String> compilerArgs;
+    private final @NotNull List<@NotNull String> pluginOptions;
+    private final @NotNull List<@NotNull String> pluginClasspath;
+    private final @NotNull List<@NotNull String> compilerArgs;
 
     public KotlinCompilerSettingsImpl(
             @Nullable String target,
-            @NonNull List<@NonNull String> pluginOptions,
-            @NonNull List<@NonNull String> pluginClasspath,
-            @NonNull List<@NonNull String> compilerArgs
+            @NotNull List<@NotNull String> pluginOptions,
+            @NotNull List<@NotNull String> pluginClasspath,
+            @NotNull List<@NotNull String> compilerArgs
     ) {
         this.jvmTarget = target;
         this.pluginOptions = pluginOptions;
@@ -32,17 +32,17 @@ public final class KotlinCompilerSettingsImpl implements KotlinCompilerSettings 
     }
 
     @Override
-    public @NonNull List<@NonNull String> getPluginOptions() {
+    public @NotNull List<@NotNull String> getPluginOptions() {
         return pluginOptions;
     }
 
     @Override
-    public @NonNull List<@NonNull String> getPluginClasspaths() {
+    public @NotNull List<@NotNull String> getPluginClasspaths() {
         return pluginClasspath;
     }
 
     @Override
-    public @NonNull List<@NonNull String> getCompilerArgs() {
+    public @NotNull List<@NotNull String> getCompilerArgs() {
         return compilerArgs;
     }
 }

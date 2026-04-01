@@ -24,8 +24,8 @@ import org.gradle.util.GradleVersion;
 import org.jetbrains.kotlin.gradle.idea.serialize.IdeaKotlinSerializationContext;
 import org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinDependency;
 import org.jetbrains.kotlin.tooling.core.Extras;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,11 +39,11 @@ import java.util.stream.Collectors;
 
 public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
 
-    private static final @NonNull String BUILD_SRC_MODULE_NAME = "buildSrc";
-    private static final @NonNull GradleVersion INCLUDED_BUILD_API_GRADLE_VERSION = GradleVersion.version("8.0");
+    private static final @NotNull String BUILD_SRC_MODULE_NAME = "buildSrc";
+    private static final @NotNull GradleVersion INCLUDED_BUILD_API_GRADLE_VERSION = GradleVersion.version("8.0");
 
     @Override
-    public @NonNull ProjectMetadata execute(@NonNull BuildController controller) {
+    public @NotNull ProjectMetadata execute(@NotNull BuildController controller) {
         Map<String, KotlinModule> kotlinModules = new HashMap<>();
         Map<String, Set<ModuleSourceSet>> sourceSets = new HashMap<>();
         Map<String, Set<ExternalModuleDependency>> externalModuleDependencySet = new HashMap<>();
@@ -60,12 +60,12 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
     }
 
     private static void resolveModels(
-            @NonNull List<@NonNull InternalIdeaProject> ideaProjects,
-            @NonNull BuildController controller,
-            @NonNull Map<@NonNull String, @NonNull KotlinModule> kotlinModules,
-            @NonNull Map<@NonNull String, @NonNull Set<ModuleSourceSet>> sourceSets,
-            @NonNull Map<@NonNull String, @NonNull Set<ExternalModuleDependency>> externalModuleDependencySet,
-            @NonNull Map<@NonNull String, @NonNull AndroidProject> androidProjects
+            @NotNull List<@NotNull InternalIdeaProject> ideaProjects,
+            @NotNull BuildController controller,
+            @NotNull Map<@NotNull String, @NotNull KotlinModule> kotlinModules,
+            @NotNull Map<@NotNull String, @NotNull Set<ModuleSourceSet>> sourceSets,
+            @NotNull Map<@NotNull String, @NotNull Set<ExternalModuleDependency>> externalModuleDependencySet,
+            @NotNull Map<@NotNull String, @NotNull AndroidProject> androidProjects
     ) {
         for (InternalIdeaProject project : ideaProjects) {
             for (InternalIdeaModule module : project.getModules()) {
@@ -98,7 +98,7 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
         }
     }
 
-    private static @NonNull String getModuleFqdn(@NonNull IdeaModule module) {
+    private static @NotNull String getModuleFqdn(@NotNull IdeaModule module) {
         StringBuilder fqdn = new StringBuilder(module.getName());
         if (module.getName().equals(module.getProject().getName())) {
             return module.getName();
@@ -111,7 +111,7 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
         return fqdn.toString();
     }
 
-    private static <Model> @Nullable Model unwrapFetchedModel(@NonNull FetchModelResult<Model> result) {
+    private static <Model> @Nullable Model unwrapFetchedModel(@NotNull FetchModelResult<Model> result) {
         if (!result.getFailures().isEmpty()) {
             for (Failure failure : result.getFailures()) {
                 System.err.println(failure.getMessage());
@@ -120,7 +120,7 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
         return result.getModel();
     }
 
-    private static @NonNull DomainObjectSet<? extends GradleBuild> getIncludedBuilds(@NonNull BuildController controller) {
+    private static @NotNull DomainObjectSet<? extends GradleBuild> getIncludedBuilds(@NotNull BuildController controller) {
         GradleBuild buildModel = controller.getBuildModel();
         if (GradleVersion.current().compareTo(INCLUDED_BUILD_API_GRADLE_VERSION) <= 0) {
             return buildModel.getIncludedBuilds();
@@ -132,7 +132,7 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
         return editableBuilds;
     }
 
-    private static @NonNull List<@NonNull InternalIdeaProject> fetchProjects(@NonNull BuildController controller) {
+    private static @NotNull List<@NotNull InternalIdeaProject> fetchProjects(@NotNull BuildController controller) {
         List<InternalIdeaProject> allProjects = new ArrayList<>();
         IdeaProject rootProject = unwrapFetchedModel(controller.fetch(IdeaProject.class));
         if (rootProject != null) {
@@ -150,9 +150,9 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
         return allProjects;
     }
 
-    private static @NonNull String getBuildSrcName(
-            @NonNull IdeaModule module,
-            @NonNull List<@NonNull InternalIdeaProject> includedProjects
+    private static @NotNull String getBuildSrcName(
+            @NotNull IdeaModule module,
+            @NotNull List<@NotNull InternalIdeaProject> includedProjects
     ) {
         String parentRootDir = module.getProjectIdentifier()
                 .getBuildIdentifier()
@@ -180,10 +180,10 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
         return rootProjectName;
     }
 
-    private static @NonNull String getRootProjectName(
-            @NonNull IdeaModule module,
-            @NonNull String parentRootDir,
-            @NonNull Map<@NonNull String, @NonNull String> includedProjectPaths
+    private static @NotNull String getRootProjectName(
+            @NotNull IdeaModule module,
+            @NotNull String parentRootDir,
+            @NotNull Map<@NotNull String, @NotNull String> includedProjectPaths
     ) {
         String rootProjectName = module.getProject().getName();
         String rootProjectPath = parentRootDir;
@@ -198,7 +198,7 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
         return rootProjectName;
     }
 
-    private static <T> @Nullable T firstOrNull(@NonNull Collection<@NonNull T> items) {
+    private static <T> @Nullable T firstOrNull(@NotNull Collection<@NotNull T> items) {
         Iterator<T> iterator = items.iterator();
         if (iterator.hasNext()) {
             return iterator.next();

@@ -12,31 +12,31 @@ import org.gradle.tooling.model.idea.IdeaDependency;
 import org.gradle.tooling.model.idea.IdeaJavaLanguageSettings;
 import org.gradle.tooling.model.idea.IdeaModule;
 import org.gradle.tooling.model.idea.IdeaProject;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
 
 public class InternalIdeaModule implements Serializable, IdeaModule {
 
-    private final @NonNull IdeaModule delegate;
-    private @NonNull String name;
+    private final @NotNull IdeaModule delegate;
+    private @NotNull String name;
 
-    public InternalIdeaModule(@NonNull IdeaModule module) {
+    public InternalIdeaModule(@NotNull IdeaModule module) {
         this.delegate = module;
         this.name = module.getName();
     }
 
     @Override
-    public @NonNull String getName() {
+    public @NotNull String getName() {
         return this.name;
     }
 
-    public @NonNull IdeaModule getDelegate() {
+    public @NotNull IdeaModule getDelegate() {
         return delegate;
     }
 
-    public void setName(@NonNull String name) {
+    public void setName(@NotNull String name) {
         this.name = name;
     }
 

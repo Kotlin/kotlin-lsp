@@ -3,20 +3,20 @@ package com.jetbrains.ls.imports.gradle.model.impl;
 
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet;
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSets;
-import org.jspecify.annotations.NonNull;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
 
 public final class ModuleSourceSetsImpl implements ModuleSourceSets {
 
-    private final @NonNull Set<@NonNull ModuleSourceSet> sourceSets;
+    private final @NotNull Set<@NotNull ModuleSourceSet> sourceSets;
 
-    public ModuleSourceSetsImpl(@NonNull Set<@NonNull ModuleSourceSet> sourceSets) {
+    public ModuleSourceSetsImpl(@NotNull Set<@NotNull ModuleSourceSet> sourceSets) {
         this.sourceSets = sourceSets;
     }
 
     @Override
-    public @NonNull Set<@NonNull ModuleSourceSet> getSourceSets() {
+    public @NotNull Set<@NotNull ModuleSourceSet> getSourceSets() {
         return sourceSets;
     }
 }

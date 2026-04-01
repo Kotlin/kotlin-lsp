@@ -1,12 +1,12 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.gradle.model;
 
-import org.jspecify.annotations.NonNull;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
 import java.util.Set;
 
 public interface ExternalModuleDependencySet extends Serializable {
 
-    @NonNull Set<@NonNull ExternalModuleDependency> getDependencies();
+    @NotNull Set<@NotNull ExternalModuleDependency> getDependencies();
 }

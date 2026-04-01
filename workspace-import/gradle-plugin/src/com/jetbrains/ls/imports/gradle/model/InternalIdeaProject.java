@@ -9,8 +9,8 @@ import org.gradle.tooling.model.idea.IdeaLanguageLevel;
 import org.gradle.tooling.model.idea.IdeaModule;
 import org.gradle.tooling.model.idea.IdeaProject;
 import org.gradle.tooling.model.internal.ImmutableDomainObjectSet;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
 import java.util.List;
@@ -18,10 +18,10 @@ import java.util.stream.Collectors;
 
 public final class InternalIdeaProject implements Serializable, IdeaProject {
 
-    private final @NonNull IdeaProject delegate;
-    private final @NonNull DomainObjectSet<InternalIdeaModule> children;
+    private final @NotNull IdeaProject delegate;
+    private final @NotNull DomainObjectSet<InternalIdeaModule> children;
 
-    public InternalIdeaProject(@NonNull IdeaProject project) {
+    public InternalIdeaProject(@NotNull IdeaProject project) {
         this.delegate = project;
         this.children = mapModules(project);
     }
@@ -42,12 +42,12 @@ public final class InternalIdeaProject implements Serializable, IdeaProject {
     }
 
     @Override
-    public @NonNull DomainObjectSet<? extends InternalIdeaModule> getChildren() {
+    public @NotNull DomainObjectSet<? extends InternalIdeaModule> getChildren() {
         return children;
     }
 
     @Override
-    public @NonNull DomainObjectSet<? extends InternalIdeaModule> getModules() {
+    public @NotNull DomainObjectSet<? extends InternalIdeaModule> getModules() {
         return children;
     }
 
@@ -66,7 +66,7 @@ public final class InternalIdeaProject implements Serializable, IdeaProject {
         return delegate.getDescription();
     }
 
-    private static @NonNull DomainObjectSet<InternalIdeaModule> mapModules(@NonNull IdeaProject project) {
+    private static @NotNull DomainObjectSet<InternalIdeaModule> mapModules(@NotNull IdeaProject project) {
         List<InternalIdeaModule> mappedModules = project.getModules()
                 .stream()
                 .map(InternalIdeaModule::new)
