@@ -10,17 +10,17 @@ import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactView;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.Dependency;
-import org.gradle.api.artifacts.result.ResolvedArtifactResult;
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition;
 import org.gradle.api.attributes.Attribute;
+import org.gradle.api.plugins.ExtensionContainer;
+import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.tooling.provider.model.ToolingModelBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -40,44 +40,46 @@ public final class ExternalModuleDependencySetModuleBuilder implements ToolingMo
             return null;
         }
 
-        Map<Integer, Dependency> dependencies = new HashMap<>();
-        for (Configuration configuration : project.getConfigurations()) {
-            for (Dependency dependency : configuration.getAllDependencies()) {
-                if (dependency instanceof org.gradle.api.artifacts.ExternalModuleDependency) {
-                    dependencies.put(
-                            Objects.hash(dependency.getGroup(), dependency.getName(), dependency.getVersion()),
-                            dependency
-                    );
-                }
-            }
+        ExtensionContainer extensions = project.getExtensions();
+        SourceSetContainer sourceSets = extensions.findByType(SourceSetContainer.class);
+        if (sourceSets != null) {
+            Set<ExternalModuleDependency> result = resolveSourceSetDependencies(sourceSets, project);
+            return new ExternalModuleDependencySetImpl(result);
         }
-
-        Configuration detachedConfiguration = project.getConfigurations().detachedConfiguration();
-        detachedConfiguration.getDependencies().addAll(dependencies.values());
-        Set<ResolvedArtifactResult> resolvedArtifactResults = resolveConfiguration(detachedConfiguration);
-        Set<ExternalModuleDependency> resolvedDependencies = mapResolvedDependencies(resolvedArtifactResults);
-        return new ExternalModuleDependencySetImpl(resolvedDependencies);
+        return null;
     }
 
-    private static @NotNull Set<@NotNull ResolvedArtifactResult> resolveConfiguration(@NotNull Configuration configuration) {
+    private static @NotNull Set<ExternalModuleDependency> resolveSourceSetDependencies(
+            @NotNull SourceSetContainer sourceSets,
+            @NotNull Project project
+    ) {
+        Set<ExternalModuleDependency> result = new HashSet<>();
+        for (SourceSet sourceSet : sourceSets) {
+            String classpathConfigurationName = sourceSet.getCompileClasspathConfigurationName();
+            Configuration classpathConfiguration = project.getConfigurations().getByName(classpathConfigurationName);
+            if (classpathConfiguration.isCanBeResolved()) {
+                Set<ExternalModuleDependency> dependencies = resolveConfiguration(classpathConfiguration);
+                result.addAll(dependencies);
+            }
+        }
+        return result;
+    }
+
+    private static @NotNull Set<@NotNull ExternalModuleDependency> resolveConfiguration(@NotNull Configuration configuration) {
         return configuration.getIncoming()
                 .artifactView(new Action<ArtifactView.ViewConfiguration>() {
                     @Override
                     public void execute(ArtifactView.@NotNull ViewConfiguration configuration) {
                         configuration.setLenient(true);
+                        configuration.componentFilter(element -> !(element instanceof ProjectComponentIdentifier));
                         configuration.attributes(container -> {
                             container.attribute(Attribute.of("artifactType", String.class), ArtifactTypeDefinition.JAR_TYPE);
                         });
                     }
                 })
                 .getArtifacts()
-                .getArtifacts();
-    }
-
-    private static @NotNull Set<@NotNull ExternalModuleDependency> mapResolvedDependencies(
-            @NotNull Set<@NotNull ResolvedArtifactResult> resolvedDependencies
-    ) {
-        return resolvedDependencies.stream()
+                .getArtifacts()
+                .stream()
                 .map(it -> new ExternalModuleDependencyImpl(
                         it.getId().getComponentIdentifier().getDisplayName(),
                         it.getFile()

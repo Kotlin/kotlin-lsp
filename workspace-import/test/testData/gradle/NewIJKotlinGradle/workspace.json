@@ -1192,15 +1192,6 @@
             }
         },
         {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-assignment-compiler-plugin-embeddable:2.2.20",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-assignment-compiler-plugin-embeddable/2.2.20/#####/kotlin-assignment-compiler-plugin-embeddable-2.2.20.jar"
-                }
-            ]
-        },
-        {
             "name": "Gradle: org.jetbrains.kotlin:kotlin-build-statistics:2.3.0",
             "type": "RUNTIME",
             "roots": [
@@ -1243,33 +1234,6 @@
             }
         },
         {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-build-tools-compat:2.3.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-build-tools-compat/2.3.0/#####/kotlin-build-tools-compat-2.3.0.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-build-tools-impl:2.2.20",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-build-tools-impl/2.2.20/#####/kotlin-build-tools-impl-2.2.20.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-compiler-embeddable:2.3.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-compiler-embeddable/2.3.0/#####/kotlin-compiler-embeddable-2.3.0.jar"
-                }
-            ]
-        },
-        {
             "name": "Gradle: org.jetbrains.kotlin:kotlin-compiler-runner:2.3.0",
             "type": "RUNTIME",
             "roots": [
@@ -1310,15 +1274,6 @@
                     "baseVersion": "2.3.0"
                 }
             }
-        },
-        {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-daemon-embeddable:2.3.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-daemon-embeddable/2.3.0/#####/kotlin-daemon-embeddable-2.3.0.jar"
-                }
-            ]
         },
         {
             "name": "Gradle: org.jetbrains.kotlin:kotlin-gradle-plugin-annotations:2.3.0",
@@ -1487,105 +1442,6 @@
                     "baseVersion": "2.2.20"
                 }
             }
-        },
-        {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-sam-with-receiver-compiler-plugin-embeddable:2.2.20",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-sam-with-receiver-compiler-plugin-embeddable/2.2.20/#####/kotlin-sam-with-receiver-compiler-plugin-embeddable-2.2.20.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-script-runtime:2.3.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-script-runtime/2.3.0/#####/kotlin-script-runtime-2.3.0.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-scripting-common:2.2.20",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-common/2.2.20/#####/kotlin-scripting-common-2.2.20.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-scripting-common:2.3.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-common/2.3.0/#####/kotlin-scripting-common-2.3.0.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable:2.2.20",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-compiler-embeddable/2.2.20/#####/kotlin-scripting-compiler-embeddable-2.2.20.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable:2.3.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-compiler-embeddable/2.3.0/#####/kotlin-scripting-compiler-embeddable-2.3.0.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-scripting-compiler-impl-embeddable:2.2.20",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-compiler-impl-embeddable/2.2.20/#####/kotlin-scripting-compiler-impl-embeddable-2.2.20.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-scripting-compiler-impl-embeddable:2.3.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-compiler-impl-embeddable/2.3.0/#####/kotlin-scripting-compiler-impl-embeddable-2.3.0.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-scripting-jvm:2.2.20",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-jvm/2.2.20/#####/kotlin-scripting-jvm-2.2.20.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-scripting-jvm:2.3.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-jvm/2.3.0/#####/kotlin-scripting-jvm-2.3.0.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-serialization-compiler-plugin-embeddable:2.3.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-serialization-compiler-plugin-embeddable/2.3.0/#####/kotlin-serialization-compiler-plugin-embeddable-2.3.0.jar"
-                }
-            ]
         },
         {
             "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.20",

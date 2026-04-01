@@ -2696,15 +2696,6 @@
             }
         },
         {
-            "name": "Gradle: com.google.code.findbugs:jsr305:3.0.2",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/com.google.code.findbugs/jsr305/3.0.2/#####/jsr305-3.0.2.jar"
-                }
-            ]
-        },
-        {
             "name": "Gradle: com.google.errorprone:error_prone_annotations:2.21.1",
             "type": "RUNTIME",
             "roots": [
@@ -2724,51 +2715,6 @@
                     "baseVersion": "2.21.1"
                 }
             }
-        },
-        {
-            "name": "Gradle: com.google.errorprone:error_prone_annotations:2.28.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/com.google.errorprone/error_prone_annotations/2.28.0/#####/error_prone_annotations-2.28.0.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: com.google.guava:failureaccess:1.0.2",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/com.google.guava/failureaccess/1.0.2/#####/failureaccess-1.0.2.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: com.google.guava:guava:33.3.1-jre",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/com.google.guava/guava/33.3.1-android/#####/guava-33.3.1-jre.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/com.google.guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/#####/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: com.google.j2objc:j2objc-annotations:3.0.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/com.google.j2objc/j2objc-annotations/3.0.0/#####/j2objc-annotations-3.0.0.jar"
-                }
-            ]
         },
         {
             "name": "Gradle: com.h2database:h2:2.3.232",
@@ -2834,15 +2780,6 @@
             }
         },
         {
-            "name": "Gradle: com.puppycrawl.tools:checkstyle:10.20.1",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/com.puppycrawl.tools/checkstyle/10.20.1/#####/checkstyle-10.20.1.jar"
-                }
-            ]
-        },
-        {
             "name": "Gradle: com.sun.istack:istack-commons-runtime:4.1.2",
             "type": "RUNTIME",
             "roots": [
@@ -2904,51 +2841,6 @@
                     "baseVersion": "5.1.0"
                 }
             }
-        },
-        {
-            "name": "Gradle: commons-beanutils:commons-beanutils:1.9.4",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/commons-beanutils/commons-beanutils/1.9.4/#####/commons-beanutils-1.9.4.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: commons-codec:commons-codec:1.17.2",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/commons-codec/commons-codec/1.17.2/#####/commons-codec-1.17.2.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: commons-collections:commons-collections:3.2.2",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/commons-collections/commons-collections/3.2.2/#####/commons-collections-3.2.2.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: commons-logging:commons-logging:1.2",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/commons-logging/commons-logging/1.2/#####/commons-logging-1.2.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: info.picocli:picocli:4.7.6",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/info.picocli/picocli/4.7.6/#####/picocli-4.7.6.jar"
-                }
-            ]
         },
         {
             "name": "Gradle: io.micrometer:micrometer-commons:1.14.3",
@@ -3075,24 +2967,6 @@
                     "baseVersion": "3.2.0"
                 }
             }
-        },
-        {
-            "name": "Gradle: io.spring.javaformat:spring-javaformat-checkstyle:0.0.43",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/io.spring.javaformat/spring-javaformat-checkstyle/0.0.43/#####/spring-javaformat-checkstyle-0.0.43.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: io.spring.javaformat:spring-javaformat-config:0.0.43",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/io.spring.javaformat/spring-javaformat-config/0.0.43/#####/spring-javaformat-config-0.0.43.jar"
-                }
-            ]
         },
         {
             "name": "Gradle: jakarta.activation:jakarta.activation-api:2.1.3",
@@ -3389,15 +3263,6 @@
             }
         },
         {
-            "name": "Gradle: net.sf.saxon:Saxon-HE:12.5",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/net.sf.saxon/Saxon-HE/12.5/#####/Saxon-HE-12.5.jar"
-                }
-            ]
-        },
-        {
             "name": "Gradle: org.antlr:antlr4-runtime:4.13.0",
             "type": "COMPILE",
             "roots": [
@@ -3419,15 +3284,6 @@
             }
         },
         {
-            "name": "Gradle: org.antlr:antlr4-runtime:4.13.2",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.antlr/antlr4-runtime/4.13.2/#####/antlr4-runtime-4.13.2.jar"
-                }
-            ]
-        },
-        {
             "name": "Gradle: org.apache.commons:commons-compress:1.24.0",
             "type": "TEST",
             "roots": [
@@ -3447,69 +3303,6 @@
                     "baseVersion": "1.24.0"
                 }
             }
-        },
-        {
-            "name": "Gradle: org.apache.commons:commons-lang3:3.17.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.commons/commons-lang3/3.17.0/#####/commons-lang3-3.17.0.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.apache.commons:commons-text:1.3",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.commons/commons-text/1.3/#####/commons-text-1.3.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.apache.httpcomponents.client5:httpclient5:5.4.1",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.httpcomponents.client5/httpclient5/5.4.1/#####/httpclient5-5.4.1.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.apache.httpcomponents.core5:httpcore5-h2:5.3.2",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.httpcomponents.core5/httpcore5-h2/5.3.2/#####/httpcore5-h2-5.3.2.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.apache.httpcomponents.core5:httpcore5:5.3.2",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.httpcomponents.core5/httpcore5/5.3.2/#####/httpcore5-5.3.2.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.apache.httpcomponents:httpclient:4.5.13",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.httpcomponents/httpclient/4.5.13/#####/httpclient-4.5.13.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.apache.httpcomponents:httpcore:4.4.16",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.httpcomponents/httpcore/4.4.16/#####/httpcore-4.4.16.jar"
-                }
-            ]
         },
         {
             "name": "Gradle: org.apache.logging.log4j:log4j-api:2.24.3",
@@ -3552,42 +3345,6 @@
                     "baseVersion": "2.24.3"
                 }
             }
-        },
-        {
-            "name": "Gradle: org.apache.maven.doxia:doxia-core:1.12.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.maven.doxia/doxia-core/1.12.0/#####/doxia-core-1.12.0.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.apache.maven.doxia:doxia-logging-api:1.12.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.maven.doxia/doxia-logging-api/1.12.0/#####/doxia-logging-api-1.12.0.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.apache.maven.doxia:doxia-module-xdoc:1.12.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.maven.doxia/doxia-module-xdoc/1.12.0/#####/doxia-module-xdoc-1.12.0.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.apache.maven.doxia:doxia-sink-api:1.12.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.maven.doxia/doxia-sink-api/1.12.0/#####/doxia-sink-api-1.12.0.jar"
-                }
-            ]
         },
         {
             "name": "Gradle: org.apache.tomcat.embed:tomcat-embed-core:10.1.34",
@@ -3651,15 +3408,6 @@
                     "baseVersion": "10.1.34"
                 }
             }
-        },
-        {
-            "name": "Gradle: org.apache.xbean:xbean-reflect:3.7",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.xbean/xbean-reflect/3.7/#####/xbean-reflect-3.7.jar"
-                }
-            ]
         },
         {
             "name": "Gradle: org.apiguardian:apiguardian-api:1.1.2",
@@ -3786,42 +3534,6 @@
                     "baseVersion": "3.48.3"
                 }
             }
-        },
-        {
-            "name": "Gradle: org.codehaus.plexus:plexus-classworlds:2.6.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.codehaus.plexus/plexus-classworlds/2.6.0/#####/plexus-classworlds-2.6.0.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.codehaus.plexus:plexus-component-annotations:2.1.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.codehaus.plexus/plexus-component-annotations/2.1.0/#####/plexus-component-annotations-2.1.0.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.codehaus.plexus:plexus-container-default:2.1.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.codehaus.plexus/plexus-container-default/2.1.0/#####/plexus-container-default-2.1.0.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.codehaus.plexus:plexus-utils:3.3.0",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.codehaus.plexus/plexus-utils/3.3.0/#####/plexus-utils-3.3.0.jar"
-                }
-            ]
         },
         {
             "name": "Gradle: org.eclipse.angus:angus-activation:2.0.2",
@@ -4053,15 +3765,6 @@
                     "baseVersion": "8.0.2.Final"
                 }
             }
-        },
-        {
-            "name": "Gradle: org.javassist:javassist:3.28.0-GA",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.javassist/javassist/3.28.0-GA/#####/javassist-3.28.0-GA.jar"
-                }
-            ]
         },
         {
             "name": "Gradle: org.jboss.logging:jboss-logging:3.6.1.Final",
@@ -4482,15 +4185,6 @@
                     "baseVersion": "1.0.4"
                 }
             }
-        },
-        {
-            "name": "Gradle: org.reflections:reflections:0.10.2",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.reflections/reflections/0.10.2/#####/reflections-0.10.2.jar"
-                }
-            ]
         },
         {
             "name": "Gradle: org.rnorth.duct-tape:duct-tape:1.0.8",
@@ -5583,15 +5277,6 @@
                     "baseVersion": "1.0.1"
                 }
             }
-        },
-        {
-            "name": "Gradle: org.xmlresolver:xmlresolver:5.2.2",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.xmlresolver/xmlresolver/5.2.2/#####/xmlresolver-5.2.2-data.jar"
-                }
-            ]
         },
         {
             "name": "Gradle: org.xmlunit:xmlunit-core:2.10.0",

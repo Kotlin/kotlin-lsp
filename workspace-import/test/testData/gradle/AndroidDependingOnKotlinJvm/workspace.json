@@ -1036,60 +1036,6 @@
             }
         },
         {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-build-tools-compat:2.3.20",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-build-tools-compat/2.3.20/#####/kotlin-build-tools-compat-2.3.20.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-script-runtime:2.3.20",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-script-runtime/2.3.20/#####/kotlin-script-runtime-2.3.20.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-scripting-common:2.3.20",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-common/2.3.20/#####/kotlin-scripting-common-2.3.20.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable:2.3.20",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-compiler-embeddable/2.3.20/#####/kotlin-scripting-compiler-embeddable-2.3.20.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-scripting-compiler-impl-embeddable:2.3.20",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-compiler-impl-embeddable/2.3.20/#####/kotlin-scripting-compiler-impl-embeddable-2.3.20.jar"
-                }
-            ]
-        },
-        {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-scripting-jvm:2.3.20",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-jvm/2.3.20/#####/kotlin-scripting-jvm-2.3.20.jar"
-                }
-            ]
-        },
-        {
             "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.0",
             "type": "COMPILE",
             "roots": [
@@ -1139,15 +1085,6 @@
                     "baseVersion": "2.3.20"
                 }
             }
-        },
-        {
-            "name": "Gradle: org.jetbrains.kotlin:kotlin-tooling-core:2.3.20",
-            "type": "COMPILE",
-            "roots": [
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-tooling-core/2.3.20/#####/kotlin-tooling-core-2.3.20.jar"
-                }
-            ]
         },
         {
             "name": "Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
