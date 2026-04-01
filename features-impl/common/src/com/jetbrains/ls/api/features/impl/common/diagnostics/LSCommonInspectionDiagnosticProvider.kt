@@ -192,7 +192,7 @@ class LSCommonInspectionDiagnosticProvider(
                 inspectionEP.language == languageId || languageDialectIsSupportedByInspection(
                     inspectionEP.language,
                     languageId
-                )
+                ) || isLanguageInspection(inspectionEP, languageId)
             }
             .filter { inspectionEP -> inspectionEP.enabledByDefault }
             .filter { inspectionEP -> HighlightDisplayLevel.find(inspectionEP.level) != HighlightDisplayLevel.DO_NOT_SHOW }
@@ -211,6 +211,11 @@ class LSCommonInspectionDiagnosticProvider(
         val fileLanguage = findLanguageByID(fileLanguageId)
         val inspectionLanguage = findLanguageByID(inspectionLanguageId)
         return fileLanguage?.isKindOf(inspectionLanguage) ?: false
+    }
+
+    /* Maybe this doesn't need now */
+    private fun isLanguageInspection(inspectionEP: InspectionEP, languageId: String): Boolean {
+        return inspectionEP.language?.uppercase() == "UAST" && (languageId == "JAVA" || languageId == "KT")
     }
 
     private fun getLocalInspections(psiFile: PsiFile): List<LocalInspectionTool> {
