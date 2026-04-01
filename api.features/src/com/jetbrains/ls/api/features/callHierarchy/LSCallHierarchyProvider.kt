@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features.callHierarchy
 
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.LSLanguageSpecificConfigurationEntry
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
 import com.jetbrains.lsp.implementation.LspHandlerContext
@@ -14,12 +15,12 @@ import com.jetbrains.lsp.protocol.CallHierarchyPrepareParams
 
 interface LSCallHierarchyProvider : LSLanguageSpecificConfigurationEntry, LSUniqueConfigurationEntry {
 
-    context(server: LSServer, handlerContext: LspHandlerContext)
+    context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
     suspend fun prepareCallHierarchy(params: CallHierarchyPrepareParams): List<CallHierarchyItem>?
 
-    context(server: LSServer, handlerContext: LspHandlerContext)
+    context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
     suspend fun incomingCalls(params: CallHierarchyIncomingCallsParams): List<CallHierarchyIncomingCall>?
 
-    context(server: LSServer, handlerContext: LspHandlerContext)
+    context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
     suspend fun outgoingCalls(params: CallHierarchyOutgoingCallsParams): List<CallHierarchyOutgoingCall>?
 }

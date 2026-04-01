@@ -30,6 +30,8 @@ import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.kotlinWorkspaceModel
 import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.registerLLFirSessionServices
 import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.resetKotlinWorkspaceModelEntity
 import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.resetLLFirSessionCacheEntity
+import com.jetbrains.ls.api.features.impl.kotlin.callHierarchy.LSKotlinCallHierarchyProvider
+import com.jetbrains.ls.api.features.impl.kotlin.callHierarchy.LSKotlinCallHierarchyRenderer
 import com.jetbrains.ls.api.features.impl.kotlin.codeActions.LSKotlinOrganizeImportsCodeActionProvider
 import com.jetbrains.ls.api.features.impl.kotlin.completion.LSKotlinCompletionProvider
 import com.jetbrains.ls.api.features.impl.kotlin.definitions.LSKotlinPackageDefinitionProvider
@@ -108,6 +110,8 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
                 else -> FoldingRangeKind.Region
             }
         },
+        LSKotlinCallHierarchyProvider,
+        LSKotlinCallHierarchyRenderer
     ),
     plugins = listOf(
         kotlinPlugin,
