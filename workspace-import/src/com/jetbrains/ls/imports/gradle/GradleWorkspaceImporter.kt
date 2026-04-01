@@ -15,7 +15,6 @@ import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.findTheMostCompatibleJdk
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.getInitScriptPath
-import com.jetbrains.ls.imports.gradle.action.ProjectMetadata
 import com.jetbrains.ls.imports.gradle.action.ProjectMetadataBuilder
 import com.jetbrains.ls.imports.gradle.model.builder.PREPARE_KOTLIN_IDEA_IMPORT_TASK_NAME
 import com.jetbrains.ls.imports.gradle.util.GradleOutputStream
@@ -40,7 +39,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
     const val LSP_GRADLE_PROJECT_SELF_CONTAINED_INIT_SCRIPT: String = "com.jetbrains.ls.imports.gradle.selfContainedInitScript"
     const val LSP_GRADLE_PROJECT_SELF_CONTAINED_PROXY_URL_PROPERTY: String = "com.jetbrains.ls.imports.gradle.selfContainedProxyUrl"
 
-    private fun isApplicableDirectory(projectDirectory: Path): Boolean {
+    override fun canImportWorkspace(projectDirectory: Path): Boolean {
         return listOf(
             "build.gradle",
             "build.gradle.kts",
@@ -56,7 +55,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         virtualFileUrlManager: VirtualFileUrlManager,
         progress: WorkspaceImportProgressReporter
     ): EntityStorage? {
-        if (!isApplicableDirectory(projectDirectory)) return null
+        if (!canImportWorkspace(projectDirectory)) return null
 
         LOG.info("Importing Gradle project from: $projectDirectory")
 

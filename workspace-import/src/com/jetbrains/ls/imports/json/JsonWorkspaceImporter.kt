@@ -25,7 +25,7 @@ import kotlin.io.path.notExists
 
 object JsonWorkspaceImporter : WorkspaceImporter {
 
-    private fun isApplicableDirectory(projectDirectory: Path): Boolean =
+    override fun canImportWorkspace(projectDirectory: Path): Boolean =
         (projectDirectory / "workspace.json").exists()
 
     override suspend fun importWorkspace(
@@ -35,7 +35,7 @@ object JsonWorkspaceImporter : WorkspaceImporter {
         virtualFileUrlManager: VirtualFileUrlManager,
         progress: WorkspaceImportProgressReporter
     ): EntityStorage? {
-        if (!isApplicableDirectory(projectDirectory)) return null
+        if (!canImportWorkspace(projectDirectory)) return null
         val jsonPath = projectDirectory / "workspace.json"
         return importWorkspaceJson(
             jsonPath, projectDirectory, defaultSdkPath, virtualFileUrlManager, progress

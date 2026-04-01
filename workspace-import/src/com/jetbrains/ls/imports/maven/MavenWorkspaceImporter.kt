@@ -49,7 +49,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         System.setProperty(JB_MAVEN_JAVA_HOME, javaHome.toString())
     }
 
-    private fun isApplicableDirectory(projectDirectory: Path): Boolean {
+    override fun canImportWorkspace(projectDirectory: Path): Boolean {
         return (projectDirectory / "pom.xml").exists()
     }
 
@@ -60,7 +60,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         virtualFileUrlManager: VirtualFileUrlManager,
         progress: WorkspaceImportProgressReporter,
     ): EntityStorage? {
-        if (!isApplicableDirectory(projectDirectory)) return null
+        if (!canImportWorkspace(projectDirectory)) return null
 
         LOG.info("Importing Maven project from: $projectDirectory")
         val wrapper = projectDirectory / (if (OS.CURRENT == OS.Windows) "mvnw.cmd" else "mvnw")

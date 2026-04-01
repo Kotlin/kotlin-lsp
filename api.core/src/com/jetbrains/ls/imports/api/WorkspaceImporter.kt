@@ -7,6 +7,8 @@ import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import java.nio.file.Path
 
 interface WorkspaceImporter {
+    fun canImportWorkspace(projectDirectory: Path): Boolean
+
     suspend fun importWorkspace(
         project: Project,
         projectDirectory: Path,

@@ -41,6 +41,8 @@ import kotlin.io.path.listDirectoryEntries
  * Mirrors the logic of initLightEditMode but operates on a fresh MutableEntityStorage and does not use updateWorkspaceModel.
  */
 object GenericWorkspaceImporter : EmptyWorkspaceImporter {
+    override fun canImportWorkspace(projectDirectory: Path): Boolean = true
+
     override suspend fun importWorkspace(
         project: Project,
         projectDirectory: Path,

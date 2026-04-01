@@ -88,9 +88,8 @@ object JpsWorkspaceImporter : WorkspaceImporter {
         virtualFileUrlManager: VirtualFileUrlManager,
         progress: WorkspaceImportProgressReporter
     ): EntityStorage? {
-        if (!isApplicableDirectory(projectDirectory)) return null
+        if (!canImportWorkspace(projectDirectory)) return null
         return try {
-            if (!isApplicableDirectory(projectDirectory)) return null
             val model = JpsElementFactory.getInstance().createModel()
             initGlobalJpsOptions(model)
             val pathVariables = JpsModelSerializationDataService.computeAllPathVariables(model.global)
@@ -357,7 +356,7 @@ object JpsWorkspaceImporter : WorkspaceImporter {
         }
     }
 
-    private fun isApplicableDirectory(projectDirectory: Path): Boolean {
+    override fun canImportWorkspace(projectDirectory: Path): Boolean {
         return (projectDirectory / ".idea" / "modules.xml").exists()
     }
 
