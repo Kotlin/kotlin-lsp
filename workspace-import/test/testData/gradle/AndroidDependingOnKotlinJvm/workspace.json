@@ -241,6 +241,204 @@
             ]
         },
         {
+            "name": "My Application.app.debugAndroidTest",
+            "dependencies": [
+                {
+                    "type": "library",
+                    "name": "Gradle: android:android-sdk:null",
+                    "scope": "provided"
+                },
+                {
+                    "type": "module",
+                    "name": "My Application.app.debug",
+                    "scope": "provided"
+                },
+                {
+                    "type": "module",
+                    "name": "My Application.library.main",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.appcompat:appcompat-resources:1.7.1",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.appcompat:appcompat:1.7.1",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.fragment:fragment:1.5.4",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.activity:activity:1.8.0",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.drawerlayout:drawerlayout:1.0.0",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.vectordrawable:vectordrawable-animated:1.1.0",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.vectordrawable:vectordrawable:1.1.0",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.viewpager:viewpager:1.0.0",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.customview:customview:1.0.0",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.loader:loader:1.0.0",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.lifecycle:lifecycle-livedata:2.6.2",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.lifecycle:lifecycle-common:2.6.2",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.lifecycle:lifecycle-viewmodel:2.6.2",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.lifecycle:lifecycle-livedata-core:2.6.2",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.lifecycle:lifecycle-runtime:2.6.2",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.lifecycle:lifecycle-viewmodel-savedstate:2.6.2",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.core:core-ktx:1.2.0",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.core:core:1.13.0",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.savedstate:savedstate:1.2.1",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.annotation:annotation-experimental:1.4.0",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.cursoradapter:cursoradapter:1.0.0",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.versionedparcelable:versionedparcelable:1.1.1",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.collection:collection:1.1.0",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.interpolator:interpolator:1.0.0",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.arch.core:core-runtime:2.1.0",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.arch.core:core-common:2.2.0",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: androidx.annotation:annotation-jvm:1.6.0",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.0",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.3.20",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains:annotations:13.0",
+                    "scope": "provided"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "17",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/app/src/debugAndroidTest"
+                }
+            ]
+        },
+        {
             "name": "My Application.app.debugUnitTest",
             "dependencies": [
                 {
@@ -1211,6 +1409,15 @@
     "javaSettings": [
         {
             "module": "My Application.app.debug",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_11",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "My Application.app.debugAndroidTest",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
             "compilerOutput": null,

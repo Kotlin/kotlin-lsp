@@ -58,9 +58,23 @@ class AndroidVariantReflection(project: Project, reflected: Reflected.Instance) 
     val nestedComponents: List<AndroidComponentReflection>? by lazy {
         reflected.call("getNestedComponents")?.unwrapAs<Collection<*>>()?.mapNotNull { source ->
             if (source == null) return@mapNotNull null
-            val hostTestClass = Class.forName("com.android.build.api.variant.HostTest", true, source.javaClass.classLoader)
-            if (hostTestClass.isInstance(source)) {
-                return@mapNotNull AndroidHostTestComponentReflection(project, source.reflected)
+
+            runCatching {
+                val hostTestClass = Class.forName("com.android.build.api.variant.HostTest", true, source.javaClass.classLoader)
+                if (hostTestClass.isInstance(source)) {
+                    return@mapNotNull AndroidHostTestComponentReflection(project, source.reflected)
+                }
+            }.onFailure {
+                project.logger.error("Failed to resolve Android component", it)
+            }
+
+            runCatching {
+                val hostTestClass = Class.forName("com.android.build.api.variant.DeviceTest", true, source.javaClass.classLoader)
+                if (hostTestClass.isInstance(source)) {
+                    return@mapNotNull AndroidDeviceTestComponentReflection(project, source.reflected)
+                }
+            }.onFailure {
+                project.logger.error("Failed to resolve Android component", it)
             }
 
             null
@@ -123,3 +137,4 @@ sealed class AndroidComponentReflection(val project: Project, val reflected: Ref
 }
 
 class AndroidHostTestComponentReflection(project: Project, reflected: Reflected.Instance) : AndroidComponentReflection(project, reflected)
+class AndroidDeviceTestComponentReflection(project: Project, reflected: Reflected.Instance) : AndroidComponentReflection(project, reflected)
