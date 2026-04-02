@@ -9,6 +9,7 @@ import com.intellij.openapi.projectRoots.impl.JavaHomeFinder
 import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.util.PathUtil
 import com.intellij.util.lang.JavaVersion
+import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter.LSP_GRADLE_JAVA_HOME_PROPERTY
 import com.jetbrains.ls.imports.gradle.compatibility.GradleJvmCompatibilityChecker
 import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.gradle.idea.proto.generated.tcs.IdeaKotlinDependencyProtoKt
@@ -30,6 +31,10 @@ object GradleToolingApiHelper {
     private val LOG = logger<GradleToolingApiHelper>()
 
     fun findTheMostCompatibleJdk(project: Project, projectDirectory: Path): String? {
+        val explicitJavaHomeValue = System.getProperty(LSP_GRADLE_JAVA_HOME_PROPERTY)
+        if (explicitJavaHomeValue != null) {
+            return explicitJavaHomeValue
+        }
         val gradleVersion = guessGradleVersion(projectDirectory) ?: return null
         val javaSdkType = SimpleJavaSdkType.getInstance()
         val suggestedJavaPath = JavaHomeFinder.suggestHomePaths(project)

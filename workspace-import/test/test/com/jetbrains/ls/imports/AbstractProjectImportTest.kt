@@ -1,6 +1,8 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports
 
+import com.intellij.ide.starter.sdk.JdkDownloadItem
+import com.intellij.ide.starter.sdk.JdkDownloaderFacade
 import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.workspaceModel.ide.impl.IdeVirtualFileUrlManagerImpl
@@ -12,7 +14,7 @@ import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
 import com.jetbrains.ls.imports.api.EmptyWorkspaceProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
-import com.jetbrains.ls.imports.json.DependencyData
+import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter.LSP_GRADLE_JAVA_HOME_PROPERTY
 import com.jetbrains.ls.imports.json.WorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData
 import com.jetbrains.ls.imports.json.toJson
@@ -30,11 +32,9 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 import java.nio.file.Path
 import kotlin.io.path.Path
-import kotlin.io.path.absolutePathString
 import kotlin.io.path.div
 import kotlin.io.path.exists
 import kotlin.io.path.pathString
@@ -54,28 +54,28 @@ abstract class AbstractProjectImportTest {
     }
 
     @Test
-    fun newIJKotlinGradle() = doGradleTest("NewIJKotlinGradle", ::withIgnoredJdk)
+    fun newIJKotlinGradle() = doGradleTest("NewIJKotlinGradle", JdkDownloaderFacade.jdk21, ::withIgnoredJdkRoots)
 
     @Test
-    fun petClinic() = doGradleTest("PetClinic", ::withIgnoredJdk)
+    fun petClinic() = doGradleTest("PetClinic", ::withIgnoredJdkRoots)
 
     @Test
-    fun multiProjectKotlinDSL() = doGradleTest("MultiProjectKotlinDSL", ::withIgnoredJdk)
+    fun multiProjectKotlinDSL() = doGradleTest("MultiProjectKotlinDSL", ::withIgnoredJdkRoots)
 
     @Test
-    fun multiProjectGroovyDSL() = doGradleTest("MultiProjectGroovyDSL", ::withIgnoredJdk)
+    fun multiProjectGroovyDSL() = doGradleTest("MultiProjectGroovyDSL", ::withIgnoredJdkRoots)
 
     @Test
-    fun customSourceSets() = doGradleTest("CustomSourceSets", ::withIgnoredJdk)
+    fun customSourceSets() = doGradleTest("CustomSourceSets", ::withIgnoredJdkRoots)
 
     @Test
-    fun dependencies() = doGradleTest("Dependencies", ::withIgnoredJdk)
+    fun dependencies() = doGradleTest("Dependencies", ::withIgnoredJdkRoots)
 
     @Test
-    fun gradle6Project() = doGradleTest("Gradle6Project", ::withIgnoredJdk)
+    fun gradle6Project() = doGradleTest("Gradle6Project", JdkDownloaderFacade.jdk11, ::withIgnoredJdkRoots)
 
     @Test
-    fun gradle7Project() = doGradleTest("Gradle7Project", ::withIgnoredJdk)
+    fun gradle7Project() = doGradleTest("Gradle7Project", JdkDownloaderFacade.jdk11, ::withIgnoredJdkRoots)
 
     @Test
     fun empty() = doGradleTest("Empty")
@@ -83,7 +83,7 @@ abstract class AbstractProjectImportTest {
     @Test
     fun nonExistentDependency() {
         // TODO: Check that missing dependencies are reported
-        doGradleTest("NonExistentDependency", ::withIgnoredJdk)
+        doGradleTest("NonExistentDependency", ::withIgnoredJdkRoots)
     }
 
     @Test
@@ -92,19 +92,23 @@ abstract class AbstractProjectImportTest {
     @Test
     @EnabledIfEnvironmentVariable(named = "ANDROID_HOME", matches = ".*", disabledReason = "Android SDK is required")
     fun androidMultiModule() = doGradleTest("AndroidMultiModule") { workspaceData ->
-        withIgnoredJdk(workspaceData).withSanitizedJarLibraryNames().withoutJavaSettings()
+        withIgnoredJdkRoots(workspaceData).withSanitizedJarLibraryNames().withoutJavaSettings()
     }
 
     @Test
     @EnabledIfEnvironmentVariable(named = "ANDROID_HOME", matches = ".*", disabledReason = "Android SDK is required")
     fun androidDependingOnKotlinJvm() = doGradleTest("AndroidDependingOnKotlinJvm") { workspaceData ->
-        withIgnoredJdk(workspaceData).withSanitizedJarLibraryNames().withoutJavaSettings()
+        withIgnoredJdkRoots(workspaceData).withSanitizedJarLibraryNames().withoutJavaSettings()
     }
 
+    protected fun doGradleTest(project: String, resultMapper: (WorkspaceData) -> WorkspaceData = { it }) =
+        doGradleTest(project, JdkDownloaderFacade.jdk17, resultMapper)
 
-    protected fun doGradleTest(project: String, resultMapper: (WorkspaceData) -> WorkspaceData = { it }) {
+    protected fun doGradleTest(project: String, jdkToUse: JdkDownloadItem, resultMapper: (WorkspaceData) -> WorkspaceData = { it }) {
         downloadGradleBinaries()
-        doTest(project, GradleWorkspaceImporter, testDataDir / "gradle", resultMapper)
+        withScopedSystemProperty(LSP_GRADLE_JAVA_HOME_PROPERTY, jdkToUse.home.toString()) {
+            doTest(project, GradleWorkspaceImporter, testDataDir / "gradle", resultMapper)
+        }
     }
 
     protected fun doMavenTest(project: String) {
@@ -188,44 +192,14 @@ abstract class AbstractProjectImportTest {
         return result
     }
 
-    /**
-     * If there is no explicitly defined java version in a Gradle project, Gradle will use the version from JAVA_HOME.
-     * JAVA_HOME may differ between environments, thus it's simply to ignore the target java version for such projects.
-     * Todo LSP-790
-     */
-    protected fun withIgnoredJdk(data: WorkspaceData): WorkspaceData {
-        return WorkspaceData(
-            data.modules.map { module ->
-                module.copy(
-                    dependencies = module.dependencies.map { dependency ->
-                        return@map if (dependency is DependencyData.Sdk) {
-                            dependency.copy(
-                                name = "ignored"
-                            )
-                        } else {
-                            dependency
-                        }
-                    }
-                )
-            },
-            data.libraries,
-            data.sdks.map {
-                it.copy(
-                    version = "ignored",
-                    name = "ignored",
-                    roots = emptyList(),
-                    homePath = null
-                )
-            },
-            data.kotlinSettings,
-            data.javaSettings.map {
-                assertNotNull(it.languageLevelId, "Module language level should never be null!")
-                it.copy(
-                    languageLevelId = "ignored"
-                )
-            }
-        )
-    }
+    protected fun withIgnoredJdkRoots(data: WorkspaceData): WorkspaceData = data.copy(
+        sdks = data.sdks.map {
+            it.copy(
+                roots = emptyList(),
+                homePath = null
+            )
+        }
+    )
 
     /**
      * Some 'adhoc' libraries were not resolved by coordinates, but as 'jars' directly.
@@ -245,5 +219,19 @@ abstract class AbstractProjectImportTest {
 
     private fun WorkspaceData.withoutJavaSettings(): WorkspaceData {
         return copy(javaSettings = emptyList())
+    }
+
+    private fun withScopedSystemProperty(key: String, value: String, action: () -> Unit) {
+        val originalValue = System.getProperty(key)
+        try {
+            System.setProperty(key, value)
+            action()
+        } finally {
+            if (originalValue == null) {
+                System.clearProperty(key)
+            } else {
+                System.setProperty(key, value)
+            }
+        }
     }
 }

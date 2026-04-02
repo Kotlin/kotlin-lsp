@@ -8,7 +8,7 @@
                 },
                 {
                     "type": "sdk",
-                    "name": "ignored",
+                    "name": "17",
                     "kind": "jdk"
                 }
             ],
@@ -46,7 +46,7 @@
                 },
                 {
                     "type": "sdk",
-                    "name": "ignored",
+                    "name": "17",
                     "kind": "jdk"
                 }
             ],
@@ -103,7 +103,7 @@
                 },
                 {
                     "type": "sdk",
-                    "name": "ignored",
+                    "name": "17",
                     "kind": "jdk"
                 }
             ],
@@ -200,9 +200,9 @@
     ],
     "sdks": [
         {
-            "name": "ignored",
+            "name": "17",
             "type": "jdk",
-            "version": "ignored",
+            "version": "JDK_17",
             "homePath": null,
             "roots": [],
             "additionalData": ""

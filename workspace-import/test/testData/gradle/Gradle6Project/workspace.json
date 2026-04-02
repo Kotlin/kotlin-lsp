@@ -8,7 +8,7 @@
                 },
                 {
                     "type": "sdk",
-                    "name": "ignored",
+                    "name": "11",
                     "kind": "jdk"
                 }
             ],
@@ -26,7 +26,7 @@
                 },
                 {
                     "type": "sdk",
-                    "name": "ignored",
+                    "name": "11",
                     "kind": "jdk"
                 }
             ],
@@ -95,7 +95,7 @@
                 },
                 {
                     "type": "sdk",
-                    "name": "ignored",
+                    "name": "11",
                     "kind": "jdk"
                 }
             ],
@@ -278,9 +278,9 @@
     ],
     "sdks": [
         {
-            "name": "ignored",
+            "name": "11",
             "type": "jdk",
-            "version": "ignored",
+            "version": "JDK_11",
             "homePath": null,
             "roots": [],
             "additionalData": ""

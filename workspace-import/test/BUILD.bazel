@@ -63,6 +63,8 @@ jvm_library(
     "//language-server/analyzer:analyzer_test_lib",
     "@community//platform/build-scripts/downloader",
     "@community//platform/build-scripts/downloader:downloader_test_lib",
+    "@community//tools/intellij.tools.ide.starter:ide-starter",
+    "@community//tools/intellij.tools.ide.starter:ide-starter_test_lib",
   ],
   runtime_deps = [
     ":test",
