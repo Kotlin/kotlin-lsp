@@ -6,6 +6,10 @@ import com.jetbrains.ls.imports.gradle.model.ModuleSourceSets;
 import com.jetbrains.ls.imports.gradle.model.builder.android.AndroidSourceSets;
 import com.jetbrains.ls.imports.gradle.model.impl.ModuleSourceSetImpl;
 import com.jetbrains.ls.imports.gradle.model.impl.ModuleSourceSetsImpl;
+import com.jetbrains.ls.imports.gradle.utils.KotlinCompilationReflection;
+import com.jetbrains.ls.imports.gradle.utils.KotlinExtensionReflection;
+import com.jetbrains.ls.imports.gradle.utils.KotlinReflectionKt;
+import com.jetbrains.ls.imports.gradle.utils.KotlinTargetExtensionReflection;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
@@ -25,8 +29,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 @SuppressWarnings("IO_FILE_USAGE")
@@ -116,6 +122,11 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
             String sourceSetName = sourceSet.getName();
             Set<File> runtimeDependencies = resolveFileCollectionFiles(sourceSetName, sourceSet.getRuntimeClasspath());
             Set<File> compileDependencies = resolveFileCollectionFiles(sourceSetName, sourceSet.getCompileClasspath());
+
+            /* Find kotlin compilation by name and resolve all friend dependencies */
+            KotlinExtensionReflection kotlin = KotlinReflectionKt.getKotlin(project);
+            Set<String> friendModuleNames = getFriendModuleNames(kotlin, sourceSetName);
+
             result.add(new ModuleSourceSetImpl(
                     sourceSetName,
                     sources.getSrcDirs(),
@@ -124,7 +135,7 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
                     runtimeDependencies == null ? Collections.emptySet() : runtimeDependencies,
                     compileDependencies == null ? Collections.emptySet() : compileDependencies,
                     producedArtifacts,
-                    Collections.emptySet(),
+                    friendModuleNames,
                     runtimeDependencies == null || compileDependencies == null,
                     targetBytecodeLevel,
                     sourceCompatibility,
@@ -133,6 +144,26 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
             ));
         }
         return result;
+    }
+
+    private static @NotNull Set<String> getFriendModuleNames(@Nullable KotlinExtensionReflection kotlin, String sourceSetName) {
+        KotlinTargetExtensionReflection kotlinTarget = kotlin != null ? kotlin.getTarget() : null;
+        KotlinCompilationReflection kotlinCompilation = kotlinTarget != null ? kotlinTarget.getCompilation(sourceSetName) : null;
+        Collection<KotlinCompilationReflection> friendModules = kotlinCompilation != null
+                                                                ? kotlinCompilation.getAllAssociatedCompilations()
+                                                                : Collections.emptySet();
+        if (friendModules == null) {
+            friendModules = Collections.emptySet();
+        }
+
+        Set<String> friendModuleNames = new LinkedHashSet<>();
+        for (KotlinCompilationReflection friendModule : friendModules) {
+            String name = friendModule.getName();
+            if (name != null) {
+                friendModuleNames.add(name);
+            }
+        }
+        return friendModuleNames;
     }
 
     private static @Nullable Set<@NotNull File> resolveFileCollectionFiles(
