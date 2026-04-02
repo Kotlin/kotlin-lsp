@@ -92,13 +92,13 @@ abstract class AbstractProjectImportTest {
     @Test
     @EnabledIfEnvironmentVariable(named = "ANDROID_HOME", matches = ".*", disabledReason = "Android SDK is required")
     fun androidMultiModule() = doGradleTest("AndroidMultiModule") { workspaceData ->
-        withIgnoredJdkRoots(workspaceData).withSanitizedJarLibraryNames().withoutJavaSettings()
+        withIgnoredJdkRoots(workspaceData).withSanitizedJarLibraryNames()
     }
 
     @Test
     @EnabledIfEnvironmentVariable(named = "ANDROID_HOME", matches = ".*", disabledReason = "Android SDK is required")
     fun androidDependingOnKotlinJvm() = doGradleTest("AndroidDependingOnKotlinJvm") { workspaceData ->
-        withIgnoredJdkRoots(workspaceData).withSanitizedJarLibraryNames().withoutJavaSettings()
+        withIgnoredJdkRoots(workspaceData).withSanitizedJarLibraryNames()
     }
 
     protected fun doGradleTest(project: String, resultMapper: (WorkspaceData) -> WorkspaceData = { it }) =
@@ -215,10 +215,6 @@ abstract class AbstractProjectImportTest {
                 library.copy(name = "Gradle: #####/${path.fileName}")
             }
         )
-    }
-
-    private fun WorkspaceData.withoutJavaSettings(): WorkspaceData {
-        return copy(javaSettings = emptyList())
     }
 
     private fun withScopedSystemProperty(key: String, value: String, action: () -> Unit) {

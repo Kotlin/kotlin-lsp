@@ -1207,5 +1207,25 @@
             "version": 5,
             "flushNeeded": false
         }
+    ],
+    "javaSettings": [
+        {
+            "module": "My Application.app.debug",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_11",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "My Application.app.debugUnitTest",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_11",
+            "manifestAttributes": {}
+        }
     ]
 }
