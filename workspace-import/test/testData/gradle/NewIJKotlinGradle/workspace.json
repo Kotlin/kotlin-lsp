@@ -2056,5 +2056,34 @@
             "version": 5,
             "flushNeeded": false
         }
+    ],
+    "javaSettings": [
+        {
+            "module": "NewIJKotlinGradle.buildSrc",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "NewIJKotlinGradle.buildSrc.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "NewIJKotlinGradle.buildSrc.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutput": null,
+            "compilerOutputForTests": null,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        }
     ]
 }
