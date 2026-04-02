@@ -13,7 +13,7 @@ const val SELECTED_ANDROID_VARIANT_ENV_KEY: String = "LSP_ANDROID_VARIANT"
  *
  */
 internal fun Iterable<AndroidVariantReflection>.selectActiveVariant(): AndroidVariantReflection? {
-    firstOrNull { variant ->
+    val selected = firstOrNull { variant ->
         val selectedVariant = variant.project.providers.gradleProperty(SELECTED_ANDROID_VARIANT_KEY)
             .orElse(variant.project.providers.systemProperty(SELECTED_ANDROID_VARIANT_KEY))
             .orElse(variant.project.providers.environmentVariable(SELECTED_ANDROID_VARIANT_ENV_KEY))
@@ -22,7 +22,7 @@ internal fun Iterable<AndroidVariantReflection>.selectActiveVariant(): AndroidVa
         selectedVariant != null && variant.name == selectedVariant
     }
 
-    return sortedBy { if ("debug" in it.name.orEmpty()) 0 else 1 }.minByOrNull { it.name?.length ?: 0 }
+    return selected ?: sortedBy { if ("debug" in it.name.orEmpty()) 0 else 1 }.minByOrNull { it.name?.length ?: 0 }
 }
 
 fun Project.isAndroidProject(): Boolean {
