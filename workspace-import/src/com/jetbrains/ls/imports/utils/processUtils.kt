@@ -37,21 +37,19 @@ internal suspend fun ProcessBuilder.runWithErrorReporting(toolName: String, prog
     }
 }
 
-internal suspend fun CoroutineScope.logOutput(process: Process, logger: Logger,  progress: WorkspaceImportProgressReporter): Job {
+internal fun CoroutineScope.logOutput(process: Process, logger: Logger,  progress: WorkspaceImportProgressReporter): Job {
 
     return launch {
         launch(Dispatchers.IO) {
             process.inputStream.bufferedReader().use { reader ->
                 reader.forEachLine {
                     progress.onStdOutput(it)
-                    logger.info("STDOUT: $it") }
+                }
             }
         }
         launch(Dispatchers.IO) {
             process.errorStream.bufferedReader().forEachLine { it ->
                 progress.onErrorOutput(it)
-                logger.warn("STDERR: $it")
-
             }
         }
     }
