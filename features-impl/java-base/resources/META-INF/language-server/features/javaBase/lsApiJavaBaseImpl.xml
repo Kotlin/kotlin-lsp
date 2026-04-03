@@ -61,6 +61,9 @@
                              implementationClass="com.intellij.psi.impl.source.resolve.reference.impl.manipulators.FragmentManipulator"/>
     <lang.elementManipulator forClass="com.intellij.psi.impl.source.javadoc.PsiSnippetDocTagImpl"
                              implementationClass="com.intellij.psi.impl.source.javadoc.SnippetDocTagManipulator"/>
+    <projectSettings service="com.intellij.codeInsight.NullableNotNullManagerImpl"/>
+    <applicationSettings service="com.intellij.codeInsight.generation.SetterTemplatesManager"/>
+    <applicationSettings service="com.intellij.codeInsight.generation.GetterTemplatesManager"/>
   </extensions>
   <extensions defaultExtensionNs="ls">
     <markdownDocProvider language="JAVA"
