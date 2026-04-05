@@ -17,7 +17,7 @@
     <orderEntry type="module" module-name="intellij.libraries.kotlinx.serialization.core" />
     <orderEntry type="library" name="java-diff-utils" level="project" />
     <orderEntry type="library" scope="TEST" name="JUnit5" level="project" />
-    <orderEntry type="library" scope="TEST" name="JUnit5Jupiter" level="project" />
+    <orderEntry type="module" module-name="intellij.libraries.junit5.jupiter" scope="TEST" />
     <orderEntry type="module" module-name="language-server.test-api" scope="TEST" />
     <orderEntry type="module" module-name="language-server.api.features" scope="TEST" />
   </component>
