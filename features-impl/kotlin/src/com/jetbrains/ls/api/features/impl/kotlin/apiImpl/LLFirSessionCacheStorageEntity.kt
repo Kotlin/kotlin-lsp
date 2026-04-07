@@ -23,7 +23,7 @@ import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.KaPlatformInterface
 import org.jetbrains.kotlin.analysis.low.level.api.fir.LLFirInternals
 import org.jetbrains.kotlin.analysis.low.level.api.fir.caches.cleanable.NoOpValueReferenceCleaner
-import org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirSessionCacheStorage
+import org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.cache.LLFirSessionCacheStorage
 
 /**
  * Caches [LLFirSessionCacheStorage] from Kotlin LL FIR inside.
@@ -66,7 +66,7 @@ internal fun AnalyzerContainerBuilder.registerLLFirSessionServices(
     val storage = when (containerType) {
         AnalyzerContainerType.WRITE -> LLFirSessionCacheStorage.createEmpty {
             @Suppress("INVISIBLE_REFERENCE")
-            org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.LLFirSessionCleaner(it.requestedDisposableOrNull)
+            org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.cache.LLFirSessionCleaner(it.requestedDisposableOrNull)
         }
         else -> LLFirSessionCacheStorageEntity.single().storage
     }
