@@ -278,16 +278,6 @@ internal class IdeaProjectMapper {
         )
     }
 
-    private fun getSourceFolderType(file: File, isTest: Boolean): String {
-        val folderName = file.name
-        val prefix = when (folderName.lowercase()) {
-            "kotlin" -> "kotlin"
-            "groovy" -> "groovy"
-            else -> "java"
-        }
-        return if (isTest) "$prefix-test" else "$prefix-source"
-    }
-
     private fun findRootForSourceRoots(sourceSetName: String, moduleRoot: File, sourceRoots: List<SourceRootData>): String {
         if (sourceRoots.isEmpty() || sourceRoots.size == 1) {
             return "${moduleRoot.path}/src/$sourceSetName"
