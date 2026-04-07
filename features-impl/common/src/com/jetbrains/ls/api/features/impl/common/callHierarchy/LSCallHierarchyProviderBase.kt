@@ -5,6 +5,7 @@ import com.intellij.ide.hierarchy.HierarchyBrowserScopes.SCOPE_PROJECT
 import com.intellij.ide.hierarchy.HierarchyTreeStructure
 import com.intellij.ide.hierarchy.ReferenceAwareNodeDescriptor
 import com.intellij.openapi.application.readAction
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.findDocument
@@ -29,6 +30,8 @@ import com.jetbrains.lsp.protocol.CallHierarchyPrepareParams
 import com.jetbrains.lsp.protocol.LSP
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+
+private val LOG = logger<LSCallHierarchyProviderBase<*>>()
 
 abstract class LSCallHierarchyProviderBase<Element : PsiElement> : LSCallHierarchyProvider {
     context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
@@ -128,8 +131,9 @@ abstract class LSCallHierarchyProviderBase<Element : PsiElement> : LSCallHierarc
                 if (jsonElement == null) return null
                 return try {
                     LSP.json.decodeFromJsonElement(serializer(), jsonElement)
-                } catch (_: Exception) {
-                    null
+                } catch (e: Exception) {
+                    LOG.error("Unable to deserialize CallHierarchyItemData from JSON", e)
+                    return null
                 }
             }
         }
@@ -145,13 +149,16 @@ abstract class LSCallHierarchyProviderBase<Element : PsiElement> : LSCallHierarc
          */
         val className: String
 
-        /**
-         * Short name of the member
-         */
-        val memberName: String
+        @Serializable
+        data class ClassNameData(override val className: String) : NameData
 
         @Serializable
-        data class ClassNameData(override val className: String, override val memberName: String) : NameData
+        sealed interface MemberNameData : NameData {
+            /**
+             * Short name of the member
+             */
+            val memberName: String
+        }
 
         @Serializable
         data class MethodNameData(
@@ -159,10 +166,9 @@ abstract class LSCallHierarchyProviderBase<Element : PsiElement> : LSCallHierarc
             override val memberName: String,
             val parametersName: List<String>,
             val isConstructor: Boolean
-        ) :
-            NameData
+        ) : MemberNameData
 
         @Serializable
-        data class FieldNameData(override val className: String, override val memberName: String) : NameData
+        data class FieldNameData(override val className: String, override val memberName: String) : MemberNameData
     }
 }

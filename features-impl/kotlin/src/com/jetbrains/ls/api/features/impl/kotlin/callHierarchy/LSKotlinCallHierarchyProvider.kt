@@ -62,7 +62,7 @@ internal object LSKotlinCallHierarchyProvider : LSCallHierarchyProviderBase<KtEl
     ): KtElement? {
         val nameData = data.nameData
         val psiClass = JavaPsiFacade.getInstance(project)
-            .findClass(nameData.className, GlobalSearchScope.allScope(project))
+            .findClass(nameData.className, GlobalSearchScope.projectScope(project))
             ?: return null
 
         val ktSource = psiClass.navigationElement

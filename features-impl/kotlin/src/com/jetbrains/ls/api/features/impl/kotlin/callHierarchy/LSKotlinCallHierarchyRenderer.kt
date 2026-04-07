@@ -76,6 +76,10 @@ internal object LSKotlinCallHierarchyRenderer : LSCallHierarchyRenderer {
         )
     }
 
+    /**
+     * Retrieves the fully qualified class name containing the given Kotlin declaration.
+     * If the declaration is a class itself, then its qualified name is returned.
+     */
     private fun getContainingClassName(element: KtNamedDeclaration): String? {
         if (element is KtClassOrObject) {
             return element.fqName?.asString()
@@ -106,8 +110,7 @@ internal object LSKotlinCallHierarchyRenderer : LSCallHierarchyRenderer {
                 NameData.FieldNameData(className, name)
             }
             is KtClassOrObject -> {
-                val name = element.name ?: return null
-                NameData.ClassNameData(className, name)
+                NameData.ClassNameData(className)
             }
             else -> null
         }
