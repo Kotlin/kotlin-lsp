@@ -2,6 +2,7 @@ load("@community//build:tests-options.bzl", "jps_test")
 
 jps_test(
   name = "test_test",
+  jvm_flags = ["-Dintellij.build.test.ignoreFirstAndLastTests=true"],
   runtime_deps = [":test_test_lib"],
   sandbox = True,
 )
