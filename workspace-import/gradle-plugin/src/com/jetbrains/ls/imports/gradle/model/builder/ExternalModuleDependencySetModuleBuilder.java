@@ -10,12 +10,17 @@ import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactView;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ConfigurationContainer;
+import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.plugins.ExtensionContainer;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.internal.component.external.model.DefaultModuleComponentArtifactIdentifier;
+import org.gradle.internal.component.model.IvyArtifactName;
 import org.gradle.tooling.provider.model.ToolingModelBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -54,9 +59,10 @@ public final class ExternalModuleDependencySetModuleBuilder implements ToolingMo
             @NotNull Project project
     ) {
         Set<ExternalModuleDependency> result = new HashSet<>();
+        ConfigurationContainer projectConfigurations = project.getConfigurations();
         for (SourceSet sourceSet : sourceSets) {
-            String classpathConfigurationName = sourceSet.getCompileClasspathConfigurationName();
-            Configuration classpathConfiguration = project.getConfigurations().getByName(classpathConfigurationName);
+            String compileConfigurationName = sourceSet.getCompileClasspathConfigurationName();
+            Configuration classpathConfiguration = projectConfigurations.getByName(compileConfigurationName);
             if (classpathConfiguration.isCanBeResolved()) {
                 Set<ExternalModuleDependency> dependencies = resolveConfiguration(classpathConfiguration);
                 result.addAll(dependencies);
@@ -81,9 +87,32 @@ public final class ExternalModuleDependencySetModuleBuilder implements ToolingMo
                 .getArtifacts()
                 .stream()
                 .map(it -> new ExternalModuleDependencyImpl(
-                        it.getId().getComponentIdentifier().getDisplayName(),
+                        getArtifactMavenCoordinates(it),
                         it.getFile()
                 ))
                 .collect(Collectors.toSet());
+    }
+
+    @SuppressWarnings("StringBufferReplaceableByString")
+    private static @NotNull String getArtifactMavenCoordinates(@NotNull ResolvedArtifactResult artifact) {
+        ComponentArtifactIdentifier id = artifact.getId();
+        String coordinates = id.getComponentIdentifier().getDisplayName();
+        if (id instanceof DefaultModuleComponentArtifactIdentifier) {
+            IvyArtifactName artifactName = ((DefaultModuleComponentArtifactIdentifier) id).getName();
+            String classifier = artifactName.getClassifier();
+            if (classifier == null) {
+                return coordinates;
+            }
+            String[] gav = coordinates.split(":");
+            if (gav.length == 3) {
+                return new StringBuilder()
+                        .append(gav[0]).append(":")
+                        .append(gav[1]).append(":")
+                        .append(classifier).append(":")
+                        .append(gav[2])
+                        .toString();
+            }
+        }
+        return coordinates;
     }
 }
