@@ -1682,7 +1682,7 @@
                 {
                     "type": "module",
                     "name": "PetClinic.aot",
-                    "scope": "provided"
+                    "scope": "runtime"
                 },
                 {
                     "type": "moduleSource"
@@ -2405,7 +2405,7 @@
                 {
                     "type": "module",
                     "name": "PetClinic.aotTest",
-                    "scope": "provided"
+                    "scope": "runtime"
                 },
                 {
                     "type": "moduleSource"

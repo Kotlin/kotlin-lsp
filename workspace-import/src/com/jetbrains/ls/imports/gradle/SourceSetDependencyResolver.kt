@@ -88,7 +88,7 @@ internal class SourceSetDependencyResolver(
                 if (it is DependencyData.Module) {
                     when {
                         compileModules.contains(it.name) -> DependencyDataScope.COMPILE
-                        else -> DependencyDataScope.PROVIDED
+                        else -> DependencyDataScope.RUNTIME
                     }
                 } else {
                     when {

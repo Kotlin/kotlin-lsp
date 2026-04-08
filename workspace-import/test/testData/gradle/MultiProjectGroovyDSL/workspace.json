@@ -286,7 +286,7 @@
                 {
                     "type": "module",
                     "name": "multi-project-example.core.main",
-                    "scope": "provided"
+                    "scope": "runtime"
                 },
                 {
                     "type": "moduleSource"
@@ -348,7 +348,7 @@
                 {
                     "type": "module",
                     "name": "multi-project-example.core.main",
-                    "scope": "provided"
+                    "scope": "runtime"
                 },
                 {
                     "type": "moduleSource"
