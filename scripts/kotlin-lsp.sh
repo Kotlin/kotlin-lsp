@@ -8,6 +8,6 @@ while [ -L "$SOURCE" ]; do
 done
 DIR=$(cd -P "$(dirname "$SOURCE")" >/dev/null 2>&1 && pwd)
 
-echo >&2 "WARNING: kotlin-lsp.sh is deprecated and will be removed in a future release. Use bin/languageServer instead."
+echo >&2 "WARNING: kotlin-lsp.sh is deprecated and will be removed in a future release. Use bin/intellij-server instead."
 
-exec "$DIR/bin/languageServer" "$@"
+exec "$DIR/bin/intellij-server" "$@"
