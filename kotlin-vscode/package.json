@@ -73,6 +73,11 @@
             "default": -1,
             "description": "Port for the locally started server to listen on. -1 to start the bundled server"
           },
+          "intellij.dev.logLaunch": {
+            "type": "boolean",
+            "default": false,
+            "description": "Enable debug logging for the bundled server launcher (logs launcher output and env)"
+          },
           "intellij.additionalJvmArgs": {
             "type": "array",
             "default": [],

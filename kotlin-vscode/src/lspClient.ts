@@ -26,6 +26,7 @@ const CONNECTION_RETRY_DELAY_MS = 100;
 
 const LANGUAGE_CLIENT_ID = 'intellij';
 const OPT_DEV_SERVER_PORT = 'intellij.dev.serverPort';
+const OPT_LOG_LAUNCH = 'intellij.dev.logLaunch';
 const OPT_JVM_ARGS = 'intellij.additionalJvmArgs';
 const OPT_DEFAULT_WORKSPACE_SDK = 'intellij.jdkForSymbolResolution';
 const OPT_BUILD_TOOL = 'intellij.buildTool';
@@ -143,8 +144,8 @@ async function getStreamInfoForBundledServer(): Promise<StreamInfo> {
     }
 }
 
-function startBundledServer(): ChildProcessByStdio<null, Readable, null> {
-    const debugLaunch = false
+function startBundledServer(): ChildProcessByStdio<null, Readable, Readable> {
+    const debugLaunch = configOption<boolean>(OPT_LOG_LAUNCH) ?? false
     const launcherPath = getLauncherPath();
 
     const context = getContext()
@@ -171,7 +172,7 @@ function startBundledServer(): ChildProcessByStdio<null, Readable, null> {
 
     const serverProcess = spawn(launcherPath, args, {
         env,
-        stdio: ['ignore', 'pipe', 'ignore'],
+        stdio: ['ignore', 'pipe', 'pipe'],
     });
 
     if (debugLaunch) {
@@ -179,13 +180,20 @@ function startBundledServer(): ChildProcessByStdio<null, Readable, null> {
             input: serverProcess.stdout,
             terminal: false,
         });
-        rl.on('line', (line: string) => logInfo(`[launcher] ${line}`));
+        rl.on('line', (line: string) => logInfo(`[stdout] ${line}`));
         serverProcess.once('exit', () => rl.close());
+
+        const rlErr = readline.createInterface({
+            input: serverProcess.stderr,
+            terminal: false,
+        });
+        rlErr.on('line', (line: string) => logInfo(`[stderr] ${line}`));
+        serverProcess.once('exit', () => rlErr.close());
     }
     return serverProcess
 }
 
-function getPortForBundledServer(serverProcess: ChildProcessByStdio<null, Readable, null>): Promise<number> {
+function getPortForBundledServer(serverProcess: ChildProcessByStdio<null, Readable, Readable>): Promise<number> {
     return new Promise<number>((resolve, reject) => {
 
         const cleanup = () => {
