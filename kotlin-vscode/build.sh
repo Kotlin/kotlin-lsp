@@ -8,12 +8,14 @@ SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd)"
 OUT_DIR=$(realpath "$SCRIPT_DIR/../../../out")
 BUILD_EXTENSION_SCRIPT="$SCRIPT_DIR/buildExtension.sh"
 
-BUNDLE_TYPE="kotlin-lsp"
+BUNDLE_TYPE=""
 for arg in "$@"; do
     case "$arg" in
         --bundle-type=*) BUNDLE_TYPE="${arg#--bundle-type=}" ;;
     esac
 done
+
+: "${BUNDLE_TYPE:?--bundle-type=<type> is required}"
 
 ARTIFACT_DIR="$OUT_DIR/language-server/$BUNDLE_TYPE/artifacts"
 BUILD_DIR="$OUT_DIR/language-server/$BUNDLE_TYPE/vscode-extension"

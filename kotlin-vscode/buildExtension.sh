@@ -68,3 +68,5 @@ if [[ ! -f "$BUILD_DIR/$VSIX_TARGET_FILENAME" ]]; then
   echo "Error: vsce package produced no output. Expected: $BUILD_DIR/$VSIX_TARGET_FILENAME" >&2
   exit 1
 fi
+
+echo "##teamcity[publishArtifacts '$BUILD_DIR/$VSIX_TARGET_FILENAME=>$BUNDLE_TYPE']"
