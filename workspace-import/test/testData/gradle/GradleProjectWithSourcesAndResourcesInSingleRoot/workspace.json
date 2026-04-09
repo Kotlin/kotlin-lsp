@@ -1,0 +1,315 @@
+{
+    "modules": [
+        {
+            "name": "untitled2",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "17",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/"
+                }
+            ]
+        },
+        {
+            "name": "untitled2.main",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "17",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/src",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/src",
+                            "type": "java-source"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "untitled2.test",
+            "dependencies": [
+                {
+                    "type": "module",
+                    "name": "untitled2.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.jupiter:junit-jupiter:5.10.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.jupiter:junit-jupiter-params:5.10.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.jupiter:junit-jupiter-api:5.10.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.platform:junit-platform-commons:1.10.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.opentest4j:opentest4j:1.3.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.apiguardian:apiguardian-api:1.1.2",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.platform:junit-platform-launcher:1.10.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.10.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.platform:junit-platform-engine:1.10.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "17",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/src/test"
+                }
+            ]
+        }
+    ],
+    "libraries": [
+        {
+            "name": "Gradle: org.apiguardian:apiguardian-api:1.1.2",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apiguardian/apiguardian-api/1.1.2/#####/apiguardian-api-1.1.2.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apiguardian/apiguardian-api/1.1.2/#####/apiguardian-api-1.1.2-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.apiguardian",
+                    "artifactId": "apiguardian-api",
+                    "version": "1.1.2",
+                    "baseVersion": "1.1.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.jupiter:junit-jupiter-api:5.10.0",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-api/5.10.0/#####/junit-jupiter-api-5.10.0.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-api/5.10.0/#####/junit-jupiter-api-5.10.0-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.jupiter",
+                    "artifactId": "junit-jupiter-api",
+                    "version": "5.10.0",
+                    "baseVersion": "5.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.10.0",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-engine/5.10.0/#####/junit-jupiter-engine-5.10.0.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-engine/5.10.0/#####/junit-jupiter-engine-5.10.0-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.jupiter",
+                    "artifactId": "junit-jupiter-engine",
+                    "version": "5.10.0",
+                    "baseVersion": "5.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.jupiter:junit-jupiter-params:5.10.0",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-params/5.10.0/#####/junit-jupiter-params-5.10.0.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-params/5.10.0/#####/junit-jupiter-params-5.10.0-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.jupiter",
+                    "artifactId": "junit-jupiter-params",
+                    "version": "5.10.0",
+                    "baseVersion": "5.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.jupiter:junit-jupiter:5.10.0",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter/5.10.0/#####/junit-jupiter-5.10.0.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter/5.10.0/#####/junit-jupiter-5.10.0-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.jupiter",
+                    "artifactId": "junit-jupiter",
+                    "version": "5.10.0",
+                    "baseVersion": "5.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.platform:junit-platform-commons:1.10.0",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-commons/1.10.0/#####/junit-platform-commons-1.10.0.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-commons/1.10.0/#####/junit-platform-commons-1.10.0-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.platform",
+                    "artifactId": "junit-platform-commons",
+                    "version": "1.10.0",
+                    "baseVersion": "1.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.platform:junit-platform-engine:1.10.0",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-engine/1.10.0/#####/junit-platform-engine-1.10.0.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-engine/1.10.0/#####/junit-platform-engine-1.10.0-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.platform",
+                    "artifactId": "junit-platform-engine",
+                    "version": "1.10.0",
+                    "baseVersion": "1.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.platform:junit-platform-launcher:1.10.0",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-launcher/1.10.0/#####/junit-platform-launcher-1.10.0.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-launcher/1.10.0/#####/junit-platform-launcher-1.10.0-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.platform",
+                    "artifactId": "junit-platform-launcher",
+                    "version": "1.10.0",
+                    "baseVersion": "1.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.opentest4j:opentest4j:1.3.0",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.opentest4j/opentest4j/1.3.0/#####/opentest4j-1.3.0.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.opentest4j/opentest4j/1.3.0/#####/opentest4j-1.3.0-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.opentest4j",
+                    "artifactId": "opentest4j",
+                    "version": "1.3.0",
+                    "baseVersion": "1.3.0"
+                }
+            }
+        }
+    ],
+    "sdks": [
+        {
+            "name": "17",
+            "type": "jdk",
+            "version": "JDK_17",
+            "homePath": null,
+            "roots": [],
+            "additionalData": ""
+        }
+    ]
+}

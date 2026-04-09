@@ -7,6 +7,7 @@ import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet
 import com.jetbrains.ls.imports.json.ContentRootData
 import com.jetbrains.ls.imports.json.SourceRootData
 import org.gradle.tooling.model.idea.IdeaModule
+import java.io.File
 import java.nio.file.Path
 
 @Suppress("IO_FILE_USAGE")
@@ -29,24 +30,20 @@ class GradleContentRootResolver(metadata: ProjectMetadata) {
             sourceSet
         )
         val isTest = sourceSet.isTest()
-        val sourceRoots = mutableListOf<SourceRootData>()
+        val sourceRoots = mutableMapOf<File, SourceRootData>()
         for (sourceRootFolder in sourceSet.sources) {
-            if (sourceRootFolder.exists() && sourceRootFolder.isDirectory) {
-                sourceRoots.add(
-                    SourceRootData(
-                        sourceRootFolder.path,
-                        if (isTest) "java-test" else "java-source"
-                    )
+            if (!sourceRoots.containsKey(sourceRootFolder) && sourceRootFolder.exists() && sourceRootFolder.isDirectory) {
+                sourceRoots[sourceRootFolder] = SourceRootData(
+                    sourceRootFolder.path,
+                    if (isTest) "java-test" else "java-source"
                 )
             }
         }
         for (sourceRootFolder in sourceSet.resources) {
-            if (sourceRootFolder.exists() && sourceRootFolder.isDirectory) {
-                sourceRoots.add(
-                    SourceRootData(
-                        sourceRootFolder.path,
-                        if (isTest) "java-test-resource" else "java-resource"
-                    )
+            if (!sourceRoots.containsKey(sourceRootFolder) && sourceRootFolder.exists() && sourceRootFolder.isDirectory) {
+                sourceRoots[sourceRootFolder] = SourceRootData(
+                    sourceRootFolder.path,
+                    if (isTest) "java-test-resource" else "java-resource"
                 )
             }
         }
@@ -56,6 +53,7 @@ class GradleContentRootResolver(metadata: ProjectMetadata) {
                 emptyList(),
                 sourceSet.excludes.toMutableList(),
                 sourceRoots = sourceRoots
+                    .values
                     .filter { sourceRoot -> Path.of(sourceRoot.path).startsWith(contentRoot) }
             )
         }

@@ -87,6 +87,12 @@ abstract class AbstractProjectImportTest {
     }
 
     @Test
+    fun gradleProjectWithSourcesAndResourcesInSingleRoot() = doGradleTest(
+        "GradleProjectWithSourcesAndResourcesInSingleRoot",
+        ::withIgnoredJdkRoots
+    )
+
+    @Test
     fun simpleMaven() = doMavenTest("SimpleMaven")
 
     @Test
