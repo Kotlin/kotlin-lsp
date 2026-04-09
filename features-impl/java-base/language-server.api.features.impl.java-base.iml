@@ -35,7 +35,7 @@
     <orderEntry type="module" module-name="intellij.libraries.kotlinx.serialization.core" />
     <orderEntry type="module" module-name="language-server.analyzer" />
     <orderEntry type="module" module-name="language-server.analyzer.java" />
-    <orderEntry type="module" module-name="language-server.api.core" />
+    <orderEntry type="module" module-name="language-server.api.impl.analyzer" />
     <orderEntry type="module" module-name="language-server.api.features.impl.common" />
     <orderEntry type="module" module-name="intellij.platform.core" />
     <orderEntry type="module" module-name="intellij.platform.core.impl" />

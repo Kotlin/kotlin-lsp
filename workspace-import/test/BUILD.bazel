@@ -49,8 +49,6 @@ jvm_library(
     "//language-server/api.impl.analyzer:api.impl.analyzer_test_lib",
     "@community//libraries/kotlinx/coroutines/core",
     "@community//libraries/kotlinx/coroutines/core:core_test_lib",
-    "//language-server/community/api.core",
-    "//language-server/community/api.core:api.core_test_lib",
     "@community//plugins/kotlin/base/facet",
     "@community//plugins/kotlin/base/facet:facet_test_lib",
     "@community//libraries/kotlinx/serialization/json",

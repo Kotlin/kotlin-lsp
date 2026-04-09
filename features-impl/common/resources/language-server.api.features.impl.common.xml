@@ -23,7 +23,6 @@
     <module name="intellij.platform.projectModel"/>
     <module name="intellij.platform.util.ui"/>
     <module name="language-server.analyzer"/>
-    <module name="language-server.api.core"/>
     <module name="language-server.api.features"/>
     <module name="language-server.api.impl.analyzer"/>
     <module name="language-server.dap.platform"/>

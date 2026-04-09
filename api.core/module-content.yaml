@@ -1,3 +1,0 @@
-- name: dist.all/lib/product.jar
-  modules:
-  - name: language-server.api.core
