@@ -138,6 +138,8 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient, changedFi
                     )
                     changedFiles[command.fileUrl] = command.content.text
                 }
+                // Skip directory creation commands. Subsequent 'create file' or 'move file' command will create missing directories anyway.
+                is ModCommandData.CreateFile.Content.Directory -> {}
 
                 else -> error("Unsupported content ${command.content}")
             }
