@@ -10,7 +10,6 @@ import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.impl.JavaHomeFinder
 import com.intellij.openapi.projectRoots.impl.JavaHomeFinder.getFinder
 import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
-import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.platform.eel.provider.getEelDescriptor
 import com.intellij.platform.workspace.jps.entities.ContentRootEntity
 import com.intellij.platform.workspace.jps.entities.DependencyScope
@@ -378,27 +377,21 @@ object JpsWorkspaceImporter : WorkspaceImporter {
                 it.versionInfo?.version ?: zeroVersion
             }
             LOG.info("Detected SDK [$sdkName]: ${sdk.path}")
-            val classRoots = JavaSdkImpl.findClasses(Path.of(sdk.path), false)
-                .map { (it.replace("!/", "!/modules/")) }
             SdkEntity(
                 name = sdkName,
                 type = JavaSdk.getInstance().name,
                 roots = buildList {
-                    classRoots.mapTo(this) {
+                    JavaSdkImpl.findClasses(Path.of(sdk.path), false).mapTo(this) {
                         SdkRoot(
-                            virtualFileUrlManager.getOrCreateFromUrl(it),
+                            virtualFileUrlManager.getOrCreateFromUrl(it.replace("!/", "!/modules/")),
                             SdkRootTypeId.CLASSES,
                         )
                     }
-                    val srcZip = Path.of(sdk.path, "lib", "src.zip")
-                    if (srcZip.exists()) {
-                        val prefix = "jar://${FileUtilRt.toSystemIndependentName(srcZip.toString())}!/"
-                        classRoots.mapTo(this) {
-                            SdkRoot(
-                                virtualFileUrlManager.getOrCreateFromUrl("$prefix${it.substringAfterLast("/")}"),
-                                SdkRootTypeId.SOURCES,
-                            )
-                        }
+                    JavaSdkImpl.findSources(Path.of(sdk.path)).mapTo(this) {
+                        SdkRoot(
+                            virtualFileUrlManager.getOrCreateFromUrl(it),
+                            SdkRootTypeId.SOURCES,
+                        )
                     }
                 },
                 additionalData = "",

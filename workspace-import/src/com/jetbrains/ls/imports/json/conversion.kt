@@ -258,19 +258,40 @@ fun MutableEntityStorage.importWorkspaceData(
         if (ignoreDuplicateLibsAndSdks && SdkId(sdkData.name, sdkData.type) in storage) {
             continue
         }
-        val roots =
-            sdkData.roots?.map { SdkRoot(virtualFileUrlManager.getOrCreateFromUrl(it.url), SdkRootTypeId(it.type)) }
-                ?: sdkData.homePath?.let { homePath ->
-                    val uris = JavaSdkImpl.findClasses(toAbsolutePath(homePath, workspacePath), false)
-                        .map { it.replace("!/", "!/modules/") }
-                    uris.map { SdkRoot(it.toIntellijUri(virtualFileUrlManager), SdkRootTypeId("classPath")) }
-                }
-                ?: emptyList()
-
         storage addEntity SdkEntity(
             name = sdkData.name,
             type = sdkData.type,
-            roots = roots,
+            roots = buildList {
+                when {
+                    sdkData.roots != null -> {
+                        sdkData.roots.mapTo(this) {
+                            SdkRoot(
+                                virtualFileUrlManager.getOrCreateFromUrl(it.url),
+                                when (it.type) {
+                                    SdkRootTypeId.SOURCES.name -> SdkRootTypeId.SOURCES
+                                    SdkRootTypeId.CLASSES.name -> SdkRootTypeId.CLASSES
+                                    else -> SdkRootTypeId(it.type)
+                                })
+                        }
+                    }
+                    sdkData.homePath != null -> {
+                        val sdkHome = toAbsolutePath(sdkData.homePath, workspacePath)
+                        JavaSdkImpl.findClasses(sdkHome, false).mapTo(this) {
+                            SdkRoot(
+                                it.replace("!/", "!/modules/").toIntellijUri(virtualFileUrlManager),
+                                SdkRootTypeId.CLASSES
+                            )
+                        }
+                        JavaSdkImpl.findSources(sdkHome).mapTo(this) {
+                            SdkRoot(
+                                it.toIntellijUri(virtualFileUrlManager),
+                                SdkRootTypeId.SOURCES
+                            )
+                        }
+                    }
+                    else -> LOG.warn("SDK has no home or roots: ${sdkData.name}")
+                }
+            },
             additionalData = sdkData.additionalData,
             entitySource = entitySource
         ) {
