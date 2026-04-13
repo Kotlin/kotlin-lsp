@@ -20,6 +20,7 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskContainer;
+import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.jvm.tasks.Jar;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
@@ -113,15 +114,23 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
             Task javaCompileTask = taskContainer.findByName(compileTaskName);
             String sourceCompatibility = null;
             String targetCompatibility = null;
+            FileCollection compileClasspath = sourceSet.getCompileClasspath();
             if (javaCompileTask instanceof JavaCompile) {
                 JavaCompile javaCompile = (JavaCompile) javaCompileTask;
                 sourceCompatibility = javaCompile.getSourceCompatibility();
                 targetCompatibility = javaCompile.getTargetCompatibility();
             }
+            if (javaCompileTask instanceof AbstractCompile) {
+                try {
+                    compileClasspath = ((AbstractCompile) javaCompileTask).getClasspath();
+                } catch (Exception e) {
+                    // ignore
+                }
+            }
 
             String sourceSetName = sourceSet.getName();
             Set<File> runtimeDependencies = resolveFileCollectionFiles(sourceSetName, sourceSet.getRuntimeClasspath());
-            Set<File> compileDependencies = resolveFileCollectionFiles(sourceSetName, sourceSet.getCompileClasspath());
+            Set<File> compileDependencies = resolveFileCollectionFiles(sourceSetName, compileClasspath);
 
             /* Find kotlin compilation by name and resolve all friend dependencies */
             KotlinExtensionReflection kotlin = KotlinReflectionKt.getKotlin(project);
