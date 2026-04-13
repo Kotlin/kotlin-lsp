@@ -81,11 +81,16 @@ internal class IdeaProjectMapper {
         sourceSets: Map<String, Set<ModuleSourceSet>>
     ): List<KotlinSettingsData> {
 
+        data class SourceSetInfo(
+            val parentModuleName: String,
+            val moduleSourceSet: ModuleSourceSet,
+        )
+
         /* Index source sets by their module 'fqn' */
         val sourceSetFqnIndex = buildMap {
-            sourceSets.forEach { (name, sourceSets) ->
+            sourceSets.forEach { (parentModuleName, sourceSets) ->
                 sourceSets.forEach { sourceSet ->
-                    put("$name.${sourceSet.name}", sourceSet)
+                    put("$parentModuleName.${sourceSet.name}", SourceSetInfo(parentModuleName, sourceSet))
                 }
             }
         }
@@ -95,8 +100,8 @@ internal class IdeaProjectMapper {
             if (!moduleData.hasValidSourceRoots()) {
                 continue
             }
-            val kotlinModuleKey = name.removeSuffix(mainSourceSetSuffix).removeSuffix(testSourceSetSuffix)
-            val kotlinModule = sourceSetFqnIndex[name]?.kotlinModule ?: kotlinModules[kotlinModuleKey]
+            val kotlinModuleKey = sourceSetFqnIndex[name]?.parentModuleName ?: name
+            val kotlinModule = sourceSetFqnIndex[name]?.moduleSourceSet?.kotlinModule ?: kotlinModules[kotlinModuleKey]
             if (kotlinModule == null) {
                 continue
             }
@@ -115,7 +120,7 @@ internal class IdeaProjectMapper {
                     useProjectSettings = false,
                     implementedModuleNames = emptyList(),
                     dependsOnModuleNames = emptyList(),
-                    additionalVisibleModuleNames = sourceSetFqnIndex[name]?.friendSourceSets.orEmpty()
+                    additionalVisibleModuleNames = sourceSetFqnIndex[name]?.moduleSourceSet?.friendSourceSets.orEmpty()
                         .map { friendModuleName -> moduleData.resolveSiblingName(friendModuleName) }
                         .toSet(),
                     productionOutputPath = null,

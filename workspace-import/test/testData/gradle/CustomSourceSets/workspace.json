@@ -528,6 +528,36 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
+                "<WORKSPACE>/lib/src/integrationTest/kotlin",
+                "<WORKSPACE>/lib/src/integrationTest/resources"
+            ],
+            "configFileItems": [],
+            "module": "multi-project-source-sets.lib.integrationTest",
+            "useProjectSettings": false,
+            "implementedModuleNames": [],
+            "dependsOnModuleNames": [],
+            "additionalVisibleModuleNames": [],
+            "productionOutputPath": null,
+            "testOutputPath": null,
+            "sourceSetNames": [],
+            "isTestModule": false,
+            "externalProjectId": "multi-project-source-sets.lib.integrationTest",
+            "isHmppEnabled": true,
+            "pureKotlinSourceFolders": [],
+            "kind": "default",
+            "compilerArguments": "J{\"jvmTarget\":\"21\",\"pluginOptions\":[],\"pluginClasspaths\":[]}",
+            "additionalArguments": null,
+            "scriptTemplates": null,
+            "scriptTemplatesClasspath": null,
+            "outputDirectoryForJsLibraryFiles": null,
+            "targetPlatform": null,
+            "externalSystemRunTasks": [],
+            "version": 5,
+            "flushNeeded": false
+        },
+        {
+            "name": "Kotlin",
+            "sourceRoots": [
                 "<WORKSPACE>/lib/src/main/java",
                 "<WORKSPACE>/lib/src/main/kotlin",
                 "<WORKSPACE>/lib/src/main/resources"
