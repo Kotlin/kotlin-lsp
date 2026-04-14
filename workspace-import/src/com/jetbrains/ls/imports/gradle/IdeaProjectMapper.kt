@@ -72,9 +72,6 @@ internal class IdeaProjectMapper {
         }
     }
 
-    private val mainSourceSetSuffix: String = ".main"
-    private val testSourceSetSuffix: String = ".test"
-
     private fun calculateKotlinSettings(
         modules: Map<String, ModuleData>,
         kotlinModules: Map<String, KotlinModule>,
