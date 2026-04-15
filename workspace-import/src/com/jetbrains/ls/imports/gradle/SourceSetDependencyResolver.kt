@@ -9,6 +9,7 @@ import com.jetbrains.ls.imports.gradle.model.ExternalModuleDependency
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet
 import com.jetbrains.ls.imports.gradle.util.DependencyDataScopeCalculator
 import com.jetbrains.ls.imports.gradle.util.DependencyFileIndex
+import com.jetbrains.ls.imports.gradle.util.ProjectLibraryIndex
 import com.jetbrains.ls.imports.json.DependencyData
 import com.jetbrains.ls.imports.json.DependencyDataScope
 import com.jetbrains.ls.imports.json.LibraryData
@@ -34,7 +35,7 @@ internal class SourceSetDependencyResolver(
     private val androidProjectsByBuildTreePath = project.androidProjects.values
         .associateBy { androidProject -> androidProject.buildTreePath }
 
-    private val libraries: MutableSet<LibraryData> = mutableSetOf()
+    private val projectLibraryIndex: ProjectLibraryIndex = ProjectLibraryIndex()
     private val dependencyFileIndex: DependencyFileIndex = DependencyFileIndex()
 
     init {
@@ -105,20 +106,7 @@ internal class SourceSetDependencyResolver(
         return dependencies
     }
 
-    fun getProjectLibraries(): List<LibraryData> = libraries.toList()
-
-    private fun ExternalModuleDependency.toLibraryData(moduleName: String): LibraryData {
-        return LibraryData(
-            name = "Gradle: ${mavenCoordinates}",
-            module = moduleName,
-            type = "COMPILE",
-            roots = this.let {
-                val result = mutableListOf<LibraryRootData>()
-                it.file.run { if (exists()) result.add(LibraryRootData(path, "CLASSES")) }
-                result
-            }
-        )
-    }
+    fun getProjectLibraries(): List<LibraryData> = projectLibraryIndex.getLibraries()
 
     private fun IdeaDependency.toDependencyData(): DependencyData? {
         return when (this) {
@@ -160,7 +148,7 @@ internal class SourceSetDependencyResolver(
             .distinctBy { it.file }
             .forEach { dependency ->
                 dependencyFileIndex.add(dependency)
-                libraries.add(dependency.toLibraryData(module.name))
+                projectLibraryIndex.add(module.name, dependency)
             }
     }
 
@@ -168,8 +156,7 @@ internal class SourceSetDependencyResolver(
         project.moduleDependencies.forEach { (moduleName, moduleDependencies) ->
             moduleDependencies.forEach { dependency ->
                 dependencyFileIndex.add(dependency)
-                val data = dependency.toLibraryData(moduleName)
-                libraries.add(data)
+                projectLibraryIndex.add(moduleName, dependency)
             }
         }
     }
@@ -189,14 +176,15 @@ internal class SourceSetDependencyResolver(
             if (dependency is IdeaKotlinResolvedBinaryDependency) {
                 val libraryName = dependency.libraryName() ?: return@forEach
                 artifacts += dependency.classpath
-                libraries += LibraryData(
+                projectLibraryIndex.add(
+                    LibraryData(
                     name = libraryName,
                     module = module.name,
                     type = "COMPILE",
                     roots = dependency.classpath.map { LibraryRootData(it.path, "CLASSES") },
                     properties = dependency.getProperties()
+                    )
                 )
-
                 dependency.classpath.forEach { artifactFile ->
                     dependencyFileIndex.add(
                         artifactFile,
@@ -236,14 +224,14 @@ internal class SourceSetDependencyResolver(
             sourceSet.compileClasspath.forEach { artifactFile ->
                 if (artifacts.add(artifactFile)) {
                     val libraryName = "Gradle: ${artifactFile.path}"
-
-                    libraries += LibraryData(
+                    projectLibraryIndex.add(
+                        LibraryData(
                         name = libraryName,
                         module = module.name,
                         type = "COMPILE",
                         roots = listOf(LibraryRootData(artifactFile.path, "CLASSES")),
+                        )
                     )
-
                     dependencyFileIndex.add(
                         artifactFile,
                         DependencyData.Library(
@@ -255,41 +243,6 @@ internal class SourceSetDependencyResolver(
                 }
             }
         }
-    }
-
-    private fun IdeaSingleEntryLibraryDependency.toLibraryData(moduleName: String): LibraryData {
-        val libraryName = getLibraryName()
-        return LibraryData(
-            name = libraryName,
-            module = moduleName,
-            type = scope.scope,
-            roots = this.let {
-                val result = mutableListOf<LibraryRootData>()
-                it.file?.run { if (exists()) result.add(LibraryRootData(path, "CLASSES")) }
-                it.source?.run { if (exists()) result.add(LibraryRootData(path, "SOURCES")) }
-                it.javadoc?.run { if (exists()) result.add(LibraryRootData(path, "JAVADOC")) }
-                result
-            },
-            properties = getProperties()
-        )
-    }
-
-    private fun IdeaSingleEntryLibraryDependency.getProperties(): XmlElement? {
-        if (gradleModuleVersion == null) {
-            return null
-        }
-        val metadata = mutableMapOf<String, String>()
-        metadata.putNotNullValue("groupId", gradleModuleVersion.group)
-        metadata.putNotNullValue("artifactId", gradleModuleVersion.name)
-        metadata.putNotNullValue("version", gradleModuleVersion.version)
-        metadata.putNotNullValue("baseVersion", gradleModuleVersion.version)
-        if (metadata.isEmpty()) {
-            return null
-        }
-        return XmlElement(
-            tag = "properties",
-            attributes = metadata
-        )
     }
 
     private fun IdeaKotlinResolvedBinaryDependency.getProperties(): XmlElement? {
@@ -305,12 +258,6 @@ internal class SourceSetDependencyResolver(
             tag = "properties",
             attributes = metadata
         )
-    }
-
-    private fun <K, V> MutableMap<K, V>.putNotNullValue(key: K, value: V?) {
-        if (value != null) {
-            put(key, value)
-        }
     }
 
     private fun DependencyData.isSelfReference(moduleName: String, sourceSet: ModuleSourceSet): Boolean {

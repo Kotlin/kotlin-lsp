@@ -931,7 +931,49 @@
             "type": "COMPILE",
             "roots": [
                 {
+                    "path": "<GRADLE_REPO>/9.2.0/#####/gradle-api-9.2.0.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/gradle-installation-beacon-9.2.0.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-ant-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-astbuilder-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-datetime-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-dateutil-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-groovydoc-4.0.28.jar"
+                },
+                {
                     "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-json-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-nio-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-templates-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-xml-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/javaparser-core-3.27.0.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/kotlin-reflect-2.2.20.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/kotlin-stdlib-2.2.20.jar"
                 }
             ]
         },
@@ -940,7 +982,61 @@
             "type": "COMPILE",
             "roots": [
                 {
+                    "path": "<GRADLE_REPO>/9.2.0/#####/gradle-api-9.2.0.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/gradle-installation-beacon-9.2.0.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/gradle-kotlin-dsl-9.2.0.jar"
+                },
+                {
                     "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/gradle-kotlin-dsl-extensions-9.2.0.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/gradle-kotlin-dsl-shared-runtime-9.2.0.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/gradle-kotlin-dsl-tooling-models-9.2.0.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-ant-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-astbuilder-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-datetime-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-dateutil-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-groovydoc-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-json-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-nio-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-templates-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-xml-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/javaparser-core-3.27.0.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/kotlin-reflect-2.2.20.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/kotlin-stdlib-2.2.20.jar"
                 }
             ]
         },
@@ -949,7 +1045,52 @@
             "type": "COMPILE",
             "roots": [
                 {
+                    "path": "<GRADLE_REPO>/9.2.0/#####/gradle-api-9.2.0.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/9.2.0/#####/gradle-test-kit-9.2.0.jar"
+                },
+                {
                     "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/gradle-installation-beacon-9.2.0.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-ant-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-astbuilder-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-datetime-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-dateutil-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-groovydoc-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-json-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-nio-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-templates-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-xml-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/javaparser-core-3.27.0.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/kotlin-reflect-2.2.20.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/kotlin-stdlib-2.2.20.jar"
                 }
             ]
         },
@@ -958,7 +1099,37 @@
             "type": "COMPILE",
             "roots": [
                 {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-ant-4.0.28.jar"
+                },
+                {
                     "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-astbuilder-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-datetime-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-dateutil-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-groovydoc-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-json-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-nio-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-templates-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-xml-4.0.28.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/javaparser-core-3.27.0.jar"
                 }
             ]
         },

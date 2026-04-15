@@ -31,3 +31,9 @@ fun IdeaDependency.isExportedSafe(): Boolean {
         false
     }
 }
+
+fun <K, V> MutableMap<K, V>.putNotNullValue(key: K, value: V?) {
+    if (value != null) {
+        put(key, value)
+    }
+}

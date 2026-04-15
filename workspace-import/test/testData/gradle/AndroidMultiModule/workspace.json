@@ -2408,10 +2408,13 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<ANDROID_HOME>/platforms/android-36/android.jar"
+                    "path": "<ANDROID_HOME>/build-tools/36.0.0/core-lambda-stubs.jar"
                 },
                 {
-                    "path": "<ANDROID_HOME>/build-tools/36.0.0/core-lambda-stubs.jar"
+                    "path": "<ANDROID_HOME>/platforms/android-36.1/android.jar"
+                },
+                {
+                    "path": "<ANDROID_HOME>/platforms/android-36/android.jar"
                 }
             ],
             "properties": {
@@ -2458,6 +2461,9 @@
             "type": "COMPILE",
             "roots": [
                 {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/9c6af1ad236fb59151209c09f8424777/transformed/activity-1.8.0/#####/classes.jar"
+                },
+                {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/ebb81c0859db545e3c977774e3bc3675/transformed/activity-1.8.0/#####/classes.jar"
                 }
             ],
@@ -2476,6 +2482,9 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/39b7f834f074f7abad8748bdedb20d8d/transformed/annotation-experimental-1.4.1/#####/classes.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/68526eecdd36f94f6d92279fc74c26f8/transformed/annotation-experimental-1.4.1/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -2510,6 +2519,9 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/46505eb459d583f8b8464c2154e0aacf/transformed/appcompat-resources-1.7.1/#####/classes.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/f3dd262f2d3fe4124ac35f5ba0c0f0f2/transformed/appcompat-resources-1.7.1/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -2525,6 +2537,9 @@
             "name": "Gradle: androidx.appcompat:appcompat:1.7.1",
             "type": "COMPILE",
             "roots": [
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/4c230b3993c0edafd27f0c2891ef454d/transformed/appcompat-1.7.1/#####/classes.jar"
+                },
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/b7e86a21dbf86f8769b942ffc78b477d/transformed/appcompat-1.7.1/#####/classes.jar"
                 }
@@ -2561,6 +2576,9 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/ca17f153fdde4d86bc935b729c9f37a5/transformed/core-runtime-2.2.0/#####/classes.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/dce64a8e7be5d4bf93adbc34a01c69ba/transformed/core-runtime-2.2.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -2578,6 +2596,9 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/09f9a4edb0114f0ebfd8ecceb017b3b8/transformed/cardview-1.0.0/#####/classes.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/a368910de301aa702b5ee8d481380d77/transformed/cardview-1.0.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -2986,6 +3007,9 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/18aeba6f452e7ee3710d98b21a4140af/transformed/coordinatorlayout-1.1.0/#####/classes.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/43ccd535f46c16b65b23dddbd110d85b/transformed/coordinatorlayout-1.1.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3003,6 +3027,9 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/0a8e0f0c043025dbf3df2f89ac3d5f29/transformed/core-ktx-1.18.0/#####/classes.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/54e28847ec5a7ad990cc6754c4d71d24/transformed/core-ktx-1.18.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3018,6 +3045,9 @@
             "name": "Gradle: androidx.core:core-viewtree:1.0.0",
             "type": "COMPILE",
             "roots": [
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/949914baaa855dac8a42ff6805db1e8d/transformed/core-viewtree-1.0.0/#####/classes.jar"
+                },
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/f4b486a48a1a79a722d7915d7a66277c/transformed/core-viewtree-1.0.0/#####/classes.jar"
                 }
@@ -3036,6 +3066,9 @@
             "type": "COMPILE",
             "roots": [
                 {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/29888ed668487c3a4271c2b6ba9d91e2/transformed/core-1.18.0/#####/classes.jar"
+                },
+                {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/69c24df88d51096bea5b8e72d75536d6/transformed/core-1.18.0/#####/classes.jar"
                 }
             ],
@@ -3052,6 +3085,9 @@
             "name": "Gradle: androidx.cursoradapter:cursoradapter:1.0.0",
             "type": "COMPILE",
             "roots": [
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/3508eb14d38f44e4c637dd62767ddb92/transformed/cursoradapter-1.0.0/#####/classes.jar"
+                },
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/96e2409650518d49bed5872e2f34d09b/transformed/cursoradapter-1.0.0/#####/classes.jar"
                 }
@@ -3071,6 +3107,9 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/eaf515d897d23ec3598f2f9e9a0c67b9/transformed/customview-1.1.0/#####/classes.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/f84bee6b6fca596f31b32e7019d58697/transformed/customview-1.1.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3104,6 +3143,9 @@
             "type": "COMPILE",
             "roots": [
                 {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/10ea1dc54d500f7a4185b3ef6f041f8f/transformed/drawerlayout-1.1.1/#####/classes.jar"
+                },
+                {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/de9281ef0049891d25f5de33884b06d3/transformed/drawerlayout-1.1.1/#####/classes.jar"
                 }
             ],
@@ -3120,6 +3162,9 @@
             "name": "Gradle: androidx.dynamicanimation:dynamicanimation:1.1.0",
             "type": "COMPILE",
             "roots": [
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/115307ceaf5721edd4644822790746dc/transformed/dynamicanimation-1.1.0/#####/classes.jar"
+                },
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/34c133db40833fae1d689dda355cebc7/transformed/dynamicanimation-1.1.0/#####/classes.jar"
                 }
@@ -3189,6 +3234,9 @@
             "type": "COMPILE",
             "roots": [
                 {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/4c1b51534658bd90c0d83cfdf205749d/transformed/graphics-shapes-release/#####/classes.jar"
+                },
+                {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/f6ee42756fee1d498f35665e67dccd11/transformed/graphics-shapes-release/#####/classes.jar"
                 }
             ],
@@ -3205,6 +3253,9 @@
             "name": "Gradle: androidx.interpolator:interpolator:1.0.0",
             "type": "COMPILE",
             "roots": [
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/6aadd6f0edf24fdac8ae136574a35f84/transformed/interpolator-1.0.0/#####/classes.jar"
+                },
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/9221a8229e129fe2d42f01e488c99626/transformed/interpolator-1.0.0/#####/classes.jar"
                 }
@@ -3564,6 +3615,9 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/230a981ee03b4e3f4ee1e1300157a4c5/transformed/loader-1.0.0/#####/classes.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/49f04a0c4e3d5456deec684c2d00e62d/transformed/loader-1.0.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3681,6 +3735,9 @@
             "name": "Gradle: androidx.recyclerview:recyclerview:1.2.1",
             "type": "COMPILE",
             "roots": [
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/ebf2ee90fb5ba9d5bef9e751198d6447/transformed/recyclerview-1.2.1/#####/classes.jar"
+                },
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/ffdced1e9f73ee95818242d4ae7774e2/transformed/recyclerview-1.2.1/#####/classes.jar"
                 }
@@ -3802,6 +3859,9 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/0ca3aa9d83788028ba7aba559011a56f/transformed/espresso-core-3.7.0/#####/classes.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/820dda70d71780154b27a7c3d9ec7d75/transformed/espresso-core-3.7.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3817,6 +3877,9 @@
             "name": "Gradle: androidx.test.espresso:espresso-idling-resource:3.7.0",
             "type": "COMPILE",
             "roots": [
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/842423dcaa88f01d8df29f96ede6f8a7/transformed/espresso-idling-resource-3.7.0/#####/classes.jar"
+                },
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/f10a04d84eb3883643aed72fedbe16ad/transformed/espresso-idling-resource-3.7.0/#####/classes.jar"
                 }
@@ -3836,6 +3899,9 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/164a58adfd159dafffc7f02d0c5e41a2/transformed/junit-1.3.0/#####/classes.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/31578bbeb31e239760fd34995358837b/transformed/junit-1.3.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3851,6 +3917,9 @@
             "name": "Gradle: androidx.test.services:storage:1.6.0",
             "type": "COMPILE",
             "roots": [
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/004dc0641c1661d617561d8701e8489f/transformed/storage-1.6.0/#####/classes.jar"
+                },
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/ac13f0ee35cec8755026b59e826d5447/transformed/storage-1.6.0/#####/classes.jar"
                 }
@@ -3870,6 +3939,9 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/b6bac927b6135a9be24fc83950c397dd/transformed/core-1.7.0/#####/classes.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/e0b819e2263bc8e20ffcc14146e9c4e3/transformed/core-1.7.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3885,6 +3957,9 @@
             "name": "Gradle: androidx.test:monitor:1.8.0",
             "type": "COMPILE",
             "roots": [
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/6fe5bd242f6374f9a3bf03ea156f7861/transformed/monitor-1.8.0/#####/classes.jar"
+                },
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/8e173c498f6917d2f332ffa0559aaba5/transformed/monitor-1.8.0/#####/classes.jar"
                 }
@@ -3902,6 +3977,9 @@
             "name": "Gradle: androidx.test:runner:1.7.0",
             "type": "COMPILE",
             "roots": [
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/55412f8afb55a35bfc93e8aa556289b4/transformed/runner-1.7.0/#####/classes.jar"
+                },
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/dd44cea578e8c2987ac8166ba4d5db37/transformed/runner-1.7.0/#####/classes.jar"
                 }
@@ -3921,6 +3999,9 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/07cd56766a0e4cad86fc5aab4bde1044/transformed/tracing-1.1.0/#####/classes.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/347dd7185b0220ae03d83bf1f7382b2f/transformed/tracing-1.1.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3938,6 +4019,9 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/ae24f9d77d02dcca5667f5bb918924dc/transformed/transition-1.5.0/#####/classes.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/e69572744be571178312b80dd803a07d/transformed/transition-1.5.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3955,6 +4039,9 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/2894f85a82c27226b2798899c5d2ef42/transformed/vectordrawable-animated-1.1.0/#####/classes.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/964b0604101d35fbde446c2e14588ce0/transformed/vectordrawable-animated-1.1.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3972,6 +4059,9 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/2118d8f92a833cfad5a24323da662b6c/transformed/vectordrawable-1.1.0/#####/classes.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/75a40626b7d867b03d42f03bb77b70e6/transformed/vectordrawable-1.1.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3989,6 +4079,9 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/26d192e969bd1a589c3707fb94359cfc/transformed/versionedparcelable-1.1.1/#####/classes.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/909fb6b51ebc2c59063211a8c58a7de7/transformed/versionedparcelable-1.1.1/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -4006,6 +4099,9 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/9db0ad177df38f97d8c740c8e3a094a7/transformed/viewpager2-1.0.0/#####/classes.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/9f6e964690fd92fa37a86aaa47858589/transformed/viewpager2-1.0.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -4023,6 +4119,9 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/72a148841ac60d230fa5caa032d78a0e/transformed/viewpager-1.0.0/#####/classes.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/735a026940c6f3d3d02b8143d1495fe6/transformed/viewpager-1.0.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -4040,6 +4139,9 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/9.4.1/transforms/a7bed8d120a513367a89db1b0cd5c7fc/transformed/material-1.13.0/#####/classes.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/e165afb54b895c32753ae6c61c0d0e01/transformed/material-1.13.0/#####/classes.jar"
                 }
             ],
             "properties": {
