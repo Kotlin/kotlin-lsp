@@ -195,7 +195,7 @@ private fun sourceRootData(
     module: MavenModuleData,
     project: MavenProject,
     kotlinSettings: KotlinSettingsData?
-): List<SourceRootData> = buildSet {
+): List<SourceRootData> = buildList {
     val projectRoot = project.basedir?.toPath()?.absolute()
 
     fun belongsToProject(dir: String) = projectRoot == null || Path(dir).let { it != projectRoot && it.startsWith(projectRoot) }
@@ -257,7 +257,7 @@ private fun sourceRootData(
 //            addModelloGeneratedSources(project, "java-test")
         }
     }
-}.toList()
+}
 
 private fun MutableSet<SourceRootData>.addAntlr4GeneratedSources(
     project: MavenProject,
