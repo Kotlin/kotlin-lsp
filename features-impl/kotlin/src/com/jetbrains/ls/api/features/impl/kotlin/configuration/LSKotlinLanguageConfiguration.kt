@@ -2,10 +2,12 @@
 package com.jetbrains.ls.api.features.impl.kotlin.configuration
 
 import com.intellij.psi.PsiComment
+import com.jetbrains.analyzer.api.AnalyzerFileSystems
 import com.jetbrains.analyzer.kotlin.initKotlinApplicationContainer
 import com.jetbrains.analyzer.kotlin.initKotlinProjectContainer
 import com.jetbrains.analyzer.kotlin.initKotlinWorkspaceModelCaches
 import com.jetbrains.analyzer.kotlin.kotlinPlugin
+import com.jetbrains.ls.api.features.AnalyzerContainerType
 import com.jetbrains.ls.api.features.ApplicationInitEntry
 import com.jetbrains.ls.api.features.InvalidateHookEntry
 import com.jetbrains.ls.api.features.ProjectInitEntry
@@ -55,8 +57,8 @@ import org.jetbrains.kotlin.psi.KtImportList
 
 val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
     entries = listOf(
-        ApplicationInitEntry { _, _ ->
-            initKotlinApplicationContainer()
+        ApplicationInitEntry { _, type ->
+            initKotlinApplicationContainer(if (type == AnalyzerContainerType.INDEXING) AnalyzerFileSystems.new() else null)
         },
         ProjectInitEntry { project, type ->
             initKotlinProjectContainer(project)

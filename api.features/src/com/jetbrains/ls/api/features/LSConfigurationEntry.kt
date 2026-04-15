@@ -20,7 +20,7 @@ interface LSLanguageSpecificConfigurationEntry : LSConfigurationEntry {
 }
 
 enum class AnalyzerContainerType {
-    ANALYSIS, WRITE,
+    ANALYSIS, WRITE, INDEXING
 }
 
 fun interface ApplicationInitEntry : LSConfigurationEntry {
