@@ -40,9 +40,10 @@ cp -R "$SCRIPT_DIR/"*.js "$EXTENSION_DIR"
 cp -R "$SCRIPT_DIR/"*.json "$EXTENSION_DIR"
 cp -R "$SCRIPT_DIR/LICENSE" "$EXTENSION_DIR"
 cp -R "$SCRIPT_DIR/README.md" "$EXTENSION_DIR"
-cp -R "$SCRIPT_DIR/grammars" "$EXTENSION_DIR"
 cp -R "$SCRIPT_DIR/src" "$EXTENSION_DIR"
 cp -R "$SCRIPT_DIR/syntaxes" "$EXTENSION_DIR"
+mkdir "$EXTENSION_DIR/grammars"
+find "$SCRIPT_DIR/node_modules" -name '*tree-sitter*.wasm' -exec cp {} "$EXTENSION_DIR/grammars" \;
 
 pushd "$EXTENSION_DIR" > /dev/null
 
