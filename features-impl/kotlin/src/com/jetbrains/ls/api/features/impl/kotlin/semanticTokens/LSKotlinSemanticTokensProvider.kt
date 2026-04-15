@@ -178,7 +178,7 @@ object LSKotlinSemanticTokensProvider : LSSemanticTokensProviderBase() {
                 }
             }
             if (symbol is KaDeclarationSymbol) {
-                if (symbol.deprecationStatus?.deprecationLevel != null) {
+                if (symbol.isDeprecated) {
                     add(LSSemanticTokenModifierPredefined.DEPRECATED)
                 }
             }
