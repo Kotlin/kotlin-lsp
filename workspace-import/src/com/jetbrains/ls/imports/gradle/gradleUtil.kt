@@ -3,6 +3,10 @@ package com.jetbrains.ls.imports.gradle
 
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet
 import org.gradle.tooling.model.ExternalDependency
+import org.gradle.tooling.model.UnsupportedMethodException
+import org.gradle.tooling.model.idea.IdeaDependency
+import org.gradle.tooling.model.idea.IdeaModuleDependency
+import org.gradle.tooling.model.idea.IdeaSingleEntryLibraryDependency
 
 fun ExternalDependency.getLibraryName(): String {
     if (gradleModuleVersion != null) {
@@ -15,3 +19,15 @@ fun ExternalDependency.getLibraryName(): String {
 }
 
 fun ModuleSourceSet.isTest(): Boolean = name.lowercase().contains("test")
+
+fun IdeaDependency.isExportedSafe(): Boolean {
+    return try {
+        when (this) {
+            is IdeaSingleEntryLibraryDependency -> isExported
+            is IdeaModuleDependency -> exported
+            else -> false
+        }
+    } catch (_: UnsupportedMethodException) {
+        false
+    }
+}

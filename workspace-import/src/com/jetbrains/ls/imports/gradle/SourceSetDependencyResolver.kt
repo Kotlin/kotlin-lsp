@@ -3,17 +3,17 @@
 
 package com.jetbrains.ls.imports.gradle
 
-import com.intellij.openapi.diagnostic.logger
 import com.jetbrains.ls.imports.gradle.action.ProjectMetadata
 import com.jetbrains.ls.imports.gradle.model.AndroidProject
 import com.jetbrains.ls.imports.gradle.model.ExternalModuleDependency
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet
+import com.jetbrains.ls.imports.gradle.util.DependencyDataScopeCalculator
+import com.jetbrains.ls.imports.gradle.util.DependencyFileIndex
 import com.jetbrains.ls.imports.json.DependencyData
 import com.jetbrains.ls.imports.json.DependencyDataScope
 import com.jetbrains.ls.imports.json.LibraryData
 import com.jetbrains.ls.imports.json.LibraryRootData
 import com.jetbrains.ls.imports.json.XmlElement
-import org.gradle.tooling.model.UnsupportedMethodException
 import org.gradle.tooling.model.idea.IdeaDependency
 import org.gradle.tooling.model.idea.IdeaModule
 import org.gradle.tooling.model.idea.IdeaModuleDependency
@@ -22,10 +22,6 @@ import org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinProjectArtifactDependency
 import org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinResolvedBinaryDependency
 import org.jetbrains.kotlin.gradle.idea.tcs.extras.artifactsClasspath
 import java.io.File
-import kotlin.collections.component1
-import kotlin.collections.component2
-
-private val LOG = logger<SourceSetDependencyResolver>()
 
 internal class SourceSetDependencyResolver(
     private val project: ProjectMetadata,
@@ -39,7 +35,7 @@ internal class SourceSetDependencyResolver(
         .associateBy { androidProject -> androidProject.buildTreePath }
 
     private val libraries: MutableSet<LibraryData> = mutableSetOf()
-    private val dependencies: MutableMap<File, DependencyData> = mutableMapOf()
+    private val dependencyFileIndex: DependencyFileIndex = DependencyFileIndex()
 
     init {
         populateDependenciesFromSourceSetOutputs()
@@ -62,44 +58,20 @@ internal class SourceSetDependencyResolver(
     fun resolveDependencies(moduleName: String, moduleSourceSet: ModuleSourceSet): List<DependencyData> {
         val compileDependencies = moduleSourceSet.compileClasspath.intersect(moduleSourceSet.runtimeClasspath)
         val compileModules = moduleSourceSet.getCompileModules()
+        val providedScopeMatcher = DependencyDataScopeCalculator.forProvided(compileDependencies, compileModules)
+        val runtimeScopeMatcher = DependencyDataScopeCalculator.forRuntime(compileDependencies, compileModules)
 
         val sourceSetDependencies = mutableSetOf<DependencyData>()
 
         for (file in moduleSourceSet.compileClasspath) {
-            val dependencyData = resolveDependencyData(file) {
-                if (it is DependencyData.Module) {
-                    when {
-                        compileModules.contains(it.name) -> DependencyDataScope.COMPILE
-                        else -> DependencyDataScope.PROVIDED
-                    }
-                } else {
-                    when {
-                        compileDependencies.contains(file) -> DependencyDataScope.COMPILE
-                        else -> DependencyDataScope.PROVIDED
-                    }
-                }
-            }
-            if (dependencyData != null && !dependencyData.isSelfReference(moduleName, moduleSourceSet)) {
-                sourceSetDependencies.add(dependencyData)
-            }
+            dependencyFileIndex.get(file, providedScopeMatcher)
+                .filter { !it.isSelfReference(moduleName, moduleSourceSet) }
+                .forEach { sourceSetDependencies.add(it) }
         }
         for (file in moduleSourceSet.runtimeClasspath) {
-            val dependencyData = resolveDependencyData(file) {
-                if (it is DependencyData.Module) {
-                    when {
-                        compileModules.contains(it.name) -> DependencyDataScope.COMPILE
-                        else -> DependencyDataScope.RUNTIME
-                    }
-                } else {
-                    when {
-                        compileDependencies.contains(file) -> DependencyDataScope.COMPILE
-                        else -> DependencyDataScope.RUNTIME
-                    }
-                }
-            }
-            if (dependencyData != null && !dependencyData.isSelfReference(moduleName, moduleSourceSet)) {
-                sourceSetDependencies.add(dependencyData)
-            }
+            dependencyFileIndex.get(file, runtimeScopeMatcher)
+                .filter { !it.isSelfReference(moduleName, moduleSourceSet) }
+                .forEach { sourceSetDependencies.add(it) }
         }
         return sourceSetDependencies.toList()
     }
@@ -148,14 +120,6 @@ internal class SourceSetDependencyResolver(
         )
     }
 
-    private fun ExternalModuleDependency.toDependencyData(): DependencyData {
-        return DependencyData.Library(
-            "Gradle: ${mavenCoordinates}",
-            DependencyDataScope.RUNTIME,
-            false
-        )
-    }
-
     private fun IdeaDependency.toDependencyData(): DependencyData? {
         return when (this) {
             is IdeaSingleEntryLibraryDependency -> {
@@ -179,11 +143,11 @@ internal class SourceSetDependencyResolver(
 
     private fun ModuleSourceSet.getCompileModules(): List<String> {
         val providedClasspathModules = compileClasspath
-            .mapNotNull { dependencies[it] }
+            .flatMap { dependencyFileIndex.get(it) }
             .filterIsInstance<DependencyData.Module>()
             .toSet()
         val runtimeClasspathModules = runtimeClasspath
-            .mapNotNull { dependencies[it] }
+            .flatMap { dependencyFileIndex.get(it) }
             .filterIsInstance<DependencyData.Module>()
             .toSet()
         return providedClasspathModules.intersect(runtimeClasspathModules)
@@ -195,13 +159,7 @@ internal class SourceSetDependencyResolver(
             .filterIsInstance<IdeaSingleEntryLibraryDependency>()
             .distinctBy { it.file }
             .forEach { dependency ->
-                dependencies.computeIfAbsent(dependency.file) {
-                    DependencyData.Library(
-                        dependency.getLibraryName(),
-                        DependencyDataScope.RUNTIME,
-                        dependency.isExportedSafe()
-                    )
-                }
+                dependencyFileIndex.add(dependency)
                 libraries.add(dependency.toLibraryData(module.name))
             }
     }
@@ -209,27 +167,17 @@ internal class SourceSetDependencyResolver(
     private fun populateDependenciesFromModuleDependencies() {
         project.moduleDependencies.forEach { (moduleName, moduleDependencies) ->
             moduleDependencies.forEach { dependency ->
-                dependencies.computeIfAbsent(dependency.file) {
-                    val data = dependency.toLibraryData(moduleName)
-                    libraries.add(data)
-                    dependency.toDependencyData()
-                }
+                dependencyFileIndex.add(dependency)
+                val data = dependency.toLibraryData(moduleName)
+                libraries.add(data)
             }
         }
     }
 
     private fun populateDependenciesFromSourceSetOutputs() {
-        project.sourceSets.forEach { (moduleFqdn, sourceSets) ->
+        project.sourceSets.forEach { (moduleFqn, sourceSets) ->
             for (sourceSet in sourceSets) {
-                for (producedArtifact in sourceSet.sourceSetOutput) {
-                    dependencies.computeIfAbsent(producedArtifact) {
-                        DependencyData.Module(
-                            name = "$moduleFqdn.${sourceSet.name}",
-                            scope = DependencyDataScope.RUNTIME,
-                            isExported = false
-                        )
-                    }
-                }
+                dependencyFileIndex.add(moduleFqn, sourceSet)
             }
         }
     }
@@ -250,13 +198,14 @@ internal class SourceSetDependencyResolver(
                 )
 
                 dependency.classpath.forEach { artifactFile ->
-                    dependencies.computeIfAbsent(artifactFile) {
+                    dependencyFileIndex.add(
+                        artifactFile,
                         DependencyData.Library(
                             name = libraryName,
                             scope = DependencyDataScope.COMPILE,
                             isExported = false
                         )
-                    }
+                    )
                 }
             }
 
@@ -264,11 +213,13 @@ internal class SourceSetDependencyResolver(
                 dependency.artifactsClasspath.forEach { artifactFile ->
                     val targetProject = androidProjectsByBuildTreePath[dependency.coordinates.projectPath] ?: return@forEach
                     val targetProjectFqn = project.androidProjects.entries.firstOrNull { it.value == targetProject }?.key ?: return@forEach
-
-                    dependencies[artifactFile] = DependencyData.Module(
-                        "$targetProjectFqn.${targetProject.activeVariant}",
-                        DependencyDataScope.COMPILE,
-                        isExported = false
+                    dependencyFileIndex.add(
+                        artifactFile,
+                        DependencyData.Module(
+                            "$targetProjectFqn.${targetProject.activeVariant}",
+                            DependencyDataScope.COMPILE,
+                            isExported = false
+                        )
                     )
                 }
             }
@@ -293,34 +244,17 @@ internal class SourceSetDependencyResolver(
                         roots = listOf(LibraryRootData(artifactFile.path, "CLASSES")),
                     )
 
-                    dependencies.computeIfAbsent(artifactFile) {
+                    dependencyFileIndex.add(
+                        artifactFile,
                         DependencyData.Library(
                             libraryName,
                             DependencyDataScope.COMPILE,
                             isExported = false
                         )
-                    }
+                    )
                 }
             }
         }
-    }
-
-
-    private fun resolveDependencyData(
-        file: File, getScope: (dependencyData: DependencyData) -> DependencyDataScope
-    ): DependencyData? {
-        val dependencyData = dependencies[file] ?: run {
-            LOG.warn("Unresolved dependency file $file")
-            return null
-        }
-        if (dependencyData is DependencyData.Library) {
-            return DependencyData.Library(dependencyData.name, getScope(dependencyData), dependencyData.isExported)
-        }
-        if (dependencyData is DependencyData.Module) {
-            return DependencyData.Module(dependencyData.name, getScope(dependencyData), dependencyData.isExported, dependencyData.isTestJar)
-        }
-        LOG.warn("Unexpected dependency type $dependencyData of $file")
-        return null
     }
 
     private fun IdeaSingleEntryLibraryDependency.toLibraryData(moduleName: String): LibraryData {
@@ -376,18 +310,6 @@ internal class SourceSetDependencyResolver(
     private fun <K, V> MutableMap<K, V>.putNotNullValue(key: K, value: V?) {
         if (value != null) {
             put(key, value)
-        }
-    }
-
-    private fun IdeaDependency.isExportedSafe(): Boolean {
-        return try {
-            when (this) {
-                is IdeaSingleEntryLibraryDependency -> isExported
-                is IdeaModuleDependency -> exported
-                else -> false
-            }
-        } catch (_: UnsupportedMethodException) {
-            false
         }
     }
 

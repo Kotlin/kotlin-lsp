@@ -51,8 +51,8 @@
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.jetbrains:annotations:13.0",
-                    "scope": "provided"
+                    "name": "Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.2",
+                    "scope": "runtime"
                 },
                 {
                     "type": "library",
@@ -71,8 +71,8 @@
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.2",
-                    "scope": "runtime"
+                    "name": "Gradle: org.jetbrains:annotations:13.0",
+                    "scope": "provided"
                 },
                 {
                     "type": "library",
@@ -120,8 +120,8 @@
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.jetbrains:annotations:13.0",
-                    "scope": "provided"
+                    "name": "Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.2",
+                    "scope": "runtime"
                 },
                 {
                     "type": "library",
@@ -140,8 +140,8 @@
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.2",
-                    "scope": "runtime"
+                    "name": "Gradle: org.jetbrains:annotations:13.0",
+                    "scope": "provided"
                 },
                 {
                     "type": "library",
@@ -196,8 +196,68 @@
             "dependencies": [
                 {
                     "type": "library",
+                    "name": "Gradle: Gradle API",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: Gradle Kotlin DSL",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: Gradle Kotlin DSL",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: Gradle TestKit",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: Local Groovy",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.google.code.gson:gson:2.11.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.google.errorprone:error_prone_annotations:2.27.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
                     "name": "Gradle: gradle-api-9.2.0.jar",
                     "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: gradle-installation-beacon-9.2.0.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: gradle-kotlin-dsl-9.2.0.jar",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: gradle-kotlin-dsl-extensions-9.2.0.jar",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: gradle-kotlin-dsl-shared-runtime-9.2.0.jar",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: gradle-kotlin-dsl-tooling-models-9.2.0.jar",
+                    "scope": "provided"
                 },
                 {
                     "type": "library",
@@ -256,48 +316,18 @@
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: kotlin-stdlib-2.2.20.jar",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
                     "name": "Gradle: kotlin-reflect-2.2.20.jar",
                     "scope": "compile"
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: gradle-installation-beacon-9.2.0.jar",
+                    "name": "Gradle: kotlin-stdlib-2.2.20.jar",
                     "scope": "compile"
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: gradle-kotlin-dsl-extensions-9.2.0.jar",
-                    "scope": "provided"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: gradle-kotlin-dsl-9.2.0.jar",
-                    "scope": "provided"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: gradle-kotlin-dsl-shared-runtime-9.2.0.jar",
-                    "scope": "provided"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: gradle-kotlin-dsl-tooling-models-9.2.0.jar",
-                    "scope": "provided"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-reflect:2.2.20",
-                    "scope": "provided"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.20",
-                    "scope": "provided"
+                    "name": "Gradle: org.jetbrains.kotlin:abi-tools-api:2.3.0",
+                    "scope": "runtime"
                 },
                 {
                     "type": "library",
@@ -306,33 +336,8 @@
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-gradle-plugin-api:2.3.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains:annotations:13.0",
-                    "scope": "provided"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-gradle-plugin-annotations:2.3.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-native-utils:2.3.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-tooling-core:2.3.0",
-                    "scope": "compile"
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-build-statistics:2.3.0",
+                    "scope": "runtime"
                 },
                 {
                     "type": "library",
@@ -341,7 +346,22 @@
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-util-io:2.3.0",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-compiler-runner:2.3.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-daemon-client:2.3.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-gradle-plugin-annotations:2.3.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-gradle-plugin-api:2.3.0",
                     "scope": "compile"
                 },
                 {
@@ -356,32 +376,42 @@
                 },
                 {
                     "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
                     "name": "Gradle: org.jetbrains.kotlin:kotlin-klib-commonizer-api:2.3.0",
                     "scope": "runtime"
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-build-statistics:2.3.0",
-                    "scope": "runtime"
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-native-utils:2.3.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-reflect:2.2.20",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.2.20",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-tooling-core:2.3.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-util-io:2.3.0",
+                    "scope": "compile"
                 },
                 {
                     "type": "library",
                     "name": "Gradle: org.jetbrains.kotlin:kotlin-util-klib-metadata:2.3.0",
-                    "scope": "runtime"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:abi-tools-api:2.3.0",
-                    "scope": "runtime"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-compiler-runner:2.3.0",
-                    "scope": "runtime"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: com.google.code.gson:gson:2.11.0",
                     "scope": "runtime"
                 },
                 {
@@ -391,18 +421,13 @@
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-daemon-client:2.3.0",
-                    "scope": "runtime"
-                },
-                {
-                    "type": "library",
                     "name": "Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.8.0",
                     "scope": "runtime"
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: com.google.errorprone:error_prone_annotations:2.27.0",
-                    "scope": "runtime"
+                    "name": "Gradle: org.jetbrains:annotations:13.0",
+                    "scope": "provided"
                 },
                 {
                     "type": "moduleSource"
@@ -462,7 +487,67 @@
                 },
                 {
                     "type": "library",
+                    "name": "Gradle: Gradle API",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: Gradle Kotlin DSL",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: Gradle TestKit",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: Local Groovy",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.google.code.gson:gson:2.11.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: com.google.errorprone:error_prone_annotations:2.27.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
                     "name": "Gradle: gradle-api-9.2.0.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: gradle-installation-beacon-9.2.0.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: gradle-kotlin-dsl-9.2.0.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: gradle-kotlin-dsl-extensions-9.2.0.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: gradle-kotlin-dsl-shared-runtime-9.2.0.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: gradle-kotlin-dsl-tooling-models-9.2.0.jar",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: gradle-test-kit-9.2.0.jar",
                     "scope": "compile"
                 },
                 {
@@ -522,42 +607,77 @@
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: kotlin-stdlib-2.2.20.jar",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
                     "name": "Gradle: kotlin-reflect-2.2.20.jar",
                     "scope": "compile"
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: gradle-installation-beacon-9.2.0.jar",
+                    "name": "Gradle: kotlin-stdlib-2.2.20.jar",
                     "scope": "compile"
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: gradle-kotlin-dsl-extensions-9.2.0.jar",
+                    "name": "Gradle: org.jetbrains.kotlin:abi-tools-api:2.3.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:fus-statistics-gradle-plugin:2.3.0",
                     "scope": "compile"
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: gradle-kotlin-dsl-9.2.0.jar",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-build-statistics:2.3.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-build-tools-api:2.3.0",
                     "scope": "compile"
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: gradle-kotlin-dsl-shared-runtime-9.2.0.jar",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-compiler-runner:2.3.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-daemon-client:2.3.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-gradle-plugin-annotations:2.3.0",
                     "scope": "compile"
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: gradle-kotlin-dsl-tooling-models-9.2.0.jar",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-gradle-plugin-api:2.3.0",
                     "scope": "compile"
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: gradle-test-kit-9.2.0.jar",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-gradle-plugin-idea-proto:2.3.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-gradle-plugin-idea:2.3.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-klib-commonizer-api:2.3.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-native-utils:2.3.0",
                     "scope": "compile"
                 },
                 {
@@ -572,42 +692,7 @@
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:fus-statistics-gradle-plugin:2.3.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-gradle-plugin-api:2.3.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains:annotations:13.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-gradle-plugin-annotations:2.3.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-native-utils:2.3.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
                     "name": "Gradle: org.jetbrains.kotlin:kotlin-tooling-core:2.3.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-build-tools-api:2.3.0",
                     "scope": "compile"
                 },
                 {
@@ -617,47 +702,7 @@
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: pluginUnderTestMetadata",
-                    "scope": "runtime"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-gradle-plugin-idea-proto:2.3.0",
-                    "scope": "runtime"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-gradle-plugin-idea:2.3.0",
-                    "scope": "runtime"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-klib-commonizer-api:2.3.0",
-                    "scope": "runtime"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-build-statistics:2.3.0",
-                    "scope": "runtime"
-                },
-                {
-                    "type": "library",
                     "name": "Gradle: org.jetbrains.kotlin:kotlin-util-klib-metadata:2.3.0",
-                    "scope": "runtime"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:abi-tools-api:2.3.0",
-                    "scope": "runtime"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-compiler-runner:2.3.0",
-                    "scope": "runtime"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: com.google.code.gson:gson:2.11.0",
                     "scope": "runtime"
                 },
                 {
@@ -667,17 +712,17 @@
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-daemon-client:2.3.0",
-                    "scope": "runtime"
-                },
-                {
-                    "type": "library",
                     "name": "Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.8.0",
                     "scope": "runtime"
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: com.google.errorprone:error_prone_annotations:2.27.0",
+                    "name": "Gradle: org.jetbrains:annotations:13.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: pluginUnderTestMetadata",
                     "scope": "runtime"
                 },
                 {
@@ -718,6 +763,16 @@
             "dependencies": [
                 {
                     "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.3.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.2",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
                     "name": "Gradle: org.jetbrains.kotlinx:kotlinx-datetime-jvm:0.7.1",
                     "scope": "compile"
                 },
@@ -729,16 +784,6 @@
                 {
                     "type": "library",
                     "name": "Gradle: org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.9.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.2",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.3.0",
                     "scope": "compile"
                 },
                 {
@@ -781,12 +826,27 @@
                 },
                 {
                     "type": "library",
+                    "name": "Gradle: org.apiguardian:apiguardian-api:1.1.2",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.3.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
                     "name": "Gradle: org.jetbrains.kotlin:kotlin-test-junit5:2.3.0",
                     "scope": "compile"
                 },
                 {
                     "type": "library",
                     "name": "Gradle: org.jetbrains.kotlin:kotlin-test:2.3.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.2",
                     "scope": "compile"
                 },
                 {
@@ -806,22 +866,7 @@
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.2",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.3.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
                     "name": "Gradle: org.jetbrains:annotations:23.0.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.junit.platform:junit-platform-commons:1.10.1",
                     "scope": "compile"
                 },
                 {
@@ -831,18 +876,13 @@
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.opentest4j:opentest4j:1.3.0",
-                    "scope": "compile"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.apiguardian:apiguardian-api:1.1.2",
-                    "scope": "provided"
-                },
-                {
-                    "type": "library",
-                    "name": "Gradle: org.junit.platform:junit-platform-launcher:1.10.1",
+                    "name": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.10.1",
                     "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.platform:junit-platform-commons:1.10.1",
+                    "scope": "compile"
                 },
                 {
                     "type": "library",
@@ -851,8 +891,13 @@
                 },
                 {
                     "type": "library",
-                    "name": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.10.1",
+                    "name": "Gradle: org.junit.platform:junit-platform-launcher:1.10.1",
                     "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.opentest4j:opentest4j:1.3.0",
+                    "scope": "compile"
                 },
                 {
                     "type": "moduleSource"
@@ -881,6 +926,42 @@
         }
     ],
     "libraries": [
+        {
+            "name": "Gradle: Gradle API",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-json-4.0.28.jar"
+                }
+            ]
+        },
+        {
+            "name": "Gradle: Gradle Kotlin DSL",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/gradle-kotlin-dsl-extensions-9.2.0.jar"
+                }
+            ]
+        },
+        {
+            "name": "Gradle: Gradle TestKit",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/gradle-installation-beacon-9.2.0.jar"
+                }
+            ]
+        },
+        {
+            "name": "Gradle: Local Groovy",
+            "type": "COMPILE",
+            "roots": [
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-astbuilder-4.0.28.jar"
+                }
+            ]
+        },
         {
             "name": "Gradle: com.google.code.gson:gson:2.11.0",
             "type": "RUNTIME",

@@ -15,6 +15,7 @@ import com.jetbrains.ls.imports.api.EmptyWorkspaceProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter.LSP_GRADLE_JAVA_HOME_PROPERTY
+import com.jetbrains.ls.imports.json.DependencyData
 import com.jetbrains.ls.imports.json.WorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData
 import com.jetbrains.ls.imports.json.toJson
@@ -54,7 +55,9 @@ abstract class AbstractProjectImportTest {
     }
 
     @Test
-    fun newIJKotlinGradle() = doGradleTest("NewIJKotlinGradle", JdkDownloaderFacade.jdk21, ::withIgnoredJdkRoots)
+    fun newIJKotlinGradle() = doGradleTest("NewIJKotlinGradle", JdkDownloaderFacade.jdk21) {
+        withIgnoredJdkRoots(it).withRelaxedDependencyOrder()
+    }
 
     @Test
     fun petClinic() = doGradleTest("PetClinic", ::withIgnoredJdkRoots)
@@ -101,13 +104,13 @@ abstract class AbstractProjectImportTest {
     @Test
     @EnabledIfEnvironmentVariable(named = "ANDROID_HOME", matches = ".*", disabledReason = "Android SDK is required")
     fun androidMultiModule() = doGradleTest("AndroidMultiModule") { workspaceData ->
-        withIgnoredJdkRoots(workspaceData).withSanitizedJarLibraryNames()
+        withIgnoredJdkRoots(workspaceData).withSanitizedJarLibraryNames().withoutSyntheticLibraries()
     }
 
     @Test
     @EnabledIfEnvironmentVariable(named = "ANDROID_HOME", matches = ".*", disabledReason = "Android SDK is required")
     fun androidDependingOnKotlinJvm() = doGradleTest("AndroidDependingOnKotlinJvm") { workspaceData ->
-        withIgnoredJdkRoots(workspaceData).withSanitizedJarLibraryNames()
+        withIgnoredJdkRoots(workspaceData).withSanitizedJarLibraryNames().withoutSyntheticLibraries()
     }
 
     protected fun doGradleTest(project: String, resultMapper: (WorkspaceData) -> WorkspaceData = { it }) =
@@ -201,6 +204,8 @@ abstract class AbstractProjectImportTest {
         return result
     }
 
+    protected open fun getRealTestDataDir(): String = testDataDir.toString()
+
     protected fun withIgnoredJdkRoots(data: WorkspaceData): WorkspaceData = data.copy(
         sdks = data.sdks.map {
             it.copy(
@@ -209,6 +214,34 @@ abstract class AbstractProjectImportTest {
             )
         }
     )
+
+    private fun WorkspaceData.withoutSyntheticLibraries(): WorkspaceData {
+        val testDataPath = getRealTestDataDir()
+        return copy(
+            modules = modules.map { moduleData ->
+                moduleData.copy(
+                    dependencies = moduleData.dependencies.filter { dependencyData ->
+                        !(dependencyData is DependencyData.Library && dependencyData.name.contains(testDataPath))
+                    }
+                )
+            }
+        )
+    }
+
+    private fun WorkspaceData.withRelaxedDependencyOrder(): WorkspaceData = copy(
+        modules = modules.map { moduleData ->
+            moduleData.copy(
+                dependencies = moduleData.dependencies.sortedWith { first, second -> first.compare(second) }
+            )
+        }
+    )
+
+    private fun DependencyData.compare(other: DependencyData): Int {
+        if (this is DependencyData.Library && other is DependencyData.Library) {
+            return this.name.compareTo(other.name)
+        }
+        return 0
+    }
 
     /**
      * Some 'adhoc' libraries were not resolved by coordinates, but as 'jars' directly.

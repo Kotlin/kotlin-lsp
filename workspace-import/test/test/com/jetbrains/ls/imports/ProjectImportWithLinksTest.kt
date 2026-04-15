@@ -61,4 +61,8 @@ class ProjectImportWithLinksTest : AbstractProjectImportTest() {
         super.tearDown()
         tempDir.toFile().deleteRecursively()
     }
+
+    override fun getRealTestDataDir(): String {
+        return tempDir.toString()
+    }
 }
