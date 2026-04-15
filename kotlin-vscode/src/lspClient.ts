@@ -150,7 +150,7 @@ function startBundledServer(): ChildProcessByStdio<null, Readable, Readable> {
 
     const context = getContext()
     const args: string[] = []
-    args.push('run', '--socket', '0');
+    args.push('--socket', '0');
     if (context.storageUri) {
         args.push('--system-path', context.storageUri.fsPath)
     }
