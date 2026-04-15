@@ -10,6 +10,7 @@ import com.jetbrains.ls.imports.gradle.utils.KotlinCompilationReflection;
 import com.jetbrains.ls.imports.gradle.utils.KotlinExtensionReflection;
 import com.jetbrains.ls.imports.gradle.utils.KotlinReflectionKt;
 import com.jetbrains.ls.imports.gradle.utils.KotlinTargetExtensionReflection;
+import com.jetbrains.ls.imports.gradle.utils.SourceSetArtifactExtractor;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
@@ -22,7 +23,6 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.api.tasks.compile.JavaCompile;
-import org.gradle.jvm.tasks.Jar;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.tooling.provider.model.ToolingModelBuilder;
 import org.gradle.util.GradleVersion;
@@ -85,17 +85,9 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
             excludes.addAll(sources.getExcludes());
             excludes.addAll(resources.getExcludes());
 
-            String jarTask = sourceSet.getJarTaskName();
-            Task packagingTask = taskContainer.findByName(jarTask);
             Set<File> producedArtifacts = new HashSet<>();
-            if (packagingTask instanceof Jar) {
-                Set<File> producedJars = packagingTask.getOutputs()
-                        .getFiles()
-                        .getFiles();
-                producedArtifacts.addAll(producedJars);
-            }
-            Set<File> compilationUnits = sourceSet.getOutput().getFiles();
-            producedArtifacts.addAll(compilationUnits);
+            producedArtifacts.addAll(sourceSet.getOutput().getFiles());
+            producedArtifacts.addAll(SourceSetArtifactExtractor.extractSourceSetArtifacts(project, sourceSet));
 
             Integer targetBytecodeLevel = null;
             if (GradleVersion.current().compareTo(GradleVersion.version("6.7")) >= 0) {
