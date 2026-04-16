@@ -3,6 +3,7 @@ package com.jetbrains.ls.api.features
 
 import com.intellij.openapi.application.Application
 import com.intellij.openapi.project.Project
+import com.jetbrains.analyzer.api.AnalyzerFileSystems
 import com.jetbrains.analyzer.api.FileUrl
 import com.jetbrains.analyzer.bootstrap.AnalyzerContainerBuilder
 import com.jetbrains.analyzer.bootstrap.AnalyzerContext
@@ -19,8 +20,10 @@ interface LSLanguageSpecificConfigurationEntry : LSConfigurationEntry {
     val supportedLanguages: Set<LSLanguage>
 }
 
-enum class AnalyzerContainerType {
-    ANALYSIS, WRITE, INDEXING
+sealed interface AnalyzerContainerType {
+    data object ANALYSIS : AnalyzerContainerType
+    data object WRITE : AnalyzerContainerType
+    data class INDEXING(val fileSystems: AnalyzerFileSystems?) : AnalyzerContainerType
 }
 
 fun interface ApplicationInitEntry : LSConfigurationEntry {

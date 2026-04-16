@@ -58,7 +58,11 @@ import org.jetbrains.kotlin.psi.KtImportList
 val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
     entries = listOf(
         ApplicationInitEntry { _, type ->
-            initKotlinApplicationContainer(if (type == AnalyzerContainerType.INDEXING) AnalyzerFileSystems.new() else null)
+            val analyzerFileSystemsForIndexing = when (type) {
+                is AnalyzerContainerType.INDEXING -> type.fileSystems ?: AnalyzerFileSystems.new()
+                else -> null
+            }
+            initKotlinApplicationContainer(analyzerFileSystemsForIndexing)
         },
         ProjectInitEntry { project, type ->
             initKotlinProjectContainer(project)
