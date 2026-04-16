@@ -48,7 +48,7 @@ find "$SCRIPT_DIR/node_modules" -name '*tree-sitter*.wasm' -exec cp {} "$EXTENSI
 pushd "$EXTENSION_DIR" > /dev/null
 
 # Patch package.json and overlay sources based on bundle type
-if [[ "$BUNDLE_TYPE" != "kotlin-lsp" ]]; then
+if [[ "$BUNDLE_TYPE" != "kotlin-server" ]]; then
   npm run apply-intellij
 fi
 

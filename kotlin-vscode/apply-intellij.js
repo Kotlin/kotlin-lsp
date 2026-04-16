@@ -5,9 +5,9 @@
 const fs = require('fs');
 const path = require('path');
 const intellijVscodeDir = path.resolve(__dirname, '../../../../../language-server/intellij-vscode');
-const bundleType = process.env.BUNDLE_TYPE || 'kotlin-lsp';
+const bundleType = process.env.BUNDLE_TYPE || 'kotlin-server';
 
-if (bundleType === 'kotlin-lsp') return;
+if (bundleType === 'kotlin-server') return;
 if (!fs.existsSync(intellijVscodeDir)) return;
 
 function merge(target, patch) {
