@@ -107,53 +107,6 @@
         }
       },
       {
-        "title": "File Templates",
-        "properties": {
-          "jetbrains.templates.kotlin.Class": {
-            "type": "string",
-            "editPresentation": "multilineText",
-            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\nclass ${NAME} {\n\t|\n}",
-            "description": "List of predefined variables: ${DATE}, ${DAY}, ${DAY_NAME_SHORT}, ${DAY_NAME_FULL},${DIR_PATH}, ${DS} - Dollar sign, ${FILE_NAME}, ${HOUR}, ${MINUTE}, ${SECOND}, ${MONTH}, ${MONTH_NAME_SHORT}, ${MONTH_NAME_FULL}, ${NAME}, ${PACKAGE_NAME}, ${PRODUCT_NAME}, ${PROJECT_NAME}, ${TIME}, ${USER}, ${YEAR}\nUse | to specify the caret position.\nSee also https://velocity.apache.org/engine/devel/user-guide.html"
-          },
-          "jetbrains.templates.kotlin.File": {
-            "type": "string",
-            "editPresentation": "multilineText",
-            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\n|",
-            "description": "List of predefined variables: ${DATE}, ${DAY}, ${DAY_NAME_SHORT}, ${DAY_NAME_FULL},${DIR_PATH}, ${DS} - Dollar sign, ${FILE_NAME}, ${HOUR}, ${MINUTE}, ${SECOND}, ${MONTH}, ${MONTH_NAME_SHORT}, ${MONTH_NAME_FULL}, ${NAME}, ${PACKAGE_NAME}, ${PRODUCT_NAME}, ${PROJECT_NAME}, ${TIME}, ${USER}, ${YEAR}\nUse | to specify the caret position.\nSee also https://velocity.apache.org/engine/devel/user-guide.html"
-          },
-          "jetbrains.templates.kotlin.Interface": {
-            "type": "string",
-            "editPresentation": "multilineText",
-            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\ninterface ${NAME} {\n\t|\n}",
-            "description": "List of predefined variables: ${DATE}, ${DAY}, ${DAY_NAME_SHORT}, ${DAY_NAME_FULL},${DIR_PATH}, ${DS} - Dollar sign, ${FILE_NAME}, ${HOUR}, ${MINUTE}, ${SECOND}, ${MONTH}, ${MONTH_NAME_SHORT}, ${MONTH_NAME_FULL}, ${NAME}, ${PACKAGE_NAME}, ${PRODUCT_NAME}, ${PROJECT_NAME}, ${TIME}, ${USER}, ${YEAR}\nUse | to specify the caret position.\nSee also https://velocity.apache.org/engine/devel/user-guide.html"
-          },
-          "jetbrains.templates.kotlin.Data Class": {
-            "type": "string",
-            "editPresentation": "multilineText",
-            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\ndata class ${NAME}(|)\n",
-            "description": "List of predefined variables: ${DATE}, ${DAY}, ${DAY_NAME_SHORT}, ${DAY_NAME_FULL},${DIR_PATH}, ${DS} - Dollar sign, ${FILE_NAME}, ${HOUR}, ${MINUTE}, ${SECOND}, ${MONTH}, ${MONTH_NAME_SHORT}, ${MONTH_NAME_FULL}, ${NAME}, ${PACKAGE_NAME}, ${PRODUCT_NAME}, ${PROJECT_NAME}, ${TIME}, ${USER}, ${YEAR}\nUse | to specify the caret position.\nSee also https://velocity.apache.org/engine/devel/user-guide.html"
-          },
-          "jetbrains.templates.kotlin.Enum": {
-            "type": "string",
-            "editPresentation": "multilineText",
-            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\nenum class ${NAME} {\n\t|\n}",
-            "description": "List of predefined variables: ${DATE}, ${DAY}, ${DAY_NAME_SHORT}, ${DAY_NAME_FULL},${DIR_PATH}, ${DS} - Dollar sign, ${FILE_NAME}, ${HOUR}, ${MINUTE}, ${SECOND}, ${MONTH}, ${MONTH_NAME_SHORT}, ${MONTH_NAME_FULL}, ${NAME}, ${PACKAGE_NAME}, ${PRODUCT_NAME}, ${PROJECT_NAME}, ${TIME}, ${USER}, ${YEAR}\nUse | to specify the caret position.\nSee also https://velocity.apache.org/engine/devel/user-guide.html"
-          },
-          "jetbrains.templates.kotlin.Annotation": {
-            "type": "string",
-            "editPresentation": "multilineText",
-            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\nannotation class ${NAME}(|)",
-            "description": "List of predefined variables: ${DATE}, ${DAY}, ${DAY_NAME_SHORT}, ${DAY_NAME_FULL},${DIR_PATH}, ${DS} - Dollar sign, ${FILE_NAME}, ${HOUR}, ${MINUTE}, ${SECOND}, ${MONTH}, ${MONTH_NAME_SHORT}, ${MONTH_NAME_FULL}, ${NAME}, ${PACKAGE_NAME}, ${PRODUCT_NAME}, ${PROJECT_NAME}, ${TIME}, ${USER}, ${YEAR}\nUse | to specify the caret position.\nSee also https://velocity.apache.org/engine/devel/user-guide.html"
-          },
-          "jetbrains.templates.kotlin.Object": {
-            "type": "string",
-            "editPresentation": "multilineText",
-            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\nobject ${NAME} {\n\t|\n}",
-            "description": "List of predefined variables: ${DATE}, ${DAY}, ${DAY_NAME_SHORT}, ${DAY_NAME_FULL},${DIR_PATH}, ${DS} - Dollar sign, ${FILE_NAME}, ${HOUR}, ${MINUTE}, ${SECOND}, ${MONTH}, ${MONTH_NAME_SHORT}, ${MONTH_NAME_FULL}, ${NAME}, ${PACKAGE_NAME}, ${PRODUCT_NAME}, ${PROJECT_NAME}, ${TIME}, ${USER}, ${YEAR}\nUse | to specify the caret position.\nSee also https://velocity.apache.org/engine/devel/user-guide.html"
-          }
-        }
-      },
-      {
         "title": "Inlay",
         "properties": {
           "jetbrains.kotlin.hints.settings.types.property": {
@@ -215,6 +168,60 @@
             "type": "boolean",
             "default": false,
             "description": "Function return type in call chains"
+          }
+        }
+      },
+      {
+        "title": "File Templates",
+        "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/docs/file_templates.md).",
+        "properties": {
+          "jetbrains.templates.kotlin.Class": {
+            "type": "string",
+            "editPresentation": "multilineText",
+            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\nclass ${NAME} {\n\t|\n}",
+            "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/docs/file_templates.md)."
+          },
+          "jetbrains.templates.kotlin.File": {
+            "type": "string",
+            "editPresentation": "multilineText",
+            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\n|",
+            "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/docs/file_templates.md)."
+          },
+          "jetbrains.templates.kotlin.Interface": {
+            "type": "string",
+            "editPresentation": "multilineText",
+            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\ninterface ${NAME} {\n\t|\n}",
+            "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/docs/file_templates.md)."
+          },
+          "jetbrains.templates.kotlin.Data Class": {
+            "type": "string",
+            "editPresentation": "multilineText",
+            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\ndata class ${NAME}(|)\n",
+            "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/docs/file_templates.md)."
+          },
+          "jetbrains.templates.kotlin.Enum": {
+            "type": "string",
+            "editPresentation": "multilineText",
+            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\nenum class ${NAME} {\n\t|\n}",
+            "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/docs/file_templates.md)."
+          },
+          "jetbrains.templates.kotlin.Annotation": {
+            "type": "string",
+            "editPresentation": "multilineText",
+            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\nannotation class ${NAME}(|)",
+            "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/docs/file_templates.md)."
+          },
+          "jetbrains.templates.kotlin.Object": {
+            "type": "string",
+            "editPresentation": "multilineText",
+            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\nobject ${NAME} {\n\t|\n}",
+            "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/docs/file_templates.md)."
+          },
+          "jetbrains.templates.include.Copyright": {
+            "type": "string",
+            "editPresentation": "multilineText",
+            "default": "",
+            "markdownDescription": "Can be used in templates using `#parse(\"Copyright\")`. Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/docs/file_templates.md)."
           }
         }
       }
