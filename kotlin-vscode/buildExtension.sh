@@ -42,8 +42,6 @@ cp -R "$SCRIPT_DIR/LICENSE" "$EXTENSION_DIR"
 cp -R "$SCRIPT_DIR/README.md" "$EXTENSION_DIR"
 cp -R "$SCRIPT_DIR/src" "$EXTENSION_DIR"
 cp -R "$SCRIPT_DIR/syntaxes" "$EXTENSION_DIR"
-mkdir "$EXTENSION_DIR/grammars"
-find "$SCRIPT_DIR/node_modules" -name '*tree-sitter*.wasm' -exec cp {} "$EXTENSION_DIR/grammars" \;
 
 pushd "$EXTENSION_DIR" > /dev/null
 
@@ -55,8 +53,12 @@ fi
 # Provide a path to LSP Server, so it will be unpacked during extension packaging
 export LSP_ZIP_PATH
 
-echo "Running npm install and npx vsce package..."
+echo "Running npm install..."
 npm install
+mkdir "grammars"
+echo "Copying wasm modules..."
+find "node_modules" -name '*tree-sitter*.wasm' -exec cp {} "grammars" \;
+echo "Running npx vsce package..."
 npx --yes vsce package "$VSCE_VERSION" \
   --out "$BUILD_DIR/$VSIX_TARGET_FILENAME" \
   --baseContentUrl=https://github.com/Kotlin/kotlin-lsp/tree/main/kotlin-vscode
