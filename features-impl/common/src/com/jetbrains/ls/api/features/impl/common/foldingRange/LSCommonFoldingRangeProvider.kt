@@ -45,7 +45,7 @@ class LSCommonFoldingRangeProvider(
                         kind = kind,
                         collapsedText = descriptor.placeholderText
                     )
-                }.distinct()
+                }.sortedBy { it.startLine }.distinct()
             }
         }.forEach { emit(it) }
     }
