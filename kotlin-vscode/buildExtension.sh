@@ -57,7 +57,8 @@ echo "Running npm install..."
 npm install
 mkdir "grammars"
 echo "Copying wasm modules..."
-find "node_modules" -name '*tree-sitter*.wasm' -exec cp {} "grammars" \;
+cp "node_modules/web-tree-sitter/web-tree-sitter.wasm" "grammars"
+find "node_modules" -name 'tree-sitter-*.wasm' -exec cp {} "grammars" \;
 echo "Running npx vsce package..."
 npx --yes vsce package "$VSCE_VERSION" \
   --out "$BUILD_DIR/$VSIX_TARGET_FILENAME" \
