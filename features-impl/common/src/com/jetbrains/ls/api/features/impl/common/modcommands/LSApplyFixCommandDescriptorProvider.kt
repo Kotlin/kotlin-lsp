@@ -1,6 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.modcommands
 
+import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
@@ -21,7 +22,9 @@ object LSApplyFixCommandDescriptorProvider : LSCommandDescriptorProvider {
         name = "applyModCommand",
         executor = { arguments ->
             val modCommandData = LSP.json.decodeFromJsonElement<ModCommandData>(arguments[0])
-            executeCommand(modCommandData, lspClient)
+            contextOf<LSServer>().withAnalysisContext {
+                executeCommand(modCommandData, lspClient)
+            }
             JsonPrimitive(true)
         },
     )
