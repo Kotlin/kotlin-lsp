@@ -10,11 +10,9 @@ import com.jetbrains.ls.imports.gradle.utils.KotlinCompilationReflection;
 import com.jetbrains.ls.imports.gradle.utils.KotlinExtensionReflection;
 import com.jetbrains.ls.imports.gradle.utils.KotlinReflectionKt;
 import com.jetbrains.ls.imports.gradle.utils.KotlinTargetExtensionReflection;
-import com.jetbrains.ls.imports.gradle.utils.SourceSetArtifactExtractor;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.api.plugins.ExtensionContainer;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
@@ -32,8 +30,10 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 @SuppressWarnings("IO_FILE_USAGE")
@@ -74,21 +74,11 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
             @NotNull SourceSetContainer sourceSets,
             @NotNull Project project
     ) {
-        Set<ModuleSourceSet> result = new HashSet<>();
+        Map<String, ModuleSourceSet> result = new HashMap<>();
         TaskContainer taskContainer = project.getTasks();
+        GradleSourceSetRootResolver sourceSetRootResolver = new GradleSourceSetRootResolver(project);
 
         for (SourceSet sourceSet : sourceSets) {
-            SourceDirectorySet sources = sourceSet.getAllJava();
-            SourceDirectorySet resources = sourceSet.getResources();
-
-            Set<String> excludes = new HashSet<>();
-            excludes.addAll(sources.getExcludes());
-            excludes.addAll(resources.getExcludes());
-
-            Set<File> producedArtifacts = new HashSet<>();
-            producedArtifacts.addAll(sourceSet.getOutput().getFiles());
-            producedArtifacts.addAll(SourceSetArtifactExtractor.extractSourceSetArtifacts(project, sourceSet));
-
             Integer targetBytecodeLevel = null;
             if (GradleVersion.current().compareTo(GradleVersion.version("6.7")) >= 0) {
                 JavaPluginExtension javaExtension = project.getExtensions()
@@ -128,23 +118,32 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
             KotlinExtensionReflection kotlin = KotlinReflectionKt.getKotlin(project);
             Set<String> friendModuleNames = getFriendModuleNames(kotlin, sourceSetName);
 
-            result.add(new ModuleSourceSetImpl(
+            GradleSourceSetRootResolver.SourceSetRoots sourceSetRoots = sourceSetRootResolver.resolveSourceSetRoots(sourceSet);
+            result.put(
                     sourceSetName,
-                    sources.getSrcDirs(),
-                    resources.getSrcDirs(),
-                    excludes,
-                    runtimeDependencies == null ? Collections.emptySet() : runtimeDependencies,
-                    compileDependencies == null ? Collections.emptySet() : compileDependencies,
-                    producedArtifacts,
-                    friendModuleNames,
-                    runtimeDependencies == null || compileDependencies == null,
-                    targetBytecodeLevel,
-                    sourceCompatibility,
-                    targetCompatibility,
-                    null
-            ));
+                    new ModuleSourceSetImpl(
+                            sourceSetName,
+                            sourceSetRoots.getSourceDirs(),
+                            sourceSetRoots.getResourceDirs(),
+                            sourceSetRoots.getExcludedPatterns(),
+                            runtimeDependencies == null ? Collections.emptySet() : runtimeDependencies,
+                            compileDependencies == null ? Collections.emptySet() : compileDependencies,
+                            sourceSetRoots.getProducedArtifacts(),
+                            friendModuleNames,
+                            runtimeDependencies == null || compileDependencies == null,
+                            targetBytecodeLevel,
+                            sourceCompatibility,
+                            targetCompatibility,
+                            null
+                    ));
         }
-        return result;
+
+        sourceSetRootResolver.attachUnclaimedRoots(
+                result.get(SourceSet.MAIN_SOURCE_SET_NAME),
+                result.get(SourceSet.TEST_SOURCE_SET_NAME)
+        );
+
+        return new HashSet<>(result.values());
     }
 
     private static @NotNull Set<String> getFriendModuleNames(@Nullable KotlinExtensionReflection kotlin, String sourceSetName) {
