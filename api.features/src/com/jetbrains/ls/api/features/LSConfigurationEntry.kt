@@ -7,7 +7,7 @@ import com.jetbrains.analyzer.api.AnalyzerFileSystems
 import com.jetbrains.analyzer.api.FileUrl
 import com.jetbrains.analyzer.bootstrap.AnalyzerContainerBuilder
 import com.jetbrains.analyzer.bootstrap.AnalyzerContext
-import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceModelEntity
@@ -53,7 +53,7 @@ fun interface RhizomeLowMemoryWatcherHook: LSConfigurationEntry {
 }
 
 fun interface InvalidateHookEntry : LSConfigurationEntry {
-    context(server: LSServer)
+    context(analysisContext: LSAnalysisContext)
     suspend fun invalidation(files: List<FileUrl>): context(ChangeScope) () -> Unit
 }
 
