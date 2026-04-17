@@ -71,6 +71,9 @@ abstract class AbstractProjectImportTest {
     fun customSourceSets() = doGradleTest("CustomSourceSets", ::withIgnoredJdkRoots)
 
     @Test
+    fun ideaPluginCustomSourceSets() = doGradleTest("IdeaPluginCustomSourceSets", ::withIgnoredJdkRoots)
+
+    @Test
     fun dependencies() = doGradleTest("Dependencies", ::withIgnoredJdkRoots)
 
     @Test

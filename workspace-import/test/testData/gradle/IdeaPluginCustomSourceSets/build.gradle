@@ -1,0 +1,17 @@
+plugins {
+    id 'java'
+    id 'idea'
+}
+
+repositories {
+    mavenCentral()
+}
+
+idea.module {
+    sourceDirs += file("src/main/gen")
+    sourceDirs += file("src/main/custom")
+    resourceDirs += file("src/main/something")
+
+    testSourceDirs += file("src/test/hello")
+    testResourceDirs += file("src/test/world")
+}
