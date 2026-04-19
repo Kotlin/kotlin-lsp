@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.flow
 
 class LSCommonSyntaxErrorDiagnosticProvider(
     override val supportedLanguages: Set<LSLanguage>,
+    private val fileFilter: (PsiFile) -> Boolean = { true },
 ) : LSDiagnosticProvider {
     context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
@@ -35,6 +36,7 @@ class LSCommonSyntaxErrorDiagnosticProvider(
                 val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
                 val document = virtualFile.findDocument() ?: return@readAction emptyList()
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
+                if (!fileFilter(psiFile)) return@readAction emptyList()
                 getSyntaxErrors(psiFile, document)
             }
         }.forEach { diagnostic -> emit(diagnostic) }
