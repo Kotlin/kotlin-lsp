@@ -287,3 +287,36 @@ tailrec fun MavenProject.deepestExecutionProject(): MavenProject {
     return executionProject.deepestExecutionProject()
 }
 
+fun MavenProject.getCompilerGeneratedSourcesDir(executionId: String): String? {
+    val compilerPlugin = getCompilerPlugin() ?: return null
+
+    if (compilerPlugin != null) {
+        val defaultCompileExec = compilerPlugin.executions?.find { it.id == executionId }
+        val execConfig = defaultCompileExec?.configuration as? Xpp3Dom
+        val execGeneratedNode = execConfig?.getChild("generatedSourcesDirectory")
+
+        if (execGeneratedNode != null && execGeneratedNode.value.isNotBlank()) {
+            return execGeneratedNode.value
+        }
+
+        val globalConfig = compilerPlugin.configuration as? Xpp3Dom
+        val globalGeneratedNode = globalConfig?.getChild("generatedSourcesDirectory")
+
+        if (globalGeneratedNode != null && globalGeneratedNode.value.isNotBlank()) {
+            return globalGeneratedNode.value
+        }
+    }
+    return null
+}
+
+private fun MavenProject.getCompilerPlugin(): Plugin? {
+    this.buildPlugins?.find {
+        it.groupId == "org.apache.maven.plugins" && it.artifactId == "maven-compiler-plugin"
+    }?.let { return it }
+
+    this.pluginManagement?.plugins?.find {
+        it.groupId == "org.apache.maven.plugins" && it.artifactId == "maven-compiler-plugin"
+    }?.let { return it }
+    return null
+}
+

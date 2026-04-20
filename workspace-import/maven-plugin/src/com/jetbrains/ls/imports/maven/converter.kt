@@ -223,6 +223,9 @@ private fun sourceRootData(
             project.compileSourceRoots
                 ?.filter { belongsToProject(it) }
                 ?.forEach { add(SourceRootData(it, "java-source")) }
+            project.getCompilerGeneratedSourcesDir("default-compile")?.let {
+                add(SourceRootData(it, "java-source"))
+            }
             project.resources
                 ?.map { it.directory }
                 ?.filter { belongsToProject(it) }
@@ -383,22 +386,10 @@ private fun contentRootData(
         return sourceRoots.map { ContentRootData(path = it.path, sourceRoots = listOf(it)) }
     }
 
-    val standardPaths = (project.compileSourceRoots.orEmpty() + project.resources.orEmpty().map { it.directory }).toSet()
-
-    val standardContentRoots = sourceRoots
-        .filter { it.path in standardPaths }
+    return sourceRoots
         .takeIf { it.isNotEmpty() }
         ?.map { ContentRootData(path = it.path, sourceRoots = listOf(it)) }
         ?: emptyList()
-
-    val nonStandardContentRoots =
-        sourceRoots
-            .filter { it.path !in standardPaths }
-            .takeIf { it.isNotEmpty() }
-            ?.let { listOf(ContentRootData(path = baseDir, sourceRoots = it)) }
-            ?: emptyList()
-
-    return standardContentRoots + nonStandardContentRoots
 }
 
 private fun getModuleImportData(
