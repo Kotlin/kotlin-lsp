@@ -55,6 +55,14 @@
     <orderRootType implementation="com.intellij.openapi.roots.JavadocOrderRootType"/>
     <lang.inferredAnnotationProvider implementation="com.intellij.codeInsight.DefaultInferredAnnotationProvider"/>
     <lang.inferredAnnotationProvider implementation="com.intellij.codeInsight.ProtobufInferredAnnotationProvider"/>
+    <lang.elementManipulator forClass="com.intellij.psi.javadoc.PsiDocTag"
+                             implementationClass="com.intellij.psi.impl.source.resolve.reference.impl.manipulators.PsiDocTagValueManipulator"/>
+    <lang.elementManipulator forClass="com.intellij.psi.PsiLiteralExpression"
+                             implementationClass="com.intellij.psi.impl.source.resolve.reference.impl.manipulators.StringLiteralManipulator"/>
+    <lang.elementManipulator forClass="com.intellij.psi.PsiFragment"
+                             implementationClass="com.intellij.psi.impl.source.resolve.reference.impl.manipulators.FragmentManipulator"/>
+    <lang.elementManipulator forClass="com.intellij.psi.impl.source.javadoc.PsiSnippetDocTagImpl"
+                             implementationClass="com.intellij.psi.impl.source.javadoc.SnippetDocTagManipulator"/>
   </extensions>
   <extensions defaultExtensionNs="ls">
     <markdownDocProvider language="JAVA"

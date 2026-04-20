@@ -1,9 +1,9 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.gradle.action;
 
+import com.jetbrains.ls.imports.gradle.model.AndroidProject;
 import com.jetbrains.ls.imports.gradle.model.ExternalModuleDependency;
 import com.jetbrains.ls.imports.gradle.model.ExternalModuleDependencySet;
-import com.jetbrains.ls.imports.gradle.model.AndroidProject;
 import com.jetbrains.ls.imports.gradle.model.InternalIdeaModule;
 import com.jetbrains.ls.imports.gradle.model.InternalIdeaProject;
 import com.jetbrains.ls.imports.gradle.model.KotlinModule;
@@ -21,15 +21,17 @@ import org.gradle.tooling.model.gradle.GradleBuild;
 import org.gradle.tooling.model.idea.IdeaModule;
 import org.gradle.tooling.model.idea.IdeaProject;
 import org.gradle.util.GradleVersion;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.gradle.idea.serialize.IdeaKotlinSerializationContext;
 import org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinDependency;
 import org.jetbrains.kotlin.tooling.core.Extras;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -69,46 +71,46 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
     ) {
         for (InternalIdeaProject project : ideaProjects) {
             for (InternalIdeaModule module : project.getModules()) {
-                String moduleFqdn = BUILD_SRC_MODULE_NAME.equals(module.getName())
+                String moduleFqn = BUILD_SRC_MODULE_NAME.equals(module.getName())
                                     ? getBuildSrcName(module, ideaProjects)
-                                    : getModuleFqdn(module);
-                module.setName(moduleFqdn);
+                                    : getModuleFqn(module);
+                module.setName(moduleFqn);
 
                 IdeaModule delegate = module.getDelegate();
                 KotlinModule kotlinModule = unwrapFetchedModel(controller.fetch(delegate, KotlinModule.class));
                 if (kotlinModule != null) {
-                    kotlinModules.put(moduleFqdn, kotlinModule);
+                    kotlinModules.put(moduleFqn, kotlinModule);
                 }
                 ModuleSourceSets moduleSourceSets = unwrapFetchedModel(controller.fetch(delegate, ModuleSourceSets.class));
-                sourceSets.put(moduleFqdn, moduleSourceSets == null ? Collections.emptySet() : moduleSourceSets.getSourceSets());
+                sourceSets.put(moduleFqn, moduleSourceSets == null ? Collections.emptySet() : moduleSourceSets.getSourceSets());
 
                 ExternalModuleDependencySet moduleDependencies = unwrapFetchedModel(
                         controller.fetch(delegate, ExternalModuleDependencySet.class)
                 );
                 externalModuleDependencySet.put(
-                        moduleFqdn,
+                        moduleFqn,
                         moduleDependencies == null ? Collections.emptySet() : moduleDependencies.getDependencies()
                 );
 
                 AndroidProject androidProject = unwrapFetchedModel(controller.fetch(delegate, AndroidProject.class));
                 if (androidProject != null) {
-                    androidProjects.put(moduleFqdn, ProxyUtil.unpackProxy(ProjectMetadata.class.getClassLoader(), androidProject));
+                    androidProjects.put(moduleFqn, ProxyUtil.unpackProxy(ProjectMetadata.class.getClassLoader(), androidProject));
                 }
             }
         }
     }
 
-    private static @NotNull String getModuleFqdn(@NotNull IdeaModule module) {
-        StringBuilder fqdn = new StringBuilder(module.getName());
+    private static @NotNull String getModuleFqn(@NotNull IdeaModule module) {
         if (module.getName().equals(module.getProject().getName())) {
             return module.getName();
         }
-        HierarchicalElement currentParent = module.getParent();
+        HierarchicalElement currentParent = module.getGradleProject();
+        Deque<String> fqn = new ArrayDeque<>();
         while (currentParent != null) {
-            fqdn.insert(0, currentParent.getName() + ".");
+            fqn.addFirst(currentParent.getName());
             currentParent = currentParent.getParent();
         }
-        return fqdn.toString();
+        return String.join(".", fqn);
     }
 
     private static <Model> @Nullable Model unwrapFetchedModel(@NotNull FetchModelResult<Model> result) {

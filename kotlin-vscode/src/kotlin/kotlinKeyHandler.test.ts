@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import * as path from 'path';
 import { Parser, Language } from 'web-tree-sitter';
 import kotlinKeyHandler from './keyHandler';
+import {type KeyEdit} from '../types';
 
 
 describe('Handling key presses in Kotlin files', () => {
@@ -60,6 +61,232 @@ describe('Handling key presses in Kotlin files', () => {
         test('completes square brackets in KDoc comments', doTest('/** [| */', '/** [|] */'));
     });
 
+    describe('Enter handling', () => {
+        test('starts KDoc comments on enter', doTest('/**\n|\nfun foo() {}', '/**\n * |\n */\nfun foo() {}'));
+
+        test('starts KDoc comments in a class on enter', doTest('class C {\n    /**\n|\n    fun foo() {}\n}', 'class C {\n    /**\n     * |\n     */\n    fun foo() {}\n}'));
+
+        test('moves following code below a generated KDoc closing delimiter', doTest(
+                '/**\n|fun foo() {}',
+                '/**\n * |\n */\nfun foo() {}',
+        ));
+
+        test('moves following class members below a generated KDoc closing delimiter', doTest(
+                'class C {\n    /**\n|    fun foo() {}\n}',
+                'class C {\n    /**\n     * |\n     */\n    fun foo() {}\n}',
+        ));
+
+        test('aligns KDoc closing delimiters when entering before an indented closing line', doTest(
+                '/**\n|    */',
+                '/**\n * |\n */',
+        ));
+
+        test('moves KDoc body text below the caret when entering before an unprefixed body line', doTest(
+                '/**\n|    foo\n */',
+                '/**\n * |\n * foo\n */',
+        ));
+
+        test('moves KDoc body text below the caret when entering before a prefixed body line', doTest(
+                '/**\n|    * foo\n */',
+                '/**\n * |\n * foo\n */',
+        ));
+
+        test('aligns KDoc closing delimiters inside a class when entering before an indented closing line', doTest(
+                'class C {\n    /**\n|        */\n}',
+                'class C {\n    /**\n     * |\n     */\n}',
+        ));
+
+        test('continues KDoc before the closing delimiter', doTest('/**\n| */', '/**\n * |\n */'));
+
+        test('continues KDoc body lines', doTest('/**\n * foo\n| */', '/**\n * foo\n * |\n */'));
+
+        test('starts block comments with leading stars', doTest('/*\n|', '/*\n * |\n */'));
+
+        test('does not continue line comments on enter', doTest('// hello\n|', '// hello\n|'));
+
+        test('does not continue line comments when enter splits them in the middle', doTest('// hel\n|lo', '// hel\n// |lo'));
+
+        test('does not rewrite enter in the middle of a single-line string literal', doTest(
+                'val s = "hel\n|lo"',
+                'val s = "hel" + \n        |"lo"',
+        ));
+
+        test('wraps dot-qualified string receivers in parentheses when splitting on enter', doTest(
+                'val l = "foo\n|bar".length()',
+                'val l = ("foo" + \n        |"bar").length()',
+        ));
+
+        test('does not duplicate existing parentheses around a split string receiver', doTest(
+                'val l = ("asdf" + "foo\n|bar").length()',
+                'val l = ("asdf" + "foo" + \n        |"bar").length()',
+        ));
+
+        test('turns a one-line multiline string into a trimIndent call on enter', doTest(
+                `
+class A {
+    val a = """
+|"""
+}`,
+                `
+class A {
+    val a = """
+        |
+    """.trimIndent()
+}`,
+        ));
+
+        test('preserves custom trimMargin markers when turning a one-line multiline string into two lines', doTest(
+                `
+class A {
+    val a = """blah blah
+|""".trimMargin("#")
+}`,
+                `
+class A {
+    val a = """blah blah
+        #|
+    """.trimMargin("#")
+}`,
+        ));
+
+        test('uses the default trimMargin marker when the trimMargin argument is dynamic', doTest(
+                `
+class A {
+    val m = '#'
+    val a = """blah blah
+<caret>""".trimMargin(m)
+}`,
+                `
+class A {
+    val m = '#'
+    val a = """blah blah
+        |<caret>
+    """.trimMargin(m)
+}`,
+        ));
+
+        test('does not append trimIndent in const multiline strings', doTest(
+                `
+object O {
+    const val s = """
+|"""
+}`,
+                `
+object O {
+    const val s = """
+        |
+    """
+}`,
+        ));
+
+        test('does not append trimIndent in annotation multiline strings with interpolation prefixes', doTest(
+                `
+@Annotation($$"""
+|""")
+fun some() {}`,
+                `
+@Annotation($$"""
+    |
+""")
+fun some() {}`,
+        ));
+
+        test('keeps existing multiline string closing quotes aligned on enter', doTest(
+                `
+fun some() {
+    val b = """
+|
+    """
+}`,
+                `
+fun some() {
+    val b = """
+        |
+    """
+}`,
+        ));
+
+        test('moves a template entry onto the new multiline string line on enter', doTest(
+                `
+val className = 1
+val test = """
+|$className"""`,
+                `
+val className = 1
+val test = """
+    |$className""".trimIndent()`,
+        ));
+
+        test('keeps trimMargin indentation when entering inside matching braces', doTest(
+                `
+val a =
+  """
+     |  blah blah blah {
+<caret>}
+  """.trimMargin()`,
+                `
+val a =
+  """
+     |  blah blah blah {
+     |  <caret>
+     |  }
+  """.trimMargin()`,
+        ));
+
+        test('keeps whitespace after the caret on the current trimMargin line when entering before a closing brace', doTest(
+                `
+val a =
+  """
+     |  blah blah blah {
+<caret>    }
+  """.trimMargin()`,
+                `
+val a =
+  """
+     |  blah blah blah {
+     |      <caret>
+     |  }
+  """.trimMargin()`,
+        ));
+
+        test('reuses the previous trimIndent line indentation when entering before a closing brace', doTest(
+                `
+fun test = """
+    {
+        abc
+        abc {
+<caret>
+    }
+""".trimIndent()`,
+                `
+fun test = """
+    {
+        abc
+        abc {
+        <caret>
+    }
+""".trimIndent()`,
+        ));
+
+        test('keeps whitespace after the caret on the current trimIndent line when entering before a closing brace', doTest(
+                `
+fun test = """
+    {
+        abc
+        abc {
+<caret>    }
+""".trimIndent()`,
+                `
+fun test = """
+    {
+        abc
+        abc {
+            <caret>
+        }
+""".trimIndent()`,
+        ));
+    });
+
     describe('no completion inside string content', () => {
         test('no completion for ( inside a string', doTest('"(|"', '"(|"'));
     });
@@ -82,34 +309,79 @@ describe('Handling key presses in Kotlin files', () => {
 
     describe('multi-line snippets', () => {
         test('completes parentheses in a multi-line call chain', doTest(
-                `val result = foo(
+                `
+val result = foo(
     bar(|
 )`,
-                `val result = foo(
+                `
+val result = foo(
     bar(|)
 )`,
         ));
 
         test('completes square brackets in multi-line KDoc content', doTest(
-                `/**
+                `
+/**
  * See [|
  */`,
-                `/**
+                `
+/**
  * See [|]
  */`,
         ));
 
         test('completes parentheses in a multi-line interpolation expression', doTest(
-                `val s = """
+                `
+val s = """
     \${foo(
         bar(|
     )}
 """.trimIndent()`,
-                `val s = """
+                `
+val s = """
     \${foo(
         bar(|)
     )}
 """.trimIndent()`,
+        ));
+
+        test('does not rewrite enter inside a lambda body', doTest(
+                `
+listOf(1, 2, 3).map { x -> 
+|}`,
+                `
+listOf(1, 2, 3).map { x ->
+    |
+}`,
+        ));
+
+        test('keeps enclosing indentation when expanding an empty lambda body', doTest(
+                `
+fun test() {
+    listOf(1, 2, 3).map { x -> 
+|}
+}`,
+                `
+fun test() {
+    listOf(1, 2, 3).map { x ->
+        |
+    }
+}`,
+        ));
+
+        test('respects configured two-space indentation when expanding an empty lambda body', doTest(
+                `
+fun test() {
+  listOf(1, 2, 3).map { x -> 
+|}
+}`,
+                `
+fun test() {
+  listOf(1, 2, 3).map { x ->
+    |
+  }
+}`,
+                '  ',
         ));
     });
 
@@ -143,24 +415,40 @@ before(async () => {
  * Simulates a single key press and the handler's response.
  *
  * @param input     Source code immediately after a key was typed, with `|`
- *                  marking the caret position (the typed character is the one
- *                  just left of `|`).
+ *                  or `<caret>` marking the caret position (the typed
+ *                  character is the one just left of the marker).
  * @param expected  Source code after the handler's result has been applied,
- *                  with `|` marking the expected caret position.
+ *                  with the same caret marker as the input.
+ * @param indentUnit
  */
-function doTest(input: string, expected: string): () => void {
+function doTest(input: string, expected: string, indentUnit?: string): () => void {
     return () => {
-        const caretIndex = input.indexOf('|');
-        assert.notEqual(caretIndex, -1, 'Input must contain | as caret marker');
-        const source = input.slice(0, caretIndex) + input.slice(caretIndex + 1);
-        const keyOffset = caretIndex - 1;
-        const key = source[keyOffset];
+        const caretMarker = input.includes('<caret>') ? '<caret>' : '|';
+        const caretIndex = input.indexOf(caretMarker);
+        const source = input.slice(0, caretIndex) + input.slice(caretIndex + caretMarker.length);
+        const key = source[caretIndex - 1];
+        const keyOffset = caretIndex - key.length;
+        const effectiveIndentUnit = indentUnit ?? '    ';
         assert.ok(parser, `No parser initialized`);
         const tree = parser.parse(source)!;
-        const result = kotlinKeyHandler(tree, key, keyOffset);
-        const resultSource = source.slice(0, keyOffset) + result.text + source.slice(keyOffset + 1);
-        const resultWithCaret = resultSource.slice(0, keyOffset + result.offset) + '|' + resultSource.slice(keyOffset + result.offset);
+        const result = kotlinKeyHandler(source, tree, key, keyOffset, effectiveIndentUnit);
+        const resultSource = applyEdits(source, result.edits);
+        const caretOffset = result.caretOffset;
+        const resultWithCaret = resultSource.slice(0, caretOffset) + caretMarker + resultSource.slice(caretOffset);
 
         assert.strictEqual(resultWithCaret, expected);
     };
+}
+
+function applyEdits(source: string, edits: KeyEdit[]): string {
+    return [...edits]
+            .sort((left, right) => {
+                if (right.startOffset !== left.startOffset) {
+                    return right.startOffset - left.startOffset;
+                }
+                return right.endOffset - left.endOffset;
+            })
+            .reduce((text, edit) => {
+                return text.slice(0, edit.startOffset) + edit.newText + text.slice(edit.endOffset);
+            }, source);
 }

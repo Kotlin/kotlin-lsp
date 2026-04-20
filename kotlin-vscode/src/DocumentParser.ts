@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import {ExtensionContext, TextDocument, Uri, workspace} from 'vscode';
+import {ExtensionContext, TextDocument, workspace} from 'vscode';
 import {Language, Parser, Tree, Edit} from 'web-tree-sitter';
 
 export class DocumentParser {
@@ -24,7 +24,7 @@ export class DocumentParser {
 
     private async init() {
         if (!DocumentParser.isTreeSitterInitialized) {
-            const locateFile = () => DocumentParser.resolveParserWasmPath(this.context.extensionUri);
+            const locateFile = () => DocumentParser.resolveParserWasmPath(this.context.extensionPath);
             await Parser.init({ locateFile });
             DocumentParser.isTreeSitterInitialized = true;
         }
@@ -108,26 +108,26 @@ export class DocumentParser {
         return cachedTree;
     }
 
-    private static resolveParserWasmPath(extensionUri: Uri): string {
-        const bundledPath = Uri.joinPath(
-                extensionUri,
-                'grammars',
-                'web-tree-sitter.wasm'
-        ).fsPath;
-
-        if (fs.existsSync(bundledPath)) {
-            return bundledPath;
-        }
-
-        const nodeModulesPath = Uri.joinPath(
-                extensionUri,
+    private static resolveParserWasmPath(extensionPath: string): string {
+        const nodeModulesPath = path.join(
+                extensionPath,
                 'node_modules',
                 'web-tree-sitter',
                 'web-tree-sitter.wasm'
-        ).fsPath;
+        );
 
         if (fs.existsSync(nodeModulesPath)) {
             return nodeModulesPath;
+        }
+
+        const bundledPath = path.join(
+                extensionPath,
+                'grammars',
+                'web-tree-sitter.wasm'
+        );
+
+        if (fs.existsSync(bundledPath)) {
+            return bundledPath;
         }
 
         throw Error('Couldn\'t find web-tree-sitter.wasm');

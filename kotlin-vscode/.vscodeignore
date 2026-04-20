@@ -13,3 +13,4 @@ src/**
 testSources
 tsconfig.json
 webpack.config.js
+docs/**

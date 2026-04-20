@@ -33,12 +33,14 @@ import kotlin.io.path.exists
 private val LOG = logger<GradleWorkspaceImporter>()
 
 object GradleWorkspaceImporter : WorkspaceImporter {
+    private const val IDEA_ACTIVE_PROPERTY: String = "idea.active"
     private const val IDEA_SYNC_ACTIVE_PROPERTY: String = "idea.sync.active"
     private const val KOTLIN_LSP_IMPORT_PROPERTY: String = "com.jetbrains.ls.imports.gradle"
     private val IMPORTER_PROPERTIES: Map<String, String> = mapOf(
         // This imitates how IntelliJ invokes gradle during sync.
         // Some builds/plugins depend on this property to configure their build for sync.
         IDEA_SYNC_ACTIVE_PROPERTY to "true",
+        IDEA_ACTIVE_PROPERTY to "true",
         // Since this is not actually IntelliJ, offer an alternative identification.
         KOTLIN_LSP_IMPORT_PROPERTY to "true",
     )

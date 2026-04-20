@@ -1,50 +1,53 @@
-import * as vscode from 'vscode';
-import {type KeyHandler} from './types';
-import {DocumentParser} from "./DocumentParser"
+import {type ExtensionContext, Range, Selection, TextDocumentChangeReason, window, workspace} from 'vscode';
+import type {DocumentParser} from "./DocumentParser"
+import {isIdentityKeyResult, type KeyHandler} from './types';
 
-const SYMBOLS = ['(', '[', '{', '<', '\'', '"', ')', ']', '}', '>'];
+const HANDLED_KEYS = new Set(['(', '[', '{', '<', '\'', '"', ')', ']', '}', '>', '\n']);
+const ENTER_KEY_PATTERN = /^\r?\n[ \t]*$/;
 
-export async function registerHandleKeyType(context: vscode.ExtensionContext, parser: DocumentParser, handler: KeyHandler): Promise<void> {
-    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event) => {
+export function registerHandleKeyType(context: ExtensionContext, parser: DocumentParser, handler: KeyHandler): void {
+    context.subscriptions.push(workspace.onDidChangeTextDocument(async (event) => {
         if (event.document.languageId !== parser.languageId
-                || event.reason === vscode.TextDocumentChangeReason.Undo
-                || event.reason === vscode.TextDocumentChangeReason.Redo
-                || event.contentChanges.length !== 1) {
+                || event.reason === TextDocumentChangeReason.Undo
+                || event.reason === TextDocumentChangeReason.Redo) {
             return;
         }
 
-        const editor = vscode.window.activeTextEditor;
+        const editor = window.activeTextEditor;
         if (editor?.document !== event.document) {
             return;
         }
         const change = event.contentChanges[0];
-        const key = change.text;
-
-        if (key.length !== 1 || !SYMBOLS.includes(key) || change.rangeLength !== 0) {
+        const key = ENTER_KEY_PATTERN.test(change.text) ? '\n' : change.text;
+        if (!HANDLED_KEYS.has(key) || change.rangeLength !== 0) {
             return;
         }
 
+        const text = event.document.getText();
         const tree = parser.parseDocument(event.document);
         if (tree === null) {
             return;
         }
 
-        const result = handler(tree, key, change.rangeOffset);
-
-        if (result.text === key && result.offset === 1) {
+        const indentUnit = editor.options.insertSpaces === false ? '\t' : ' '.repeat(editor.options.indentSize as number);
+        const result = handler(text, tree, key, change.rangeOffset, indentUnit);
+        if (isIdentityKeyResult(change.rangeOffset, key, result)) {
             return;
         }
 
-        const insertedRange = new vscode.Range(
-                change.range.start,
-                event.document.positionAt(event.document.offsetAt(change.range.start) + 1)
-        );
-
-        editor.edit((editBuilder) => {
-            editBuilder.replace(insertedRange, result.text);
+        await editor.edit((editBuilder) => {
+            for (const edit of result.edits) {
+                editBuilder.replace(
+                        new Range(
+                                event.document.positionAt(edit.startOffset),
+                                event.document.positionAt(edit.endOffset),
+                        ),
+                        edit.newText,
+                );
+            }
         }, {undoStopBefore: false, undoStopAfter: false});
 
-        const newPosition = event.document.positionAt(event.document.offsetAt(change.range.start) + result.offset);
-        editor.selection = new vscode.Selection(newPosition, newPosition);
+        const position = editor.document.positionAt(result.caretOffset);
+        editor.selection = new Selection(position, position);
     }, null, context.subscriptions));
 }

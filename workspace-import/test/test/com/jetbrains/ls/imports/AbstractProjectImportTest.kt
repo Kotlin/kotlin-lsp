@@ -6,7 +6,6 @@ import com.intellij.ide.starter.sdk.JdkDownloaderFacade
 import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.workspaceModel.ide.impl.IdeVirtualFileUrlManagerImpl
-import com.jetbrains.analyzer.api.AnalyzerFileSystems
 import com.jetbrains.analyzer.api.withAnalyzer
 import com.jetbrains.analyzer.bootstrap.AnalyzerProjectId
 import com.jetbrains.analyzer.bootstrap.WorkspaceModelSnapshot
@@ -23,7 +22,7 @@ import com.jetbrains.ls.imports.json.workspaceData
 import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
 import com.jetbrains.ls.imports.utils.DETECT_PROJECT_SDK
 import com.jetbrains.ls.test.api.utils.compareWithTestdata
-import com.jetbrains.ls.test.api.utils.testApplicationInits
+import com.jetbrains.ls.test.api.utils.testApplicationInitsForImport
 import com.jetbrains.ls.test.api.utils.testPluginSet
 import com.jetbrains.ls.test.api.utils.testProjectInits
 import kotlinx.coroutines.Dispatchers
@@ -70,6 +69,9 @@ abstract class AbstractProjectImportTest {
 
     @Test
     fun customSourceSets() = doGradleTest("CustomSourceSets", ::withIgnoredJdkRoots)
+
+    @Test
+    fun ideaPluginCustomSourceSets() = doGradleTest("IdeaPluginCustomSourceSets", ::withIgnoredJdkRoots)
 
     @Test
     fun dependencies() = doGradleTest("Dependencies", ::withIgnoredJdkRoots)
@@ -145,12 +147,11 @@ abstract class AbstractProjectImportTest {
                 val virtualFileUrlManager = currentSnapshot.virtualFileUrlManager
                 analyzer.withProject(
                     analyzerProjectConfigForImport(
-                        fileSystems = AnalyzerFileSystems.default(),
                         projectId = AnalyzerProjectId(),
                         entities = currentSnapshot.entityStore,
                         urlManager = virtualFileUrlManager,
                         pluginSet = testPluginSet,
-                        applicationInits = testApplicationInits,
+                        applicationInits = testApplicationInitsForImport,
                         projectInits = testProjectInits,
                     )
                 ) {

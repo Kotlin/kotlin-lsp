@@ -1,0 +1,105 @@
+{
+    "modules": [
+        {
+            "name": "IdeaPluginCustomSourceSets",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "17",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/"
+                }
+            ]
+        },
+        {
+            "name": "IdeaPluginCustomSourceSets.main",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "17",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/src/main",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/src/main/java",
+                            "type": "java-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/main/custom",
+                            "type": "java-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/main/something",
+                            "type": "java-resource"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "IdeaPluginCustomSourceSets.test",
+            "dependencies": [
+                {
+                    "type": "module",
+                    "name": "IdeaPluginCustomSourceSets.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "17",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/src/test",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/src/test/java",
+                            "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/test/hello",
+                            "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/test/resources",
+                            "type": "java-test-resource"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/test/world",
+                            "type": "java-test-resource"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "sdks": [
+        {
+            "name": "17",
+            "type": "jdk",
+            "version": "JDK_17",
+            "homePath": null,
+            "roots": [],
+            "additionalData": ""
+        }
+    ]
+}
