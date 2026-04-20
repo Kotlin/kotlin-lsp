@@ -1,9 +1,8 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.utils
 
-import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.projectRoots.DefaultJdkConfigurator
 import com.intellij.openapi.projectRoots.JavaSdk
+import com.intellij.openapi.projectRoots.impl.JavaHomeFinder
 import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
 import com.intellij.platform.workspace.jps.entities.InheritedSdkDependency
 import com.intellij.platform.workspace.jps.entities.ModuleEntity
@@ -33,13 +32,13 @@ fun MutableEntityStorage.fixMissingProjectSdk(
 ) {
     var existingSdk = entities(SdkEntity::class.java).singleOrNull()
     if (existingSdk == null && defaultSdkPath == null && !DETECT_PROJECT_SDK) return
+    val path = sdkHome(defaultSdkPath) ?: return
     entities<ModuleEntity>().forEach { module ->
         modifyModuleEntity(module) {
             dependencies = dependencies.map { moduleDependencyItem ->
                 when (moduleDependencyItem) {
                     is InheritedSdkDependency -> {
                         existingSdk = existingSdk ?: run {
-                            val path = sdkHome(defaultSdkPath)
                             createSdkEntity(
                                 name = DEFAULT_JDK_NAME,
                                 type = JavaSdk.getInstance(),
@@ -62,12 +61,14 @@ fun MutableEntityStorage.fixMissingProjectSdk(
     }
 }
 
-private fun sdkHome(defaultSdkPath: Path?): Path =
+private fun sdkHome(defaultSdkPath: Path?): Path? =
     defaultSdkPath?.also {
         require(it.isDirectory()) { "Configured Java home does not exist or is not a directory: $it" }
     } ?: run {
-        val jdkConfigurator = ApplicationManager.getApplication().getService(DefaultJdkConfigurator::class.java)
-        Path.of(jdkConfigurator.guessJavaHome() ?: System.getProperty("java.home")).also {
+        val javaHome = JavaHomeFinder.suggestHomePaths(false).firstOrNull()
+            ?: System.getProperty("java.home")
+            ?: return@run null
+        Path.of(javaHome).also {
             require(it.isDirectory()) { "Expected a directory, got $it" }
         }
     }
