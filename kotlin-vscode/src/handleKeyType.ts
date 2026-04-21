@@ -17,6 +17,11 @@ export function registerHandleKeyType(context: ExtensionContext, parser: Documen
         if (editor?.document !== event.document) {
             return;
         }
+
+        if (event.contentChanges.length !== 1) {
+            return;
+        }
+    
         const change = event.contentChanges[0];
         const key = ENTER_KEY_PATTERN.test(change.text) ? '\n' : change.text;
         if (!HANDLED_KEYS.has(key) || change.rangeLength !== 0) {
