@@ -86,6 +86,7 @@
         <outputFile implementation="java.lang.String">${outputFile}</outputFile>
         <project implementation="org.apache.maven.project.MavenProject" default-value="${project}"/>
         <session implementation="org.apache.maven.execution.MavenSession" default-value="${session}"/>
+        <mojoExecution implementation="org.apache.maven.plugin.MojoExecution" default-value="${mojoExecution}" />
       </configuration>
     </mojo>
   </mojos>

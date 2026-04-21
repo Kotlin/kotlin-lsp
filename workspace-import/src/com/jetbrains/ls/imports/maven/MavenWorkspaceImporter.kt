@@ -76,12 +76,15 @@ object MavenWorkspaceImporter : WorkspaceImporter {
 
 
         val offlineOpts = if (System.getProperty(LSP_MAVEN_PROJECT_OFFLINE_PROPERTY).toBoolean()) listOf("-o") else emptyList()
+        progress.progressStatus("Installing Maven plugin...")
         installMavenPlugin(execPath, javaHome, projectDirectory, progress, offlineOpts)
 
 
+        progress.progressStatus("Collecting Maven model...")
         val modelWithDeps = runMavenPluginGoal(execPath, javaHome, projectDirectory, "model-with-deps", progress, offlineOpts)
         val modelWithGeneratedSources =
             modelWithGeneratedSources(modelWithDeps is SuccessResult, execPath, javaHome, projectDirectory, progress, offlineOpts)
+        progress.progressStatus("Maven model collected, commiting...")
         val mergedModels = mergeResults(modelWithDeps, modelWithGeneratedSources)
 
         when (mergedModels) {
@@ -110,9 +113,12 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         progress: WorkspaceImportProgressReporter,
         additionalParams: List<String>
     ): MavenRunResult {
+        progress.progressStatus("Generating sources...")
         val modelWithGeneratedSources = runMavenPluginGoal(execPath, javaHome, projectDirectory, "gen-sources", progress, additionalParams)
         if (modelWithGeneratedSources is ErrorResult && couldBeFixedWithInstall(depsResolved, modelWithGeneratedSources)) {
+            progress.progressStatus("Generating sources failed, trying to fix with mvn install...")
             runGoal(execPath, javaHome, projectDirectory, "install", progress, additionalParams)
+            progress.progressStatus("Generating sources, second try...")
             return runMavenPluginGoal(execPath, javaHome, projectDirectory, "gen-sources", progress, additionalParams)
         } else return modelWithGeneratedSources
     }
