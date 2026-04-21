@@ -109,7 +109,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                         .setStandardOutput(GradleOutputStream { line -> progress.onStdOutput(line) })
                         .setStandardError(GradleOutputStream { line -> progress.onErrorOutput(line) })
                         .addProgressListener(
-                            GradleProgressListener { line -> progress.onStdOutput(line) },
+                            GradleProgressListener { line -> progress.progressStatus(line) },
                             setOf(OperationType.GENERIC, OperationType.FILE_DOWNLOAD, OperationType.PROJECT_CONFIGURATION)
                         )
                         .withCancellationToken(GradleConnector.newCancellationTokenSource().token())
