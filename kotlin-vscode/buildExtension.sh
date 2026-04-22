@@ -54,7 +54,10 @@ fi
 export LSP_ZIP_PATH
 
 echo "Running npm install..."
-npm install
+# --ignore-scripts skips native builds (e.g. tree-sitter-sql's legacy node-gyp
+# rebuild, which fails on recent Node versions). Runtime uses web-tree-sitter
+# with prebuilt .wasm files shipped inside the grammar packages.
+npm install --ignore-scripts
 mkdir "grammars"
 echo "Copying wasm modules..."
 cp "node_modules/web-tree-sitter/web-tree-sitter.wasm" "grammars"
