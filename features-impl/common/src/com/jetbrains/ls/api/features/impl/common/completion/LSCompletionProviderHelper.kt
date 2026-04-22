@@ -34,7 +34,6 @@ import com.jetbrains.ls.api.features.utils.isSource
 import com.jetbrains.ls.snapshot.api.impl.core.CompletionItemId
 import com.jetbrains.ls.snapshot.api.impl.core.CompletionItemWithObject
 import com.jetbrains.ls.snapshot.api.impl.core.LatestCompletionSessionEntity
-import com.jetbrains.ls.snapshot.api.impl.core.initializeParams
 import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.protocol.ApplyEditRequests
 import com.jetbrains.lsp.protocol.ApplyWorkspaceEditParams
@@ -204,7 +203,7 @@ class LSCompletionProviderHelper(
                     documentation = readAction { computeDocumentation(completionData.lookup) },
                 )
                 // https://youtrack.jetbrains.com/issue/LSP-319/Fix-completion-in-Air
-                val isAir = checkNotNull(initializeParams()).clientInfo?.name?.equals("JetBrains Air") ?: false
+                val isAir = server.initializeParams.clientInfo?.name?.equals("JetBrains Air") ?: false
                 if (isAir) {
                     val insRes = applyCompletion(completionData, fileForModificationProvider)
                     completionItem.copy(
