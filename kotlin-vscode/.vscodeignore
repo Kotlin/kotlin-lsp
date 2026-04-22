@@ -12,5 +12,6 @@ package-lock.json
 src/**
 testSources
 tsconfig.json
+unpack-server.js
 webpack.config.js
 docs/**
