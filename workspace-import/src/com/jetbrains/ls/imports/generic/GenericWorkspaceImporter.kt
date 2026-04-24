@@ -36,6 +36,8 @@ import kotlin.io.path.extension
 import kotlin.io.path.isDirectory
 import kotlin.io.path.listDirectoryEntries
 
+object GenericEntitySource: EntitySource
+
 /**
  * Builds a minimal workspace model for projects without a recognized build system.
  * Mirrors the logic of initLightEditMode but operates on a fresh MutableEntityStorage and does not use updateWorkspaceModel.
@@ -66,7 +68,7 @@ object GenericWorkspaceImporter : EmptyWorkspaceImporter {
         defaultSdkPath: Path?
     ): MutableEntityStorage {
         val storage = MutableEntityStorage.create()
-        val entitySource = object : EntitySource {}
+        val entitySource = GenericEntitySource
 
         val stdlibUrl = UriConverter.localAbsolutePathToIntellijUri(getKotlinStdlibPath())
         val stdlibSourcesUrl = getKotlinStdlibSourcesPath()?.let { UriConverter.localAbsolutePathToIntellijUri(it) }
