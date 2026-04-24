@@ -85,6 +85,10 @@ abstract class LSInlayHintsProviderBase(
         val factory: HintFactoryBase
     )
 
+    protected open fun createSink(inlayOptions: InlayOptions): LSCommonInlayTreeSink {
+        return LSCommonInlayTreeSinkImpl(inlayOptions)
+    }
+
     context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getInlayHints(params: InlayHintParams): Flow<InlayHint> = flow {
         val result = mutableListOf<InlayHint>()
@@ -253,7 +257,7 @@ abstract class LSInlayHintsProviderBase(
         inlayOptions: InlayOptions,
     ): List<Presentation> {
         val collector = provider.intellijProvider.createCollector(psiFile, editor) ?: return emptyList()
-        val sink = LSCommonInlayTreeSink(inlayOptions)
+        val sink = createSink(inlayOptions)
         when (collector) {
             is SharedBypassCollector -> {
                 val traverser = SyntaxTraverser.psiTraverser(psiFile).onRange(textRange)
@@ -266,15 +270,17 @@ abstract class LSInlayHintsProviderBase(
                 error("Unsupported collector type: ${collector::class.simpleName}")
             }
         }
-        return sink.presentations
+        return sink.getPresentations()
     }
 
-    private class LSCommonInlayTreeSink(
-        private val inlayOptions: InlayOptions,
-    ) : InlayTreeSink {
-        private val _presentations: MutableList<Presentation> = mutableListOf()
+    protected interface LSCommonInlayTreeSink : InlayTreeSink {
+        fun getPresentations(): List<Presentation>
+    }
 
-        val presentations: List<Presentation> get() = _presentations
+    private class LSCommonInlayTreeSinkImpl(
+        private val inlayOptions: InlayOptions,
+    ) : LSCommonInlayTreeSink {
+        private val _presentations: MutableList<Presentation> = mutableListOf()
 
         override fun addPresentation(
             position: InlayPosition,
@@ -294,6 +300,10 @@ abstract class LSInlayHintsProviderBase(
             if (inlayOptions.isEnabled(optionId)) {
                 block()
             }
+        }
+
+        override fun getPresentations(): List<Presentation> {
+            return _presentations
         }
     }
 
