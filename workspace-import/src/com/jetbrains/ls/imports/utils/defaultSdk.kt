@@ -15,6 +15,7 @@ import com.intellij.platform.workspace.storage.entities
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.jetbrains.ls.api.core.util.createSdkEntity
 import com.jetbrains.ls.api.core.util.intellijUriToLspUri
+import com.jetbrains.ls.snapshot.api.impl.core.toFileUrl
 import org.jetbrains.annotations.TestOnly
 import java.nio.file.Path
 import kotlin.io.path.isDirectory
@@ -49,7 +50,9 @@ fun MutableEntityStorage.fixMissingProjectSdk(
                                 urlManager = virtualFileUrlManager,
                                 source = DefaultJdkEntitySource,
                                 storage = this@fixMissingProjectSdk,
-                            )
+                            ) {
+                                homePath = virtualFileUrlManager.getOrCreateFromUrl(path.toFileUrl().url)
+                            }
                         }
                         SdkDependency(existingSdk.symbolicId)
                     }
