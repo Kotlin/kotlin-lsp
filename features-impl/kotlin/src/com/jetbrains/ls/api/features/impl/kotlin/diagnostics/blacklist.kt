@@ -42,6 +42,10 @@ internal val kotlinInspectionBlacklist = Blacklist(
         fqcn = "org.jetbrains.kotlin.idea.k2.codeinsight.inspections.PublicApiImplicitTypeInspection",
         reason = "LSP-711",
     ),
+    BlacklistEntry.Class(
+        fqcn = "org.jetbrains.kotlin.idea.k2.codeinsight.inspections.UnusedSymbolInspection",
+        reason = "LSP-1005",
+    ),
     BlacklistEntry.SuperClass(
         fqcn = "org.jetbrains.kotlin.idea.codeinsight.api.applicable.inspections.KotlinKtDiagnosticBasedInspectionBase",
         reason = "LSP-712",
