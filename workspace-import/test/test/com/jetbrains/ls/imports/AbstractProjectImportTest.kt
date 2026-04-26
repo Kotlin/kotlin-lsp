@@ -5,6 +5,7 @@ import com.intellij.ide.starter.sdk.JdkDownloadItem
 import com.intellij.ide.starter.sdk.JdkDownloaderFacade
 import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.MutableEntityStorage
+import com.intellij.testFramework.common.timeoutRunBlocking
 import com.intellij.workspaceModel.ide.impl.IdeVirtualFileUrlManagerImpl
 import com.jetbrains.analyzer.api.withAnalyzer
 import com.jetbrains.analyzer.bootstrap.AnalyzerProjectId
@@ -25,8 +26,6 @@ import com.jetbrains.ls.test.api.utils.compareWithTestdata
 import com.jetbrains.ls.test.api.utils.testApplicationInitsForImport
 import com.jetbrains.ls.test.api.utils.testPluginSet
 import com.jetbrains.ls.test.api.utils.testProjectInits
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -39,6 +38,7 @@ import kotlin.io.path.div
 import kotlin.io.path.exists
 import kotlin.io.path.pathString
 import kotlin.io.path.relativeTo
+import kotlin.time.Duration.Companion.minutes
 
 abstract class AbstractProjectImportTest {
     protected abstract val testDataDir: Path
@@ -141,7 +141,7 @@ abstract class AbstractProjectImportTest {
         val projectDir = testDataDir / project
         require(projectDir.exists()) { "Project $project not found at $projectDir" }
 
-        val storage = runBlocking(Dispatchers.Default) {
+        val storage = timeoutRunBlocking(timeout = 10.minutes) {
             withAnalyzer(isUnitTestMode = true) { analyzer ->
                 val currentSnapshot = WorkspaceModelSnapshot.empty()
                 val virtualFileUrlManager = currentSnapshot.virtualFileUrlManager

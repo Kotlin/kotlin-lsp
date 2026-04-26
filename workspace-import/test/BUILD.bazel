@@ -35,6 +35,8 @@ jvm_library(
     "@community//platform/ide-core-impl",
     "@community//platform/projectModel-impl",
     "@community//platform/projectModel-impl:projectModel-impl_test_lib",
+    "@community//platform/testFramework/common",
+    "@community//platform/testFramework/common:common_test_lib",
     "@community//platform/util",
     "@community//platform/util:util_test_lib",
     "//language-server/community/workspace-import",
