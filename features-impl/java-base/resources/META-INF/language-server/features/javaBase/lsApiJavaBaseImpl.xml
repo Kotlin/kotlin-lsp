@@ -51,8 +51,6 @@
     <projectService serviceImplementation="com.intellij.codeInspection.bytecodeAnalysis.ProjectBytecodeAnalysis"/>
     <projectService serviceInterface="com.intellij.codeInsight.guess.GuessManager"
                     serviceImplementation="com.intellij.codeInsight.guess.impl.GuessManagerImpl"/>
-    <orderRootType implementation="com.intellij.openapi.roots.AnnotationOrderRootType"/>
-    <orderRootType implementation="com.intellij.openapi.roots.JavadocOrderRootType"/>
     <lang.inferredAnnotationProvider implementation="com.intellij.codeInsight.DefaultInferredAnnotationProvider"/>
     <lang.inferredAnnotationProvider implementation="com.intellij.codeInsight.ProtobufInferredAnnotationProvider"/>
     <lang.elementManipulator forClass="com.intellij.psi.javadoc.PsiDocTag"
