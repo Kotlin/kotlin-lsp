@@ -215,12 +215,6 @@
             "editPresentation": "multilineText",
             "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\nobject ${NAME} {\n\t|\n}",
             "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/kotlin-vscode/docs/file_templates.md)."
-          },
-          "jetbrains.templates.include.Copyright": {
-            "type": "string",
-            "editPresentation": "multilineText",
-            "default": "",
-            "markdownDescription": "Can be used in templates using `#parse(\"Copyright\")`. Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/kotlin-vscode/docs/file_templates.md)."
           }
         }
       }
