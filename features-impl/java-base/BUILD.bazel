@@ -52,6 +52,7 @@ jvm_library(
 
 jvm_library(
   name = "java-base_test_lib",
+  testonly = True,
   module_name = "language-server.api.features.impl.java-base",
   visibility = ["//visibility:public"],
   srcs = glob([], allow_empty = True),

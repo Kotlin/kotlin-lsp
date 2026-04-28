@@ -42,6 +42,7 @@ jvm_library(
 
 jvm_library(
   name = "maven-plugin_test_lib",
+  testonly = True,
   module_name = "language-server.workspace-import.maven-plugin",
   visibility = ["//visibility:public"],
   srcs = glob([], allow_empty = True),

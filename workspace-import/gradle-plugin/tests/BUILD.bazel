@@ -16,6 +16,7 @@ jvm_library(
 
 jvm_library(
   name = "tests_test_lib",
+  testonly = True,
   visibility = ["//visibility:public"],
   srcs = glob(["test/**/*.kt", "test/**/*.java", "test/**/*.form"], allow_empty = True),
   kotlinc_opts = ":custom_tests",

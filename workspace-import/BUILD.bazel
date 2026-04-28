@@ -62,6 +62,7 @@ jvm_library(
 
 jvm_library(
   name = "workspace-import_test_lib",
+  testonly = True,
   module_name = "language-server.workspace-import",
   visibility = ["//visibility:public"],
   srcs = glob([], allow_empty = True),
