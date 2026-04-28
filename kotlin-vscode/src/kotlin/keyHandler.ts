@@ -36,7 +36,7 @@ export default (text: string, tree: Tree, key: string, index: number, indentUnit
         case '}':
             return handleClosingDelimiter(text, tree, key, index);
         default:
-            return keyResult(key, key.length, index);
+            return keyResult(key, index, index + 1, index + key.length);
     }
 }
 
@@ -51,51 +51,51 @@ function handleLeftBracket(text: string, tree: Tree, index: number): KeyResult {
 function handleOpeningDelimiter(text: string, tree: Tree, index: number, opening: string, closing: string): KeyResult {
     const root = tree.rootNode;
     const node = root.descendantForIndex(index);
-    if (node === null) return keyResult(opening, opening.length, index);
+    if (node === null) return keyResult(opening, index, index + 1, index + opening.length);
     if (node.type === 'block_comment') return handleBlockComment(node, opening, text, index);
-    return isTextNode(node) ? keyResult(opening, 1, index) : getOpenBraceResult(text, index, opening, closing);
+    return isTextNode(node) ? keyResult(opening, index, index + 1, index + 1) : getOpenBraceResult(text, index, opening, closing);
 }
 
 function handleLeftBrace(text: string, tree: Tree, index: number): KeyResult {
     const root = tree.rootNode;
     const node = root.descendantForIndex(index);
-    if (node === null) return keyResult('{', 1, index);
+    if (node === null) return keyResult('{', index, index + 1, index + 1);
     if (isTextNode(node)) {
-        return keyResult('{', 1, index);
+        return keyResult('{', index, index + 1, index + 1);
     }
     // `${...}` templates are the one place where '{' inside a string should
     // still behave like a paired delimiter.
     if (text[index - 1] === '$' && text[index + 1] === '}') {
-        return keyResult('{', 1, index);
+        return keyResult('{', index, index + 1, index + 1);
     }
     if (text[index - 1] === '$') {
-        return keyResult('{}', 1, index);
+        return keyResult('{}', index, index + 1, index + 1);
     }
     return getOpenBraceResult(text, index, '{', '}');
 }
 
 function handleSingleQuote(tree: Tree, index: number): KeyResult {
     const node = tree.rootNode.descendantForIndex(index);
-    if (node === null) return keyResult(`'`, 1, index);
+    if (node === null) return keyResult(`'`, index, index + 1, index + 1);
     return isTextNode(node)
-            ? keyResult(`'`, 1, index)
+            ? keyResult(`'`, index, index + 1, index + 1)
             : node.parent?.type === 'character_literal'
-                    ? keyResult('', 1, index)
-                    : keyResult(`''`, 1, index);
+                    ? keyResult('', index, index + 1, index + 1)
+                    : keyResult(`''`, index, index + 1, index + 1);
 }
 
 function handleDoubleQuoteKey(text: string, tree: Tree, index: number): KeyResult {
     const root = tree.rootNode;
     const node = root.descendantForIndex(index);
-    if (node === null) return keyResult('"', 1, index);
+    if (node === null) return keyResult('"', index, index + 1, index + 1);
 
     // Kotlin overtypes an existing closing quote instead of inserting a duplicate one.
     if (node.type !== '"""' && text[index + 1] === '"') {
-        return keyResult('', 1, index);
+        return keyResult('', index, index + 1, index + 1);
     }
 
     if (isTextNode(node)) {
-        return keyResult('"', 1, index);
+        return keyResult('"', index, index + 1, index + 1);
     }
     switch (node.type) {
         case '"':
@@ -103,41 +103,41 @@ function handleDoubleQuoteKey(text: string, tree: Tree, index: number): KeyResul
         case '"""':
             return handleTripleQuote(node, index);
         default:
-            return keyResult('"', 1, index);
+            return keyResult('"', index, index + 1, index + 1);
     }
 }
 
 function handleTripleQuote(node: Node, index: number): KeyResult {
     switch (index - node.startIndex) {
         case 0:
-            return keyResult('"', 1, index);
+            return keyResult('"', index, index + 1, index + 1);
         case 1:
-            return keyResult('', 1, index);
+            return keyResult('', index, index + 1, index + 1);
         default:
-            return keyResult('""""', 1, index);
+            return keyResult('""""', index, index + 1, index + 1);
     }
 }
 
 function handleDoubleQuote(node: Node, index: number): KeyResult {
     const parent = node.parent;
-    if (parent === null) return keyResult('"', 1, index);
+    if (parent === null) return keyResult('"', index, index + 1, index + 1);
 
     switch (parent.type) {
         case 'string_literal':
             // The Kotlin grammar may eagerly attach this quote to a later closing quote,
             // even though the user just started a new string. If this quote is the
             // opening delimiter of that literal, keep pairing it as an opening quote.
-            return node.startIndex === parent.startIndex ? keyResult('""', 1, index) : keyResult('"', 1, index);
+            return node.startIndex === parent.startIndex ? keyResult('""', index, index + 1, index + 1) : keyResult('"', index, index + 1, index + 1);
         case 'string_content':
-            return keyResult('"', 1, index);
+            return keyResult('"', index, index + 1, index + 1);
         default:
-            return keyResult('""', 1, index);
+            return keyResult('""', index, index + 1, index + 1);
     }
 }
 
 function handleEnter(text: string, tree: Tree, index: number, indentUnit: string): KeyResult {
     const node = tree.rootNode.descendantForIndex(index);
-    if (node === null) return keyResult('\n', 1, index);
+    if (node === null) return keyResult('\n', index, index + 1, index + 1);
 
     const lineCommentEnterResult = handleLineCommentEnter(text, node, index);
     if (lineCommentEnterResult !== null) {
@@ -150,7 +150,7 @@ function handleEnter(text: string, tree: Tree, index: number, indentUnit: string
     }
 
     if (hasAncestor(node, ENTER_LITERAL_ANCESTOR_TYPES)) {
-        return keyResult('\n', 1, index);
+        return keyResult('\n', index, index + 1, index + 1);
     }
 
     const lambdaEnterResult = handleEmptyLambdaBodyEnter(node, text, index, indentUnit);
@@ -160,7 +160,7 @@ function handleEnter(text: string, tree: Tree, index: number, indentUnit: string
 
     const commentContext = findBlockCommentContext(node, text, index);
     if (commentContext === null) {
-        return keyResult('\n', 1, index);
+        return keyResult('\n', index, index + 1, index + 1);
     }
 
     const commentIndent = getIndent(text, getLineStart(text, commentContext.start));
@@ -174,7 +174,7 @@ function handleEnter(text: string, tree: Tree, index: number, indentUnit: string
             (whitespaceSinceCommentStart && (commentContext.end === null || currentLineTail.trim().length === 0));
 
     if (!useLinePrefix && commentContext.end !== null) {
-        return keyResult('\n', 1, index);
+        return keyResult('\n', index, index + 1, index + 1);
     }
 
     const prefixLine = `\n${commentIndent} ${useLinePrefix ? '* ' : ''}`;
@@ -184,9 +184,9 @@ function handleEnter(text: string, tree: Tree, index: number, indentUnit: string
     }
 
     if (commentContext.end === null) {
-        return keyResult(`${prefixLine}\n${commentIndent} */`, prefixLine.length, index);
+        return keyResult(`${prefixLine}\n${commentIndent} */`, index, index + 1, index + prefixLine.length);
     }
-    return keyResult(prefixLine, prefixLine.length, index);
+    return keyResult(prefixLine, index, index + 1, index + prefixLine.length);
 }
 
 function handleEmptyLambdaBodyEnter(
@@ -224,37 +224,37 @@ function handleEmptyLambdaBodyEnter(
     const baseIndent = getIndent(text, getLineStart(text, lambda.startIndex));
     const bodyIndent = `${baseIndent}${indentUnit}`;
     const replacement = `\n${bodyIndent}\n${baseIndent}`;
-    return keyResult(replacement, `\n${bodyIndent}`.length, index, whitespaceAfterArrow.length);
+    return keyResult(replacement, index - whitespaceAfterArrow.length, index + 1, index - whitespaceAfterArrow.length + `\n${bodyIndent}`.length);
 }
 
 function handleLeftAngle(tree: Tree, index: number): KeyResult {
     const root = tree.rootNode;
     const node = root.descendantForIndex(index);
-    if (node === null) return keyResult('<', 1, index);
+    if (node === null) return keyResult('<', index, index + 1, index + 1);
     if (isTextNode(node)) {
-        return keyResult('<', 1, index);
+        return keyResult('<', index, index + 1, index + 1);
     }
     const prev = prevNode(node);
-    if (prev === null) return keyResult('<', 1, index);
+    if (prev === null) return keyResult('<', index, index + 1, index + 1);
     switch (prev.type) {
         case 'identifier': {
             const looksLikeAClass = prev.endIndex === node.startIndex && prev.text[0] === prev.text[0].toUpperCase();
-            return looksLikeAClass ? keyResult('<>', 1, index) : keyResult('<', 1, index);
+            return looksLikeAClass ? keyResult('<>', index, index + 1, index + 1) : keyResult('<', index, index + 1, index + 1);
         }
         case 'fun':
-            return keyResult('<>', 1, index);
+            return keyResult('<>', index, index + 1, index + 1);
         default:
-            return keyResult('<', 1, index);
+            return keyResult('<', index, index + 1, index + 1);
     }
 }
 
 function handleClosingDelimiter(text: string, tree: Tree, key: string, index: number): KeyResult {
     const root = tree.rootNode;
     const node = root.descendantForIndex(index);
-    if (node === null) return keyResult(key, key.length, index);
+    if (node === null) return keyResult(key, index, index + 1, index + key.length);
 
     if (isTextNode(node)) {
-        return keyResult(key, 1, index);
+        return keyResult(key, index, index + 1, index + 1);
     }
     if (index < root.endIndex - 1 && text[index + 1] === key) {
         // Only skip a closer while we are still inside the same broken
@@ -262,32 +262,32 @@ function handleClosingDelimiter(text: string, tree: Tree, key: string, index: nu
         for (let i = index + 1; i < root.endIndex; i++) {
             const nextNode = root.descendantForIndex(i);
             if (nextNode?.isError) {
-                return keyResult('', 1, index);
+                return keyResult('', index, index + 1, index + 1);
             }
             switch (nextNode?.type) {
                 case node.type:
                     if (nextNode.parent?.isError) {
-                        return keyResult('', 1, index);
+                        return keyResult('', index, index + 1, index + 1);
                     }
                     break;
                 case 'source_file':
                     if (text[i] === key) {
-                        return keyResult('', 1, index);
+                        return keyResult('', index, index + 1, index + 1);
                     }
                     break;
                 default:
-                    return keyResult(key, 1, index);
+                    return keyResult(key, index, index + 1, index + 1);
                 }
             }
         }
-    return keyResult(key, 1, index);
+    return keyResult(key, index, index + 1, index + 1);
 }
 
 function handleBlockComment(node: Node, key: string, text: string, index: number): KeyResult {
     // tree-sitter-kotlin does not expose dedicated KDoc tokens, so detect KDoc
     // by its opening marker and keep the extra () / [] pairing there.
     if (!node.text.startsWith('/**')) {
-        return keyResult(key, 1, index);
+        return keyResult(key, index, index + 1, index + 1);
     }
 
     switch (key) {
@@ -296,7 +296,7 @@ function handleBlockComment(node: Node, key: string, text: string, index: number
         case '[':
             return getOpenBraceResult(text, index, '[', ']');
         default:
-            return keyResult(key, 1, index);
+            return keyResult(key, index, index + 1, index + 1);
     }
 }
 
@@ -313,15 +313,15 @@ function getOpenBraceResult(text: string, textIndex: number, opening: string, cl
         case ']':
         case '}':
         case '{':
-            return keyResult(opening + closing, 1, textIndex);
+            return keyResult(opening + closing, textIndex, textIndex + 1, textIndex + 1);
         case '/':
             switch (text[textIndex + 2]) {
                 case '/':
                 case '*':
-                    return keyResult(opening + closing, 1, textIndex);
+                    return keyResult(opening + closing, textIndex, textIndex + 1, textIndex + 1);
             }
     }
-    return keyResult(opening, 1, textIndex);
+    return keyResult(opening, textIndex, textIndex + 1, textIndex + 1);
 }
 
 function prevNode(node: Node): Node | null {
@@ -459,12 +459,12 @@ function handleLineCommentEnter(text: string, node: Node, index: number): KeyRes
 
     const currentLineTail = getCurrentLineTail(text, index + 1);
     if (currentLineTail.trim().length === 0) {
-        return keyResult('\n', 1, index);
+        return keyResult('\n', index, index + 1, index + 1);
     }
 
     const prefix = getLineCommentPrefix(text, lineComment);
     const replacement = `\n${prefix}`;
-    return keyResult(replacement, replacement.length, index);
+    return keyResult(replacement, index, index + 1, index + replacement.length);
 }
 
 function handleStringLiteralEnter(
@@ -491,7 +491,7 @@ function handleStringLiteralEnter(
     const after = text.slice(index + 1, stringLiteral.endIndex - 1);
     const replacement = `${wrapPrefix}"${before}" + \n${continuationIndent}"${after}"${wrapSuffix}`;
     const offset = `${wrapPrefix}"${before}" + \n${continuationIndent}`.length;
-    return keyResult(replacement, offset, index, index - stringLiteral.startIndex, stringLiteral.endIndex - index - 1);
+    return keyResult(replacement, stringLiteral.startIndex, stringLiteral.endIndex, stringLiteral.startIndex + offset);
 }
 
 function rewriteCommentLineTail(
@@ -509,9 +509,9 @@ function rewriteCommentLineTail(
     const trimmedTail = currentLineTail.trimStart();
     if (trimmedTail.length === 0) {
         if (commentContext.end === null) {
-            return keyResult(`${prefixLine}\n${commentIndent} */`, prefixLine.length, index, 0, currentLineTail.length);
+            return keyResult(`${prefixLine}\n${commentIndent} */`, index, index + 1 + currentLineTail.length, index + prefixLine.length);
         }
-        return useLinePrefix ? keyResult(prefixLine, prefixLine.length, index, 0, currentLineTail.length) : null;
+        return useLinePrefix ? keyResult(prefixLine, index, index + 1 + currentLineTail.length, index + prefixLine.length) : null;
     }
 
     if (!useLinePrefix) {
@@ -519,15 +519,15 @@ function rewriteCommentLineTail(
     }
 
     if (trimmedTail.startsWith('*/')) {
-        return keyResult(`${prefixLine}\n${commentIndent} */`, prefixLine.length, index, 0, currentLineTail.length);
+        return keyResult(`${prefixLine}\n${commentIndent} */`, index, index + 1 + currentLineTail.length, index + prefixLine.length);
     }
 
     if (commentContext.end === null) {
-        return keyResult(`${prefixLine}\n${commentIndent} */\n${currentLineTail}`, prefixLine.length, index, 0, currentLineTail.length);
+        return keyResult(`${prefixLine}\n${commentIndent} */\n${currentLineTail}`, index, index + 1 + currentLineTail.length, index + prefixLine.length);
     }
 
     const shiftedLine = getCommentBodyLine(currentLineTail, commentIndent);
-    return keyResult(`${prefixLine}\n${shiftedLine}`, prefixLine.length, index, 0, currentLineTail.length);
+    return keyResult(`${prefixLine}\n${shiftedLine}`, index, index + 1 + currentLineTail.length, index + prefixLine.length);
 }
 
 function getCommentBodyLine(currentLineTail: string, commentIndent: string): string {
@@ -586,22 +586,16 @@ function handleMultilineStringLiteralEnter(
         const replacement = tail.length === 0
                 ? `\n${linePrefix}\n${baseIndent}${MULTILINE_QUOTE}${trimCall}`
                 : `\n${linePrefix}${tail}${MULTILINE_QUOTE}${trimCall}`;
-        return keyResult(replacement, `\n${linePrefix}`.length, index, 0, multilineStringLiteral.endIndex - index - 1);
+        return keyResult(replacement, index, multilineStringLiteral.endIndex, index + `\n${linePrefix}`.length);
     }
 
     const previousLineStart = getLineStart(text, index);
     const linePrefix = getExistingMultilineStringLinePrefix(text, multilineStringLiteral, previousLineStart, indentUnit, marginChar);
     if (isBraceEnter(text[index - 1], tailAfterCaret[0])) {
-        return keyResult(
-                `\n${linePrefix}${whitespaceAfterCaret}\n${linePrefix}${tailAfterCaret}`,
-                `\n${linePrefix}${whitespaceAfterCaret}`.length,
-                index,
-                0,
-                contentEnd - index - 1,
-        );
+        return keyResult(`\n${linePrefix}${whitespaceAfterCaret}\n${linePrefix}${tailAfterCaret}`, index, contentEnd, index + `\n${linePrefix}${whitespaceAfterCaret}`.length);
     }
 
-    return keyResult(`\n${linePrefix}`, `\n${linePrefix}`.length, index);
+    return keyResult(`\n${linePrefix}`, index, index + 1, index + `\n${linePrefix}`.length);
 }
 
 function findAncestorAtEnter(node: Node, index: number, type: string): Node | null {

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import * as path from 'path';
 import { Parser, Language } from 'web-tree-sitter';
 import kotlinKeyHandler from './keyHandler';
-import {type KeyEdit} from '../types';
+import {type KeyResult} from '../types';
 
 
 describe('Handling key presses in Kotlin files', () => {
@@ -432,7 +432,7 @@ function doTest(input: string, expected: string, indentUnit?: string): () => voi
         assert.ok(parser, `No parser initialized`);
         const tree = parser.parse(source)!;
         const result = kotlinKeyHandler(source, tree, key, keyOffset, effectiveIndentUnit);
-        const resultSource = applyEdits(source, result.edits);
+        const resultSource = applyEdit(source, result);
         const caretOffset = result.caretOffset;
         const resultWithCaret = resultSource.slice(0, caretOffset) + caretMarker + resultSource.slice(caretOffset);
 
@@ -440,15 +440,6 @@ function doTest(input: string, expected: string, indentUnit?: string): () => voi
     };
 }
 
-function applyEdits(source: string, edits: KeyEdit[]): string {
-    return [...edits]
-            .sort((left, right) => {
-                if (right.startOffset !== left.startOffset) {
-                    return right.startOffset - left.startOffset;
-                }
-                return right.endOffset - left.endOffset;
-            })
-            .reduce((text, edit) => {
-                return text.slice(0, edit.startOffset) + edit.newText + text.slice(edit.endOffset);
-            }, source);
+function applyEdit(source: string, result: KeyResult): string {
+    return source.slice(0, result.startOffset) + result.text + source.slice(result.endOffset);
 }

@@ -1,6 +1,6 @@
 import {type ExtensionContext, Range, Selection, TextDocumentChangeReason, window, workspace} from 'vscode';
 import type {DocumentParser} from "./DocumentParser"
-import {isIdentityKeyResult, type KeyHandler} from './types';
+import {type KeyHandler} from './types';
 
 const HANDLED_KEYS = new Set(['(', '[', '{', '<', '\'', '"', ')', ']', '}', '>', '\n']);
 const ENTER_KEY_PATTERN = /^\r?\n[ \t]*$/;
@@ -36,20 +36,21 @@ export function registerHandleKeyType(context: ExtensionContext, parser: Documen
 
         const indentUnit = editor.options.insertSpaces === false ? '\t' : ' '.repeat(editor.options.indentSize as number);
         const result = handler(text, tree, key, change.rangeOffset, indentUnit);
-        if (isIdentityKeyResult(change.rangeOffset, key, result)) {
+        if (result.startOffset === change.rangeOffset
+                && result.endOffset === change.rangeOffset + 1
+                && result.caretOffset === change.rangeOffset + 1
+                && change.text === result.text) {
             return;
         }
 
         await editor.edit((editBuilder) => {
-            for (const edit of result.edits) {
-                editBuilder.replace(
-                        new Range(
-                                event.document.positionAt(edit.startOffset),
-                                event.document.positionAt(edit.endOffset),
-                        ),
-                        edit.newText,
-                );
-            }
+            editBuilder.replace(
+                    new Range(
+                            event.document.positionAt(result.startOffset),
+                            event.document.positionAt(result.endOffset),
+                    ),
+                    result.text,
+            );
         }, {undoStopBefore: false, undoStopAfter: false});
 
         const position = editor.document.positionAt(result.caretOffset);
