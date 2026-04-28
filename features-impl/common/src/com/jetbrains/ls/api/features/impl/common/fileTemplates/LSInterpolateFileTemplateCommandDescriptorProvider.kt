@@ -9,11 +9,17 @@ import com.intellij.openapi.application.readAction
 import com.intellij.openapi.util.ClassLoaderUtil
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.findPsiFile
+import com.intellij.platform.workspace.jps.entities.ModuleEntity
+import com.intellij.platform.workspace.jps.entities.sourceRoots
+import com.intellij.platform.workspace.storage.entities
+import com.intellij.workspaceModel.ide.toPath
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
+import com.jetbrains.ls.imports.api.WorkspaceEntitySource
+import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceModelEntity
 import com.jetbrains.lsp.implementation.throwLspError
 import com.jetbrains.lsp.protocol.Commands.ExecuteCommand
 import com.jetbrains.lsp.protocol.DocumentUri
@@ -53,9 +59,7 @@ object LSInterpolateFileTemplateCommandDescriptorProvider : LSCommandDescriptorP
                 val template = CustomFileTemplate(virtualFile.nameWithoutExtension, virtualFile.extension ?: "")
                 template.text = text
 
-                val p0 = FileTemplateManager.getInstance(project).getDefaultProperties()
-                val propsMap = HashMap<String?, Any?>()
-                FileTemplateUtil.putAll(propsMap, p0)
+                val propsMap = FileTemplateManager.getInstance(project).defaultContextMap
 
                 val props = Properties()
                 FileTemplateUtil.fillDefaultProperties(props, psiDirectory)
@@ -63,8 +67,18 @@ object LSInterpolateFileTemplateCommandDescriptorProvider : LSCommandDescriptorP
 
                 propsMap[FileTemplate.ATTRIBUTE_NAME] = virtualFile.nameWithoutExtension
                 propsMap[FileTemplate.ATTRIBUTE_FILE_NAME] = psiFile.name
-                propsMap[FileTemplate.ATTRIBUTE_FILE_PATH] = psiFile.virtualFile.path
+                propsMap[FileTemplate.ATTRIBUTE_FILE_PATH] = virtualFile.path
                 propsMap[FileTemplate.ATTRIBUTE_DIR_PATH] = psiDirectory.virtualFile.path
+
+                val nioPath = virtualFile.toNioPath()
+                val module = WorkspaceModelEntity.single()
+                    .workspaceModelSnapshot
+                    .entityStore
+                    .entities<ModuleEntity>()
+                    .singleOrNull { module -> module.sourceRoots.any { nioPath.startsWith(it.url.toPath()) } }
+                val projectName = (module?.entitySource as? WorkspaceEntitySource)?.virtualFileUrl?.fileName
+                propsMap[FileTemplateManager.PROJECT_NAME_VARIABLE] = projectName
+
                 //Set escaped references to dummy values to remove leading "\" (if not already explicitly set)
                 val dummyRefs: Array<String?> =
                     FileTemplateUtil.calculateAttributes(template.getText(), propsMap, true, project)
@@ -78,7 +92,7 @@ object LSInterpolateFileTemplateCommandDescriptorProvider : LSCommandDescriptorP
                 val mergedText = ClassLoaderUtil.computeWithClassLoader<String, IOException?>(
                     FileTemplateUtil::class.java.getClassLoader()
                 ) {
-                    template.getText(propsMap)
+                     template.getText(propsMap)
                 }
                 StringUtil.convertLineSeparators(mergedText)
             }
