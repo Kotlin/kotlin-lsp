@@ -25,7 +25,7 @@ export default (text: string, tree: Tree, key: string, index: number, indentUnit
         case '{':
             return handleLeftBrace(text, tree, index);
         case `'`:
-            return handleSingleQuote(tree, index);
+            return handleSingleQuote(text, tree, index);
         case '"':
             return handleDoubleQuoteKey(text, tree, index);
         case '<':
@@ -74,13 +74,15 @@ function handleLeftBrace(text: string, tree: Tree, index: number): KeyResult {
     return getOpenBraceResult(text, index, '{', '}');
 }
 
-function handleSingleQuote(tree: Tree, index: number): KeyResult {
+function handleSingleQuote(text: string, tree: Tree, index: number): KeyResult {
     const node = tree.rootNode.descendantForIndex(index);
     if (node === null) return keyResult(`'`, index, index + 1, index + 1);
     return isTextNode(node)
             ? keyResult(`'`, index, index + 1, index + 1)
             : node.parent?.type === 'character_literal'
-                    ? keyResult('', index, index + 1, index + 1)
+                    ? text[index + 1] === `'` && (index === 0 || text[index - 1] !== '\\')
+                            ? keyResult('', index, index + 1, index + 1)
+                            : keyResult(`'`, index, index + 1, index + 1)
                     : keyResult(`''`, index, index + 1, index + 1);
 }
 
@@ -90,7 +92,7 @@ function handleDoubleQuoteKey(text: string, tree: Tree, index: number): KeyResul
     if (node === null) return keyResult('"', index, index + 1, index + 1);
 
     // Kotlin overtypes an existing closing quote instead of inserting a duplicate one.
-    if (node.type !== '"""' && text[index + 1] === '"') {
+    if (node.type !== '"""' && text[index + 1] === '"' && (index === 0 || text[index - 1] !== '\\')) {
         return keyResult('', index, index + 1, index + 1);
     }
 
@@ -160,7 +162,7 @@ function handleEnter(text: string, tree: Tree, index: number, indentUnit: string
 
     const commentContext = findBlockCommentContext(node, text, index);
     if (commentContext === null) {
-        return keyResult('\n', index, index + 1, index + 1);
+        return handleRegularEnter(text, index, indentUnit);
     }
 
     const commentIndent = getIndent(text, getLineStart(text, commentContext.start));
@@ -187,6 +189,50 @@ function handleEnter(text: string, tree: Tree, index: number, indentUnit: string
         return keyResult(`${prefixLine}\n${commentIndent} */`, index, index + 1, index + prefixLine.length);
     }
     return keyResult(prefixLine, index, index + 1, index + prefixLine.length);
+}
+
+function handleRegularEnter(text: string, index: number, indentUnit: string): KeyResult {
+    const previousLineIndent = getPreviousNonEmptyLineIndent(text, index);
+    const continuationIndent = previousLineIndent === null ? null : `${previousLineIndent}${indentUnit}`;
+    const shouldUseContinuationIndent = shouldApplyContinuationIndent(text, index);
+
+    const nextLineStart = getNextLineStart(text, index + 1);
+    if (nextLineStart === null) {
+        if (!shouldUseContinuationIndent || continuationIndent === null) {
+            return keyResultWithOptionalBlockIndent(previousLineIndent, index);
+        }
+        const replacement = `\n${continuationIndent}`;
+        return keyResult(replacement, index, index + 1, index + replacement.length);
+    }
+
+    const nextLineEnd = getLineEnd(text, nextLineStart);
+    const nextLineContentStart = skipIndent(text, nextLineStart, nextLineEnd);
+    const nextChar = text[nextLineContentStart];
+    if (nextChar !== ')' && nextChar !== ']' && nextChar !== '}') {
+        if (!shouldUseContinuationIndent || continuationIndent === null) {
+            return keyResultWithOptionalBlockIndent(previousLineIndent, index);
+        }
+        const replacement = `\n${continuationIndent}`;
+        return keyResult(replacement, index, index + 1, index + replacement.length);
+    }
+
+    if (previousLineIndent === null) {
+        return keyResult('\n', index, index + 1, index + 1);
+    }
+
+    const indent = shouldUseContinuationIndent && continuationIndent !== null
+            ? continuationIndent
+            : previousLineIndent;
+    const replacement = `\n${indent}`;
+    return keyResult(replacement, index, index + 1, index + replacement.length);
+}
+
+function keyResultWithOptionalBlockIndent(previousLineIndent: string | null, index: number): KeyResult {
+    if (previousLineIndent === null || previousLineIndent.length === 0) {
+        return keyResult('\n', index, index + 1, index + 1);
+    }
+    const replacement = `\n${previousLineIndent}`;
+    return keyResult(replacement, index, index + 1, index + replacement.length);
 }
 
 function handleEmptyLambdaBodyEnter(
@@ -398,6 +444,20 @@ function getLineEnd(text: string, index: number): number {
     return current;
 }
 
+function getNextLineStart(text: string, index: number): number | null {
+    if (index >= text.length) {
+        return null;
+    }
+
+    if (text[index] === '\n') {
+        return index + 1;
+    }
+    if (text[index] === '\r') {
+        return index + 1 + (text[index + 1] === '\n' ? 1 : 0);
+    }
+    return null;
+}
+
 function getIndent(text: string, lineStart: number): string {
     let current = lineStart;
     while (current < text.length) {
@@ -443,6 +503,36 @@ function skipIndent(text: string, start: number, end: number): number {
         current++;
     }
     return current;
+}
+
+function getPreviousNonEmptyLineIndent(text: string, index: number): string | null {
+    let lineEnd = index;
+    while (lineEnd > 0) {
+        const lineStart = getLineStart(text, lineEnd - 1);
+        const line = text.slice(lineStart, lineEnd);
+        if (line.trim().length !== 0) {
+            return getIndent(text, lineStart);
+        }
+        lineEnd = lineStart;
+    }
+
+    return null;
+}
+
+function shouldApplyContinuationIndent(text: string, index: number): boolean {
+    const c = getPreviousSignificantChar(text, index);
+    return c !== null && '([{,+-*/%&|^=?:'.includes(c);
+}
+
+function getPreviousSignificantChar(text: string, index: number): string | null {
+    for (let current = index - 1; current >= 0; current--) {
+        const char = text[current];
+        if (char === ' ' || char === '\t' || char === '\n' || char === '\r') {
+            continue;
+        }
+        return char;
+    }
+    return null;
 }
 
 interface BlockCommentContext {

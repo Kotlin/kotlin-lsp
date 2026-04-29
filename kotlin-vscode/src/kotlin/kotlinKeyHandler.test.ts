@@ -17,6 +17,9 @@ describe('Handling key presses in Kotlin files', () => {
         test('completes curly braces', doTest('val x = {|', 'val x = {|}'));
 
         test('completes single quotes', doTest("val x = '|", "val x = '|'"));
+
+        test('completes parenthesis after empty angular braces', doTest(`val x = ArrayList<>(|`, `val x = ArrayList<>(|)`));
+
     });
 
     describe('angle bracket auto-completion', () => {
@@ -27,6 +30,12 @@ describe('Handling key presses in Kotlin files', () => {
         test('no completion after lowercase identifier', doTest('val less = x <|', 'val less = x <|'));
 
         test('no completion after non-identifier token', doTest('val x = 1 <|', 'val x = 1 <|'));
+
+        test('no overtyping in an empty type parameter list', doTest('fun <>|>', 'fun <>|'));
+
+        test('no overtyping in a non-empty type parameter list', doTest('fun <T>|>', 'fun <T>|'));
+
+
     });
 
     describe('single quote handling', () => {
@@ -383,10 +392,332 @@ fun test() {
 }`,
                 '  ',
         ));
+
+        test('properly handles malformed interpolation', doTest(
+                'val s = "a${}b"\n|',
+                'val s = "a${}b"\n|',
+        ));
+
+        test('properly indents next line', doTest(
+                `
+class A {
+  val x = 1
+|
+}                
+                `,
+                `
+class A {
+  val x = 1
+  |
+}                
+                `,
+        ));
+
+        test('properly indents next line when block uses tabs', doTest(
+                `
+class A {
+\tval x = 1
+|
+}
+                `,
+                `
+class A {
+\tval x = 1
+\t|
+}
+                `,
+        ));
+
+        test('properly indents next line before a closing parenthesis', doTest(
+                `
+fun test() {
+  call(
+    value,
+|
+  )
+}
+                `,
+                `
+fun test() {
+  call(
+    value,
+        |
+  )
+}
+                `,
+        ));
+
+        test('properly indents next line before a closing bracket', doTest(
+                `
+fun test() {
+  val y = xs[
+|
+  ]
+}
+                `,
+                `
+fun test() {
+  val y = xs[
+      |
+  ]
+}
+                `,
+        ));
+
+        test('inserts block indent on blank line before next statement', doTest(
+                `
+class A {
+  val x = 1
+|
+  val y = 2
+}`,
+                `
+class A {
+  val x = 1
+  |
+  val y = 2
+}`,
+        ));
+
+        test('indents after opening parenthesis when next line closes call', doTest(
+                `
+fun test() {
+  val result = foo(
+|
+  )
+}
+                `,
+                `
+fun test() {
+  val result = foo(
+      |
+  )
+}
+                `,
+        ));
+
+        test('indents after comma in function call when next line closes call', doTest(
+                `
+fun test() {
+  val result = foo(
+    first,
+|
+  )
+}
+                `,
+                `
+fun test() {
+  val result = foo(
+    first,
+        |
+  )
+}
+                `,
+        ));
+
+        test('indents after arithmetic operator when next line closes parenthesized expression', doTest(
+                `
+fun test() {
+  val result = (1 +
+|
+  )
+}
+                `,
+                `
+fun test() {
+  val result = (1 +
+      |
+  )
+}
+                `,
+        ));
+
+        test('inserts block indent on blank line before leading operator on next line', doTest(
+                `
+fun test() {
+  val result = 1
+|
+  + 2
+}
+                `,
+                `
+fun test() {
+  val result = 1
+  |
+  + 2
+}
+                `,
+        ));
+
+        test('indents after arithmetic operator when next line starts with an operand', doTest(
+                `
+fun test() {
+  val result = 1 +
+|
+2
+}
+                `,
+                `
+fun test() {
+  val result = 1 +
+      |
+2
+}
+                `,
+        ));
+
+        test('inserts block indent on blank line before leading boolean operator on next line', doTest(
+                `
+fun test() {
+  val ok = conditionA
+|
+  && conditionB
+}
+                `,
+                `
+fun test() {
+  val ok = conditionA
+  |
+  && conditionB
+}
+                `,
+        ));
+
+        test('indents after boolean operator when next line starts with an operand', doTest(
+                `
+fun test() {
+  val ok = conditionA &&
+|
+conditionB
+}
+                `,
+                `
+fun test() {
+  val ok = conditionA &&
+      |
+conditionB
+}
+                `,
+        ));
+
+        test('indents with tabs before a closing brace', doTest(
+                `
+fun test() {
+\tif (true) {
+\t\tprintln(1)
+|
+\t}
+}
+                `,
+                `
+fun test() {
+\tif (true) {
+\t\tprintln(1)
+\t\t|
+\t}
+}
+                `,
+        ));
+
+        test('continues indent after equals for single-expression function body', doTest(
+                `
+fun answer() =
+|
+42
+                `,
+                `
+fun answer() =
+    |
+42
+                `,
+        ));
+
+        test('inserts block indent after statement-ending semicolon, not continuation indent', doTest(
+                `
+fun test() {
+  val a = 1;
+|
+  val b = 2
+}
+                `,
+                `
+fun test() {
+  val a = 1;
+  |
+  val b = 2
+}
+                `,
+        ));
+
+        test('continues indent after comma in destructuring before closing parenthesis', doTest(
+                `
+fun test() {
+  val (a,
+|
+  ) = p
+}
+                `,
+                `
+fun test() {
+  val (a,
+      |
+  ) = p
+}
+                `,
+        ));
+
+        test('continues indent when splitting if condition before closing parenthesis', doTest(
+                `
+fun test() {
+  if (true &&
+|
+  ) {}
+}
+                `,
+                `
+fun test() {
+  if (true &&
+      |
+  ) {}
+}
+                `,
+        ));
+
+        test('continues indent after elvis operator before expression on next line', doTest(
+                `
+fun test() {
+  val x = a ?:
+|
+  b
+}
+                `,
+                `
+fun test() {
+  val x = a ?:
+      |
+  b
+}
+                `,
+        ));
+
+        test('handles CRLF when continuing before closing parenthesis', doTest(
+                `fun test() {\r\n  foo(\r\n    1,\r\n|\r\n  )\r\n}`,
+                `fun test() {\r\n  foo(\r\n    1,\r\n        |\r\n  )\r\n}`,
+        ));
+
+        test('keeps escaped quote in string literals', doTest(
+                `val s = "\\"|"`,
+                `val s = "\\"|"`,
+        ));
+
+        test('keeps escaped quote in char literals', doTest(
+                `val c = '\\'|'`,
+                `val c = '\\'|'`,
+        ));
     });
 
     describe('suppresses extra closing symbols', () => {
-        test('no extra parenthesis', doTest('\nval x = (2 + 3)|)', '\nval x = (2 + 3)|'));
+        test('no extra parenthesis', doTest('val x = (2 + 3)|)', 'val x = (2 + 3)|'));
 
         test('no extra bracket', doTest('val x = a[0]|]', 'val x = a[0]|'));
 

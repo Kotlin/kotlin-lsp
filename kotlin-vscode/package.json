@@ -219,6 +219,12 @@
         }
       }
     ],
+    "configurationDefaults": {
+      "[kotlin]": {
+        "editor.autoIndent": "none",
+        "editor.formatOnType": false
+      }
+    },
     "commands": [
       {
         "command": "jetbrains.exportWorkspaceToJson",
