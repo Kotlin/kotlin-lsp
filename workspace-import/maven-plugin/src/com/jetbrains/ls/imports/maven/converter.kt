@@ -762,7 +762,7 @@ private fun createAttachArtifactDependency(
 }
 
 
-private fun MavenProject.extractKotlinSettings(
+internal fun MavenProject.extractKotlinSettings(
     moduleData: MavenModuleData,
     repositorySystem: RepositorySystem,
     repositorySystemSession: RepositorySystemSession
