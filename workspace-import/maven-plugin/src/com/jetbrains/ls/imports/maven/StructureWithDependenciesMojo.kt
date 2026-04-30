@@ -14,7 +14,7 @@ import java.io.File
  *   -Dfile=out/jps-artifacts/language-server.workspace-import.maven-plugin.jar \
  *   -DgroupId=com.jetbrains.ls \
  *   -DartifactId=imports-maven-plugin \
- *   -Dversion=0.99 \
+ *   -Dversion=0.100 \
  *   -Dpackaging=maven-plugin
  *
  * MAVEN_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005" \

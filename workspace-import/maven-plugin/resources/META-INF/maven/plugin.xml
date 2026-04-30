@@ -81,13 +81,26 @@
           <required>true</required>
           <editable>false</editable>
         </parameter>
+        <parameter>
+          <name>repositorySystemSession</name>
+          <type>org.eclipse.aether.RepositorySystemSession</type>
+          <required>true</required>
+          <editable>false</editable>
+        </parameter>
       </parameters>
       <configuration>
         <outputFile implementation="java.lang.String">${outputFile}</outputFile>
         <project implementation="org.apache.maven.project.MavenProject" default-value="${project}"/>
         <session implementation="org.apache.maven.execution.MavenSession" default-value="${session}"/>
         <mojoExecution implementation="org.apache.maven.plugin.MojoExecution" default-value="${mojoExecution}" />
+        <repositorySystemSession implementation="org.eclipse.aether.RepositorySystemSession" default-value="${repositorySystemSession}"/>
       </configuration>
+      <requirements>
+        <requirement>
+          <role>org.eclipse.aether.RepositorySystem</role>
+          <field-name>repositorySystem</field-name>
+        </requirement>
+      </requirements>
     </mojo>
     <mojo>
       <goal>model-process-resources</goal>
@@ -120,13 +133,26 @@
           <required>true</required>
           <editable>false</editable>
         </parameter>
+        <parameter>
+          <name>repositorySystemSession</name>
+          <type>org.eclipse.aether.RepositorySystemSession</type>
+          <required>true</required>
+          <editable>false</editable>
+        </parameter>
       </parameters>
       <configuration>
         <outputFile implementation="java.lang.String">${outputFile}</outputFile>
         <project implementation="org.apache.maven.project.MavenProject" default-value="${project}"/>
         <session implementation="org.apache.maven.execution.MavenSession" default-value="${session}"/>
         <mojoExecution implementation="org.apache.maven.plugin.MojoExecution" default-value="${mojoExecution}" />
+        <repositorySystemSession implementation="org.eclipse.aether.RepositorySystemSession" default-value="${repositorySystemSession}"/>
       </configuration>
+      <requirements>
+        <requirement>
+          <role>org.eclipse.aether.RepositorySystem</role>
+          <field-name>repositorySystem</field-name>
+        </requirement>
+      </requirements>
     </mojo>
   </mojos>
 </plugin>
