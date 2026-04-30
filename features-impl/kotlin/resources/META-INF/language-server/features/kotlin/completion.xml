@@ -11,5 +11,10 @@
     <weigher key="proximity" implementationClass="org.jetbrains.kotlin.idea.completion.implCommon.weighers.PreferKotlinxLibrariesWeigher"
              id="kotlin.preferKotlinx"
              order="after sameModule, before knownElement"/>
+
+    <applicationService
+            serviceInterface="org.jetbrains.kotlin.idea.completion.impl.k2.handlers.TrailingLambdaInsertionHandlerFactory"
+            serviceImplementation="org.jetbrains.kotlin.idea.completion.impl.k2.handlers.TrailingLambdaInsertionHandlerFactory$Disabled"/>
+
   </extensions>
 </idea-plugin>
