@@ -217,7 +217,7 @@ private fun sourceRootData(
 //        addBuildHelperRoots(project, "add-test-resource", "resources","java-test-resource")
 //        addCompilerGeneratedSources(project, "compiler:testCompile","java-test")
 //        addAntlr4GeneratedSources(project, "java-test")
-//        addModelloGeneratedSources(project, "java-test")
+//        addModelloGeneratedSources(project, "java-test")(value#0) = "/Users/Alexander.Bubenchiko/ultimate-2/out/ide-tests/cache/projects/unpacked/maven/api/maven-api-settings/src/main/java"
     } else {
         if (module.type.containsMain) {
             project.compileSourceRoots
