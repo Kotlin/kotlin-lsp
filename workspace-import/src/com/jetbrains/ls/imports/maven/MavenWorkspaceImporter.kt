@@ -113,18 +113,40 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         progress: WorkspaceImportProgressReporter,
         additionalParams: List<String>
     ): MavenRunResult {
-        progress.progressStatus("Generating sources...")
-        val modelWithGeneratedSources = runMavenPluginGoal(execPath, javaHome, projectDirectory, "gen-sources", progress, additionalParams)
-        if (modelWithGeneratedSources is ErrorResult && couldBeFixedWithInstall(depsResolved, modelWithGeneratedSources)) {
-            progress.progressStatus("Generating sources failed, trying to fix with mvn install...")
-            runGoal(execPath, javaHome, projectDirectory, "install", progress, additionalParams)
-            progress.progressStatus("Generating sources, second try...")
-            return runMavenPluginGoal(execPath, javaHome, projectDirectory, "gen-sources", progress, additionalParams)
-        } else return modelWithGeneratedSources
-    }
+        progress.progressStatus("Generating resources...")
+        val modelProcessResourcesPhase =
+            runMavenPluginGoal(execPath, javaHome, projectDirectory, "model-process-resources", progress, additionalParams)
+        if (modelProcessResourcesPhase is SuccessResult) {
+            LOG.info("Generated sources collected via model-process-resources (1st try)")
+            return modelProcessResourcesPhase
+        }
 
-    private fun couldBeFixedWithInstall(depsResolved: Boolean, modelWithGeneratedSources: ErrorResult): Boolean {
-        return depsResolved //todo
+        progress.progressStatus("Generating resources failed, trying to fix with mvn process-sources...")
+        val modelProcessSourcesPhase =
+            runMavenPluginGoal(execPath, javaHome, projectDirectory, "model-process-sources", progress, additionalParams)
+        if (modelProcessSourcesPhase is SuccessResult) {
+            LOG.info("Generated sources collected via model-process-sources (1st try)")
+            return modelProcessSourcesPhase
+        }
+        if (!depsResolved) {
+            LOG.warn("Generated sources collection failed and deps not resolved; returning model-process-sources error result")
+            return modelProcessSourcesPhase
+        }
+
+        progress.progressStatus("Generating sources failed, trying to fix with mvn install...")
+        LOG.info("Generated sources collection failed; running 'mvn install' before retrying")
+        runGoal(execPath, javaHome, projectDirectory, "install", progress, additionalParams)
+        progress.progressStatus("Generating resources, second try...")
+        val modelProcessResourcesPhase2 =
+            runMavenPluginGoal(execPath, javaHome, projectDirectory, "model-process-resources", progress, additionalParams)
+        if (modelProcessResourcesPhase2 is SuccessResult) {
+            LOG.info("Generated sources collected via model-process-resources (2nd try)")
+            return modelProcessResourcesPhase2
+        }
+        progress.progressStatus("Generating sources, second try...")
+        LOG.info("Falling back to model-process-sources (2nd try)")
+        return runMavenPluginGoal(execPath, javaHome, projectDirectory, "model-process-sources", progress, additionalParams)
+
     }
 
     private suspend fun runMavenPluginGoal(
