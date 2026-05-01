@@ -29,7 +29,7 @@ object LSSemanticTokens {
         return SemanticTokens(resultId = null, data = encoded)
     }
 
-    context(configuration: LSConfiguration, handlerContext: LspHandlerContext)
+    context(configuration: LSConfiguration)
     fun createRegistry(): LSSemanticTokenRegistry {
         val registries = configuration.entries<LSSemanticTokensProvider>().map { it.createRegistry() }
         if (registries.isEmpty()) return LSSemanticTokenRegistry.EMPTY

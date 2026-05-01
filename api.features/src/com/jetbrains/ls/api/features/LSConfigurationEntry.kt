@@ -25,7 +25,6 @@ sealed interface AnalyzerContainerType {
     data object WRITE : AnalyzerContainerType
     data class INDEXING(val fileSystems: AnalyzerFileSystems?) : AnalyzerContainerType
 }
-
 fun interface ApplicationInitEntry : LSConfigurationEntry {
     fun AnalyzerContainerBuilder.initApplication(application: Application, type: AnalyzerContainerType)
 }
