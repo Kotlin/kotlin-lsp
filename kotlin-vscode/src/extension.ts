@@ -6,6 +6,7 @@ import {registerStatusBarItem} from './statusBar';
 import {registerDapServer} from './dap'
 import {registerDatabase} from './database'
 import {registerFileTemplates} from './fileTemplates'
+import {checkGeoRestricted} from './geoRestriction'
 
 let _context: ExtensionContext | undefined
 let _outputChannel: OutputChannel | undefined;
@@ -47,6 +48,11 @@ const dynamicModulesContext = (require as any).context('.', true, /^\.\/[A-Za-z0
 export async function activate(context: ExtensionContext) {
     _context = context;
     initOutputChannel(context);
+
+    if (await checkGeoRestricted()) {
+        return;
+    }
+
     registerDecompiler(context);
     registerOpeningJars();
     registerDapServer(context);
