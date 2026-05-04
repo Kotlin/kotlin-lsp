@@ -6,8 +6,8 @@ import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiPackage
 import com.intellij.psi.search.EverythingGlobalScope
-import com.intellij.psi.stubs.StubIndex.getInstance
-import com.jetbrains.analyzer.java.JavaFilePackageIndex.FILE_PACKAGE_INDEX
+import com.intellij.psi.stubs.StubIndex
+import com.jetbrains.analyzer.java.JavaFilePackageIndex
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
@@ -40,9 +40,9 @@ class LSJavaPackageDefinitionProvider(
                 val targets = psiFile.getTargetsAtPosition(params.position, document, targetKinds)
 
                 targets.filterIsInstance<PsiPackage>().mapNotNull { psiElement ->
-                    val directory = getInstance()
+                    val directory = StubIndex.getInstance()
                         .getContainingFilesIterator(
-                            FILE_PACKAGE_INDEX,
+                            JavaFilePackageIndex.FILE_PACKAGE_INDEX,
                             psiElement.qualifiedName,
                             psiElement.project,
                             EverythingGlobalScope()
