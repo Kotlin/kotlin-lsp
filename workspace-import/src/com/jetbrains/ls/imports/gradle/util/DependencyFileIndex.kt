@@ -65,7 +65,8 @@ internal class DependencyFileIndex {
                     DependencyData.Module(
                         name = "$moduleFqn.${sourceSet.name}",
                         scope = DependencyDataScope.RUNTIME,
-                        isExported = false
+                        isExported = false,
+                        isTestJar = sourceSet.name.lowercase().contains("test")
                     )
                 )
             }
