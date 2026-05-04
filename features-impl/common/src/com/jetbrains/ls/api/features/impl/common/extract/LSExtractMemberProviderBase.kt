@@ -16,7 +16,6 @@ import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.util.toTextRange
-import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.core.withWriteAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
@@ -193,14 +192,13 @@ abstract class LSExtractMemberProviderBase<Context> : LSCodeActionProvider, LSCo
             getWriteContext(file, selection, data.choice) to document.text
         } ?: return ExtractResult(emptyList(), null)
 
-        val navigationRange = server.withWritableFile(file.uri) {
-            val postProcessReformatting = PostprocessReformattingAspect.getInstance(project)
-            if (postProcessReformatting == null) {
-                LOG.error("Wasn't able to initialize PostProcessReformattingAspect")
-            }
-            val reference = doExtract(writeContext) ?: return@withWritableFile null
-            readAction { TextRange(reference.startOffset, reference.startOffset) }
+        val postProcessReformatting = PostprocessReformattingAspect.getInstance(project)
+        if (postProcessReformatting == null) {
+            LOG.error("Wasn't able to initialize PostProcessReformattingAspect")
         }
+
+        val reference = doExtract(writeContext)
+        val navigationRange = if (reference != null) readAction { TextRange(reference.startOffset, reference.startOffset) } else null
 
         return readAction {
             val document = file.findDocument() ?: return@readAction ExtractResult.EMPTY

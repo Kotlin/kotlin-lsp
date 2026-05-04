@@ -1,4 +1,4 @@
-// Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.rename
 
 import com.intellij.openapi.application.WriteAction
@@ -38,6 +38,8 @@ import com.intellij.refactoring.util.RelatedUsageInfo
 import com.intellij.usageView.UsageInfo
 import com.intellij.usageView.UsageViewUtil
 import com.intellij.util.containers.MultiMap
+import com.jetbrains.analyzer.api.FileUrl
+import com.jetbrains.analyzer.api.fileUrl
 import com.jetbrains.lsp.implementation.throwLspError
 import com.jetbrains.lsp.protocol.ErrorCodes
 import com.jetbrains.lsp.protocol.RenameRequestType
@@ -72,8 +74,8 @@ internal class Renamer(
     private val usages: Array<UsageInfo>
 
     // TODO: Use backing fields once they stabilize
-    val originals: Map<String, Pair<PsiFile, String>> get() = _originals
-    private val _originals: MutableMap<String, Pair<PsiFile, String>> = mutableMapOf()
+    val originals: Map<FileUrl, Pair<PsiFile, String>> get() = _originals
+    private val _originals: MutableMap<FileUrl, Pair<PsiFile, String>> = mutableMapOf()
 
     init {
         RenameUtil.assertNonCompileElement(primaryElement)
@@ -360,7 +362,7 @@ internal class Renamer(
     private fun addFiles(list: List<PsiFile>) {
         list.mapNotNull {  file  ->
             val virtualFile = file.virtualFile ?: return@mapNotNull null
-            file to virtualFile.url
+            file to virtualFile.fileUrl
         }.distinctBy { it.second }.forEach { _originals[it.second] = it.first to it.first.text }
     }
 
