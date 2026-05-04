@@ -38,7 +38,6 @@ jvm_library(
     "@community//platform/util",
     "@community//libraries/kotlinx/serialization/json",
     "@community//libraries/kotlinx/serialization/core",
-    "@ultimate_lib//:java-diff-utils",
     "//language-server/analyzer",
     "//language-server/api.impl.analyzer",
   ]

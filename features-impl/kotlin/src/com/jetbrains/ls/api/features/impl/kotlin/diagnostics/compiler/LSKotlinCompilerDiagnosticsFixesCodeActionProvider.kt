@@ -12,7 +12,7 @@ import com.intellij.openapi.vfs.findPsiFile
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
-import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
+import com.jetbrains.ls.api.core.withWriteAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.diagnosticData
 import com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDescriptorProvider
@@ -49,33 +49,31 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
         val diagnosticData = params.diagnosticData<KotlinCompilerDiagnosticData>().ifEmpty { return@flow }
 
         val uri = params.textDocument.uri.uri
-        server.withWritableFile(uri) {
-            server.withAnalysisContextAndFileSettings(uri) {
-                readAction {
-                    val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
-                    val quickFixService = KotlinQuickFixService.getInstance()
-                    val ktFile = virtualFile.findPsiFile(project) as? KtFile ?: return@readAction emptyList()
-                    val document = virtualFile.findDocument() ?: return@readAction emptyList()
-                    analyze(ktFile) {
-                        val kaDiagnostics = ktFile.collectDiagnostics(filter = KaDiagnosticCheckerFilter.ONLY_COMMON_CHECKERS)
-                        if (kaDiagnostics.isEmpty()) return@analyze emptyList()
-                        val editor = ImaginaryEditor(project, document).apply {
-                            caretModel.primaryCaret.moveToOffset(0)
-                        }
-                        val result = mutableListOf<CodeAction>()
-                        for (data in diagnosticData) {
-                            val kaDiagnostic = kaDiagnostics.firstOrNull { data.data.matches(it) } ?: continue
-                            with(quickFixService) {
-                                result += getQuickFixesAsCodeActions(
-                                    ktFile,
-                                    editor,
-                                    kaDiagnostic,
-                                    data.diagnostic,
-                                )
-                            }
-                        }
-                        result
+        server.withWriteAnalysisContextAndFileSettings(uri) {
+            readAction {
+                val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
+                val quickFixService = KotlinQuickFixService.getInstance()
+                val ktFile = virtualFile.findPsiFile(project) as? KtFile ?: return@readAction emptyList()
+                val document = virtualFile.findDocument() ?: return@readAction emptyList()
+                analyze(ktFile) {
+                    val kaDiagnostics = ktFile.collectDiagnostics(filter = KaDiagnosticCheckerFilter.ONLY_COMMON_CHECKERS)
+                    if (kaDiagnostics.isEmpty()) return@analyze emptyList()
+                    val editor = ImaginaryEditor(project, document).apply {
+                        caretModel.primaryCaret.moveToOffset(0)
                     }
+                    val result = mutableListOf<CodeAction>()
+                    for (data in diagnosticData) {
+                        val kaDiagnostic = kaDiagnostics.firstOrNull { data.data.matches(it) } ?: continue
+                        with(quickFixService) {
+                            result += getQuickFixesAsCodeActions(
+                                ktFile,
+                                editor,
+                                kaDiagnostic,
+                                data.diagnostic,
+                            )
+                        }
+                    }
+                    result
                 }
             }
         }.forEach { emit(it) }

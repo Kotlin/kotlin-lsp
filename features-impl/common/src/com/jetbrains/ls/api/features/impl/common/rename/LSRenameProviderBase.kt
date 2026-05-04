@@ -1,4 +1,4 @@
-// Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.rename
 
 import com.intellij.model.psi.PsiSymbolService
@@ -12,6 +12,7 @@ import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.util.IncorrectOperationException
+import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.fileExtension
@@ -19,11 +20,11 @@ import com.jetbrains.ls.api.core.util.fileName
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.util.scheme
-import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.rename.LSRenameProvider
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.DiffGranularity
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
+import com.jetbrains.ls.snapshot.api.impl.core.asURI
 import com.jetbrains.lsp.implementation.LspException
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.throwLspError
@@ -94,7 +95,7 @@ abstract class LSRenameProviderBase(
         return WorkspaceEdit(documentChanges = edits)
     }
 
-    context(server: LSServer)
+    context(server: LSServer, _: LSAnalysisContext)
     private suspend fun doRename(context: Context): List<FileChange>? {
         val renamer = readAction {
             val target = context.target
@@ -102,10 +103,14 @@ abstract class LSRenameProviderBase(
             Renamer(target.project, target, context.newName, false, false)
         } ?: return null
 
-        val renames = try {
-            renameAndGetChangedFiles(renamer).mapNotNull { (oldUri, newUri) ->
-                if (oldUri == context.uriToSkip) return@mapNotNull null
-                RenameFile(DocumentUri(oldUri), DocumentUri(newUri))
+
+
+
+        try {
+            withContext(Dispatchers.EDT) {
+                writeIntentReadAction {
+                    renamer.rename()
+                }
             }
         } catch (ex: Throwable) {
             LOG.warn("Error renaming element", ex)
@@ -127,28 +132,20 @@ abstract class LSRenameProviderBase(
             }
         }
 
-        val edits = readAction {
-            renamer.originals.map { (_, fileToOriginalText) ->
+        return readAction {
+            val edits = renamer.originals.map { (oldUrl, fileToOriginalText) ->
                 val (file, original) = fileToOriginalText
-                val uri = DocumentUri(file.virtualFile.uri)
+                val uri = DocumentUri(oldUrl.asURI())
                 val version = server.documents.getVersion(uri.uri)
                     ?: 0 // According to LSP spec, it should be null, but our serialization would drop it, causing an error on the LSP side. Zero seems to work.
                 val id = TextDocumentIdentifier(uri, version)
                 val edits = computeTextEdits(original, file.text, context.granularity)
                 TextDocumentEdit(id, edits)
             }
-        }
-        return edits + renames
-    }
-
-    context(server: LSServer)
-    private suspend fun renameAndGetChangedFiles(processor: Renamer): Map<URI, URI> {
-        return withContext(Dispatchers.EDT) {
-            server.withRenamesEnabled {
-                writeIntentReadAction {
-                    processor.rename()
-                }
-            }
+            // In `workspace/willRenameFiles` request, the rename of the file itself is handled on the client side.
+            // Though we track it, we need to filter it out to avoid excessive data transfer and conflicts.
+            val filteredChanges = server.snapshot.filterNot { it is RenameFile && it.oldUri.uri == context.uriToSkip }
+            edits + filteredChanges
         }
     }
 
