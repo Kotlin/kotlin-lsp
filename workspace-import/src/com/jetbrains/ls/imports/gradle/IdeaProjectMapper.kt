@@ -279,17 +279,11 @@ internal class IdeaProjectMapper {
     }
 
     private fun ModuleSourceSet?.isToolchainSpecified(): Boolean {
-        if (this == null) {
-            return false
-        }
-        return toolchainVersion != null
+        return this != null && toolchainVersion != null
     }
 
     private fun ModuleSourceSet?.isCompileTaskSpecified(): Boolean {
-        if (this == null) {
-            return false
-        }
-        return sourceCompatibility != null || targetCompatibility != null
+        return this != null && (sourceCompatibility != null || targetCompatibility != null)
     }
 
     private fun JavaVersion.getJavaVersion(): String {

@@ -5,7 +5,6 @@ package com.jetbrains.ls.imports.gradle
 
 import com.jetbrains.ls.imports.gradle.action.ProjectMetadata
 import com.jetbrains.ls.imports.gradle.model.AndroidProject
-import com.jetbrains.ls.imports.gradle.model.ExternalModuleDependency
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet
 import com.jetbrains.ls.imports.gradle.util.DependencyDataScopeCalculator
 import com.jetbrains.ls.imports.gradle.util.DependencyFileIndex
@@ -86,13 +85,7 @@ internal class SourceSetDependencyResolver(
     ): List<DependencyData> {
         val isTest = moduleSourceSet.isTest()
         val dependencies = module.dependencies
-            .filter { dependency ->
-                if (!isTest) {
-                    dependency.scope.scope != "TEST"
-                } else {
-                    true
-                }
-            }
+            .filter { dependency -> isTest || dependency.scope.scope != "TEST" }
             .mapNotNull { it.toDependencyData() }
             .toMutableList()
         if (isTest) {
@@ -261,11 +254,7 @@ internal class SourceSetDependencyResolver(
     }
 
     private fun DependencyData.isSelfReference(moduleName: String, sourceSet: ModuleSourceSet): Boolean {
-        return if (this is DependencyData.Module) {
-            name == "$moduleName.${sourceSet.name}"
-        } else {
-            false
-        }
+        return this is DependencyData.Module && name == "$moduleName.${sourceSet.name}"
     }
 }
 
