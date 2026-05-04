@@ -1,4 +1,4 @@
-import {type ExtensionContext, Range, Selection, TextDocumentChangeReason, window, workspace} from 'vscode';
+import {EndOfLine, type ExtensionContext, Range, Selection, TextDocumentChangeReason, window, workspace} from 'vscode';
 import type {DocumentParser} from "./DocumentParser"
 import {type KeyHandler} from './types';
 
@@ -23,6 +23,11 @@ export function registerHandleKeyType(context: ExtensionContext, parser: Documen
         }
     
         const change = event.contentChanges[0];
+
+        if (change.rangeLength !== 0) {
+            return;
+        }
+
         const key = ENTER_KEY_PATTERN.test(change.text) ? '\n' : change.text;
         if (!HANDLED_KEYS.has(key) || change.rangeLength !== 0) {
             return;
@@ -36,24 +41,29 @@ export function registerHandleKeyType(context: ExtensionContext, parser: Documen
 
         const indentUnit = editor.options.insertSpaces === false ? '\t' : ' '.repeat(editor.options.indentSize as number);
         const result = handler(text, tree, key, change.rangeOffset, indentUnit);
-        if (result.startOffset === change.rangeOffset
-                && result.endOffset === change.rangeOffset + 1
-                && result.caretOffset === change.rangeOffset + 1
-                && change.text === result.text) {
-            return;
+        let insertText: string;
+        switch(editor.document.eol) {
+            case EndOfLine.LF:
+                insertText = result.text;
+                break;
+            case EndOfLine.CRLF:
+                insertText = result.text.replace('\n', '\r\n');
+                break;
         }
-
-        await editor.edit((editBuilder) => {
-            editBuilder.replace(
-                    new Range(
-                            event.document.positionAt(result.startOffset),
-                            event.document.positionAt(result.endOffset),
-                    ),
-                    result.text,
-            );
-        }, {undoStopBefore: false, undoStopAfter: false});
-
-        const position = editor.document.positionAt(result.caretOffset);
-        editor.selection = new Selection(position, position);
+        if (result.startOffset !== change.rangeOffset
+                || result.endOffset !== change.rangeOffset + 1
+                || insertText !== change.text) {
+            await editor.edit((editBuilder) => {
+                editBuilder.replace(
+                        new Range(
+                                event.document.positionAt(result.startOffset),
+                                event.document.positionAt(result.endOffset),
+                        ),
+                        insertText,
+                );
+            }, {undoStopBefore: false, undoStopAfter: false});
+            const position = editor.document.positionAt(result.caretOffset);
+            editor.selection = new Selection(position, position);
+        }
     }, null, context.subscriptions));
 }
