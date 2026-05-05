@@ -618,7 +618,9 @@ function handleLineCommentEnter(text: string, node: Node, index: number): KeyRes
 
     const currentLineTail = getCurrentLineTail(text, index + 1);
     if (currentLineTail.trim().length === 0) {
-        return keyResult('\n', index, index + 1, index + 1);
+        const indent = getLineCommentIndent(text, lineComment);
+        const replacement = `\n${indent}`;
+        return keyResult(replacement, index, index + 1, index + replacement.length);
     }
 
     const prefix = getLineCommentPrefix(text, lineComment);
@@ -942,10 +944,12 @@ function isBraceEnter(charBefore: string | undefined, charAfter: string | undefi
 }
 
 function getLineCommentPrefix(text: string, lineComment: Node): string {
-    const lineStart = getLineStart(text, lineComment.startIndex);
-    const indent = text.slice(lineStart, lineComment.startIndex);
     const leadingSpaces = lineComment.text.slice(2).match(/^\s*/)?.[0] ?? '';
-    return `${indent}//${leadingSpaces}`;
+    return `${getLineCommentIndent(text, lineComment)}//${leadingSpaces}`;
+}
+
+function getLineCommentIndent(text: string, lineComment: Node): string {
+    return getIndent(text, getLineStart(text, lineComment.startIndex));
 }
 
 function findBlockCommentContext(

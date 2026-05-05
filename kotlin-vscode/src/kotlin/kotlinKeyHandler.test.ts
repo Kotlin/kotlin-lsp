@@ -318,6 +318,19 @@ class C {
   }
 }`
       ));
+
+        test('properly indents after a single-line comment', doTest(
+`
+fun foo() {
+  // comment
+|
+}`,
+`
+fun foo() {
+  // comment
+  |
+}`,
+'  '));
     });
 
     describe('no completion inside string content', () => {
