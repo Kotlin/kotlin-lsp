@@ -1,17 +1,14 @@
-*.backup
-*.vsix
-*.zip
-.gitignore
-.vscode
-.vscode-test
-apply-intellij.js
-buildLocally.sh
-node_modules
-out
-package-lock.json
-src/**
-testSources
-tsconfig.json
-unpack-server.js
-webpack.config.js
-docs/**
+# Ignore everything
+**
+
+# Whitelist what's needed
+!bin/**
+!dist/**
+!grammars/**
+!icons/**
+!server/**
+!syntaxes/**
+!language-configuration.json
+!LICENSE
+!package.json
+!README.md
