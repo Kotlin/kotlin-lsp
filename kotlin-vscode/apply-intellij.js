@@ -18,7 +18,11 @@ function merge(target, patch) {
     if (isObject(target) && isObject(patch)) {
         const result = {...target};
         for (const key in patch) {
-            result[key] = merge(target[key], patch[key]);
+            if (key === 'scripts') {
+                result[key] = mergeScripts(target[key], patch[key]);
+            } else {
+                result[key] = merge(target[key], patch[key]);
+            }
         }
         return result;
     }
@@ -33,6 +37,14 @@ function merge(target, patch) {
     }
 
     return patch;
+}
+
+function mergeScripts(target, patch) {
+    const result = {...target};
+    for (const key in patch) {
+        result[key] = target?.[key] ? `${target[key]} && ${patch[key]}` : patch[key];
+    }
+    return result;
 }
 
 function isObject(value) {
