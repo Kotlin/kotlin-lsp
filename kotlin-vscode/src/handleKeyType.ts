@@ -40,7 +40,8 @@ export function registerHandleKeyType(context: ExtensionContext, parser: Documen
         }
 
         const indentUnit = editor.options.insertSpaces === false ? '\t' : ' '.repeat(editor.options.indentSize as number);
-        const result = handler(text, tree, key, change.rangeOffset, indentUnit);
+        const offset = change.text.includes(`\r\n`) ? change.rangeOffset + 1 : change.rangeOffset;
+        const result = handler(text, tree, key, offset, indentUnit);
         let insertText: string;
         switch(editor.document.eol) {
             case EndOfLine.LF:
