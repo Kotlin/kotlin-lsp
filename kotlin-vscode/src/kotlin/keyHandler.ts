@@ -195,6 +195,10 @@ function handleRegularEnter(text: string, index: number, indentUnit: string): Ke
     const previousLineIndent = getPreviousNonEmptyLineIndent(text, index);
     const continuationIndent = previousLineIndent === null ? null : `${previousLineIndent}${indentUnit}`;
     const shouldUseContinuationIndent = shouldApplyContinuationIndent(text, index);
+    const matchingDelimiterEnterResult = handleMatchingDelimiterEnter(text, index, previousLineIndent, continuationIndent);
+    if (matchingDelimiterEnterResult !== null) {
+        return matchingDelimiterEnterResult;
+    }
 
     const nextLineStart = getNextLineStart(text, index + 1);
     if (nextLineStart === null) {
@@ -225,6 +229,40 @@ function handleRegularEnter(text: string, index: number, indentUnit: string): Ke
             : previousLineIndent;
     const replacement = `\n${indent}`;
     return keyResult(replacement, index, index + 1, index + replacement.length);
+}
+
+function handleMatchingDelimiterEnter(
+        text: string,
+        index: number,
+        previousLineIndent: string | null,
+        continuationIndent: string | null,
+): KeyResult | null {
+    const matchingDelimiter = getMatchingClosingDelimiter(getPreviousSignificantChar(text, index));
+    if (matchingDelimiter === null || index + 1 >= text.length) {
+        return null;
+    }
+
+    const currentLineEnd = getLineEnd(text, index + 1);
+    const currentLineContentStart = skipIndent(text, index + 1, currentLineEnd);
+    if (text[currentLineContentStart] !== matchingDelimiter) {
+        return null;
+    }
+
+    const bodyIndent = matchingDelimiter === '}'
+            ? getBlockBodyIndent(text, index, previousLineIndent, continuationIndent)
+            : continuationIndent ?? previousLineIndent ?? '';
+    const closingIndent = previousLineIndent ?? '';
+    const replacement = `\n${bodyIndent}\n${closingIndent}`;
+    return keyResult(replacement, index, currentLineContentStart, index + `\n${bodyIndent}`.length);
+}
+
+function getBlockBodyIndent(text: string, index: number, previousLineIndent: string | null, continuationIndent: string | null): string {
+    if (previousLineIndent === null) {
+        return continuationIndent ?? '';
+    }
+
+    const indentStep = getIndentStepFromContext(text, index, previousLineIndent);
+    return indentStep === null ? continuationIndent ?? previousLineIndent : `${previousLineIndent}${indentStep}`;
 }
 
 function keyResultWithOptionalBlockIndent(previousLineIndent: string | null, index: number): KeyResult {
@@ -531,6 +569,37 @@ function getPreviousSignificantChar(text: string, index: number): string | null 
             continue;
         }
         return char;
+    }
+    return null;
+}
+
+function getMatchingClosingDelimiter(char: string | null): string | null {
+    switch (char) {
+        case '(':
+            return ')';
+        case '[':
+            return ']';
+        case '{':
+            return '}';
+        default:
+            return null;
+    }
+}
+
+function getIndentStepFromContext(text: string, index: number, currentIndent: string): string | null {
+    const currentLineStart = getLineStart(text, index);
+    let lineEnd = currentLineStart;
+    while (lineEnd > 0) {
+        const lineStart = getLineStart(text, lineEnd - 1);
+        const line = text.slice(lineStart, lineEnd);
+        if (line.trim().length !== 0) {
+            const indent = getIndent(text, lineStart);
+            if (indent.length < currentIndent.length && currentIndent.startsWith(indent)) {
+                const indentStep = currentIndent.slice(indent.length);
+                return indentStep.length === 0 ? null : indentStep;
+            }
+        }
+        lineEnd = lineStart;
     }
     return null;
 }

@@ -294,6 +294,30 @@ fun test = """
         }
 """.trimIndent()`,
         ));
+
+        test('Properly indents class body', doTest(
+                `
+class C {
+|}`,
+                `
+class C {
+    |
+}`
+        ));
+
+      test('Properly indents method body', doTest(
+`
+class C {
+  fun foo() {
+|}
+}`,
+`
+class C {
+  fun foo() {
+    |
+  }
+}`
+      ));
     });
 
     describe('no completion inside string content', () => {
