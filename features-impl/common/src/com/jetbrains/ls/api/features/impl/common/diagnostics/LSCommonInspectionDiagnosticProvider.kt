@@ -19,6 +19,7 @@ import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.codeInspection.QuickFix
 import com.intellij.codeInspection.ex.InspectionManagerEx
 import com.intellij.lang.Language
+import com.intellij.lang.Language.findLanguageByID
 import com.intellij.modcommand.ActionContext
 import com.intellij.modcommand.ModCommand
 import com.intellij.modcommand.ModCommandQuickFix
@@ -187,7 +188,12 @@ class LSCommonInspectionDiagnosticProvider(
     private fun getEnabledInspectionTools(extensionList: List<InspectionEP>, languageId: String): Sequence<InspectionProfileEntry> {
         return extensionList
             .asSequence()
-            .filter { inspectionEP -> inspectionEP.language == languageId }
+            .filter { inspectionEP ->
+                inspectionEP.language == languageId || languageDialectIsSupportedByInspection(
+                    inspectionEP.language,
+                    languageId
+                )
+            }
             .filter { inspectionEP -> inspectionEP.enabledByDefault }
             .filter { inspectionEP -> HighlightDisplayLevel.find(inspectionEP.level) != HighlightDisplayLevel.DO_NOT_SHOW }
             .filterNot { inspectionBlacklist.containsImplementation(it.implementationClass) }
@@ -199,6 +205,12 @@ class LSCommonInspectionDiagnosticProvider(
                 }
             }
             .filterNot { inspectionBlacklist.containsSuperClass(it) }
+    }
+
+    private fun languageDialectIsSupportedByInspection(inspectionLanguageId: String?, fileLanguageId: String): Boolean {
+        val fileLanguage = findLanguageByID(fileLanguageId)
+        val inspectionLanguage = findLanguageByID(inspectionLanguageId)
+        return fileLanguage?.isKindOf(inspectionLanguage) ?: false
     }
 
     private fun getLocalInspections(psiFile: PsiFile): List<LocalInspectionTool> {
