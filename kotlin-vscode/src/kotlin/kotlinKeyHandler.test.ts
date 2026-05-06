@@ -331,6 +331,23 @@ fun foo() {
   |
 }`,
 '  '));
+
+        test('properly indents after a multi-line comment', doTest(
+                `
+fun foo() {
+  /*
+  comment
+  */ 
+|
+}`,
+                `
+fun foo() {
+  /*
+  comment
+  */ 
+  |
+}`,
+                '  '));
     });
 
     describe('no completion inside string content', () => {
