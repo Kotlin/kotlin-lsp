@@ -21,48 +21,9 @@
   ],
   "main": "./dist/extension",
   "activationEvents": [
-    "onCommand:jetbrains.activateLsp",
-    "onLanguage:kotlin"
+    "onCommand:jetbrains.activateLsp"
   ],
   "contributes": {
-    "languages": [
-      {
-        "id": "kotlin",
-        "aliases": [
-          "Kotlin",
-          "kotlin"
-        ],
-        "extensions": [
-          ".kt"
-        ],
-        "configuration": "./language-configuration.json"
-      }
-    ],
-    "grammars": [
-      {
-        "language": "kotlin",
-        "scopeName": "source.kotlin",
-        "path": "./syntaxes/kotlin.tmLanguage.json",
-        "unbalancedBracketScopes": [
-          "keyword.operator.kotlin"
-        ]
-      }
-    ],
-    "breakpoints": [
-      {
-        "language": "kotlin"
-      }
-    ],
-    "debuggers": [
-      {
-        "type": "intellij_debugger",
-        "label": "IntelliJ Debugger",
-        "languages": [
-          "kotlin"
-        ],
-        "configurationAttributes": {}
-      }
-    ],
     "configuration": [
       {
         "title": "IntelliJ Language Server",
@@ -104,127 +65,8 @@
             "description": "Traces the communication between VS Code and the language server."
           }
         }
-      },
-      {
-        "title": "Inlay",
-        "properties": {
-          "jetbrains.kotlin.hints.settings.types.property": {
-            "type": "boolean",
-            "default": true,
-            "description": "Show inlay hints for property types"
-          },
-          "jetbrains.kotlin.hints.settings.types.variable": {
-            "type": "boolean",
-            "default": true,
-            "description": "Show inlay hints for local variable types"
-          },
-          "jetbrains.kotlin.hints.type.function.return": {
-            "type": "boolean",
-            "default": true,
-            "description": "Show inlay hints for function return types"
-          },
-          "jetbrains.kotlin.hints.type.function.parameter": {
-            "type": "boolean",
-            "default": true,
-            "description": "Show inlay hints for function parameter types"
-          },
-          "jetbrains.kotlin.hints.settings.lambda.return": {
-            "type": "boolean",
-            "default": true,
-            "description": "Show inlay hints for return expressions"
-          },
-          "jetbrains.kotlin.hints.lambda.receivers.parameters": {
-            "type": "boolean",
-            "default": true,
-            "description": "Show inlay hints for implicit receivers and parameters"
-          },
-          "jetbrains.kotlin.hints.settings.value.ranges": {
-            "type": "boolean",
-            "default": true,
-            "description": "Show inlay hints for ranges"
-          },
-          "jetbrains.kotlin.hints.value.kotlin.time": {
-            "type": "boolean",
-            "default": true,
-            "description": "Show kotlin.time package warning inlay hints"
-          },
-          "jetbrains.kotlin.hints.parameters": {
-            "type": "boolean",
-            "default": true,
-            "description": "Show parameter names"
-          },
-          "jetbrains.kotlin.hints.parameters.compiled": {
-            "type": "boolean",
-            "default": true,
-            "description": "Show compiled parameter names"
-          },
-          "jetbrains.kotlin.hints.parameters.excluded": {
-            "type": "boolean",
-            "default": false,
-            "description": "Show excluded parameter names"
-          },
-          "jetbrains.kotlin.hints.call.chains": {
-            "type": "boolean",
-            "default": false,
-            "description": "Function return type in call chains"
-          }
-        }
-      },
-      {
-        "title": "File Templates",
-        "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/kotlin-vscode/docs/file_templates.md).",
-        "properties": {
-          "jetbrains.templates.kotlin.Class": {
-            "type": "string",
-            "editPresentation": "multilineText",
-            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\nclass ${NAME} {\n\t|\n}",
-            "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/kotlin-vscode/docs/file_templates.md)."
-          },
-          "jetbrains.templates.kotlin.File": {
-            "type": "string",
-            "editPresentation": "multilineText",
-            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\n|",
-            "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/kotlin-vscode/docs/file_templates.md)."
-          },
-          "jetbrains.templates.kotlin.Interface": {
-            "type": "string",
-            "editPresentation": "multilineText",
-            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\ninterface ${NAME} {\n\t|\n}",
-            "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/kotlin-vscode/docs/file_templates.md)."
-          },
-          "jetbrains.templates.kotlin.Data Class": {
-            "type": "string",
-            "editPresentation": "multilineText",
-            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\ndata class ${NAME}(|)\n",
-            "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/kotlin-vscode/docs/file_templates.md)."
-          },
-          "jetbrains.templates.kotlin.Enum": {
-            "type": "string",
-            "editPresentation": "multilineText",
-            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\nenum class ${NAME} {\n\t|\n}",
-            "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/kotlin-vscode/docs/file_templates.md)."
-          },
-          "jetbrains.templates.kotlin.Annotation": {
-            "type": "string",
-            "editPresentation": "multilineText",
-            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\nannotation class ${NAME}(|)",
-            "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/kotlin-vscode/docs/file_templates.md)."
-          },
-          "jetbrains.templates.kotlin.Object": {
-            "type": "string",
-            "editPresentation": "multilineText",
-            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\nobject ${NAME} {\n\t|\n}",
-            "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/kotlin-vscode/docs/file_templates.md)."
-          }
-        }
       }
     ],
-    "configurationDefaults": {
-      "[kotlin]": {
-        "editor.autoIndent": "none",
-        "editor.formatOnType": false
-      }
-    },
     "commands": [
       {
         "command": "jetbrains.exportWorkspaceToJson",
@@ -249,17 +91,17 @@
     "webpack-cli": "^6.0.1"
   },
   "dependencies": {
-    "@tree-sitter-grammars/tree-sitter-kotlin": "^1.1.0",
     "vscode-languageclient": "9.0.1",
     "web-tree-sitter": "^0.26.8"
   },
   "scripts": {
     "compile": "webpack --mode development",
     "watch": "webpack --mode development --watch",
-    "vscode:prepublish": "npm run package && npm run unpack-server",
+    "vscode:prepublish": "npm run ij:prepublish && npm run package && npm run unpack-server",
     "package": "webpack --mode production --devtool hidden-source-map",
     "apply-intellij": "node apply-intellij.js",
     "unpack-server": "node unpack-server.js",
+    "ij:prepublish": "mkdir -p grammars && cp node_modules/web-tree-sitter/web-tree-sitter.wasm grammars/",
     "test": "npm run test:grammar && npm run test:unit",
     "test:grammar": "textmate-grammar-snap --grammar syntaxes/kotlin.tmLanguage.json --scope source.kotlin \"testSources/tokenization/*.kt\"",
     "test:unit": "node --import tsx --test src/*.test.ts src/**/*.test.ts",
