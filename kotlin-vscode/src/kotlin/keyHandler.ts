@@ -544,20 +544,14 @@ function skipIndent(text: string, start: number, end: number): number {
 }
 
 function getPreviousNonEmptyLineIndent(text: string, index: number): string | null {
-    let lineEnd = index;
-    while (lineEnd > 0) {
-        const lineStart = getLineStart(text, lineEnd - 1);
-        const line = text.slice(lineStart, lineEnd);
-        if (line.trim().length !== 0) {
-            return getIndent(text, lineStart);
-        }
-        lineEnd = lineStart;
-    }
-
-    return null;
+    const previousLine = getPreviousNonEmptyLine(text, index);
+    return previousLine === null ? null : getIndent(text, previousLine.start);
 }
 
 function shouldApplyContinuationIndent(text: string, index: number): boolean {
+    if (isAfterStandaloneBlockCommentClosingLine(text, index)) {
+        return false;
+    }
     const c = getPreviousSignificantChar(text, index);
     return c !== null && '([{,+-*/%&|^=?:'.includes(c);
 }
@@ -571,6 +565,23 @@ function getPreviousSignificantChar(text: string, index: number): string | null 
         return char;
     }
     return null;
+}
+
+function getPreviousNonEmptyLine(text: string, index: number): { start: number, end: number, text: string } | null {
+    let lineEnd = index;
+    while (lineEnd > 0) {
+        const lineStart = getLineStart(text, lineEnd - 1);
+        const line = text.slice(lineStart, lineEnd);
+        if (line.trim().length !== 0) {
+            return {start: lineStart, end: lineEnd, text: line};
+        }
+        lineEnd = lineStart;
+    }
+    return null;
+}
+
+function isAfterStandaloneBlockCommentClosingLine(text: string, index: number): boolean {
+    return getPreviousNonEmptyLine(text, index)?.text.trim() === '*/';
 }
 
 function getMatchingClosingDelimiter(char: string | null): string | null {
