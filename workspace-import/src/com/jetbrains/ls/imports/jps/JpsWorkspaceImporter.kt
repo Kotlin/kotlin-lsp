@@ -10,6 +10,7 @@ import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.impl.JavaHomeFinder
 import com.intellij.openapi.projectRoots.impl.JavaHomeFinder.getFinder
 import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
+import com.intellij.openapi.util.JDOMUtil
 import com.intellij.platform.eel.provider.getEelDescriptor
 import com.intellij.platform.workspace.jps.entities.ContentRootEntity
 import com.intellij.platform.workspace.jps.entities.DependencyScope
@@ -37,12 +38,15 @@ import com.intellij.platform.workspace.jps.entities.SourceRootTypeId
 import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
+import com.intellij.util.PathUtil
 import com.intellij.util.containers.nullize
 import com.intellij.util.lang.JavaVersion
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
+import com.jetbrains.ls.imports.api.applyChangesWithDeduplication
+import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
 import com.jetbrains.ls.imports.utils.toIntellijUri
 import org.jetbrains.jps.model.JpsElementFactory
 import org.jetbrains.jps.model.JpsModel
@@ -62,6 +66,7 @@ import org.jetbrains.jps.model.serialization.JpsGlobalSettingsLoading
 import org.jetbrains.jps.model.serialization.JpsMavenSettings
 import org.jetbrains.jps.model.serialization.JpsModelSerializationDataService
 import org.jetbrains.jps.model.serialization.JpsProjectLoader
+import org.jetbrains.jps.model.serialization.PathMacroUtil
 import org.jetbrains.jps.model.serialization.impl.JpsPathVariablesConfigurationImpl
 import org.jetbrains.jps.util.JpsPathUtil
 import org.jetbrains.kotlin.cli.common.arguments.copyOf
@@ -76,6 +81,7 @@ import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.div
 import kotlin.io.path.exists
+import kotlin.io.path.isRegularFile
 
 private val LOG = fileLogger()
 
@@ -90,260 +96,40 @@ object JpsWorkspaceImporter : WorkspaceImporter {
         if (!canImportWorkspace(projectDirectory)) return null
         return try {
             val model = JpsElementFactory.getInstance().createModel()
+            val macroExpandMap = ExpandMacroToPathMap()
+
             initGlobalJpsOptions(model)
-            val pathVariables = JpsModelSerializationDataService.computeAllPathVariables(model.global)
-            JpsProjectLoader.loadProject(model.getProject(), pathVariables, model.getGlobal().getPathMapper(), projectDirectory, true, null)
+            JpsModelSerializationDataService.computeAllPathVariables(model.global).let { pathVariables ->
+                JpsProjectLoader.loadProject(model.getProject(), pathVariables, model.getGlobal().getPathMapper(), projectDirectory, true, null)
+
+                ProjectWidePathMacroContributor.getAllMacros(
+                    (projectDirectory / ".idea" / "modules.xml").absolutePathString()
+                ).forEach { (name, value) ->
+                    macroExpandMap.addMacroExpand(name, value)
+                }
+                pathVariables.forEach { (name, value) ->
+                    macroExpandMap.addMacroExpand(name, value)
+                }
+                macroExpandMap.addMacroExpand(
+                    PathMacroUtil.PROJECT_DIR_MACRO_NAME, projectDirectory.absolutePathString()
+                )
+            }
 
             val storage = MutableEntityStorage.create()
-            val entitySource = WorkspaceEntitySource(projectDirectory.toIntellijUri(virtualFileUrlManager))
-            val libs = mutableSetOf<String>()
-            val sdks = mutableSetOf<String>()
-            val macroExpandMap = run {
-                val map = ExpandMacroToPathMap()
-                ProjectWidePathMacroContributor.getAllMacros((projectDirectory / ".idea" / "misc.xml").absolutePathString()).forEach { (name, value) ->
-                    map.addMacroExpand(name, value)
-                }
-                map
+            importJpsModel(storage, projectDirectory, virtualFileUrlManager, model, macroExpandMap, progress)
+
+            findLinkedProjects(projectDirectory, macroExpandMap).forEach { (path, importer) ->
+                LOG.info("Importing linked Maven project: $path")
+                val diff = importer.importWorkspace(
+                    project = project,
+                    projectDirectory = path,
+                    defaultSdkPath = defaultSdkPath,
+                    virtualFileUrlManager = virtualFileUrlManager,
+                    progress = progress,
+                ) ?: return@forEach
+                storage.applyChangesWithDeduplication(diff)
             }
 
-            // Pre-compute the set of modules each module transitively exports, for flattening.
-            // JPS projects use a non-flat dependency model (A→B→C), so exported transitive deps
-            // must be added as direct deps of each module (like Maven/Gradle importers do).
-            val modulesByName = model.project.modules.associateBy { it.name }
-            val transitiveExportsCache = mutableMapOf<String, Set<String>>()
-
-            fun transitiveExports(moduleName: String): Set<String> {
-                transitiveExportsCache[moduleName]?.let { return it }
-                transitiveExportsCache[moduleName] = emptySet() // guard against dependency cycles
-                val jpsModule = modulesByName[moduleName] ?: return emptySet()
-                val result = buildSet {
-                    for (dep in jpsModule.dependenciesList.dependencies) {
-                        if (dep !is JpsModuleDependency) continue
-                        val depModule = dep.module ?: continue
-                        if (JpsJavaExtensionService.getInstance().getDependencyExtension(dep)?.isExported != true) continue
-                        add(depModule.name)
-                        addAll(transitiveExports(depModule.name))
-                    }
-                }
-                transitiveExportsCache[moduleName] = result
-                return result
-            }
-
-            model.project.modules.forEach { module ->
-                val kotlinFacetModuleExtension = module.container.getChild(JpsKotlinFacetModuleExtension.KIND)
-
-                val directDeps = module.dependenciesList.dependencies.mapNotNull { dependency ->
-                    val javaExtension = JpsJavaExtensionService.getInstance().getDependencyExtension(dependency)
-                    when (dependency) {
-                        is JpsLibraryDependency -> {
-                            val library = dependency.library ?: return@mapNotNull null
-                            if (libs.add(library.name)) {
-                                val libEntity = LibraryEntity(
-                                    name = library.name,
-                                    tableId = ProjectLibraryTableId,
-                                    roots = buildList {
-                                        library.getRootUrls(JpsOrderRootType.COMPILED).mapNotNullTo(this) { url ->
-                                            val fileUrl = virtualFileUrlManager.getOrCreateFromUrl(url)
-                                            if (!Path.of(JpsPathUtil.urlToPath(url)).exists()) {
-                                                progress.onUnresolvedDependency(url)
-                                                return@mapNotNull null
-                                            }
-                                            LibraryRoot(
-                                                fileUrl,
-                                                LibraryRootTypeId.COMPILED
-                                            )
-                                        }
-                                        library.getRootUrls(JpsOrderRootType.SOURCES).mapTo(this) { url ->
-                                            LibraryRoot(virtualFileUrlManager.getOrCreateFromUrl(url), LibraryRootTypeId.SOURCES)
-                                        }
-                                    },
-                                    entitySource = entitySource
-                                ) {
-                                    typeId = LibraryTypeId(library.type.javaClass.simpleName)
-                                }
-                                storage addEntity libEntity
-                            }
-                            LibraryDependency(
-                                library = LibraryId(library.name, ProjectLibraryTableId),
-                                exported = javaExtension?.isExported == true,
-                                scope = DependencyScope.valueOf(javaExtension?.scope?.name ?: "COMPILE")
-                            )
-                        }
-
-                        is JpsModuleDependency -> {
-                            val depModule = dependency.module ?: return@mapNotNull null
-                            ModuleDependency(
-                                module = ModuleId(depModule.name),
-                                exported = javaExtension?.isExported == true,
-                                scope = DependencyScope.valueOf(javaExtension?.scope?.name ?: "COMPILE"),
-                                productionOnTest = false
-                            )
-                        }
-
-                        is JpsSdkDependency -> {
-                            val sdkReference = dependency.sdkReference ?: return@mapNotNull null
-                            sdks.add(sdkReference.sdkName)
-                            SdkDependency(
-                                sdk = SdkId(
-                                    name = sdkReference.sdkName,
-                                    type = dependency.sdkType.toSdkType()
-                                )
-                            )
-                        }
-
-                        is JpsModuleSourceDependency -> ModuleSourceDependency
-                        else -> null
-                    }
-                }
-
-                // Add transitively exported module deps as direct deps (flattening).
-                // A module X reachable via an exported chain from direct dep D is added once;
-                // its exported flag mirrors the first-hop dep (A→D) so that downstream modules
-                // that depend on this module also see X when D is exported.
-                val presentModules = directDeps.filterIsInstance<ModuleDependency>().mapTo(mutableSetOf()) { it.module.name }
-                val flattenedDeps = buildList {
-                    for (dep in module.dependenciesList.dependencies) {
-                        if (dep !is JpsModuleDependency) continue
-                        val depModuleName = dep.module?.name ?: continue
-                        val javaExt = JpsJavaExtensionService.getInstance().getDependencyExtension(dep)
-                        val exported = javaExt?.isExported == true
-                        val scope = DependencyScope.valueOf(javaExt?.scope?.name ?: "COMPILE")
-                        for (transitiveName in transitiveExports(depModuleName)) {
-                            if (presentModules.add(transitiveName)) {
-                                add(ModuleDependency(
-                                    module = ModuleId(transitiveName),
-                                    exported = exported,
-                                    scope = scope,
-                                    productionOnTest = false
-                                ))
-                            }
-                        }
-                    }
-                }
-
-                val entity = ModuleEntity(
-                    name = module.name,
-                    dependencies = directDeps + flattenedDeps,
-                    entitySource = entitySource
-                ) {
-                    this.type = ModuleTypeId(with(module.moduleType) {
-                        when (this) {
-                            is JpsJavaModuleType -> "JAVA_MODULE"
-                            else -> javaClass.toString()
-                        }
-                    })
-                    this.contentRoots = module.contentRootsList.urls.mapNotNull { rootUrl ->
-                        ContentRootEntity(
-                            rootUrl.toIntellijUri(virtualFileUrlManager),
-                            module.excludePatterns
-                                .filter { rootUrl.startsWith(it.baseDirUrl) || it.baseDirUrl.startsWith(rootUrl) }
-                                .map { it.pattern },
-                            entitySource
-                        ) {
-                            this.module = this@ModuleEntity
-                            this.sourceRoots = module.sourceRoots.filter { it.url.startsWith(rootUrl) }.map {
-                                SourceRootEntity(
-                                    url = it.url.toIntellijUri(virtualFileUrlManager),
-                                    rootTypeId = SourceRootTypeId(
-                                        with(it.rootType) {
-                                            when (this) {
-                                                is JavaSourceRootType -> if (isForTests) "java-test" else "java-source"
-                                                is JavaResourceRootType -> if (isForTests) "java-test-resource" else "java-resource"
-                                                else -> this.toString()
-                                            }
-                                        }),
-                                    entitySource = entitySource
-                                ) {
-                                    this.contentRoot = this@ContentRootEntity
-                                }
-
-                            }
-                            this.excludedUrls = module.excludeRootsList.urls.filter { it.startsWith(rootUrl) }.map {
-                                ExcludeUrlEntity(
-                                    url = it.toIntellijUri(virtualFileUrlManager),
-                                    entitySource = entitySource
-                                )
-                            }
-                        }
-                    }
-                    if (kotlinFacetModuleExtension != null) {
-                        val settings = kotlinFacetModuleExtension.settings
-                        this.kotlinSettings = listOf(
-                            KotlinSettingsEntity(
-                                name = KotlinFacetType.INSTANCE.presentableName,
-                                moduleId = ModuleId(module.name),
-                                sourceRoots = emptyList(),
-                                configFileItems = emptyList(),
-                                useProjectSettings = settings.useProjectSettings,
-                                implementedModuleNames = settings.implementedModuleNames,
-                                dependsOnModuleNames = settings.dependsOnModuleNames,
-                                additionalVisibleModuleNames = settings.additionalVisibleModuleNames,
-                                sourceSetNames = settings.sourceSetNames,
-                                isTestModule = settings.isTestModule,
-                                externalProjectId = settings.externalProjectId,
-                                isHmppEnabled = settings.mppVersion.isHmpp,
-                                pureKotlinSourceFolders = settings.pureKotlinSourceFolders,
-                                kind = settings.kind,
-                                externalSystemRunTasks = emptyList(),
-                                version = settings.version,
-                                flushNeeded = false,
-                                entitySource = entitySource
-                            ) {
-                                this.compilerArguments = settings.compilerArguments?.let { args ->
-                                    val args = args.pluginClasspaths?.let { classpath ->
-                                        args.copyOf().apply {
-                                            pluginClasspaths = classpath.map {
-                                                macroExpandMap.substitute(it, true)
-                                            }.toTypedArray()
-                                        }
-                                    } ?: args
-                                    CompilerArgumentsSerializer.serializeToString(args)
-                                }
-                                this.compilerSettings = settings.compilerSettings.toCompilerSettingsData()
-                                this.targetPlatform = settings.targetPlatform.toString()
-                            }
-                        )
-                    }
-                }
-                storage addEntity entity
-            }
-            if (model.global.libraryCollection.libraries.isEmpty()) {
-                detectJavaSdks(projectDirectory, sdks, virtualFileUrlManager, entitySource).forEach { builder ->
-                    storage addEntity builder
-                }
-            }
-            model.global.libraryCollection.libraries.forEach { library ->
-                if (!sdks.contains(library.name)) return@forEach
-                when (library.type) {
-                    is JpsJavaSdkType -> {
-                        val builder = SdkEntity(
-                            name = library.name,
-                            type = library.type.toSdkType(),
-                            roots = buildList {
-                                library.getRootUrls(JpsOrderRootType.COMPILED).mapNotNullTo(this) { url ->
-                                    val url = url.run { if (startsWith("jrt://")) replace("!/", "!/modules/") else this }
-                                    SdkRoot(
-                                        virtualFileUrlManager.getOrCreateFromUrl(url),
-                                        SdkRootTypeId.CLASSES,
-                                    )
-                                }
-                                library.getRootUrls(JpsOrderRootType.SOURCES).mapNotNullTo(this) { url ->
-                                    SdkRoot(
-                                        virtualFileUrlManager.getOrCreateFromUrl(url),
-                                        SdkRootTypeId.SOURCES,
-                                    )
-                                }
-                            },
-                            additionalData = "",
-                            entitySource = entitySource
-                        )
-                        storage addEntity builder
-                    }
-
-                    is JpsLibraryType -> {
-                    }
-                }
-            }
             storage
 
         } catch (e: IOException) {
@@ -352,6 +138,260 @@ object JpsWorkspaceImporter : WorkspaceImporter {
                 "Error parsing workspace.json:\n ${e.message ?: e.stackTraceToString()}",
                 e
             )
+        }
+    }
+
+    private fun importJpsModel(
+        storage: MutableEntityStorage,
+        projectDirectory: Path,
+        virtualFileUrlManager: VirtualFileUrlManager,
+        model: JpsModel,
+        macroExpandMap: ExpandMacroToPathMap,
+        progress: WorkspaceImportProgressReporter
+    ) {
+        val entitySource = WorkspaceEntitySource(projectDirectory.toIntellijUri(virtualFileUrlManager))
+        val libs = mutableSetOf<String>()
+        val sdks = mutableSetOf<String>()
+
+        // Pre-compute the set of modules each module transitively exports, for flattening.
+        // JPS projects use a non-flat dependency model (A→B→C), so exported transitive deps
+        // must be added as direct deps of each module (like Maven/Gradle importers do).
+        val modulesByName = model.project.modules.associateBy { it.name }
+        val transitiveExportsCache = mutableMapOf<String, Set<String>>()
+
+        fun transitiveExports(moduleName: String): Set<String> {
+            transitiveExportsCache[moduleName]?.let { return it }
+            transitiveExportsCache[moduleName] = emptySet() // guard against dependency cycles
+            val jpsModule = modulesByName[moduleName] ?: return emptySet()
+            val result = buildSet {
+                for (dep in jpsModule.dependenciesList.dependencies) {
+                    if (dep !is JpsModuleDependency) continue
+                    val depModule = dep.module ?: continue
+                    if (JpsJavaExtensionService.getInstance().getDependencyExtension(dep)?.isExported != true) continue
+                    add(depModule.name)
+                    addAll(transitiveExports(depModule.name))
+                }
+            }
+            transitiveExportsCache[moduleName] = result
+            return result
+        }
+
+        model.project.modules.forEach { module ->
+            val kotlinFacetModuleExtension = module.container.getChild(JpsKotlinFacetModuleExtension.KIND)
+
+            val directDeps = module.dependenciesList.dependencies.mapNotNull { dependency ->
+                val javaExtension = JpsJavaExtensionService.getInstance().getDependencyExtension(dependency)
+                when (dependency) {
+                    is JpsLibraryDependency -> {
+                        val library = dependency.library ?: return@mapNotNull null
+                        if (libs.add(library.name)) {
+                            val libEntity = LibraryEntity(
+                                name = library.name,
+                                tableId = ProjectLibraryTableId,
+                                roots = buildList {
+                                    library.getRootUrls(JpsOrderRootType.COMPILED).mapNotNullTo(this) { url ->
+                                        val fileUrl = virtualFileUrlManager.getOrCreateFromUrl(url)
+                                        if (!Path.of(JpsPathUtil.urlToPath(url)).exists()) {
+                                            progress.onUnresolvedDependency(url)
+                                            return@mapNotNull null
+                                        }
+                                        LibraryRoot(
+                                            fileUrl,
+                                            LibraryRootTypeId.COMPILED
+                                        )
+                                    }
+                                    library.getRootUrls(JpsOrderRootType.SOURCES).mapTo(this) { url ->
+                                        LibraryRoot(virtualFileUrlManager.getOrCreateFromUrl(url), LibraryRootTypeId.SOURCES)
+                                    }
+                                },
+                                entitySource = entitySource
+                            ) {
+                                typeId = LibraryTypeId(library.type.javaClass.simpleName)
+                            }
+                            storage addEntity libEntity
+                        }
+                        LibraryDependency(
+                            library = LibraryId(library.name, ProjectLibraryTableId),
+                            exported = javaExtension?.isExported == true,
+                            scope = DependencyScope.valueOf(javaExtension?.scope?.name ?: "COMPILE")
+                        )
+                    }
+
+                    is JpsModuleDependency -> {
+                        val depModule = dependency.module ?: return@mapNotNull null
+                        ModuleDependency(
+                            module = ModuleId(depModule.name),
+                            exported = javaExtension?.isExported == true,
+                            scope = DependencyScope.valueOf(javaExtension?.scope?.name ?: "COMPILE"),
+                            productionOnTest = false
+                        )
+                    }
+
+                    is JpsSdkDependency -> {
+                        val sdkReference = dependency.sdkReference ?: return@mapNotNull null
+                        sdks.add(sdkReference.sdkName)
+                        SdkDependency(
+                            sdk = SdkId(
+                                name = sdkReference.sdkName,
+                                type = dependency.sdkType.toSdkType()
+                            )
+                        )
+                    }
+
+                    is JpsModuleSourceDependency -> ModuleSourceDependency
+                    else -> null
+                }
+            }
+
+            // Add transitively exported module deps as direct deps (flattening).
+            // A module X reachable via an exported chain from direct dep D is added once;
+            // its exported flag mirrors the first-hop dep (A→D) so that downstream modules
+            // that depend on this module also see X when D is exported.
+            val presentModules = directDeps.filterIsInstance<ModuleDependency>().mapTo(mutableSetOf()) { it.module.name }
+            val flattenedDeps = buildList {
+                for (dep in module.dependenciesList.dependencies) {
+                    if (dep !is JpsModuleDependency) continue
+                    val depModuleName = dep.module?.name ?: continue
+                    val javaExt = JpsJavaExtensionService.getInstance().getDependencyExtension(dep)
+                    val exported = javaExt?.isExported == true
+                    val scope = DependencyScope.valueOf(javaExt?.scope?.name ?: "COMPILE")
+                    for (transitiveName in transitiveExports(depModuleName)) {
+                        if (presentModules.add(transitiveName)) {
+                            add(
+                                ModuleDependency(
+                                    module = ModuleId(transitiveName),
+                                    exported = exported,
+                                    scope = scope,
+                                    productionOnTest = false
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+
+            val entity = ModuleEntity(
+                name = module.name,
+                dependencies = directDeps + flattenedDeps,
+                entitySource = entitySource
+            ) {
+                this.type = ModuleTypeId(with(module.moduleType) {
+                    when (this) {
+                        is JpsJavaModuleType -> "JAVA_MODULE"
+                        else -> javaClass.toString()
+                    }
+                })
+                this.contentRoots = module.contentRootsList.urls.mapNotNull { rootUrl ->
+                    ContentRootEntity(
+                        rootUrl.toIntellijUri(virtualFileUrlManager),
+                        module.excludePatterns
+                            .filter { rootUrl.startsWith(it.baseDirUrl) || it.baseDirUrl.startsWith(rootUrl) }
+                            .map { it.pattern },
+                        entitySource
+                    ) {
+                        this.module = this@ModuleEntity
+                        this.sourceRoots = module.sourceRoots.filter { it.url.startsWith(rootUrl) }.map {
+                            SourceRootEntity(
+                                url = it.url.toIntellijUri(virtualFileUrlManager),
+                                rootTypeId = SourceRootTypeId(
+                                    with(it.rootType) {
+                                        when (this) {
+                                            is JavaSourceRootType -> if (isForTests) "java-test" else "java-source"
+                                            is JavaResourceRootType -> if (isForTests) "java-test-resource" else "java-resource"
+                                            else -> this.toString()
+                                        }
+                                    }),
+                                entitySource = entitySource
+                            ) {
+                                this.contentRoot = this@ContentRootEntity
+                            }
+
+                        }
+                        this.excludedUrls = module.excludeRootsList.urls.filter { it.startsWith(rootUrl) }.map {
+                            ExcludeUrlEntity(
+                                url = it.toIntellijUri(virtualFileUrlManager),
+                                entitySource = entitySource
+                            )
+                        }
+                    }
+                }
+                if (kotlinFacetModuleExtension != null) {
+                    val settings = kotlinFacetModuleExtension.settings
+                    this.kotlinSettings = listOf(
+                        KotlinSettingsEntity(
+                            name = KotlinFacetType.INSTANCE.presentableName,
+                            moduleId = ModuleId(module.name),
+                            sourceRoots = emptyList(),
+                            configFileItems = emptyList(),
+                            useProjectSettings = settings.useProjectSettings,
+                            implementedModuleNames = settings.implementedModuleNames,
+                            dependsOnModuleNames = settings.dependsOnModuleNames,
+                            additionalVisibleModuleNames = settings.additionalVisibleModuleNames,
+                            sourceSetNames = settings.sourceSetNames,
+                            isTestModule = settings.isTestModule,
+                            externalProjectId = settings.externalProjectId,
+                            isHmppEnabled = settings.mppVersion.isHmpp,
+                            pureKotlinSourceFolders = settings.pureKotlinSourceFolders,
+                            kind = settings.kind,
+                            externalSystemRunTasks = emptyList(),
+                            version = settings.version,
+                            flushNeeded = false,
+                            entitySource = entitySource
+                        ) {
+                            this.compilerArguments = settings.compilerArguments?.let { args ->
+                                val args = args.pluginClasspaths.let { classpath ->
+                                    args.copyOf().apply {
+                                        pluginClasspaths = classpath.map {
+                                            macroExpandMap.substitute(it, true)
+                                        }.toTypedArray()
+                                    }
+                                }
+                                CompilerArgumentsSerializer.serializeToString(args)
+                            }
+                            this.compilerSettings = settings.compilerSettings.toCompilerSettingsData()
+                            this.targetPlatform = settings.targetPlatform.toString()
+                        }
+                    )
+                }
+            }
+            storage addEntity entity
+        }
+        if (model.global.libraryCollection.libraries.isEmpty()) {
+            detectJavaSdks(projectDirectory, sdks, virtualFileUrlManager, entitySource).forEach { builder ->
+                storage addEntity builder
+            }
+        }
+        model.global.libraryCollection.libraries.forEach { library ->
+            if (!sdks.contains(library.name)) return@forEach
+            when (library.type) {
+                is JpsJavaSdkType -> {
+                    val builder = SdkEntity(
+                        name = library.name,
+                        type = library.type.toSdkType(),
+                        roots = buildList {
+                            library.getRootUrls(JpsOrderRootType.COMPILED).mapNotNullTo(this) { url ->
+                                val url = url.run { if (startsWith("jrt://")) replace("!/", "!/modules/") else this }
+                                SdkRoot(
+                                    virtualFileUrlManager.getOrCreateFromUrl(url),
+                                    SdkRootTypeId.CLASSES,
+                                )
+                            }
+                            library.getRootUrls(JpsOrderRootType.SOURCES).mapNotNullTo(this) { url ->
+                                SdkRoot(
+                                    virtualFileUrlManager.getOrCreateFromUrl(url),
+                                    SdkRootTypeId.SOURCES,
+                                )
+                            }
+                        },
+                        additionalData = "",
+                        entitySource = entitySource
+                    )
+                    storage addEntity builder
+                }
+
+                is JpsLibraryType -> {
+                }
+            }
         }
     }
 
@@ -418,6 +458,51 @@ private fun initGlobalJpsOptions(model: JpsModel) {
 private fun JpsLibraryType<*>.toSdkType(): String = when (this) {
     is JpsJavaSdkType -> JavaSdk.getInstance().name
     else -> toString()
+}
+
+/**
+ * Reads `.idea/misc.xml` and returns the list of pom.xml paths registered with `MavenProjectsManager.originalFiles`.
+ * Empty if misc.xml is absent, malformed, or has no MavenProjectsManager component.
+ *
+ * Example excerpt that matches:
+ * ```xml
+ * <component name="MavenProjectsManager">
+ *   <option name="originalFiles">
+ *     <list>
+ *       <option value="$PROJECT_DIR$/.teamcity/pom.xml" />
+ *     </list>
+ *   </option>
+ * </component>
+ * ```
+ */
+private fun findLinkedProjects(
+    projectDirectory: Path,
+    macroExpandMap: ExpandMacroToPathMap
+): Sequence<Pair<Path, WorkspaceImporter>> = sequence {
+    val miscXml = projectDirectory / ".idea" / "misc.xml"
+    if (!miscXml.exists()) return@sequence
+    val root = try {
+        JDOMUtil.load(miscXml)
+    } catch (e: Exception) {
+        LOG.warn("Failed to parse $miscXml: ${e.message}")
+        return@sequence
+    }
+    val mavenComponent = root.children
+        .firstOrNull { it.name == "component" && it.getAttributeValue("name") == "MavenProjectsManager" }
+        ?: return@sequence
+    val originalFilesOption = mavenComponent.children
+        .firstOrNull { it.name == "option" && it.getAttributeValue("name") == "originalFiles" }
+        ?: return@sequence
+    val list = originalFilesOption.getChild("list") ?: return@sequence
+    list.children
+        .asSequence()
+        .filter { it.name == "option" }
+        .mapNotNull { it.getAttributeValue("value") }
+        .map { Path.of(PathUtil.toSystemDependentName(macroExpandMap.substitute(it, true))) }
+        .filter { it.isRegularFile() }
+        .forEach {
+            yield(it.parent to MavenWorkspaceImporter)
+        }
 }
 
 fun findJdks(projectPath: Path): Set<JavaHomeFinder.JdkEntry> {
