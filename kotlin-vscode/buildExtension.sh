@@ -46,21 +46,14 @@ cp -R "$SCRIPT_DIR/syntaxes" "$EXTENSION_DIR"
 pushd "$EXTENSION_DIR" > /dev/null
 
 # Patch package.json and overlay sources based on bundle type
-if [[ "$BUNDLE_TYPE" != "kotlin-server" ]]; then
-  npm run apply-intellij
-fi
+npm run apply-intellij
 
 # Provide a path to LSP Server, so it will be unpacked during extension packaging
 export LSP_ZIP_PATH
 
 echo "Running npm install..."
 npm install --ignore-scripts
-npm run --if-present build:post-install
 
-mkdir "grammars"
-echo "Copying wasm modules..."
-cp "node_modules/web-tree-sitter/web-tree-sitter.wasm" "grammars"
-find "node_modules" -name 'tree-sitter-*.wasm' -exec cp {} "grammars" \;
 echo "Running npx vsce package..."
 npx --yes vsce package "$VSCE_VERSION" \
   --out "$BUILD_DIR/$VSIX_TARGET_FILENAME" \
