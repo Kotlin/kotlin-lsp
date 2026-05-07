@@ -56,4 +56,4 @@ Runs from this directory. It bootstraps `out/dev/` and runs all tests. In VS Cod
 
 ## License
 
-Apache 2.0, see [LICENSE](LICENSE).
+See [LICENSE.txt](LICENSE.txt).
