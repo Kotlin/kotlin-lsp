@@ -3,9 +3,7 @@ package com.jetbrains.ls.api.features.impl.common.rename
 
 import com.intellij.model.psi.PsiSymbolService
 import com.intellij.model.psi.impl.targetSymbols
-import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.readAction
-import com.intellij.openapi.application.writeIntentReadAction
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiCompiledElement
@@ -40,8 +38,6 @@ import com.jetbrains.lsp.protocol.TextDocumentEdit
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 import com.jetbrains.lsp.protocol.URI
 import com.jetbrains.lsp.protocol.WorkspaceEdit
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 abstract class LSRenameProviderBase(
     override val supportedLanguages: Set<LSLanguage>,
@@ -108,10 +104,8 @@ abstract class LSRenameProviderBase(
 
 
         try {
-            withContext(Dispatchers.EDT) {
-                writeIntentReadAction {
-                    renamer.rename()
-                }
+            writeIntentUserReadAction {
+                renamer.rename()
             }
         } catch (ex: Throwable) {
             when (ex) {
