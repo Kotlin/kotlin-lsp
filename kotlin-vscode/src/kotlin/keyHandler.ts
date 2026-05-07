@@ -588,7 +588,7 @@ function getPreviousNonEmptyLineIndent(text: string, index: number): string | nu
 }
 
 function shouldApplyContinuationIndent(text: string, index: number): boolean {
-    if (isAfterStandaloneBlockCommentClosingLine(text, index)) {
+    if (isAfterStandaloneBlockCommentLine(text, index)) {
         return false;
     }
     const c = getPreviousSignificantChar(text, index);
@@ -619,8 +619,9 @@ function getPreviousNonEmptyLine(text: string, index: number): { start: number, 
     return null;
 }
 
-function isAfterStandaloneBlockCommentClosingLine(text: string, index: number): boolean {
-    return getPreviousNonEmptyLine(text, index)?.text.trim() === '*/';
+function isAfterStandaloneBlockCommentLine(text: string, index: number): boolean {
+    const previousLine = getPreviousNonEmptyLine(text, index)?.text.trim();
+    return previousLine === '*/' || (previousLine?.startsWith('/*') === true && previousLine.endsWith('*/'));
 }
 
 function getMatchingClosingDelimiter(char: string | null): string | null {
