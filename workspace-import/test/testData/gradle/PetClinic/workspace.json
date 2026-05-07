@@ -513,7 +513,8 @@
                 {
                     "type": "module",
                     "name": "PetClinic.test",
-                    "scope": "provided"
+                    "scope": "provided",
+                    "isTestJar": true
                 },
                 {
                     "type": "library",
@@ -2405,7 +2406,8 @@
                 {
                     "type": "module",
                     "name": "PetClinic.aotTest",
-                    "scope": "runtime"
+                    "scope": "runtime",
+                    "isTestJar": true
                 },
                 {
                     "type": "moduleSource"
