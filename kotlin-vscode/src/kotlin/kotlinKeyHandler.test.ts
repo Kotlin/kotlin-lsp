@@ -75,6 +75,26 @@ describe('Handling key presses in Kotlin files', () => {
     });
 
     describe('Enter handling', () => {
+        test('completes multi-lne comments', doTest('  /*\n|', '  /*\n  |\n   */'));
+
+        test('completes multi-lne comments within function body', doTest(
+`
+fun foo() {
+  println("hello")
+  /*
+|
+  println("world")
+}`,
+                `
+fun foo() {
+  println("hello")
+  /*
+  |
+   */
+  println("world")
+}`,
+        '  '));
+
         test('starts KDoc comments on enter', doTest('/**\n|\nfun foo() {}', '/**\n * |\n */\nfun foo() {}'));
 
         test('starts KDoc comments in a class on enter', doTest('class C {\n    /**\n|\n    fun foo() {}\n}', 'class C {\n    /**\n     * |\n     */\n    fun foo() {}\n}'));
