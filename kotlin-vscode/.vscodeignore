@@ -9,6 +9,6 @@
 !server/**
 !syntaxes/**
 !language-configuration.json
-!LICENSE
+!LICENSE.txt
 !package.json
 !README.md

@@ -1,0 +1,306 @@
+JETBRAINS FREE PLUGIN LICENSE AGREEMENT
+
+Version 1.0, effective as of September 15, 2025
+
+THIS IS A LEGAL AGREEMENT. BY CLICKING ON THE “I AGREE” (OR SIMILAR) BUTTON
+THAT IS PRESENTED TO YOU AT THE TIME OF INSTALLATION, OR BY DOWNLOADING,
+INSTALLING, COPYING, SAVING ON YOUR DEVICE, OR OTHERWISE ACCESSING OR USING
+THE PLUGIN, YOU ACCEPT THIS AGREEMENT AND BECOME A PARTY TO IT, YOU DECLARE
+YOU HAVE THE LEGAL CAPACITY TO ENTER INTO THIS AGREEMENT, AND YOU CONSENT TO
+BE BOUND BY ITS TERMS AND CONDITIONS.
+
+1. Introduction
+
+This JetBrains Free Plugin License Agreement (“Agreement”) is entered into
+between JetBrains s.r.o., a company with its registered office at Na hřebenech
+II 1718/8, Nusle, 140 00 Prague 4, Czech Republic, Corporate Identification
+No. (IČO): 265 02 275, registered in the Commercial Register maintained by the
+Municipal Court in Prague, Section C, File No. 86211 (“JetBrains”, “We”, or
+“Us”) and you, an individual or a legal entity that you represent (“You”). If
+You accept this Agreement on behalf of a legal entity, You confirm that You
+are authorized to enter into agreements on behalf of that legal entity.
+
+2. Definitions
+
+“Acceptable Use Policy” means the JetBrains Products Acceptable Use Policy
+available at https://www.jetbrains.com/legal/docs/terms/acceptable-use-policy/.
+
+“Documentation” means the latest versions of all online technical documentation
+relating to the Plugin, including the description of the main features of the
+Plugin, available either on the JetBrains Website or on the relevant
+Third-Party Platform, depending on where You access the Plugin.
+
+“JetBrains Website” means the website hosted at https://www.jetbrains.com/ and
+any other website operated by Us, such as https://plugins.jetbrains.com.
+
+“Machine” means a computing device used by You for running the Plugin.
+
+“Plugin” means any JetBrains plugin, extension, application, widget, or other
+JetBrains software, including AI models, designed to work with the Product and
+licensed to You under this Agreement. In some cases, a Plugin may consist
+solely of the software, constituting configuration files, connectors, or
+instructions that enable You to download, install, access, or otherwise obtain
+the JetBrains software as described above.
+
+“Product” means any product or service that You access under a separate
+agreement with JetBrains or a third party.
+
+“Third-Party Platform” means a third-party platform where a given Plugin is
+published by JetBrains and where the main information about the Plugin is
+provided.
+
+“Third-Party Software” means any third-party software program that is owned or
+licensed by someone other than Us and is described on the JetBrains Website at
+https://www.jetbrains.com/legal/third-party-software or in the Documentation.
+
+3. License, Subscription, and Your Responsibilities
+
+3.1. License. You may install the Plugin on Your Machine free of charge and
+use it with the relevant Product, as described in this Section 3, depending on
+where You access the Plugin and provided that You comply with this Agreement,
+Documentation, and, where applicable, the Acceptable Use Policy. This license
+is provided as worldwide, non-exclusive, non-transferable, non-sublicensable,
+and royalty-free for the term of this Agreement.
+
+3.2. Free Use. Following the installation, You may use the Plugin for free for
+any commercial or non-commercial purposes always subject to the terms of this
+Agreement.
+
+For the avoidance of doubt, in cases where the Plugin consists solely of
+configuration files, connectors, or instructions that enable You to download,
+install, access, or otherwise obtain JetBrains software as described in
+Section 2 above, such JetBrains software may be subject to acceptance of a
+separate agreement, which may include payment clauses. It is Your
+responsibility to carefully review any such agreement before accepting it.
+
+3.3. Updates. We may issue from time to time updates of the Plugin in the form
+of a higher Plugin version. These updates may change the Plugin features, and
+if You install the newer version of the Plugin, You agree with these changes
+and acknowledge that updates are subject to the terms of this Agreement,
+unless otherwise specified in this Agreement.
+
+3.4. Restrictions. Without our express written permission (or unless this
+right is granted by applicable law), You may not:
+
+(a) use the Plugin or its features in a manner contrary to this Agreement or
+applicable laws;
+
+(b) reverse-engineer, disassemble, or decompile the Plugin, or parts thereof,
+or try to derive the source code of the Plugin in any way;
+
+(c) modify, alter, adapt, translate, enhance, tamper with, repair, or
+otherwise create derivative works of the Plugin or any part thereof;
+
+(d) sell, rent, lease, sublease, license, sublicense, lend, time-share,
+transfer, assign, provide the use of, or otherwise provide the Plugin or
+access to the Plugin to any third party, whether in whole or in part;
+
+(e) use or try to use the Plugin in a way that avoids overcoming technical
+restrictions, security protection, or authentication methods;
+
+(f) access the Plugin in order to build a similar or competitive product or
+service, as well as copy any ideas, features, functions, or graphics of the
+Plugin or any part thereof.
+
+4. Intellectual Property Rights and Ownership
+
+4.1. Our Rights. All intellectual property rights or other proprietary rights
+to the Plugin are retained by Us or our licensors. This includes all
+Plugin-related copyrights, trademarks, patents, and other registered or
+unregistered intellectual property. With the exception of the license granted
+to You under this Agreement, nothing in this Agreement grants, by implication
+or otherwise, to You or any third party any intellectual property rights or
+other right, title, or interest in or to the Plugin or any other intellectual
+property.
+
+4.2. Feedback. To the extent You provide any ideas, suggestions,
+recommendations, proposals, or other feedback in relation to the Plugin, You
+give Us the right to use, change, commercialize, and incorporate any of it
+into the Plugin. You cannot withdraw this permission after it is given (it is
+irrevocable), and it is perpetual. You acknowledge that We are not required to
+pay a fee for this feedback and that We can transfer and give similar rights
+to Your feedback to anyone else worldwide.
+
+4.3. Third-Party Software. You understand that the Plugin may integrate
+Third-Party Software and that by using the Plugin You might be using such
+Third-Party Software. This Third-Party Software is provided to You on the
+terms and conditions of the respective Third-Party Software, and You need to
+comply with those terms and conditions. Nothing in this Agreement limits Your
+right to use Third-Party Software under those applicable terms and conditions.
+
+5. Access and Your Data
+
+By default, We do not see or have access to any of Your data processed or
+otherwise accessed by the Plugin. However, some services used in combination
+with the Plugin and/or the Product can allow access to Us or to third parties.
+It is Your responsibility to become familiar with the terms of these services
+and/or the Product and to set the appropriate level of access to Your data.
+Any content or data downloaded or otherwise obtained through Your use of the
+Plugin are acquired at Your own risk.
+
+6. Warranty Limitation
+
+6.1. No Expressed Warranty. The Plugin is licensed to You on an “as-is” and
+“as-available” basis. This means that You agree to use it at Your own risk,
+and We make no express warranty as to the Plugin use or performance and do not
+represent or warrant that in any way that the Plugin:
+
+(a) is accurate, reliable, or correct;
+
+(b) will meet Your requirements;
+
+(c) will be available at any particular time or location, uninterrupted, or
+secure;
+
+(d) is free of defects or errors and that any, if found, will be corrected;
+and/or
+
+(e) is free of viruses or other harmful components.
+
+6.2. Disclaimer of Warranties. To the maximum extent permitted by applicable
+law, We disclaim all warranties and conditions, whether express or implied
+(including, but not limited to, implied warranties of merchantability, fitness
+for a particular purpose, title, and non-infringement) with regard to the
+Plugin and the provision of any related support, updates, or upgrades.
+
+6.3. No Rights from Defective Performance. As the Plugin is provided free of
+charge, to the maximum extent permitted by applicable law, You acknowledge
+that You have no rights from defective performance, and You waive all
+statutory rights arising from defective performance.
+
+7. Disclaimer of Damages
+
+7.1. Exclusion of Damages. To the maximum extent permitted by applicable law,
+in no event will We be liable to You, Your affiliates, users, or anyone else
+for:
+
+(a) any special, incidental, indirect, consequential, exemplary, or punitive
+damages whatsoever, including for lost profit;
+
+(b) any loss of use, data, goodwill, or profits, whether or not foreseeable;
+and
+
+(c) any loss or damages in connection with the termination or suspension of
+Your access to the Plugin in accordance with this Agreement;
+
+and You waive a right to claim compensation for any such loss or damage.
+
+7.2. Limitation of Liability. Our total liability in all matters arising out
+of or in relation to this Agreement is limited to the greater of ten (10) U.S.
+dollars (USD) and You waive a right to claim compensation for any excess loss
+or damage. This limitation will apply even if We have been advised of the
+possibility of liability exceeding such an amount and notwithstanding any
+failure of the essential purpose of any limited remedy. This limitation will
+not apply to cases when the liability cannot be limited by the applicable law.
+
+8. Term, Termination, and Withdrawal
+
+8.1. Term. This Agreement will commence upon acceptance of this Agreement by
+You, and it will continue for an indefinite period, until it is terminated by
+either party according to this Agreement or applicable law.
+
+8.2. Termination. We may terminate this Agreement by a notice sent to You in
+email or otherwise in writing if:
+
+(a) You materially breached this Agreement and failed to remedy the breach
+within thirty (30) days of written notice;
+
+(b) We are required to do so by law (for example, where the provision of the
+Plugin is, or becomes, unlawful); or
+
+(c) We elect to discontinue providing the Plugin, in whole or in part; in this
+case, We will send the notice at least thirty (30) days before the
+termination.
+
+8.3. Withdrawal. You have the right to cease using the Plugin and withdraw
+from this Agreement at any time without providing any reason. In such case,
+You must uninstall and cease using the Plugin.
+
+9. Export Control Laws
+
+9.1. Export Control Compliance. You must comply with all applicable laws and
+regulations with regard to economic sanctions, export controls, import
+regulations, restrictive measures, and trade embargoes (all herein referred to
+as “Sanctions”), including those of the European Union (EU) and the United
+States (USA) You declare and warrant that You are not a person targeted by
+Sanctions, nor You are otherwise owned or controlled by or acting on behalf of
+any entity or person targeted by Sanctions. You agree that You will not
+download or otherwise export or re-export the Plugin or any related technical
+data directly or indirectly to any person targeted by Sanctions or download or
+otherwise use the Plugin for any end use prohibited or restricted by
+Sanctions.
+
+9.2. Reporting of Non-Compliance. You must immediately report any concerns of
+non-compliance regarding Sanctions to compliance@jetbrains.com and cooperate
+with Us in Our efforts to verify and ensure compliance with Sanctions.
+
+10. Miscellaneous
+
+10.1. Reservation of Rights. We reserve the right at any time to cease Our
+support of the Plugin and to alter the pricing, features, specifications,
+capabilities, functions, terms of use, release dates, general availability,
+and other characteristics of the Plugin.
+
+10.2. Severability. If any provision of this Agreement is or becomes invalid,
+illegal, or unenforceable, it shall be deemed deleted, but that shall not
+affect the validity and enforceability of any other provision of this
+Agreement.
+
+10.3. Changes. This Agreement can be updated from time to time to reflect
+changes to the Plugin, including its new versions, features, updates,
+enhancements, or other modifications, as well as changes in how We offer the
+Plugin to users. We will notify You about the changes to this Agreement
+either by displaying the updated version of the Agreement (“Updated
+Agreement”) to You in the Plugin, in Your JetBrains Account, via the
+Third-Party Platform, or by sending the Updated Agreement to the email
+address provided in Your JetBrains Account. By accepting the Updated
+Agreement or by continuing to use the Plugin after the effective date
+specified in the notification or in the Updated Agreement, You agree to be
+bound by the Updated Agreement instead of this Agreement. We respect that You
+may not agree to the Updated Agreement. If that is the case, You can withdraw
+from this Agreement before the effective date of the change by uninstalling
+the Plugin in accordance with Section 8.3.
+
+10.4. No Waiver. Our failure to enforce or exercise any part of this Agreement
+is not a waiver of the respective Section.
+
+10.5. No Assignment. You may not assign or otherwise transfer any right or
+obligation under this Agreement or this Agreement itself to a third party
+without Our prior written consent.
+
+10.6. Entire Agreement. This Agreement constitutes the entire agreement
+between You and Us in relation to its subject matter and replaces and
+supersedes all prior agreements, representations, understandings, and
+undertakings of any nature made, whether oral or written, in relation to that
+subject matter.
+
+10.7. Governing Law and Dispute Resolution. This Agreement is governed by the
+laws of the Czech Republic, without reference to conflict of laws principles,
+and specifically excluding the United Nations Convention on Contracts for the
+International Sale of Goods. The Parties to this Agreement undertake to use
+their best commercial efforts to amicably settle any disputes arising
+hereunder (“Dispute”). Should the Parties to this Agreement fail to settle a
+Dispute amicably, the Dispute will be excluded from the jurisdiction of
+general courts and all such Disputes will be finally decided by the
+Arbitration Court attached to the Czech Chamber of Commerce and the
+Agricultural Chamber of the Czech Republic by three (3) arbitrators in
+accordance with the Rules of that Arbitration Court. The language of the
+proceedings will be English.
+
+10.8. Data Privacy. If We receive any personal data from You or Your users in
+connection with the use of the Plugin, We will process it as described in
+JetBrains’ Privacy Notice available at
+https://www.jetbrains.com/company/privacy.html.
+
+10.9. Consumer Protection. If You are a consumer, You may have certain rights,
+which may not be limited or excluded and which may vary from jurisdiction to
+jurisdiction. In the extent to which the exclusions or limitations in this
+Agreement are not legally permitted, such provisions shall not apply to You.
+This shall in no way affect the validity or the applicability of the
+remaining provisions of this Agreement. If You are a consumer, You may
+further have a right to raise a complaint with a supervisory authority or
+settle a dispute out of court through the extrajudicial dispute resolution
+entity. For more information specific to Your country, please visit
+https://www.jetbrains.com/legal.
+
+For further information, please contact us at legal@jetbrains.com.

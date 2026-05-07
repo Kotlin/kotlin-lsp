@@ -32,4 +32,4 @@ Provides Kotlin language support for Visual Studio Code
 
 ## License
 
-Apache 2.0, see [LICENSE](LICENSE).
+See [LICENSE.txt](LICENSE.txt).
