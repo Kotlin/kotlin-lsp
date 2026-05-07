@@ -9,6 +9,7 @@ const bundleType = process.env.BUNDLE_TYPE || 'kotlin-server';
 
 applyPatch('package.json', path.join(__dirname, 'package-patch-kotlin.json'), 'package.json');
 
+if (bundleType.startsWith('kotlin')) return;
 if (!fs.existsSync(intellijVscodeDir)) return;
 
 function merge(target, patch) {
