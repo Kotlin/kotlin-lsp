@@ -16,6 +16,10 @@ describe('Handling key presses in Kotlin files', () => {
 
         test('completes curly braces', doTest('val x = {|', 'val x = {|}'));
 
+        test('completes parentheses with CRLF line separator', doTest('fun f(|\r\n\r\n', 'fun f(|)\r\n\r\n'));
+
+        test('completes curly braces with CRLF line separator', doTest('fun f() {|\r\n\r\n', 'fun f() {|}\r\n\r\n'));
+
         test('completes single quotes', doTest("val x = '|", "val x = '|'"));
 
         test('completes parenthesis after empty angular braces', doTest(`val x = ArrayList<>(|`, `val x = ArrayList<>(|)`));
