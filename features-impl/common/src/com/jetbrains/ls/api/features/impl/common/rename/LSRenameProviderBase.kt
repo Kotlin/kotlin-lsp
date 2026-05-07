@@ -6,11 +6,12 @@ import com.intellij.model.psi.impl.targetSymbols
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.application.writeIntentReadAction
-import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
+import com.intellij.psi.PsiCompiledElement
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.refactoring.rename.RenamePsiElementProcessor
 import com.intellij.util.IncorrectOperationException
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
@@ -45,10 +46,6 @@ import kotlinx.coroutines.withContext
 abstract class LSRenameProviderBase(
     override val supportedLanguages: Set<LSLanguage>,
 ) : LSRenameProvider {
-    companion object {
-        private val LOG = logger<LSRenameProviderBase>()
-    }
-
     context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun rename(params: RenameParams): WorkspaceEdit {
         val changes: List<FileChange> = server.withWriteAnalysisContext {
@@ -100,6 +97,10 @@ abstract class LSRenameProviderBase(
         val renamer = readAction {
             val target = context.target
             if (!target.isValid) return@readAction null
+            val primaryElement = RenamePsiElementProcessor.forElement(target).substituteElementToRename(target, null) ?: target
+            if (primaryElement is PsiCompiledElement) {
+                throwLspError(RenameRequestType, "This element cannot be renamed", Unit, ErrorCodes.InvalidParams)
+            }
             Renamer(target.project, target, context.newName, false, false)
         } ?: return null
 
@@ -113,7 +114,6 @@ abstract class LSRenameProviderBase(
                 }
             }
         } catch (ex: Throwable) {
-            LOG.warn("Error renaming element", ex)
             when (ex) {
                 is LspException -> throw ex
                 else -> {
