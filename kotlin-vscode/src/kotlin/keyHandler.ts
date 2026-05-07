@@ -13,6 +13,19 @@ const ENTER_LITERAL_ANCESTOR_TYPES = new Set([
     'string_literal',
     'character_literal',
 ]);
+const BLOCK_COMMENT_SCAN_ROOT_TYPES = new Set([
+    'block',
+    'class_body',
+    'enum_class_body',
+    'source_file',
+]);
+const BLOCK_COMMENT_IGNORED_NODE_TYPES = new Set([
+    'block_comment',
+    'line_comment',
+    'string_literal',
+    'multi_line_string_literal',
+    'character_literal',
+]);
 
 export default (text: string, tree: Tree, key: string, index: number, indentUnit: string): KeyResult => {
     switch (key) {
@@ -170,16 +183,25 @@ function handleEnter(text: string, tree: Tree, index: number, indentUnit: string
     const tailStartsWithAsterisk = /^\s*\*/.test(currentLineTail);
     const whitespaceSinceCommentStart = /^\s*$/.test(text.slice(commentContext.start + (commentContext.isDoc ? 3 : 2), index));
     const hasAsteriskLineBefore = hasLineWithPrefix(text, commentContext.start, index, '*');
+    const omitLeadingStarOnIndentedFirstLine = shouldOmitLeadingStarOnIndentedFirstLine(
+            text,
+            commentContext,
+            commentIndent,
+            index,
+            hasAsteriskLineBefore,
+            tailStartsWithAsterisk,
+    );
     const useLinePrefix = commentContext.isDoc ||
             hasAsteriskLineBefore ||
             tailStartsWithAsterisk ||
-            (whitespaceSinceCommentStart && (commentContext.end === null || currentLineTail.trim().length === 0));
+            (!omitLeadingStarOnIndentedFirstLine && whitespaceSinceCommentStart &&
+                    (commentContext.end === null || currentLineTail.trim().length === 0));
 
     if (!useLinePrefix && commentContext.end !== null) {
         return keyResult('\n', index, index + 1, index + 1);
     }
 
-    const prefixLine = `\n${commentIndent} ${useLinePrefix ? '* ' : ''}`;
+    const prefixLine = `\n${commentIndent}${useLinePrefix ? ' * ' : ''}`;
     const rewrittenTailResult = rewriteCommentLineTail(commentContext, commentIndent, currentLineTail, prefixLine, index, useLinePrefix);
     if (rewrittenTailResult !== null) {
         return rewrittenTailResult;
@@ -189,6 +211,22 @@ function handleEnter(text: string, tree: Tree, index: number, indentUnit: string
         return keyResult(`${prefixLine}\n${commentIndent} */`, index, index + 1, index + prefixLine.length);
     }
     return keyResult(prefixLine, index, index + 1, index + prefixLine.length);
+}
+
+function shouldOmitLeadingStarOnIndentedFirstLine(
+        text: string,
+        commentContext: BlockCommentContext,
+        commentIndent: string,
+        index: number,
+        hasAsteriskLineBefore: boolean,
+        tailStartsWithAsterisk: boolean,
+): boolean {
+    if (commentContext.isDoc || commentContext.end !== null || commentIndent.length === 0 ||
+            hasAsteriskLineBefore || tailStartsWithAsterisk) {
+        return false;
+    }
+
+    return /^\s*$/.test(text.slice(commentContext.start + 2, index));
 }
 
 function handleRegularEnter(text: string, index: number, indentUnit: string): KeyResult {
@@ -622,6 +660,11 @@ interface BlockCommentContext {
     isDoc: boolean
 }
 
+interface TextRange {
+    start: number
+    end: number
+}
+
 function handleLineCommentEnter(text: string, node: Node, index: number): KeyResult | null {
     const lineComment = findLineCommentAtEnter(node, index);
     if (lineComment === null) {
@@ -688,6 +731,9 @@ function rewriteCommentLineTail(
     }
 
     if (!useLinePrefix) {
+        if (commentContext.end === null) {
+            return keyResult(`${prefixLine}\n${commentIndent} */\n${currentLineTail}`, index, index + 1 + currentLineTail.length, index + prefixLine.length);
+        }
         return null;
     }
 
@@ -979,11 +1025,14 @@ function findBlockCommentContext(
     }
 
     const errorNode = findEnclosingErrorNode(node, index);
-    if (errorNode === null) {
-        return null;
+    if (errorNode !== null) {
+        const errorComment = findUnterminatedBlockCommentContext(errorNode, text, index);
+        if (errorComment !== null) {
+            return errorComment;
+        }
     }
 
-    return findUnterminatedBlockCommentContext(errorNode, text, index);
+    return findLexicalBlockCommentContext(node, text, index);
 }
 
 function findEnclosingErrorNode(node: Node, index: number): Node | null {
@@ -1023,42 +1072,117 @@ function findUnterminatedBlockCommentContext(
         index: number,
 ): BlockCommentContext | null {
     const errorStartIndex = errorNode.startIndex;
-    const localLimit = index - errorStartIndex;
-    if (localLimit < 2) {
+    if (index - errorStartIndex < 2) {
         return null;
     }
 
     // In incomplete surrounding constructs, tree-sitter-kotlin may report only the
     // token that first broke recovery (for example a class body's `{`) as ERROR and
     // drop the following unfinished comment from the tree entirely.
-    const errorText = text.slice(errorStartIndex, index);
-    const stack: Array<{ start: number, isDoc: boolean }> = [];
+    return findUnterminatedBlockCommentInRange(text, errorStartIndex, index, []);
+}
 
-    // tree-sitter-kotlin represents unfinished block comments as a single ERROR
-    // leaf, so inspect only that local slice instead of rescanning the document.
-    for (let i = 0; i < localLimit; i++) {
-        if (errorText.startsWith('/*', i)) {
-            stack.push({
-                start: i,
-                isDoc: errorText.startsWith('/**', i),
-            });
-            i += errorText.startsWith('/**', i) ? 2 : 1;
+function findLexicalBlockCommentContext(node: Node, text: string, index: number): BlockCommentContext | null {
+    for (const scanRoot of getBlockCommentScanRoots(node)) {
+        const ignoredRanges = collectIgnoredRanges(scanRoot, index);
+        const commentContext = findUnterminatedBlockCommentInRange(text, scanRoot.startIndex, index, ignoredRanges);
+        if (commentContext !== null) {
+            return commentContext;
+        }
+    }
+    return null;
+}
+
+function getBlockCommentScanRoots(node: Node): Node[] {
+    const roots: Node[] = [];
+    const seenStarts = new Set<number>();
+    for (let current: Node | null = node; current !== null; current = current.parent) {
+        if (!BLOCK_COMMENT_SCAN_ROOT_TYPES.has(current.type) || seenStarts.has(current.startIndex)) {
             continue;
         }
-        if (stack.length > 0 && errorText.startsWith('*/', i)) {
-            stack.pop();
-            i++;
+        roots.push(current);
+        seenStarts.add(current.startIndex);
+    }
+
+    const sourceFile = node.tree.rootNode;
+    if (!seenStarts.has(sourceFile.startIndex)) {
+        roots.push(sourceFile);
+    }
+    return roots;
+}
+
+function collectIgnoredRanges(node: Node, endIndex: number): TextRange[] {
+    const ranges: TextRange[] = [];
+    collectIgnoredRangesRecursively(node, endIndex, ranges);
+    return ranges;
+}
+
+function collectIgnoredRangesRecursively(node: Node, endIndex: number, ranges: TextRange[]): void {
+    if (node.startIndex >= endIndex) {
+        return;
+    }
+
+    if (shouldIgnoreRangeForBlockCommentScan(node)) {
+        ranges.push({
+            start: node.startIndex,
+            end: Math.min(node.endIndex, endIndex),
+        });
+        return;
+    }
+
+    for (let i = 0; i < node.childCount; i++) {
+        const child = node.child(i);
+        if (child !== null) {
+            collectIgnoredRangesRecursively(child, endIndex, ranges);
         }
+    }
+}
+
+function shouldIgnoreRangeForBlockCommentScan(node: Node): boolean {
+    return BLOCK_COMMENT_IGNORED_NODE_TYPES.has(node.type) ||
+            (node.type === 'identifier' && node.text.startsWith('`'));
+}
+
+function findUnterminatedBlockCommentInRange(
+        text: string,
+        startIndex: number,
+        endIndex: number,
+        ignoredRanges: TextRange[],
+): BlockCommentContext | null {
+    const stack: Array<{ start: number, isDoc: boolean }> = [];
+    let ignoredRangeIndex = 0;
+    for (let current = startIndex; current < endIndex;) {
+        const ignoredRange = ignoredRanges[ignoredRangeIndex];
+        if (ignoredRange !== undefined && current >= ignoredRange.start) {
+            current = ignoredRange.end;
+            ignoredRangeIndex++;
+            continue;
+        }
+
+        if (text.startsWith('/*', current)) {
+            stack.push({
+                start: current,
+                isDoc: text.startsWith('/**', current),
+            });
+            current += text.startsWith('/**', current) ? 3 : 2;
+            continue;
+        }
+
+        if (stack.length > 0 && text.startsWith('*/', current)) {
+            stack.pop();
+            current += 2;
+            continue;
+        }
+
+        current++;
     }
 
     const openComment = stack.at(-1);
-    if (openComment === undefined) {
-        return null;
-    }
-
-    return {
-        start: errorStartIndex + openComment.start,
-        end: null,
-        isDoc: openComment.isDoc,
-    };
+    return openComment === undefined
+            ? null
+            : {
+                start: openComment.start,
+                end: null,
+                isDoc: openComment.isDoc,
+            };
 }
