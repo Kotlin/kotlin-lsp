@@ -389,6 +389,7 @@ function getOpenBraceResult(text: string, textIndex: number, opening: string, cl
         case undefined:
         case ' ':
         case '\t':
+        case '\r':
         case '\n':
         case ':':
         case ';':
