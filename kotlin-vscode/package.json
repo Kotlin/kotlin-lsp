@@ -38,6 +38,11 @@
             "default": false,
             "description": "Enable debug logging for the bundled server launcher (logs launcher output and env)"
           },
+          "intellij.dev.commands": {
+            "type": "boolean",
+            "default": false,
+            "description": "Expose developer-only commands."
+          },
           "intellij.additionalJvmArgs": {
             "type": "array",
             "default": [],

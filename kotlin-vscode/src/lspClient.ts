@@ -16,6 +16,7 @@ import * as os from 'node:os';
 import {type ChildProcessByStdio, spawn} from 'node:child_process';
 import {getContext, getOutputChannel, logInfo} from "./extension"
 import {middleware} from "./middleware";
+import {getAcceptedEulaHash} from "./eula";
 import * as readline from 'node:readline';
 import {type Readable} from 'node:stream';
 
@@ -306,6 +307,7 @@ async function createLspClient(): Promise<LanguageClient | null> {
                         configOption<string>(OPT_BUILD_TOOL, folder.uri),
                     ])
             ),
+            eulaHash: getAcceptedEulaHash(getContext()),
         },
         middleware: middleware,
         markdown: {

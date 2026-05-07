@@ -7,6 +7,7 @@ import {registerDapServer} from './dap'
 import {registerDatabase} from './database'
 import {registerFileTemplates} from './fileTemplates'
 import {checkGeoRestricted} from './geoRestriction'
+import {checkEulaAccepted} from './eula'
 
 let _context: ExtensionContext | undefined
 let _outputChannel: OutputChannel | undefined;
@@ -52,7 +53,9 @@ export async function activate(context: ExtensionContext) {
     if (await checkGeoRestricted()) {
         return;
     }
-
+    if (!await checkEulaAccepted(context)) {
+        return;
+    }
     registerDecompiler(context);
     registerOpeningJars();
     registerDapServer(context);
