@@ -46,8 +46,10 @@ import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.api.applyChangesWithDeduplication
+import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
 import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
 import com.jetbrains.ls.imports.utils.toIntellijUri
+import org.jdom.Element
 import org.jetbrains.jps.model.JpsElementFactory
 import org.jetbrains.jps.model.JpsModel
 import org.jetbrains.jps.model.java.JavaResourceRootType
@@ -81,6 +83,7 @@ import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.div
 import kotlin.io.path.exists
+import kotlin.io.path.isDirectory
 import kotlin.io.path.isRegularFile
 
 private val LOG = fileLogger()
@@ -119,7 +122,7 @@ object JpsWorkspaceImporter : WorkspaceImporter {
             importJpsModel(storage, projectDirectory, virtualFileUrlManager, model, macroExpandMap, progress)
 
             findLinkedProjects(projectDirectory, macroExpandMap).forEach { (path, importer) ->
-                LOG.info("Importing linked Maven project: $path")
+                LOG.info("Importing linked project: $path")
                 val diff = importer.importWorkspace(
                     project = project,
                     projectDirectory = path,
@@ -461,16 +464,30 @@ private fun JpsLibraryType<*>.toSdkType(): String = when (this) {
 }
 
 /**
- * Reads `.idea/misc.xml` and returns the list of pom.xml paths registered with `MavenProjectsManager.originalFiles`.
- * Empty if misc.xml is absent, malformed, or has no MavenProjectsManager component.
+ * Returns linked external project directories paired with the importer that should handle them.
  *
- * Example excerpt that matches:
+ * Currently looks for:
+ *  - Maven projects registered in `.idea/misc.xml` under `MavenProjectsManager.originalFiles`
+ *  - Gradle projects registered in `.idea/gradle.xml` under `GradleSettings.linkedExternalProjectsSettings`
+ *
+ * Example Maven excerpt:
  * ```xml
  * <component name="MavenProjectsManager">
  *   <option name="originalFiles">
  *     <list>
- *       <option value="$PROJECT_DIR$/.teamcity/pom.xml" />
+ *       <option value="$PROJECT_DIR$/subproject/pom.xml" />
  *     </list>
+ *   </option>
+ * </component>
+ * ```
+ *
+ * Example Gradle excerpt:
+ * ```xml
+ * <component name="GradleSettings">
+ *   <option name="linkedExternalProjectsSettings">
+ *     <GradleProjectSettings>
+ *       <option name="externalProjectPath" value="$PROJECT_DIR$/subproject" />
+ *     </GradleProjectSettings>
  *   </option>
  * </component>
  * ```
@@ -479,14 +496,15 @@ private fun findLinkedProjects(
     projectDirectory: Path,
     macroExpandMap: ExpandMacroToPathMap
 ): Sequence<Pair<Path, WorkspaceImporter>> = sequence {
-    val miscXml = projectDirectory / ".idea" / "misc.xml"
-    if (!miscXml.exists()) return@sequence
-    val root = try {
-        JDOMUtil.load(miscXml)
-    } catch (e: Exception) {
-        LOG.warn("Failed to parse $miscXml: ${e.message}")
-        return@sequence
-    }
+    yieldAll(findLinkedMavenProjects(projectDirectory, macroExpandMap).map { it to MavenWorkspaceImporter })
+    yieldAll(findLinkedGradleProjects(projectDirectory, macroExpandMap).map { it to GradleWorkspaceImporter })
+}
+
+private fun findLinkedMavenProjects(
+    projectDirectory: Path,
+    macroExpandMap: ExpandMacroToPathMap,
+): Sequence<Path> = sequence {
+    val root = loadIdeaXml(projectDirectory, "misc.xml") ?: return@sequence
     val mavenComponent = root.children
         .firstOrNull { it.name == "component" && it.getAttributeValue("name") == "MavenProjectsManager" }
         ?: return@sequence
@@ -501,8 +519,45 @@ private fun findLinkedProjects(
         .map { Path.of(PathUtil.toSystemDependentName(macroExpandMap.substitute(it, true))) }
         .filter { it.isRegularFile() }
         .forEach {
-            yield(it.parent to MavenWorkspaceImporter)
+            yield(it.parent)
         }
+}
+
+private fun findLinkedGradleProjects(
+    projectDirectory: Path,
+    macroExpandMap: ExpandMacroToPathMap,
+): Sequence<Path> = sequence {
+    val root = loadIdeaXml(projectDirectory, "gradle.xml") ?: return@sequence
+    val gradleComponent = root.children
+        .firstOrNull { it.name == "component" && it.getAttributeValue("name") == "GradleSettings" }
+        ?: return@sequence
+    val linkedSettingsOption = gradleComponent.children
+        .firstOrNull { it.name == "option" && it.getAttributeValue("name") == "linkedExternalProjectsSettings" }
+        ?: return@sequence
+    linkedSettingsOption.children
+        .asSequence()
+        .filter { it.name == "GradleProjectSettings" }
+        .mapNotNull { settings ->
+            settings.children
+                .firstOrNull { it.name == "option" && it.getAttributeValue("name") == "externalProjectPath" }
+                ?.getAttributeValue("value")
+        }
+        .map { Path.of(PathUtil.toSystemDependentName(macroExpandMap.substitute(it, true))) }
+        .filter { it.isDirectory() }
+        .forEach {
+            yield(it)
+        }
+}
+
+private fun loadIdeaXml(projectDirectory: Path, fileName: String): Element? {
+    val xml = projectDirectory / ".idea" / fileName
+    if (!xml.exists()) return null
+    return try {
+        JDOMUtil.load(xml)
+    } catch (e: Exception) {
+        LOG.warn("Failed to parse $xml: ${e.message}")
+        null
+    }
 }
 
 fun findJdks(projectPath: Path): Set<JavaHomeFinder.JdkEntry> {
