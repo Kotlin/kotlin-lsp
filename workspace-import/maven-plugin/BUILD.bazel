@@ -1,17 +1,11 @@
 ### auto-generated section `build language-server.workspace-import.maven-plugin` start
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
-load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_provided_library", "resourcegroup")
+load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_provided_library")
 
 create_kotlinc_options(
   name = "custom_maven-plugin",
   jvm_target = "8",
   x_context_parameters = True
-)
-
-resourcegroup(
-  name = "maven-plugin_resources",
-  srcs = glob(["resources/**/*"]),
-  strip_prefix = "resources"
 )
 
 jvm_provided_library(
@@ -29,7 +23,8 @@ jvm_library(
   module_name = "language-server.workspace-import.maven-plugin",
   visibility = ["//visibility:public"],
   srcs = glob(["src/**/*.kt", "src/**/*.java", "src/**/*.form"], allow_empty = True),
-  resources = [":maven-plugin_resources"],
+  resources = glob(["resources/**/*"]),
+  resource_strip_prefix = "resources",
   kotlinc_opts = ":custom_maven-plugin",
   deps = [
     "@lib//:kotlin-stdlib",

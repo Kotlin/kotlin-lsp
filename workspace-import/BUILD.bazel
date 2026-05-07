@@ -1,16 +1,10 @@
 ### auto-generated section `build language-server.workspace-import` start
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
-load("@rules_jvm//:jvm.bzl", "jvm_library", "resourcegroup")
+load("@rules_jvm//:jvm.bzl", "jvm_library")
 
 create_kotlinc_options(
   name = "custom_workspace-import",
   x_context_parameters = True
-)
-
-resourcegroup(
-  name = "workspace-import_resources",
-  srcs = glob(["resources/**/*"]),
-  strip_prefix = "resources"
 )
 
 jvm_library(
@@ -18,7 +12,8 @@ jvm_library(
   module_name = "language-server.workspace-import",
   visibility = ["//visibility:public"],
   srcs = glob(["gen/**/*.kt", "gen/**/*.java", "src/**/*.kt", "src/**/*.java", "src/**/*.form"], allow_empty = True),
-  resources = [":workspace-import_resources"],
+  resources = glob(["resources/**/*"]),
+  resource_strip_prefix = "resources",
   kotlinc_opts = ":custom_workspace-import",
   deps = [
     "@lib//:kotlin-stdlib",
