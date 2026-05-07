@@ -9,9 +9,12 @@ OUT_DIR=$(realpath "$SCRIPT_DIR/../../../out")
 BUILD_EXTENSION_SCRIPT="$SCRIPT_DIR/buildExtension.sh"
 
 BUNDLE_TYPE=""
+VSCE_VERSION_OVERRIDE=""
+
 for arg in "$@"; do
     case "$arg" in
         --bundle-type=*) BUNDLE_TYPE="${arg#--bundle-type=}" ;;
+        --vsce-version=*) VSCE_VERSION_OVERRIDE="${arg#--vsce-version=}" ;;
     esac
 done
 
@@ -70,6 +73,11 @@ for productInfo in "$ARTIFACT_DIR"/*.product-info.json; do
     # Normalize old ".SNAPSHOT" style to "-SNAPSHOT" for vscode compatibility
     if [[ "$version" == *".SNAPSHOT" ]]; then
         version="${version%.SNAPSHOT}-SNAPSHOT"
+    fi
+
+    # Ignore derived version if it was overridden by an argument
+    if [[ -n "$VSCE_VERSION_OVERRIDE" ]]; then
+        version="$VSCE_VERSION_OVERRIDE"
     fi
 
     case "$version_arch_ext" in
