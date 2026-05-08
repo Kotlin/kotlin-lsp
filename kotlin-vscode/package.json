@@ -19,7 +19,7 @@
   "categories": [
     "Programming Languages"
   ],
-  "main": "./dist/extension",
+  "main": "./out/dist/extension",
   "activationEvents": [
     "onCommand:jetbrains.activateLsp"
   ],
