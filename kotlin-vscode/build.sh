@@ -81,10 +81,16 @@ for productInfo in "$ARTIFACT_DIR"/*.product-info.json; do
     fi
 
     case "$version_arch_ext" in
-      *.tar.gz)  platform="linux-$arch" ;;
-      *.win.zip) platform="win-$arch" ;;
-      *.sit)     platform="mac-$arch" ;;
+      *.tar.gz)  platform="linux-$arch"; vsce_os="linux"  ;;
+      *.win.zip) platform="win-$arch";   vsce_os="win32"  ;;
+      *.sit)     platform="mac-$arch";   vsce_os="darwin" ;;
     esac
+    case "$arch" in
+      amd64)   vsce_arch="x64"   ;;
+      aarch64) vsce_arch="arm64" ;;
+      *)       echo "Error: unknown arch '$arch' for vsce --target" >&2; exit 1 ;;
+    esac
+    vsce_target="$vsce_os-$vsce_arch"
     vsix_target_filename="$basename-$version-$platform.vsix"
 
     EXTENSION_DIR="$BUILD_DIR/vscode-$platform"
@@ -94,6 +100,7 @@ for productInfo in "$ARTIFACT_DIR"/*.product-info.json; do
     EXTENSION_DIR="$EXTENSION_DIR" \
     VSIX_TARGET_FILENAME="$vsix_target_filename" \
     VSCE_VERSION="$version" \
+    VSCE_TARGET="$vsce_target" \
     LSP_ZIP_PATH="$bundle" \
     BUNDLE_TYPE="$BUNDLE_TYPE" \
       bash "$BUILD_EXTENSION_SCRIPT" &
