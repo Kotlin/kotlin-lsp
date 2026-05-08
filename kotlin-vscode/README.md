@@ -2,8 +2,9 @@
 
 Kotlin language support for Visual Studio Code, powered by the Kotlin Language Server.
 
-> [!NOTE]  
-> **Alpha.** This extension is early-access software. The feature set is still incomplete, and breaking changes are expected.
+⚠️ **Alpha Version** ⚠️
+
+This extension is early-access software. The feature set is still incomplete, and breaking changes are expected.
 
 ## License
 
