@@ -4,12 +4,29 @@
 
 const fs = require('fs');
 const path = require('path');
+// In both modes it is 5 ../ steps up to project root
 const intellijVscodeDir = path.resolve(__dirname, '../../../../../language-server/intellij-vscode');
 const bundleType = process.env.BUNDLE_TYPE || 'kotlin-server';
+const devSymlink = process.env.DEV_SYMLINK === '1';
 
-applyPatch('package.json', path.join(__dirname, 'package-patch-kotlin.json'), 'package.json');
+// In DEV_SYMLINK mode, kotlin-vscode/ source lives at __dirname/../.. (out/dev/ is directly inside it).
+// In production builds, source files are staged alongside this script in __dirname.
+const kotlinSrcDir = devSymlink ? path.resolve(__dirname, '..', '..') : __dirname;
 
-if (bundleType.startsWith('kotlin')) return;
+applyPatch('package.json', path.join(kotlinSrcDir, 'package-patch-kotlin.json'), 'package.json');
+
+if (bundleType === 'kotlin-server') {
+    const target = path.join(__dirname, 'package-lock.json');
+    const src = path.join(kotlinSrcDir, `package-lock-${bundleType}.json`);
+    fs.rmSync(target, {force: true});
+    if (devSymlink) {
+        fs.symlinkSync(src, target);
+    } else {
+        fs.copyFileSync(src, target);
+    }
+    return;
+}
+
 if (!fs.existsSync(intellijVscodeDir)) return;
 
 function merge(target, patch) {
@@ -102,8 +119,56 @@ function copyOverlayDir(subdir) {
     copyOverlayDirectory(path.join(intellijVscodeDir, subdir), path.join(__dirname, subdir));
 }
 
-function copyFile(src, dest) {
-    fs.copyFileSync(path.join(intellijVscodeDir, src), path.join(__dirname, dest));
+function copyOverlayFile(src, dest) {
+    const target = path.join(__dirname, dest);
+    fs.mkdirSync(path.dirname(target), {recursive: true});
+    fs.copyFileSync(path.join(intellijVscodeDir, src), target);
 }
 
-require(path.join(intellijVscodeDir, 'apply-intellij-impl.js'))(bundleType, patchPackageJson, copyOverlayDir, copyFile);
+function symlinkOverlayDir(subdir) {
+    symlinkOverlayDirectory(path.join(intellijVscodeDir, subdir), path.join(__dirname, subdir));
+}
+
+function symlinkOverlayFile(src, dest) {
+    const target = path.join(__dirname, dest);
+    const targetDir = path.dirname(target);
+    const lstat = fs.lstatSync(targetDir, {throwIfNoEntry: false});
+    if (lstat?.isSymbolicLink()) {
+        throw new Error(`Refusing to overlay into symlinked directory (would mutate source): ${targetDir}`);
+    }
+    fs.mkdirSync(targetDir, {recursive: true});
+    symlinkOverlay(path.join(intellijVscodeDir, src), target);
+}
+
+function symlinkOverlayDirectory(sourceDir, targetDir) {
+    if (!fs.existsSync(sourceDir)) return;
+    // Refuse to descend into a symlinked target dir: it would resolve into the
+    // source tree, and writing entries inside would mutate community sources.
+    const lstat = fs.lstatSync(targetDir, {throwIfNoEntry: false});
+    if (lstat?.isSymbolicLink()) {
+        throw new Error(`Refusing to overlay into symlinked directory (would mutate source): ${targetDir}`);
+    }
+    fs.mkdirSync(targetDir, {recursive: true});
+    for (const entry of fs.readdirSync(sourceDir, {withFileTypes: true})) {
+        const sourcePath = path.join(sourceDir, entry.name);
+        const targetPath = path.join(targetDir, entry.name);
+        if (entry.isDirectory()) {
+            symlinkOverlayDirectory(sourcePath, targetPath);
+        } else {
+            symlinkOverlay(sourcePath, targetPath);
+        }
+    }
+}
+
+function symlinkOverlay(sourcePath, targetPath) {
+    fs.rmSync(targetPath, {recursive: true, force: true});
+    fs.symlinkSync(sourcePath, targetPath);
+    console.log(`Symlinking ${sourcePath} -> ${targetPath}`);
+}
+
+require(path.join(intellijVscodeDir, 'apply-intellij-impl.js'))(
+        bundleType,
+        patchPackageJson,
+        devSymlink ? symlinkOverlayDir : copyOverlayDir,
+        devSymlink ? symlinkOverlayFile : copyOverlayFile
+);

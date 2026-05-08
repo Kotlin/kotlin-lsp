@@ -6,12 +6,9 @@
       "type": "extensionHost",
       "request": "launch",
       "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}"
+        "--extensionDevelopmentPath=${workspaceFolder}/out/dev"
       ],
-      "preLaunchTask": {
-        "type": "npm",
-        "script": "compile"
-      }
+      "preLaunchTask": "dev-watch"
     }
   ]
 }

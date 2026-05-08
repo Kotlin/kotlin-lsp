@@ -102,9 +102,10 @@
     "apply-intellij": "node apply-intellij.js",
     "unpack-server": "node unpack-server.js",
     "ij:prepublish": "mkdir -p grammars && cp node_modules/web-tree-sitter/web-tree-sitter.wasm grammars/",
-    "test": "npm run test:grammar && npm run test:unit",
+    "test": "bash dev-setup.sh && (cd out/dev && npm run test:in-dev)",
+    "test:in-dev": "npm run test:grammar && npm run test:unit",
     "test:grammar": "textmate-grammar-snap --grammar syntaxes/kotlin.tmLanguage.json --scope source.kotlin \"testSources/tokenization/*.kt\"",
-    "test:unit": "node --import tsx --test src/*.test.ts src/**/*.test.ts",
+    "test:unit": "NODE_PATH=\"$PWD/node_modules\" node --import tsx --test $(find -L src -name '*.test.ts')",
     "updateGrammarTests": "textmate-grammar-snap --grammar syntaxes/kotlin.tmLanguage.json --scope source.kotlin -u \"testSources/tokenization/*.kt\""
   }
 }
