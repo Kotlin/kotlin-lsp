@@ -13,4 +13,14 @@ object ExtractActionKind {
      * Action kind to extract method via a hot key
      */
     val RefactorExtractFunction: CodeActionKind = CodeActionKind("refactor.extract.function")
+
+    /**
+     * Action kind to extract field via a hot key
+     */
+    val RefactorExtractField: CodeActionKind = CodeActionKind("refactor.extract.field")
+
+    /**
+     * Action kind to extract constant via a hot key
+     */
+    val RefactorExtractConstant: CodeActionKind = CodeActionKind("refactor.extract.constant")
 }
