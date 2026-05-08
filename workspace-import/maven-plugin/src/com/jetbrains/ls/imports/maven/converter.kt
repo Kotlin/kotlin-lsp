@@ -200,7 +200,22 @@ private fun sourceRootData(
 
     fun belongsToProject(dir: String) = projectRoot == null || Path(dir).let { it != projectRoot && it.startsWith(projectRoot) }
 
-    if (module.type == StandardMavenModuleType.TEST_ONLY) {
+    if (module.type.containsMain) {
+        project.compileSourceRoots
+            ?.filter { belongsToProject(it) }
+            ?.forEach { add(SourceRootData(it, "java-source")) }
+        project.getCompilerGeneratedSourcesDir("default-compile")?.let {
+            add(SourceRootData(it, "java-source"))
+        }
+        project.resources
+            ?.map { it.directory }
+            ?.filter { belongsToProject(it) }
+            ?.forEach { add(SourceRootData(it, "java-resource")) }
+        kotlinSettings?.compileSourceRoots?.forEach {
+            add(SourceRootData(it, "java-source"))
+        }
+    }
+    if (module.type.containsTest) {
         project.testCompileSourceRoots
             ?.filter { belongsToProject(it) }
             ?.forEach { add(SourceRootData(it, "java-test")) }
@@ -213,158 +228,8 @@ private fun sourceRootData(
         kotlinSettings?.testSourceRoots
             ?.filter { belongsToProject(it) }
             ?.forEach { add(SourceRootData(it, "java-test")) }
-//        addBuildHelperRoots(project, "add-test-source", "sources", "java-test")
-//        addBuildHelperRoots(project, "add-test-resource", "resources","java-test-resource")
-//        addCompilerGeneratedSources(project, "compiler:testCompile","java-test")
-//        addAntlr4GeneratedSources(project, "java-test")
-//        addModelloGeneratedSources(project, "java-test")(value#0) = "/Users/Alexander.Bubenchiko/ultimate-2/out/ide-tests/cache/projects/unpacked/maven/api/maven-api-settings/src/main/java"
-    } else {
-        if (module.type.containsMain) {
-            project.compileSourceRoots
-                ?.filter { belongsToProject(it) }
-                ?.forEach { add(SourceRootData(it, "java-source")) }
-            project.getCompilerGeneratedSourcesDir("default-compile")?.let {
-                add(SourceRootData(it, "java-source"))
-            }
-            project.resources
-                ?.map { it.directory }
-                ?.filter { belongsToProject(it) }
-                ?.forEach { add(SourceRootData(it, "java-resource")) }
-            kotlinSettings?.compileSourceRoots?.forEach {
-                add(SourceRootData(it, "java-source"))
-            }
-//            addBuildHelperRoots(project, "add-source", "sources","java-source")
-//            addBuildHelperRoots(project, "add-resource", "resources","java-resource")
-//            addModelloGeneratedSources(project, "java-source")
-//            addCompilerGeneratedSources(project, "compiler:compile","java-source")
-//            addAntlr4GeneratedSources(project, "java-source")
-            //addGeneratedDirProperty(project, "java-source")
-        }
-        if (module.type.containsTest) {
-            project.testCompileSourceRoots
-                ?.filter { belongsToProject(it) }
-                ?.forEach { add(SourceRootData(it, "java-test")) }
-            project.testResources
-                ?.map { it.directory }
-                ?.filter { belongsToProject(it) }
-                ?.forEach {
-                    add(SourceRootData(it, "java-test-resource"))
-                }
-            kotlinSettings?.testSourceRoots
-                ?.filter { belongsToProject(it) }
-                ?.forEach { add(SourceRootData(it, "java-test")) }
-//            addBuildHelperRoots(project, "add-test-source", "sources", "java-test")
-//            addBuildHelperRoots(project, "add-test-resource", "resources","java-test-resource")
-//            addCompilerGeneratedSources(project, "compiler:testCompile","java-source")
-//            addAntlr4GeneratedSources(project, "java-test")
-//            addModelloGeneratedSources(project, "java-test")
-        }
     }
-}
-
-private fun MutableSet<SourceRootData>.addAntlr4GeneratedSources(
-    project: MavenProject,
-    rootType: String
-) {
-    val plugin = findPlugin(project, "org.antlr", "antlr4-maven-plugin") ?: return
-
-    plugin.executions.forEach { execution ->
-        if (execution.goals.contains("antlr4")) {
-            val executionConfig = execution.configuration as? Xpp3Dom
-            val pluginConfig = plugin.configuration as? Xpp3Dom
-
-            val outputDir = executionConfig?.getChild("outputDirectory")?.value?.trim()
-                ?: pluginConfig?.getChild("outputDirectory")?.value?.trim()
-                ?: "${project.build?.directory ?: "target"}/generated-sources/antlr4"
-
-            if (outputDir.isNotEmpty()) {
-                add(SourceRootData(outputDir, rootType))
-            }
-        }
-    }
-}
-
-private fun MutableSet<SourceRootData>.addBuildHelperRoots(
-    project: MavenProject,
-    goal: String,
-    property: String,
-    rootType: String
-) {
-    val plugin = findPlugin(project, "org.codehaus.mojo", "build-helper-maven-plugin") ?: return
-
-    plugin.executions.forEach { execution ->
-        if (execution.goals.contains(goal)) {
-            val config = execution.configuration as? Xpp3Dom ?: return@forEach
-            val sources = config.getChild(property) ?: return@forEach
-            sources.children.forEach { sourceElement ->
-                val path = sourceElement.value?.trim()
-                if (!path.isNullOrEmpty()) {
-                    add(SourceRootData(toAbsolutePath(project, path), rootType))
-                }
-            }
-        }
-    }
-}
-
-
-private fun MutableSet<SourceRootData>.addModelloGeneratedSources(
-    project: MavenProject,
-    rootType: String
-) {
-    val plugin = findPlugin(project, "org.codehaus.mojo", "modello-maven-plugin") ?: return
-
-    // Modello plugin generates Java sources with various goals (java, velocity, etc.)
-    val javaGeneratingGoals = setOf("java", "velocity", "java5", "jpox-jdo-mapping", "jpox-metadata-class")
-
-    plugin.executions.forEach { execution ->
-        // Check if any execution has a goal that generates Java sources
-        if (execution.goals.any { it in javaGeneratingGoals }) {
-            // Get outputDirectory from execution configuration or plugin configuration
-            val executionConfig = execution.configuration as? Xpp3Dom
-            val pluginConfig = plugin.configuration as? Xpp3Dom
-
-            val outputDir = executionConfig?.getChild("outputDirectory")?.value?.trim()
-                ?: pluginConfig?.getChild("outputDirectory")?.value?.trim()
-                ?: "${project.build?.directory ?: "target"}/generated-sources/modello"
-
-            if (outputDir.isNotEmpty()) {
-                add(SourceRootData(toAbsolutePath(project, outputDir), rootType))
-            }
-        }
-    }
-}
-
-private fun MutableSet<SourceRootData>.addCompilerGeneratedSources(
-    project: MavenProject,
-    goal: String,
-    rootType: String
-) {
-    val plugin = findCompilerPlugin(project) ?: return
-
-    plugin.executions.forEach { execution ->
-        if (goal in execution.goals) {
-            val executionConfig = execution.configuration as? Xpp3Dom
-            val pluginConfig = plugin.configuration as? Xpp3Dom
-
-            val outputDir = executionConfig?.getChild("generatedSourcesDirectory")?.value?.trim()
-                ?: pluginConfig?.getChild("generatedSourcesDirectory")?.value?.trim()
-                ?: project.properties.getProperty("project.build.directory")?.trim()?.let { "$it/generated-sources/annotations" }
-
-            if (!outputDir.isNullOrEmpty()) {
-                add(SourceRootData(toAbsolutePath(project, outputDir), rootType))
-            }
-        }
-    }
-}
-
-private fun MutableSet<SourceRootData>.addGeneratedDirProperty(
-    project: MavenProject,
-    rootType: String
-) {
-    val generatedDir = project.properties.getProperty("generated.dir")?.trim()
-    if (!generatedDir.isNullOrEmpty()) {
-        add(SourceRootData(generatedDir, rootType))
-    }
+    addPluginGeneratedSources(project, module.type)
 }
 
 private fun contentRootData(

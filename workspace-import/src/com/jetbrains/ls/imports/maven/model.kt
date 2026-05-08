@@ -1,7 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.maven
 
-import com.intellij.util.containers.nullize
+import com.jetbrains.ls.imports.json.ContentRootData
 import com.jetbrains.ls.imports.json.ModuleData
 import com.jetbrains.ls.imports.json.SourceRootData
 import com.jetbrains.ls.imports.json.WorkspaceData
@@ -38,22 +38,37 @@ private fun mergeModels(deps: WorkspaceData, genSources: WorkspaceData?): Worksp
 // Still, we have to preserve types of our source roots, if they have rank more than received from gen-sources
 //we can just copy when mullitype-source roots are supported.
 private fun ModuleData.copyWithReplacedSources(sourceData: ModuleData?): ModuleData {
+    val depsContentRoots = this.contentRoots
+    val genContentRoots = sourceData?.contentRoots
+    val baseContentRoots = genContentRoots ?: depsContentRoots
+
     val allSourceRootsByRank = rankSourceRoots(
-        this.contentRoots.flatMap { it.sourceRoots } + (sourceData?.contentRoots?.flatMap { it.sourceRoots } ?: emptyList())
+        depsContentRoots.flatMap { it.sourceRoots } + (genContentRoots?.flatMap { it.sourceRoots } ?: emptyList())
     ).toMutableMap()
 
-    val newContentRoots = sourceData?.contentRoots ?: this.contentRoots
-    val contentRootsWithRankedSources = newContentRoots.mapNotNull mapContentRoot@{ cr ->
-        val newSourceRoots = cr.sourceRoots.mapNotNull { sr ->
-            allSourceRootsByRank.remove(sr.path)
+    val resultByPath = LinkedHashMap<String, ContentRootData>()
+    baseContentRoots.forEach { cr ->
+        val newSourceRoots = cr.sourceRoots.mapNotNull { allSourceRootsByRank.remove(it.path) }
+        val existing = resultByPath[cr.path]
+        resultByPath[cr.path] = existing?.let { it.copy(sourceRoots = it.sourceRoots + newSourceRoots) }
+            ?: cr.copy(sourceRoots = newSourceRoots)
+    }
+
+    // Source roots present only on the deps side (or in a deps CR with a path missing from gen)
+    // are still in the rank map. Place them into their original deps content root, merging into
+    // an existing same-path result entry when one already exists.
+    if (genContentRoots != null && allSourceRootsByRank.isNotEmpty()) {
+        depsContentRoots.forEach { depsCr ->
+            val orphans = depsCr.sourceRoots.mapNotNull { allSourceRootsByRank.remove(it.path) }
+            if (orphans.isEmpty()) return@forEach
+            val existing = resultByPath[depsCr.path]
+            resultByPath[depsCr.path] = existing?.let { it.copy(sourceRoots = it.sourceRoots + orphans) }
+                ?: depsCr.copy(sourceRoots = orphans)
         }
-        return@mapContentRoot cr.copy(
-            sourceRoots = newSourceRoots
-        )
     }
 
     return this.copy(
-        contentRoots = contentRootsWithRankedSources
+        contentRoots = resultByPath.values.toList()
     )
 }
 
