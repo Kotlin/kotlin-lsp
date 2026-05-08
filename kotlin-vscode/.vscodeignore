@@ -3,7 +3,7 @@
 
 # Whitelist what's needed
 !bin/**
-!dist/**
+!out/dist/**
 !grammars/**
 !icons/**
 !server/**

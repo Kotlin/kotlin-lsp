@@ -6,11 +6,11 @@
     "lib": [
       "es2020"
     ],
-    "outDir": "out",
+    "outDir": "out/compile",
     "rootDir": "src",
     "sourceMap": true,
     "composite": true,
-    "tsBuildInfoFile": "out/tsconfig.tsbuildinfo",
+    "tsBuildInfoFile": "out/compile/tsconfig.tsbuildinfo",
     "esModuleInterop": true
   },
   "include": [

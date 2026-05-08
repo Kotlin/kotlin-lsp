@@ -1,5 +1,4 @@
 out/
-dist/
 node_modules/
 grammars/
 *.vsix
