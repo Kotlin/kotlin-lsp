@@ -18,8 +18,7 @@
         ],
         "extensions": [
           ".kt"
-        ],
-        "configuration": "./language-configuration.json"
+        ]
       }
     ],
     "grammars": [
