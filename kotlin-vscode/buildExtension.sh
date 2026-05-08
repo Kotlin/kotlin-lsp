@@ -13,6 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 : "${BUNDLE_TYPE:?BUNDLE_TYPE is required}"
 
 VSCE_VERSION="${VSCE_VERSION:-}"
+VSCE_TARGET="${VSCE_TARGET:-}"
 
 if [[ -z "$VSCE_VERSION" ]]; then
   echo "Error: --vsce-version is required" >&2
@@ -63,9 +64,15 @@ echo "Copying wasm modules..."
 cp "node_modules/web-tree-sitter/web-tree-sitter.wasm" "grammars"
 find "node_modules" -name 'tree-sitter-*.wasm' -exec cp {} "grammars" \;
 echo "Running npx vsce package..."
-npx --yes vsce package "$VSCE_VERSION" \
-  --out "$BUILD_DIR/$VSIX_TARGET_FILENAME" \
-  --baseContentUrl=https://github.com/Kotlin/kotlin-lsp/tree/main/kotlin-vscode
+
+vsce_args=("$VSCE_VERSION"
+           --out "$BUILD_DIR/$VSIX_TARGET_FILENAME"
+           --baseContentUrl=https://github.com/Kotlin/kotlin-lsp/tree/main/kotlin-vscode)
+if [[ -n "$VSCE_TARGET" ]]; then
+  vsce_args+=(--target "$VSCE_TARGET")
+fi
+
+npx --yes vsce package "${vsce_args[@]}"
 popd > /dev/null
 
 # Delete temporary extension directory
