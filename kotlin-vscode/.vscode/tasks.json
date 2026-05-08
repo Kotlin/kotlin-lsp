@@ -1,0 +1,56 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dev-bootstrap",
+      "type": "shell",
+      "command": "${workspaceFolder}/dev-setup.sh",
+      "problemMatcher": []
+    },
+    {
+      "label": "dev-watch",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "watch"],
+      "options": {
+        "cwd": "${workspaceFolder}/out/dev"
+      },
+      "isBackground": true,
+      "dependsOn": "dev-bootstrap",
+      "problemMatcher": {
+        "owner": "webpack",
+        "fileLocation": "absolute",
+        "pattern": {
+          "regexp": "^(ERROR|WARNING) in (.+)$",
+          "severity": 1,
+          "file": 2,
+          "message": 0
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": "^(?:assets by|asset |Webpack is watching|.*compiling)"
+          },
+          "endsPattern": {
+            "regexp": "webpack \\S+ compiled"
+          }
+        }
+      }
+    },
+    {
+      "label": "dev-test",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "test:in-dev"],
+      "options": {
+        "cwd": "${workspaceFolder}/out/dev"
+      },
+      "dependsOn": "dev-bootstrap",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}
