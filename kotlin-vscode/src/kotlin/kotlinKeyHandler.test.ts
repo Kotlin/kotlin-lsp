@@ -1,8 +1,8 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
-import { describe, test, before } from 'node:test';
+import {before, describe, test} from 'node:test';
 import assert from 'node:assert/strict';
 import * as path from 'path';
-import { Parser, Language } from 'web-tree-sitter';
+import {Language, Parser} from 'web-tree-sitter';
 import kotlinKeyHandler from './keyHandler';
 import {type KeyResult} from '../types';
 
@@ -821,7 +821,7 @@ fun test() {
 let parser: Parser;
 
 before(async () => {
-    const projectRoot = path.resolve(__dirname, '..', '..');
+    const projectRoot = process.cwd();
     await Parser.init({
         locateFile: () => path.join(projectRoot, 'node_modules', 'web-tree-sitter', 'web-tree-sitter.wasm'),
     });
