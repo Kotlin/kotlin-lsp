@@ -1,7 +1,8 @@
 import * as path from 'path';
 import {commands, type ExtensionContext, extensions, type OutputChannel, Uri, window, workspace,} from 'vscode'
 import {registerDecompiler, registerOpeningJars} from './decompiler'
-import {initLspClient, startLspClient} from './lspClient';
+import {getLspClient, initLspClient, startLspClient} from './lspClient';
+import {LSPErrorCodes, RequestType0, ResponseError} from 'vscode-languageclient/node';
 import {registerStatusBarItem} from './statusBar';
 import {registerDapServer} from './dap'
 import {registerDatabase} from './database'
@@ -44,6 +45,26 @@ function registerExportWorkspaceToJsonCommand(context: ExtensionContext) {
         }
     }));
 }
+
+const ReloadWorkspaceRequest = new RequestType0<null, void>('intellij/reloadWorkspace');
+
+function registerReloadWorkspaceCommand(context: ExtensionContext) {
+    context.subscriptions.push(commands.registerCommand('jetbrains.kotlin.reloadWorkspace', async () => {
+        const client = getLspClient();
+        if (client === undefined || client.initializeResult === undefined) {
+            await window.showErrorMessage('Language server is not running');
+            return;
+        }
+        try {
+            await client.sendRequest(ReloadWorkspaceRequest);
+            await window.showInformationMessage('Workspace reloaded');
+        } catch (e) {
+            if (e instanceof ResponseError && e.code === LSPErrorCodes.RequestCancelled) return;
+            const message = e instanceof Error ? e.message : String(e);
+            await window.showErrorMessage(`Failed to reload workspace: ${message}`);
+        }
+    }));
+}
 const dynamicModulesContext = (require as any).context('.', true, /^\.\/[A-Za-z0-9_-]+\/module\.ts$/);
 
 export async function activate(context: ExtensionContext) {
@@ -61,6 +82,7 @@ export async function activate(context: ExtensionContext) {
     registerDapServer(context);
     registerDatabase(context);
     registerExportWorkspaceToJsonCommand(context);
+    registerReloadWorkspaceCommand(context);
     registerStatusBarItem();
     registerFileTemplates(context);
 

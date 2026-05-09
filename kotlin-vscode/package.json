@@ -80,8 +80,13 @@
       },
       {
         "command": "jetbrains.kotlin.restartLsp",
-        "category": "Kotlin",
-        "title": "Restart LSP server"
+        "category": "IntelliJ",
+        "title": "Restart Language Server"
+      },
+      {
+        "command": "jetbrains.kotlin.reloadWorkspace",
+        "category": "IntelliJ",
+        "title": "Reload Workspace"
       }
     ]
   },
