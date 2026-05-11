@@ -3,7 +3,7 @@ package com.jetbrains.ls.imports.jps
 
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.components.ExpandMacroToPathMap
-import com.intellij.openapi.components.impl.ProjectWidePathMacroContributor
+import com.intellij.openapi.components.impl.getAllMacros
 import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.JavaSdk
@@ -105,7 +105,7 @@ object JpsWorkspaceImporter : WorkspaceImporter {
             JpsModelSerializationDataService.computeAllPathVariables(model.global).let { pathVariables ->
                 JpsProjectLoader.loadProject(model.getProject(), pathVariables, model.getGlobal().getPathMapper(), projectDirectory, true, null)
 
-                ProjectWidePathMacroContributor.getAllMacros(
+                getAllMacros(
                     (projectDirectory / ".idea" / "modules.xml").absolutePathString()
                 ).forEach { (name, value) ->
                     macroExpandMap.addMacroExpand(name, value)
