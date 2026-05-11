@@ -175,7 +175,7 @@ function handleEnter(text: string, tree: Tree, index: number, indentUnit: string
 
     const commentContext = findBlockCommentContext(node, text, index);
     if (commentContext === null) {
-        return handleRegularEnter(text, index, indentUnit);
+        return handleRegularEnter(text, index, indentUnit, getPreviousBlockCommentIndent(node, text, index));
     }
 
     const commentIndent = getIndent(text, getLineStart(text, commentContext.start));
@@ -229,8 +229,13 @@ function shouldOmitLeadingStarOnIndentedFirstLine(
     return /^\s*$/.test(text.slice(commentContext.start + 2, index));
 }
 
-function handleRegularEnter(text: string, index: number, indentUnit: string): KeyResult {
-    const previousLineIndent = getPreviousNonEmptyLineIndent(text, index);
+function handleRegularEnter(
+        text: string,
+        index: number,
+        indentUnit: string,
+        previousLineIndentOverride?: string | null,
+): KeyResult {
+    const previousLineIndent = previousLineIndentOverride ?? getPreviousNonEmptyLineIndent(text, index);
     const continuationIndent = previousLineIndent === null ? null : `${previousLineIndent}${indentUnit}`;
     const shouldUseContinuationIndent = shouldApplyContinuationIndent(text, index);
     const matchingDelimiterEnterResult = handleMatchingDelimiterEnter(text, index, previousLineIndent, continuationIndent);
@@ -620,8 +625,27 @@ function getPreviousNonEmptyLine(text: string, index: number): { start: number, 
 }
 
 function isAfterStandaloneBlockCommentLine(text: string, index: number): boolean {
-    const previousLine = getPreviousNonEmptyLine(text, index)?.text.trim();
-    return previousLine === '*/' || (previousLine?.startsWith('/*') === true && previousLine.endsWith('*/'));
+    const previousLine = getPreviousNonEmptyLine(text, index)?.text;
+    return previousLine !== undefined && isStandaloneBlockCommentLine(previousLine);
+}
+
+function isStandaloneBlockCommentLine(text: string): boolean {
+    const trimmedText = text.trim();
+    return trimmedText === '*/' || (trimmedText.startsWith('/*') && trimmedText.endsWith('*/'));
+}
+
+function getPreviousBlockCommentIndent(node: Node, text: string, index: number): string | null {
+    const previousLine = getPreviousNonEmptyLine(text, index);
+    if (previousLine === null || previousLine.text.trim() !== '*/') {
+        return null;
+    }
+
+    const commentEnd = previousLine.start + previousLine.text.lastIndexOf('*/') + 2;
+    const blockComment = findAncestor(node.tree.rootNode.descendantForIndex(commentEnd - 1), 'block_comment');
+    if (blockComment === null || blockComment.endIndex !== commentEnd) {
+        return null;
+    }
+    return getIndent(text, getLineStart(text, blockComment.startIndex));
 }
 
 function getMatchingClosingDelimiter(char: string | null): string | null {

@@ -790,6 +790,42 @@ fun test() {
                 `,
         ));
 
+        test('properly indents after a multi-line comment', doTest(
+                `
+fun foo() {
+  /*
+   * comment 
+   */
+|
+}`,
+                `
+fun foo() {
+  /*
+   * comment 
+   */
+  |
+}`,
+        '  '));
+
+        test('properly indents after a multi-line comment', doTest(
+                `
+class C {                
+  /**
+   * comment 
+   */
+|
+fun foo() {
+}`,
+                `
+class C {                
+  /**
+   * comment 
+   */
+  |
+fun foo() {
+}`,
+                '  '));
+
         test('handles CRLF when continuing before closing parenthesis', doTest(
                 `fun test() {\r\n  foo(\r\n    1,\r\n|\r\n  )\r\n}`,
                 `fun test() {\r\n  foo(\r\n    1,\r\n        |\r\n  )\r\n}`,
