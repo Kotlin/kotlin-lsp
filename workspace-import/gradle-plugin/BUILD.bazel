@@ -34,7 +34,7 @@ jvm_library(
   deps = [
     "@lib//:kotlin-stdlib",
     "@ultimate_lib//:javax-inject-provided",
-    "@lib//:org-codehaus-groovy-groovy",
+    "@community//libraries/groovy",
     "@ultimate_lib//:gradle-provided",
     "@lib//:kotlin-gradle-plugin-idea",
     "@lib//:kotlin-tooling-core",
@@ -57,6 +57,7 @@ jvm_library(
   runtime_deps = [
     ":gradle-plugin",
     "@ultimate_lib//:javax-inject-provided",
+    "@community//libraries/groovy:groovy_test_lib",
     "@ultimate_lib//:gradle-provided",
     "@community//libraries/jspecify",
     "@community//libraries/jspecify:jspecify_test_lib",
