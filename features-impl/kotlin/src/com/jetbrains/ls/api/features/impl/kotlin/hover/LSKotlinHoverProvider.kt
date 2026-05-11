@@ -9,6 +9,7 @@ import com.intellij.psi.PsiPackage
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.positionByOffset
+import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.features.impl.common.hover.LSHoverProviderBase
 import com.jetbrains.ls.api.features.impl.common.hover.markdownMultilineCode
 import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
@@ -111,12 +112,12 @@ internal object LSKotlinHoverProvider : LSHoverProviderBase(TargetKind.ALL) {
 
         fun resolveKDocLinkToURI(link: String): String? {
             val psi = kDocLinks[link]?.let { resolveToPsi(it) } ?: return null
-            val path = psi.containingFile?.virtualFile?.path
+            val path = psi.containingFile?.virtualFile
             val fileDocument = psi.containingFile?.fileDocument ?: return null
             val startPosition = fileDocument.positionByOffset(psi.textOffset)
 
             // the format is taken from https://github.com/microsoft/vscode/blob/b3ec8181fc49f5462b5128f38e0723ae85e295c2/src/vs/platform/opener/common/opener.ts#L151-L160
-            return "file://$path#${startPosition.line + 1},${startPosition.character + 1}"
+            return "${path?.uri?.uri}#${startPosition.line + 1},${startPosition.character + 1}"
         }
 
         fun mdLink(kDocLink: String, label: String = kDocLink): String {
