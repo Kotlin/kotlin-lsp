@@ -21,6 +21,10 @@ const config = {
     },
     resolve: {
         extensions: ['.ts', '.js'],
+        alias: {
+            '@keyHandlerUtils': path.resolve(__dirname, 'src/keyHandlerUtils.ts'),
+            '@keyHandlerTestUtils': path.resolve(__dirname, 'src/keyHandlerTestUtils.ts'),
+        },
     },
     module: {
         rules: [

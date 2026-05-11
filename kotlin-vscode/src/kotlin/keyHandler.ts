@@ -1,5 +1,23 @@
 import {Tree, Node} from 'web-tree-sitter';
-import {type KeyResult, keyResult} from '../types';
+import {
+    type BlockCommentContext,
+    type KeyResult,
+    findAncestor,
+    findAncestorAtEnter,
+    findEnclosingErrorNode,
+    getIndent,
+    getLineEnd,
+    getLineStart,
+    getNextLineStart,
+    getPreviousNonEmptyLine,
+    getPreviousNonEmptyLineIndent,
+    getPreviousSignificantChar,
+    hasAncestor,
+    keyResult,
+    keyResultWithOptionalBlockIndent,
+    shouldApplyContinuationIndent,
+    skipIndent,
+} from '../keyHandlerUtils';
 
 const DEFAULT_TRIM_MARGIN_CHAR = '|';
 const MULTILINE_QUOTE = '"""';
@@ -308,14 +326,6 @@ function getBlockBodyIndent(text: string, index: number, previousLineIndent: str
     return indentStep === null ? continuationIndent ?? previousLineIndent : `${previousLineIndent}${indentStep}`;
 }
 
-function keyResultWithOptionalBlockIndent(previousLineIndent: string | null, index: number): KeyResult {
-    if (previousLineIndent === null || previousLineIndent.length === 0) {
-        return keyResult('\n', index, index + 1, index + 1);
-    }
-    const replacement = `\n${previousLineIndent}`;
-    return keyResult(replacement, index, index + 1, index + replacement.length);
-}
-
 function handleEmptyLambdaBodyEnter(
         node: Node,
         text: string,
@@ -460,26 +470,8 @@ function prevNode(node: Node): Node | null {
     return null;
 }
 
-function hasAncestor(node: Node | null, types: Set<string>): boolean {
-    for (let current: Node | null = node; current !== null; current = current.parent) {
-        if (types.has(current.type)) {
-            return true;
-        }
-    }
-    return false;
-}
-
 function isTextNode(node: Node | null): boolean {
     return node !== null && TEXT_NODE_TYPES.has(node.type);
-}
-
-function findAncestor(node: Node | null, type: string): Node | null {
-    for (let current: Node | null = node; current !== null; current = current.parent) {
-        if (current.type === type) {
-            return current;
-        }
-    }
-    return null;
 }
 
 function findChild(node: Node, type: string): Node | null {
@@ -500,56 +492,6 @@ function findNamedChildInRange(node: Node, startIndex: number, endIndex: number)
         }
     }
     return null;
-}
-
-function getLineStart(text: string, index: number): number {
-    let current = index;
-    while (current > 0) {
-        const char = text[current - 1];
-        if (char === '\n' || char === '\r') {
-            break;
-        }
-        current--;
-    }
-    return current;
-}
-
-function getLineEnd(text: string, index: number): number {
-    let current = index;
-    while (current < text.length) {
-        const char = text[current];
-        if (char === '\n' || char === '\r') {
-            break;
-        }
-        current++;
-    }
-    return current;
-}
-
-function getNextLineStart(text: string, index: number): number | null {
-    if (index >= text.length) {
-        return null;
-    }
-
-    if (text[index] === '\n') {
-        return index + 1;
-    }
-    if (text[index] === '\r') {
-        return index + 1 + (text[index + 1] === '\n' ? 1 : 0);
-    }
-    return null;
-}
-
-function getIndent(text: string, lineStart: number): string {
-    let current = lineStart;
-    while (current < text.length) {
-        const char = text[current];
-        if (char !== ' ' && char !== '\t') {
-            break;
-        }
-        current++;
-    }
-    return text.slice(lineStart, current);
 }
 
 function getCurrentLineTail(text: string, index: number): string {
@@ -573,65 +515,6 @@ function hasLineWithPrefix(text: string, start: number, end: number, prefix: str
         }
     }
     return false;
-}
-
-function skipIndent(text: string, start: number, end: number): number {
-    let current = start;
-    while (current < end) {
-        const char = text[current];
-        if (char !== ' ' && char !== '\t') {
-            break;
-        }
-        current++;
-    }
-    return current;
-}
-
-function getPreviousNonEmptyLineIndent(text: string, index: number): string | null {
-    const previousLine = getPreviousNonEmptyLine(text, index);
-    return previousLine === null ? null : getIndent(text, previousLine.start);
-}
-
-function shouldApplyContinuationIndent(text: string, index: number): boolean {
-    if (isAfterStandaloneBlockCommentLine(text, index)) {
-        return false;
-    }
-    const c = getPreviousSignificantChar(text, index);
-    return c !== null && '([{,+-*/%&|^=?:'.includes(c);
-}
-
-function getPreviousSignificantChar(text: string, index: number): string | null {
-    for (let current = index - 1; current >= 0; current--) {
-        const char = text[current];
-        if (char === ' ' || char === '\t' || char === '\n' || char === '\r') {
-            continue;
-        }
-        return char;
-    }
-    return null;
-}
-
-function getPreviousNonEmptyLine(text: string, index: number): { start: number, end: number, text: string } | null {
-    let lineEnd = index;
-    while (lineEnd > 0) {
-        const lineStart = getLineStart(text, lineEnd - 1);
-        const line = text.slice(lineStart, lineEnd);
-        if (line.trim().length !== 0) {
-            return {start: lineStart, end: lineEnd, text: line};
-        }
-        lineEnd = lineStart;
-    }
-    return null;
-}
-
-function isAfterStandaloneBlockCommentLine(text: string, index: number): boolean {
-    const previousLine = getPreviousNonEmptyLine(text, index)?.text;
-    return previousLine !== undefined && isStandaloneBlockCommentLine(previousLine);
-}
-
-function isStandaloneBlockCommentLine(text: string): boolean {
-    const trimmedText = text.trim();
-    return trimmedText === '*/' || (trimmedText.startsWith('/*') && trimmedText.endsWith('*/'));
 }
 
 function getPreviousBlockCommentIndent(node: Node, text: string, index: number): string | null {
@@ -677,12 +560,6 @@ function getIndentStepFromContext(text: string, index: number, currentIndent: st
         lineEnd = lineStart;
     }
     return null;
-}
-
-interface BlockCommentContext {
-    start: number
-    end: number | null
-    isDoc: boolean
 }
 
 interface TextRange {
@@ -840,18 +717,6 @@ function handleMultilineStringLiteralEnter(
     }
 
     return keyResult(`\n${linePrefix}`, index, index + 1, index + `\n${linePrefix}`.length);
-}
-
-function findAncestorAtEnter(node: Node, index: number, type: string): Node | null {
-    const currentAncestor = findAncestor(node, type);
-    if (currentAncestor !== null) {
-        return currentAncestor;
-    }
-
-    if (index === 0) {
-        return null;
-    }
-    return findAncestor(node.tree.rootNode.descendantForIndex(index - 1), type);
 }
 
 function shouldWrapQualifiedStringReceiver(stringLiteral: Node): boolean {
@@ -1058,37 +923,6 @@ function findBlockCommentContext(
     }
 
     return findLexicalBlockCommentContext(node, text, index);
-}
-
-function findEnclosingErrorNode(node: Node, index: number): Node | null {
-    const directError = findAncestor(node, 'ERROR');
-    if (directError !== null) {
-        return directError;
-    }
-
-    const previousIndex = index - 1;
-    if (previousIndex < 0) {
-        return null;
-    }
-
-    return findAncestor(node.tree.rootNode.namedDescendantForIndex(previousIndex), 'ERROR')
-            ?? findLastErrorBeforeIndex(node.tree.rootNode, previousIndex);
-}
-
-function findLastErrorBeforeIndex(node: Node, index: number): Node | null {
-    for (let i = node.childCount - 1; i >= 0; i--) {
-        const child = node.child(i);
-        if (child === null || child.startIndex > index) {
-            continue;
-        }
-
-        const error = findLastErrorBeforeIndex(child, index);
-        if (error !== null) {
-            return error;
-        }
-    }
-
-    return node.type === 'ERROR' ? node : null;
 }
 
 function findUnterminatedBlockCommentContext(

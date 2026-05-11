@@ -1,5 +1,14 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@keyHandlerUtils": [
+        "src/keyHandlerUtils"
+      ],
+      "@keyHandlerTestUtils": [
+        "src/keyHandlerTestUtils"
+      ]
+    },
     "module": "commonjs",
     "target": "es2020",
     "strict": true,

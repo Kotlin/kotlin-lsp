@@ -1,6 +1,6 @@
 import {EndOfLine, type ExtensionContext, Range, Selection, TextDocumentChangeReason, window, workspace} from 'vscode';
 import type {DocumentParser} from "./DocumentParser"
-import {type KeyHandler} from './types';
+import {type KeyHandler} from './keyHandlerUtils';
 
 const HANDLED_KEYS = new Set(['(', '[', '{', '<', '\'', '"', ')', ']', '}', '>', '\n']);
 const ENTER_KEY_PATTERN = /^\r?\n[ \t]*$/;
