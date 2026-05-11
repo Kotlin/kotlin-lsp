@@ -116,7 +116,7 @@ internal object LSKotlinHoverProvider : LSHoverProviderBase(TargetKind.ALL) {
             val startPosition = fileDocument.positionByOffset(psi.textOffset)
 
             // the format is taken from https://github.com/microsoft/vscode/blob/b3ec8181fc49f5462b5128f38e0723ae85e295c2/src/vs/platform/opener/common/opener.ts#L151-L160
-            return "file://$path#${startPosition.line + 1},${startPosition.character + 1}}"
+            return "file://$path#${startPosition.line + 1},${startPosition.character + 1}"
         }
 
         fun mdLink(kDocLink: String, label: String = kDocLink): String {
