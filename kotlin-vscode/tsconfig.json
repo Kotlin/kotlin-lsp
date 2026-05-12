@@ -1,12 +1,11 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
       "@keyHandlerUtils": [
-        "src/keyHandlerUtils"
+        "./src/keyHandlerUtils"
       ],
       "@keyHandlerTestUtils": [
-        "src/keyHandlerTestUtils"
+        "./src/keyHandlerTestUtils"
       ]
     },
     "module": "commonjs",
@@ -20,7 +19,8 @@
     "sourceMap": true,
     "composite": true,
     "tsBuildInfoFile": "out/compile/tsconfig.tsbuildinfo",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "preserveSymlinks": true
   },
   "include": [
     "src"
