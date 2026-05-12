@@ -2,7 +2,7 @@ import {EndOfLine, type ExtensionContext, Range, Selection, TextDocumentChangeRe
 import type {DocumentParser} from "./DocumentParser"
 import {type KeyHandler} from './keyHandlerUtils';
 
-const HANDLED_KEYS = new Set(['(', '[', '{', '<', '\'', '"', ')', ']', '}', '>', '\n']);
+const HANDLED_KEYS = new Set(['(', '[', '{', '<', '\'', '"', ')', ']', '}', '>']);
 const ENTER_KEY_PATTERN = /^\r?\n[ \t]*$/;
 
 export function registerHandleKeyType(context: ExtensionContext, parser: DocumentParser, handler: KeyHandler): void {
