@@ -226,6 +226,7 @@ data class JavaSettingsData(
 
 @Serializable
 data class KotlinJvmCompilerArguments(
+    val languageVersion: String? = null,
     val jvmTarget: String? = null,
     val pluginOptions: List<String> = emptyList(),
     val pluginClasspaths: List<String> = emptyList(),
