@@ -46,6 +46,14 @@ describe('Handling key presses in Kotlin files', () => {
 
     });
 
+    describe('closing delimiter handling', () => {
+        test('skips an existing closing parenthesis', doTest('foo()<caret>)', 'foo()<caret>'));
+
+        test('skips an existing closing square bracket', doTest('arr[0]<caret>]', 'arr[0]<caret>'));
+
+        test('skips an existing closing brace', doTest('run {}<caret>}', 'run {}<caret>'));
+    });
+
     describe('single quote handling', () => {
         test('wraps in single quotes when opening a char literal', doTest('val x = \'<caret>', 'val x = \'<caret>\''));
 
