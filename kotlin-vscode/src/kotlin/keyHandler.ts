@@ -41,7 +41,6 @@ const ENTER_LITERAL_ANCESTOR_TYPES = new Set([
     'character_literal',
 ]);
 const CONTINUATION_ALIGN_ANCESTOR_TYPES = [
-    'function_value_parameters',
     'type_parameters',
 ];
 const BLOCK_COMMENT_SCAN_ROOT_TYPES = new Set([
@@ -273,7 +272,8 @@ function handleRegularEnter(
         previousLineIndentOverride?: string | null,
 ): KeyResult {
     const previousLineIndent = previousLineIndentOverride ?? getPreviousNonEmptyLineIndent(text, index);
-    const continuationIndent = getAlignedAncestorListContinuationIndent(text, node, index, CONTINUATION_ALIGN_ANCESTOR_TYPES)
+    const continuationIndent = getFunctionParameterContinuationIndent(text, node, index)
+            ?? getAlignedAncestorListContinuationIndent(text, node, index, CONTINUATION_ALIGN_ANCESTOR_TYPES)
             ?? getTypeArgumentContinuationIndent(text, node, index)
             ?? (previousLineIndent === null ? null : `${previousLineIndent}${indentUnit}`);
     const matchingDelimiterEnterResult = handleMatchingDelimiterEnter(text, index, previousLineIndent, continuationIndent);
@@ -281,6 +281,28 @@ function handleRegularEnter(
         return matchingDelimiterEnterResult;
     }
     return getRegularEnterResult(text, index, previousLineIndent, continuationIndent);
+}
+
+function getFunctionParameterContinuationIndent(text: string, node: Node | null, index: number): string | null {
+    if (node === null || getPreviousSignificantChar(text, index) !== ',') {
+        return null;
+    }
+
+    const functionParameters = findAncestorAtEnter(node, index, 'function_value_parameters');
+    if (functionParameters === null) {
+        return null;
+    }
+
+    const firstParameter = functionParameters.namedChild(0);
+    if (firstParameter === null) {
+        return null;
+    }
+
+    if (getLineStart(text, functionParameters.startIndex) !== getLineStart(text, firstParameter.startIndex)) {
+        return getIndent(text, getLineStart(text, firstParameter.startIndex));
+    }
+
+    return getAlignedListIndent(text, functionParameters, index);
 }
 
 function getTypeArgumentContinuationIndent(text: string, node: Node | null, index: number): string | null {

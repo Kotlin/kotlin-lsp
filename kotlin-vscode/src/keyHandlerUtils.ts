@@ -391,6 +391,19 @@ export function getAlignedListIndent(text: string, listNode: Node, index: number
     return alignmentWidth <= 0 ? baseIndent : `${baseIndent}${' '.repeat(alignmentWidth)}`;
 }
 
+export function getMultilineListItemIndent(text: string, listNode: Node, index: number): string | null {
+    const firstItem = listNode.namedChild(0);
+    if (firstItem === null || firstItem.startIndex >= index) {
+        return null;
+    }
+
+    const listLineStart = getLineStart(text, listNode.startIndex);
+    const firstItemLineStart = getLineStart(text, firstItem.startIndex);
+    return firstItemLineStart === listLineStart
+            ? getAlignedListIndent(text, listNode, index)
+            : getIndent(text, firstItemLineStart);
+}
+
 export function keyResultWithOptionalBlockIndent(previousLineIndent: string | null, index: number): KeyResult {
     if (previousLineIndent === null || previousLineIndent.length === 0) {
         return keyResult('\n', index, index + 1, index + 1);

@@ -913,6 +913,16 @@ val x = foo<T,
 val x = foo<T,
         <caret>U>()`));
 
+        test('indents in function parameters', doTest(
+`
+fun foo(
+    a: Int,
+<caret>)`,
+`
+fun foo(
+    a: Int,
+    <caret>)`));
+
         test('handles CRLF when continuing before closing parenthesis', doTest(
                 `fun test() {\r\n  foo(\r\n    1,\r\n<caret>\r\n  )\r\n}`,
                 `fun test() {\r\n  foo(\r\n    1,\r\n        <caret>\r\n  )\r\n}`,
