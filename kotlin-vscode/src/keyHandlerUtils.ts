@@ -150,9 +150,10 @@ export function skipIndent(text: string, start: number, end: number): number {
     return current;
 }
 
-export function handleRegularEnter(text: string, index: number, indentUnit: string): KeyResult {
+export function handleRegularEnter(text: string, index: number, indentUnit: string, node?: Node | null): KeyResult {
     const previousLineIndent = getPreviousNonEmptyLineIndent(text, index);
-    const continuationIndent = previousLineIndent === null ? null : `${previousLineIndent}${indentUnit}`;
+    const continuationIndent = getDeclarationParameterContinuationIndent(text, node ?? null, index)
+            ?? (previousLineIndent === null ? null : `${previousLineIndent}${indentUnit}`);
     const shouldUseContinuationIndent = shouldApplyContinuationIndent(text, index);
 
     const nextLineStart = getNextLineStart(text, index + 1);
@@ -184,6 +185,33 @@ export function handleRegularEnter(text: string, index: number, indentUnit: stri
             : previousLineIndent;
     const replacement = `\n${indent}`;
     return keyResult(replacement, index, index + 1, index + replacement.length);
+}
+
+function getDeclarationParameterContinuationIndent(text: string, node: Node | null, index: number): string | null {
+    if (node === null || getPreviousSignificantChar(text, index) !== ',') {
+        return null;
+    }
+
+    for (const ancestorType of ['formal_parameters', 'parameter_list', 'create_function_parameters']) {
+        const parameters = findAncestorAtEnter(node, index, ancestorType);
+        if (parameters !== null) {
+            return getAlignedListIndent(text, parameters, index);
+        }
+    }
+    return null;
+}
+
+function getAlignedListIndent(text: string, listNode: Node, index: number): string | null {
+    const lineStart = getLineStart(text, listNode.startIndex);
+    const lineEnd = getLineEnd(text, listNode.startIndex);
+    const firstItemStart = skipIndent(text, listNode.startIndex + 1, lineEnd);
+    if (firstItemStart >= lineEnd || firstItemStart >= index) {
+        return null;
+    }
+
+    const baseIndent = getIndent(text, lineStart);
+    const alignmentWidth = firstItemStart - lineStart - baseIndent.length;
+    return alignmentWidth <= 0 ? baseIndent : `${baseIndent}${' '.repeat(alignmentWidth)}`;
 }
 
 export function keyResultWithOptionalBlockIndent(previousLineIndent: string | null, index: number): KeyResult {
