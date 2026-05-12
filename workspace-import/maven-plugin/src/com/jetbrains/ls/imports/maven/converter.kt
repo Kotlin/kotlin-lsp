@@ -675,11 +675,17 @@ internal fun MavenProject.extractKotlinSettings(
         else -> kotlinCompileSourceRoots + kotlinTestSourceRoots
     }
 
+    // See https://kotlinlang.org/docs/maven-kotlin-compiler.html
+    val languageVersion = config?.getChild("languageVersion")?.value
+        ?: this.properties["kotlin.compiler.languageVersion"]?.toString()
+        ?: extractLanguageVersionFromKotlinPluginVersion(kotlinPlugin.version)
+
     val jvmTarget = config?.getChild("jvmTarget")?.value
     val compilerArgs = config?.getChild("args")?.children?.map { it.value } ?: emptyList()
     val pluginOptions = config?.getChild("pluginOptions")?.children?.map { "plugin:${it.value}" } ?: emptyList()
 
     val compilerArguments = KotlinJvmCompilerArguments(
+        languageVersion = languageVersion,
         jvmTarget = jvmTarget,
         pluginOptions = pluginOptions,
         pluginClasspaths = pluginClasspath
@@ -724,3 +730,16 @@ private fun Plugin.kotlinSourceDirs(execution: String): Set<String>? {
         ?.mapNotNull { it.value }
         ?.toSet()
 }
+
+/**
+ * Returns the leading `<major>.<minor>` from the passed [kotlinPluginVersion], or `null` if it cannot be parsed.
+ * Used as a fallback for the Kotlin language version: the `kotlin-maven-plugin`'s default `languageVersion`
+ * follows the plugin's own `<major>.<minor>` (e.g., `1.9.20` -> `1.9`).
+ */
+private fun extractLanguageVersionFromKotlinPluginVersion(kotlinPluginVersion: String?): String? {
+    if (kotlinPluginVersion == null) return null
+
+    return MAJOR_MINOR_REGEX.find(kotlinPluginVersion)?.value
+}
+
+private val MAJOR_MINOR_REGEX: Regex = Regex("""^\d+\.\d+""")

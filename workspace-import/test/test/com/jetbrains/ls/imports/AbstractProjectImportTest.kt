@@ -110,6 +110,15 @@ abstract class AbstractProjectImportTest {
     fun simpleMaven() = doMavenTest("SimpleMaven")
 
     @Test
+    fun mavenKotlinLanguageVersionFromConfiguration() = doMavenTest("MavenKotlinLanguageVersionFromConfiguration")
+
+    @Test
+    fun mavenKotlinLanguageVersionFromProperty() = doMavenTest("MavenKotlinLanguageVersionFromProperty")
+
+    @Test
+    fun mavenKotlinLanguageVersionFromPluginVersion() = doMavenTest("MavenKotlinLanguageVersionFromPluginVersion")
+
+    @Test
     @EnabledIfEnvironmentVariable(named = "ANDROID_HOME", matches = ".*", disabledReason = "Android SDK is required")
     fun androidMultiModule() = doGradleTest("AndroidMultiModule") { workspaceData ->
         withIgnoredJdkRoots(workspaceData).withSanitizedJarLibraryNames().withoutSyntheticLibraries()
