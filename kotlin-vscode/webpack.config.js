@@ -20,6 +20,7 @@ const config = {
         vscode: 'commonjs vscode'
     },
     resolve: {
+        symlinks: false,
         extensions: ['.ts', '.js'],
         alias: {
             '@keyHandlerUtils': path.resolve(__dirname, 'src/keyHandlerUtils.ts'),
