@@ -387,7 +387,50 @@ fun foo() {
 fun foo() {
     /* comment */
     <caret>
-}`, '    '))
+}`, '    '));
+
+        test('properly indents inside a multi-line comment', doTest(
+                `
+/*
+      blah
+<caret>
+      blah
+ */`,
+                `
+/*
+      blah
+      <caret>
+      blah
+ */`,
+        ));
+
+        test('properly indents inside a multi-line doc comment', doTest(
+                `
+/**
+  *    blah
+<caret>
+  *    blah
+  */`,
+                `
+/**
+  *    blah
+  *    <caret>
+  *    blah
+  */`,
+        ));
+
+        test('properly indents inside a multi-line string', doTest(
+                `
+         val c = """
+             line 1
+<caret>
+         """.trimIndent()`,
+                `
+         val c = """
+             line 1
+             <caret>
+         """.trimIndent()`,
+        ));
     });
 
     describe('no completion inside string content', () => {

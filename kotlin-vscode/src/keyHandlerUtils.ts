@@ -225,6 +225,39 @@ export function getPreviousNonEmptyLine(text: string, index: number): { start: n
     return null;
 }
 
+export function getClosedNodeBodyIndent(
+        text: string,
+        start: number,
+        end: number | null,
+        index: number,
+        shouldIgnoreLine: (trimmedLine: string) => boolean,
+): string | null {
+    if (end === null) {
+        return null;
+    }
+
+    const startLine = getLineStart(text, start);
+    const nextLineStart = getNextLineStart(text, index + 1);
+    if (nextLineStart !== null && nextLineStart < end) {
+        const nextLine = text.slice(nextLineStart, getLineEnd(text, nextLineStart)).trim();
+        if (nextLine.length !== 0 && !shouldIgnoreLine(nextLine)) {
+            return getIndent(text, nextLineStart);
+        }
+    }
+
+    const previousLine = getPreviousNonEmptyLine(text, index);
+    if (previousLine === null || previousLine.start < startLine) {
+        return null;
+    }
+
+    const previousLineText = previousLine.text.trim();
+    if (shouldIgnoreLine(previousLineText)) {
+        return null;
+    }
+
+    return getIndent(text, previousLine.start);
+}
+
 export function getPreviousSignificantChar(text: string, index: number): string | null {
     for (let current = index - 1; current >= 0; current--) {
         const char = text[current];

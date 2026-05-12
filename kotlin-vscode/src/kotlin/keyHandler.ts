@@ -216,10 +216,20 @@ function handleEnter(text: string, tree: Tree, index: number, indentUnit: string
                     (commentContext.end === null || currentLineTail.trim().length === 0));
 
     if (!useLinePrefix && commentContext.end !== null) {
+        if (currentLineTail.trim() === '') {
+            const bodyIndent = getClosedBlockCommentBodyIndent(text, commentContext, index);
+            if (bodyIndent !== null) {
+                const replacement = `\n${bodyIndent}`;
+                return keyResult(replacement, index, index + 1 + currentLineTail.length, index + replacement.length);
+            }
+        }
         return keyResult('\n', index, index + 1, index + 1);
     }
 
-    const prefixLine = `\n${commentIndent}${useLinePrefix ? ' * ' : ''}`;
+    const docCommentBodyPrefix = commentContext.isDoc && currentLineTail.trim().length === 0
+            ? getDocCommentBodyPrefix(text, commentContext, index)
+            : null;
+    const prefixLine = `\n${docCommentBodyPrefix ?? `${commentIndent}${useLinePrefix ? ' * ' : ''}`}`;
     const rewrittenTailResult = rewriteCommentLineTail(commentContext, commentIndent, currentLineTail, prefixLine, index, useLinePrefix);
     if (rewrittenTailResult !== null) {
         return rewrittenTailResult;
@@ -529,6 +539,72 @@ function getPreviousBlockCommentIndent(node: Node, text: string, index: number):
         return null;
     }
     return getIndent(text, getLineStart(text, blockComment.startIndex));
+}
+
+function getClosedBlockCommentBodyIndent(text: string, commentContext: BlockCommentContext, index: number): string | null {
+    if (commentContext.end === null) {
+        return null;
+    }
+
+    const commentStartLine = getLineStart(text, commentContext.start);
+    const nextLineStart = getNextLineStart(text, index + 1);
+    if (nextLineStart !== null && nextLineStart < commentContext.end) {
+        const nextLine = text.slice(nextLineStart, getLineEnd(text, nextLineStart)).trim();
+        if (nextLine.length !== 0 && nextLine !== '*/') {
+            return getIndent(text, nextLineStart);
+        }
+    }
+
+    const previousLine = getPreviousNonEmptyLine(text, index);
+    if (previousLine === null || previousLine.start < commentStartLine) {
+        return null;
+    }
+
+    const previousLineText = previousLine.text.trim();
+    if (previousLineText === '/*' || previousLineText === '/**' || previousLineText === '*/') {
+        return null;
+    }
+
+    return getIndent(text, previousLine.start);
+}
+
+function getDocCommentBodyPrefix(text: string, commentContext: BlockCommentContext, index: number): string | null {
+    if (!commentContext.isDoc || commentContext.end === null) {
+        return null;
+    }
+
+    const commentStartLine = getLineStart(text, commentContext.start);
+    const nextLineStart = getNextLineStart(text, index + 1);
+    if (nextLineStart !== null && nextLineStart < commentContext.end) {
+        const nextPrefix = getDocCommentBodyLinePrefix(text, nextLineStart);
+        if (nextPrefix !== null) {
+            return nextPrefix;
+        }
+    }
+
+    const previousLine = getPreviousNonEmptyLine(text, index);
+    if (previousLine === null || previousLine.start < commentStartLine) {
+        return null;
+    }
+
+    return getDocCommentBodyLinePrefix(text, previousLine.start);
+}
+
+function getDocCommentBodyLinePrefix(text: string, lineStart: number): string | null {
+    const lineEnd = getLineEnd(text, lineStart);
+    const line = text.slice(lineStart, lineEnd);
+    const trimmedLine = line.trim();
+    if (trimmedLine.length === 0 || trimmedLine === '/**' || trimmedLine === '*/') {
+        return null;
+    }
+
+    const indent = getIndent(text, lineStart);
+    if (!line.startsWith(`${indent}*`)) {
+        return null;
+    }
+
+    const spacesAfterStar = line.slice(indent.length + 1).match(/^[ \t]*/)?.[0] ?? '';
+    return `${indent}*${spacesAfterStar}`;
 }
 
 function getMatchingClosingDelimiter(char: string | null): string | null {
