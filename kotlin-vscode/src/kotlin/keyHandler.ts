@@ -193,7 +193,7 @@ function handleEnter(text: string, tree: Tree, index: number, indentUnit: string
 
     const commentContext = findBlockCommentContext(node, text, index);
     if (commentContext === null) {
-        return handleRegularEnter(text, index, indentUnit, getPreviousBlockCommentIndent(node, text, index));
+        return handleRegularEnter(text, node, index, indentUnit, getPreviousBlockCommentIndent(node, text, index));
     }
 
     const commentIndent = getIndent(text, getLineStart(text, commentContext.start));
@@ -259,12 +259,14 @@ function shouldOmitLeadingStarOnIndentedFirstLine(
 
 function handleRegularEnter(
         text: string,
+        node: Node,
         index: number,
         indentUnit: string,
         previousLineIndentOverride?: string | null,
 ): KeyResult {
     const previousLineIndent = previousLineIndentOverride ?? getPreviousNonEmptyLineIndent(text, index);
-    const continuationIndent = previousLineIndent === null ? null : `${previousLineIndent}${indentUnit}`;
+    const continuationIndent = getFunctionParameterContinuationIndent(text, node, index)
+            ?? (previousLineIndent === null ? null : `${previousLineIndent}${indentUnit}`);
     const shouldUseContinuationIndent = shouldApplyContinuationIndent(text, index);
     const matchingDelimiterEnterResult = handleMatchingDelimiterEnter(text, index, previousLineIndent, continuationIndent);
     if (matchingDelimiterEnterResult !== null) {
@@ -300,6 +302,28 @@ function handleRegularEnter(
             : previousLineIndent;
     const replacement = `\n${indent}`;
     return keyResult(replacement, index, index + 1, index + replacement.length);
+}
+
+function getFunctionParameterContinuationIndent(text: string, node: Node, index: number): string | null {
+    if (getPreviousSignificantChar(text, index) !== ',') {
+        return null;
+    }
+
+    const parameters = findAncestorAtEnter(node, index, 'function_value_parameters');
+    if (parameters === null) {
+        return null;
+    }
+
+    const lineStart = getLineStart(text, parameters.startIndex);
+    const lineEnd = getLineEnd(text, parameters.startIndex);
+    const firstParameterStart = skipIndent(text, parameters.startIndex + 1, lineEnd);
+    if (firstParameterStart >= lineEnd || firstParameterStart >= index) {
+        return null;
+    }
+
+    const baseIndent = getIndent(text, lineStart);
+    const alignmentWidth = firstParameterStart - lineStart - baseIndent.length;
+    return alignmentWidth <= 0 ? baseIndent : `${baseIndent}${' '.repeat(alignmentWidth)}`;
 }
 
 function handleMatchingDelimiterEnter(

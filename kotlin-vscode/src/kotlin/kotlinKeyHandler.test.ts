@@ -873,6 +873,14 @@ fun foo() {
 }`,
                 '  '));
 
+        test('indents after an argument', doTest(
+`
+fun foo(a: Int,
+<caret>) {}`,
+                `
+fun foo(a: Int,
+        <caret>) {}`));
+
         test('handles CRLF when continuing before closing parenthesis', doTest(
                 `fun test() {\r\n  foo(\r\n    1,\r\n<caret>\r\n  )\r\n}`,
                 `fun test() {\r\n  foo(\r\n    1,\r\n        <caret>\r\n  )\r\n}`,
