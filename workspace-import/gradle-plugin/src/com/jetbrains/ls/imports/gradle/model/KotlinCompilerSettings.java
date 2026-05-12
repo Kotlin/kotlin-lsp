@@ -9,6 +9,8 @@ import java.util.List;
 
 public interface KotlinCompilerSettings extends Serializable {
 
+    @Nullable String getLanguageVersion();
+
     @Nullable String getJvmTarget();
 
     @NotNull List<@NotNull String> getPluginOptions();

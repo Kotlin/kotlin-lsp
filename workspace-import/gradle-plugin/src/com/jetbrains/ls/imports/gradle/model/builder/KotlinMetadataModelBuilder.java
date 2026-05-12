@@ -27,6 +27,7 @@ public final class KotlinMetadataModelBuilder implements ToolingModelBuilder {
     private static final String COMPILE_TASK_NAME = "compileKotlin";
     private static final String COMPILER_OPTIONS_PROPERTY_NAME = "compilerOptions";
     private static final String JVM_TARGET_PROPERTY_NAME = "jvmTarget";
+    private static final String LANGUAGE_VERSION_PROPERTY_NAME = "languageVersion";
     private static final String FREE_COMPILER_ARGS_PROPERTY_NAME = "freeCompilerArgs";
     private static final String PLUGIN_CLASSPATH_PROPERTY_NAME = "pluginClasspath";
     private static final String PLUGIN_OPTIONS_PROPERTY_NAME = "pluginOptions";
@@ -60,13 +61,16 @@ public final class KotlinMetadataModelBuilder implements ToolingModelBuilder {
 
     private static @NotNull KotlinCompilerSettingsImpl getKotlinCompilerSettings(@NotNull Task task) {
         String jvmTarget = null;
+        String languageVersion = null;
         List<String> compilerArgs = Collections.emptyList();
         if (task.hasProperty(COMPILER_OPTIONS_PROPERTY_NAME)) {
             Object compilerOptions = task.property(COMPILER_OPTIONS_PROPERTY_NAME);
             jvmTarget = getJvmTarget(compilerOptions);
+            languageVersion = getKotlinLanguageVersion(compilerOptions);
             compilerArgs = getCompilerArgs(compilerOptions);
         }
         return new KotlinCompilerSettingsImpl(
+                languageVersion,
                 jvmTarget,
                 getPluginOptions(task),
                 getPluginClasspath(task),
@@ -124,6 +128,24 @@ public final class KotlinMetadataModelBuilder implements ToolingModelBuilder {
             return target.replace("JVM_", "");
         }
         return null;
+    }
+
+    private static @Nullable String getKotlinLanguageVersion(@NotNull Object compilerOptions) {
+        DefaultProperty<?> languageVersion = (DefaultProperty<?>) getProperty(compilerOptions, LANGUAGE_VERSION_PROPERTY_NAME);
+        if (languageVersion == null) {
+            return null;
+        }
+
+        ClassLoader classLoader = compilerOptions.getClass().getClassLoader();
+        Object kotlinVersionValue = languageVersion.isPresent()
+                       ? languageVersion.get()
+                       : KotlinVersionReflectiveUtils.getDefaultVersion(classLoader);
+
+        if (kotlinVersionValue == null) {
+            return null;
+        }
+
+        return KotlinVersionReflectiveUtils.getVersionString(kotlinVersionValue, classLoader);
     }
 
     private static @NotNull List<String> getCompilerArgs(@NotNull Object compilerOptions) {

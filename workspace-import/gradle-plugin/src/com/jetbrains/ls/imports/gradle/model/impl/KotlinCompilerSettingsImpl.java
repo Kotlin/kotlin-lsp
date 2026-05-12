@@ -9,21 +9,29 @@ import java.util.List;
 
 public final class KotlinCompilerSettingsImpl implements KotlinCompilerSettings {
 
+    private final @Nullable String languageVersion;
     private final @Nullable String jvmTarget;
     private final @NotNull List<@NotNull String> pluginOptions;
     private final @NotNull List<@NotNull String> pluginClasspath;
     private final @NotNull List<@NotNull String> compilerArgs;
 
     public KotlinCompilerSettingsImpl(
+            @Nullable String languageVersion,
             @Nullable String target,
             @NotNull List<@NotNull String> pluginOptions,
             @NotNull List<@NotNull String> pluginClasspath,
             @NotNull List<@NotNull String> compilerArgs
     ) {
+        this.languageVersion = languageVersion;
         this.jvmTarget = target;
         this.pluginOptions = pluginOptions;
         this.pluginClasspath = pluginClasspath;
         this.compilerArgs = compilerArgs;
+    }
+
+    @Override
+    public @Nullable String getLanguageVersion() {
+        return languageVersion;
     }
 
     @Override

@@ -71,6 +71,12 @@ abstract class AbstractProjectImportTest {
     fun customSourceSets() = doGradleTest("CustomSourceSets", ::withIgnoredJdkRoots)
 
     @Test
+    fun gradleKotlinLanguageVersionCustom() = doGradleTest("GradleKotlinLanguageVersionCustom", ::withIgnoredJdkRoots)
+
+    @Test
+    fun gradleKotlinLanguageVersionDefaultFromPlugin() = doGradleTest("GradleKotlinLanguageVersionDefaultFromPlugin", ::withIgnoredJdkRoots)
+
+    @Test
     fun ideaPluginCustomSourceSets() = doGradleTest("IdeaPluginCustomSourceSets", ::withIgnoredJdkRoots)
 
     @Test

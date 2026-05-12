@@ -104,7 +104,14 @@ internal class IdeaProjectMapper {
             }
             val compilerSettings = kotlinModule.compilerSettings
             val kotlinCompilerSettings = compilerSettings.let {
-                Json.encodeToString(KotlinCompilerSettings(it.jvmTarget, it.pluginOptions, it.pluginClasspaths))
+                Json.encodeToString(
+                    KotlinCompilerSettings(
+                        it.languageVersion,
+                        it.jvmTarget,
+                        it.pluginOptions,
+                        it.pluginClasspaths
+                    )
+                )
             }
             result.add(
                 KotlinSettingsData(
@@ -341,6 +348,7 @@ internal class IdeaProjectMapper {
 
     @Serializable
     private data class KotlinCompilerSettings(
+        val languageVersion: String?,
         val jvmTarget: String?,
         val pluginOptions: List<String>,
         val pluginClasspaths: List<String>
