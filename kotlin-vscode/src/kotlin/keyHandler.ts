@@ -5,6 +5,7 @@ import {
     findAncestor,
     findAncestorAtEnter,
     findEnclosingErrorNode,
+    getAlignedListIndent,
     getAlignedAncestorListContinuationIndent,
     getIndent,
     getLineEnd,
@@ -39,7 +40,10 @@ const ENTER_LITERAL_ANCESTOR_TYPES = new Set([
     'string_literal',
     'character_literal',
 ]);
-const FUNCTION_PARAMETER_ANCESTOR_TYPES = ['function_value_parameters'];
+const CONTINUATION_ALIGN_ANCESTOR_TYPES = [
+    'function_value_parameters',
+    'type_parameters',
+];
 const BLOCK_COMMENT_SCAN_ROOT_TYPES = new Set([
     'block',
     'class_body',
@@ -269,13 +273,35 @@ function handleRegularEnter(
         previousLineIndentOverride?: string | null,
 ): KeyResult {
     const previousLineIndent = previousLineIndentOverride ?? getPreviousNonEmptyLineIndent(text, index);
-    const continuationIndent = getAlignedAncestorListContinuationIndent(text, node, index, FUNCTION_PARAMETER_ANCESTOR_TYPES)
+    const continuationIndent = getAlignedAncestorListContinuationIndent(text, node, index, CONTINUATION_ALIGN_ANCESTOR_TYPES)
+            ?? getTypeArgumentContinuationIndent(text, node, index)
             ?? (previousLineIndent === null ? null : `${previousLineIndent}${indentUnit}`);
     const matchingDelimiterEnterResult = handleMatchingDelimiterEnter(text, index, previousLineIndent, continuationIndent);
     if (matchingDelimiterEnterResult !== null) {
         return matchingDelimiterEnterResult;
     }
     return getRegularEnterResult(text, index, previousLineIndent, continuationIndent);
+}
+
+function getTypeArgumentContinuationIndent(text: string, node: Node | null, index: number): string | null {
+    if (node === null || getPreviousSignificantChar(text, index) !== ',') {
+        return null;
+    }
+
+    const typeArguments = findAncestorAtEnter(node, index, 'type_arguments');
+    if (typeArguments === null) {
+        return null;
+    }
+
+    const callExpression = findAncestor(typeArguments, 'call_expression');
+    if (callExpression === null) {
+        return getAlignedListIndent(text, typeArguments, index);
+    }
+
+    const lineStart = getLineStart(text, callExpression.startIndex);
+    const baseIndent = getIndent(text, lineStart);
+    const alignmentWidth = callExpression.startIndex - lineStart - baseIndent.length;
+    return alignmentWidth <= 0 ? baseIndent : `${baseIndent}${' '.repeat(alignmentWidth)}`;
 }
 
 function handleMatchingDelimiterEnter(
