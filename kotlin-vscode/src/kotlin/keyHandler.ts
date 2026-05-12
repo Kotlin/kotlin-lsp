@@ -5,17 +5,25 @@ import {
     findAncestor,
     findAncestorAtEnter,
     findEnclosingErrorNode,
+    getAlignedAncestorListContinuationIndent,
     getIndent,
     getLineEnd,
     getLineStart,
     getNextLineStart,
+    getOpeningDelimiterResult,
+    getPreviousLeaf,
     getPreviousNonEmptyLine,
     getPreviousNonEmptyLineIndent,
     getPreviousSignificantChar,
+    getRegularEnterResult,
     hasAncestor,
+    handleEnterWithHandlers,
+    handleKeyWithSpecialNode,
+    handleLineCommentEnter,
+    handleOpeningDelimiterKey,
+    handlePairedClosingDelimiterKey,
+    handleStandardClosingDelimiterKey,
     keyResult,
-    keyResultWithOptionalBlockIndent,
-    shouldApplyContinuationIndent,
     skipIndent,
 } from '../keyHandlerUtils';
 
@@ -31,6 +39,7 @@ const ENTER_LITERAL_ANCESTOR_TYPES = new Set([
     'string_literal',
     'character_literal',
 ]);
+const FUNCTION_PARAMETER_ANCESTOR_TYPES = ['function_value_parameters'];
 const BLOCK_COMMENT_SCAN_ROOT_TYPES = new Set([
     'block',
     'class_body',
@@ -44,6 +53,11 @@ const BLOCK_COMMENT_IGNORED_NODE_TYPES = new Set([
     'multi_line_string_literal',
     'character_literal',
 ]);
+const NON_ANGLE_DELIMITER_ANCESTORS = new Set<string>();
+const OPENING_DELIMITER_OPTIONS = {
+    extraAutoCloseChars: [':'],
+    commentPrefixes: ['//', '/*'],
+};
 
 export default (text: string, tree: Tree, key: string, index: number, indentUnit: string): KeyResult => {
     switch (key) {
@@ -60,7 +74,7 @@ export default (text: string, tree: Tree, key: string, index: number, indentUnit
         case '"':
             return handleDoubleQuoteKey(text, tree, index);
         case '<':
-            return handleLeftAngle(tree, index);
+            return handleLeftAngle(text, tree, index);
         case ')':
         case ']':
         case '>':
@@ -80,64 +94,61 @@ function handleLeftBracket(text: string, tree: Tree, index: number): KeyResult {
 }
 
 function handleOpeningDelimiter(text: string, tree: Tree, index: number, opening: string, closing: string): KeyResult {
-    const root = tree.rootNode;
-    const node = root.descendantForIndex(index);
-    if (node === null) return keyResult(opening, index, index + 1, index + opening.length);
-    if (node.type === 'block_comment') return handleBlockComment(node, opening, text, index);
-    return isTextNode(node) ? keyResult(opening, index, index + 1, index + 1) : getOpenBraceResult(text, index, opening, closing);
+    return handleOpeningDelimiterKey(text, tree, index, opening, closing, handleSpecialNodeKey, OPENING_DELIMITER_OPTIONS);
 }
 
 function handleLeftBrace(text: string, tree: Tree, index: number): KeyResult {
-    const root = tree.rootNode;
-    const node = root.descendantForIndex(index);
-    if (node === null) return keyResult('{', index, index + 1, index + 1);
-    if (isTextNode(node)) {
-        return keyResult('{', index, index + 1, index + 1);
-    }
-    // `${...}` templates are the one place where '{' inside a string should
-    // still behave like a paired delimiter.
-    if (text[index - 1] === '$' && text[index + 1] === '}') {
-        return keyResult('{', index, index + 1, index + 1);
-    }
-    if (text[index - 1] === '$') {
-        return keyResult('{}', index, index + 1, index + 1);
-    }
-    return getOpenBraceResult(text, index, '{', '}');
+    return handleKeyWithSpecialNode(text, tree, '{', index, handleSpecialNodeKey, () => {
+        // `${...}` templates are the one place where '{' inside a string should
+        // still behave like a paired delimiter.
+        if (text[index - 1] === '$' && text[index + 1] === '}') {
+            return keyResult('{', index, index + 1, index + 1);
+        }
+        if (text[index - 1] === '$') {
+            return keyResult('{}', index, index + 1, index + 1);
+        }
+        return getOpeningDelimiterResult(text, index, '{', '}', OPENING_DELIMITER_OPTIONS);
+    });
 }
 
 function handleSingleQuote(text: string, tree: Tree, index: number): KeyResult {
-    const node = tree.rootNode.descendantForIndex(index);
-    if (node === null) return keyResult(`'`, index, index + 1, index + 1);
-    return isTextNode(node)
-            ? keyResult(`'`, index, index + 1, index + 1)
-            : node.parent?.type === 'character_literal'
-                    ? text[index + 1] === `'` && (index === 0 || text[index - 1] !== '\\')
-                            ? keyResult('', index, index + 1, index + 1)
-                            : keyResult(`'`, index, index + 1, index + 1)
-                    : keyResult(`''`, index, index + 1, index + 1);
+    return handleKeyWithSpecialNode(text, tree, `'`, index, handleSpecialNodeKey, () => keyResult(`''`, index, index + 1, index + 1));
 }
 
 function handleDoubleQuoteKey(text: string, tree: Tree, index: number): KeyResult {
-    const root = tree.rootNode;
-    const node = root.descendantForIndex(index);
-    if (node === null) return keyResult('"', index, index + 1, index + 1);
+    const node = tree.rootNode.descendantForIndex(index);
 
     // Kotlin overtypes an existing closing quote instead of inserting a duplicate one.
-    if (node.type !== '"""' && text[index + 1] === '"' && (index === 0 || text[index - 1] !== '\\')) {
+    if (node !== null && node.type !== '"""' && text[index + 1] === '"' && (index === 0 || text[index - 1] !== '\\')) {
         return keyResult('', index, index + 1, index + 1);
     }
 
+    return handleKeyWithSpecialNode(text, tree, `"`, index, handleSpecialNodeKey, () => keyResult('"', index, index + 1, index + 1));
+}
+
+function handleSpecialNodeKey(node: Node, text: string, key: string, index: number): KeyResult | null {
+    if (node.type === 'block_comment') {
+        return handleBlockComment(node, key, text, index);
+    }
     if (isTextNode(node)) {
-        return keyResult('"', index, index + 1, index + 1);
+        return keyResult(key, index, index + 1, index + 1);
     }
-    switch (node.type) {
-        case '"':
-            return handleDoubleQuote(node, index);
-        case '"""':
-            return handleTripleQuote(node, index);
-        default:
-            return keyResult('"', index, index + 1, index + 1);
+    if (key === '"' && node.type === '"') {
+        return handleDoubleQuote(node, index);
     }
+    if (key === '"' && node.type === '"""') {
+        return handleTripleQuote(node, index);
+    }
+    if (key === `'` && node.parent?.type === 'character_literal') {
+        return getCharacterLiteralQuoteResult(text, index);
+    }
+    return null;
+}
+
+function getCharacterLiteralQuoteResult(text: string, index: number): KeyResult {
+    return text[index + 1] === `'` && (index === 0 || text[index - 1] !== '\\')
+            ? keyResult('', index, index + 1, index + 1)
+            : keyResult(`'`, index, index + 1, index + 1);
 }
 
 function handleTripleQuote(node: Node, index: number): KeyResult {
@@ -169,76 +180,69 @@ function handleDoubleQuote(node: Node, index: number): KeyResult {
 }
 
 function handleEnter(text: string, tree: Tree, index: number, indentUnit: string): KeyResult {
-    const node = tree.rootNode.descendantForIndex(index);
-    if (node === null) return keyResult('\n', index, index + 1, index + 1);
-
-    const lineCommentEnterResult = handleLineCommentEnter(text, node, index);
-    if (lineCommentEnterResult !== null) {
-        return lineCommentEnterResult;
-    }
-
-    const stringLiteralEnterResult = handleStringLiteralEnter(text, node, index, indentUnit);
-    if (stringLiteralEnterResult !== null) {
-        return stringLiteralEnterResult;
-    }
-
-    if (hasAncestor(node, ENTER_LITERAL_ANCESTOR_TYPES)) {
-        return keyResult('\n', index, index + 1, index + 1);
-    }
-
-    const lambdaEnterResult = handleEmptyLambdaBodyEnter(node, text, index, indentUnit);
-    if (lambdaEnterResult !== null) {
-        return lambdaEnterResult;
-    }
-
-    const commentContext = findBlockCommentContext(node, text, index);
-    if (commentContext === null) {
-        return handleRegularEnter(text, node, index, indentUnit, getPreviousBlockCommentIndent(node, text, index));
-    }
-
-    const commentIndent = getIndent(text, getLineStart(text, commentContext.start));
-    const currentLineTail = getCurrentLineTail(text, index + 1);
-    const tailStartsWithAsterisk = /^\s*\*/.test(currentLineTail);
-    const whitespaceSinceCommentStart = /^\s*$/.test(text.slice(commentContext.start + (commentContext.isDoc ? 3 : 2), index));
-    const hasAsteriskLineBefore = hasLineWithPrefix(text, commentContext.start, index, '*');
-    const omitLeadingStarOnIndentedFirstLine = shouldOmitLeadingStarOnIndentedFirstLine(
+    return handleEnterWithHandlers(
             text,
-            commentContext,
-            commentIndent,
+            tree,
             index,
-            hasAsteriskLineBefore,
-            tailStartsWithAsterisk,
+            indentUnit,
+            [
+                (node) => handleLineCommentEnter(text, node, index, 'line_comment', '//'),
+                (node) => handleStringLiteralEnter(text, node, index, indentUnit),
+                (node) => hasAncestor(node, ENTER_LITERAL_ANCESTOR_TYPES) ? keyResult('\n', index, index + 1, index + 1) : null,
+                (node) => handleEmptyLambdaBodyEnter(node, text, index, indentUnit),
+            ],
+            (node) => {
+                const commentContext = findBlockCommentContext(node, text, index);
+                if (commentContext === null) {
+                    return handleRegularEnter(text, node, index, indentUnit, getPreviousBlockCommentIndent(node, text, index));
+                }
+
+                const commentIndent = getIndent(text, getLineStart(text, commentContext.start));
+                const currentLineTail = getCurrentLineTail(text, index + 1);
+                const tailStartsWithAsterisk = /^\s*\*/.test(currentLineTail);
+                const whitespaceSinceCommentStart = /^\s*$/.test(text.slice(commentContext.start + (commentContext.isDoc ? 3 : 2), index));
+                const hasAsteriskLineBefore = hasLineWithPrefix(text, commentContext.start, index, '*');
+                const omitLeadingStarOnIndentedFirstLine = shouldOmitLeadingStarOnIndentedFirstLine(
+                        text,
+                        commentContext,
+                        commentIndent,
+                        index,
+                        hasAsteriskLineBefore,
+                        tailStartsWithAsterisk,
+                );
+                const useLinePrefix = commentContext.isDoc ||
+                        hasAsteriskLineBefore ||
+                        tailStartsWithAsterisk ||
+                        (!omitLeadingStarOnIndentedFirstLine && whitespaceSinceCommentStart &&
+                                (commentContext.end === null || currentLineTail.trim().length === 0));
+
+                if (!useLinePrefix && commentContext.end !== null) {
+                    if (currentLineTail.trim() === '') {
+                        const bodyIndent = getClosedBlockCommentBodyIndent(text, commentContext, index);
+                        if (bodyIndent !== null) {
+                            const replacement = `\n${bodyIndent}`;
+                            return keyResult(replacement, index, index + 1 + currentLineTail.length, index + replacement.length);
+                        }
+                    }
+                    return keyResult('\n', index, index + 1, index + 1);
+                }
+
+                const docCommentBodyPrefix = commentContext.isDoc && currentLineTail.trim().length === 0
+                        ? getDocCommentBodyPrefix(text, commentContext, index)
+                        : null;
+                const prefixLine = `\n${docCommentBodyPrefix ?? `${commentIndent}${useLinePrefix ? ' * ' : ''}`}`;
+                const rewrittenTailResult = rewriteCommentLineTail(commentContext, commentIndent, currentLineTail, prefixLine, index, useLinePrefix);
+                if (rewrittenTailResult !== null) {
+                    return rewrittenTailResult;
+                }
+
+                if (commentContext.end === null) {
+                    return keyResult(`${prefixLine}\n${commentIndent} */`, index, index + 1, index + prefixLine.length);
+                }
+                return keyResult(prefixLine, index, index + 1, index + prefixLine.length);
+            },
+            () => keyResult('\n', index, index + 1, index + 1),
     );
-    const useLinePrefix = commentContext.isDoc ||
-            hasAsteriskLineBefore ||
-            tailStartsWithAsterisk ||
-            (!omitLeadingStarOnIndentedFirstLine && whitespaceSinceCommentStart &&
-                    (commentContext.end === null || currentLineTail.trim().length === 0));
-
-    if (!useLinePrefix && commentContext.end !== null) {
-        if (currentLineTail.trim() === '') {
-            const bodyIndent = getClosedBlockCommentBodyIndent(text, commentContext, index);
-            if (bodyIndent !== null) {
-                const replacement = `\n${bodyIndent}`;
-                return keyResult(replacement, index, index + 1 + currentLineTail.length, index + replacement.length);
-            }
-        }
-        return keyResult('\n', index, index + 1, index + 1);
-    }
-
-    const docCommentBodyPrefix = commentContext.isDoc && currentLineTail.trim().length === 0
-            ? getDocCommentBodyPrefix(text, commentContext, index)
-            : null;
-    const prefixLine = `\n${docCommentBodyPrefix ?? `${commentIndent}${useLinePrefix ? ' * ' : ''}`}`;
-    const rewrittenTailResult = rewriteCommentLineTail(commentContext, commentIndent, currentLineTail, prefixLine, index, useLinePrefix);
-    if (rewrittenTailResult !== null) {
-        return rewrittenTailResult;
-    }
-
-    if (commentContext.end === null) {
-        return keyResult(`${prefixLine}\n${commentIndent} */`, index, index + 1, index + prefixLine.length);
-    }
-    return keyResult(prefixLine, index, index + 1, index + prefixLine.length);
 }
 
 function shouldOmitLeadingStarOnIndentedFirstLine(
@@ -265,65 +269,13 @@ function handleRegularEnter(
         previousLineIndentOverride?: string | null,
 ): KeyResult {
     const previousLineIndent = previousLineIndentOverride ?? getPreviousNonEmptyLineIndent(text, index);
-    const continuationIndent = getFunctionParameterContinuationIndent(text, node, index)
+    const continuationIndent = getAlignedAncestorListContinuationIndent(text, node, index, FUNCTION_PARAMETER_ANCESTOR_TYPES)
             ?? (previousLineIndent === null ? null : `${previousLineIndent}${indentUnit}`);
-    const shouldUseContinuationIndent = shouldApplyContinuationIndent(text, index);
     const matchingDelimiterEnterResult = handleMatchingDelimiterEnter(text, index, previousLineIndent, continuationIndent);
     if (matchingDelimiterEnterResult !== null) {
         return matchingDelimiterEnterResult;
     }
-
-    const nextLineStart = getNextLineStart(text, index + 1);
-    if (nextLineStart === null) {
-        if (!shouldUseContinuationIndent || continuationIndent === null) {
-            return keyResultWithOptionalBlockIndent(previousLineIndent, index);
-        }
-        const replacement = `\n${continuationIndent}`;
-        return keyResult(replacement, index, index + 1, index + replacement.length);
-    }
-
-    const nextLineEnd = getLineEnd(text, nextLineStart);
-    const nextLineContentStart = skipIndent(text, nextLineStart, nextLineEnd);
-    const nextChar = text[nextLineContentStart];
-    if (nextChar !== ')' && nextChar !== ']' && nextChar !== '}') {
-        if (!shouldUseContinuationIndent || continuationIndent === null) {
-            return keyResultWithOptionalBlockIndent(previousLineIndent, index);
-        }
-        const replacement = `\n${continuationIndent}`;
-        return keyResult(replacement, index, index + 1, index + replacement.length);
-    }
-
-    if (previousLineIndent === null) {
-        return keyResult('\n', index, index + 1, index + 1);
-    }
-
-    const indent = shouldUseContinuationIndent && continuationIndent !== null
-            ? continuationIndent
-            : previousLineIndent;
-    const replacement = `\n${indent}`;
-    return keyResult(replacement, index, index + 1, index + replacement.length);
-}
-
-function getFunctionParameterContinuationIndent(text: string, node: Node, index: number): string | null {
-    if (getPreviousSignificantChar(text, index) !== ',') {
-        return null;
-    }
-
-    const parameters = findAncestorAtEnter(node, index, 'function_value_parameters');
-    if (parameters === null) {
-        return null;
-    }
-
-    const lineStart = getLineStart(text, parameters.startIndex);
-    const lineEnd = getLineEnd(text, parameters.startIndex);
-    const firstParameterStart = skipIndent(text, parameters.startIndex + 1, lineEnd);
-    if (firstParameterStart >= lineEnd || firstParameterStart >= index) {
-        return null;
-    }
-
-    const baseIndent = getIndent(text, lineStart);
-    const alignmentWidth = firstParameterStart - lineStart - baseIndent.length;
-    return alignmentWidth <= 0 ? baseIndent : `${baseIndent}${' '.repeat(alignmentWidth)}`;
+    return getRegularEnterResult(text, index, previousLineIndent, continuationIndent);
 }
 
 function handleMatchingDelimiterEnter(
@@ -398,60 +350,29 @@ function handleEmptyLambdaBodyEnter(
     return keyResult(replacement, index - whitespaceAfterArrow.length, index + 1, index - whitespaceAfterArrow.length + `\n${bodyIndent}`.length);
 }
 
-function handleLeftAngle(tree: Tree, index: number): KeyResult {
-    const root = tree.rootNode;
-    const node = root.descendantForIndex(index);
-    if (node === null) return keyResult('<', index, index + 1, index + 1);
-    if (isTextNode(node)) {
-        return keyResult('<', index, index + 1, index + 1);
-    }
-    const prev = prevNode(node);
-    if (prev === null) return keyResult('<', index, index + 1, index + 1);
-    switch (prev.type) {
-        case 'identifier': {
-            const looksLikeAClass = prev.endIndex === node.startIndex && prev.text[0] === prev.text[0].toUpperCase();
-            return looksLikeAClass ? keyResult('<>', index, index + 1, index + 1) : keyResult('<', index, index + 1, index + 1);
+function handleLeftAngle(text: string, tree: Tree, index: number): KeyResult {
+    return handleKeyWithSpecialNode(text, tree, '<', index, handleSpecialNodeKey, (node) => {
+        const prev = getPreviousLeaf(node);
+        if (prev === null) return keyResult('<', index, index + 1, index + 1);
+        switch (prev.type) {
+            case 'identifier': {
+                const looksLikeAClass = prev.endIndex === node.startIndex && prev.text[0] === prev.text[0].toUpperCase();
+                return looksLikeAClass ? keyResult('<>', index, index + 1, index + 1) : keyResult('<', index, index + 1, index + 1);
+            }
+            case 'fun':
+                return keyResult('<>', index, index + 1, index + 1);
+            default:
+                return keyResult('<', index, index + 1, index + 1);
         }
-        case 'fun':
-            return keyResult('<>', index, index + 1, index + 1);
-        default:
-            return keyResult('<', index, index + 1, index + 1);
-    }
+    });
 }
 
 function handleClosingDelimiter(text: string, tree: Tree, key: string, index: number): KeyResult {
-    const root = tree.rootNode;
-    const node = root.descendantForIndex(index);
-    if (node === null) return keyResult(key, index, index + 1, index + key.length);
-
-    if (isTextNode(node)) {
-        return keyResult(key, index, index + 1, index + 1);
+    if (key === '>') {
+        return handlePairedClosingDelimiterKey(text, tree, key, index, '<', handleSpecialNodeKey);
     }
-    if (index < root.endIndex - 1 && text[index + 1] === key) {
-        // Only skip a closer while we are still inside the same broken
-        // parser subtree; otherwise treat the key as a literal character.
-        for (let i = index + 1; i < root.endIndex; i++) {
-            const nextNode = root.descendantForIndex(i);
-            if (nextNode?.isError) {
-                return keyResult('', index, index + 1, index + 1);
-            }
-            switch (nextNode?.type) {
-                case node.type:
-                    if (nextNode.parent?.isError) {
-                        return keyResult('', index, index + 1, index + 1);
-                    }
-                    break;
-                case 'source_file':
-                    if (text[i] === key) {
-                        return keyResult('', index, index + 1, index + 1);
-                    }
-                    break;
-                default:
-                    return keyResult(key, index, index + 1, index + 1);
-                }
-            }
-        }
-    return keyResult(key, index, index + 1, index + 1);
+
+    return handleStandardClosingDelimiterKey(text, tree, key, index, handleSpecialNodeKey, NON_ANGLE_DELIMITER_ANCESTORS);
 }
 
 function handleBlockComment(node: Node, key: string, text: string, index: number): KeyResult {
@@ -463,45 +384,12 @@ function handleBlockComment(node: Node, key: string, text: string, index: number
 
     switch (key) {
         case '(':
-            return getOpenBraceResult(text, index, '(', ')');
+            return getOpeningDelimiterResult(text, index, '(', ')', OPENING_DELIMITER_OPTIONS);
         case '[':
-            return getOpenBraceResult(text, index, '[', ']');
+            return getOpeningDelimiterResult(text, index, '[', ']', OPENING_DELIMITER_OPTIONS);
         default:
             return keyResult(key, index, index + 1, index + 1);
     }
-}
-
-function getOpenBraceResult(text: string, textIndex: number, opening: string, closing: string): KeyResult {
-    switch (text[textIndex + 1]) {
-        case undefined:
-        case ' ':
-        case '\t':
-        case '\r':
-        case '\n':
-        case ':':
-        case ';':
-        case ',':
-        case ')':
-        case ']':
-        case '}':
-        case '{':
-            return keyResult(opening + closing, textIndex, textIndex + 1, textIndex + 1);
-        case '/':
-            switch (text[textIndex + 2]) {
-                case '/':
-                case '*':
-                    return keyResult(opening + closing, textIndex, textIndex + 1, textIndex + 1);
-            }
-    }
-    return keyResult(opening, textIndex, textIndex + 1, textIndex + 1);
-}
-
-function prevNode(node: Node): Node | null {
-    for (let i = node.startIndex - 1; i >= 0; i--) {
-        const n = node.tree.rootNode.descendantForIndex(i);
-        if (n && n.childCount === 0) return n;
-    }
-    return null;
 }
 
 function isTextNode(node: Node | null): boolean {
@@ -667,24 +555,6 @@ interface TextRange {
     end: number
 }
 
-function handleLineCommentEnter(text: string, node: Node, index: number): KeyResult | null {
-    const lineComment = findLineCommentAtEnter(node, index);
-    if (lineComment === null) {
-        return null;
-    }
-
-    const currentLineTail = getCurrentLineTail(text, index + 1);
-    if (currentLineTail.trim().length === 0) {
-        const indent = getLineCommentIndent(text, lineComment);
-        const replacement = `\n${indent}`;
-        return keyResult(replacement, index, index + 1, index + replacement.length);
-    }
-
-    const prefix = getLineCommentPrefix(text, lineComment);
-    const replacement = `\n${prefix}`;
-    return keyResult(replacement, index, index + 1, index + replacement.length);
-}
-
 function handleStringLiteralEnter(
         text: string,
         node: Node,
@@ -761,22 +631,6 @@ function getCommentBodyLine(currentLineTail: string, commentIndent: string): str
     }
 
     return body.length === 0 ? `${commentIndent} * ` : `${commentIndent} * ${body}`;
-}
-
-function findLineCommentAtEnter(node: Node, index: number): Node | null {
-    const lineComment = findAncestor(node, 'line_comment');
-    if (lineComment !== null) {
-        return lineComment;
-    }
-
-    const previousIndex = index - 1;
-    if (previousIndex < 0) {
-        return null;
-    }
-
-    const previousNode = node.tree.rootNode.descendantForIndex(previousIndex);
-    const previousLineComment = findAncestor(previousNode, 'line_comment');
-    return previousLineComment?.endIndex === index ? previousLineComment : null;
 }
 
 function handleMultilineStringLiteralEnter(
@@ -989,15 +843,6 @@ function isBraceEnter(charBefore: string | undefined, charAfter: string | undefi
     return (charBefore === '{' && charAfter === '}') ||
             (charBefore === '(' && charAfter === ')') ||
             (charBefore === '>' && charAfter === '<');
-}
-
-function getLineCommentPrefix(text: string, lineComment: Node): string {
-    const leadingSpaces = lineComment.text.slice(2).match(/^\s*/)?.[0] ?? '';
-    return `${getLineCommentIndent(text, lineComment)}//${leadingSpaces}`;
-}
-
-function getLineCommentIndent(text: string, lineComment: Node): string {
-    return getIndent(text, getLineStart(text, lineComment.startIndex));
 }
 
 function findBlockCommentContext(
