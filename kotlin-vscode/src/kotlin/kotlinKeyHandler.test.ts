@@ -889,6 +889,30 @@ fun foo(a: Int,
 fun foo(a: Int,
         <caret>) {}`));
 
+        test('indents in a function invocation', doTest(
+                `
+val x = foo(1, 2,
+<caret>)`,
+                `
+val x = foo(1, 2,
+    <caret>)`));
+
+        test('indents in type parameters', doTest(
+                `
+fun foo<T,
+<caret>U>() {}`,
+                `
+fun foo<T,
+        <caret>U>() {}`));
+
+        test('indents in type arguments', doTest(
+                `
+val x = foo<T,
+<caret>U>()`,
+                `
+val x = foo<T,
+        <caret>U>()`));
+
         test('handles CRLF when continuing before closing parenthesis', doTest(
                 `fun test() {\r\n  foo(\r\n    1,\r\n<caret>\r\n  )\r\n}`,
                 `fun test() {\r\n  foo(\r\n    1,\r\n        <caret>\r\n  )\r\n}`,
