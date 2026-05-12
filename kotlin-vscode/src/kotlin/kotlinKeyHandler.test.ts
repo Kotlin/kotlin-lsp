@@ -923,6 +923,14 @@ fun foo(
     a: Int,
     <caret>)`));
 
+        test('indents when Enter is pressed before dot', doTest(
+`
+val x = a
+<caret>.b`,
+                `
+val x = a
+    <caret>.b`));
+
         test('handles CRLF when continuing before closing parenthesis', doTest(
                 `fun test() {\r\n  foo(\r\n    1,\r\n<caret>\r\n  )\r\n}`,
                 `fun test() {\r\n  foo(\r\n    1,\r\n        <caret>\r\n  )\r\n}`,

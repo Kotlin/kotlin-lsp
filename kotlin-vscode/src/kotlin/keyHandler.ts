@@ -280,7 +280,34 @@ function handleRegularEnter(
     if (matchingDelimiterEnterResult !== null) {
         return matchingDelimiterEnterResult;
     }
+    const leadingNavigationEnterResult = handleLeadingNavigationEnter(text, index, continuationIndent);
+    if (leadingNavigationEnterResult !== null) {
+        return leadingNavigationEnterResult;
+    }
     return getRegularEnterResult(text, index, previousLineIndent, continuationIndent);
+}
+
+function handleLeadingNavigationEnter(text: string, index: number, continuationIndent: string | null): KeyResult | null {
+    if (continuationIndent === null) {
+        return null;
+    }
+
+    if (index + 1 >= text.length) {
+        return null;
+    }
+
+    const currentLineEnd = getLineEnd(text, index + 1);
+    const currentLineContentStart = skipIndent(text, index + 1, currentLineEnd);
+    if (!isLeadingNavigationPrefix(text.slice(currentLineContentStart, currentLineEnd))) {
+        return null;
+    }
+
+    const replacement = `\n${continuationIndent}`;
+    return keyResult(replacement, index, index + 1, index + replacement.length);
+}
+
+function isLeadingNavigationPrefix(line: string): boolean {
+    return line.startsWith('.') || line.startsWith('?.');
 }
 
 function getFunctionParameterContinuationIndent(text: string, node: Node | null, index: number): string | null {
