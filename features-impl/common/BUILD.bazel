@@ -21,7 +21,7 @@ jvm_library(
   kotlinc_opts = ":custom_common",
   deps = [
     "@lib//:kotlin-stdlib",
-    "@lib//:opentelemetry",
+    "@community//libraries/opentelemetry",
     "@community//libraries/kotlinx/coroutines/core",
     "@community//platform/analysis-api:analysis",
     "@community//platform/core-api:core",
@@ -69,6 +69,7 @@ jvm_library(
   kotlinc_opts = ":custom_common",
   runtime_deps = [
     ":common",
+    "@community//libraries/opentelemetry:opentelemetry_test_lib",
     "@community//libraries/kotlinx/coroutines/core:core_test_lib",
     "@community//platform/analysis-api:analysis_test_lib",
     "@community//platform/core-api:core_test_lib",

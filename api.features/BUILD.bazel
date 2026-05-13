@@ -21,8 +21,8 @@ jvm_library(
   kotlinc_opts = ":custom_api.features",
   deps = [
     "@lib//:kotlin-stdlib",
-    "@lib//:opentelemetry",
-    "@lib//:opentelemetry-extension-kotlin",
+    "@community//libraries/opentelemetry",
+    "@community//libraries/opentelemetry-extension-kotlin",
     "@community//fleet/lsp.protocol",
     "@community//fleet/rhizomedb",
     "@community//libraries/kotlinx/coroutines/core",
@@ -47,6 +47,8 @@ jvm_library(
   kotlinc_opts = ":custom_api.features",
   runtime_deps = [
     ":api.features",
+    "@community//libraries/opentelemetry:opentelemetry_test_lib",
+    "@community//libraries/opentelemetry-extension-kotlin:opentelemetry-extension-kotlin_test_lib",
     "@community//fleet/lsp.protocol:lsp.protocol_test_lib",
     "@community//fleet/rhizomedb:rhizomedb_test_lib",
     "@community//libraries/kotlinx/coroutines/core:core_test_lib",
