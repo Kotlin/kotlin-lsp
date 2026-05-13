@@ -346,6 +346,9 @@ internal class IdeaProjectMapper {
         )
     }
 
+    /**
+     * When updating, see also [com.jetbrains.ls.imports.maven.KotlinJvmCompilerArguments].
+     */
     @Serializable
     private data class KotlinCompilerSettings(
         val languageVersion: String?,
