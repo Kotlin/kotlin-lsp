@@ -269,6 +269,13 @@ async function getStreamInfoForRunningServer(port: number, timeoutMs: number): P
 function buildDocumentSelector(): LanguageClientOptions['documentSelector'] {
     const contributedLanguageIds: string[] = (packageJson()?.contributes?.languages ?? [])
         .map((l: { id: string }) => l.id);
+
+    if (contributedLanguageIds.includes('kotlin') && !contributedLanguageIds.includes('java')) {
+        // we want to be able to detect changes in Java files
+        // to correctly reflect them in Kotlin, see LSP-1053
+        contributedLanguageIds.push('java');
+    }
+
     logInfo(`Serving languages: ${contributedLanguageIds.join(', ')}`);
 
     let supportedSchemes = ['file', 'jar', 'jrt']
