@@ -272,7 +272,11 @@ function handleRegularEnter(
         previousLineIndentOverride?: string | null,
 ): KeyResult {
     const previousLineIndent = previousLineIndentOverride ?? getPreviousNonEmptyLineIndent(text, index);
+    const classTypeParameterContinuationIndent = getClassTypeParameterContinuationIndent(text, node, index, indentUnit);
+    const classTypeArgumentContinuationIndent = getClassTypeArgumentContinuationIndent(text, node, index, indentUnit);
     const continuationIndent = getFunctionParameterContinuationIndent(text, node, index)
+            ?? classTypeParameterContinuationIndent
+            ?? classTypeArgumentContinuationIndent
             ?? getAlignedAncestorListContinuationIndent(text, node, index, CONTINUATION_ALIGN_ANCESTOR_TYPES)
             ?? getTypeArgumentContinuationIndent(text, node, index)
             ?? (previousLineIndent === null ? null : `${previousLineIndent}${indentUnit}`);
@@ -283,6 +287,11 @@ function handleRegularEnter(
     const leadingNavigationEnterResult = handleLeadingNavigationEnter(text, index, continuationIndent);
     if (leadingNavigationEnterResult !== null) {
         return leadingNavigationEnterResult;
+    }
+    const directTypeContinuationIndent = classTypeParameterContinuationIndent ?? classTypeArgumentContinuationIndent;
+    if (directTypeContinuationIndent !== null) {
+        const replacement = `\n${directTypeContinuationIndent}`;
+        return keyResult(replacement, index, index + 1, index + replacement.length);
     }
     return getRegularEnterResult(text, index, previousLineIndent, continuationIndent);
 }
@@ -308,6 +317,39 @@ function handleLeadingNavigationEnter(text: string, index: number, continuationI
 
 function isLeadingNavigationPrefix(line: string): boolean {
     return line.startsWith('.') || line.startsWith('?.');
+}
+
+function getClassTypeParameterContinuationIndent(text: string, node: Node | null, index: number, indentUnit: string): string | null {
+    if (node === null || getPreviousSignificantChar(text, index) !== '<') {
+        return null;
+    }
+
+    const typeParameters = findAncestorAtEnter(node, index, 'type_parameters');
+    if (typeParameters?.parent?.type !== 'class_declaration') {
+        return null;
+    }
+
+    const baseIndent = getIndent(text, getLineStart(text, typeParameters.startIndex));
+    return `${baseIndent}${indentUnit}${indentUnit}`;
+}
+
+function getClassTypeArgumentContinuationIndent(text: string, node: Node | null, index: number, indentUnit: string): string | null {
+    if (node === null || getPreviousSignificantChar(text, index) !== '<') {
+        return null;
+    }
+
+    const typeArguments = findAncestorAtEnter(node, index, 'type_arguments');
+    const indentAnchor = typeArguments?.parent?.type === 'user_type'
+            ? typeArguments.parent
+            : typeArguments === null
+                ? null
+                : findAncestor(typeArguments, 'call_expression');
+    if (indentAnchor === null) {
+        return null;
+    }
+
+    const baseIndent = getIndent(text, getLineStart(text, indentAnchor.startIndex));
+    return `${baseIndent}${indentUnit}${indentUnit}`;
 }
 
 function getFunctionParameterContinuationIndent(text: string, node: Node | null, index: number): string | null {

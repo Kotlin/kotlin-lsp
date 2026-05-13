@@ -905,6 +905,14 @@ fun foo<T,
 fun foo<T,
         <caret>U>() {}`));
 
+        test('indents in class type parameters', doTest(
+                `
+class Box<
+<caret>T: Any, R>`,
+                `
+class Box<
+        <caret>T: Any, R>`));
+
         test('indents in type arguments', doTest(
                 `
 val x = foo<T,
@@ -912,6 +920,22 @@ val x = foo<T,
                 `
 val x = foo<T,
         <caret>U>()`));
+
+        test('indents in class type arguments', doTest(
+                `
+val box = Box<
+<caret>Stirng, String>()`,
+                `
+val box = Box<
+        <caret>Stirng, String>()`));
+
+        test('indents in class type arguments in type annotation', doTest(
+                `
+val box: Box<
+<caret>Stirng, String>()`,
+                `
+val box: Box<
+        <caret>Stirng, String>()`));
 
         test('indents in function parameters', doTest(
 `
