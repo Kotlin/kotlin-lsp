@@ -224,6 +224,9 @@ data class JavaSettingsData(
     val manifestAttributes: Map<String, String>
 )
 
+/**
+ * When updating, see also [com.jetbrains.ls.imports.gradle.IdeaProjectMapper.KotlinCompilerSettings].
+ */
 @Serializable
 data class KotlinJvmCompilerArguments(
     val languageVersion: String? = null,
