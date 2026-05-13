@@ -20,12 +20,7 @@ object LSDiagnostic {
     suspend fun getDiagnostics(params: DocumentDiagnosticParams): DocumentDiagnosticReport =
         when (server.indexingProgress.value) {
             is LSServer.IndexingProgress.Running ->
-                DocumentDiagnosticReport(
-                    kind = DocumentDiagnosticReportKind.Full,
-                    resultId = null,
-                    items = emptyList(),
-                    relatedDocuments = null,
-                )
+                DocumentDiagnosticReport.EMPTY_FULL
 
             LSServer.IndexingProgress.UpToDate -> {
                 // partial results in diagnotics, according to the LSP spec (https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#documentDiagnosticReportPartialResult),
