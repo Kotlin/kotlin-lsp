@@ -7,6 +7,7 @@ import {registerDapServer} from './dap'
 import {registerDatabase} from './database'
 import {registerFileTemplates} from './fileTemplates'
 import {checkGeoRestricted} from './geoRestriction'
+import {checkLegacyKotlinExtensionConflict} from './legacyKotlinExtensionConflict'
 
 let _context: ExtensionContext | undefined
 let _outputChannel: OutputChannel | undefined;
@@ -50,6 +51,10 @@ export async function activate(context: ExtensionContext) {
     initOutputChannel(context);
 
     if (await checkGeoRestricted()) {
+        return;
+    }
+
+    if (checkLegacyKotlinExtensionConflict(context)) {
         return;
     }
 
