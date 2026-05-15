@@ -17,7 +17,18 @@
     "node": ">=22.20.0"
   },
   "categories": [
-    "Programming Languages"
+    "Programming Languages",
+    "Debuggers",
+    "Formatters",
+    "Linters",
+    "Snippets"
+  ],
+  "keywords": [
+    "kotlin",
+    "lsp",
+    "language server",
+    "jetbrains",
+    "intellij"
   ],
   "main": "./out/dist/extension",
   "activationEvents": [
