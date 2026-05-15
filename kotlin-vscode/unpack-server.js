@@ -67,3 +67,13 @@ if (lower.endsWith('.tar.gz') || lower.endsWith('.tgz')) {
   console.error(`Unsupported archive type: ${zip}`);
   process.exit(1);
 }
+
+const libDir = path.join(serverDir, 'lib');
+if (!fs.existsSync(libDir) || !fs.statSync(libDir).isDirectory()) {
+  console.error(`Error: unpacked LSP is missing 'lib' directory: ${libDir}`);
+  process.exit(1);
+}
+
+if (fs.existsSync(path.join(libDir, '..', 'EULA.txt'))) {
+  console.log("##teamcity[addBuildTag 'EULA']");
+}
