@@ -10,6 +10,7 @@ import {
     getCommaSeparatedBodyContinuationIndent,
     getExistingMultilineListItemIndent,
     getIndent,
+    getLineBreakAtIndex,
     getLineEnd,
     getLineStart,
     getMultilineListItemIndent,
@@ -702,10 +703,11 @@ function handleStringLiteralEnter(
     const wrapWithParens = shouldWrapQualifiedStringReceiver(stringLiteral);
     const wrapPrefix = wrapWithParens ? '(' : '';
     const wrapSuffix = wrapWithParens ? ')' : '';
-    const before = text.slice(stringLiteral.startIndex + 1, index);
-    const after = text.slice(index + 1, stringLiteral.endIndex - 1);
-    const replacement = `${wrapPrefix}"${before}" + \n${continuationIndent}"${after}"${wrapSuffix}`;
-    const offset = `${wrapPrefix}"${before}" + \n${continuationIndent}`.length;
+    const lineBreak = getLineBreakAtIndex(text, index);
+    const before = text.slice(stringLiteral.startIndex + 1, lineBreak.startOffset);
+    const after = text.slice(lineBreak.endOffset, stringLiteral.endIndex - 1);
+    const replacement = `${wrapPrefix}"${before}" + ${lineBreak.text}${continuationIndent}"${after}"${wrapSuffix}`;
+    const offset = `${wrapPrefix}"${before}" + ${lineBreak.text}${continuationIndent}`.length;
     return keyResult(replacement, stringLiteral.startIndex, stringLiteral.endIndex, stringLiteral.startIndex + offset);
 }
 

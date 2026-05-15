@@ -156,6 +156,11 @@ fun foo() {
                 'val s = "hel" + \n        <caret>"lo"',
         ));
 
+        test('does not rewrite enter in the middle of a single-line string literal with CRLF', doTest(
+                'val s = "hel\r\n<caret>lo"',
+                'val s = "hel" + \r\n        <caret>"lo"',
+        ));
+
         test('wraps dot-qualified string receivers in parentheses when splitting on enter', doTest(
                 'val l = "foo\n<caret>bar".length()',
                 'val l = ("foo" + \n        <caret>"bar").length()',

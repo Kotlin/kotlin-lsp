@@ -661,6 +661,28 @@ export function handleLineCommentEnter(
     return keyResult(`\n${prefix}`, index, index + 1, index + prefix.length + 1);
 }
 
+export function getLineBreakAtIndex(text: string, index: number): { startOffset: number, endOffset: number, text: string } {
+    if (text[index] === '\n' && index > 0 && text[index - 1] === '\r') {
+        return {
+            startOffset: index - 1,
+            endOffset: index + 1,
+            text: '\r\n',
+        };
+    }
+    if (text[index] === '\r' && text[index + 1] === '\n') {
+        return {
+            startOffset: index,
+            endOffset: index + 2,
+            text: '\r\n',
+        };
+    }
+    return {
+        startOffset: index,
+        endOffset: index + 1,
+        text: text[index],
+    };
+}
+
 export function handleStringLiteralEnter(
         text: string,
         node: Node,
@@ -682,9 +704,15 @@ export function handleStringLiteralEnter(
         return null;
     }
 
+    const lineBreak = getLineBreakAtIndex(text, index);
     const continuationIndent = `${getIndent(text, getLineStart(text, stringLiteral.startIndex))}${indentUnit}${indentUnit}`;
-    const replacement = `${delimiter} ${concatenationOperator} \n${continuationIndent}${delimiter}`;
-    return keyResult(replacement, index, index + 1, index + replacement.length - delimiter.length);
+    const replacement = `${delimiter} ${concatenationOperator} ${lineBreak.text}${continuationIndent}${delimiter}`;
+    return keyResult(
+            replacement,
+            lineBreak.startOffset,
+            lineBreak.endOffset,
+            lineBreak.startOffset + replacement.length - delimiter.length,
+    );
 }
 
 export function handleMultilineClosedNodeEnter(
