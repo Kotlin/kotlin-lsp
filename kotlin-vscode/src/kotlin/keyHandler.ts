@@ -10,6 +10,7 @@ import {
     getCommaSeparatedBodyContinuationIndent,
     getExistingMultilineListItemIndent,
     getIndent,
+    getLeadingNavigationContinuationIndent,
     getLineBreakAtIndex,
     getLineEnd,
     getLineStart,
@@ -321,7 +322,8 @@ function handleLeadingNavigationEnter(text: string, index: number, continuationI
         return null;
     }
 
-    const replacement = `\n${continuationIndent}`;
+    const indent = getLeadingNavigationContinuationIndent(text, index, continuationIndent, ['.', '?.']);
+    const replacement = `\n${indent}`;
     return keyResult(replacement, index, index + 1, index + replacement.length);
 }
 

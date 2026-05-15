@@ -487,6 +487,23 @@ export function getPreviousNonEmptyLine(text: string, index: number): { start: n
     return null;
 }
 
+export function getLeadingNavigationContinuationIndent(
+        text: string,
+        index: number,
+        continuationIndent: string,
+        prefixes: ReadonlyArray<string>,
+): string {
+    const previousLine = getPreviousNonEmptyLine(text, index);
+    if (previousLine === null) {
+        return continuationIndent;
+    }
+
+    const trimmedPreviousLine = previousLine.text.trimStart();
+    return prefixes.some((prefix) => trimmedPreviousLine.startsWith(prefix))
+            ? getIndent(text, previousLine.start)
+            : continuationIndent;
+}
+
 export function getClosedNodeBodyIndent(
         text: string,
         start: number,

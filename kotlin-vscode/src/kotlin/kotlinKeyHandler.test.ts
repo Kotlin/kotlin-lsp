@@ -966,6 +966,17 @@ val x = a
 val x = a
     <caret>.b`));
 
+
+        test('indents when Enter is pressed before dot in chained calls', doTest(
+                `
+val x = a
+    .b
+<caret>.c`,
+                `
+val x = a
+    .b
+    <caret>.c`));
+
         test('indents in a primary constructor of a data class', doTest(
 `
 data class Foo(
