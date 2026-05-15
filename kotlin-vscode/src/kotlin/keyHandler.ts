@@ -685,6 +685,13 @@ interface TextRange {
     end: number
 }
 
+interface StringLiteralContext {
+    startIndex: number
+    endIndex: number
+    wrapWithParens: boolean
+    spaceAfterConcatenationOperator: boolean
+}
+
 function handleStringLiteralEnter(
         text: string,
         node: Node,
@@ -696,21 +703,93 @@ function handleStringLiteralEnter(
         return handleMultilineStringLiteralEnter(text, multilineStringLiteral, index, indentUnit);
     }
 
-    const stringLiteral = findAncestorAtEnter(node, index, 'string_literal');
+    const stringLiteral = getStringLiteralContext(text, node, index);
     if (stringLiteral === null || index >= stringLiteral.endIndex - 1) {
         return null;
     }
 
     const continuationIndent = `${getIndent(text, getLineStart(text, stringLiteral.startIndex))}${indentUnit}${indentUnit}`;
-    const wrapWithParens = shouldWrapQualifiedStringReceiver(stringLiteral);
-    const wrapPrefix = wrapWithParens ? '(' : '';
-    const wrapSuffix = wrapWithParens ? ')' : '';
+    const wrapPrefix = stringLiteral.wrapWithParens ? '(' : '';
+    const wrapSuffix = stringLiteral.wrapWithParens ? ')' : '';
     const lineBreak = getLineBreakAtIndex(text, index);
+    const operatorSpacing = stringLiteral.spaceAfterConcatenationOperator ? ' ' : '';
     const before = text.slice(stringLiteral.startIndex + 1, lineBreak.startOffset);
     const after = text.slice(lineBreak.endOffset, stringLiteral.endIndex - 1);
-    const replacement = `${wrapPrefix}"${before}" + ${lineBreak.text}${continuationIndent}"${after}"${wrapSuffix}`;
-    const offset = `${wrapPrefix}"${before}" + ${lineBreak.text}${continuationIndent}`.length;
+    const replacement = `${wrapPrefix}"${before}" +${operatorSpacing}${lineBreak.text}${continuationIndent}"${after}"${wrapSuffix}`;
+    const offset = `${wrapPrefix}"${before}" +${operatorSpacing}${lineBreak.text}${continuationIndent}`.length;
     return keyResult(replacement, stringLiteral.startIndex, stringLiteral.endIndex, stringLiteral.startIndex + offset);
+}
+
+function getStringLiteralContext(text: string, node: Node, index: number): StringLiteralContext | null {
+    const stringLiteral = findAncestorAtEnter(node, index, 'string_literal');
+    if (stringLiteral !== null) {
+        return {
+            startIndex: stringLiteral.startIndex,
+            endIndex: stringLiteral.endIndex,
+            wrapWithParens: shouldWrapQualifiedStringReceiver(stringLiteral),
+            spaceAfterConcatenationOperator: true,
+        };
+    }
+
+    return findMalformedInterpolationStringLiteral(text, node, index);
+}
+
+function findMalformedInterpolationStringLiteral(text: string, node: Node, index: number): StringLiteralContext | null {
+    const errorNode = findEnclosingErrorNode(node, index);
+    if (errorNode === null) {
+        return null;
+    }
+
+    const startIndex = findPreviousUnescapedQuote(text, errorNode.startIndex, index - 1);
+    if (startIndex === null || text.startsWith(MULTILINE_QUOTE, startIndex)) {
+        return null;
+    }
+
+    const endIndex = findNextUnescapedQuote(text, index + 1);
+    return endIndex === null
+            ? null
+            : {
+                startIndex,
+                endIndex: endIndex + 1,
+                wrapWithParens: false,
+                spaceAfterConcatenationOperator: false,
+            };
+}
+
+function findPreviousUnescapedQuote(text: string, minIndex: number, startIndex: number): number | null {
+    for (let current = startIndex; current >= minIndex; current--) {
+        if (text[current] !== '"' || isEscapedQuote(text, current)) {
+            continue;
+        }
+        if (current >= 2 && text.startsWith(MULTILINE_QUOTE, current - 2)) {
+            current -= 2;
+            continue;
+        }
+        return current;
+    }
+    return null;
+}
+
+function findNextUnescapedQuote(text: string, startIndex: number): number | null {
+    for (let current = startIndex; current < text.length; current++) {
+        if (text[current] !== '"' || isEscapedQuote(text, current)) {
+            continue;
+        }
+        if (text.startsWith(MULTILINE_QUOTE, current)) {
+            current += 2;
+            continue;
+        }
+        return current;
+    }
+    return null;
+}
+
+function isEscapedQuote(text: string, index: number): boolean {
+    let backslashCount = 0;
+    for (let current = index - 1; current >= 0 && text[current] === '\\'; current--) {
+        backslashCount++;
+    }
+    return backslashCount % 2 === 1;
 }
 
 function rewriteCommentLineTail(

@@ -554,6 +554,11 @@ fun test() {
                 'val s = "a${}b"\n<caret>',
         ));
 
+        test('properly wraps after malformed interpolation', doTest(
+                'val s = "a${}\n<caret>b"',
+                'val s = "a${}" +\n        <caret>"b"',
+        ));
+
         test('properly indents next line', doTest(
                 `
 class A {
