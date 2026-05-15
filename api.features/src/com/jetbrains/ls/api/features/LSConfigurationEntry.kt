@@ -10,6 +10,7 @@ import com.jetbrains.analyzer.bootstrap.AnalyzerContext
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.imports.api.WorkspaceImporter
+import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceComponent
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceModelEntity
 import com.jetbrains.rhizomedb.ChangeScope
 import com.jetbrains.rhizomedb.EntityType
@@ -25,6 +26,7 @@ sealed interface AnalyzerContainerType {
     data object WRITE : AnalyzerContainerType
     data class INDEXING(val fileSystems: AnalyzerFileSystems?) : AnalyzerContainerType
 }
+
 fun interface ApplicationInitEntry : LSConfigurationEntry {
     fun AnalyzerContainerBuilder.initApplication(application: Application, type: AnalyzerContainerType)
 }
@@ -38,6 +40,10 @@ class WorkspaceImporterEntry(
     val importer: WorkspaceImporter,
 ): LSConfigurationEntry
 
+fun interface WorkspaceComponentEntry : LSConfigurationEntry {
+    fun component(): WorkspaceComponent<*>
+}
+
 fun interface RhizomeEntityTypeEntry : LSConfigurationEntry {
     fun entityType(): EntityType<*>
 }
@@ -49,11 +55,6 @@ fun interface RhizomeWorkspaceInitEntry : LSConfigurationEntry {
 fun interface RhizomeLowMemoryWatcherHook: LSConfigurationEntry {
     context(_: ChangeScope)
     fun onLowMemory()
-}
-
-fun interface InvalidateHookEntry : LSConfigurationEntry {
-    context(analysisContext: LSAnalysisContext)
-    suspend fun invalidation(files: List<FileUrl>): context(ChangeScope) () -> Unit
 }
 
 inline fun <reified E : LSConfigurationEntry, P> LSConfiguration.analyzerContainerBuilderEntries(

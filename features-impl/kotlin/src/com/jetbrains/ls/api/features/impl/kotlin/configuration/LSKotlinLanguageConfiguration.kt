@@ -9,11 +9,10 @@ import com.jetbrains.analyzer.kotlin.initKotlinWorkspaceModelCaches
 import com.jetbrains.analyzer.kotlin.kotlinPlugin
 import com.jetbrains.ls.api.features.AnalyzerContainerType
 import com.jetbrains.ls.api.features.ApplicationInitEntry
-import com.jetbrains.ls.api.features.InvalidateHookEntry
 import com.jetbrains.ls.api.features.ProjectInitEntry
 import com.jetbrains.ls.api.features.RhizomeEntityTypeEntry
-import com.jetbrains.ls.api.features.RhizomeLowMemoryWatcherHook
 import com.jetbrains.ls.api.features.RhizomeWorkspaceInitEntry
+import com.jetbrains.ls.api.features.WorkspaceComponentEntry
 import com.jetbrains.ls.api.features.impl.common.definitions.LSCommonDefinitionProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionDiagnosticProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionFixesCodeActionProvider
@@ -26,12 +25,9 @@ import com.jetbrains.ls.api.features.impl.common.typeDefinition.LSCommonTypeDefi
 import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
 import com.jetbrains.ls.api.features.impl.javaBase.LSJavaPackageDefinitionProvider
 import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.KotlinWorkspaceModelEntity
-import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.LLFirSessionCacheStorageEntity
-import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.filesInvalidation
+import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.LLFirSessionCacheStorageComponent
 import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.kotlinWorkspaceModel
-import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.registerLLFirSessionServices
 import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.resetKotlinWorkspaceModelEntity
-import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.resetLLFirSessionCacheEntity
 import com.jetbrains.ls.api.features.impl.kotlin.callHierarchy.LSKotlinCallHierarchyProvider
 import com.jetbrains.ls.api.features.impl.kotlin.callHierarchy.LSKotlinCallHierarchyRenderer
 import com.jetbrains.ls.api.features.impl.kotlin.codeActions.LSKotlinOrganizeImportsCodeActionProvider
@@ -71,18 +67,10 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
                     initKotlinWorkspaceModelCaches(project, model.caches)
                 }
             }
-            LLFirSessionCacheStorageEntity.singleOrNull()?.let {
-                registerLLFirSessionServices(project, type)
-            }
         },
-        RhizomeEntityTypeEntry { LLFirSessionCacheStorageEntity },
+        WorkspaceComponentEntry { LLFirSessionCacheStorageComponent },
         RhizomeEntityTypeEntry { KotlinWorkspaceModelEntity },
-        RhizomeWorkspaceInitEntry { resetLLFirSessionCacheEntity() },
         RhizomeWorkspaceInitEntry { resetKotlinWorkspaceModelEntity(it) },
-        RhizomeLowMemoryWatcherHook { resetLLFirSessionCacheEntity() },
-        InvalidateHookEntry { urls ->
-            filesInvalidation(urls)
-        },
         LSKotlinOrganizeImportsCodeActionProvider,
         LSKotlinCompletionProvider,
         LSCommonDefinitionProvider(setOf(LSKotlinLanguage), TargetKind.ALL),
