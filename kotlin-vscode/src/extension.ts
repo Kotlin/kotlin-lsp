@@ -9,6 +9,7 @@ import {registerDatabase} from './database'
 import {registerFileTemplates} from './fileTemplates'
 import {checkGeoRestricted} from './geoRestriction'
 import {checkEulaAccepted} from './eula'
+import {checkLegacyKotlinExtensionConflict} from './legacyKotlinExtensionConflict'
 
 let _context: ExtensionContext | undefined
 let _outputChannel: OutputChannel | undefined;
@@ -77,6 +78,11 @@ export async function activate(context: ExtensionContext) {
     if (!await checkEulaAccepted(context)) {
         return;
     }
+
+    if (checkLegacyKotlinExtensionConflict(context)) {
+        return;
+    }
+
     registerDecompiler(context);
     registerOpeningJars();
     registerDapServer(context);
