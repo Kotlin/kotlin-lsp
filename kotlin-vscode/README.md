@@ -22,4 +22,4 @@ implementation.
 
 ## License
 
-See [LICENSE.txt](LICENSE.txt).
+See [JetBrains Free Plugin License Agreement](https://www.jetbrains.com/legal/docs/terms/jetbrains-free-plugin-license).
