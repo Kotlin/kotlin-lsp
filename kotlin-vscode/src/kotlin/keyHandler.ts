@@ -7,9 +7,12 @@ import {
     findEnclosingErrorNode,
     getAlignedListIndent,
     getAlignedAncestorListContinuationIndent,
+    getCommaSeparatedBodyContinuationIndent,
+    getExistingMultilineListItemIndent,
     getIndent,
     getLineEnd,
     getLineStart,
+    getMultilineListItemIndent,
     getNextLineStart,
     getOpeningDelimiterResult,
     getPreviousLeaf,
@@ -42,6 +45,10 @@ const ENTER_LITERAL_ANCESTOR_TYPES = new Set([
 ]);
 const CONTINUATION_ALIGN_ANCESTOR_TYPES = [
     'type_parameters',
+];
+const PARAMETER_LIST_ANCESTOR_TYPES = [
+    'function_value_parameters',
+    'class_parameters',
 ];
 const BLOCK_COMMENT_SCAN_ROOT_TYPES = new Set([
     'block',
@@ -275,6 +282,8 @@ function handleRegularEnter(
     const classTypeParameterContinuationIndent = getClassTypeParameterContinuationIndent(text, node, index, indentUnit);
     const classTypeArgumentContinuationIndent = getClassTypeArgumentContinuationIndent(text, node, index, indentUnit);
     const continuationIndent = getFunctionParameterContinuationIndent(text, node, index)
+            ?? getFunctionArgumentContinuationIndent(text, node, index)
+            ?? getCommaSeparatedBodyContinuationIndent(text, node, index, ['enum_class_body'])
             ?? classTypeParameterContinuationIndent
             ?? classTypeArgumentContinuationIndent
             ?? getAlignedAncestorListContinuationIndent(text, node, index, CONTINUATION_ALIGN_ANCESTOR_TYPES)
@@ -357,21 +366,22 @@ function getFunctionParameterContinuationIndent(text: string, node: Node | null,
         return null;
     }
 
-    const functionParameters = findAncestorAtEnter(node, index, 'function_value_parameters');
-    if (functionParameters === null) {
+    for (const ancestorType of PARAMETER_LIST_ANCESTOR_TYPES) {
+        const parameterList = findAncestorAtEnter(node, index, ancestorType);
+        if (parameterList !== null) {
+            return getMultilineListItemIndent(text, parameterList, index);
+        }
+    }
+    return null;
+}
+
+function getFunctionArgumentContinuationIndent(text: string, node: Node | null, index: number): string | null {
+    if (node === null || getPreviousSignificantChar(text, index) !== ',') {
         return null;
     }
 
-    const firstParameter = functionParameters.namedChild(0);
-    if (firstParameter === null) {
-        return null;
-    }
-
-    if (getLineStart(text, functionParameters.startIndex) !== getLineStart(text, firstParameter.startIndex)) {
-        return getIndent(text, getLineStart(text, firstParameter.startIndex));
-    }
-
-    return getAlignedListIndent(text, functionParameters, index);
+    const valueArguments = findAncestorAtEnter(node, index, 'value_arguments');
+    return valueArguments === null ? null : getExistingMultilineListItemIndent(text, valueArguments, index);
 }
 
 function getTypeArgumentContinuationIndent(text: string, node: Node | null, index: number): string | null {

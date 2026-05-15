@@ -404,6 +404,32 @@ export function getMultilineListItemIndent(text: string, listNode: Node, index: 
             : getIndent(text, firstItemLineStart);
 }
 
+export function getExistingMultilineItemIndent(
+        text: string,
+        containerStartIndex: number,
+        firstItem: Node | null,
+        index: number,
+): string | null {
+    if (firstItem === null || firstItem.startIndex >= index) {
+        return null;
+    }
+
+    const currentLineTail = text.slice(index + 1, getLineEnd(text, index + 1));
+    if (currentLineTail.length === 0 || currentLineTail.trim().length !== 0) {
+        return null;
+    }
+
+    const containerLineStart = getLineStart(text, containerStartIndex);
+    const firstItemLineStart = getLineStart(text, firstItem.startIndex);
+    return firstItemLineStart === containerLineStart
+            ? null
+            : getIndent(text, firstItemLineStart);
+}
+
+export function getExistingMultilineListItemIndent(text: string, listNode: Node, index: number): string | null {
+    return getExistingMultilineItemIndent(text, listNode.startIndex, listNode.namedChild(0), index);
+}
+
 export function keyResultWithOptionalBlockIndent(previousLineIndent: string | null, index: number): KeyResult {
     if (previousLineIndent === null || previousLineIndent.length === 0) {
         return keyResult('\n', index, index + 1, index + 1);
@@ -428,6 +454,21 @@ export function isStandaloneBlockCommentLine(text: string): boolean {
 export function getPreviousNonEmptyLineIndent(text: string, index: number): string | null {
     const previousLine = getPreviousNonEmptyLine(text, index);
     return previousLine === null ? null : getIndent(text, previousLine.start);
+}
+
+export function getCommaSeparatedBodyContinuationIndent(
+        text: string,
+        node: Node | null,
+        index: number,
+        ancestorTypes: readonly string[],
+): string | null {
+    if (node === null || getPreviousSignificantChar(text, index) !== ',') {
+        return null;
+    }
+
+    return ancestorTypes.some((ancestorType) => findAncestorAtEnter(node, index, ancestorType) !== null)
+            ? getPreviousNonEmptyLineIndent(text, index)
+            : null;
 }
 
 export function getPreviousNonEmptyLine(text: string, index: number): { start: number, end: number, text: string } | null {

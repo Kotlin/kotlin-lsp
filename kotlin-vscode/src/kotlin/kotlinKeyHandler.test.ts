@@ -955,6 +955,42 @@ val x = a
 val x = a
     <caret>.b`));
 
+        test('indents in a primary constructor of a data class', doTest(
+`
+data class Foo(
+    val a: Int,
+<caret>)`,
+`
+data class Foo(
+    val a: Int,
+    <caret>)`));
+
+        test('indents when Enter is pressed in function arguments', doTest(
+`
+    val items = foo(
+        x,
+<caret>            
+    )`,
+                `
+    val items = foo(
+        x,
+        <caret>            
+    )`
+        ));
+
+        test('indents when Enter is pressed after a enum constant', doTest(
+                `
+enum class E {
+    A,
+<caret>    
+}`,
+                `
+enum class E {
+    A,
+    <caret>    
+}`
+        ));
+
         test('handles CRLF when continuing before closing parenthesis', doTest(
                 `fun test() {\r\n  foo(\r\n    1,\r\n<caret>\r\n  )\r\n}`,
                 `fun test() {\r\n  foo(\r\n    1,\r\n        <caret>\r\n  )\r\n}`,
