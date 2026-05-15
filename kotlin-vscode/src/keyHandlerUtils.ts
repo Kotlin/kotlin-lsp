@@ -225,6 +225,9 @@ export function findEnclosingErrorNode(node: Node, index: number): Node | null {
 
 export function getLineStart(text: string, index: number): number {
     let current = index;
+    if (current > 0 && current < text.length && text[current] === '\n' && text[current - 1] === '\r') {
+        current--;
+    }
     while (current > 0) {
         const char = text[current - 1];
         if (char === '\n' || char === '\r') {

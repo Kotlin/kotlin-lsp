@@ -412,6 +412,12 @@ fun foo() {
  */`,
         ));
 
+        test('properly indents inside a multi-line comment with CRLF', doTest(
+
+'         val c = """\r\n             line 1\r\n<caret>\r\n         """.trimIndent()',
+                '         val c = """\r\n             line 1\r\n             <caret>\r\n         """.trimIndent()'
+        ));
+
         test('properly indents inside a multi-line doc comment', doTest(
                 `
 /**
