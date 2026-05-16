@@ -1,0 +1,3 @@
+rootProject.name = 'untitled'
+includeBuild 'untitled1'
+includeBuild 'untitled2'

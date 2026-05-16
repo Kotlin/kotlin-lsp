@@ -89,6 +89,11 @@ abstract class AbstractProjectImportTest {
     fun gradle7Project() = doGradleTest("Gradle7Project", JdkDownloaderFacade.jdk11, ::withIgnoredJdkRoots)
 
     @Test
+    fun gradleIncludedBuildProject() = doGradleTest("GradleIncludedBuildProject", JdkDownloaderFacade.jdk17) {
+        withIgnoredJdkRoots(it).withRelaxedDependencyOrder()
+    }
+
+    @Test
     fun empty() = doGradleTest("Empty")
 
     @Test
