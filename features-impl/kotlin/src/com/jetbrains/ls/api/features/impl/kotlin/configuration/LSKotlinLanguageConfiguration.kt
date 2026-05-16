@@ -1,17 +1,18 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.kotlin.configuration
 
+import com.intellij.openapi.application.Application
+import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiComment
 import com.jetbrains.analyzer.api.AnalyzerFileSystems
+import com.jetbrains.analyzer.bootstrap.AnalyzerContainerBuilder
+import com.jetbrains.analyzer.bootstrap.AnalyzerContext
+import com.jetbrains.analyzer.kotlin.KotlinWorkspaceModelCaches
+import com.jetbrains.analyzer.kotlin.createKotlinWorkspaceModelCaches
 import com.jetbrains.analyzer.kotlin.initKotlinApplicationContainer
 import com.jetbrains.analyzer.kotlin.initKotlinProjectContainer
 import com.jetbrains.analyzer.kotlin.initKotlinWorkspaceModelCaches
 import com.jetbrains.analyzer.kotlin.kotlinPlugin
-import com.jetbrains.ls.api.features.AnalyzerContainerType
-import com.jetbrains.ls.api.features.ApplicationInitEntry
-import com.jetbrains.ls.api.features.ProjectInitEntry
-import com.jetbrains.ls.api.features.RhizomeEntityTypeEntry
-import com.jetbrains.ls.api.features.RhizomeWorkspaceInitEntry
 import com.jetbrains.ls.api.features.WorkspaceComponentEntry
 import com.jetbrains.ls.api.features.impl.common.definitions.LSCommonDefinitionProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionDiagnosticProvider
@@ -24,10 +25,7 @@ import com.jetbrains.ls.api.features.impl.common.references.LSCommonReferencesPr
 import com.jetbrains.ls.api.features.impl.common.typeDefinition.LSCommonTypeDefinitionProvider
 import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
 import com.jetbrains.ls.api.features.impl.javaBase.LSJavaPackageDefinitionProvider
-import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.KotlinWorkspaceModelEntity
 import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.LLFirSessionCacheStorageComponent
-import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.kotlinWorkspaceModel
-import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.resetKotlinWorkspaceModelEntity
 import com.jetbrains.ls.api.features.impl.kotlin.callHierarchy.LSKotlinCallHierarchyProvider
 import com.jetbrains.ls.api.features.impl.kotlin.callHierarchy.LSKotlinCallHierarchyRenderer
 import com.jetbrains.ls.api.features.impl.kotlin.codeActions.LSKotlinOrganizeImportsCodeActionProvider
@@ -47,30 +45,16 @@ import com.jetbrains.ls.api.features.impl.kotlin.signatureHelp.LSKotlinSignature
 import com.jetbrains.ls.api.features.impl.kotlin.symbols.LSKotlinDocumentSymbolProvider
 import com.jetbrains.ls.api.features.impl.kotlin.symbols.LSKotlinWorkspaceSymbolProvider
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
-import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceModelEntity
+import com.jetbrains.ls.snapshot.api.impl.core.AnalyzerContextKind
+import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceComponent
+import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceEvent
 import com.jetbrains.lsp.protocol.FoldingRangeKind
 import org.jetbrains.kotlin.psi.KtImportList
 
 val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
     entries = listOf(
-        ApplicationInitEntry { _, type ->
-            val analyzerFileSystemsForIndexing = when (type) {
-                is AnalyzerContainerType.INDEXING -> type.fileSystems ?: AnalyzerFileSystems.new()
-                else -> null
-            }
-            initKotlinApplicationContainer(analyzerFileSystemsForIndexing)
-        },
-        ProjectInitEntry { project, type ->
-            initKotlinProjectContainer(project)
-            WorkspaceModelEntity.singleOrNull()?.let {
-                it.kotlinWorkspaceModel?.let { model ->
-                    initKotlinWorkspaceModelCaches(project, model.caches)
-                }
-            }
-        },
+        WorkspaceComponentEntry { KotlinWorkspaceComponent },
         WorkspaceComponentEntry { LLFirSessionCacheStorageComponent },
-        RhizomeEntityTypeEntry { KotlinWorkspaceModelEntity },
-        RhizomeWorkspaceInitEntry { resetKotlinWorkspaceModelEntity(it) },
         LSKotlinOrganizeImportsCodeActionProvider,
         LSKotlinCompletionProvider,
         LSCommonDefinitionProvider(setOf(LSKotlinLanguage), TargetKind.ALL),
@@ -115,3 +99,44 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSKotlinLanguage,
     ),
 )
+
+private data class KotlinWorkspaceState(
+    val caches: KotlinWorkspaceModelCaches? = null,
+)
+
+private object KotlinWorkspaceComponent : WorkspaceComponent<KotlinWorkspaceState> {
+    override fun init(): KotlinWorkspaceState =
+        KotlinWorkspaceState()
+
+    override fun handleEvent(event: WorkspaceEvent, state: KotlinWorkspaceState): KotlinWorkspaceState =
+        when (event) {
+            is WorkspaceEvent.WorkspaceModelChanged ->
+                KotlinWorkspaceState(createKotlinWorkspaceModelCaches(AnalyzerContext.current.project))
+            is WorkspaceEvent.InvalidateFiles, WorkspaceEvent.LowMemory -> state
+        }
+
+    override fun registerInApplicationContainer(
+        builder: AnalyzerContainerBuilder,
+        application: Application,
+        state: KotlinWorkspaceState,
+        contextKind: AnalyzerContextKind,
+    ) {
+        val analyzerFileSystemsForIndexing = when (contextKind) {
+            is AnalyzerContextKind.INDEXING -> contextKind.fileSystems ?: AnalyzerFileSystems.new()
+            else -> null
+        }
+        builder.initKotlinApplicationContainer(analyzerFileSystemsForIndexing)
+    }
+
+    override fun registerInProjectContainer(
+        builder: AnalyzerContainerBuilder,
+        project: Project,
+        state: KotlinWorkspaceState,
+        contextKind: AnalyzerContextKind,
+    ) {
+        builder.initKotlinProjectContainer(project)
+        state.caches?.let { caches ->
+            builder.initKotlinWorkspaceModelCaches(project, caches)
+        }
+    }
+}

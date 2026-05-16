@@ -10,7 +10,7 @@ import com.jetbrains.analyzer.bootstrap.AnalyzerContext
 import com.jetbrains.analyzer.kotlin.invalidate
 import com.jetbrains.analyzer.kotlin.registerLLFirSessionServices
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceComponent
-import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceComponentContainerType
+import com.jetbrains.ls.snapshot.api.impl.core.AnalyzerContextKind
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceEvent
 import com.jetbrains.ls.snapshot.api.impl.core.rocks.toList
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
@@ -37,6 +37,7 @@ internal object LLFirSessionCacheStorageComponent : WorkspaceComponent<LLFirSess
     override fun handleEvent(event: WorkspaceEvent, state: LLFirSessionCacheStorage): LLFirSessionCacheStorage =
         when (event) {
             is WorkspaceEvent.InvalidateFiles -> state.invalidate(event.files.toList(), AnalyzerContext.current.project)
+            is WorkspaceEvent.WorkspaceModelChanged -> state
             WorkspaceEvent.LowMemory -> newStorage()
         }
 
@@ -44,7 +45,7 @@ internal object LLFirSessionCacheStorageComponent : WorkspaceComponent<LLFirSess
         builder: AnalyzerContainerBuilder,
         application: Application,
         state: LLFirSessionCacheStorage,
-        type: WorkspaceComponentContainerType,
+        contextKind: AnalyzerContextKind,
     ) {
     }
 
@@ -52,16 +53,16 @@ internal object LLFirSessionCacheStorageComponent : WorkspaceComponent<LLFirSess
         builder: AnalyzerContainerBuilder,
         project: Project,
         state: LLFirSessionCacheStorage,
-        type: WorkspaceComponentContainerType,
+        contextKind: AnalyzerContextKind,
     ) {
-        val storage = when (type) {
-            WorkspaceComponentContainerType.WRITE -> LLFirSessionCacheStorage.createEmpty {
+        val storage = when (contextKind) {
+            AnalyzerContextKind.WRITE -> LLFirSessionCacheStorage.createEmpty {
                 @Suppress("INVISIBLE_REFERENCE")
                 org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.cache.LLFirSessionCleaner(it.requestedDisposableOrNull)
             }
             else -> state
         }
-        builder.registerLLFirSessionServices(project, storage, type == WorkspaceComponentContainerType.WRITE)
+        builder.registerLLFirSessionServices(project, storage, contextKind == AnalyzerContextKind.WRITE)
     }
 
     private fun newStorage(): LLFirSessionCacheStorage =

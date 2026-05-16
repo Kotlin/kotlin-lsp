@@ -1,23 +1,27 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.javaBase
 
+import com.intellij.openapi.application.Application
+import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
+import com.jetbrains.analyzer.bootstrap.AnalyzerContainerBuilder
 import com.jetbrains.analyzer.java.initJavaApplicationContainer
 import com.jetbrains.analyzer.java.initJavaProjectContainer
 import com.jetbrains.analyzer.java.javaPlugin
 import com.jetbrains.ls.api.core.util.scheme
 import com.jetbrains.ls.api.core.util.uri
-import com.jetbrains.ls.api.features.ApplicationInitEntry
-import com.jetbrains.ls.api.features.ProjectInitEntry
+import com.jetbrains.ls.api.features.WorkspaceComponentEntry
 import com.jetbrains.ls.api.features.impl.common.definitions.LSCommonDefinitionProvider
 import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
+import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceComponent
+import com.jetbrains.ls.snapshot.api.impl.core.AnalyzerContextKind
+import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceEvent
 import com.jetbrains.lsp.protocol.URI
 
 val LSJavaBaseLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
     entries = listOf(
-        ApplicationInitEntry { application, _ -> initJavaApplicationContainer(application) },
-        ProjectInitEntry { project, _, -> initJavaProjectContainer(project) },
+        WorkspaceComponentEntry { JavaBaseWorkspaceComponent },
         // entries Kotlin for inlay hints to work
         // they require hover and definition requests to work on the declaration site to have some interactivity on inlays with classes from java
         LSCommonDefinitionProvider(setOf(LSJavaLanguage), setOf(TargetKind.DECLARATION)),
@@ -39,3 +43,29 @@ val LSJavaBaseLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece
         LSJavaLanguage,
     ),
 )
+
+private object JavaBaseWorkspaceComponent : WorkspaceComponent<Unit> {
+    override fun init() {
+    }
+
+    override fun handleEvent(event: WorkspaceEvent, state: Unit) {
+    }
+
+    override fun registerInApplicationContainer(
+        builder: AnalyzerContainerBuilder,
+        application: Application,
+        state: Unit,
+        contextKind: AnalyzerContextKind,
+    ) {
+        builder.initJavaApplicationContainer(application)
+    }
+
+    override fun registerInProjectContainer(
+        builder: AnalyzerContainerBuilder,
+        project: Project,
+        state: Unit,
+        contextKind: AnalyzerContextKind,
+    ) {
+        initJavaProjectContainer(project)
+    }
+}
