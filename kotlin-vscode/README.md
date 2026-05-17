@@ -10,12 +10,12 @@ for the Kotlin language.
 The server is based on [IntelliJ IDEA](https://github.com/JetBrains/intellij-community) and the [IntelliJ IDEA Kotlin Plugin](https://github.com/JetBrains/intellij-community/tree/master/plugins/kotlin)
 implementation.
 
-### Important Notes
+## Important Notes
 
 * This extension is in Alpha. The feature set is still incomplete, and breaking changes are expected.
 * Only Kotlin/JVM projects are currently supported. Kotlin Multiplatform (KMP) projects are not properly supported yet.
 
-### Quick Start
+## Quick Start
 
 1. Install the extension in Visual Studio Code.
 2. Open a folder with a Kotlin JVM Gradle or Maven project.
@@ -25,12 +25,12 @@ implementation.
 
 After that, you can start using the extension's features!
 
-### Supported Features
+## Supported Features
 
 * Up-to-date Kotlin language versions support
 * IntelliJ-powered code completion and signature help
 * IntelliJ-powered diagnostics, inspections, and quick fixes for Kotlin and `kotlinx` libraries
-* Build system support for JVM projects: Gradle, Maven, experimental Android Gradle Plugin (AGP) support
+* Build system support for JVM projects: Gradle, Maven, experimental Android Gradle Plugin support
 * Semantic highlighting
 * Inlay hints for types and parameter names
 * Navigation: definition, references, type definition, and implementation
@@ -43,13 +43,13 @@ After that, you can start using the extension's features!
 * Code Folding
 * File templates for creating new Kotlin files
 
-### Configuration
+## Configuration
 
-The extension provides a number of VSCode Configuration options to customize its behavior, including:
+The extension provides a number of VS Code configuration options to customize its behavior, including:
 
 * `jetbrains.kotlin.hints.*` to configure inlay hints
 * `jetbrains.templates.kotlin.*` to customize Kotlin file templates
-* `intellij.buildTool` to prefer a specific project importer (e.g `maven` or `gradle`)
+* `intellij.buildTool` to prefer a specific project importer (e.g., `maven` or `gradle`)
 
 ## License
 
