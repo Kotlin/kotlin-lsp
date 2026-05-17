@@ -10,11 +10,17 @@ for the Kotlin language.
 The server is based on [IntelliJ IDEA](https://github.com/JetBrains/intellij-community) and the [IntelliJ IDEA Kotlin Plugin](https://github.com/JetBrains/intellij-community/tree/master/plugins/kotlin)
 implementation.
 
+### Important Notes
+
+* This extension is in Alpha. The feature set is still incomplete, and breaking changes are expected.
+* Only Kotlin/JVM projects are currently supported. Kotlin Multiplatform (KMP) projects are not properly supported yet.
+
 ### Quick Start
 
 1. Install the extension in Visual Studio Code.
-2. Open a folder with a Kotlin Gradle or Maven project.
+2. Open a folder with a Kotlin JVM Gradle or Maven project.
 3. Open any `.kt` file to activate the extension and language server.
+   - **Important:** If prompted, uninstall the outdated `JetBrains.kotlin` extension and reload the window.
 4. Wait for project import and indexing to complete.
 
 After that, you can start using the extension's features!
@@ -24,7 +30,7 @@ After that, you can start using the extension's features!
 * Up-to-date Kotlin language versions support
 * IntelliJ-powered code completion and signature help
 * IntelliJ-powered diagnostics, inspections, and quick fixes for Kotlin and `kotlinx` libraries
-* Build system support: Gradle, Maven, experimental Android Gradle Plugin (AGP) support
+* Build system support for JVM projects: Gradle, Maven, experimental Android Gradle Plugin (AGP) support
 * Semantic highlighting
 * Inlay hints for types and parameter names
 * Navigation: definition, references, type definition, and implementation
