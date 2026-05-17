@@ -13,16 +13,20 @@ implementation.
 ### Supported Features
 
 * Up-to-date Kotlin language versions support
-* IntelliJ-powered code completion
-* IntelliJ-powered diagnostics and quick fixes for Kotlin and kotlinx libraries
+* IntelliJ-powered code completion and signature help
+* IntelliJ-powered diagnostics, inspections, and quick fixes for Kotlin and `kotlinx` libraries
 * Build system support: Gradle, Maven, experimental Android Gradle Plugin (AGP) support
 * Semantic highlighting
+* Inlay hints for types and parameter names
+* Navigation: definition, references, type definition, and implementation
+* Call Hierarchy
+* Document and workspace symbols
+* Documentation navigation and hover support
 * Organize imports
 * Rename refactoring
 * Code formatting
-* Documentation navigation and hover support
-* Call Hierarchy
 * Code Folding
+* File templates for creating new Kotlin files
 
 ## License
 
