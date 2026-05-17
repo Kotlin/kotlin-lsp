@@ -50,7 +50,7 @@ export async function activate(context: ExtensionContext) {
     _context = context;
     initOutputChannel(context);
 
-    if (await checkGeoRestricted()) {
+    if (await checkGeoRestricted(context.extension)) {
         return;
     }
     if (!await checkEulaAccepted(context)) {
