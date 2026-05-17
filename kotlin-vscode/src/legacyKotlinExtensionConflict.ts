@@ -65,7 +65,7 @@ async function handleLegacyKotlinExtensionConflict(): Promise<void> {
 
         if (selectedAction !== UNINSTALL_OUTDATED_EXTENSION_ACTION) {
             logInfo(`User dismissed conflicting extension warning for '${LEGACY_KOTLIN_EXTENSION_ID}' while activating '${KOTLIN_SERVER_EXTENSION_ID}'`);
-            await window.showWarningMessage(`The new "Kotlin by JetBrains" extension is inactive until the outdated extension "${LEGACY_KOTLIN_EXTENSION_ID}" is uninstalled.`);
+            await window.showWarningMessage(`"Kotlin by JetBrains" cannot complete activation while the outdated extension "${LEGACY_KOTLIN_EXTENSION_ID}" is still installed.`);
             return;
         }
 
@@ -88,7 +88,7 @@ async function handleLegacyKotlinExtensionConflict(): Promise<void> {
         }
 
         logInfo(`User dismissed reload prompt after uninstalling '${LEGACY_KOTLIN_EXTENSION_ID}' for '${KOTLIN_SERVER_EXTENSION_ID}'`);
-        await window.showInformationMessage('The new "Kotlin by JetBrains" extension will be activated on window reload.');
+        await window.showInformationMessage('Reload the window to complete activation of "Kotlin by JetBrains".');
     } catch (error) {
         logInfo(`Handling conflicting extension '${LEGACY_KOTLIN_EXTENSION_ID}' for '${KOTLIN_SERVER_EXTENSION_ID}' failed with error: ${error}`);
     }
