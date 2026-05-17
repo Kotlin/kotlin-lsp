@@ -7,7 +7,12 @@ const LEGACY_KOTLIN_EXTENSION_ID = 'jetbrains.kotlin';
 const UNINSTALL_EXTENSION_COMMAND = 'workbench.extensions.uninstallExtension';
 const RELOAD_WINDOW_COMMAND = 'workbench.action.reloadWindow';
 
-const UNINSTALL_EXTENSION_ACTION_PREFIX = 'Uninstall';
+const CONFLICT_WARNING_MAIN_MESSAGE = 'Conflicting "Kotlin by JetBrains" extensions detected.';
+const CONFLICT_WARNING_DETAILS = 'Uninstall the outdated extension "jetbrains.kotlin" to avoid conflicts with the new extension "jetbrains.kotlin-server".';
+const UNINSTALL_OUTDATED_EXTENSION_ACTION = 'Uninstall outdated extension';
+
+const POST_UNINSTALL_MAIN_MESSAGE = 'The outdated "Kotlin by JetBrains" extension was uninstalled.';
+const POST_UNINSTALL_DETAILS = 'Reload the window to finish switching to the new extension "jetbrains.kotlin-server".';
 const RELOAD_WINDOW_ACTION = 'Reload Window';
 
 /**
@@ -16,7 +21,7 @@ const RELOAD_WINDOW_ACTION = 'Reload Window';
  * Return `true` iff there is a legacy Kotlin extension is detected, and the initialization
  * should be stopped to avoid confusion.
  *
- * Side effect: when a conflict is detected, a warning notification is shown. If the user chooses
+ * Side effect: when a conflict is detected, a modal warning dialog is shown. If the user chooses
  * the uninstall action, the legacy extension is uninstalled and a reload prompt is shown.
  *
  * The UI flow is handled asynchronously; callers must not continue activation when this function returns `true`.
@@ -53,13 +58,16 @@ export function checkLegacyKotlinExtensionConflict(context: ExtensionContext): b
  */
 async function handleLegacyKotlinExtensionConflict(currentExtensionId: string, legacyExtensionId: string): Promise<void> {
     try {
-        const uninstallExtensionAction = `${UNINSTALL_EXTENSION_ACTION_PREFIX} ${legacyExtensionId}`;
         const selectedAction = await window.showWarningMessage(
-                `Extension '${legacyExtensionId}' is installed and conflicts with '${currentExtensionId}'. Uninstall '${legacyExtensionId}' to avoid conflicts.`,
-                uninstallExtensionAction,
+                CONFLICT_WARNING_MAIN_MESSAGE,
+                {
+                    modal: true,
+                    detail: CONFLICT_WARNING_DETAILS,
+                },
+                UNINSTALL_OUTDATED_EXTENSION_ACTION,
         );
 
-        if (selectedAction !== uninstallExtensionAction) {
+        if (selectedAction !== UNINSTALL_OUTDATED_EXTENSION_ACTION) {
             logInfo(`User dismissed conflicting extension warning for '${legacyExtensionId}' while activating '${currentExtensionId}'`);
             return;
         }
@@ -68,7 +76,11 @@ async function handleLegacyKotlinExtensionConflict(currentExtensionId: string, l
         logInfo(`Uninstalled conflicting extension '${legacyExtensionId}' while activating '${currentExtensionId}'`);
 
         const reloadWindowAction = await window.showInformationMessage(
-                `Extension '${legacyExtensionId}' was uninstalled. Reload Window to finish enabling '${currentExtensionId}'.`,
+                POST_UNINSTALL_MAIN_MESSAGE,
+                {
+                    modal: true,
+                    detail: POST_UNINSTALL_DETAILS,
+                },
                 RELOAD_WINDOW_ACTION,
         );
 
