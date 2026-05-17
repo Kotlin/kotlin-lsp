@@ -15,6 +15,9 @@ const POST_UNINSTALL_MAIN_MESSAGE = 'The outdated "Kotlin by JetBrains" extensio
 const POST_UNINSTALL_DETAILS = 'Reload the window to finish switching to the new extension "jetbrains.kotlin-server".';
 const RELOAD_WINDOW_ACTION = 'Reload Window';
 
+const DISMISSED_UNINSTALL_REMINDER = 'The new "Kotlin by JetBrains" extension is inactive until the outdated extension "jetbrains.kotlin" is uninstalled.';
+const DISMISSED_RELOAD_REMINDER = 'The new "Kotlin by JetBrains" extension will be activated on window reload.';
+
 /**
  * Checks whether Kotlin Server should be blocked because the legacy Kotlin extension is installed.
  *
@@ -69,6 +72,7 @@ async function handleLegacyKotlinExtensionConflict(currentExtensionId: string, l
 
         if (selectedAction !== UNINSTALL_OUTDATED_EXTENSION_ACTION) {
             logInfo(`User dismissed conflicting extension warning for '${legacyExtensionId}' while activating '${currentExtensionId}'`);
+            void window.showWarningMessage(DISMISSED_UNINSTALL_REMINDER);
             return;
         }
 
@@ -87,7 +91,11 @@ async function handleLegacyKotlinExtensionConflict(currentExtensionId: string, l
         if (reloadWindowAction === RELOAD_WINDOW_ACTION) {
             logInfo(`Reloading window after uninstalling '${legacyExtensionId}' for '${currentExtensionId}'`);
             await commands.executeCommand(RELOAD_WINDOW_COMMAND);
+            return;
         }
+
+        logInfo(`User dismissed reload prompt after uninstalling '${legacyExtensionId}' for '${currentExtensionId}'`);
+        void window.showInformationMessage(DISMISSED_RELOAD_REMINDER);
     } catch (error) {
         logInfo(`Handling conflicting extension '${legacyExtensionId}' for '${currentExtensionId}' failed with error: ${error}`);
     }
