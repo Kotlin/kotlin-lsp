@@ -10,6 +10,15 @@ for the Kotlin language.
 The server is based on [IntelliJ IDEA](https://github.com/JetBrains/intellij-community) and the [IntelliJ IDEA Kotlin Plugin](https://github.com/JetBrains/intellij-community/tree/master/plugins/kotlin)
 implementation.
 
+### Quick Start
+
+1. Install the extension in Visual Studio Code.
+2. Open a folder with a Kotlin Gradle or Maven project.
+3. Open any `.kt` file to activate the extension and language server.
+4. Wait for project import and indexing to complete.
+
+After that, you can start using the extension's features!
+
 ### Supported Features
 
 * Up-to-date Kotlin language versions support
