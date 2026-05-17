@@ -33,7 +33,7 @@ import com.jetbrains.ls.api.features.textEdits.TextEditsComputer
 import com.jetbrains.ls.api.features.utils.isSource
 import com.jetbrains.ls.snapshot.api.impl.core.CompletionItemId
 import com.jetbrains.ls.snapshot.api.impl.core.CompletionItemWithObject
-import com.jetbrains.ls.snapshot.api.impl.core.LatestCompletionSessionEntity
+import com.jetbrains.ls.snapshot.api.impl.core.LatestCompletionSessionComponent
 import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.protocol.ApplyEditRequests
 import com.jetbrains.lsp.protocol.ApplyWorkspaceEditParams
@@ -56,7 +56,6 @@ import com.jetbrains.lsp.protocol.ShowMessageParams
 import com.jetbrains.lsp.protocol.StringOrMarkupContent
 import com.jetbrains.lsp.protocol.TextEdit
 import com.jetbrains.lsp.protocol.WorkspaceEdit
-import fleet.kernel.change
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -81,9 +80,10 @@ class LSCompletionProviderHelper(
                 title = "Apply Completion Item",
                 name = applyCompletionCommandKey,
                 executor = { arguments ->
+                    val server = contextOf<LSServer>()
                     require(arguments.size == 1) { "Expected 1 argument, got: ${arguments.size}" }
                     val id = arguments[0]
-                    when (val completion = LatestCompletionSessionEntity.obj(CompletionItemId.fromJson(id)) as LSCompletion?) {
+                    when (val completion = server[LatestCompletionSessionComponent].get(CompletionItemId.fromJson(id)) as LSCompletion?) {
                         null -> {
                             lspClient.notify(
                                 notificationType = ShowMessageNotificationType,
@@ -92,7 +92,7 @@ class LSCompletionProviderHelper(
                         }
 
                         else -> {
-                            contextOf<LSServer>().withAnalysisContextAndFileSettings(completion.params.textDocument.uri.uri) {
+                            server.withAnalysisContextAndFileSettings(completion.params.textDocument.uri.uri) {
                                 val insertionResult = applyCompletion(completion, fileForModificationProvider)
                                 lspClient.request(
                                     ApplyEditRequests.ApplyEdit,
@@ -154,7 +154,7 @@ class LSCompletionProviderHelper(
                             val itemMatcher = completionProcess.arranger.itemMatcher(lookup)
                             val obj = LSCompletion(params, lookup, itemMatcher)
 
-                            val key = LatestCompletionSessionEntity.nextId()
+                            val key = server[LatestCompletionSessionComponent].nextId()
                             CompletionItemWithObject(
                                 item = CompletionItem(
                                     label = lookupPresentation.itemText ?: lookup.lookupString,
@@ -186,8 +186,8 @@ class LSCompletionProviderHelper(
                     }
                 } ?: emptyList()
             }
-            change {
-                LatestCompletionSessionEntity.replace(itemsWithObjects)
+            server.update(LatestCompletionSessionComponent) { state ->
+                state.replace(itemsWithObjects)
             }
             CompletionList(isIncomplete = true, items = itemsWithObjects.map { it.item })
         }
@@ -197,7 +197,7 @@ class LSCompletionProviderHelper(
     suspend fun resolveCompletion(completionItem: CompletionItem, fileForModificationProvider: FileForModificationProvider): CompletionItem? {
         val completionDataValue = completionItem.data?.jsonObject?.get(completionDataKey) ?: return completionItem
 
-        return (LatestCompletionSessionEntity.obj(CompletionItemId.fromJson(completionDataValue)) as LSCompletion?)?.let { completionData ->
+        return (server[LatestCompletionSessionComponent].get(CompletionItemId.fromJson(completionDataValue)) as LSCompletion?)?.let { completionData ->
             server.withAnalysisContextAndFileSettings(completionData.params.textDocument.uri.uri) {
                 val completionItem = completionItem.copy(
                     documentation = readAction { computeDocumentation(completionData.lookup) },
