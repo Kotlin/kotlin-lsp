@@ -13,7 +13,7 @@ implementation.
 ## Important Notes
 
 * This extension is in Alpha. The feature set is still incomplete, and breaking changes are expected.
-* Only Kotlin/JVM projects are currently supported. Kotlin Multiplatform (KMP) projects are not properly supported yet.
+* Only Kotlin/JVM projects are currently supported. Kotlin Multiplatform (KMP) support is coming in the future releases.
 
 ## Quick Start
 
