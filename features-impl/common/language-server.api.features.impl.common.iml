@@ -62,9 +62,7 @@
     <orderEntry type="module" module-name="intellij.platform.diagnostic.telemetry" />
     <orderEntry type="module" module-name="intellij.libraries.caffeine" />
     <orderEntry type="module" module-name="language-server.api.impl.analyzer" />
-    <orderEntry type="module" module-name="fleet.rhizomedb" />
     <orderEntry type="module" module-name="language-server.dap.platform" />
-    <orderEntry type="module" module-name="fleet.rhizomedb.transactor" />
     <orderEntry type="module" module-name="intellij.platform.ide.core.impl" />
   </component>
 </module>

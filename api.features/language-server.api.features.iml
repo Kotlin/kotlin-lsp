@@ -33,7 +33,6 @@
     <orderEntry type="module" module-name="intellij.libraries.opentelemetry" />
     <orderEntry type="module" module-name="intellij.libraries.opentelemetry.extension.kotlin" />
     <orderEntry type="module" module-name="fleet.lsp.protocol" />
-    <orderEntry type="module" module-name="fleet.rhizomedb" />
     <orderEntry type="module" module-name="intellij.libraries.kotlinx.coroutines.core" />
     <orderEntry type="module" module-name="intellij.platform.core" />
     <orderEntry type="module" module-name="intellij.platform.analysis.impl" />

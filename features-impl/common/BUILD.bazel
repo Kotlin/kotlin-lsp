@@ -53,9 +53,7 @@ jvm_library(
     "@community//platform/diagnostic/telemetry",
     "@community//libraries/caffeine",
     "//language-server/api.impl.analyzer",
-    "@community//fleet/rhizomedb",
     "//language-server/dap/platform",
-    "@community//fleet/rhizomedb.transactor",
     "@community//platform/ide-core-impl",
   ]
 )
@@ -101,9 +99,7 @@ jvm_library(
     "@community//platform/diagnostic/telemetry:telemetry_test_lib",
     "@community//libraries/caffeine:caffeine_test_lib",
     "//language-server/api.impl.analyzer:api.impl.analyzer_test_lib",
-    "@community//fleet/rhizomedb:rhizomedb_test_lib",
     "//language-server/dap/platform:platform_test_lib",
-    "@community//fleet/rhizomedb.transactor:rhizomedb.transactor_test_lib",
     "@community//platform/ide-core-impl:ide-core-impl_test_lib",
   ]
 )

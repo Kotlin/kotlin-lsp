@@ -80,8 +80,6 @@
     <orderEntry type="module" module-name="language-server.analyzer.kotlin" />
     <orderEntry type="module" module-name="language-server.dap.jvm" />
     <orderEntry type="module" module-name="language-server.api.impl.analyzer" />
-    <orderEntry type="module" module-name="fleet.rhizomedb" />
-    <orderEntry type="module" module-name="fleet.kernel" />
     <orderEntry type="module" module-name="language-server.dap.jvm.lsp.features" />
     <orderEntry type="module" module-name="language-server.workspace-import" />
     <orderEntry type="module" module-name="language-server.api.features.impl.java-base" />
