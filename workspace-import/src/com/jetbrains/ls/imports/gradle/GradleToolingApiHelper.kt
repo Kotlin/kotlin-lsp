@@ -9,6 +9,7 @@ import com.intellij.openapi.projectRoots.impl.JavaHomeFinder
 import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.util.PathUtil
 import com.intellij.util.lang.JavaVersion
+import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter.LSP_GRADLE_JAVA_HOME_PROPERTY
 import com.jetbrains.ls.imports.gradle.compatibility.GradleJvmCompatibilityChecker
 import org.gradle.util.GradleVersion
@@ -41,8 +42,20 @@ object GradleToolingApiHelper {
             .map { Pair(JavaVersion.tryParse(javaSdkType.getVersionString(it)), it) }
             .filter { it.first != null }
             .sortedByDescending { it.first }
-            .first { GradleJvmCompatibilityChecker.isSupported(gradleVersion, it.first!!) }
-            .second
+            .firstOrNull { GradleJvmCompatibilityChecker.isSupported(gradleVersion, it.first!!) }
+            ?.second
+
+        if (suggestedJavaPath == null) {
+            throw WorkspaceImportException(
+                "Unable to find compatible JDK for Gradle execution. You need to have a JDK compatible with $gradleVersion.",
+                """
+                    |There are no compatible JDKs found on the machine. Unable to run Gradle.
+                    |Gradle version: $gradleVersion
+                    |Checked Java paths: ${JavaHomeFinder.suggestHomePaths(project)}
+                """.trimMargin()
+            )
+        }
+
         LOG.info("Gradle Tooling API will use Java located in $suggestedJavaPath")
         return suggestedJavaPath
     }
