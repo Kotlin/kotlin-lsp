@@ -20,7 +20,9 @@ implementation.
 1. Install the extension in Visual Studio Code.
 2. Open a folder with a Kotlin JVM Gradle or Maven project.
 3. Open any `.kt` file to activate the extension and language server.
-   - **Important:** If prompted, uninstall the outdated `JetBrains.kotlin` extension and reload the window.
+   - **Important:** If you already have a "Kotlin by JetBrains" extension installed from GitHub, a dialog will offer to uninstall it. 
+   Accept it and reload the window — the new `jetbrains.kotlin-server` extension cannot properly activate while the old `jetbrains.kotlin` 
+   extension is present.
 4. Wait for project import and indexing to complete.
 
 After that, you can start using the extension's features!
