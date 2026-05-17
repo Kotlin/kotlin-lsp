@@ -28,6 +28,14 @@ implementation.
 * Code Folding
 * File templates for creating new Kotlin files
 
+### Configuration
+
+The extension provides a number of VSCode Configuration options to customize its behavior, including:
+
+* `jetbrains.kotlin.hints.*` to configure inlay hints
+* `jetbrains.templates.kotlin.*` to customize Kotlin file templates
+* `intellij.buildTool` to prefer a specific project importer (e.g `maven` or `gradle`)
+
 ## License
 
 See [JetBrains Free Plugin License Agreement](https://www.jetbrains.com/legal/docs/terms/jetbrains-free-plugin-license).
