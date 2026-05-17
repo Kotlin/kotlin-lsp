@@ -7,13 +7,15 @@
 Official Kotlin support for Visual Studio Code and an implementation of the [Language Server Protocol](https://github.com/Microsoft/language-server-protocol)
 for the Kotlin language.
 
+## Extension status
+
+**This extension is currently in the Alpha state.**
+
 The server is based on [IntelliJ IDEA](https://github.com/JetBrains/intellij-community) and the [IntelliJ IDEA Kotlin Plugin](https://github.com/JetBrains/intellij-community/tree/master/plugins/kotlin)
 implementation.
 
-## Important Notes
-
-* This extension is in Alpha. The feature set is still incomplete, and breaking changes are expected.
-* Only Kotlin/JVM projects are currently supported. Kotlin Multiplatform (KMP) support is coming in the future releases.
+The core implementation and overall architecture are mostly settled and stable.
+Upcoming releases will focus on feature completeness and stability of the existing functionality.
 
 ## Quick Start
 
@@ -33,6 +35,7 @@ After that, you can start using the extension's features!
 * IntelliJ-powered code completion and signature help
 * IntelliJ-powered diagnostics, inspections, and quick fixes for Kotlin and `kotlinx` libraries
 * Build system support for JVM projects: Gradle, Maven, experimental Android Gradle Plugin support
+  * Support for Kotlin Multiplatform (KMP) projects is coming in the future releases.
 * Semantic highlighting
 * Inlay hints for types and parameter names
 * Navigation: definition, references, type definition, and implementation
@@ -52,6 +55,10 @@ The extension provides a number of VS Code configuration options to customize it
 * `jetbrains.kotlin.hints.*` to configure inlay hints
 * `jetbrains.templates.kotlin.*` to customize Kotlin file templates
 * `intellij.buildTool` to prefer a specific project importer (e.g., `maven` or `gradle`)
+
+## Feedback and Issues
+
+The best way to provide feedback or report an issue is to file a bug in [GitHub issues](https://github.com/Kotlin/kotlin-lsp/issues/new).
 
 ## License
 
