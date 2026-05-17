@@ -19,7 +19,6 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
-import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceModelEntity
 import com.jetbrains.lsp.implementation.throwLspError
 import com.jetbrains.lsp.protocol.Commands.ExecuteCommand
 import com.jetbrains.lsp.protocol.DocumentUri
@@ -71,9 +70,8 @@ object LSInterpolateFileTemplateCommandDescriptorProvider : LSCommandDescriptorP
                 propsMap[FileTemplate.ATTRIBUTE_DIR_PATH] = psiDirectory.virtualFile.path
 
                 val nioPath = virtualFile.toNioPath()
-                val module = WorkspaceModelEntity.single()
-                    .workspaceModelSnapshot
-                    .entityStore
+                val module = context.workspaceStructure
+                    .getEntityStorage()
                     .entities<ModuleEntity>()
                     .singleOrNull { module -> module.sourceRoots.any { nioPath.startsWith(it.url.toPath()) } }
                 val projectName = (module?.entitySource as? WorkspaceEntitySource)?.virtualFileUrl?.fileName
