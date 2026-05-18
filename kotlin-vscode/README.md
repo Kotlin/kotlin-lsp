@@ -7,12 +7,10 @@
 Official Kotlin support for Visual Studio Code and an implementation of the [Language Server Protocol](https://github.com/Microsoft/language-server-protocol)
 for the Kotlin language.
 
-## Extension status
-
-**This extension is currently in the Alpha state.**
-
 The server is based on [IntelliJ IDEA](https://github.com/JetBrains/intellij-community) and the [IntelliJ IDEA Kotlin Plugin](https://github.com/JetBrains/intellij-community/tree/master/plugins/kotlin)
 implementation.
+
+⚠️ **This extension is currently in the Alpha state** ⚠️
 
 The core implementation and overall architecture are mostly settled and stable.
 Upcoming releases will focus on feature completeness and stability of the existing functionality.
