@@ -23,6 +23,7 @@ import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.rename.LSRenameProvider
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.DiffGranularity
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
+import com.jetbrains.ls.api.features.textEdits.fileChanges
 import com.jetbrains.ls.snapshot.api.impl.core.asURI
 import com.jetbrains.lsp.implementation.LspException
 import com.jetbrains.lsp.implementation.LspHandlerContext
@@ -138,7 +139,7 @@ abstract class LSRenameProviderBase(
             }
             // In `workspace/willRenameFiles` request, the rename of the file itself is handled on the client side.
             // Though we track it, we need to filter it out to avoid excessive data transfer and conflicts.
-            val filteredChanges = server.snapshot.filterNot { it is RenameFile && it.oldUri.uri == context.uriToSkip }
+            val filteredChanges = server.fileChanges().filterNot { it is RenameFile && it.oldUri.uri == context.uriToSkip }
             edits + filteredChanges
         }
     }
