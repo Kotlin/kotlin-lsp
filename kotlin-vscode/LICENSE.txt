@@ -2,7 +2,7 @@ JETBRAINS FREE PLUGIN LICENSE AGREEMENT
 
 Version 1.0, effective as of September 15, 2025
 
-THIS IS A LEGAL AGREEMENT. BY CLICKING ON THE “I AGREE” (OR SIMILAR) BUTTON
+THIS IS A LEGAL AGREEMENT. BY CLICKING ON THE "I AGREE" (OR SIMILAR) BUTTON
 THAT IS PRESENTED TO YOU AT THE TIME OF INSTALLATION, OR BY DOWNLOADING,
 INSTALLING, COPYING, SAVING ON YOUR DEVICE, OR OTHERWISE ACCESSING OR USING
 THE PLUGIN, YOU ACCEPT THIS AGREEMENT AND BECOME A PARTY TO IT, YOU DECLARE
@@ -11,45 +11,45 @@ BE BOUND BY ITS TERMS AND CONDITIONS.
 
 1. Introduction
 
-This JetBrains Free Plugin License Agreement (“Agreement”) is entered into
-between JetBrains s.r.o., a company with its registered office at Na hřebenech
+This JetBrains Free Plugin License Agreement ("Agreement") is entered into
+between JetBrains s.r.o., a company with its registered office at Na hrebenech
 II 1718/8, Nusle, 140 00 Prague 4, Czech Republic, Corporate Identification
-No. (IČO): 265 02 275, registered in the Commercial Register maintained by the
-Municipal Court in Prague, Section C, File No. 86211 (“JetBrains”, “We”, or
-“Us”) and you, an individual or a legal entity that you represent (“You”). If
+No. (ICO): 265 02 275, registered in the Commercial Register maintained by the
+Municipal Court in Prague, Section C, File No. 86211 ("JetBrains", "We", or
+"Us") and you, an individual or a legal entity that you represent ("You"). If
 You accept this Agreement on behalf of a legal entity, You confirm that You
 are authorized to enter into agreements on behalf of that legal entity.
 
 2. Definitions
 
-“Acceptable Use Policy” means the JetBrains Products Acceptable Use Policy
+"Acceptable Use Policy" means the JetBrains Products Acceptable Use Policy
 available at https://www.jetbrains.com/legal/docs/terms/acceptable-use-policy/.
 
-“Documentation” means the latest versions of all online technical documentation
+"Documentation" means the latest versions of all online technical documentation
 relating to the Plugin, including the description of the main features of the
 Plugin, available either on the JetBrains Website or on the relevant
 Third-Party Platform, depending on where You access the Plugin.
 
-“JetBrains Website” means the website hosted at https://www.jetbrains.com/ and
+"JetBrains Website" means the website hosted at https://www.jetbrains.com/ and
 any other website operated by Us, such as https://plugins.jetbrains.com.
 
-“Machine” means a computing device used by You for running the Plugin.
+"Machine" means a computing device used by You for running the Plugin.
 
-“Plugin” means any JetBrains plugin, extension, application, widget, or other
+"Plugin" means any JetBrains plugin, extension, application, widget, or other
 JetBrains software, including AI models, designed to work with the Product and
 licensed to You under this Agreement. In some cases, a Plugin may consist
 solely of the software, constituting configuration files, connectors, or
 instructions that enable You to download, install, access, or otherwise obtain
 the JetBrains software as described above.
 
-“Product” means any product or service that You access under a separate
+"Product" means any product or service that You access under a separate
 agreement with JetBrains or a third party.
 
-“Third-Party Platform” means a third-party platform where a given Plugin is
+"Third-Party Platform" means a third-party platform where a given Plugin is
 published by JetBrains and where the main information about the Plugin is
 provided.
 
-“Third-Party Software” means any third-party software program that is owned or
+"Third-Party Software" means any third-party software program that is owned or
 licensed by someone other than Us and is described on the JetBrains Website at
 https://www.jetbrains.com/legal/third-party-software or in the Documentation.
 
@@ -140,8 +140,8 @@ Plugin are acquired at Your own risk.
 
 6. Warranty Limitation
 
-6.1. No Expressed Warranty. The Plugin is licensed to You on an “as-is” and
-“as-available” basis. This means that You agree to use it at Your own risk,
+6.1. No Expressed Warranty. The Plugin is licensed to You on an "as-is" and
+"as-available" basis. This means that You agree to use it at Your own risk,
 and We make no express warranty as to the Plugin use or performance and do not
 represent or warrant that in any way that the Plugin:
 
@@ -221,7 +221,7 @@ You must uninstall and cease using the Plugin.
 9.1. Export Control Compliance. You must comply with all applicable laws and
 regulations with regard to economic sanctions, export controls, import
 regulations, restrictive measures, and trade embargoes (all herein referred to
-as “Sanctions”), including those of the European Union (EU) and the United
+as "Sanctions"), including those of the European Union (EU) and the United
 States (USA) You declare and warrant that You are not a person targeted by
 Sanctions, nor You are otherwise owned or controlled by or acting on behalf of
 any entity or person targeted by Sanctions. You agree that You will not
@@ -250,8 +250,8 @@ Agreement.
 changes to the Plugin, including its new versions, features, updates,
 enhancements, or other modifications, as well as changes in how We offer the
 Plugin to users. We will notify You about the changes to this Agreement
-either by displaying the updated version of the Agreement (“Updated
-Agreement”) to You in the Plugin, in Your JetBrains Account, via the
+either by displaying the updated version of the Agreement ("Updated
+Agreement") to You in the Plugin, in Your JetBrains Account, via the
 Third-Party Platform, or by sending the Updated Agreement to the email
 address provided in Your JetBrains Account. By accepting the Updated
 Agreement or by continuing to use the Plugin after the effective date
@@ -279,7 +279,7 @@ laws of the Czech Republic, without reference to conflict of laws principles,
 and specifically excluding the United Nations Convention on Contracts for the
 International Sale of Goods. The Parties to this Agreement undertake to use
 their best commercial efforts to amicably settle any disputes arising
-hereunder (“Dispute”). Should the Parties to this Agreement fail to settle a
+hereunder ("Dispute"). Should the Parties to this Agreement fail to settle a
 Dispute amicably, the Dispute will be excluded from the jurisdiction of
 general courts and all such Disputes will be finally decided by the
 Arbitration Court attached to the Czech Chamber of Commerce and the
@@ -289,7 +289,7 @@ proceedings will be English.
 
 10.8. Data Privacy. If We receive any personal data from You or Your users in
 connection with the use of the Plugin, We will process it as described in
-JetBrains’ Privacy Notice available at
+JetBrains' Privacy Notice available at
 https://www.jetbrains.com/company/privacy.html.
 
 10.9. Consumer Protection. If You are a consumer, You may have certain rights,
