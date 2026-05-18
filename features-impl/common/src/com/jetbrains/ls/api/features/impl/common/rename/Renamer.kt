@@ -111,6 +111,10 @@ internal class Renamer(
             return
         }
 
+        PsiElementRenameHandler.getRenameErrorMessage(project, null, primaryElement)?.also {
+            throwLspError(RenameRequestType, it, Unit, ErrorCodes.InvalidParams)
+        }
+
         DumbService.getInstance(project).completeJustSubmittedTasks()
 
         var usagesIn = usages
@@ -183,10 +187,6 @@ internal class Renamer(
             skippedUsages.addAll(conflictUsages)
         }
         usagesIn = usagesSet.toTypedArray<UsageInfo>()
-
-        PsiElementRenameHandler.getRenameErrorMessage(project, null, primaryElement)?.also {
-            throwLspError(RenameRequestType, it, Unit, ErrorCodes.InvalidParams)
-        }
 
         execute(usagesIn)
     }
