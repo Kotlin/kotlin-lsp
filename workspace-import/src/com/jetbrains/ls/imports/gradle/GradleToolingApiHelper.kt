@@ -8,6 +8,7 @@ import com.intellij.openapi.projectRoots.SimpleJavaSdkType
 import com.intellij.openapi.projectRoots.impl.JavaHomeFinder
 import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.util.PathUtil
+import com.intellij.util.SystemProperties
 import com.intellij.util.lang.JavaVersion
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter.LSP_GRADLE_JAVA_HOME_PROPERTY
@@ -37,13 +38,7 @@ object GradleToolingApiHelper {
             return explicitJavaHomeValue
         }
         val gradleVersion = guessGradleVersion(projectDirectory) ?: return null
-        val javaSdkType = SimpleJavaSdkType.getInstance()
-        val suggestedJavaPath = JavaHomeFinder.suggestHomePaths(project)
-            .map { Pair(JavaVersion.tryParse(javaSdkType.getVersionString(it)), it) }
-            .filter { it.first != null }
-            .sortedByDescending { it.first }
-            .firstOrNull { GradleJvmCompatibilityChecker.isSupported(gradleVersion, it.first!!) }
-            ?.second
+        val suggestedJavaPath = suggestJavaPath(project, gradleVersion) ?: tryJavaFromJavaHome(gradleVersion)
 
         if (suggestedJavaPath == null) {
             throw WorkspaceImportException(
@@ -96,6 +91,28 @@ object GradleToolingApiHelper {
                 }.trimMargin()
             )
         }
+    }
+
+    private fun suggestJavaPath(project: Project, gradleVersion: GradleVersion): String? {
+        val javaSdkType = SimpleJavaSdkType.getInstance()
+        return JavaHomeFinder.suggestHomePaths(project)
+            .map { Pair(JavaVersion.tryParse(javaSdkType.getVersionString(it)), it) }
+            .filter { it.first != null }
+            .sortedByDescending { it.first }
+            .firstOrNull { GradleJvmCompatibilityChecker.isSupported(gradleVersion, it.first!!) }
+            ?.second
+    }
+
+    private fun tryJavaFromJavaHome(gradleVersion: GradleVersion): String? {
+        val javaHome = SystemProperties.getJavaHome()
+        val javaHomeVersionString = SimpleJavaSdkType.getInstance()
+            .getVersionString(javaHome)
+        val javaHomeVersion = JavaVersion.tryParse(javaHomeVersionString) ?: return null
+        if (GradleJvmCompatibilityChecker.isSupported(gradleVersion, javaHomeVersion)) {
+            LOG.info("A Java distribution defined by the JAVA_HOME environment variable will be used for Gradle execution")
+            return javaHome
+        }
+        return null
     }
 
     private fun String.escapeStringLiteral(): String {
