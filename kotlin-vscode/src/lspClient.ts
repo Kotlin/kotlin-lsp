@@ -85,7 +85,23 @@ export async function startLspClient(): Promise<void> {
         )
    );
 
-    await runClient.start()
+    try {
+        await runClient.start();
+    } catch (e) {
+        if (e instanceof LanguageServerStartupError && e.code === LanguageServerStartupError.LICENSE_ERROR_CODE) {
+            void vscode.window.showErrorMessage(
+                    `"${extensionDisplayName()}" could not properly start the language server.`,
+                    {
+                        modal: true,
+                        detail: "The bundled language server build has expired. Update the extension and try again."
+                    }
+            )
+
+            return
+        }
+
+        throw e
+    }
 }
 
 /**
@@ -194,6 +210,14 @@ function startBundledServer(): ChildProcessByStdio<null, Readable, Readable> {
     return serverProcess
 }
 
+class LanguageServerStartupError extends Error {
+    static readonly LICENSE_ERROR_CODE: number = 7;
+
+    constructor(public code: number | null, public signal: NodeJS.Signals | null) {
+        super(`Language server process exited before announcing port (code=${code}, signal=${signal})`);
+    }
+}
+
 function getPortForBundledServer(serverProcess: ChildProcessByStdio<null, Readable, Readable>): Promise<number> {
     return new Promise<number>((resolve, reject) => {
 
@@ -205,7 +229,7 @@ function getPortForBundledServer(serverProcess: ChildProcessByStdio<null, Readab
         }
 
         const onExit = (code: number | null, signal: NodeJS.Signals | null) => {
-            reject(new Error(`Language server process exited before announcing port (code=${code}, signal=${signal})`));
+            reject(new LanguageServerStartupError(code, signal));
         };
 
         const timer = setTimeout(() => {
