@@ -13,8 +13,8 @@ import com.jetbrains.analyzer.bootstrap.WorkspaceModelSnapshot
 import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
 import com.jetbrains.ls.imports.api.EmptyWorkspaceProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
+import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.LSP_GRADLE_JAVA_HOME_PROPERTY
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
-import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter.LSP_GRADLE_JAVA_HOME_PROPERTY
 import com.jetbrains.ls.imports.json.DependencyData
 import com.jetbrains.ls.imports.json.WorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData

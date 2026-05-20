@@ -7,22 +7,34 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.SimpleJavaSdkType
 import com.intellij.openapi.projectRoots.impl.JavaHomeFinder
 import com.intellij.openapi.util.io.FileUtilRt
+import com.intellij.openapi.util.io.toNioPathOrNull
 import com.intellij.util.PathUtil
 import com.intellij.util.SystemProperties
+import com.intellij.util.containers.addIfNotNull
+import com.intellij.util.io.delete
 import com.intellij.util.lang.JavaVersion
 import com.jetbrains.ls.imports.api.WorkspaceImportException
-import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter.LSP_GRADLE_JAVA_HOME_PROPERTY
+import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.gradle.compatibility.GradleJvmCompatibilityChecker
+import com.jetbrains.ls.imports.gradle.util.GradleOutputStream
+import org.gradle.tooling.BuildActionExecuter
+import org.gradle.tooling.GradleConnector
+import org.gradle.tooling.events.OperationType
+import org.gradle.tooling.events.ProgressEvent
 import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.gradle.idea.proto.generated.tcs.IdeaKotlinDependencyProtoKt
 import org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinDependency
 import org.jetbrains.kotlin.tooling.core.Extras
+import java.lang.System.getProperty
 import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.LinkedList
 import java.util.Properties
+import kotlin.io.path.absolutePathString
 import kotlin.io.path.createTempFile
+import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.writeText
@@ -32,8 +44,27 @@ object GradleToolingApiHelper {
 
     private val LOG = logger<GradleToolingApiHelper>()
 
+    const val LSP_GRADLE_JAVA_HOME_PROPERTY: String = "com.jetbrains.ls.imports.gradle.java.home"
+
+    private const val LSP_GRADLE_PROJECT_OFFLINE_PROPERTY: String = "com.jetbrains.ls.imports.gradle.offline"
+    private const val LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY: String = "com.jetbrains.ls.imports.gradle.gradleUserHome"
+    private const val LSP_GRADLE_PROJECT_SELF_CONTAINED_INIT_SCRIPT: String = "com.jetbrains.ls.imports.gradle.selfContainedInitScript"
+    private const val LSP_GRADLE_PROJECT_SELF_CONTAINED_PROXY_URL_PROPERTY: String = "com.jetbrains.ls.imports.gradle.selfContainedProxyUrl"
+
+    private const val IDEA_ACTIVE_PROPERTY: String = "idea.active"
+    private const val IDEA_SYNC_ACTIVE_PROPERTY: String = "idea.sync.active"
+    private const val KOTLIN_LSP_IMPORT_PROPERTY: String = "com.jetbrains.ls.imports.gradle"
+    private val IMPORTER_PROPERTIES: Map<String, String> = mapOf(
+        // This imitates how IntelliJ invokes gradle during sync.
+        // Some builds/plugins depend on this property to configure their build for sync.
+        IDEA_SYNC_ACTIVE_PROPERTY to "true",
+        IDEA_ACTIVE_PROPERTY to "true",
+        // Since this is not actually IntelliJ, offer an alternative identification.
+        KOTLIN_LSP_IMPORT_PROPERTY to "true",
+    )
+
     fun findTheMostCompatibleJdk(project: Project, projectDirectory: Path): String? {
-        val explicitJavaHomeValue = System.getProperty(LSP_GRADLE_JAVA_HOME_PROPERTY)
+        val explicitJavaHomeValue = getProperty(LSP_GRADLE_JAVA_HOME_PROPERTY)
         if (explicitJavaHomeValue != null) {
             return explicitJavaHomeValue
         }
@@ -55,7 +86,66 @@ object GradleToolingApiHelper {
         return suggestedJavaPath
     }
 
-    fun getInitScriptPath(): Path {
+    fun <T> BuildActionExecuter<T>.addInitScripts(initScripts: Iterable<Path>): BuildActionExecuter<T> {
+        initScripts.forEach { script ->
+            LOG.debug("Appending $script to Gradle execution")
+            addArguments("--init-script", script.absolutePathString())
+        }
+        return this
+    }
+
+    fun <T> BuildActionExecuter<T>.prepareForExecution(): BuildActionExecuter<T> {
+        addArguments("--stacktrace")
+        withSystemProperties(IMPORTER_PROPERTIES)
+        if (getProperty(LSP_GRADLE_PROJECT_OFFLINE_PROPERTY)?.toBoolean() == true) {
+            setEnvironmentVariables(
+                mapOf(
+                    "SELF_CONTAINED_PROXY_URL" to getProperty(LSP_GRADLE_PROJECT_SELF_CONTAINED_PROXY_URL_PROPERTY),
+                    "GRADLE_USER_HOME" to getProperty(LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY)
+                )
+            )
+        }
+        withCancellationToken(GradleConnector.newCancellationTokenSource().token())
+        return this
+    }
+
+    fun <T> BuildActionExecuter<T>.configureLogging(progress: WorkspaceImportProgressReporter): BuildActionExecuter<T> {
+        setStandardOutput(GradleOutputStream { line -> progress.onStdOutput(line) })
+        setStandardError(GradleOutputStream { line -> progress.onErrorOutput(line) })
+        addProgressListener(
+            GradleProgressListener { line -> progress.progressStatus(line) },
+            setOf(OperationType.GENERIC, OperationType.FILE_DOWNLOAD, OperationType.PROJECT_CONFIGURATION)
+        )
+        return this
+    }
+
+    fun GradleConnector.withCustomGradleHome(): GradleConnector {
+        val customGradleUserHomePropertyValue = getProperty(LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY) ?: return this
+        if (customGradleUserHomePropertyValue.isNotBlank()) {
+            val gradleUserHome = Path.of(customGradleUserHomePropertyValue)
+            check(gradleUserHome.exists())
+            useGradleUserHomeDir(gradleUserHome.toFile())
+        }
+        return this
+    }
+
+    fun <T> withDaemonInitScripts(action: (Iterable<Path>) -> T): T {
+        val initScripts = LinkedList<Path>()
+        initScripts.add(getLspGradlePluginInitScript())
+        if (getProperty(LSP_GRADLE_PROJECT_OFFLINE_PROPERTY)?.toBoolean() == true) {
+            val selfContainedInitScript = getProperty(LSP_GRADLE_PROJECT_SELF_CONTAINED_INIT_SCRIPT)?.toNioPathOrNull()
+            initScripts.addIfNotNull(selfContainedInitScript)
+        }
+        try {
+            return action(initScripts)
+        } finally {
+            initScripts.forEach {
+                it.delete()
+            }
+        }
+    }
+
+    private fun getLspGradlePluginInitScript(): Path {
         val pluginResourcePath = "/META-INF/gradle-plugins/imports-gradle-plugin.properties"
 
         val pluginJar = PathManager.getResourceRoot(this::class.java, pluginResourcePath)
@@ -176,6 +266,12 @@ object GradleToolingApiHelper {
                 .use { reader -> Properties().apply { load(reader) } }
         } catch (_: Exception) {
             null
+        }
+    }
+
+    private class GradleProgressListener(private val lineConsumer: (line: String) -> Unit) : org.gradle.tooling.events.ProgressListener {
+        override fun statusChanged(event: ProgressEvent) {
+            lineConsumer(event.displayName)
         }
     }
 }
