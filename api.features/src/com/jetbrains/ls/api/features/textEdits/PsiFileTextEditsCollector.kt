@@ -5,7 +5,7 @@ import com.intellij.lang.Language
 import com.intellij.lang.LanguageExtension
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.EDT
-import com.intellij.openapi.application.writeAction
+import com.intellij.openapi.application.edtWriteAction
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
@@ -29,7 +29,7 @@ object PsiFileTextEditsCollector {
         app.assertReadAccessNotAllowed()
 
         return withContext(Dispatchers.EDT) {
-            writeAction {
+            edtWriteAction {
                 var res: List<TextEdit>? = null
                 CommandProcessor.getInstance().executeCommand(
                     project,
