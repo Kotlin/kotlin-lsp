@@ -16,7 +16,7 @@ implementation.
 
 ### VS Code Quick Start
 
-For the latest stable release:
+For the latest release from the official VS Code Marketplace:
 
 * [Install the extension](https://marketplace.visualstudio.com/items?itemName=org.jetbrains.kotlin-server)
 * The extension is automatically activated when opening a Kotlin file in a workspace
@@ -26,6 +26,22 @@ For manually downloaded builds from the [release page](https://github.com/Kotlin
 1. Download the required VSIX file from the corresponding release page
 2. Install it as a VSC Extension via `Extensions | More Actions | Install from VSIX`
     * Alternatively, it is possible to drag-and-drop VSIX extension directly into the `Extensions` tool window
+
+> [!WARNING]
+> "Kotlin by JetBrains" extension now has a different VS Code Marketplace ID:
+>
+> Old one: `jetbrains.kotlin`
+>
+> New one: `jetbrains.kotlin-server`
+>
+> When you install a newer `jetbrains.kotlin-server`, a dialog will offer to uninstall an older `jetbrains.kotlin` extensions.
+>  <details> 
+>  <summary>Example of the dialog.</summary>
+>  <img width="263" height="292" alt="image" src="https://gist.github.com/user-attachments/assets/d909ceef-e1d8-4709-87eb-290eb5334e14" />
+>  </details>
+>
+> Accept it and reload the window — the new extension cannot properly activate while the old `jetbrains.kotlin`
+> extension is present.
 
 ### Install kotlin-lsp CLI
 
