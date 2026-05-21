@@ -6,6 +6,8 @@ Language Server for Kotlin
 [![GitHub license](https://img.shields.io/github/license/kotlin/kotlinx-io)](LICENSE.txt)
 [![GitHub Release](https://img.shields.io/github/v/release/Kotlin/kotlin-lsp)](https://github.com/Kotlin/kotlin-lsp/releases/latest)
 
+[![VS Code Extension](https://img.shields.io/badge/VS%20Code-Kotlin_by_JetBrains-007ACC?logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=JetBrains.kotlin-server)
+
 Official Kotlin support for Visual Studio Code and an implementation of the [Language Server Protocol](https://github.com/Microsoft/language-server-protocol)
 for the Kotlin language.
 
@@ -51,7 +53,7 @@ Manual installation:
 
 ### Project Status
 
-**The project is in its alpha stage**.
+⚠️ **The project is currently in the Alpha state** ⚠️
 
 The language server is based on the most recent IntelliJ IDEA version and proprietary parts of JetBrains Air and Fleet products, 
 making it partially closed-source.
