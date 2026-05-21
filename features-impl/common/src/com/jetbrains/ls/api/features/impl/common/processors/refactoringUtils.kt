@@ -1,7 +1,9 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.processors
 
+import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.readAction
+import com.intellij.openapi.application.writeIntentReadAction
 import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiDirectoryContainer
@@ -9,7 +11,6 @@ import com.intellij.psi.PsiFile
 import com.intellij.util.IncorrectOperationException
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.features.impl.common.rename.writeIntentUserReadAction
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.DiffGranularity
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
 import com.jetbrains.ls.api.features.textEdits.fileChanges
@@ -27,6 +28,8 @@ import com.jetbrains.lsp.protocol.RenameRequestType
 import com.jetbrains.lsp.protocol.TextDocumentEdit
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 import com.jetbrains.lsp.protocol.URI
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Executes [RefactoringProcessor], and returns diff after its changes
@@ -45,8 +48,10 @@ suspend fun doRefactoring(
     uriToSkip: URI?,
 ): List<FileChange> {
     val originals = try {
-        writeIntentUserReadAction {
-            execute(processor)
+        withContext(Dispatchers.EDT) {
+            writeIntentReadAction {
+                execute(processor)
+            }
         }
     } catch (ex: Throwable) {
         when (ex) {
