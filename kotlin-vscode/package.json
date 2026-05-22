@@ -1,40 +1,100 @@
 {
   "name": "kotlin-server",
   "displayName": "Kotlin by JetBrains",
-  "description": "Language Support for Kotlin by JetBrains",
-  "author": "JetBrains",
-  "publisher": "JetBrains",
-  "bugs": "https://github.com/Kotlin/kotlin-lsp",
-  "icon": "icons/kotlin.png",
   "version": "0.0.1",
+  "description": "Language Support for Kotlin by JetBrains",
+  "categories": [
+    "Debuggers",
+    "Formatters",
+    "Linters",
+    "Programming Languages",
+    "Snippets"
+  ],
+  "keywords": [
+    "intellij",
+    "jetbrains",
+    "kotlin",
+    "language server",
+    "lsp"
+  ],
+  "bugs": "https://github.com/Kotlin/kotlin-lsp",
   "license": "SEE LICENSE IN LICENSE.txt",
+  "author": "JetBrains",
   "repository": {
     "url": "https://github.com/Kotlin/kotlin-lsp",
     "directory": "kotlin-vscode"
   },
-  "engines": {
-    "vscode": "^1.96.0",
-    "node": ">=22.20.0"
+  "publisher": "JetBrains",
+  "type": "module",
+  "main": "./out/dist/extension.js",
+  "scripts": {
+    "compile": "rspack build --mode development",
+    "watch": "rspack build --mode development --watch",
+    "package": "rspack build --mode production --devtool hidden-source-map",
+    "unpack-server": "node unpack-server.mjs",
+    "test": "pnpm run test:grammar && pnpm run test:unit",
+    "test:grammar": "textmate-grammar-snap --grammar syntaxes/kotlin.tmLanguage.json --scope source.kotlin \"testSources/tokenization/*.kt\"",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "pnpm --filter @jetbrains/vscode-extension-core test && pnpm --filter @jetbrains/vscode-language-kotlin test",
+    "updateGrammarTests": "textmate-grammar-snap --grammar syntaxes/kotlin.tmLanguage.json --scope source.kotlin -u \"testSources/tokenization/*.kt\""
   },
-  "categories": [
-    "Programming Languages",
-    "Debuggers",
-    "Formatters",
-    "Linters",
-    "Snippets"
-  ],
-  "keywords": [
-    "kotlin",
-    "lsp",
-    "language server",
-    "jetbrains",
-    "intellij"
-  ],
-  "main": "./out/dist/extension",
-  "activationEvents": [
-    "onCommand:jetbrains.activateLsp"
-  ],
+  "dependencies": {
+    "@jetbrains/vscode-extension-core": "workspace:*",
+    "@jetbrains/vscode-language-kotlin": "workspace:*",
+    "@tree-sitter-grammars/tree-sitter-kotlin": "catalog:",
+    "vscode-languageclient": "catalog:",
+    "web-tree-sitter": "catalog:"
+  },
+  "devDependencies": {
+    "@rspack/cli": "catalog:",
+    "@rspack/core": "catalog:",
+    "@types/node": "catalog:",
+    "@types/vscode": "catalog:",
+    "@vscode/vsce": "catalog:",
+    "textmate-grammar-test": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vscode-languageserver-types": "catalog:"
+  },
   "contributes": {
+    "languages": [
+      {
+        "id": "kotlin",
+        "aliases": [
+          "Kotlin",
+          "kotlin"
+        ],
+        "extensions": [
+          ".kt"
+        ],
+        "configuration": "./syntaxes/language-configuration-kotlin.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "kotlin",
+        "scopeName": "source.kotlin",
+        "path": "./syntaxes/kotlin.tmLanguage.json",
+        "unbalancedBracketScopes": [
+          "keyword.operator.kotlin"
+        ]
+      }
+    ],
+    "breakpoints": [
+      {
+        "language": "kotlin"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "intellij_debugger",
+        "label": "IntelliJ Debugger",
+        "languages": [
+          "kotlin"
+        ],
+        "configurationAttributes": {}
+      }
+    ],
     "configuration": [
       {
         "title": "IntelliJ Language Server",
@@ -81,8 +141,127 @@
             "description": "Traces the communication between VS Code and the language server."
           }
         }
+      },
+      {
+        "title": "Inlay",
+        "properties": {
+          "jetbrains.kotlin.hints.settings.types.property": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show inlay hints for property types"
+          },
+          "jetbrains.kotlin.hints.settings.types.variable": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show inlay hints for local variable types"
+          },
+          "jetbrains.kotlin.hints.type.function.return": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show inlay hints for function return types"
+          },
+          "jetbrains.kotlin.hints.type.function.parameter": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show inlay hints for function parameter types"
+          },
+          "jetbrains.kotlin.hints.settings.lambda.return": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show inlay hints for return expressions"
+          },
+          "jetbrains.kotlin.hints.lambda.receivers.parameters": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show inlay hints for implicit receivers and parameters"
+          },
+          "jetbrains.kotlin.hints.settings.value.ranges": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show inlay hints for ranges"
+          },
+          "jetbrains.kotlin.hints.value.kotlin.time": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show kotlin.time package warning inlay hints"
+          },
+          "jetbrains.kotlin.hints.parameters": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show parameter names"
+          },
+          "jetbrains.kotlin.hints.parameters.compiled": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show compiled parameter names"
+          },
+          "jetbrains.kotlin.hints.parameters.excluded": {
+            "type": "boolean",
+            "default": false,
+            "description": "Show excluded parameter names"
+          },
+          "jetbrains.kotlin.hints.call.chains": {
+            "type": "boolean",
+            "default": false,
+            "description": "Function return type in call chains"
+          }
+        }
+      },
+      {
+        "title": "File Templates",
+        "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/kotlin-vscode/docs/file_templates.md).",
+        "properties": {
+          "jetbrains.templates.kotlin.Class": {
+            "type": "string",
+            "editPresentation": "multilineText",
+            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\nclass ${NAME} {\n\t|\n}",
+            "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/kotlin-vscode/docs/file_templates.md)."
+          },
+          "jetbrains.templates.kotlin.File": {
+            "type": "string",
+            "editPresentation": "multilineText",
+            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\n|",
+            "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/kotlin-vscode/docs/file_templates.md)."
+          },
+          "jetbrains.templates.kotlin.Interface": {
+            "type": "string",
+            "editPresentation": "multilineText",
+            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\ninterface ${NAME} {\n\t|\n}",
+            "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/kotlin-vscode/docs/file_templates.md)."
+          },
+          "jetbrains.templates.kotlin.Data Class": {
+            "type": "string",
+            "editPresentation": "multilineText",
+            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\ndata class ${NAME}(|)\n",
+            "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/kotlin-vscode/docs/file_templates.md)."
+          },
+          "jetbrains.templates.kotlin.Enum": {
+            "type": "string",
+            "editPresentation": "multilineText",
+            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\nenum class ${NAME} {\n\t|\n}",
+            "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/kotlin-vscode/docs/file_templates.md)."
+          },
+          "jetbrains.templates.kotlin.Annotation": {
+            "type": "string",
+            "editPresentation": "multilineText",
+            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\nannotation class ${NAME}(|)",
+            "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/kotlin-vscode/docs/file_templates.md)."
+          },
+          "jetbrains.templates.kotlin.Object": {
+            "type": "string",
+            "editPresentation": "multilineText",
+            "default": "#if (${PACKAGE_NAME} && ${PACKAGE_NAME} != \"\")package ${PACKAGE_NAME}\n\n#end\nobject ${NAME} {\n\t|\n}",
+            "markdownDescription": "Please check [documentation](https://github.com/Kotlin/kotlin-lsp/blob/main/kotlin-vscode/docs/file_templates.md)."
+          }
+        }
       }
     ],
+    "configurationDefaults": {
+      "[kotlin]": {
+        "editor.autoIndent": "none",
+        "editor.formatOnType": false
+      }
+    },
     "commands": [
       {
         "command": "jetbrains.exportWorkspaceToJson",
@@ -101,32 +280,13 @@
       }
     ]
   },
-  "devDependencies": {
-    "@types/node": "^22.13.8",
-    "@types/vscode": "^1.96.0",
-    "textmate-grammar-test": "^0.6.0",
-    "ts-loader": "^9.5.2",
-    "tsx": "^4.21.0",
-    "typescript": "^5.7.2",
-    "webpack": "^5.100.2",
-    "webpack-cli": "^6.0.1"
-  },
-  "dependencies": {
-    "vscode-languageclient": "9.0.1",
-    "web-tree-sitter": "^0.26.8"
-  },
-  "scripts": {
-    "compile": "webpack --mode development",
-    "watch": "webpack --mode development --watch",
-    "vscode:prepublish": "npm run ij:prepublish && npm run package && npm run unpack-server",
-    "package": "webpack --mode production --devtool hidden-source-map",
-    "apply-intellij": "node apply-intellij.js",
-    "unpack-server": "node unpack-server.js",
-    "ij:prepublish": "mkdir -p grammars && cp node_modules/web-tree-sitter/web-tree-sitter.wasm grammars/",
-    "test": "bash dev-setup.sh && (cd out/dev && npm run test:in-dev)",
-    "test:in-dev": "npm run test:grammar && npm run test:unit",
-    "test:grammar": "textmate-grammar-snap --grammar syntaxes/kotlin.tmLanguage.json --scope source.kotlin \"testSources/tokenization/*.kt\"",
-    "test:unit": "NODE_PATH=\"$PWD/node_modules\" node --import tsx --test $(find -L src -name '*.test.ts')",
-    "updateGrammarTests": "textmate-grammar-snap --grammar syntaxes/kotlin.tmLanguage.json --scope source.kotlin -u \"testSources/tokenization/*.kt\""
+  "activationEvents": [
+    "onCommand:jetbrains.activateLsp",
+    "onLanguage:kotlin"
+  ],
+  "icon": "icons/kotlin.png",
+  "engines": {
+    "node": ">=22.20.0",
+    "vscode": "^1.120.0"
   }
 }

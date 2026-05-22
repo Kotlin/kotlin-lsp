@@ -1,23 +1,36 @@
 # Development
 
-The dev build is sandboxed in `out/dev/` — the source tree stays clean, the IntelliJ overlay can be applied non-destructively, and a single ignored folder (`out/`) covers everything generated.
+The dev build runs directly from this package. Generated files stay in ignored folders such as `out/` and `grammars/`.
 
 ### Bootstrap, run, watch
 
-In VS Code, press F5 (`Extension`). The launch config triggers the `dev-watch` task, which depends on `dev-bootstrap`, which runs `dev-setup.sh`. The script is idempotent — re-running is fast.
+From this directory, run:
 
-What `dev-setup.sh` does:
+```sh
+pnpm install
+```
 
-- Mirrors static files into `out/dev/`.
-- Symlinks `src/` (and `testSources/`) so webpack-watch picks up source edits live.
-- Runs `npm install` inside `out/dev/` (npm itself is a no-op when nothing changed).
-
-After F5: edit a file in `src/`, webpack rebuilds, hit `Cmd+R` in the development host.
+In VS Code, press F5 (`Extension`). The launch config triggers the `watch` task. After F5: edit a file in `src/`, Rspack rebuilds, hit `Cmd+R` in the development host.
 
 ### Test
 
 ```sh
-npm test
+pnpm test
 ```
 
-Runs from this directory. It bootstraps `out/dev/` and runs all tests. In VS Code, `Tasks: Run Test Task` does the same via the `dev-test` task.
+Runs from this directory. In VS Code, `Tasks: Run Test Task` runs the `test` task.
+
+### Build VSIX
+
+After server artifacts are built, run:
+
+```sh
+./build.sh
+```
+
+When this package is built inside a pnpm workspace, enable pnpm 11 once:
+
+```sh
+corepack enable
+corepack prepare pnpm@11.4.0 --activate
+```

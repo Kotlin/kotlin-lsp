@@ -8,7 +8,6 @@
 !icons/**
 !server/**
 !syntaxes/**
-!language-configuration.json
 !LICENSE.txt
 !package.json
 !README.md

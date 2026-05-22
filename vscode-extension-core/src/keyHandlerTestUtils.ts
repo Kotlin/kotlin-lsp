@@ -1,16 +1,18 @@
 import assert from 'node:assert/strict';
-import * as path from 'path';
-import {Language, Parser} from 'web-tree-sitter';
-import {type KeyHandler, type KeyResult} from '@keyHandlerUtils';
+import { fileURLToPath } from 'node:url';
+import { Language, Parser } from 'web-tree-sitter';
+import { type KeyHandler, type KeyResult } from './keyHandlerUtils';
 
 const CARET_MARKER = '<caret>';
+const WEB_TREE_SITTER_WASM_PATH = fileURLToPath(
+    new URL('../node_modules/web-tree-sitter/web-tree-sitter.wasm', import.meta.url),
+);
 
 let treeSitterInitPromise: Promise<void> | null = null;
 
 export async function createParser(grammarWasmPath: string): Promise<Parser> {
-    const projectRoot = process.cwd();
     treeSitterInitPromise ??= Parser.init({
-        locateFile: () => path.join(projectRoot, 'node_modules', 'web-tree-sitter', 'web-tree-sitter.wasm'),
+        locateFile: () => WEB_TREE_SITTER_WASM_PATH,
     });
     await treeSitterInitPromise;
 
@@ -21,8 +23,8 @@ export async function createParser(grammarWasmPath: string): Promise<Parser> {
 }
 
 export function createDoTest(
-        parserPromise: Promise<Parser>,
-        handler: KeyHandler,
+    parserPromise: Promise<Parser>,
+    handler: KeyHandler,
 ): (input: string, expected: string, indentUnit?: string) => () => Promise<void> {
     return (input: string, expected: string, indentUnit?: string) => async () => {
         const caretIndex = input.indexOf(CARET_MARKER);
@@ -39,9 +41,7 @@ export function createDoTest(
         const resultSource = applyEdit(source, result);
         const caretOffset = result.caretOffset;
         const resultWithCaret =
-                resultSource.slice(0, caretOffset) +
-                CARET_MARKER +
-                resultSource.slice(caretOffset);
+            resultSource.slice(0, caretOffset) + CARET_MARKER + resultSource.slice(caretOffset);
 
         assert.strictEqual(resultWithCaret, expected);
     };

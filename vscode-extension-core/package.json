@@ -1,0 +1,27 @@
+{
+  "name": "@jetbrains/vscode-extension-core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/extension.ts",
+    "./DocumentParser": "./src/DocumentParser.ts",
+    "./handleKeyType": "./src/handleKeyType.ts",
+    "./testing/keyHandlerTestUtils": "./src/keyHandlerTestUtils.ts",
+    "./keyHandlerUtils": "./src/keyHandlerUtils.ts"
+  },
+  "scripts": {
+    "test": "node --import tsx --test src/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "vscode-languageclient": "catalog:",
+    "web-tree-sitter": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/vscode": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}

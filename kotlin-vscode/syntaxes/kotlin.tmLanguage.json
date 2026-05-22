@@ -2,10 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "Kotlin",
   "scopeName": "source.kotlin",
-  "fileTypes": [
-    "kt",
-    "kts"
-  ],
+  "fileTypes": ["kt", "kts"],
   "patterns": [
     {
       "include": "#keywords"

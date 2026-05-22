@@ -1,10 +1,10 @@
-import * as vscode from "vscode";
-import {State} from "vscode-languageclient/node";
-import { getContext } from "./extension";
-import { getLspClient, subscribeToClientEvent } from "./lspClient";
+import * as vscode from 'vscode';
+import { State } from 'vscode-languageclient/node';
+import { getContext } from './extension';
+import { getLspClient, subscribeToClientEvent } from './lspClient';
 
-const TITLE = 'Kotlin'
-const LSP_TITLE = 'LSP'
+const TITLE = 'Kotlin';
+const LSP_TITLE = 'LSP';
 
 let statusBarItem: vscode.StatusBarItem | undefined;
 
@@ -24,19 +24,18 @@ function updateView() {
 }
 
 function computeTooltip(): vscode.MarkdownString {
-    const text = new vscode.MarkdownString()
+    const text = new vscode.MarkdownString();
     text.isTrusted = true;
     text.supportThemeIcons = true;
     text.supportHtml = true;
 
-    const lspState = `<div>${getLspClientStatus()}</div>`
+    const lspState = `<div>${getLspClientStatus()}</div>`;
     text.appendMarkdown(`
 <div>
 <h4>Kotlin</h4>
 ${lspState}
 </div>
-        `   
-    )
+        `);
     return text;
 }
 
@@ -45,23 +44,23 @@ function computeText(): string {
 
     switch (clientState) {
         case State.Running:
-            return `\$(check) ${TITLE}`;
+            return `$(check) ${TITLE}`;
         case State.Starting:
-            return `\$(sync) ${TITLE}`;
+            return `$(sync) ${TITLE}`;
         default:
-            return `\$(stop) ${TITLE}`;
+            return `$(stop) ${TITLE}`;
     }
 }
 
 function getLspClientStatus(): string {
     const clientState = getLspClient()?.state ?? State.Stopped;
-    const restartButton = `<a href="command:jetbrains.kotlin.restartLsp" title="Restart">$(sync)</a>`
+    const restartButton = `<a href="command:jetbrains.kotlin.restartLsp" title="Restart">$(sync)</a>`;
     switch (clientState) {
         case State.Running:
-            return `\$(check) ${LSP_TITLE}: Running&nbsp;&nbsp;${restartButton}`;
+            return `$(check) ${LSP_TITLE}: Running&nbsp;&nbsp;${restartButton}`;
         case State.Starting:
-            return `\$(sync) ${LSP_TITLE}: Starting`;
+            return `$(sync) ${LSP_TITLE}: Starting`;
         default:
-            return `\$(stop) ${LSP_TITLE}: Stopped&nbsp;&nbsp;${restartButton}`;
+            return `$(stop) ${LSP_TITLE}: Stopped&nbsp;&nbsp;${restartButton}`;
     }
 }

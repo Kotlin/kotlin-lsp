@@ -1,32 +1,13 @@
 {
+  "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "paths": {
-      "@keyHandlerUtils": [
-        "./src/keyHandlerUtils"
-      ],
-      "@keyHandlerTestUtils": [
-        "./src/keyHandlerTestUtils"
-      ]
-    },
-    "module": "commonjs",
-    "target": "es2020",
-    "strict": true,
-    "lib": [
-      "es2020"
-    ],
     "outDir": "out/compile",
-    "rootDir": "src",
+    "rootDir": "..",
     "sourceMap": true,
     "composite": true,
     "tsBuildInfoFile": "out/compile/tsconfig.tsbuildinfo",
-    "esModuleInterop": true,
-    "preserveSymlinks": true
+    "types": ["node"]
   },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "node_modules",
-    ".vscode-test"
-  ]
+  "include": ["src", "../vscode-extension-core/src", "../vscode-language-kotlin/src"],
+  "exclude": ["node_modules", ".vscode-test"]
 }

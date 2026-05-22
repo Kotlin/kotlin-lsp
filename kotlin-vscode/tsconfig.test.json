@@ -1,12 +1,9 @@
 {
-    "extends": "./tsconfig.json",
-    "compilerOptions": {
-        "rootDir": ".",
-        "composite": false,
-        "tsBuildInfoFile": null
-    },
-    "include": [
-        "src",
-        "test"
-    ]
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "composite": false,
+    "tsBuildInfoFile": null
+  },
+  "include": ["src", "test"]
 }

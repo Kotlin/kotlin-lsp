@@ -1,108 +1,13 @@
-import * as path from 'path';
-import {commands, type ExtensionContext, extensions, type OutputChannel, Uri, window, workspace,} from 'vscode'
-import {registerDecompiler, registerOpeningJars} from './decompiler'
-import {getLspClient, initLspClient, startLspClient} from './lspClient';
-import {LSPErrorCodes, RequestType0, ResponseError} from 'vscode-languageclient/node';
-import {registerStatusBarItem} from './statusBar';
-import {registerDapServer} from './dap'
-import {registerDatabase} from './database'
-import {registerFileTemplates} from './fileTemplates'
-import {checkGeoRestricted} from './geoRestriction'
-import {checkEulaAccepted} from './eula'
-import {checkLegacyKotlinExtensionConflict} from './legacyKotlinExtensionConflict'
+import { type ExtensionContext } from 'vscode';
+import { activateExtension } from '@jetbrains/vscode-extension-core';
+import kotlinModule from '@jetbrains/vscode-language-kotlin';
+import { checkGeoRestricted } from './geoRestriction';
 
-let _context: ExtensionContext | undefined
-let _outputChannel: OutputChannel | undefined;
-
-export function getContext(): ExtensionContext {
-    return _context!;
-}
-
-export function getOutputChannel(): OutputChannel {
-    return _outputChannel!;
-}
-
-export function logInfo(text: string) {
-    if (_outputChannel) {
-        _outputChannel.appendLine(text)
-    } else {
-        console.log(text);
-    }
-}
-
-function registerExportWorkspaceToJsonCommand(context: ExtensionContext) {
-    context.subscriptions.push(commands.registerCommand('jetbrains.exportWorkspaceToJson', async () => {
-        if (workspace.rootPath === undefined) {
-            await window.showErrorMessage('No workspace opened');
-            return;
-        }
-        const rootPath = workspace.rootPath as string;
-        await commands.executeCommand('exportWorkspace', rootPath);
-        const choice = await window.showInformationMessage('Exported workspace structure to workspace.json.', 'Open');
-        if (choice === 'Open') {
-            const uri = Uri.file(path.join(rootPath, 'workspace.json'));
-            const doc = await workspace.openTextDocument(uri);
-            await window.showTextDocument(doc);
-        }
-    }));
-}
-
-const ReloadWorkspaceRequest = new RequestType0<null, void>('intellij/reloadWorkspace');
-
-function registerReloadWorkspaceCommand(context: ExtensionContext) {
-    context.subscriptions.push(commands.registerCommand('jetbrains.kotlin.reloadWorkspace', async () => {
-        const client = getLspClient();
-        if (client === undefined || client.initializeResult === undefined) {
-            await window.showErrorMessage('Language server is not running');
-            return;
-        }
-        try {
-            await client.sendRequest(ReloadWorkspaceRequest);
-            await window.showInformationMessage('Workspace reloaded');
-        } catch (e) {
-            if (e instanceof ResponseError && e.code === LSPErrorCodes.RequestCancelled) return;
-            const message = e instanceof Error ? e.message : String(e);
-            await window.showErrorMessage(`Failed to reload workspace: ${message}`);
-        }
-    }));
-}
-const dynamicModulesContext = (require as any).context('.', true, /^\.\/[A-Za-z0-9_-]+\/module\.ts$/);
-
-export async function activate(context: ExtensionContext) {
-    _context = context;
-    initOutputChannel(context);
-
-    if (await checkGeoRestricted(context.extension)) {
-        return;
-    }
-    if (!await checkEulaAccepted(context)) {
-        return;
-    }
-
-    if (checkLegacyKotlinExtensionConflict(context)) {
-        return;
-    }
-
-    registerDecompiler(context);
-    registerOpeningJars();
-    registerDapServer(context);
-    registerDatabase(context);
-    registerExportWorkspaceToJsonCommand(context);
-    registerReloadWorkspaceCommand(context);
-    registerStatusBarItem();
-    registerFileTemplates(context);
-
-    for (let key of dynamicModulesContext.keys()) {
-        const module = dynamicModulesContext(key) as any;
-        await module.default(context);
-    }
-
-    initLspClient();
-    await startLspClient();
-}
-
-function initOutputChannel(context: ExtensionContext) {
-    const extension = extensions.getExtension(context.extension.id);
-    const pkg = extension?.packageJSON as { displayName?: string } | undefined;
-    _outputChannel = window.createOutputChannel(pkg?.displayName ?? 'JetBrains LSP');
+export async function activate(context: ExtensionContext): Promise<void> {
+    await activateExtension(context, {
+        checkGeoRestricted,
+        enableDapServer: true,
+        enableDecompiler: true,
+        modules: [kotlinModule],
+    });
 }

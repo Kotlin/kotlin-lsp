@@ -1,0 +1,24 @@
+{
+  "name": "@jetbrains/vscode-language-kotlin",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/kotlin/module.ts"
+  },
+  "scripts": {
+    "test": "node --import tsx --test src/kotlin/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@jetbrains/vscode-extension-core": "workspace:*",
+    "@tree-sitter-grammars/tree-sitter-kotlin": "catalog:",
+    "web-tree-sitter": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/vscode": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}

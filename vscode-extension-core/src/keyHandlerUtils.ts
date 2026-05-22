@@ -1,37 +1,48 @@
-import type {Node, Tree} from 'web-tree-sitter';
+import type { Node, Tree } from 'web-tree-sitter';
 
 export interface KeyResult {
-    text: string
-    startOffset: number
-    endOffset: number
-    caretOffset: number
+    text: string;
+    startOffset: number;
+    endOffset: number;
+    caretOffset: number;
 }
 
-export type KeyHandler = (text: string, tree: Tree, key: string, index: number, indentUnit: string) => KeyResult;
+export type KeyHandler = (
+    text: string,
+    tree: Tree,
+    key: string,
+    index: number,
+    indentUnit: string,
+) => KeyResult;
 
 export interface BlockCommentContext {
-    start: number
-    end: number | null
-    isDoc: boolean
+    start: number;
+    end: number | null;
+    isDoc: boolean;
 }
 
 export interface PairedDelimiterContext {
-    opening: string
-    openIndex: number
-    between: string
+    opening: string;
+    openIndex: number;
+    between: string;
 }
 
 export interface OpeningDelimiterOptions {
-    skipPairingWhenNextCharEqualsClosing?: boolean
-    extraAutoCloseChars?: Iterable<string>
-    commentPrefixes?: string[]
+    skipPairingWhenNextCharEqualsClosing?: boolean;
+    extraAutoCloseChars?: Iterable<string>;
+    commentPrefixes?: string[];
 }
 
 interface EmptyPairedDelimiterOptions {
-    shouldInsertClosingLine?: (context: PairedDelimiterContext) => boolean
+    shouldInsertClosingLine?: (context: PairedDelimiterContext) => boolean;
 }
 
-type SpecialNodeKeyHandler = (node: Node, text: string, key: string, index: number) => KeyResult | null;
+type SpecialNodeKeyHandler = (
+    node: Node,
+    text: string,
+    key: string,
+    index: number,
+) => KeyResult | null;
 type EnterResultHandler = (node: Node) => KeyResult | null;
 
 const OPENING_BY_CLOSING = new Map<string, string>([
@@ -46,7 +57,12 @@ const CLOSING_BY_OPENING = new Map<string, string>([
     ['{', '}'],
 ]);
 
-export function keyResult(text: string, startOffset: number, endOffset: number, caretOffset: number): KeyResult {
+export function keyResult(
+    text: string,
+    startOffset: number,
+    endOffset: number,
+    caretOffset: number,
+): KeyResult {
     return {
         text,
         startOffset,
@@ -56,11 +72,11 @@ export function keyResult(text: string, startOffset: number, endOffset: number, 
 }
 
 export function withSpecialNodeResult(
-        tree: Tree,
-        key: string,
-        index: number,
-        specialNodeHandler: (node: Node) => KeyResult | null,
-        fallback: (node: Node) => KeyResult,
+    tree: Tree,
+    key: string,
+    index: number,
+    specialNodeHandler: (node: Node) => KeyResult | null,
+    fallback: (node: Node) => KeyResult,
 ): KeyResult {
     const node = tree.rootNode.descendantForIndex(index);
     if (node === null) {
@@ -70,64 +86,72 @@ export function withSpecialNodeResult(
 }
 
 export function handleKeyWithSpecialNode(
-        text: string,
-        tree: Tree,
-        key: string,
-        index: number,
-        specialNodeHandler: SpecialNodeKeyHandler,
-        fallback: (node: Node) => KeyResult,
+    text: string,
+    tree: Tree,
+    key: string,
+    index: number,
+    specialNodeHandler: SpecialNodeKeyHandler,
+    fallback: (node: Node) => KeyResult,
 ): KeyResult {
-    return withSpecialNodeResult(tree, key, index, (node) => specialNodeHandler(node, text, key, index), fallback);
+    return withSpecialNodeResult(
+        tree,
+        key,
+        index,
+        (node) => specialNodeHandler(node, text, key, index),
+        fallback,
+    );
 }
 
 export function handleOpeningDelimiterKey(
-        text: string,
-        tree: Tree,
-        index: number,
-        opening: string,
-        closing: string,
-        specialNodeHandler: SpecialNodeKeyHandler,
-        options: OpeningDelimiterOptions = {},
+    text: string,
+    tree: Tree,
+    index: number,
+    opening: string,
+    closing: string,
+    specialNodeHandler: SpecialNodeKeyHandler,
+    options: OpeningDelimiterOptions = {},
 ): KeyResult {
-    return handleKeyWithSpecialNode(text, tree, opening, index, specialNodeHandler, () => getOpeningDelimiterResult(text, index, opening, closing, options));
+    return handleKeyWithSpecialNode(text, tree, opening, index, specialNodeHandler, () =>
+        getOpeningDelimiterResult(text, index, opening, closing, options),
+    );
 }
 
 export function handleStandardClosingDelimiterKey(
-        text: string,
-        tree: Tree,
-        key: string,
-        index: number,
-        specialNodeHandler: SpecialNodeKeyHandler,
-        ignoredAncestorTypes: Set<string>,
+    text: string,
+    tree: Tree,
+    key: string,
+    index: number,
+    specialNodeHandler: SpecialNodeKeyHandler,
+    ignoredAncestorTypes: Set<string>,
 ): KeyResult {
     return handleKeyWithSpecialNode(text, tree, key, index, specialNodeHandler, (node) => {
         return shouldSkipClosingDelimiter(text, node, key, index, ignoredAncestorTypes)
-                ? keyResult('', index, index + 1, index + 1)
-                : keyResult(key, index, index + 1, index + 1);
+            ? keyResult('', index, index + 1, index + 1)
+            : keyResult(key, index, index + 1, index + 1);
     });
 }
 
 export function handlePairedClosingDelimiterKey(
-        text: string,
-        tree: Tree,
-        key: string,
-        index: number,
-        opening: string,
-        specialNodeHandler: SpecialNodeKeyHandler,
+    text: string,
+    tree: Tree,
+    key: string,
+    index: number,
+    opening: string,
+    specialNodeHandler: SpecialNodeKeyHandler,
 ): KeyResult {
     return handleKeyWithSpecialNode(text, tree, key, index, specialNodeHandler, (node) => {
         return shouldSkipPairedClosingDelimiter(node, text, key, index, opening)
-                ? keyResult('', index, index + 1, index + 1)
-                : keyResult(key, index, index + 1, index + 1);
+            ? keyResult('', index, index + 1, index + 1)
+            : keyResult(key, index, index + 1, index + 1);
     });
 }
 
 export function getOpeningDelimiterResult(
-        text: string,
-        index: number,
-        opening: string,
-        closing: string,
-        options: OpeningDelimiterOptions = {},
+    text: string,
+    index: number,
+    opening: string,
+    closing: string,
+    options: OpeningDelimiterOptions = {},
 ): KeyResult {
     const nextChar = text[index + 1];
     if (options.skipPairingWhenNextCharEqualsClosing && nextChar === closing) {
@@ -179,7 +203,11 @@ export function getNextLeaf(node: Node | null): Node | null {
 
 export function countTokenBalance(node: Node, opening: string, closing: string): number {
     let balance = 0;
-    for (let current: Node | null = getFirstLeaf(node); current !== null && current.startIndex < node.endIndex; current = getNextLeaf(current)) {
+    for (
+        let current: Node | null = getFirstLeaf(node);
+        current !== null && current.startIndex < node.endIndex;
+        current = getNextLeaf(current)
+    ) {
         switch (current.type) {
             case opening:
                 balance++;
@@ -219,13 +247,20 @@ export function findEnclosingErrorNode(node: Node, index: number): Node | null {
         return null;
     }
 
-    return findAncestor(node.tree.rootNode.namedDescendantForIndex(previousIndex), 'ERROR')
-            ?? findLastErrorBeforeIndex(node.tree.rootNode, previousIndex);
+    return (
+        findAncestor(node.tree.rootNode.namedDescendantForIndex(previousIndex), 'ERROR') ??
+        findLastErrorBeforeIndex(node.tree.rootNode, previousIndex)
+    );
 }
 
 export function getLineStart(text: string, index: number): number {
     let current = index;
-    if (current > 0 && current < text.length && text[current] === '\n' && text[current - 1] === '\r') {
+    if (
+        current > 0 &&
+        current < text.length &&
+        text[current] === '\n' &&
+        text[current - 1] === '\r'
+    ) {
         current--;
     }
     while (current > 0) {
@@ -289,13 +324,13 @@ export function skipIndent(text: string, start: number, end: number): number {
 }
 
 export function handleEnterWithHandlers(
-        text: string,
-        tree: Tree,
-        index: number,
-        indentUnit: string,
-        handlers: ReadonlyArray<EnterResultHandler>,
-        fallback: (node: Node) => KeyResult,
-        missingNodeFallback?: () => KeyResult,
+    text: string,
+    tree: Tree,
+    index: number,
+    indentUnit: string,
+    handlers: ReadonlyArray<EnterResultHandler>,
+    fallback: (node: Node) => KeyResult,
+    missingNodeFallback?: () => KeyResult,
 ): KeyResult {
     const node = tree.rootNode.descendantForIndex(index);
     if (node === null) {
@@ -312,22 +347,23 @@ export function handleEnterWithHandlers(
 }
 
 export function handleRegularEnter(
-        text: string,
-        index: number,
-        indentUnit: string,
-        continuationIndentOverride?: string | null,
+    text: string,
+    index: number,
+    indentUnit: string,
+    continuationIndentOverride?: string | null,
 ): KeyResult {
     const previousLineIndent = getPreviousNonEmptyLineIndent(text, index);
-    const continuationIndent = continuationIndentOverride
-            ?? (previousLineIndent === null ? null : `${previousLineIndent}${indentUnit}`);
+    const continuationIndent =
+        continuationIndentOverride ??
+        (previousLineIndent === null ? null : `${previousLineIndent}${indentUnit}`);
     return getRegularEnterResult(text, index, previousLineIndent, continuationIndent);
 }
 
 export function getRegularEnterResult(
-        text: string,
-        index: number,
-        previousLineIndent: string | null,
-        continuationIndent: string | null,
+    text: string,
+    index: number,
+    previousLineIndent: string | null,
+    continuationIndent: string | null,
 ): KeyResult {
     const shouldUseContinuationIndent = shouldApplyContinuationIndent(text, index);
 
@@ -355,7 +391,8 @@ export function getRegularEnterResult(
         return keyResult('\n', index, index + 1, index + 1);
     }
 
-    const indent = shouldUseContinuationIndent && continuationIndent !== null
+    const indent =
+        shouldUseContinuationIndent && continuationIndent !== null
             ? continuationIndent
             : previousLineIndent;
     const replacement = `\n${indent}`;
@@ -363,10 +400,10 @@ export function getRegularEnterResult(
 }
 
 export function getAlignedAncestorListContinuationIndent(
-        text: string,
-        node: Node | null,
-        index: number,
-        ancestorTypes: Iterable<string>,
+    text: string,
+    node: Node | null,
+    index: number,
+    ancestorTypes: Iterable<string>,
 ): string | null {
     if (node === null || getPreviousSignificantChar(text, index) !== ',') {
         return null;
@@ -394,7 +431,11 @@ export function getAlignedListIndent(text: string, listNode: Node, index: number
     return alignmentWidth <= 0 ? baseIndent : `${baseIndent}${' '.repeat(alignmentWidth)}`;
 }
 
-export function getMultilineListItemIndent(text: string, listNode: Node, index: number): string | null {
+export function getMultilineListItemIndent(
+    text: string,
+    listNode: Node,
+    index: number,
+): string | null {
     const firstItem = listNode.namedChild(0);
     if (firstItem === null || firstItem.startIndex >= index) {
         return null;
@@ -403,15 +444,15 @@ export function getMultilineListItemIndent(text: string, listNode: Node, index: 
     const listLineStart = getLineStart(text, listNode.startIndex);
     const firstItemLineStart = getLineStart(text, firstItem.startIndex);
     return firstItemLineStart === listLineStart
-            ? getAlignedListIndent(text, listNode, index)
-            : getIndent(text, firstItemLineStart);
+        ? getAlignedListIndent(text, listNode, index)
+        : getIndent(text, firstItemLineStart);
 }
 
 export function getExistingMultilineItemIndent(
-        text: string,
-        containerStartIndex: number,
-        firstItem: Node | null,
-        index: number,
+    text: string,
+    containerStartIndex: number,
+    firstItem: Node | null,
+    index: number,
 ): string | null {
     if (firstItem === null || firstItem.startIndex >= index) {
         return null;
@@ -424,16 +465,21 @@ export function getExistingMultilineItemIndent(
 
     const containerLineStart = getLineStart(text, containerStartIndex);
     const firstItemLineStart = getLineStart(text, firstItem.startIndex);
-    return firstItemLineStart === containerLineStart
-            ? null
-            : getIndent(text, firstItemLineStart);
+    return firstItemLineStart === containerLineStart ? null : getIndent(text, firstItemLineStart);
 }
 
-export function getExistingMultilineListItemIndent(text: string, listNode: Node, index: number): string | null {
+export function getExistingMultilineListItemIndent(
+    text: string,
+    listNode: Node,
+    index: number,
+): string | null {
     return getExistingMultilineItemIndent(text, listNode.startIndex, listNode.namedChild(0), index);
 }
 
-export function keyResultWithOptionalBlockIndent(previousLineIndent: string | null, index: number): KeyResult {
+export function keyResultWithOptionalBlockIndent(
+    previousLineIndent: string | null,
+    index: number,
+): KeyResult {
     if (previousLineIndent === null || previousLineIndent.length === 0) {
         return keyResult('\n', index, index + 1, index + 1);
     }
@@ -460,27 +506,32 @@ export function getPreviousNonEmptyLineIndent(text: string, index: number): stri
 }
 
 export function getCommaSeparatedBodyContinuationIndent(
-        text: string,
-        node: Node | null,
-        index: number,
-        ancestorTypes: readonly string[],
+    text: string,
+    node: Node | null,
+    index: number,
+    ancestorTypes: readonly string[],
 ): string | null {
     if (node === null || getPreviousSignificantChar(text, index) !== ',') {
         return null;
     }
 
-    return ancestorTypes.some((ancestorType) => findAncestorAtEnter(node, index, ancestorType) !== null)
-            ? getPreviousNonEmptyLineIndent(text, index)
-            : null;
+    return ancestorTypes.some(
+        (ancestorType) => findAncestorAtEnter(node, index, ancestorType) !== null,
+    )
+        ? getPreviousNonEmptyLineIndent(text, index)
+        : null;
 }
 
-export function getPreviousNonEmptyLine(text: string, index: number): { start: number, end: number, text: string } | null {
+export function getPreviousNonEmptyLine(
+    text: string,
+    index: number,
+): { start: number; end: number; text: string } | null {
     let lineEnd = index;
     while (lineEnd > 0) {
         const lineStart = getLineStart(text, lineEnd - 1);
         const line = text.slice(lineStart, lineEnd);
         if (line.trim().length !== 0) {
-            return {start: lineStart, end: lineEnd, text: line};
+            return { start: lineStart, end: lineEnd, text: line };
         }
         lineEnd = lineStart;
     }
@@ -488,10 +539,10 @@ export function getPreviousNonEmptyLine(text: string, index: number): { start: n
 }
 
 export function getLeadingNavigationContinuationIndent(
-        text: string,
-        index: number,
-        continuationIndent: string,
-        prefixes: ReadonlyArray<string>,
+    text: string,
+    index: number,
+    continuationIndent: string,
+    prefixes: ReadonlyArray<string>,
 ): string {
     const previousLine = getPreviousNonEmptyLine(text, index);
     if (previousLine === null) {
@@ -500,16 +551,16 @@ export function getLeadingNavigationContinuationIndent(
 
     const trimmedPreviousLine = previousLine.text.trimStart();
     return prefixes.some((prefix) => trimmedPreviousLine.startsWith(prefix))
-            ? getIndent(text, previousLine.start)
-            : continuationIndent;
+        ? getIndent(text, previousLine.start)
+        : continuationIndent;
 }
 
 export function getClosedNodeBodyIndent(
-        text: string,
-        start: number,
-        end: number | null,
-        index: number,
-        shouldIgnoreLine: (trimmedLine: string) => boolean,
+    text: string,
+    start: number,
+    end: number | null,
+    index: number,
+    shouldIgnoreLine: (trimmedLine: string) => boolean,
 ): string | null {
     if (end === null) {
         return null;
@@ -549,11 +600,11 @@ export function getPreviousSignificantChar(text: string, index: number): string 
 }
 
 export function handleEmptyPairedDelimiterEnter(
-        node: Node,
-        text: string,
-        index: number,
-        indentUnit: string,
-        options: EmptyPairedDelimiterOptions = {},
+    node: Node,
+    text: string,
+    index: number,
+    indentUnit: string,
+    options: EmptyPairedDelimiterOptions = {},
 ): KeyResult | null {
     const context = findEnclosingPairedDelimiter(node, text, index);
     if (context === null) {
@@ -564,7 +615,9 @@ export function handleEmptyPairedDelimiterEnter(
     const bodyIndent = `${baseIndent}${indentUnit}`;
     if (/^[ \t]*\r?\n[ \t]*$/.test(context.between)) {
         const shouldInsertClosingLine = options.shouldInsertClosingLine?.(context) ?? true;
-        const replacement = shouldInsertClosingLine ? `\n${bodyIndent}\n${baseIndent}` : `\n${bodyIndent}`;
+        const replacement = shouldInsertClosingLine
+            ? `\n${bodyIndent}\n${baseIndent}`
+            : `\n${bodyIndent}`;
         return keyResult(replacement, index, index + 1, index + `\n${bodyIndent}`.length);
     }
     if (/^\r?\n\r?\n[ \t]*$/.test(context.between)) {
@@ -574,10 +627,10 @@ export function handleEmptyPairedDelimiterEnter(
 }
 
 export function findBlockCommentContext(
-        node: Node,
-        text: string,
-        index: number,
-        ancestorType: string,
+    node: Node,
+    text: string,
+    index: number,
+    ancestorType: string,
 ): BlockCommentContext | null {
     const blockComment = findAncestor(node, ancestorType);
     if (blockComment?.text.startsWith('/*')) {
@@ -594,28 +647,33 @@ export function findBlockCommentContext(
     }
 
     const start = findUnterminatedBlockCommentStart(errorNode, text, index);
-    return start === null ? null : {start, end: null, isDoc: text.startsWith('/**', start)};
+    return start === null ? null : { start, end: null, isDoc: text.startsWith('/**', start) };
 }
 
 export function handleSimpleBlockCommentEnter(
-        text: string,
-        context: BlockCommentContext,
-        index: number,
-        shouldIgnoreLine: (trimmedLine: string) => boolean,
+    text: string,
+    context: BlockCommentContext,
+    index: number,
+    shouldIgnoreLine: (trimmedLine: string) => boolean,
 ): KeyResult {
     if (context.end !== null) {
         const currentLineTail = text.slice(index + 1, getLineEnd(text, index + 1));
         if (currentLineTail.trim().length === 0) {
             const bodyIndent = getClosedNodeBodyIndent(
-                    text,
-                    context.start,
-                    context.end,
-                    index,
-                    shouldIgnoreLine,
+                text,
+                context.start,
+                context.end,
+                index,
+                shouldIgnoreLine,
             );
             if (bodyIndent !== null) {
                 const replacement = `\n${bodyIndent}`;
-                return keyResult(replacement, index, index + 1 + currentLineTail.length, index + replacement.length);
+                return keyResult(
+                    replacement,
+                    index,
+                    index + 1 + currentLineTail.length,
+                    index + replacement.length,
+                );
             }
         }
         return keyResult('\n', index, index + 1, index + 1);
@@ -623,17 +681,22 @@ export function handleSimpleBlockCommentEnter(
 
     const commentIndent = getIndent(text, getLineStart(text, context.start));
     const prefixLine = `\n${commentIndent} `;
-    return keyResult(`${prefixLine}\n${commentIndent} */`, index, index + 1, index + prefixLine.length);
+    return keyResult(
+        `${prefixLine}\n${commentIndent} */`,
+        index,
+        index + 1,
+        index + prefixLine.length,
+    );
 }
 
 export function handleSimpleBlockCommentOrRegularEnter(
-        text: string,
-        node: Node,
-        index: number,
-        indentUnit: string,
-        ancestorType: string,
-        shouldIgnoreLine: (trimmedLine: string) => boolean,
-        continuationIndent?: string | null,
+    text: string,
+    node: Node,
+    index: number,
+    indentUnit: string,
+    ancestorType: string,
+    shouldIgnoreLine: (trimmedLine: string) => boolean,
+    continuationIndent?: string | null,
 ): KeyResult {
     const context = findBlockCommentContext(node, text, index, ancestorType);
     if (context === null) {
@@ -643,12 +706,12 @@ export function handleSimpleBlockCommentOrRegularEnter(
 }
 
 export function handleLineCommentEnter(
-        text: string,
-        node: Node,
-        index: number,
-        ancestorType: string,
-        marker: string,
-        continueOnBlankLine: boolean = false,
+    text: string,
+    node: Node,
+    index: number,
+    ancestorType: string,
+    marker: string,
+    continueOnBlankLine: boolean = false,
 ): KeyResult | null {
     const lineComment = findLineCommentAtEnter(text, node, index, ancestorType, marker);
     if (lineComment === null) {
@@ -678,7 +741,10 @@ export function handleLineCommentEnter(
     return keyResult(`\n${prefix}`, index, index + 1, index + prefix.length + 1);
 }
 
-export function getLineBreakAtIndex(text: string, index: number): { startOffset: number, endOffset: number, text: string } {
+export function getLineBreakAtIndex(
+    text: string,
+    index: number,
+): { startOffset: number; endOffset: number; text: string } {
     if (text[index] === '\n' && index > 0 && text[index - 1] === '\r') {
         return {
             startOffset: index - 1,
@@ -701,14 +767,14 @@ export function getLineBreakAtIndex(text: string, index: number): { startOffset:
 }
 
 export function handleStringLiteralEnter(
-        text: string,
-        node: Node,
-        index: number,
-        ancestorType: string,
-        delimiter: string,
-        concatenationOperator: string,
-        indentUnit: string,
-        excludedPrefixes: string[] = [],
+    text: string,
+    node: Node,
+    index: number,
+    ancestorType: string,
+    delimiter: string,
+    concatenationOperator: string,
+    indentUnit: string,
+    excludedPrefixes: string[] = [],
 ): KeyResult | null {
     const stringLiteral = findAncestorAtEnter(node, index, ancestorType);
     if (stringLiteral === null || !text.startsWith(delimiter, stringLiteral.startIndex)) {
@@ -725,37 +791,38 @@ export function handleStringLiteralEnter(
     const continuationIndent = `${getIndent(text, getLineStart(text, stringLiteral.startIndex))}${indentUnit}${indentUnit}`;
     const replacement = `${delimiter} ${concatenationOperator} ${lineBreak.text}${continuationIndent}${delimiter}`;
     return keyResult(
-            replacement,
-            lineBreak.startOffset,
-            lineBreak.endOffset,
-            lineBreak.startOffset + replacement.length - delimiter.length,
+        replacement,
+        lineBreak.startOffset,
+        lineBreak.endOffset,
+        lineBreak.startOffset + replacement.length - delimiter.length,
     );
 }
 
 export function handleMultilineClosedNodeEnter(
-        text: string,
-        node: Node,
-        index: number,
-        ancestorType: string,
-        shouldHandleNode: (targetNode: Node) => boolean,
-        shouldIgnoreLine: (trimmedLine: string) => boolean,
+    text: string,
+    node: Node,
+    index: number,
+    ancestorType: string,
+    shouldHandleNode: (targetNode: Node) => boolean,
+    shouldIgnoreLine: (trimmedLine: string) => boolean,
 ): KeyResult | null {
     const targetNode = findAncestorAtEnter(node, index, ancestorType);
     if (targetNode === null || !shouldHandleNode(targetNode)) {
         return null;
     }
-    const hasOtherLineBreak = text.slice(targetNode.startIndex, index).includes('\n') ||
-            text.slice(index + 1, targetNode.endIndex).includes('\n');
+    const hasOtherLineBreak =
+        text.slice(targetNode.startIndex, index).includes('\n') ||
+        text.slice(index + 1, targetNode.endIndex).includes('\n');
     if (!hasOtherLineBreak) {
         return null;
     }
 
     const bodyIndent = getClosedNodeBodyIndent(
-            text,
-            targetNode.startIndex,
-            targetNode.endIndex,
-            index,
-            shouldIgnoreLine,
+        text,
+        targetNode.startIndex,
+        targetNode.endIndex,
+        index,
+        shouldIgnoreLine,
     );
     if (bodyIndent === null) {
         return null;
@@ -766,11 +833,11 @@ export function handleMultilineClosedNodeEnter(
 }
 
 export function shouldSkipClosingDelimiter(
-        text: string,
-        node: Node,
-        key: string,
-        index: number,
-        ignoredAncestorTypes: Set<string>,
+    text: string,
+    node: Node,
+    key: string,
+    index: number,
+    ignoredAncestorTypes: Set<string>,
 ): boolean {
     const expectedOpening = OPENING_BY_CLOSING.get(key);
     if (expectedOpening === undefined || text[index + 1] !== key) {
@@ -778,7 +845,7 @@ export function shouldSkipClosingDelimiter(
     }
 
     const stack: string[] = [key];
-    for (let currentNode: Node | null = getPreviousLeaf(node); currentNode !== null;) {
+    for (let currentNode: Node | null = getPreviousLeaf(node); currentNode !== null; ) {
         const ignoredAncestor = findAncestorInSet(currentNode, ignoredAncestorTypes);
         if (ignoredAncestor !== null) {
             currentNode = getPreviousLeaf(ignoredAncestor);
@@ -816,15 +883,28 @@ function isAfterStandaloneBlockCommentLine(text: string, index: number): boolean
 }
 
 function shouldAutoCloseOpeningDelimiter(
-        text: string,
-        index: number,
-        nextChar: string | undefined,
-        options: OpeningDelimiterOptions,
+    text: string,
+    index: number,
+    nextChar: string | undefined,
+    options: OpeningDelimiterOptions,
 ): boolean {
-    if (nextChar === undefined || nextChar === ' ' || nextChar === '\t' || nextChar === '\n' || nextChar === '\r') {
+    if (
+        nextChar === undefined ||
+        nextChar === ' ' ||
+        nextChar === '\t' ||
+        nextChar === '\n' ||
+        nextChar === '\r'
+    ) {
         return true;
     }
-    if (nextChar === ',' || nextChar === ';' || nextChar === ')' || nextChar === ']' || nextChar === '}' || nextChar === '{') {
+    if (
+        nextChar === ',' ||
+        nextChar === ';' ||
+        nextChar === ')' ||
+        nextChar === ']' ||
+        nextChar === '}' ||
+        nextChar === '{'
+    ) {
         return true;
     }
     for (const char of options.extraAutoCloseChars ?? []) {
@@ -868,9 +948,9 @@ function getFirstLeaf(node: Node): Node {
 }
 
 export function findEnclosingPairedDelimiter(
-        node: Node,
-        text: string,
-        index: number,
+    node: Node,
+    text: string,
+    index: number,
 ): PairedDelimiterContext | null {
     for (let current: Node | null = node; current !== null; current = current.parent) {
         const startIndex = current.startIndex;
@@ -889,7 +969,7 @@ export function findEnclosingPairedDelimiter(
             continue;
         }
 
-        return {opening, openIndex: startIndex, between};
+        return { opening, openIndex: startIndex, between };
     }
 
     return null;
@@ -908,13 +988,23 @@ function isMatchingPair(opening: string, closing: string): boolean {
     return OPENING_BY_CLOSING.get(closing) === opening;
 }
 
-function shouldSkipPairedClosingDelimiter(node: Node, text: string, key: string, index: number, opening: string): boolean {
+function shouldSkipPairedClosingDelimiter(
+    node: Node,
+    text: string,
+    key: string,
+    index: number,
+    opening: string,
+): boolean {
     if (text[index + 1] !== key) {
         return false;
     }
 
     const stack: string[] = [key];
-    for (let currentNode: Node | null = getPreviousLeaf(node); currentNode !== null; currentNode = getPreviousLeaf(currentNode)) {
+    for (
+        let currentNode: Node | null = getPreviousLeaf(node);
+        currentNode !== null;
+        currentNode = getPreviousLeaf(currentNode)
+    ) {
         if (currentNode.type === key) {
             stack.push(key);
             continue;
@@ -931,7 +1021,11 @@ function shouldSkipPairedClosingDelimiter(node: Node, text: string, key: string,
     return false;
 }
 
-function findUnterminatedBlockCommentStart(errorNode: Node, text: string, index: number): number | null {
+function findUnterminatedBlockCommentStart(
+    errorNode: Node,
+    text: string,
+    index: number,
+): number | null {
     const errorStartIndex = errorNode.startIndex;
     const localLimit = index - errorStartIndex;
     if (localLimit < 2) {
@@ -961,11 +1055,11 @@ function findUnterminatedBlockCommentStart(errorNode: Node, text: string, index:
 }
 
 function findLineCommentAtEnter(
-        text: string,
-        node: Node,
-        index: number,
-        ancestorType: string,
-        marker: string,
+    text: string,
+    node: Node,
+    index: number,
+    ancestorType: string,
+    marker: string,
 ): Node | null {
     const lineComment = findAncestorAtEnter(node, index, ancestorType);
     if (lineComment !== null && text.startsWith(marker, lineComment.startIndex)) {

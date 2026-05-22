@@ -1,4 +1,4 @@
-import {Tree, Node} from 'web-tree-sitter';
+import { Tree, Node } from 'web-tree-sitter';
 import {
     type BlockCommentContext,
     type KeyResult,
@@ -31,27 +31,18 @@ import {
     handleStandardClosingDelimiterKey,
     keyResult,
     skipIndent,
-} from '../keyHandlerUtils';
+} from '@jetbrains/vscode-extension-core/keyHandlerUtils';
 
 const DEFAULT_TRIM_MARGIN_CHAR = '|';
 const MULTILINE_QUOTE = '"""';
-const TEXT_NODE_TYPES = new Set([
-    'block_comment',
-    'line_comment',
-    'string_content',
-]);
+const TEXT_NODE_TYPES = new Set(['block_comment', 'line_comment', 'string_content']);
 const ENTER_LITERAL_ANCESTOR_TYPES = new Set([
     'string_content',
     'string_literal',
     'character_literal',
 ]);
-const CONTINUATION_ALIGN_ANCESTOR_TYPES = [
-    'type_parameters',
-];
-const PARAMETER_LIST_ANCESTOR_TYPES = [
-    'function_value_parameters',
-    'class_parameters',
-];
+const CONTINUATION_ALIGN_ANCESTOR_TYPES = ['type_parameters'];
+const PARAMETER_LIST_ANCESTOR_TYPES = ['function_value_parameters', 'class_parameters'];
 const BLOCK_COMMENT_SCAN_ROOT_TYPES = new Set([
     'block',
     'class_body',
@@ -71,7 +62,13 @@ const OPENING_DELIMITER_OPTIONS = {
     commentPrefixes: ['//', '/*'],
 };
 
-export default (text: string, tree: Tree, key: string, index: number, indentUnit: string): KeyResult => {
+export default (
+    text: string,
+    tree: Tree,
+    key: string,
+    index: number,
+    indentUnit: string,
+): KeyResult => {
     switch (key) {
         case '\n':
             return handleEnter(text, tree, index, indentUnit);
@@ -95,7 +92,7 @@ export default (text: string, tree: Tree, key: string, index: number, indentUnit
         default:
             return keyResult(key, index, index + 1, index + key.length);
     }
-}
+};
 
 function handleLeftParenthesis(text: string, tree: Tree, index: number): KeyResult {
     return handleOpeningDelimiter(text, tree, index, '(', ')');
@@ -105,8 +102,22 @@ function handleLeftBracket(text: string, tree: Tree, index: number): KeyResult {
     return handleOpeningDelimiter(text, tree, index, '[', ']');
 }
 
-function handleOpeningDelimiter(text: string, tree: Tree, index: number, opening: string, closing: string): KeyResult {
-    return handleOpeningDelimiterKey(text, tree, index, opening, closing, handleSpecialNodeKey, OPENING_DELIMITER_OPTIONS);
+function handleOpeningDelimiter(
+    text: string,
+    tree: Tree,
+    index: number,
+    opening: string,
+    closing: string,
+): KeyResult {
+    return handleOpeningDelimiterKey(
+        text,
+        tree,
+        index,
+        opening,
+        closing,
+        handleSpecialNodeKey,
+        OPENING_DELIMITER_OPTIONS,
+    );
 }
 
 function handleLeftBrace(text: string, tree: Tree, index: number): KeyResult {
@@ -124,21 +135,35 @@ function handleLeftBrace(text: string, tree: Tree, index: number): KeyResult {
 }
 
 function handleSingleQuote(text: string, tree: Tree, index: number): KeyResult {
-    return handleKeyWithSpecialNode(text, tree, `'`, index, handleSpecialNodeKey, () => keyResult(`''`, index, index + 1, index + 1));
+    return handleKeyWithSpecialNode(text, tree, `'`, index, handleSpecialNodeKey, () =>
+        keyResult(`''`, index, index + 1, index + 1),
+    );
 }
 
 function handleDoubleQuoteKey(text: string, tree: Tree, index: number): KeyResult {
     const node = tree.rootNode.descendantForIndex(index);
 
     // Kotlin overtypes an existing closing quote instead of inserting a duplicate one.
-    if (node !== null && node.type !== '"""' && text[index + 1] === '"' && (index === 0 || text[index - 1] !== '\\')) {
+    if (
+        node !== null &&
+        node.type !== '"""' &&
+        text[index + 1] === '"' &&
+        (index === 0 || text[index - 1] !== '\\')
+    ) {
         return keyResult('', index, index + 1, index + 1);
     }
 
-    return handleKeyWithSpecialNode(text, tree, `"`, index, handleSpecialNodeKey, () => keyResult('"', index, index + 1, index + 1));
+    return handleKeyWithSpecialNode(text, tree, `"`, index, handleSpecialNodeKey, () =>
+        keyResult('"', index, index + 1, index + 1),
+    );
 }
 
-function handleSpecialNodeKey(node: Node, text: string, key: string, index: number): KeyResult | null {
+function handleSpecialNodeKey(
+    node: Node,
+    text: string,
+    key: string,
+    index: number,
+): KeyResult | null {
     if (node.type === 'block_comment') {
         return handleBlockComment(node, key, text, index);
     }
@@ -159,8 +184,8 @@ function handleSpecialNodeKey(node: Node, text: string, key: string, index: numb
 
 function getCharacterLiteralQuoteResult(text: string, index: number): KeyResult {
     return text[index + 1] === `'` && (index === 0 || text[index - 1] !== '\\')
-            ? keyResult('', index, index + 1, index + 1)
-            : keyResult(`'`, index, index + 1, index + 1);
+        ? keyResult('', index, index + 1, index + 1)
+        : keyResult(`'`, index, index + 1, index + 1);
 }
 
 function handleTripleQuote(node: Node, index: number): KeyResult {
@@ -183,7 +208,9 @@ function handleDoubleQuote(node: Node, index: number): KeyResult {
             // The Kotlin grammar may eagerly attach this quote to a later closing quote,
             // even though the user just started a new string. If this quote is the
             // opening delimiter of that literal, keep pairing it as an opening quote.
-            return node.startIndex === parent.startIndex ? keyResult('""', index, index + 1, index + 1) : keyResult('"', index, index + 1, index + 1);
+            return node.startIndex === parent.startIndex
+                ? keyResult('""', index, index + 1, index + 1)
+                : keyResult('"', index, index + 1, index + 1);
         case 'string_content':
             return keyResult('"', index, index + 1, index + 1);
         default:
@@ -193,80 +220,116 @@ function handleDoubleQuote(node: Node, index: number): KeyResult {
 
 function handleEnter(text: string, tree: Tree, index: number, indentUnit: string): KeyResult {
     return handleEnterWithHandlers(
-            text,
-            tree,
-            index,
-            indentUnit,
-            [
-                (node) => handleLineCommentEnter(text, node, index, 'line_comment', '//'),
-                (node) => handleStringLiteralEnter(text, node, index, indentUnit),
-                (node) => hasAncestor(node, ENTER_LITERAL_ANCESTOR_TYPES) ? keyResult('\n', index, index + 1, index + 1) : null,
-                (node) => handleEmptyLambdaBodyEnter(node, text, index, indentUnit),
-            ],
-            (node) => {
-                const commentContext = findBlockCommentContext(node, text, index);
-                if (commentContext === null) {
-                    return handleRegularEnter(text, node, index, indentUnit, getPreviousBlockCommentIndent(node, text, index));
-                }
-
-                const commentIndent = getIndent(text, getLineStart(text, commentContext.start));
-                const currentLineTail = getCurrentLineTail(text, index + 1);
-                const tailStartsWithAsterisk = /^\s*\*/.test(currentLineTail);
-                const whitespaceSinceCommentStart = /^\s*$/.test(text.slice(commentContext.start + (commentContext.isDoc ? 3 : 2), index));
-                const hasAsteriskLineBefore = hasLineWithPrefix(text, commentContext.start, index, '*');
-                const omitLeadingStarOnIndentedFirstLine = shouldOmitLeadingStarOnIndentedFirstLine(
-                        text,
-                        commentContext,
-                        commentIndent,
-                        index,
-                        hasAsteriskLineBefore,
-                        tailStartsWithAsterisk,
+        text,
+        tree,
+        index,
+        indentUnit,
+        [
+            (node) => handleLineCommentEnter(text, node, index, 'line_comment', '//'),
+            (node) => handleStringLiteralEnter(text, node, index, indentUnit),
+            (node) =>
+                hasAncestor(node, ENTER_LITERAL_ANCESTOR_TYPES)
+                    ? keyResult('\n', index, index + 1, index + 1)
+                    : null,
+            (node) => handleEmptyLambdaBodyEnter(node, text, index, indentUnit),
+        ],
+        (node) => {
+            const commentContext = findBlockCommentContext(node, text, index);
+            if (commentContext === null) {
+                return handleRegularEnter(
+                    text,
+                    node,
+                    index,
+                    indentUnit,
+                    getPreviousBlockCommentIndent(node, text, index),
                 );
-                const useLinePrefix = commentContext.isDoc ||
-                        hasAsteriskLineBefore ||
-                        tailStartsWithAsterisk ||
-                        (!omitLeadingStarOnIndentedFirstLine && whitespaceSinceCommentStart &&
-                                (commentContext.end === null || currentLineTail.trim().length === 0));
+            }
 
-                if (!useLinePrefix && commentContext.end !== null) {
-                    if (currentLineTail.trim() === '') {
-                        const bodyIndent = getClosedBlockCommentBodyIndent(text, commentContext, index);
-                        if (bodyIndent !== null) {
-                            const replacement = `\n${bodyIndent}`;
-                            return keyResult(replacement, index, index + 1 + currentLineTail.length, index + replacement.length);
-                        }
+            const commentIndent = getIndent(text, getLineStart(text, commentContext.start));
+            const currentLineTail = getCurrentLineTail(text, index + 1);
+            const tailStartsWithAsterisk = /^\s*\*/.test(currentLineTail);
+            const whitespaceSinceCommentStart = /^\s*$/.test(
+                text.slice(commentContext.start + (commentContext.isDoc ? 3 : 2), index),
+            );
+            const hasAsteriskLineBefore = hasLineWithPrefix(text, commentContext.start, index, '*');
+            const omitLeadingStarOnIndentedFirstLine = shouldOmitLeadingStarOnIndentedFirstLine(
+                text,
+                commentContext,
+                commentIndent,
+                index,
+                hasAsteriskLineBefore,
+                tailStartsWithAsterisk,
+            );
+            const useLinePrefix =
+                commentContext.isDoc ||
+                hasAsteriskLineBefore ||
+                tailStartsWithAsterisk ||
+                (!omitLeadingStarOnIndentedFirstLine &&
+                    whitespaceSinceCommentStart &&
+                    (commentContext.end === null || currentLineTail.trim().length === 0));
+
+            if (!useLinePrefix && commentContext.end !== null) {
+                if (currentLineTail.trim() === '') {
+                    const bodyIndent = getClosedBlockCommentBodyIndent(text, commentContext, index);
+                    if (bodyIndent !== null) {
+                        const replacement = `\n${bodyIndent}`;
+                        return keyResult(
+                            replacement,
+                            index,
+                            index + 1 + currentLineTail.length,
+                            index + replacement.length,
+                        );
                     }
-                    return keyResult('\n', index, index + 1, index + 1);
                 }
+                return keyResult('\n', index, index + 1, index + 1);
+            }
 
-                const docCommentBodyPrefix = commentContext.isDoc && currentLineTail.trim().length === 0
-                        ? getDocCommentBodyPrefix(text, commentContext, index)
-                        : null;
-                const prefixLine = `\n${docCommentBodyPrefix ?? `${commentIndent}${useLinePrefix ? ' * ' : ''}`}`;
-                const rewrittenTailResult = rewriteCommentLineTail(commentContext, commentIndent, currentLineTail, prefixLine, index, useLinePrefix);
-                if (rewrittenTailResult !== null) {
-                    return rewrittenTailResult;
-                }
+            const docCommentBodyPrefix =
+                commentContext.isDoc && currentLineTail.trim().length === 0
+                    ? getDocCommentBodyPrefix(text, commentContext, index)
+                    : null;
+            const prefixLine = `\n${docCommentBodyPrefix ?? `${commentIndent}${useLinePrefix ? ' * ' : ''}`}`;
+            const rewrittenTailResult = rewriteCommentLineTail(
+                commentContext,
+                commentIndent,
+                currentLineTail,
+                prefixLine,
+                index,
+                useLinePrefix,
+            );
+            if (rewrittenTailResult !== null) {
+                return rewrittenTailResult;
+            }
 
-                if (commentContext.end === null) {
-                    return keyResult(`${prefixLine}\n${commentIndent} */`, index, index + 1, index + prefixLine.length);
-                }
-                return keyResult(prefixLine, index, index + 1, index + prefixLine.length);
-            },
-            () => keyResult('\n', index, index + 1, index + 1),
+            if (commentContext.end === null) {
+                return keyResult(
+                    `${prefixLine}\n${commentIndent} */`,
+                    index,
+                    index + 1,
+                    index + prefixLine.length,
+                );
+            }
+            return keyResult(prefixLine, index, index + 1, index + prefixLine.length);
+        },
+        () => keyResult('\n', index, index + 1, index + 1),
     );
 }
 
 function shouldOmitLeadingStarOnIndentedFirstLine(
-        text: string,
-        commentContext: BlockCommentContext,
-        commentIndent: string,
-        index: number,
-        hasAsteriskLineBefore: boolean,
-        tailStartsWithAsterisk: boolean,
+    text: string,
+    commentContext: BlockCommentContext,
+    commentIndent: string,
+    index: number,
+    hasAsteriskLineBefore: boolean,
+    tailStartsWithAsterisk: boolean,
 ): boolean {
-    if (commentContext.isDoc || commentContext.end !== null || commentIndent.length === 0 ||
-            hasAsteriskLineBefore || tailStartsWithAsterisk) {
+    if (
+        commentContext.isDoc ||
+        commentContext.end !== null ||
+        commentIndent.length === 0 ||
+        hasAsteriskLineBefore ||
+        tailStartsWithAsterisk
+    ) {
         return false;
     }
 
@@ -274,32 +337,59 @@ function shouldOmitLeadingStarOnIndentedFirstLine(
 }
 
 function handleRegularEnter(
-        text: string,
-        node: Node,
-        index: number,
-        indentUnit: string,
-        previousLineIndentOverride?: string | null,
+    text: string,
+    node: Node,
+    index: number,
+    indentUnit: string,
+    previousLineIndentOverride?: string | null,
 ): KeyResult {
-    const previousLineIndent = previousLineIndentOverride ?? getPreviousNonEmptyLineIndent(text, index);
-    const classTypeParameterContinuationIndent = getClassTypeParameterContinuationIndent(text, node, index, indentUnit);
-    const classTypeArgumentContinuationIndent = getClassTypeArgumentContinuationIndent(text, node, index, indentUnit);
-    const continuationIndent = getFunctionParameterContinuationIndent(text, node, index)
-            ?? getFunctionArgumentContinuationIndent(text, node, index)
-            ?? getCommaSeparatedBodyContinuationIndent(text, node, index, ['enum_class_body'])
-            ?? classTypeParameterContinuationIndent
-            ?? classTypeArgumentContinuationIndent
-            ?? getAlignedAncestorListContinuationIndent(text, node, index, CONTINUATION_ALIGN_ANCESTOR_TYPES)
-            ?? getTypeArgumentContinuationIndent(text, node, index)
-            ?? (previousLineIndent === null ? null : `${previousLineIndent}${indentUnit}`);
-    const matchingDelimiterEnterResult = handleMatchingDelimiterEnter(text, index, previousLineIndent, continuationIndent);
+    const previousLineIndent =
+        previousLineIndentOverride ?? getPreviousNonEmptyLineIndent(text, index);
+    const classTypeParameterContinuationIndent = getClassTypeParameterContinuationIndent(
+        text,
+        node,
+        index,
+        indentUnit,
+    );
+    const classTypeArgumentContinuationIndent = getClassTypeArgumentContinuationIndent(
+        text,
+        node,
+        index,
+        indentUnit,
+    );
+    const continuationIndent =
+        getFunctionParameterContinuationIndent(text, node, index) ??
+        getFunctionArgumentContinuationIndent(text, node, index) ??
+        getCommaSeparatedBodyContinuationIndent(text, node, index, ['enum_class_body']) ??
+        classTypeParameterContinuationIndent ??
+        classTypeArgumentContinuationIndent ??
+        getAlignedAncestorListContinuationIndent(
+            text,
+            node,
+            index,
+            CONTINUATION_ALIGN_ANCESTOR_TYPES,
+        ) ??
+        getTypeArgumentContinuationIndent(text, node, index) ??
+        (previousLineIndent === null ? null : `${previousLineIndent}${indentUnit}`);
+    const matchingDelimiterEnterResult = handleMatchingDelimiterEnter(
+        text,
+        index,
+        previousLineIndent,
+        continuationIndent,
+    );
     if (matchingDelimiterEnterResult !== null) {
         return matchingDelimiterEnterResult;
     }
-    const leadingNavigationEnterResult = handleLeadingNavigationEnter(text, index, continuationIndent);
+    const leadingNavigationEnterResult = handleLeadingNavigationEnter(
+        text,
+        index,
+        continuationIndent,
+    );
     if (leadingNavigationEnterResult !== null) {
         return leadingNavigationEnterResult;
     }
-    const directTypeContinuationIndent = classTypeParameterContinuationIndent ?? classTypeArgumentContinuationIndent;
+    const directTypeContinuationIndent =
+        classTypeParameterContinuationIndent ?? classTypeArgumentContinuationIndent;
     if (directTypeContinuationIndent !== null) {
         const replacement = `\n${directTypeContinuationIndent}`;
         return keyResult(replacement, index, index + 1, index + replacement.length);
@@ -307,7 +397,11 @@ function handleRegularEnter(
     return getRegularEnterResult(text, index, previousLineIndent, continuationIndent);
 }
 
-function handleLeadingNavigationEnter(text: string, index: number, continuationIndent: string | null): KeyResult | null {
+function handleLeadingNavigationEnter(
+    text: string,
+    index: number,
+    continuationIndent: string | null,
+): KeyResult | null {
     if (continuationIndent === null) {
         return null;
     }
@@ -322,7 +416,10 @@ function handleLeadingNavigationEnter(text: string, index: number, continuationI
         return null;
     }
 
-    const indent = getLeadingNavigationContinuationIndent(text, index, continuationIndent, ['.', '?.']);
+    const indent = getLeadingNavigationContinuationIndent(text, index, continuationIndent, [
+        '.',
+        '?.',
+    ]);
     const replacement = `\n${indent}`;
     return keyResult(replacement, index, index + 1, index + replacement.length);
 }
@@ -331,7 +428,12 @@ function isLeadingNavigationPrefix(line: string): boolean {
     return line.startsWith('.') || line.startsWith('?.');
 }
 
-function getClassTypeParameterContinuationIndent(text: string, node: Node | null, index: number, indentUnit: string): string | null {
+function getClassTypeParameterContinuationIndent(
+    text: string,
+    node: Node | null,
+    index: number,
+    indentUnit: string,
+): string | null {
     if (node === null || getPreviousSignificantChar(text, index) !== '<') {
         return null;
     }
@@ -345,17 +447,23 @@ function getClassTypeParameterContinuationIndent(text: string, node: Node | null
     return `${baseIndent}${indentUnit}${indentUnit}`;
 }
 
-function getClassTypeArgumentContinuationIndent(text: string, node: Node | null, index: number, indentUnit: string): string | null {
+function getClassTypeArgumentContinuationIndent(
+    text: string,
+    node: Node | null,
+    index: number,
+    indentUnit: string,
+): string | null {
     if (node === null || getPreviousSignificantChar(text, index) !== '<') {
         return null;
     }
 
     const typeArguments = findAncestorAtEnter(node, index, 'type_arguments');
-    const indentAnchor = typeArguments?.parent?.type === 'user_type'
+    const indentAnchor =
+        typeArguments?.parent?.type === 'user_type'
             ? typeArguments.parent
             : typeArguments === null
-                ? null
-                : findAncestor(typeArguments, 'call_expression');
+              ? null
+              : findAncestor(typeArguments, 'call_expression');
     if (indentAnchor === null) {
         return null;
     }
@@ -364,7 +472,11 @@ function getClassTypeArgumentContinuationIndent(text: string, node: Node | null,
     return `${baseIndent}${indentUnit}${indentUnit}`;
 }
 
-function getFunctionParameterContinuationIndent(text: string, node: Node | null, index: number): string | null {
+function getFunctionParameterContinuationIndent(
+    text: string,
+    node: Node | null,
+    index: number,
+): string | null {
     if (node === null || getPreviousSignificantChar(text, index) !== ',') {
         return null;
     }
@@ -378,16 +490,26 @@ function getFunctionParameterContinuationIndent(text: string, node: Node | null,
     return null;
 }
 
-function getFunctionArgumentContinuationIndent(text: string, node: Node | null, index: number): string | null {
+function getFunctionArgumentContinuationIndent(
+    text: string,
+    node: Node | null,
+    index: number,
+): string | null {
     if (node === null || getPreviousSignificantChar(text, index) !== ',') {
         return null;
     }
 
     const valueArguments = findAncestorAtEnter(node, index, 'value_arguments');
-    return valueArguments === null ? null : getExistingMultilineListItemIndent(text, valueArguments, index);
+    return valueArguments === null
+        ? null
+        : getExistingMultilineListItemIndent(text, valueArguments, index);
 }
 
-function getTypeArgumentContinuationIndent(text: string, node: Node | null, index: number): string | null {
+function getTypeArgumentContinuationIndent(
+    text: string,
+    node: Node | null,
+    index: number,
+): string | null {
     if (node === null || getPreviousSignificantChar(text, index) !== ',') {
         return null;
     }
@@ -409,10 +531,10 @@ function getTypeArgumentContinuationIndent(text: string, node: Node | null, inde
 }
 
 function handleMatchingDelimiterEnter(
-        text: string,
-        index: number,
-        previousLineIndent: string | null,
-        continuationIndent: string | null,
+    text: string,
+    index: number,
+    previousLineIndent: string | null,
+    continuationIndent: string | null,
 ): KeyResult | null {
     const matchingDelimiter = getMatchingClosingDelimiter(getPreviousSignificantChar(text, index));
     if (matchingDelimiter === null || index + 1 >= text.length) {
@@ -425,28 +547,36 @@ function handleMatchingDelimiterEnter(
         return null;
     }
 
-    const bodyIndent = matchingDelimiter === '}'
+    const bodyIndent =
+        matchingDelimiter === '}'
             ? getBlockBodyIndent(text, index, previousLineIndent, continuationIndent)
-            : continuationIndent ?? previousLineIndent ?? '';
+            : (continuationIndent ?? previousLineIndent ?? '');
     const closingIndent = previousLineIndent ?? '';
     const replacement = `\n${bodyIndent}\n${closingIndent}`;
     return keyResult(replacement, index, currentLineContentStart, index + `\n${bodyIndent}`.length);
 }
 
-function getBlockBodyIndent(text: string, index: number, previousLineIndent: string | null, continuationIndent: string | null): string {
+function getBlockBodyIndent(
+    text: string,
+    index: number,
+    previousLineIndent: string | null,
+    continuationIndent: string | null,
+): string {
     if (previousLineIndent === null) {
         return continuationIndent ?? '';
     }
 
     const indentStep = getIndentStepFromContext(text, index, previousLineIndent);
-    return indentStep === null ? continuationIndent ?? previousLineIndent : `${previousLineIndent}${indentStep}`;
+    return indentStep === null
+        ? (continuationIndent ?? previousLineIndent)
+        : `${previousLineIndent}${indentStep}`;
 }
 
 function handleEmptyLambdaBodyEnter(
-        node: Node,
-        text: string,
-        index: number,
-        indentUnit: string,
+    node: Node,
+    text: string,
+    index: number,
+    indentUnit: string,
 ): KeyResult | null {
     const lambda = findAncestor(node, 'lambda_literal');
     if (lambda === null) {
@@ -477,7 +607,12 @@ function handleEmptyLambdaBodyEnter(
     const baseIndent = getIndent(text, getLineStart(text, lambda.startIndex));
     const bodyIndent = `${baseIndent}${indentUnit}`;
     const replacement = `\n${bodyIndent}\n${baseIndent}`;
-    return keyResult(replacement, index - whitespaceAfterArrow.length, index + 1, index - whitespaceAfterArrow.length + `\n${bodyIndent}`.length);
+    return keyResult(
+        replacement,
+        index - whitespaceAfterArrow.length,
+        index + 1,
+        index - whitespaceAfterArrow.length + `\n${bodyIndent}`.length,
+    );
 }
 
 function handleLeftAngle(text: string, tree: Tree, index: number): KeyResult {
@@ -486,8 +621,12 @@ function handleLeftAngle(text: string, tree: Tree, index: number): KeyResult {
         if (prev === null) return keyResult('<', index, index + 1, index + 1);
         switch (prev.type) {
             case 'identifier': {
-                const looksLikeAClass = prev.endIndex === node.startIndex && prev.text[0] === prev.text[0].toUpperCase();
-                return looksLikeAClass ? keyResult('<>', index, index + 1, index + 1) : keyResult('<', index, index + 1, index + 1);
+                const looksLikeAClass =
+                    prev.endIndex === node.startIndex &&
+                    prev.text[0] === prev.text[0].toUpperCase();
+                return looksLikeAClass
+                    ? keyResult('<>', index, index + 1, index + 1)
+                    : keyResult('<', index, index + 1, index + 1);
             }
             case 'fun':
                 return keyResult('<>', index, index + 1, index + 1);
@@ -502,7 +641,14 @@ function handleClosingDelimiter(text: string, tree: Tree, key: string, index: nu
         return handlePairedClosingDelimiterKey(text, tree, key, index, '<', handleSpecialNodeKey);
     }
 
-    return handleStandardClosingDelimiterKey(text, tree, key, index, handleSpecialNodeKey, NON_ANGLE_DELIMITER_ANCESTORS);
+    return handleStandardClosingDelimiterKey(
+        text,
+        tree,
+        key,
+        index,
+        handleSpecialNodeKey,
+        NON_ANGLE_DELIMITER_ANCESTORS,
+    );
 }
 
 function handleBlockComment(node: Node, key: string, text: string, index: number): KeyResult {
@@ -576,14 +722,21 @@ function getPreviousBlockCommentIndent(node: Node, text: string, index: number):
     }
 
     const commentEnd = previousLine.start + previousLine.text.lastIndexOf('*/') + 2;
-    const blockComment = findAncestor(node.tree.rootNode.descendantForIndex(commentEnd - 1), 'block_comment');
+    const blockComment = findAncestor(
+        node.tree.rootNode.descendantForIndex(commentEnd - 1),
+        'block_comment',
+    );
     if (blockComment === null || blockComment.endIndex !== commentEnd) {
         return null;
     }
     return getIndent(text, getLineStart(text, blockComment.startIndex));
 }
 
-function getClosedBlockCommentBodyIndent(text: string, commentContext: BlockCommentContext, index: number): string | null {
+function getClosedBlockCommentBodyIndent(
+    text: string,
+    commentContext: BlockCommentContext,
+    index: number,
+): string | null {
     if (commentContext.end === null) {
         return null;
     }
@@ -610,7 +763,11 @@ function getClosedBlockCommentBodyIndent(text: string, commentContext: BlockComm
     return getIndent(text, previousLine.start);
 }
 
-function getDocCommentBodyPrefix(text: string, commentContext: BlockCommentContext, index: number): string | null {
+function getDocCommentBodyPrefix(
+    text: string,
+    commentContext: BlockCommentContext,
+    index: number,
+): string | null {
     if (!commentContext.isDoc || commentContext.end === null) {
         return null;
     }
@@ -662,7 +819,11 @@ function getMatchingClosingDelimiter(char: string | null): string | null {
     }
 }
 
-function getIndentStepFromContext(text: string, index: number, currentIndent: string): string | null {
+function getIndentStepFromContext(
+    text: string,
+    index: number,
+    currentIndent: string,
+): string | null {
     const currentLineStart = getLineStart(text, index);
     let lineEnd = currentLineStart;
     while (lineEnd > 0) {
@@ -681,25 +842,28 @@ function getIndentStepFromContext(text: string, index: number, currentIndent: st
 }
 
 interface TextRange {
-    start: number
-    end: number
+    start: number;
+    end: number;
 }
 
 interface StringLiteralContext {
-    startIndex: number
-    endIndex: number
-    wrapWithParens: boolean
-    spaceAfterConcatenationOperator: boolean
+    startIndex: number;
+    endIndex: number;
+    wrapWithParens: boolean;
+    spaceAfterConcatenationOperator: boolean;
 }
 
 function handleStringLiteralEnter(
-        text: string,
-        node: Node,
-        index: number,
-        indentUnit: string,
+    text: string,
+    node: Node,
+    index: number,
+    indentUnit: string,
 ): KeyResult | null {
     const multilineStringLiteral = findAncestorAtEnter(node, index, 'multiline_string_literal');
-    if (multilineStringLiteral !== null && text.startsWith('"""', multilineStringLiteral.startIndex)) {
+    if (
+        multilineStringLiteral !== null &&
+        text.startsWith('"""', multilineStringLiteral.startIndex)
+    ) {
         return handleMultilineStringLiteralEnter(text, multilineStringLiteral, index, indentUnit);
     }
 
@@ -716,11 +880,21 @@ function handleStringLiteralEnter(
     const before = text.slice(stringLiteral.startIndex + 1, lineBreak.startOffset);
     const after = text.slice(lineBreak.endOffset, stringLiteral.endIndex - 1);
     const replacement = `${wrapPrefix}"${before}" +${operatorSpacing}${lineBreak.text}${continuationIndent}"${after}"${wrapSuffix}`;
-    const offset = `${wrapPrefix}"${before}" +${operatorSpacing}${lineBreak.text}${continuationIndent}`.length;
-    return keyResult(replacement, stringLiteral.startIndex, stringLiteral.endIndex, stringLiteral.startIndex + offset);
+    const offset =
+        `${wrapPrefix}"${before}" +${operatorSpacing}${lineBreak.text}${continuationIndent}`.length;
+    return keyResult(
+        replacement,
+        stringLiteral.startIndex,
+        stringLiteral.endIndex,
+        stringLiteral.startIndex + offset,
+    );
 }
 
-function getStringLiteralContext(text: string, node: Node, index: number): StringLiteralContext | null {
+function getStringLiteralContext(
+    text: string,
+    node: Node,
+    index: number,
+): StringLiteralContext | null {
     const stringLiteral = findAncestorAtEnter(node, index, 'string_literal');
     if (stringLiteral !== null) {
         return {
@@ -734,7 +908,11 @@ function getStringLiteralContext(text: string, node: Node, index: number): Strin
     return findMalformedInterpolationStringLiteral(text, node, index);
 }
 
-function findMalformedInterpolationStringLiteral(text: string, node: Node, index: number): StringLiteralContext | null {
+function findMalformedInterpolationStringLiteral(
+    text: string,
+    node: Node,
+    index: number,
+): StringLiteralContext | null {
     const errorNode = findEnclosingErrorNode(node, index);
     if (errorNode === null) {
         return null;
@@ -747,16 +925,20 @@ function findMalformedInterpolationStringLiteral(text: string, node: Node, index
 
     const endIndex = findNextUnescapedQuote(text, index + 1);
     return endIndex === null
-            ? null
-            : {
-                startIndex,
-                endIndex: endIndex + 1,
-                wrapWithParens: false,
-                spaceAfterConcatenationOperator: false,
-            };
+        ? null
+        : {
+              startIndex,
+              endIndex: endIndex + 1,
+              wrapWithParens: false,
+              spaceAfterConcatenationOperator: false,
+          };
 }
 
-function findPreviousUnescapedQuote(text: string, minIndex: number, startIndex: number): number | null {
+function findPreviousUnescapedQuote(
+    text: string,
+    minIndex: number,
+    startIndex: number,
+): number | null {
     for (let current = startIndex; current >= minIndex; current--) {
         if (text[current] !== '"' || isEscapedQuote(text, current)) {
             continue;
@@ -793,12 +975,12 @@ function isEscapedQuote(text: string, index: number): boolean {
 }
 
 function rewriteCommentLineTail(
-        commentContext: BlockCommentContext,
-        commentIndent: string,
-        currentLineTail: string,
-        prefixLine: string,
-        index: number,
-        useLinePrefix: boolean,
+    commentContext: BlockCommentContext,
+    commentIndent: string,
+    currentLineTail: string,
+    prefixLine: string,
+    index: number,
+    useLinePrefix: boolean,
 ): KeyResult | null {
     if (currentLineTail.length === 0) {
         return null;
@@ -807,28 +989,60 @@ function rewriteCommentLineTail(
     const trimmedTail = currentLineTail.trimStart();
     if (trimmedTail.length === 0) {
         if (commentContext.end === null) {
-            return keyResult(`${prefixLine}\n${commentIndent} */`, index, index + 1 + currentLineTail.length, index + prefixLine.length);
+            return keyResult(
+                `${prefixLine}\n${commentIndent} */`,
+                index,
+                index + 1 + currentLineTail.length,
+                index + prefixLine.length,
+            );
         }
-        return useLinePrefix ? keyResult(prefixLine, index, index + 1 + currentLineTail.length, index + prefixLine.length) : null;
+        return useLinePrefix
+            ? keyResult(
+                  prefixLine,
+                  index,
+                  index + 1 + currentLineTail.length,
+                  index + prefixLine.length,
+              )
+            : null;
     }
 
     if (!useLinePrefix) {
         if (commentContext.end === null) {
-            return keyResult(`${prefixLine}\n${commentIndent} */\n${currentLineTail}`, index, index + 1 + currentLineTail.length, index + prefixLine.length);
+            return keyResult(
+                `${prefixLine}\n${commentIndent} */\n${currentLineTail}`,
+                index,
+                index + 1 + currentLineTail.length,
+                index + prefixLine.length,
+            );
         }
         return null;
     }
 
     if (trimmedTail.startsWith('*/')) {
-        return keyResult(`${prefixLine}\n${commentIndent} */`, index, index + 1 + currentLineTail.length, index + prefixLine.length);
+        return keyResult(
+            `${prefixLine}\n${commentIndent} */`,
+            index,
+            index + 1 + currentLineTail.length,
+            index + prefixLine.length,
+        );
     }
 
     if (commentContext.end === null) {
-        return keyResult(`${prefixLine}\n${commentIndent} */\n${currentLineTail}`, index, index + 1 + currentLineTail.length, index + prefixLine.length);
+        return keyResult(
+            `${prefixLine}\n${commentIndent} */\n${currentLineTail}`,
+            index,
+            index + 1 + currentLineTail.length,
+            index + prefixLine.length,
+        );
     }
 
     const shiftedLine = getCommentBodyLine(currentLineTail, commentIndent);
-    return keyResult(`${prefixLine}\n${shiftedLine}`, index, index + 1 + currentLineTail.length, index + prefixLine.length);
+    return keyResult(
+        `${prefixLine}\n${shiftedLine}`,
+        index,
+        index + 1 + currentLineTail.length,
+        index + prefixLine.length,
+    );
 }
 
 function getCommentBodyLine(currentLineTail: string, commentIndent: string): string {
@@ -844,10 +1058,10 @@ function getCommentBodyLine(currentLineTail: string, commentIndent: string): str
 }
 
 function handleMultilineStringLiteralEnter(
-        text: string,
-        multilineStringLiteral: Node,
-        index: number,
-        indentUnit: string,
+    text: string,
+    multilineStringLiteral: Node,
+    index: number,
+    indentUnit: string,
 ): KeyResult | null {
     const contentEnd = multilineStringLiteral.endIndex - MULTILINE_QUOTE.length;
     if (index > contentEnd) {
@@ -856,28 +1070,58 @@ function handleMultilineStringLiteralEnter(
 
     const baseIndent = getIndent(text, getLineStart(text, multilineStringLiteral.startIndex));
     const trimCallInfo = getTrimCallInfo(text, multilineStringLiteral);
-    const marginChar = trimCallInfo.kind === 'trimIndent'
+    const marginChar =
+        trimCallInfo.kind === 'trimIndent'
             ? null
-            : trimCallInfo.marginChar ?? getMarginCharFromLiteral(text, multilineStringLiteral);
+            : (trimCallInfo.marginChar ?? getMarginCharFromLiteral(text, multilineStringLiteral));
     const tail = text.slice(index + 1, contentEnd);
     const whitespaceAfterCaret = tail.match(/^[ \t]*/)?.[0] ?? '';
     const tailAfterCaret = tail.slice(whitespaceAfterCaret.length);
-    const originalLiteralText = text.slice(multilineStringLiteral.startIndex, index) + text.slice(index + 1, multilineStringLiteral.endIndex);
+    const originalLiteralText =
+        text.slice(multilineStringLiteral.startIndex, index) +
+        text.slice(index + 1, multilineStringLiteral.endIndex);
     if (!originalLiteralText.includes('\n')) {
-        const shouldUseTrimIndent = trimCallInfo.kind === 'trimIndent' ||
-                (marginChar === null && isStartOfMultilineString(text, multilineStringLiteral));
-        const linePrefix = getMultilineStringLinePrefix(baseIndent, indentUnit, shouldUseTrimIndent ? null : marginChar ?? DEFAULT_TRIM_MARGIN_CHAR);
-        const trimCall = getInsertedTrimCall(text, multilineStringLiteral, trimCallInfo.kind !== null, shouldUseTrimIndent ? null : marginChar ?? DEFAULT_TRIM_MARGIN_CHAR);
-        const replacement = tail.length === 0
+        const shouldUseTrimIndent =
+            trimCallInfo.kind === 'trimIndent' ||
+            (marginChar === null && isStartOfMultilineString(text, multilineStringLiteral));
+        const linePrefix = getMultilineStringLinePrefix(
+            baseIndent,
+            indentUnit,
+            shouldUseTrimIndent ? null : (marginChar ?? DEFAULT_TRIM_MARGIN_CHAR),
+        );
+        const trimCall = getInsertedTrimCall(
+            text,
+            multilineStringLiteral,
+            trimCallInfo.kind !== null,
+            shouldUseTrimIndent ? null : (marginChar ?? DEFAULT_TRIM_MARGIN_CHAR),
+        );
+        const replacement =
+            tail.length === 0
                 ? `\n${linePrefix}\n${baseIndent}${MULTILINE_QUOTE}${trimCall}`
                 : `\n${linePrefix}${tail}${MULTILINE_QUOTE}${trimCall}`;
-        return keyResult(replacement, index, multilineStringLiteral.endIndex, index + `\n${linePrefix}`.length);
+        return keyResult(
+            replacement,
+            index,
+            multilineStringLiteral.endIndex,
+            index + `\n${linePrefix}`.length,
+        );
     }
 
     const previousLineStart = getLineStart(text, index);
-    const linePrefix = getExistingMultilineStringLinePrefix(text, multilineStringLiteral, previousLineStart, indentUnit, marginChar);
+    const linePrefix = getExistingMultilineStringLinePrefix(
+        text,
+        multilineStringLiteral,
+        previousLineStart,
+        indentUnit,
+        marginChar,
+    );
     if (isBraceEnter(text[index - 1], tailAfterCaret[0])) {
-        return keyResult(`\n${linePrefix}${whitespaceAfterCaret}\n${linePrefix}${tailAfterCaret}`, index, contentEnd, index + `\n${linePrefix}${whitespaceAfterCaret}`.length);
+        return keyResult(
+            `\n${linePrefix}${whitespaceAfterCaret}\n${linePrefix}${tailAfterCaret}`,
+            index,
+            contentEnd,
+            index + `\n${linePrefix}${whitespaceAfterCaret}`.length,
+        );
     }
 
     return keyResult(`\n${linePrefix}`, index, index + 1, index + `\n${linePrefix}`.length);
@@ -885,13 +1129,19 @@ function handleMultilineStringLiteralEnter(
 
 function shouldWrapQualifiedStringReceiver(stringLiteral: Node): boolean {
     let expression: Node = stringLiteral;
-    for (let current: Node | null = stringLiteral.parent; current !== null; current = current.parent) {
+    for (
+        let current: Node | null = stringLiteral.parent;
+        current !== null;
+        current = current.parent
+    ) {
         switch (current.type) {
             case 'parenthesized_expression':
                 return false;
             case 'navigation_expression':
-                return current.namedChild(0)?.startIndex === expression.startIndex &&
-                        current.namedChild(0)?.endIndex === expression.endIndex;
+                return (
+                    current.namedChild(0)?.startIndex === expression.startIndex &&
+                    current.namedChild(0)?.endIndex === expression.endIndex
+                );
             default:
                 if (current.type.endsWith('_expression')) {
                     expression = current;
@@ -903,18 +1153,24 @@ function shouldWrapQualifiedStringReceiver(stringLiteral: Node): boolean {
 }
 
 function getTrimCallInfo(
-        text: string,
-        multilineStringLiteral: Node,
-): { kind: 'trimIndent', marginChar: null } | { kind: 'trimMargin', marginChar: string } | { kind: null, marginChar: null } {
+    text: string,
+    multilineStringLiteral: Node,
+):
+    | { kind: 'trimIndent'; marginChar: null }
+    | { kind: 'trimMargin'; marginChar: string }
+    | { kind: null; marginChar: null } {
     for (const callExpression of getLiteralCallChain(multilineStringLiteral)) {
         switch (getCallName(text, callExpression)) {
             case 'trimIndent':
-                return {kind: 'trimIndent', marginChar: null};
+                return { kind: 'trimIndent', marginChar: null };
             case 'trimMargin':
-                return {kind: 'trimMargin', marginChar: getTrimMarginMarginChar(text, callExpression)};
+                return {
+                    kind: 'trimMargin',
+                    marginChar: getTrimMarginMarginChar(text, callExpression),
+                };
         }
     }
-    return {kind: null, marginChar: null};
+    return { kind: null, marginChar: null };
 }
 
 function getLiteralCallChain(multilineStringLiteral: Node): Node[] {
@@ -922,16 +1178,20 @@ function getLiteralCallChain(multilineStringLiteral: Node): Node[] {
     let current: Node = multilineStringLiteral;
     while (true) {
         const navigationExpression = current.parent;
-        if (navigationExpression?.type !== 'navigation_expression' ||
-                navigationExpression.namedChild(0)?.startIndex !== current.startIndex ||
-                navigationExpression.namedChild(0)?.endIndex !== current.endIndex) {
+        if (
+            navigationExpression?.type !== 'navigation_expression' ||
+            navigationExpression.namedChild(0)?.startIndex !== current.startIndex ||
+            navigationExpression.namedChild(0)?.endIndex !== current.endIndex
+        ) {
             return calls;
         }
 
         const callExpression = navigationExpression.parent;
-        if (callExpression?.type !== 'call_expression' ||
-                callExpression.namedChild(0)?.startIndex !== navigationExpression.startIndex ||
-                callExpression.namedChild(0)?.endIndex !== navigationExpression.endIndex) {
+        if (
+            callExpression?.type !== 'call_expression' ||
+            callExpression.namedChild(0)?.startIndex !== navigationExpression.startIndex ||
+            callExpression.namedChild(0)?.endIndex !== navigationExpression.endIndex
+        ) {
             return calls;
         }
 
@@ -942,49 +1202,75 @@ function getLiteralCallChain(multilineStringLiteral: Node): Node[] {
 
 function getCallName(text: string, callExpression: Node): string | null {
     const navigationExpression = callExpression.namedChild(0);
-    const identifier = navigationExpression?.type === 'navigation_expression' ? navigationExpression.namedChild(1) : null;
+    const identifier =
+        navigationExpression?.type === 'navigation_expression'
+            ? navigationExpression.namedChild(1)
+            : null;
     return identifier === null ? null : text.slice(identifier.startIndex, identifier.endIndex);
 }
 
 function getTrimMarginMarginChar(text: string, callExpression: Node): string {
     const valueArguments = callExpression.namedChild(1);
-    const valueArgument = valueArguments?.type === 'value_arguments' ? valueArguments.namedChild(0) : null;
+    const valueArgument =
+        valueArguments?.type === 'value_arguments' ? valueArguments.namedChild(0) : null;
     const argumentExpression = valueArgument?.namedChild(0);
-    const stringContent = argumentExpression?.type === 'string_literal' ? argumentExpression.namedChild(0) : null;
-    return stringContent?.type === 'string_content' && stringContent.endIndex - stringContent.startIndex === 1
-            ? text[stringContent.startIndex]
-            : DEFAULT_TRIM_MARGIN_CHAR;
+    const stringContent =
+        argumentExpression?.type === 'string_literal' ? argumentExpression.namedChild(0) : null;
+    return stringContent?.type === 'string_content' &&
+        stringContent.endIndex - stringContent.startIndex === 1
+        ? text[stringContent.startIndex]
+        : DEFAULT_TRIM_MARGIN_CHAR;
 }
 
 function getMarginCharFromLiteral(text: string, multilineStringLiteral: Node): string | null {
-    const lines = text.slice(multilineStringLiteral.startIndex, multilineStringLiteral.endIndex).split(/\r?\n/);
+    const lines = text
+        .slice(multilineStringLiteral.startIndex, multilineStringLiteral.endIndex)
+        .split(/\r?\n/);
     if (lines.length <= 2) {
         return null;
     }
 
     const middleNonBlankLines = lines.slice(1, -1).filter((line) => line.trim().length !== 0);
-    return middleNonBlankLines.length !== 0 && middleNonBlankLines.every((line) => line.trimStart().startsWith(DEFAULT_TRIM_MARGIN_CHAR))
-            ? DEFAULT_TRIM_MARGIN_CHAR
-            : null;
+    return middleNonBlankLines.length !== 0 &&
+        middleNonBlankLines.every((line) => line.trimStart().startsWith(DEFAULT_TRIM_MARGIN_CHAR))
+        ? DEFAULT_TRIM_MARGIN_CHAR
+        : null;
 }
 
 function isStartOfMultilineString(text: string, multilineStringLiteral: Node): boolean {
-    const firstLine = text.slice(multilineStringLiteral.startIndex, Math.min(getLineEnd(text, multilineStringLiteral.startIndex), multilineStringLiteral.endIndex));
+    const firstLine = text.slice(
+        multilineStringLiteral.startIndex,
+        Math.min(
+            getLineEnd(text, multilineStringLiteral.startIndex),
+            multilineStringLiteral.endIndex,
+        ),
+    );
     return firstLine.trim().replace(/^\$+/, '') === MULTILINE_QUOTE;
 }
 
-function getInsertedTrimCall(text: string, multilineStringLiteral: Node, hasTrimCall: boolean, marginChar: string | null): string {
+function getInsertedTrimCall(
+    text: string,
+    multilineStringLiteral: Node,
+    hasTrimCall: boolean,
+    marginChar: string | null,
+): string {
     if (hasTrimCall || isTrimCallSuppressed(text, multilineStringLiteral)) {
         return '';
     }
     if (marginChar === null) {
         return '.trimIndent()';
     }
-    return marginChar === DEFAULT_TRIM_MARGIN_CHAR ? '.trimMargin()' : `.trimMargin("${marginChar}")`;
+    return marginChar === DEFAULT_TRIM_MARGIN_CHAR
+        ? '.trimMargin()'
+        : `.trimMargin("${marginChar}")`;
 }
 
 function isTrimCallSuppressed(text: string, multilineStringLiteral: Node): boolean {
-    for (let current: Node | null = multilineStringLiteral.parent; current !== null; current = current.parent) {
+    for (
+        let current: Node | null = multilineStringLiteral.parent;
+        current !== null;
+        current = current.parent
+    ) {
         if (current.type === 'annotation') {
             return true;
         }
@@ -997,68 +1283,97 @@ function isTrimCallSuppressed(text: string, multilineStringLiteral: Node): boole
 
 function hasConstModifier(text: string, propertyDeclaration: Node): boolean {
     const modifiers = findChild(propertyDeclaration, 'modifiers');
-    return modifiers !== null && text.slice(modifiers.startIndex, modifiers.endIndex).includes('const');
+    return (
+        modifiers !== null && text.slice(modifiers.startIndex, modifiers.endIndex).includes('const')
+    );
 }
 
 function getExistingMultilineStringLinePrefix(
-        text: string,
-        multilineStringLiteral: Node,
-        previousLineStart: number,
-        indentUnit: string,
-        marginChar: string | null,
+    text: string,
+    multilineStringLiteral: Node,
+    previousLineStart: number,
+    indentUnit: string,
+    marginChar: string | null,
 ): string {
     const literalLineStart = getLineStart(text, multilineStringLiteral.startIndex);
     const baseIndent = getIndent(text, literalLineStart);
     if (previousLineStart === literalLineStart) {
-        return getMultilineStringLinePrefix(baseIndent, indentUnit, getMarginCharToInsert(text, multilineStringLiteral, text.slice(previousLineStart, getLineEnd(text, previousLineStart)), marginChar));
+        return getMultilineStringLinePrefix(
+            baseIndent,
+            indentUnit,
+            getMarginCharToInsert(
+                text,
+                multilineStringLiteral,
+                text.slice(previousLineStart, getLineEnd(text, previousLineStart)),
+                marginChar,
+            ),
+        );
     }
 
     const previousLine = text.slice(previousLineStart, getLineEnd(text, previousLineStart));
     const indent = getIndent(text, previousLineStart);
-    const insertedMarginChar = getMarginCharToInsert(text, multilineStringLiteral, previousLine, marginChar);
+    const insertedMarginChar = getMarginCharToInsert(
+        text,
+        multilineStringLiteral,
+        previousLine,
+        marginChar,
+    );
     if (insertedMarginChar === null) {
         return indent;
     }
 
     const trimmedLine = previousLine.slice(indent.length);
     const whitespaceAfterMargin = trimmedLine.startsWith(insertedMarginChar)
-            ? trimmedLine.slice(insertedMarginChar.length).match(/^[ \t]*/)?.[0] ?? ''
-            : '';
+        ? (trimmedLine.slice(insertedMarginChar.length).match(/^[ \t]*/)?.[0] ?? '')
+        : '';
     return `${indent}${insertedMarginChar}${whitespaceAfterMargin}`;
 }
 
-function getMarginCharToInsert(text: string, multilineStringLiteral: Node, previousLine: string, marginChar: string | null): string | null {
+function getMarginCharToInsert(
+    text: string,
+    multilineStringLiteral: Node,
+    previousLine: string,
+    marginChar: string | null,
+): string | null {
     if (marginChar === null) {
         return null;
     }
 
     const prefixStripped = previousLine.trimStart();
-    const lines = text.slice(multilineStringLiteral.startIndex, multilineStringLiteral.endIndex).split(/\r?\n/);
+    const lines = text
+        .slice(multilineStringLiteral.startIndex, multilineStringLiteral.endIndex)
+        .split(/\r?\n/);
     const nonBlankNotFirstLines = lines.slice(1).filter((line) => {
         const trimmed = line.trim();
         return trimmed.length !== 0 && trimmed !== MULTILINE_QUOTE;
     });
     return !prefixStripped.startsWith(marginChar) &&
-            nonBlankNotFirstLines.length !== 0 &&
-            nonBlankNotFirstLines.every((line) => !line.trimStart().startsWith(marginChar))
-            ? null
-            : marginChar;
+        nonBlankNotFirstLines.length !== 0 &&
+        nonBlankNotFirstLines.every((line) => !line.trimStart().startsWith(marginChar))
+        ? null
+        : marginChar;
 }
 
-function getMultilineStringLinePrefix(baseIndent: string, indentUnit: string, marginChar: string | null): string {
+function getMultilineStringLinePrefix(
+    baseIndent: string,
+    indentUnit: string,
+    marginChar: string | null,
+): string {
     return `${baseIndent}${indentUnit}${marginChar ?? ''}`;
 }
 
 function isBraceEnter(charBefore: string | undefined, charAfter: string | undefined): boolean {
-    return (charBefore === '{' && charAfter === '}') ||
-            (charBefore === '(' && charAfter === ')') ||
-            (charBefore === '>' && charAfter === '<');
+    return (
+        (charBefore === '{' && charAfter === '}') ||
+        (charBefore === '(' && charAfter === ')') ||
+        (charBefore === '>' && charAfter === '<')
+    );
 }
 
 function findBlockCommentContext(
-        node: Node,
-        text: string,
-        index: number,
+    node: Node,
+    text: string,
+    index: number,
 ): BlockCommentContext | null {
     const blockComment = findAncestor(node, 'block_comment');
     if (blockComment !== null) {
@@ -1081,9 +1396,9 @@ function findBlockCommentContext(
 }
 
 function findUnterminatedBlockCommentContext(
-        errorNode: Node,
-        text: string,
-        index: number,
+    errorNode: Node,
+    text: string,
+    index: number,
 ): BlockCommentContext | null {
     const errorStartIndex = errorNode.startIndex;
     if (index - errorStartIndex < 2) {
@@ -1096,10 +1411,19 @@ function findUnterminatedBlockCommentContext(
     return findUnterminatedBlockCommentInRange(text, errorStartIndex, index, []);
 }
 
-function findLexicalBlockCommentContext(node: Node, text: string, index: number): BlockCommentContext | null {
+function findLexicalBlockCommentContext(
+    node: Node,
+    text: string,
+    index: number,
+): BlockCommentContext | null {
     for (const scanRoot of getBlockCommentScanRoots(node)) {
         const ignoredRanges = collectIgnoredRanges(scanRoot, index);
-        const commentContext = findUnterminatedBlockCommentInRange(text, scanRoot.startIndex, index, ignoredRanges);
+        const commentContext = findUnterminatedBlockCommentInRange(
+            text,
+            scanRoot.startIndex,
+            index,
+            ignoredRanges,
+        );
         if (commentContext !== null) {
             return commentContext;
         }
@@ -1111,7 +1435,10 @@ function getBlockCommentScanRoots(node: Node): Node[] {
     const roots: Node[] = [];
     const seenStarts = new Set<number>();
     for (let current: Node | null = node; current !== null; current = current.parent) {
-        if (!BLOCK_COMMENT_SCAN_ROOT_TYPES.has(current.type) || seenStarts.has(current.startIndex)) {
+        if (
+            !BLOCK_COMMENT_SCAN_ROOT_TYPES.has(current.type) ||
+            seenStarts.has(current.startIndex)
+        ) {
             continue;
         }
         roots.push(current);
@@ -1153,19 +1480,21 @@ function collectIgnoredRangesRecursively(node: Node, endIndex: number, ranges: T
 }
 
 function shouldIgnoreRangeForBlockCommentScan(node: Node): boolean {
-    return BLOCK_COMMENT_IGNORED_NODE_TYPES.has(node.type) ||
-            (node.type === 'identifier' && node.text.startsWith('`'));
+    return (
+        BLOCK_COMMENT_IGNORED_NODE_TYPES.has(node.type) ||
+        (node.type === 'identifier' && node.text.startsWith('`'))
+    );
 }
 
 function findUnterminatedBlockCommentInRange(
-        text: string,
-        startIndex: number,
-        endIndex: number,
-        ignoredRanges: TextRange[],
+    text: string,
+    startIndex: number,
+    endIndex: number,
+    ignoredRanges: TextRange[],
 ): BlockCommentContext | null {
-    const stack: Array<{ start: number, isDoc: boolean }> = [];
+    const stack: Array<{ start: number; isDoc: boolean }> = [];
     let ignoredRangeIndex = 0;
-    for (let current = startIndex; current < endIndex;) {
+    for (let current = startIndex; current < endIndex; ) {
         const ignoredRange = ignoredRanges[ignoredRangeIndex];
         if (ignoredRange !== undefined && current >= ignoredRange.start) {
             current = ignoredRange.end;
@@ -1193,10 +1522,10 @@ function findUnterminatedBlockCommentInRange(
 
     const openComment = stack.at(-1);
     return openComment === undefined
-            ? null
-            : {
-                start: openComment.start,
-                end: null,
-                isDoc: openComment.isDoc,
-            };
+        ? null
+        : {
+              start: openComment.start,
+              end: null,
+              isDoc: openComment.isDoc,
+          };
 }
