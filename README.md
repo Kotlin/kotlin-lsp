@@ -18,7 +18,7 @@ implementation.
 
 For the latest release from the official VS Code Marketplace:
 
-* [Install the extension](https://marketplace.visualstudio.com/items?itemName=org.jetbrains.kotlin-server)
+* [Install the extension](https://marketplace.visualstudio.com/items?itemName=JetBrains.kotlin-server)
 * The extension is automatically activated when opening a Kotlin file in a workspace
 
 For manually downloaded builds from the [release page](https://github.com/Kotlin/kotlin-lsp/releases):
