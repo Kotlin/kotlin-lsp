@@ -46,10 +46,10 @@ object GradleToolingApiHelper {
 
     const val LSP_GRADLE_JAVA_HOME_PROPERTY: String = "com.jetbrains.ls.imports.gradle.java.home"
 
-    private const val LSP_GRADLE_PROJECT_OFFLINE_PROPERTY: String = "com.jetbrains.ls.imports.gradle.offline"
-    private const val LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY: String = "com.jetbrains.ls.imports.gradle.gradleUserHome"
-    private const val LSP_GRADLE_PROJECT_SELF_CONTAINED_INIT_SCRIPT: String = "com.jetbrains.ls.imports.gradle.selfContainedInitScript"
-    private const val LSP_GRADLE_PROJECT_SELF_CONTAINED_PROXY_URL_PROPERTY: String = "com.jetbrains.ls.imports.gradle.selfContainedProxyUrl"
+    const val LSP_GRADLE_PROJECT_OFFLINE_PROPERTY: String = "com.jetbrains.ls.imports.gradle.offline"
+    const val LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY: String = "com.jetbrains.ls.imports.gradle.gradleUserHome"
+    const val LSP_GRADLE_PROJECT_SELF_CONTAINED_INIT_SCRIPT: String = "com.jetbrains.ls.imports.gradle.selfContainedInitScript"
+    const val LSP_GRADLE_PROJECT_SELF_CONTAINED_PROXY_URL_PROPERTY: String = "com.jetbrains.ls.imports.gradle.selfContainedProxyUrl"
 
     private const val IDEA_ACTIVE_PROPERTY: String = "idea.active"
     private const val IDEA_SYNC_ACTIVE_PROPERTY: String = "idea.sync.active"
