@@ -113,6 +113,13 @@ abstract class AbstractProjectImportTest {
     fun systemPropertiesCheckerProject() = doGradleTest("SystemPropertiesCheckerProject", ::withIgnoredJdkRoots)
 
     @Test
+    fun systemPropertiesCheckerGradle6Project() = doGradleTest(
+        "SystemPropertiesCheckerGradle6Project",
+        JdkDownloaderFacade.jdk11,
+        ::withIgnoredJdkRoots
+    )
+
+    @Test
     fun simpleMaven() = doMavenTest("SimpleMaven")
 
     @Test

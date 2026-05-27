@@ -96,7 +96,9 @@ object GradleToolingApiHelper {
 
     fun <T> BuildActionExecuter<T>.prepareForExecution(): BuildActionExecuter<T> {
         addArguments("--stacktrace")
-        withSystemProperties(IMPORTER_PROPERTIES)
+        IMPORTER_PROPERTIES.forEach { (key, value) ->
+            addArguments("-D$key=$value")
+        }
         if (getProperty(LSP_GRADLE_PROJECT_OFFLINE_PROPERTY)?.toBoolean() == true) {
             setEnvironmentVariables(
                 mapOf(
