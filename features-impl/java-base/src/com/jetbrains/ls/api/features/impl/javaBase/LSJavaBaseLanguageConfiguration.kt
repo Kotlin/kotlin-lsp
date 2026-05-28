@@ -51,7 +51,7 @@ private object JavaBaseWorkspaceComponent : WorkspaceComponent<Unit> {
     override fun handleEvent(event: WorkspaceEvent, state: Unit) {
     }
 
-    override fun registerInApplicationContainer(
+    override suspend fun registerInApplicationContainer(
         builder: AnalyzerContainerBuilder,
         application: Application,
         state: Unit,
@@ -60,7 +60,7 @@ private object JavaBaseWorkspaceComponent : WorkspaceComponent<Unit> {
         builder.initJavaApplicationContainer(application)
     }
 
-    override fun registerInProjectContainer(
+    override suspend fun registerInProjectContainer(
         builder: AnalyzerContainerBuilder,
         project: Project,
         state: Unit,

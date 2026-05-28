@@ -41,7 +41,7 @@ internal object LLFirSessionCacheStorageComponent : WorkspaceComponent<LLFirSess
             WorkspaceEvent.LowMemory -> newStorage()
         }
 
-    override fun registerInApplicationContainer(
+    override suspend fun registerInApplicationContainer(
         builder: AnalyzerContainerBuilder,
         application: Application,
         state: LLFirSessionCacheStorage,
@@ -49,7 +49,7 @@ internal object LLFirSessionCacheStorageComponent : WorkspaceComponent<LLFirSess
     ) {
     }
 
-    override fun registerInProjectContainer(
+    override suspend fun registerInProjectContainer(
         builder: AnalyzerContainerBuilder,
         project: Project,
         state: LLFirSessionCacheStorage,

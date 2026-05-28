@@ -117,7 +117,7 @@ private object KotlinWorkspaceComponent : WorkspaceComponent<KotlinWorkspaceStat
             is WorkspaceEvent.InvalidateFiles, WorkspaceEvent.LowMemory -> state
         }
 
-    override fun registerInApplicationContainer(
+    override suspend fun registerInApplicationContainer(
         builder: AnalyzerContainerBuilder,
         application: Application,
         state: KotlinWorkspaceState,
@@ -130,7 +130,7 @@ private object KotlinWorkspaceComponent : WorkspaceComponent<KotlinWorkspaceStat
         builder.initKotlinApplicationContainer(analyzerFileSystemsForIndexing)
     }
 
-    override fun registerInProjectContainer(
+    override suspend fun registerInProjectContainer(
         builder: AnalyzerContainerBuilder,
         project: Project,
         state: KotlinWorkspaceState,
