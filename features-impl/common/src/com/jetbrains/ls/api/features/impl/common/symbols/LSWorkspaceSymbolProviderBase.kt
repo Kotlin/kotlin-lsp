@@ -1,4 +1,4 @@
-// Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.symbols
 
 import com.intellij.navigation.ChooseByNameContributor
@@ -44,6 +44,7 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
         query: String,
         channel: SendChannel<WorkspaceSymbol>
     ) {
+        if (query.isBlank()) return
         var qualifiedName: String? = null
         var shortName: String = query
         if (contributor is GotoClassContributor) {
@@ -57,7 +58,7 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
                 }
             }
         }
-        val searchScope = FindSymbolParameters.searchScopeFor(project, /* searchInLibraries = */ false)
+        val searchScope = FindSymbolParameters.searchScopeFor(project, /* searchInLibraries = */ true)
         val parameters = FindSymbolParameters(query, shortName, searchScope)
         // Mirrors ContributorsBasedGotoByModel.doProcessContributorNames: dispatch on Ex2/Ex/base,
         // collecting into a set to deduplicate names that appear in multiple indices
@@ -67,7 +68,7 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
                 when (contributor) {
                     is ChooseByNameContributorEx2 -> contributor.processNames({ add(it); true }, parameters)
                     is ChooseByNameContributorEx -> contributor.processNames({ add(it); true }, searchScope, /* filter = */ null)
-                    else -> addAll(contributor.getNames(project, /* includeNonProjectItems = */ false))
+                    else -> addAll(contributor.getNames(project, /* includeNonProjectItems = */ true))
                 }
             }
         }
@@ -78,7 +79,7 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
                     val result = mutableListOf<NavigationItem>()
                     when (contributor) {
                         is ChooseByNameContributorEx -> contributor.processElementsWithName(name, result::add, parameters)
-                        else -> result.addAll(contributor.getItemsByName(name, shortName, project, /* includeNonProjectItems = */ false))
+                        else -> result.addAll(contributor.getItemsByName(name, shortName, project, /* includeNonProjectItems = */ true))
                     }
                     if (qualifiedName != null && contributor is GotoClassContributor) {
                         result.filter { contributor.getQualifiedName(it)?.contains(qualifiedName, ignoreCase = true) == true }
