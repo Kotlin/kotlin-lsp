@@ -4,6 +4,7 @@ package com.jetbrains.ls.imports.gradle.action;
 import com.jetbrains.ls.imports.gradle.model.AndroidProject;
 import com.jetbrains.ls.imports.gradle.model.ExternalModuleDependency;
 import com.jetbrains.ls.imports.gradle.model.ExternalModuleDependencySet;
+import com.jetbrains.ls.imports.gradle.model.ExternalModuleFullDependencySet;
 import com.jetbrains.ls.imports.gradle.model.InternalIdeaModule;
 import com.jetbrains.ls.imports.gradle.model.InternalIdeaProject;
 import com.jetbrains.ls.imports.gradle.model.KotlinModule;
@@ -44,6 +45,18 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
     private static final @NotNull String BUILD_SRC_MODULE_NAME = "buildSrc";
     private static final @NotNull GradleVersion INCLUDED_BUILD_API_GRADLE_VERSION = GradleVersion.version("8.0");
 
+    private final @NotNull GradleSyncSettings syncSettings;
+
+    public ProjectMetadataBuilder(@NotNull GradleSyncSettings settings) {
+        syncSettings = settings;
+    }
+
+    public ProjectMetadataBuilder() {
+        this(
+                new GradleSyncSettings(false)
+        );
+    }
+
     @Override
     public @NotNull ProjectMetadata execute(@NotNull BuildController controller) {
         Map<String, KotlinModule> kotlinModules = new HashMap<>();
@@ -51,7 +64,7 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
         Map<String, Set<ExternalModuleDependency>> externalModuleDependencySet = new HashMap<>();
         Map<String, AndroidProject> androidProjects = new HashMap<>();
         List<InternalIdeaProject> ideaProjects = fetchProjects(controller);
-        resolveModels(ideaProjects, controller, kotlinModules, sourceSets, externalModuleDependencySet, androidProjects);
+        resolveModels(ideaProjects, controller, syncSettings, kotlinModules, sourceSets, externalModuleDependencySet, androidProjects);
         return new ProjectMetadata(
                 ideaProjects,
                 kotlinModules,
@@ -64,6 +77,7 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
     private static void resolveModels(
             @NotNull List<@NotNull InternalIdeaProject> ideaProjects,
             @NotNull BuildController controller,
+            @NotNull GradleSyncSettings syncSettings,
             @NotNull Map<@NotNull String, @NotNull KotlinModule> kotlinModules,
             @NotNull Map<@NotNull String, @NotNull Set<ModuleSourceSet>> sourceSets,
             @NotNull Map<@NotNull String, @NotNull Set<ExternalModuleDependency>> externalModuleDependencySet,
@@ -84,8 +98,11 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
                 ModuleSourceSets moduleSourceSets = unwrapFetchedModel(controller.fetch(delegate, ModuleSourceSets.class));
                 sourceSets.put(moduleFqn, moduleSourceSets == null ? Collections.emptySet() : moduleSourceSets.getSourceSets());
 
+                Class<? extends ExternalModuleDependencySet> dependencyModel = syncSettings.getDownloadLibrarySources()
+                                                                                       ? ExternalModuleFullDependencySet.class
+                                                                                       : ExternalModuleDependencySet.class;
                 ExternalModuleDependencySet moduleDependencies = unwrapFetchedModel(
-                        controller.fetch(delegate, ExternalModuleDependencySet.class)
+                        controller.fetch(delegate, dependencyModel)
                 );
                 externalModuleDependencySet.put(
                         moduleFqn,

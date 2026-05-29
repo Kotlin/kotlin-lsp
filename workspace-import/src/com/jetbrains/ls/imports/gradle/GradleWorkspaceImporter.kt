@@ -18,6 +18,7 @@ import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.findTheMostCompati
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.prepareForExecution
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.withCustomGradleHome
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.withDaemonInitScripts
+import com.jetbrains.ls.imports.gradle.action.GradleSyncSettings
 import com.jetbrains.ls.imports.gradle.action.ProjectMetadataBuilder
 import com.jetbrains.ls.imports.gradle.model.builder.PREPARE_KOTLIN_IDEA_IMPORT_TASK_NAME
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter.postProcessWorkspaceData
@@ -57,9 +58,10 @@ object GradleWorkspaceImporter : WorkspaceImporter {
             .forProjectDirectory(projectDirectory.toFile())
             .withCustomGradleHome()
             .connect()
+        val syncSettings = GradleSyncSettings(downloadLibrarySources = true)
         val gradleProjectData = connection.use {
             withDaemonInitScripts { daemonInitScripts ->
-                val builder = it.action(ProjectMetadataBuilder())
+                val builder = it.action(ProjectMetadataBuilder(syncSettings))
                     .configureLogging(progress)
                     .prepareForExecution()
                     .addInitScripts(daemonInitScripts)

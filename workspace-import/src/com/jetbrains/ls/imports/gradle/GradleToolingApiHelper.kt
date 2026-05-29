@@ -134,6 +134,7 @@ object GradleToolingApiHelper {
     fun <T> withDaemonInitScripts(action: (Iterable<Path>) -> T): T {
         val initScripts = LinkedList<Path>()
         initScripts.add(getLspGradlePluginInitScript())
+        initScripts.add(getIdeaPluginConfiguratorInitScript())
         if (getProperty(LSP_GRADLE_PROJECT_OFFLINE_PROPERTY)?.toBoolean() == true) {
             val selfContainedInitScript = getProperty(LSP_GRADLE_PROJECT_SELF_CONTAINED_INIT_SCRIPT)?.toNioPathOrNull()
             initScripts.addIfNotNull(selfContainedInitScript)
@@ -144,6 +145,51 @@ object GradleToolingApiHelper {
             initScripts.forEach {
                 it.delete()
             }
+        }
+    }
+
+    private fun getIdeaPluginConfiguratorInitScript() : Path {
+        return createTempFile("lsp-gradle-idea-configurator", ".gradle").also {
+            it.writeText("""
+                import java.util.function.Consumer
+                import org.gradle.util.GradleVersion
+
+                static void beforeProject(Gradle gradle, Consumer<Project> action) {
+                  if (IdeaPluginConfigurator.isCurrentGradleAtLeast("8.8")) {
+                    gradle.getLifecycle().beforeProject {
+                      action.accept(it)
+                    }
+                    return
+                  }
+                  gradle.allprojects {
+                    action.accept(it)
+                  }
+                }
+
+                beforeProject(gradle) { Project project ->
+                  IdeaPluginConfigurator.toggleSources(project.plugins, !IdeaPluginConfigurator.isCurrentGradleAtLeast("7.5"))
+                }
+
+                class IdeaPluginConfigurator {
+                  static void toggleSources(PluginContainer plugins, boolean value) {
+                    plugins.withType(IdeaPlugin).all { IdeaPlugin plugin ->
+                      overridePluginSourcesPolicy(plugin, value)
+                    }
+                  }
+                  
+                  static boolean isCurrentGradleAtLeast(String version) {
+                    return GradleVersion.current().getBaseVersion().compareTo(GradleVersion.version(version)) >= 0
+                  }
+                  
+                  private static void overridePluginSourcesPolicy(IdeaPlugin plugin, boolean value) {
+                    def module = plugin?.model?.module
+                    if (module != null) {
+                      module.downloadJavadoc = false
+                      module.downloadSources = value
+                    }
+                  }
+                }
+            """.trimIndent())
         }
     }
 

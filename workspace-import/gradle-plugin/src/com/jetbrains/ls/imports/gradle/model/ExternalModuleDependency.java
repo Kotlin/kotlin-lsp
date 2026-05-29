@@ -2,6 +2,7 @@
 package com.jetbrains.ls.imports.gradle.model;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.Serializable;
@@ -12,4 +13,6 @@ public interface ExternalModuleDependency extends Serializable {
     @NotNull String getMavenCoordinates();
 
     @NotNull File getFile();
+
+    @Nullable File getSources();
 }

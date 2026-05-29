@@ -3,7 +3,11 @@ package com.jetbrains.ls.imports
 
 import com.intellij.ide.starter.sdk.JdkDownloadItem
 import com.intellij.ide.starter.sdk.JdkDownloaderFacade
+import com.intellij.platform.workspace.jps.entities.LibraryEntity
+import com.intellij.platform.workspace.jps.entities.LibraryRoot
+import com.intellij.platform.workspace.jps.entities.LibraryRootTypeId
 import com.intellij.platform.workspace.storage.EntitySource
+import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.testFramework.common.timeoutRunBlocking
 import com.intellij.workspaceModel.ide.impl.IdeVirtualFileUrlManagerImpl
@@ -14,6 +18,7 @@ import com.jetbrains.analyzer.bootstrap.WorkspaceModelSnapshot
 import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
 import com.jetbrains.ls.imports.api.EmptyWorkspaceProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
+import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.LSP_GRADLE_JAVA_HOME_PROPERTY
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
 import com.jetbrains.ls.imports.jps.JpsWorkspaceImporter
@@ -31,11 +36,17 @@ import com.jetbrains.ls.test.api.utils.testProjectInits
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
+import org.junit.jupiter.api.fail
 import java.nio.file.Path
+import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.Path
+import kotlin.io.path.createDirectory
+import kotlin.io.path.deleteRecursively
 import kotlin.io.path.div
 import kotlin.io.path.exists
 import kotlin.io.path.pathString
@@ -56,8 +67,8 @@ abstract class AbstractProjectImportTest {
     }
 
     @Test
-    fun newIJKotlinGradle() = doGradleTest("NewIJKotlinGradle", JdkDownloaderFacade.jdk21) {
-        withIgnoredJdkRoots(it).withRelaxedDependencyOrder()
+    fun newIJKotlinGradle() = doGradleTest("NewIJKotlinGradle", JdkDownloaderFacade.jdk21) { workspace: WorkspaceData ->
+        withIgnoredJdkRoots(workspace).withRelaxedDependencyOrder()
     }
 
     @Test
@@ -91,8 +102,8 @@ abstract class AbstractProjectImportTest {
     fun gradle7Project() = doGradleTest("Gradle7Project", JdkDownloaderFacade.jdk11, ::withIgnoredJdkRoots)
 
     @Test
-    fun gradleIncludedBuildProject() = doGradleTest("GradleIncludedBuildProject", JdkDownloaderFacade.jdk17) {
-        withIgnoredJdkRoots(it).withRelaxedDependencyOrder()
+    fun gradleIncludedBuildProject() = doGradleTest("GradleIncludedBuildProject", JdkDownloaderFacade.jdk17) { workspace: WorkspaceData ->
+        withIgnoredJdkRoots(workspace).withRelaxedDependencyOrder()
     }
 
     @Test
@@ -154,13 +165,44 @@ abstract class AbstractProjectImportTest {
         doTest(project, JpsWorkspaceImporter, testDataDir / "jps")
     }
 
-    protected fun doGradleTest(project: String, resultMapper: (WorkspaceData) -> WorkspaceData = { it }) =
-        doGradleTest(project, JdkDownloaderFacade.jdk17, resultMapper)
+    @Test
+    fun gradleProjectLibrarySourcesAreDownloadedByDefault() = withCustomUserHome { gradleUserHomePath ->
+        withScopedSystemProperty(GradleToolingApiHelper.LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY, gradleUserHomePath) {
+            doGradleTest("GradleProjectLibrarySourcesAreDownloadedByDefault", JdkDownloaderFacade.jdk17, ::withIgnoredJdkRoots, { wsm ->
+                val libraries = wsm.entities(LibraryEntity::class.java).toList()
+                assertEquals(5, libraries.size)
+                val targetLibrary = libraries.find { it.name == "Gradle: org.junit.jupiter:junit-jupiter-api:6.1.0" }
+                    ?: fail("Required library does not exists in the Workspace Model")
+                val libraryRoots = targetLibrary.roots
+                assertEquals(2, libraryRoots.size, "Unexpected library root count. Two roots expected: a classes root and a sources root.")
+                libraryRoots.find { it.type == LibraryRootTypeId("CLASSES") }.run {
+                    assertExists()
+                }
+                libraryRoots.find { it.type == LibraryRootTypeId("SOURCES") }.run {
+                    assertExists()
+                }
+            })
+        }
+    }
 
-    protected fun doGradleTest(project: String, jdkToUse: JdkDownloadItem, resultMapper: (WorkspaceData) -> WorkspaceData = { it }) {
+    protected fun doGradleTest(project: String, resultMapper: (WorkspaceData) -> WorkspaceData = { it }) =
+        doGradleTest(project, JdkDownloaderFacade.jdk17, resultMapper) { }
+
+    protected fun doGradleTest(
+        project: String,
+        jdkToUse: JdkDownloadItem,
+        resultMapper: (WorkspaceData) -> WorkspaceData = { it }
+    ) = doGradleTest(project, jdkToUse, resultMapper) { }
+
+    protected fun doGradleTest(
+        project: String,
+        jdkToUse: JdkDownloadItem,
+        resultMapper: (WorkspaceData) -> WorkspaceData = { it },
+        entityStorageVerifier: (EntityStorage) -> Unit
+    ) {
         downloadGradleBinaries()
         withScopedSystemProperty(LSP_GRADLE_JAVA_HOME_PROPERTY, jdkToUse.home.toString()) {
-            doTest(project, GradleWorkspaceImporter, testDataDir / "gradle", resultMapper)
+            doTest(project, GradleWorkspaceImporter, testDataDir / "gradle", resultMapper, entityStorageVerifier)
         }
     }
 
@@ -175,7 +217,8 @@ abstract class AbstractProjectImportTest {
         project: String,
         importer: WorkspaceImporter,
         testDataDir: Path,
-        resultMapper: (WorkspaceData) -> WorkspaceData = { it }
+        resultMapper: (WorkspaceData) -> WorkspaceData = { it },
+        entityStorageVerifier: (EntityStorage) -> Unit = { }
     ) {
         val projectDir = testDataDir / project
         require(projectDir.exists()) { "Project $project not found at $projectDir" }
@@ -203,6 +246,8 @@ abstract class AbstractProjectImportTest {
             assertFalse((projectDir / "workspace.json").exists(), "Workspace import failed")
             return
         }
+
+        entityStorageVerifier(storage)
 
         val data = resultMapper(workspaceData(storage, projectDir))
         compareWithTestdata(projectDir / "workspace.json", cropJarPaths(toJson(data)))
@@ -310,6 +355,28 @@ abstract class AbstractProjectImportTest {
             } else {
                 System.setProperty(key, value)
             }
+        }
+    }
+
+    @OptIn(ExperimentalPathApi::class)
+    private fun Path.recreateDir() {
+        deleteRecursively()
+        createDirectory()
+    }
+
+    private fun LibraryRoot?.assertExists() {
+        assertNotNull(this)
+        assertTrue(Path.of(url.presentableUrl).exists(), "${url.presentableUrl} should exist on a disk!")
+    }
+
+    @OptIn(ExperimentalPathApi::class)
+    private fun withCustomUserHome(action: (String) -> Unit) {
+        val gradleUserHomePath = Path.of(getRealTestDataDir()).resolve(".gradle")
+        gradleUserHomePath.recreateDir()
+        try {
+            action(gradleUserHomePath.toString())
+        } finally {
+            gradleUserHomePath.deleteRecursively()
         }
     }
 }

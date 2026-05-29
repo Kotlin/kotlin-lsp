@@ -54,7 +54,6 @@ internal class IdeaProjectMapper {
 
         val projectJdks = projectJdkCache.values
             .filterNotNull()
-            .distinctBy { it.name }
         sdks.addAll(projectJdks)
 
         return WorkspaceData(
