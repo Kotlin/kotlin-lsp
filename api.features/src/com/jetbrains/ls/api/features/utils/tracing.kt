@@ -1,7 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.utils
 
-import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.diagnostic.rethrowControlFlowException
 import com.intellij.platform.diagnostic.telemetry.IJTracer
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.context.Context
@@ -30,7 +30,7 @@ internal fun <T> IJTracer.traceProvider(
     try {
         emitAll(resultsFlow.flowOn(Context.current().with(span).asContextElement()))
     } catch (e: Throwable) {
-        if (Logger.shouldRethrow(e)) throw e
+        rethrowControlFlowException(e)
         span.recordException(e)
         span.setStatus(StatusCode.ERROR, e.message ?: e.javaClass.simpleName)
         throw e
