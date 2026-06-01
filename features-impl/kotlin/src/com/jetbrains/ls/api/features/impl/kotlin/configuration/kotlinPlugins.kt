@@ -20,13 +20,6 @@ internal val kotlinFeature: PluginMainDescriptor = makePlugin(
         "intellij.kotlin.codeInsight.base" to "intellij.kotlin.codeInsight.base.xml",
         "intellij.kotlin.base.codeInsight.minimal" to "intellij.kotlin.base.codeInsight.minimal.xml",
     ),
-    emptyModules = listOf(
-        "intellij.kotlin.base.externalSystem",
-        "intellij.kotlin.codeInsight.intentions",
-        "intellij.kotlin.refactorings",
-        "intellij.kotlin.codeInsight",
-        "intellij.kotlin.highlighting",
-    ),
     dependencies = listOf(
         "org.jetbrains.ls.plugin.kotlin",
         "org.jetbrains.ls.feature.java-base"
