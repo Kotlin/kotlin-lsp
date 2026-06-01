@@ -7,7 +7,7 @@ import com.jetbrains.analyzer.plugins.makePlugin
 val javaBaseFeature: PluginMainDescriptor = makePlugin(
     pluginId = "org.jetbrains.ls.feature.java-base",
     xmlModules = mapOf(
-        "features/javaBase/apiImpl" to "META-INF/language-server/features/javaBase/lsApiJavaBaseImpl.xml"
+        "language-server.api.features.impl.java-base" to "META-INF/language-server/features/javaBase/lsApiJavaBaseImpl.xml"
     ),
     dependencies = listOf("org.jetbrains.ls.plugin.java"),
 )

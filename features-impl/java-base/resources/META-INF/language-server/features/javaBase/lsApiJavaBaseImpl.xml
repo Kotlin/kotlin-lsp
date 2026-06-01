@@ -1,4 +1,11 @@
 <idea-plugin>
+  <extensions defaultExtensionNs="com.intellij">
+    <applicationService serviceInterface="com.intellij.codeInsight.folding.JavaCodeFoldingSettings"
+                        serviceImplementation="com.intellij.codeInsight.folding.impl.JavaCodeFoldingSettingsBase"/>
+
+    <findUsagesHandlerFactory implementation="com.intellij.find.findUsages.JavaFindUsagesHandlerFactory" id="java"
+                              order="last, before default"/>
+  </extensions>
   <extensions defaultExtensionNs="ls">
     <markdownDocProvider language="JAVA"
                          implementationClass="com.jetbrains.ls.api.features.impl.javaBase.LSJavaMarkdownDocProvider"/>
