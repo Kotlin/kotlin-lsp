@@ -7,6 +7,12 @@
       <with attribute="implementationClass" implements="com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider"/>
     </extensionPoint>
     <extensionPoint qualifiedName="com.intellij.customFoldingProvider" interface="com.intellij.lang.folding.CustomFoldingProvider" dynamic="true"/>
+    <extensionPoint qualifiedName="com.intellij.platform.backend.documentation.targetProvider" dynamic="true"
+                    interface="com.intellij.platform.backend.documentation.DocumentationTargetProvider"/>
+    <extensionPoint qualifiedName="com.intellij.platform.backend.documentation.symbolTargetProvider" dynamic="true"
+                    interface="com.intellij.platform.backend.documentation.SymbolDocumentationTargetProvider"/>
+    <extensionPoint qualifiedName="com.intellij.platform.backend.documentation.psiTargetProvider" dynamic="true"
+                    interface="com.intellij.platform.backend.documentation.PsiDocumentationTargetProvider"/>
   </extensionPoints>
 
   <extensions defaultExtensionNs="com.intellij">
@@ -15,6 +21,10 @@
 
     <customFoldingProvider implementation="com.intellij.lang.customFolding.NetBeansCustomFoldingProvider"/>
     <customFoldingProvider implementation="com.intellij.lang.customFolding.VisualStudioCustomFoldingProvider"/>
+  </extensions>
+
+  <extensions defaultExtensionNs="com.intellij.platform.backend">
+    <documentation.targetProvider implementation="com.intellij.lang.documentation.symbol.impl.DefaultTargetSymbolDocumentationTargetProvider"/>
   </extensions>
 
   <extensions defaultExtensionNs="ls">

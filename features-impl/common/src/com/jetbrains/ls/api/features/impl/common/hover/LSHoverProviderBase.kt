@@ -1,4 +1,4 @@
-// Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.hover
 
 import com.intellij.lang.Language
@@ -16,8 +16,7 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.features.hover.LSHoverProvider
-import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
-import com.jetbrains.ls.api.features.impl.common.utils.getTargetsAtPosition
+import com.jetbrains.ls.api.features.impl.common.utils.getDocumentationTargetAtPosition
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.Hover
 import com.jetbrains.lsp.protocol.HoverParams
@@ -27,9 +26,7 @@ import com.jetbrains.lsp.protocol.Position
 import com.jetbrains.lsp.protocol.Range
 import com.jetbrains.lsp.protocol.StringOrMarkupContent
 
-abstract class LSHoverProviderBase(
-    private val targetKinds: Set<TargetKind>
-) : LSHoverProvider {
+abstract class LSHoverProviderBase : LSHoverProvider {
     protected open fun acceptTarget(target: PsiElement): Boolean = true
 
     context(server: LSServer, handlerContext: LspHandlerContext)
@@ -40,13 +37,14 @@ abstract class LSHoverProviderBase(
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction null
                 val document = virtualFile.findDocument() ?: return@readAction null
                 val targets = psiFile
-                    .getTargetsAtPosition(params.position, document, targetKinds)
+                    .getDocumentationTargetAtPosition(params.position, document)
                     .filter { psiElement -> acceptTarget(psiElement) }
                 if (targets.isEmpty()) return@readAction null
 
                 val markdown = targets.mapNotNull { psiElement ->
                     generateMarkdownForPsiElementTarget(psiElement, psiFile)
                 }.joinToString("\n---\n")
+                if (markdown.isEmpty()) return@readAction null
 
                 Hover(
                     contents = Hover.Content.Markup(MarkupContent(MarkupKindType.Markdown, markdown)),

@@ -1,4 +1,4 @@
-// Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.javaBase
 
 import com.intellij.openapi.application.Application
@@ -14,8 +14,8 @@ import com.jetbrains.ls.api.features.WorkspaceComponentEntry
 import com.jetbrains.ls.api.features.impl.common.definitions.LSCommonDefinitionProvider
 import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
-import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceComponent
 import com.jetbrains.ls.snapshot.api.impl.core.AnalyzerContextKind
+import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceComponent
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceEvent
 import com.jetbrains.lsp.protocol.URI
 
@@ -26,12 +26,13 @@ val LSJavaBaseLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece
         // they require hover and definition requests to work on the declaration site to have some interactivity on inlays with classes from java
         LSCommonDefinitionProvider(setOf(LSJavaLanguage), setOf(TargetKind.DECLARATION)),
         LSJavaPackageDefinitionProvider(setOf(LSJavaLanguage), setOf(TargetKind.DECLARATION)),
-        object : LSJavaHoverProvider(setOf(TargetKind.DECLARATION)) {
+        object : LSJavaHoverProvider() {
             override fun acceptTarget(target: PsiElement): Boolean {
                 // if a user has some java support installed, then the hover results will be duplicated
                 // we can and should show for libraries as Kotlin LSP vscode extension
                 // handles decompiled files itself in a way only it can handle such urls via custom editors
-                return target.containingFile.virtualFile.uri.scheme in listOf(URI.Schemas.JRT, URI.Schemas.JAR, URI.Schemas.ZIP)
+                val containingFile = target.containingFile ?: return false
+                return containingFile.virtualFile.uri.scheme in listOf(URI.Schemas.JRT, URI.Schemas.JAR, URI.Schemas.ZIP)
             }
         },
     ),

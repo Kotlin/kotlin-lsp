@@ -1,9 +1,11 @@
-// Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.utils
 
+import com.intellij.lang.documentation.impl.documentationTargets
 import com.intellij.model.psi.PsiSymbolService
 import com.intellij.model.psi.impl.targetDeclarationAndReferenceSymbols
 import com.intellij.openapi.editor.Document
+import com.intellij.platform.backend.documentation.DocumentationTarget
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
@@ -24,6 +26,20 @@ fun PsiFile.getTargetsAtPosition(position: Position, document: Document, targetK
 
         else -> return emptyList()
     }
+}
+
+fun PsiFile.getDocumentationTargetAtPosition(position: Position, doc: Document): List<PsiElement> {
+    val targets = getTargets(doc, position)
+    return targets.mapNotNull { it.navigatable as? PsiElement }
+}
+
+fun PsiFile.getTargets(
+    doc: Document,
+    position: Position
+): List<DocumentationTarget> {
+    val offset = doc.offsetByPosition(position)
+    val targets = documentationTargets(this, offset, false)
+    return targets
 }
 
 enum class TargetKind {

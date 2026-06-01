@@ -4,6 +4,10 @@
                             implementationClass="org.jetbrains.kotlin.idea.search.ideaExtensions.FirKotlinTargetElementEvaluator"/>
     <targetElementUtilExtender implementation="org.jetbrains.kotlin.idea.search.ideaExtensions.FirKotlinTargetElementEvaluator"/>
     <usageTargetProvider implementation="org.jetbrains.kotlin.idea.search.ideaExtensions.FirKotlinUsageTargetProvider"/>
+    <platform.backend.documentation.targetProvider id="KotlinDocumentationTargetProvider"
+                                                   implementation="org.jetbrains.kotlin.idea.k2.codeinsight.quickDoc.KotlinDocumentationTargetProvider"/>
+    <platform.backend.documentation.psiTargetProvider id="KotlinDocumentationTargetProvider"
+                                                      implementation="org.jetbrains.kotlin.idea.k2.codeinsight.quickDoc.KotlinPsiDocumentationTargetProvider"/>
 
     <projectService serviceInterface="org.jetbrains.kotlin.psi.KtFileClassProvider"
                     serviceImplementation="org.jetbrains.kotlin.idea.caches.resolve.KtFileClassProviderImpl"/>

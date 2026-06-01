@@ -12,7 +12,6 @@ import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.features.impl.common.hover.LSHoverProviderBase
 import com.jetbrains.ls.api.features.impl.common.hover.markdownMultilineCode
-import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
 import org.jetbrains.kotlin.analysis.api.KaNonPublicApi
@@ -34,13 +33,14 @@ import org.jetbrains.kotlin.kdoc.psi.impl.KDocLink
 import org.jetbrains.kotlin.kdoc.psi.impl.KDocName
 import org.jetbrains.kotlin.kdoc.psi.impl.KDocTag
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.psi.KtCallElement
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNonPublicApi
 import org.jetbrains.kotlin.psi.psiUtil.forEachDescendantOfType
 import org.jetbrains.kotlin.renderer.render
 
-internal object LSKotlinHoverProvider : LSHoverProviderBase(TargetKind.ALL) {
+internal object LSKotlinHoverProvider : LSHoverProviderBase() {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSKotlinLanguage)
 
     context(server: LSServer, analysisContext: LSAnalysisContext)
@@ -53,6 +53,7 @@ internal object LSKotlinHoverProvider : LSHoverProviderBase(TargetKind.ALL) {
                 is PsiClass -> target.namedClassSymbol
                 is PsiMember -> target.callableSymbol
                 is PsiPackage -> findPackage(FqName(target.qualifiedName))
+                is KtCallElement -> target.resolveSymbol()
                 else -> null
             } ?: return null
             getMarkdownContent(symbol)
