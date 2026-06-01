@@ -1,5 +1,7 @@
 <idea-plugin visibility="public">
   <dependencies>
+    <module name="language-server.api.features.impl.common"/>
+
     <module name="intellij.java.impl"/>
     <module name="intellij.java.backend"/>
 
