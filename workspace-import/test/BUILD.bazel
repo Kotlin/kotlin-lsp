@@ -81,6 +81,8 @@ jvm_library(
         "@community//platform/core-impl:core-impl_test_lib",
         "//language-server/analyzer",
         "//language-server/analyzer:analyzer_test_lib",
+        "@community//plugins/editorconfig/backend",
+        "@community//plugins/editorconfig/backend:backend_test_lib",
         "@community//platform/build-scripts/downloader",
         "@community//platform/build-scripts/downloader:downloader_test_lib",
         "@community//tools/intellij.tools.ide.starter:ide-starter",
