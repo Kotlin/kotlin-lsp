@@ -46,7 +46,7 @@ jvm_library(
     "@community//libraries/jspecify",
     "//language-server/community/workspace-import/gradle-plugin",
     "//language-server/community/workspace-import/maven-plugin",
-    "@ultimate_lib//:gradle_tooling_a_p_i",
+    "//libraries/gradle-tooling",
     "@lib//:kotlin-gradle-plugin-idea",
     "@lib//:kotlin-tooling-core",
     "@lib//:kotlin-gradle-plugin-idea-proto",
@@ -91,6 +91,7 @@ jvm_library(
     "@community//libraries/jspecify:jspecify_test_lib",
     "//language-server/community/workspace-import/gradle-plugin:gradle-plugin_test_lib",
     "//language-server/community/workspace-import/maven-plugin:maven-plugin_test_lib",
+    "//libraries/gradle-tooling:gradle-tooling_test_lib",
     "//language-server/analyzer.kotlin:analyzer.kotlin_test_lib",
     "//language-server/api.impl.analyzer:api.impl.analyzer_test_lib",
   ]

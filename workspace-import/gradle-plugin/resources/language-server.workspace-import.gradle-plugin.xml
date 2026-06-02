@@ -1,0 +1,5 @@
+<idea-plugin>
+  <dependencies>
+    <module name="intellij.libraries.gradle.tooling"/>
+  </dependencies>
+</idea-plugin>
