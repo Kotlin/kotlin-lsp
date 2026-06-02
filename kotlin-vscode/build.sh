@@ -34,8 +34,7 @@ if ! command -v pnpm >/dev/null; then
     exit 1
   fi
 
-  npm install --global corepack@latest
-  corepack enable
+  npm install -g pnpm@11.5.1
 fi
 
 if [[ -z "$PACKAGE_DIR" ]]; then
