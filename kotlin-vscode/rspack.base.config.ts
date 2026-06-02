@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { rspack, type Configuration } from '@rspack/core';
+import { type Configuration, rspack } from '@rspack/core';
 import { TsCheckerRspackPlugin } from 'ts-checker-rspack-plugin';
 
 export interface PackageCopy {
@@ -93,6 +93,13 @@ export function createExtensionConfig(
                 typescript: {
                     configFile: tsconfig,
                     configOverwrite: {
+                        // Scope the type check to this bundle's own sources. The shared
+                        // intellij-vscode/tsconfig.json includes every bundle; without this
+                        // override, a filtered install (which installs only the requested
+                        // bundle's deps) would fail type-checking the other bundles' sources.
+                        include: sourceDirs.map((dir) =>
+                            path.relative(path.dirname(tsconfig), dir),
+                        ),
                         exclude: [
                             '**/node_modules',
                             '**/.*/',
