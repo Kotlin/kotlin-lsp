@@ -9,6 +9,11 @@ create_kotlinc_options(
 )
 
 jvm_provided_library(
+  name = "community_libraries_groovy_provided",
+  lib = "@community//libraries/groovy"
+)
+
+jvm_provided_library(
   name = "community_libraries_jspecify_provided",
   lib = "@community//libraries/jspecify"
 )
@@ -34,13 +39,13 @@ jvm_library(
   deps = [
     "@lib//:kotlin-stdlib",
     "@ultimate_lib//:javax-inject-provided",
-    "@community//libraries/groovy",
     "@ultimate_lib//:gradle-provided",
     "@lib//:kotlin-gradle-plugin-idea",
     "@lib//:kotlin-tooling-core",
     "@lib//:kotlin-gradle-plugin-idea-proto",
     "@lib//:jetbrains-annotations",
     "@ultimate_lib//:slf4j-api-provided",
+    ":community_libraries_groovy_provided",
     ":community_libraries_jspecify_provided",
     ":community_libraries_kotlinx_serialization_core_provided",
     ":community_libraries_kotlinx_serialization_json_provided",
@@ -57,6 +62,7 @@ jvm_library(
   runtime_deps = [
     ":gradle-plugin",
     "@ultimate_lib//:javax-inject-provided",
+    "@community//libraries/groovy",
     "@community//libraries/groovy:groovy_test_lib",
     "@ultimate_lib//:gradle-provided",
     "@community//libraries/jspecify",
