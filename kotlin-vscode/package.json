@@ -274,6 +274,11 @@
         "title": "Restart Language Server"
       },
       {
+        "command": "jetbrains.kotlin.clearCachesAndRestartLsp",
+        "category": "IntelliJ",
+        "title": "Clear Caches and Restart Language Server"
+      },
+      {
         "command": "jetbrains.kotlin.reloadWorkspace",
         "category": "IntelliJ",
         "title": "Reload Workspace"

@@ -11,6 +11,7 @@ import {
     StreamInfo,
 } from 'vscode-languageclient/node';
 import { chmodSync } from 'fs';
+import { rm } from 'node:fs/promises';
 import * as net from 'node:net';
 import * as os from 'node:os';
 import { type ChildProcessByStdio, spawn } from 'node:child_process';
@@ -38,6 +39,8 @@ const OPT_JVM_ARGS = 'intellij.additionalJvmArgs';
 const OPT_DEFAULT_WORKSPACE_SDK = 'intellij.jdkForSymbolResolution';
 const OPT_BUILD_TOOL = 'intellij.buildTool';
 
+const INDEX_DIR_STATE_KEY = 'jetbrains.intellij.indexDir';
+
 let _client: LanguageClient | undefined;
 
 const clientSubscriptions: ((client: LanguageClient, stateChange: StateChangeEvent) => void)[] = [];
@@ -49,7 +52,114 @@ export function initLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): vo
             await startLspClient(getAcceptedEulaHash);
             await vscode.window.showInformationMessage(extensionDisplayName() + ' restarted');
         }),
+        vscode.commands.registerCommand('jetbrains.kotlin.clearCachesAndRestartLsp', async () => {
+            await clearCachesAndRestart(getAcceptedEulaHash);
+        }),
     );
+    // Remember the index location the server reports on each successful start, so we can still
+    // clear caches when the server later fails to start (and thus reports no `indexDir`).
+    subscribeToClientEvent((client, stateChange) => {
+        if (stateChange.newState !== State.Running) return;
+        const indexDir = indexDirFromClient(client);
+        if (indexDir) {
+            void getContext().workspaceState.update(INDEX_DIR_STATE_KEY, indexDir);
+        }
+    });
+}
+
+/** The index directory the server reported in its `initialize` result, if it is running. */
+function indexDirFromClient(client: LanguageClient | undefined): string | undefined {
+    const experimental = client?.initializeResult?.capabilities?.experimental as
+        | { indexDir?: string }
+        | undefined;
+    return experimental?.indexDir;
+}
+
+const INDEX_DELETE_MAX_ATTEMPTS = 5;
+const INDEX_DELETE_RETRY_DELAY_MS = 200;
+
+/**
+ * Stops the language server, deletes its on-disk index/cache directory, then starts it again,
+ * forcing a clean reindex. The index location is reported by the server in the `initialize`
+ * result (`capabilities.experimental.indexDir`); we read it from the running client, falling back
+ * to the value persisted on the last successful start when the server isn't running. Deletion
+ * happens while the server is down so the RocksDB lock on the directory is released first.
+ */
+async function clearCachesAndRestart(getAcceptedEulaHash: AcceptedEulaHashProvider): Promise<void> {
+    // Prefer the running server's reported location; fall back to the last one we persisted so the
+    // action still works when the server fails to start (e.g. because of the very caches to clear).
+    const indexDir =
+        indexDirFromClient(getLspClient()) ??
+        getContext().workspaceState.get<string>(INDEX_DIR_STATE_KEY);
+
+    const externalPort = configOption<number>(OPT_DEV_SERVER_PORT) ?? -1;
+    if (externalPort !== -1) {
+        // The server runs externally (a fixed dev port), so we don't control its lifecycle and
+        // can't release the index lock — clearing its caches from here would corrupt the live
+        // index. Ask the user to stop it and delete the directory manually.
+        const detail = indexDir
+            ? `${extensionDisplayName()} is connected to an external language server on port ${externalPort}, so its caches can't be cleared from here.\n\nStop that server and delete its index directory manually:\n${indexDir}`
+            : `${extensionDisplayName()} is connected to an external language server on port ${externalPort}, so its caches can't be cleared from here.\n\nStop that server and delete its index directory manually.`;
+        const choice = await vscode.window.showWarningMessage(
+            'Cannot clear caches for an external language server',
+            { modal: true, detail },
+            ...(indexDir ? ['Copy Path'] : []),
+        );
+        if (choice === 'Copy Path' && indexDir) {
+            await vscode.env.clipboard.writeText(indexDir);
+        }
+        return;
+    }
+
+    const confirmation = await vscode.window.showWarningMessage(
+        `Clear caches and restart ${extensionDisplayName()}?`,
+        {
+            modal: true,
+            detail: indexDir
+                ? `The index directory will be deleted and rebuilt from scratch:\n${indexDir}`
+                : 'The language server will be restarted. The index location is unknown (the server is not running), so no caches will be cleared.',
+        },
+        'Clear and Restart',
+    );
+    if (confirmation !== 'Clear and Restart') return;
+
+    await stopLspClient();
+
+    const cleared = indexDir ? await deleteIndexDir(indexDir) : false;
+
+    await startLspClient(getAcceptedEulaHash);
+
+    await vscode.window.showInformationMessage(
+        cleared
+            ? `${extensionDisplayName()} restarted (caches cleared)`
+            : `${extensionDisplayName()} restarted`,
+    );
+}
+
+/**
+ * Deletes the index directory, retrying a few times to tolerate the OS releasing the server's
+ * file handles after it exits (notably on Windows). Returns `true` if the directory was removed,
+ * `false` if every attempt failed (the failure is reported but does not abort the restart).
+ */
+async function deleteIndexDir(indexDir: string): Promise<boolean> {
+    for (let attempt = 1; attempt <= INDEX_DELETE_MAX_ATTEMPTS; attempt++) {
+        try {
+            await rm(indexDir, { recursive: true, force: true });
+            logInfo(`Cleared index directory: ${indexDir}`);
+            return true;
+        } catch (e) {
+            const message = e instanceof Error ? e.message : String(e);
+            if (attempt === INDEX_DELETE_MAX_ATTEMPTS) {
+                logInfo(`Failed to clear index directory ${indexDir}: ${message}`);
+                await vscode.window.showErrorMessage(
+                    `Failed to clear caches at ${indexDir}: ${message}`,
+                );
+                return false;
+            }
+            await new Promise((resolve) => setTimeout(resolve, INDEX_DELETE_RETRY_DELAY_MS));
+        }
+    }
+    return false;
 }
 
 /**
@@ -111,12 +221,9 @@ export async function startLspClient(getAcceptedEulaHash: AcceptedEulaHashProvid
     }
 }
 
-/**
- * Stops LSP, if it's not running, does nothing.
- */
 export async function stopLspClient(): Promise<void> {
     if (!_client) return;
-    if (_client.state == State.Running) {
+    if (_client.needsStop()) {
         await _client.stop();
     }
     _client = undefined;

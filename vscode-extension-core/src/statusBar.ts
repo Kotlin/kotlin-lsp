@@ -1,19 +1,42 @@
 import * as vscode from 'vscode';
 import { State } from 'vscode-languageclient/node';
 import { getContext } from './extension';
-import { getLspClient, subscribeToClientEvent } from './lspClient';
+import { getLspClient, packageJson, subscribeToClientEvent } from './lspClient';
 
-const TITLE = 'Kotlin';
-const LSP_TITLE = 'LSP';
+const STATUS_MENU_COMMAND = 'jetbrains.kotlin.showLspStatusMenu';
+
+interface LspAction extends vscode.QuickPickItem {
+    command: string;
+}
+
+function lspActions(): LspAction[] {
+    return [
+        { label: '$(sync) Restart Language Server', command: 'jetbrains.kotlin.restartLsp' },
+        {
+            label: '$(clear-all) Clear Caches and Restart Language Server',
+            command: 'jetbrains.kotlin.clearCachesAndRestartLsp',
+        },
+    ];
+}
+
+/** Product name for the status bar, derived from the active extension's display name. */
+function productTitle(options?: { shorten?: boolean }): string {
+    const name = packageJson()?.displayName;
+    return (options?.shorten ? name?.split(' ')[0] : name) ?? 'IntelliJ';
+}
 
 let statusBarItem: vscode.StatusBarItem | undefined;
 
 export function registerStatusBarItem() {
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-    statusBarItem.text = TITLE;
+    statusBarItem.text = productTitle({ shorten: true });
+    statusBarItem.command = STATUS_MENU_COMMAND;
     statusBarItem.show();
     updateView();
-    getContext().subscriptions.push(statusBarItem);
+    getContext().subscriptions.push(
+        statusBarItem,
+        vscode.commands.registerCommand(STATUS_MENU_COMMAND, showLspStatusMenu),
+    );
     subscribeToClientEvent(() => updateView());
 }
 
@@ -24,43 +47,48 @@ function updateView() {
 }
 
 function computeTooltip(): vscode.MarkdownString {
+    // Shown on hover; clicking the item opens the same actions as a QuickPick (STATUS_MENU_COMMAND).
     const text = new vscode.MarkdownString();
     text.isTrusted = true;
     text.supportThemeIcons = true;
-    text.supportHtml = true;
 
-    const lspState = `<div>${getLspClientStatus()}</div>`;
-    text.appendMarkdown(`
-<div>
-<h4>Kotlin</h4>
-${lspState}
-</div>
-        `);
+    const actions = lspActions().map((a) => `[${a.label}](command:${a.command})`);
+    text.appendMarkdown(
+        [`**${productTitle()}**&nbsp;&nbsp;${stateText()}`, ...actions].join('\n\n'),
+    );
     return text;
 }
 
 function computeText(): string {
     const clientState = getLspClient()?.state ?? State.Stopped;
-
+    const title = productTitle({ shorten: true });
     switch (clientState) {
         case State.Running:
-            return `$(check) ${TITLE}`;
+            return `$(check) ${title}`;
         case State.Starting:
-            return `$(sync) ${TITLE}`;
+            return `$(sync) ${title}`;
         default:
-            return `$(stop) ${TITLE}`;
+            return `$(stop) ${title}`;
     }
 }
 
-function getLspClientStatus(): string {
+function stateText(): string {
     const clientState = getLspClient()?.state ?? State.Stopped;
-    const restartButton = `<a href="command:jetbrains.kotlin.restartLsp" title="Restart">$(sync)</a>`;
     switch (clientState) {
         case State.Running:
-            return `$(check) ${LSP_TITLE}: Running&nbsp;&nbsp;${restartButton}`;
+            return '$(check) Running';
         case State.Starting:
-            return `$(sync) ${LSP_TITLE}: Starting`;
+            return '$(sync) Starting';
         default:
-            return `$(stop) ${LSP_TITLE}: Stopped&nbsp;&nbsp;${restartButton}`;
+            return '$(stop) Stopped';
+    }
+}
+
+async function showLspStatusMenu(): Promise<void> {
+    const picked = await vscode.window.showQuickPick(lspActions(), {
+        placeHolder: `${productTitle()} — language server actions`,
+    });
+    if (picked) {
+        await vscode.commands.executeCommand(picked.command);
     }
 }
