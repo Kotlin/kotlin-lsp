@@ -17,10 +17,7 @@ jvm_library(
     ),
     module_name = "language-server.workspace-import.test",
     visibility = ["//visibility:public"],
-    runtime_deps = [
-        # do not sort,
-        "@lib//:kotlin-stdlib",
-    ],
+    runtime_deps = ["@lib//:kotlin-stdlib"],
 )
 
 jvm_library(

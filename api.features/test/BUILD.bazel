@@ -46,10 +46,7 @@ jvm_library(
     ),
     module_name = "language-server.api.features.test",
     visibility = ["//visibility:public"],
-    runtime_deps = [
-        # do not sort,
-        ":test",
-    ],
+    runtime_deps = [":test"],
     deps = [
         # do not sort,
         "@lib//:kotlin-stdlib",
