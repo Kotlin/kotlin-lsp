@@ -1,70 +1,88 @@
-### auto-generated section `build language-server.api.features` start
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
 load("@rules_jvm//:jvm.bzl", "jvm_library")
 
+### auto-generated section `build language-server.api.features` start
+
 create_kotlinc_options(
-  name = "custom_api.features",
-  opt_in = [
-    "com.intellij.openapi.util.IntellijInternalApi",
-    "org.jetbrains.kotlin.analysis.api.KaExperimentalApi",
-  ],
-  x_context_parameters = True
+    name = "custom_api.features",
+    opt_in = [
+        "com.intellij.openapi.util.IntellijInternalApi",
+        "org.jetbrains.kotlin.analysis.api.KaExperimentalApi",
+    ],
+    x_context_parameters = True,
 )
 
 jvm_library(
-  name = "api.features",
-  module_name = "language-server.api.features",
-  visibility = ["//visibility:public"],
-  srcs = glob(["src/**/*.kt", "src/**/*.java", "src/**/*.form"], allow_empty = True),
-  resources = glob(["resources/**/*"]),
-  resource_strip_prefix = "resources",
-  kotlinc_opts = ":custom_api.features",
-  deps = [
-    "@lib//:kotlin-stdlib",
-    "@community//libraries/opentelemetry",
-    "@community//libraries/opentelemetry-extension-kotlin",
-    "@community//fleet/lsp.protocol",
-    "@community//libraries/kotlinx/coroutines/core",
-    "@community//platform/core-api:core",
-    "@community//platform/analysis-impl",
-    "@community//platform/core-impl",
-    "@community//platform/diagnostic/telemetry",
-    "@community//platform/util",
-    "@community//libraries/kotlinx/serialization/json",
-    "@community//libraries/kotlinx/serialization/core",
-    "//language-server/analyzer",
-    "//language-server/api.impl.analyzer",
-  ]
+    name = "api.features",
+    srcs = glob(
+        [
+            "src/**/*.kt",
+            "src/**/*.java",
+            "src/**/*.form",
+        ],
+        allow_empty = True,
+    ),
+    kotlinc_opts = ":custom_api.features",
+    module_name = "language-server.api.features",
+    resource_strip_prefix = "resources",
+    resources = glob(
+        ["resources/**/*"],
+    ),
+    visibility = ["//visibility:public"],
+    deps = [
+        # do not sort,
+        "@lib//:kotlin-stdlib",
+        "@community//libraries/opentelemetry",
+        "@community//libraries/opentelemetry-extension-kotlin",
+        "@community//fleet/lsp.protocol",
+        "@community//libraries/kotlinx/coroutines/core",
+        "@community//platform/core-api:core",
+        "@community//platform/analysis-impl",
+        "@community//platform/core-impl",
+        "@community//platform/diagnostic/telemetry",
+        "@community//platform/util",
+        "@community//libraries/kotlinx/serialization/json",
+        "@community//libraries/kotlinx/serialization/core",
+        "//language-server/analyzer",
+        "//language-server/api.impl.analyzer",
+    ],
 )
 
 jvm_library(
-  name = "api.features_test_lib",
-  testonly = True,
-  module_name = "language-server.api.features",
-  visibility = ["//visibility:public"],
-  srcs = glob([], allow_empty = True),
-  kotlinc_opts = ":custom_api.features",
-  runtime_deps = [
-    ":api.features",
-    "@community//libraries/opentelemetry:opentelemetry_test_lib",
-    "@community//libraries/opentelemetry-extension-kotlin:opentelemetry-extension-kotlin_test_lib",
-    "@community//fleet/lsp.protocol:lsp.protocol_test_lib",
-    "@community//libraries/kotlinx/coroutines/core:core_test_lib",
-    "@community//platform/core-api:core_test_lib",
-    "@community//platform/analysis-impl:analysis-impl_test_lib",
-    "@community//platform/core-impl:core-impl_test_lib",
-    "@community//platform/diagnostic/telemetry:telemetry_test_lib",
-    "@community//platform/util:util_test_lib",
-    "@community//libraries/kotlinx/serialization/json:json_test_lib",
-    "@community//libraries/kotlinx/serialization/core:core_test_lib",
-    "//language-server/analyzer:analyzer_test_lib",
-    "//language-server/api.impl.analyzer:api.impl.analyzer_test_lib",
-  ]
+    name = "api.features_test_lib",
+    testonly = True,
+    srcs = glob(
+        [],
+        allow_empty = True,
+    ),
+    kotlinc_opts = ":custom_api.features",
+    module_name = "language-server.api.features",
+    visibility = ["//visibility:public"],
+    runtime_deps = [
+        # do not sort,
+        ":api.features",
+        "@community//libraries/opentelemetry:opentelemetry_test_lib",
+        "@community//libraries/opentelemetry-extension-kotlin:opentelemetry-extension-kotlin_test_lib",
+        "@community//fleet/lsp.protocol:lsp.protocol_test_lib",
+        "@community//libraries/kotlinx/coroutines/core:core_test_lib",
+        "@community//platform/core-api:core_test_lib",
+        "@community//platform/analysis-impl:analysis-impl_test_lib",
+        "@community//platform/core-impl:core-impl_test_lib",
+        "@community//platform/diagnostic/telemetry:telemetry_test_lib",
+        "@community//platform/util:util_test_lib",
+        "@community//libraries/kotlinx/serialization/json:json_test_lib",
+        "@community//libraries/kotlinx/serialization/core:core_test_lib",
+        "//language-server/analyzer:analyzer_test_lib",
+        "//language-server/api.impl.analyzer:api.impl.analyzer_test_lib",
+    ],
 )
 ### auto-generated section `build language-server.api.features` end
 
 ### auto-generated section `iml language-server.api.features` start
-exports_files([
-  "language-server.api.features.iml",
-], visibility = ["//visibility:public"])
+exports_files(
+    [
+        "language-server.api.features.iml",
+    ],
+    visibility = ["//visibility:public"],
+)
 ### auto-generated section `iml language-server.api.features` end

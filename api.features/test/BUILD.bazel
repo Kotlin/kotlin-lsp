@@ -1,71 +1,89 @@
 load("@community//build:tests-options.bzl", "jps_test")
+load("@rules_jvm//:jvm.bzl", "jvm_library")
 
 jps_test(
-  name = "test_test",
-  jvm_flags = ["-Dintellij.build.test.ignoreFirstAndLastTests=true"],
-  runtime_deps = [":test_test_lib"],
-  sandbox = True,
+    name = "test_test",
+    jvm_flags = ["-Dintellij.build.test.ignoreFirstAndLastTests=true"],
+    sandbox = True,
+    runtime_deps = [":test_test_lib"],
 )
 ### skip generation section `test language-server.api.features.test`
 
 ### auto-generated section `build language-server.api.features.test` start
-load("@rules_jvm//:jvm.bzl", "jvm_library")
 
 jvm_library(
-  name = "test",
-  module_name = "language-server.api.features.test",
-  visibility = ["//visibility:public"],
-  srcs = glob([], allow_empty = True),
-  runtime_deps = [
-    "@lib//:kotlin-stdlib",
-    "@community//fleet/lsp.protocol",
-    "@community//libraries/kotlinx/coroutines/core",
-    "//language-server/api.impl.analyzer",
-    "@community//platform/analysis-impl",
-    "@community//platform/util",
-    "@community//libraries/kotlinx/serialization/json",
-    "@community//libraries/kotlinx/serialization/core",
-    "@ultimate_lib//:java-diff-utils",
-  ]
+    name = "test",
+    srcs = glob(
+        [],
+        allow_empty = True,
+    ),
+    module_name = "language-server.api.features.test",
+    visibility = ["//visibility:public"],
+    runtime_deps = [
+        # do not sort,
+        "@lib//:kotlin-stdlib",
+        "@community//fleet/lsp.protocol",
+        "@community//libraries/kotlinx/coroutines/core",
+        "//language-server/api.impl.analyzer",
+        "@community//platform/analysis-impl",
+        "@community//platform/util",
+        "@community//libraries/kotlinx/serialization/json",
+        "@community//libraries/kotlinx/serialization/core",
+        "@ultimate_lib//:java-diff-utils",
+    ],
 )
 
 jvm_library(
-  name = "test_test_lib",
-  testonly = True,
-  module_name = "language-server.api.features.test",
-  visibility = ["//visibility:public"],
-  srcs = glob(["test/**/*.kt", "test/**/*.java", "test/**/*.form"], allow_empty = True),
-  deps = [
-    "@lib//:kotlin-stdlib",
-    "@community//fleet/lsp.protocol",
-    "@community//fleet/lsp.protocol:lsp.protocol_test_lib",
-    "@community//libraries/kotlinx/coroutines/core",
-    "@community//libraries/kotlinx/coroutines/core:core_test_lib",
-    "//language-server/api.impl.analyzer",
-    "//language-server/api.impl.analyzer:api.impl.analyzer_test_lib",
-    "@community//platform/analysis-impl",
-    "@community//platform/analysis-impl:analysis-impl_test_lib",
-    "@community//platform/util",
-    "@community//platform/util:util_test_lib",
-    "@community//libraries/kotlinx/serialization/json",
-    "@community//libraries/kotlinx/serialization/json:json_test_lib",
-    "@community//libraries/kotlinx/serialization/core",
-    "@community//libraries/kotlinx/serialization/core:core_test_lib",
-    "@ultimate_lib//:java-diff-utils",
-    "@lib//:junit5",
-    "@community//libraries/junit5-jupiter",
-    "@community//libraries/junit5-jupiter:junit5-jupiter_test_lib",
-    "//language-server/test-api",
-    "//language-server/test-api:test-api_test_lib",
-    "//language-server/community/api.features",
-    "//language-server/community/api.features:api.features_test_lib",
-  ],
-  runtime_deps = [":test"]
+    name = "test_test_lib",
+    testonly = True,
+    srcs = glob(
+        [
+            "test/**/*.kt",
+            "test/**/*.java",
+            "test/**/*.form",
+        ],
+        allow_empty = True,
+    ),
+    module_name = "language-server.api.features.test",
+    visibility = ["//visibility:public"],
+    runtime_deps = [
+        # do not sort,
+        ":test",
+    ],
+    deps = [
+        # do not sort,
+        "@lib//:kotlin-stdlib",
+        "@community//fleet/lsp.protocol",
+        "@community//fleet/lsp.protocol:lsp.protocol_test_lib",
+        "@community//libraries/kotlinx/coroutines/core",
+        "@community//libraries/kotlinx/coroutines/core:core_test_lib",
+        "//language-server/api.impl.analyzer",
+        "//language-server/api.impl.analyzer:api.impl.analyzer_test_lib",
+        "@community//platform/analysis-impl",
+        "@community//platform/analysis-impl:analysis-impl_test_lib",
+        "@community//platform/util",
+        "@community//platform/util:util_test_lib",
+        "@community//libraries/kotlinx/serialization/json",
+        "@community//libraries/kotlinx/serialization/json:json_test_lib",
+        "@community//libraries/kotlinx/serialization/core",
+        "@community//libraries/kotlinx/serialization/core:core_test_lib",
+        "@ultimate_lib//:java-diff-utils",
+        "@lib//:junit5",
+        "@community//libraries/junit5-jupiter",
+        "@community//libraries/junit5-jupiter:junit5-jupiter_test_lib",
+        "//language-server/test-api",
+        "//language-server/test-api:test-api_test_lib",
+        "//language-server/community/api.features",
+        "//language-server/community/api.features:api.features_test_lib",
+    ],
 )
 ### auto-generated section `build language-server.api.features.test` end
 
 ### auto-generated section `iml language-server.api.features.test` start
-exports_files([
-  "language-server.api.features.test.iml",
-], visibility = ["//visibility:public"])
+exports_files(
+    [
+        "language-server.api.features.test.iml",
+    ],
+    visibility = ["//visibility:public"],
+)
 ### auto-generated section `iml language-server.api.features.test` end

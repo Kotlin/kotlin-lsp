@@ -1,61 +1,79 @@
-### auto-generated section `build language-server.workspace-import.maven-plugin` start
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
 load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_provided_library")
 
+### auto-generated section `build language-server.workspace-import.maven-plugin` start
+
 create_kotlinc_options(
-  name = "custom_maven-plugin",
-  jvm_target = "8",
-  x_context_parameters = True
+    name = "custom_maven-plugin",
+    jvm_target = "8",
+    x_context_parameters = True,
 )
 
 jvm_provided_library(
-  name = "community_libraries_kotlinx_serialization_core_provided",
-  lib = "@community//libraries/kotlinx/serialization/core"
+    name = "community_libraries_kotlinx_serialization_core_provided",
+    lib = "@community//libraries/kotlinx/serialization/core",
 )
 
 jvm_provided_library(
-  name = "community_libraries_kotlinx_serialization_json_provided",
-  lib = "@community//libraries/kotlinx/serialization/json"
+    name = "community_libraries_kotlinx_serialization_json_provided",
+    lib = "@community//libraries/kotlinx/serialization/json",
 )
 
 jvm_library(
-  name = "maven-plugin",
-  module_name = "language-server.workspace-import.maven-plugin",
-  visibility = ["//visibility:public"],
-  srcs = glob(["src/**/*.kt", "src/**/*.java", "src/**/*.form"], allow_empty = True),
-  resources = glob(["resources/**/*"]),
-  resource_strip_prefix = "resources",
-  kotlinc_opts = ":custom_maven-plugin",
-  deps = [
-    "@lib//:kotlin-stdlib",
-    "@ultimate_lib//:apache-maven-plugin-api-provided",
-    "@ultimate_lib//:apache-maven-core-provided",
-    ":community_libraries_kotlinx_serialization_core_provided",
-    ":community_libraries_kotlinx_serialization_json_provided",
-  ]
+    name = "maven-plugin",
+    srcs = glob(
+        [
+            "src/**/*.kt",
+            "src/**/*.java",
+            "src/**/*.form",
+        ],
+        allow_empty = True,
+    ),
+    kotlinc_opts = ":custom_maven-plugin",
+    module_name = "language-server.workspace-import.maven-plugin",
+    resource_strip_prefix = "resources",
+    resources = glob(
+        ["resources/**/*"],
+    ),
+    visibility = ["//visibility:public"],
+    deps = [
+        # do not sort,
+        "@lib//:kotlin-stdlib",
+        "@ultimate_lib//:apache-maven-plugin-api-provided",
+        "@ultimate_lib//:apache-maven-core-provided",
+        ":community_libraries_kotlinx_serialization_core_provided",
+        ":community_libraries_kotlinx_serialization_json_provided",
+    ],
 )
 
 jvm_library(
-  name = "maven-plugin_test_lib",
-  testonly = True,
-  module_name = "language-server.workspace-import.maven-plugin",
-  visibility = ["//visibility:public"],
-  srcs = glob([], allow_empty = True),
-  kotlinc_opts = ":custom_maven-plugin",
-  runtime_deps = [
-    ":maven-plugin",
-    "@community//libraries/kotlinx/serialization/core",
-    "@community//libraries/kotlinx/serialization/core:core_test_lib",
-    "@community//libraries/kotlinx/serialization/json",
-    "@community//libraries/kotlinx/serialization/json:json_test_lib",
-    "@ultimate_lib//:apache-maven-plugin-api-provided",
-    "@ultimate_lib//:apache-maven-core-provided",
-  ]
+    name = "maven-plugin_test_lib",
+    testonly = True,
+    srcs = glob(
+        [],
+        allow_empty = True,
+    ),
+    kotlinc_opts = ":custom_maven-plugin",
+    module_name = "language-server.workspace-import.maven-plugin",
+    visibility = ["//visibility:public"],
+    runtime_deps = [
+        # do not sort,
+        ":maven-plugin",
+        "@community//libraries/kotlinx/serialization/core",
+        "@community//libraries/kotlinx/serialization/core:core_test_lib",
+        "@community//libraries/kotlinx/serialization/json",
+        "@community//libraries/kotlinx/serialization/json:json_test_lib",
+        "@ultimate_lib//:apache-maven-plugin-api-provided",
+        "@ultimate_lib//:apache-maven-core-provided",
+    ],
 )
 ### auto-generated section `build language-server.workspace-import.maven-plugin` end
 
 ### auto-generated section `iml language-server.workspace-import.maven-plugin` start
-exports_files([
-  "language-server.workspace-import.maven-plugin.iml",
-], visibility = ["//visibility:public"])
+exports_files(
+    [
+        "language-server.workspace-import.maven-plugin.iml",
+    ],
+    visibility = ["//visibility:public"],
+)
 ### auto-generated section `iml language-server.workspace-import.maven-plugin` end
