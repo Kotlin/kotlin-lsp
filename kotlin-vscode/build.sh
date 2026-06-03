@@ -35,6 +35,13 @@ if ! command -v pnpm >/dev/null; then
   fi
 
   npm install -g pnpm@11.5.1
+
+if [[ -n "$TEAMCITY_VERSION" ]]; then
+  NPM_PREFIX=$(npm config get prefix)
+  export PATH="$NPM_PREFIX/bin:$PATH"
+fi
+
+  pnpm --version
 fi
 
 if [[ -z "$PACKAGE_DIR" ]]; then
