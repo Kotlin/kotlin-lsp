@@ -89,6 +89,7 @@ jvm_library(
         "//language-server/dap/jvm/lsp.features",
         "//language-server/community/workspace-import",
         "//language-server/community/features-impl/java-base",
+        "@community//plugins/kotlin/references",
     ],
 )
 
@@ -152,6 +153,7 @@ jvm_library(
         "//language-server/dap/jvm/lsp.features:lsp.features_test_lib",
         "//language-server/community/workspace-import:workspace-import_test_lib",
         "//language-server/community/features-impl/java-base:java-base_test_lib",
+        "@community//plugins/kotlin/references:references_test_lib",
     ],
 )
 ### auto-generated section `build language-server.api.features.impl.kotlin` end
