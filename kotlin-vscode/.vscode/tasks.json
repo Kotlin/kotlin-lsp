@@ -29,7 +29,7 @@
         ],
         "background": {
           "activeOnStart": true,
-          "beginsPattern": ".*",
+          "beginsPattern": ".*rspack build --mode development --watch.*",
           "endsPattern": ".*Rspack compiled.*"
         }
       }
