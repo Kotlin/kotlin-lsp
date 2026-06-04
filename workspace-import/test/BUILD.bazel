@@ -2,6 +2,16 @@ load("@community//build:compiler-options.bzl", "create_kotlinc_options")
 load("@community//build:tests-options.bzl", "jps_test")
 load("@rules_jvm//:jvm.bzl", "jvm_library")
 
+jps_test(
+    name = "test_test",
+    jvm_flags = [
+        "-XX:-DoEscapeAnalysis",
+    ],
+    tags = ["importing-tests"],
+    runtime_deps = [":test_test_lib"],
+)
+### skip generation section `test language-server.workspace-import.test`
+
 ### auto-generated section `build language-server.workspace-import.test` start
 
 create_kotlinc_options(
@@ -99,11 +109,3 @@ exports_files(
     visibility = ["//visibility:public"],
 )
 ### auto-generated section `iml language-server.workspace-import.test` end
-
-### auto-generated section `test language-server.workspace-import.test` start
-
-jps_test(
-    name = "test_test",
-    runtime_deps = [":test_test_lib"],
-)
-### auto-generated section `test language-server.workspace-import.test` end
