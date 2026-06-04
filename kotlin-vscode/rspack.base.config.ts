@@ -58,6 +58,10 @@ export function createExtensionConfig(
         resolve: {
             extensions: ['.ts', '.js'],
             alias: {
+                'web-tree-sitter$': path.resolve(
+                    packageDir,
+                    'node_modules/web-tree-sitter/web-tree-sitter.cjs',
+                ),
                 'vscode-languageserver-types$': path.resolve(
                     packageDir,
                     'node_modules/vscode-languageserver-types/lib/esm/main.js',
