@@ -90,7 +90,7 @@ class GradleSourceSetRootResolver(private val project: Project) {
     companion object {
         private fun getIdeaModule(project: Project): IdeaModule? {
             val plugins = project.plugins
-            val ideaPlugin = plugins.findPlugin<IdeaPlugin?>(IdeaPlugin::class.java)
+            val ideaPlugin = plugins.findPlugin<IdeaPlugin>(IdeaPlugin::class.java)
             if (ideaPlugin != null) {
                 val ideaPluginModel = ideaPlugin.model
                 if (ideaPluginModel != null) {
