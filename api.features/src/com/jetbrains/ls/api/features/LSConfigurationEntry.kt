@@ -14,7 +14,8 @@ interface LSLanguageSpecificConfigurationEntry : LSConfigurationEntry {
 class WorkspaceImporterEntry(
     val id: String,
     val importer: WorkspaceImporter,
-): LSConfigurationEntry
+    val order: String = "",
+) : LSConfigurationEntry
 
 fun interface WorkspaceComponentEntry : LSConfigurationEntry {
     fun component(): WorkspaceComponent<*>

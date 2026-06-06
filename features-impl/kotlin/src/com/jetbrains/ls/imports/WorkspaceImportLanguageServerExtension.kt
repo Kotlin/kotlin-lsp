@@ -4,7 +4,6 @@ package com.jetbrains.ls.imports
 import com.jetbrains.ls.api.features.LanguageServerExtension
 import com.jetbrains.ls.api.features.WorkspaceImporterEntry
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
-import com.jetbrains.ls.imports.generic.GenericWorkspaceImporter
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
 import com.jetbrains.ls.imports.jps.JpsWorkspaceImporter
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
@@ -20,8 +19,6 @@ class WorkspaceImportLanguageServerExtension : LanguageServerExtension {
                 WorkspaceImporterEntry("maven", MavenWorkspaceImporter),
                 WorkspaceImporterEntry("gradle", GradleWorkspaceImporter),
                 WorkspaceImporterEntry("jps", JpsWorkspaceImporter),
-
-                WorkspaceImporterEntry("generic", GenericWorkspaceImporter),
             ),
         )
 }
