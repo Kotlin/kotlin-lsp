@@ -36,7 +36,8 @@ fun interface ProjectInitEntry : LSConfigurationEntry {
 class WorkspaceImporterEntry(
     val id: String,
     val importer: WorkspaceImporter,
-): LSConfigurationEntry
+    val order: String = "",
+) : LSConfigurationEntry
 
 fun interface RhizomeEntityTypeEntry : LSConfigurationEntry {
     fun entityType(): EntityType<*>

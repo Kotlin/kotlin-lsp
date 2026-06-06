@@ -15,26 +15,6 @@ internal object MetadataStorageImpl : MetadataStorageBase() {
         var typeMetadata: StorageTypeMetadata
 
         typeMetadata = FinalClassMetadata.ObjectMetadata(
-            fqName = "com.jetbrains.ls.imports.generic.GenericEntitySource",
-            properties = listOf(
-                OwnPropertyMetadata(
-                    isComputable = false,
-                    isKey = false,
-                    isOpen = false,
-                    name = "virtualFileUrl",
-                    valueType = ValueTypeMetadata.SimpleType.CustomType(
-                        isNullable = true,
-                        typeMetadata = FinalClassMetadata.KnownClass(fqName = "com.intellij.platform.workspace.storage.url.VirtualFileUrl")
-                    ),
-                    withDefault = false
-                )
-            ),
-            supertypes = listOf("com.intellij.platform.workspace.storage.EntitySource")
-        )
-
-        addMetadata(typeMetadata)
-
-        typeMetadata = FinalClassMetadata.ObjectMetadata(
             fqName = "com.jetbrains.ls.imports.utils.DefaultJdkEntitySource",
             properties = listOf(
                 OwnPropertyMetadata(
@@ -57,7 +37,6 @@ internal object MetadataStorageImpl : MetadataStorageBase() {
 
     override fun initializeMetadataHash() {
         addMetadataHash(typeFqn = "com.intellij.platform.workspace.storage.EntitySource", metadataHash = -1205400579)
-        addMetadataHash(typeFqn = "com.jetbrains.ls.imports.generic.GenericEntitySource", metadataHash = 6870742)
         addMetadataHash(typeFqn = "com.jetbrains.ls.imports.utils.DefaultJdkEntitySource", metadataHash = -258517457)
     }
 }
