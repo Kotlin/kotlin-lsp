@@ -1,4 +1,4 @@
-<idea-plugin>
+<idea-plugin visibility="internal">
   <dependencies>
     <module name="language-server.analyzer.kotlin"/>
     <module name="language-server.workspace-import.gradle-plugin"/>
