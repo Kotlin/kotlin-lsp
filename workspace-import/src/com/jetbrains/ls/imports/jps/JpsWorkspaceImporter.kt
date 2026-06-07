@@ -48,6 +48,7 @@ import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.api.applyChangesWithDeduplication
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
+import com.jetbrains.ls.imports.json.flattenExportedDependencies
 import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
 import com.jetbrains.ls.imports.utils.toIntellijUri
 import org.jdom.Element
@@ -158,29 +159,6 @@ object JpsWorkspaceImporter : WorkspaceImporter {
         val libs = mutableSetOf<String>()
         val sdks = mutableSetOf<String>()
 
-        // Pre-compute the set of modules each module transitively exports, for flattening.
-        // JPS projects use a non-flat dependency model (A→B→C), so exported transitive deps
-        // must be added as direct deps of each module (like Maven/Gradle importers do).
-        val modulesByName = model.project.modules.associateBy { it.name }
-        val transitiveExportsCache = mutableMapOf<String, Set<String>>()
-
-        fun transitiveExports(moduleName: String): Set<String> {
-            transitiveExportsCache[moduleName]?.let { return it }
-            transitiveExportsCache[moduleName] = emptySet() // guard against dependency cycles
-            val jpsModule = modulesByName[moduleName] ?: return emptySet()
-            val result = buildSet {
-                for (dep in jpsModule.dependenciesList.dependencies) {
-                    if (dep !is JpsModuleDependency) continue
-                    val depModule = dep.module ?: continue
-                    if (JpsJavaExtensionService.getInstance().getDependencyExtension(dep)?.isExported != true) continue
-                    add(depModule.name)
-                    addAll(transitiveExports(depModule.name))
-                }
-            }
-            transitiveExportsCache[moduleName] = result
-            return result
-        }
-
         model.project.modules.forEach { module ->
             val kotlinFacetModuleExtension = module.container.getChild(JpsKotlinFacetModuleExtension.KIND)
 
@@ -248,36 +226,9 @@ object JpsWorkspaceImporter : WorkspaceImporter {
                 }
             }
 
-            // Add transitively exported module deps as direct deps (flattening).
-            // A module X reachable via an exported chain from direct dep D is added once;
-            // its exported flag mirrors the first-hop dep (A→D) so that downstream modules
-            // that depend on this module also see X when D is exported.
-            val presentModules = directDeps.filterIsInstance<ModuleDependency>().mapTo(mutableSetOf()) { it.module.name }
-            val flattenedDeps = buildList {
-                for (dep in module.dependenciesList.dependencies) {
-                    if (dep !is JpsModuleDependency) continue
-                    val depModuleName = dep.module?.name ?: continue
-                    val javaExt = JpsJavaExtensionService.getInstance().getDependencyExtension(dep)
-                    val exported = javaExt?.isExported == true
-                    val scope = DependencyScope.valueOf(javaExt?.scope?.name ?: "COMPILE")
-                    for (transitiveName in transitiveExports(depModuleName)) {
-                        if (presentModules.add(transitiveName)) {
-                            add(
-                                ModuleDependency(
-                                    module = ModuleId(transitiveName),
-                                    exported = exported,
-                                    scope = scope,
-                                    productionOnTest = false
-                                )
-                            )
-                        }
-                    }
-                }
-            }
-
             val entity = ModuleEntity(
                 name = module.name,
-                dependencies = directDeps + flattenedDeps,
+                dependencies = directDeps,
                 entitySource = entitySource
             ) {
                 this.type = ModuleTypeId(with(module.moduleType) {
@@ -374,6 +325,10 @@ object JpsWorkspaceImporter : WorkspaceImporter {
                 this.compilerOutputForTests = javaService.getOutputUrl(module, true)?.let { virtualFileUrlManager.getOrCreateFromUrl(it) }
             }
         }
+
+        // JPS uses a non-flat dependency model; flatten transitively-exported module deps into direct deps
+        // so the analyzer's non-recursive OrderEnumerator resolves them. See AnalyzerOrderEnumerationHandler.
+        flattenExportedDependencies(storage, includeLibraries = false)
         if (model.global.libraryCollection.libraries.isEmpty()) {
             detectJavaSdks(projectDirectory, sdks, virtualFileUrlManager, entitySource).forEach { builder ->
                 storage addEntity builder
