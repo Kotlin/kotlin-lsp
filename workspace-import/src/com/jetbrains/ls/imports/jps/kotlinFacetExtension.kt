@@ -1,5 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
-package com.jetbrains.ls.imports.jps
+@file:Suppress("PackageDirectoryMismatch")
+
+package org.jetbrains.kotlin.jps.model
 
 import com.intellij.util.xmlb.XmlSerializer
 import org.jdom.Element
@@ -24,6 +26,8 @@ import org.jetbrains.kotlin.config.deserializeFacetSettings
 
 // A copy-paste from the obsolete and incompatible
 // kotlin-jps-plugin-classpath-2.1.21.jar library
+// reusing the same package because in some runs
+// the original library is present (all-tests)
 internal class KotlinModelSerializerService : KotlinCommonJpsModelSerializerExtension() {
     override fun getProjectExtensionSerializers() = listOf(
         KotlinCommonCompilerArgumentsSerializer(),

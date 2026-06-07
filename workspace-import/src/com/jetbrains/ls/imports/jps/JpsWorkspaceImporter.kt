@@ -1,6 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.jps
 
+import com.intellij.java.workspace.entities.JavaModuleSettingsEntity
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.components.ExpandMacroToPathMap
 import com.intellij.openapi.components.impl.getAllMacros
@@ -78,6 +79,7 @@ import org.jetbrains.kotlin.idea.workspaceModel.CompilerArgumentsSerializer
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
 import org.jetbrains.kotlin.idea.workspaceModel.kotlinSettings
 import org.jetbrains.kotlin.idea.workspaceModel.toCompilerSettingsData
+import org.jetbrains.kotlin.jps.model.JpsKotlinFacetModuleExtension
 import java.io.IOException
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
@@ -358,6 +360,19 @@ object JpsWorkspaceImporter : WorkspaceImporter {
                 }
             }
             storage addEntity entity
+
+            val javaService = JpsJavaExtensionService.getInstance()
+            val javaModuleExtension = javaService.getModuleExtension(module)
+            storage addEntity JavaModuleSettingsEntity(
+                inheritedCompilerOutput = javaModuleExtension?.isInheritOutput ?: true,
+                excludeOutput = javaModuleExtension?.isExcludeOutput ?: true,
+                entitySource = entitySource,
+            ) {
+                this.module = entity
+                this.languageLevelId = javaService.getLanguageLevel(module)?.name
+                this.compilerOutput = javaService.getOutputUrl(module, false)?.let { virtualFileUrlManager.getOrCreateFromUrl(it) }
+                this.compilerOutputForTests = javaService.getOutputUrl(module, true)?.let { virtualFileUrlManager.getOrCreateFromUrl(it) }
+            }
         }
         if (model.global.libraryCollection.libraries.isEmpty()) {
             detectJavaSdks(projectDirectory, sdks, virtualFileUrlManager, entitySource).forEach { builder ->

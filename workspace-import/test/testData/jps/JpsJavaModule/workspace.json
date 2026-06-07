@@ -1,0 +1,38 @@
+{
+    "modules": [
+        {
+            "name": "moduleB",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/src",
+                            "type": "java-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/test",
+                            "type": "java-test"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "javaSettings": [
+        {
+            "module": "moduleB",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": true,
+            "compilerOutput": "<WORKSPACE>/out/production",
+            "compilerOutputForTests": "<WORKSPACE>/out/test",
+            "languageLevelId": "JDK_17",
+            "manifestAttributes": {}
+        }
+    ]
+}

@@ -16,6 +16,7 @@ import com.jetbrains.ls.imports.api.EmptyWorkspaceProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.LSP_GRADLE_JAVA_HOME_PROPERTY
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
+import com.jetbrains.ls.imports.jps.JpsWorkspaceImporter
 import com.jetbrains.ls.imports.json.DependencyData
 import com.jetbrains.ls.imports.json.WorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData
@@ -120,6 +121,12 @@ abstract class AbstractProjectImportTest {
     )
 
     @Test
+    fun jpsKotlinFacet() = doJpsTest("JpsKotlinFacet")
+
+    @Test
+    fun jpsJavaModule() = doJpsTest("JpsJavaModule")
+
+    @Test
     fun simpleMaven() = doMavenTest("SimpleMaven")
 
     @Test
@@ -141,6 +148,10 @@ abstract class AbstractProjectImportTest {
     @EnabledIfEnvironmentVariable(named = "ANDROID_HOME", matches = ".*", disabledReason = "Android SDK is required")
     fun androidDependingOnKotlinJvm() = doGradleTest("AndroidDependingOnKotlinJvm") { workspaceData ->
         withIgnoredJdkRoots(workspaceData).withSanitizedJarLibraryNames().withoutSyntheticLibraries()
+    }
+
+    private fun doJpsTest(project: String,) {
+        doTest(project, JpsWorkspaceImporter, testDataDir / "jps")
     }
 
     protected fun doGradleTest(project: String, resultMapper: (WorkspaceData) -> WorkspaceData = { it }) =

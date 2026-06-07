@@ -1,5 +1,10 @@
 <idea-plugin>
+  <extensionPoints>
+    <extensionPoint qualifiedName="com.intellij.jps.plugin"
+                    beanClass="com.intellij.jps.impl.JpsPluginBean" dynamic="true"/>
+  </extensionPoints>
   <extensions defaultExtensionNs="com.intellij">
+    <jps.plugin/>
     <projectService serviceInterface="com.intellij.openapi.externalSystem.ExternalSystemModulePropertyManagerFactory"
                     serviceImplementation="com.intellij.openapi.externalSystem.service.project.ExternalSystemModulePropertyManagerFactoryImpl"/>
 

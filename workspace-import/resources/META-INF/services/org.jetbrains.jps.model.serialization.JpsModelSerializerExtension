@@ -1,1 +1,1 @@
-com.jetbrains.ls.imports.jps.KotlinModelSerializerService
+org.jetbrains.kotlin.jps.model.KotlinModelSerializerService
