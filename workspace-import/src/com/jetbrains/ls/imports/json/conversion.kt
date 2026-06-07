@@ -173,7 +173,7 @@ private fun toDataClass(entity: SdkEntity, workspacePath: Path): SdkData =
         version = entity.version,
         homePath = entity.homePath?.let { toRelativePath(it, workspacePath) },
         roots = when {
-            entity.homePath != null && entity.type == "JavaSDK" -> null // Let's calculate them on restore
+            entity.homePath != null && (entity.type == "JavaSDK" || entity.type == "jdk") -> null // Let's calculate them on restore
             else -> entity.roots.map { SdkRootData(it.url.url, it.type.name) }
         },
         additionalData = entity.additionalData
@@ -207,7 +207,7 @@ private fun toDataClass(
         },
         kind = KotlinSettingsData.KotlinModuleKind.valueOf(entity.kind.name),
         compilerArguments = entity.compilerArguments?.let {
-            toRelativeKotlinCompilerArguments(it)
+            toRelativeKotlinCompilerArguments(it, workspacePath)
         },
         additionalArguments = entity.compilerSettings?.additionalArguments?.nullize(),
         scriptTemplates = entity.compilerSettings?.scriptTemplates?.nullize(),
@@ -428,7 +428,7 @@ private fun toEntity(
     this.module = module
     this.targetPlatform = kotlinSettingsData.targetPlatform
     this.compilerArguments = kotlinSettingsData.compilerArguments?.let {
-        toAbsoluteKotlinCompilerArguments(it)
+        toAbsoluteKotlinCompilerArguments(it, workspacePath)
     }
     this.compilerSettings = with(kotlinSettingsData) {
         CompilerSettingsData(
@@ -489,14 +489,22 @@ private fun addFacetRecursive(
         this.module = moduleEntity
     }
 
-private fun toRelativeKotlinCompilerArguments(json: String): String = when (OS.CURRENT) {
-    OS.Windows if json.contains("\\\\") -> json.replace("${m2Repo.toAbsolutePath()}\\".replace("\\", "\\\\"), MAVEN_PREFIX.replace("/", "\\\\"))
-    else -> json.replace("${m2Repo.toAbsolutePath()}/", MAVEN_PREFIX)
+private fun toRelativeKotlinCompilerArguments(json: String, workspacePath: Path): String =
+    json.replaceAbsolutePathWithPrefix(m2Repo, MAVEN_PREFIX)
+        .replaceAbsolutePathWithPrefix(workspacePath, WORKSPACE_PREFIX)
+
+private fun toAbsoluteKotlinCompilerArguments(json: String, workspacePath: Path): String =
+    json.replacePrefixWithAbsolutePath(MAVEN_PREFIX, m2Repo)
+        .replacePrefixWithAbsolutePath(WORKSPACE_PREFIX, workspacePath)
+
+private fun String.replaceAbsolutePathWithPrefix(absolute: Path, prefix: String): String = when (OS.CURRENT) {
+    OS.Windows if contains("\\\\") -> replace("${absolute.toAbsolutePath()}\\".replace("\\", "\\\\"), prefix.replace("/", "\\\\"))
+    else -> replace("${absolute.toAbsolutePath()}/", prefix)
 }
 
-private fun toAbsoluteKotlinCompilerArguments(json: String): String = when (OS.CURRENT) {
-    OS.Windows if json.contains("\\\\") -> json.replace(MAVEN_PREFIX.replace("/", "\\\\"), "${m2Repo.toAbsolutePath()}\\".replace("\\", "\\\\"))
-    else -> json.replace(MAVEN_PREFIX, "${m2Repo.toAbsolutePath()}/")
+private fun String.replacePrefixWithAbsolutePath(prefix: String, absolute: Path): String = when (OS.CURRENT) {
+    OS.Windows if contains("\\\\") -> replace(prefix.replace("/", "\\\\"), "${absolute.toAbsolutePath()}\\".replace("\\", "\\\\"))
+    else -> replace(prefix, "${FileUtilRt.toSystemIndependentName(absolute.toAbsolutePath().toString())}/")
 }
 
 internal fun toAbsolutePath(path: String, workspacePath: Path): Path {

@@ -8,7 +8,10 @@ import com.intellij.platform.workspace.jps.entities.InheritedSdkDependency
 import com.intellij.platform.workspace.jps.entities.ModuleEntity
 import com.intellij.platform.workspace.jps.entities.SdkDependency
 import com.intellij.platform.workspace.jps.entities.SdkEntity
+import com.intellij.platform.workspace.jps.entities.SdkRoot
+import com.intellij.platform.workspace.jps.entities.SdkRootTypeId
 import com.intellij.platform.workspace.jps.entities.modifyModuleEntity
+import com.intellij.platform.workspace.jps.entities.modifySdkEntity
 import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.entities
@@ -34,6 +37,20 @@ fun MutableEntityStorage.fixMissingProjectSdk(
     var existingSdk = entities(SdkEntity::class.java).singleOrNull()
     if (existingSdk == null && defaultSdkPath == null && !DETECT_PROJECT_SDK) return
     val path = sdkHome(defaultSdkPath) ?: return
+    existingSdk = existingSdk?.let { sdk ->
+        if (sdk.roots.isNotEmpty()) sdk
+        else modifySdkEntity(sdk) {
+            homePath = virtualFileUrlManager.getOrCreateFromUrl(path.toFileUrl().url)
+            roots = mutableListOf<SdkRoot>().apply {
+                JavaSdkImpl.findClasses(path, false).mapTo(this) {
+                    SdkRoot(it.replace("!/", "!/modules/").toIntellijUri(virtualFileUrlManager), SdkRootTypeId.CLASSES)
+                }
+                JavaSdkImpl.findSources(path).mapTo(this) {
+                    SdkRoot(it.toIntellijUri(virtualFileUrlManager), SdkRootTypeId.SOURCES)
+                }
+            }
+        }
+    }
     entities<ModuleEntity>().forEach { module ->
         modifyModuleEntity(module) {
             dependencies = dependencies.map { moduleDependencyItem ->
@@ -75,4 +92,3 @@ private fun sdkHome(defaultSdkPath: Path?): Path? =
             require(it.isDirectory()) { "Expected a directory, got $it" }
         }
     }
-
