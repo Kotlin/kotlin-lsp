@@ -8,6 +8,6 @@ internal val commonLsApiPlugin: PluginMainDescriptor =
     makePlugin(
         pluginId = "ls.common.api",
         xmlModules = mapOf(
-            "language-server/common/api" to "META-INF/language-server/features/common/commonLsApi.xml"
+            "language-server.api.features.impl.common" to "META-INF/language-server/features/common/commonLsApi.xml"
         ),
     )
