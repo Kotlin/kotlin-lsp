@@ -10,6 +10,7 @@ import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.testFramework.common.timeoutRunBlocking
+import com.intellij.util.SystemProperties
 import com.intellij.workspaceModel.ide.impl.IdeVirtualFileUrlManagerImpl
 import com.jetbrains.analyzer.api.withAnalyzer
 import com.jetbrains.analyzer.api.withProject
@@ -20,6 +21,7 @@ import com.jetbrains.ls.imports.api.EmptyWorkspaceProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.LSP_GRADLE_JAVA_HOME_PROPERTY
+import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.LSP_GRADLE_PROJECT_INIT_SCRIPTS
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
 import com.jetbrains.ls.imports.jps.JpsWorkspaceImporter
 import com.jetbrains.ls.imports.json.DependencyData
@@ -45,12 +47,16 @@ import org.junit.jupiter.api.fail
 import java.nio.file.Path
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.Path
+import kotlin.io.path.copyToRecursively
+import kotlin.io.path.createDirectories
 import kotlin.io.path.createDirectory
+import kotlin.io.path.createTempFile
 import kotlin.io.path.deleteRecursively
 import kotlin.io.path.div
 import kotlin.io.path.exists
 import kotlin.io.path.pathString
 import kotlin.io.path.relativeTo
+import kotlin.io.path.writeText
 import kotlin.time.Duration.Companion.minutes
 
 abstract class AbstractProjectImportTest {
@@ -64,6 +70,7 @@ abstract class AbstractProjectImportTest {
     @AfterEach
     open fun tearDown() {
         DETECT_PROJECT_SDK = true
+        System.clearProperty(LSP_GRADLE_PROJECT_INIT_SCRIPTS)
     }
 
     @Test
@@ -201,8 +208,14 @@ abstract class AbstractProjectImportTest {
         entityStorageVerifier: (EntityStorage) -> Unit
     ) {
         downloadGradleBinaries()
-        withScopedSystemProperty(LSP_GRADLE_JAVA_HOME_PROPERTY, jdkToUse.home.toString()) {
-            doTest(project, GradleWorkspaceImporter, testDataDir / "gradle", resultMapper, entityStorageVerifier)
+        withConditionalScopedSystemProperty(
+            condition = { System.getenv("TEAMCITY_VERSION") != null && !project.contains("android", true) },
+            key = LSP_GRADLE_PROJECT_INIT_SCRIPTS,
+            value = getCacheRedirectorInitScriptPath().toString()
+        ) {
+            withScopedSystemProperty(key = LSP_GRADLE_JAVA_HOME_PROPERTY, value = jdkToUse.home.toString()) {
+                doTest(project, GradleWorkspaceImporter, testDataDir / "gradle", resultMapper, entityStorageVerifier)
+            }
         }
     }
 
@@ -344,6 +357,14 @@ abstract class AbstractProjectImportTest {
         )
     }
 
+    private fun withConditionalScopedSystemProperty(condition: () -> Boolean, key: String, value: String, action: () -> Unit) {
+        if (condition()) {
+            withScopedSystemProperty(key, value, action)
+        } else {
+            action()
+        }
+    }
+
     private fun withScopedSystemProperty(key: String, value: String, action: () -> Unit) {
         val originalValue = System.getProperty(key)
         try {
@@ -374,9 +395,49 @@ abstract class AbstractProjectImportTest {
         val gradleUserHomePath = Path.of(getRealTestDataDir()).resolve(".gradle")
         gradleUserHomePath.recreateDir()
         try {
+            val systemUserHome = getGradleUserHome() ?: return
+            copyGradleDistribution(systemUserHome, gradleUserHomePath)
             action(gradleUserHomePath.toString())
         } finally {
             gradleUserHomePath.deleteRecursively()
+        }
+    }
+
+    @OptIn(ExperimentalPathApi::class)
+    private fun copyGradleDistribution(gradleUserHome: Path, newGradleUserHome: Path) {
+        assertTrue(newGradleUserHome.exists())
+        val source = gradleUserHome.resolve("wrapper/dists")
+        if (!source.exists()) {
+            return
+        }
+        val destination = newGradleUserHome.resolve("wrapper/dists")
+        assertFalse(destination.exists())
+        destination.createDirectories()
+        source.copyToRecursively(destination, { _, _, exception -> throw exception }, false, false)
+    }
+
+    private fun getGradleUserHome(): Path? {
+        val gradleUserHome = System.getenv("GRADLE_USER_HOME") ?: System.getProperty("gradle.user.home")
+        if (gradleUserHome != null) {
+            return Path.of(gradleUserHome)
+        }
+        val userHome = SystemProperties.getUserHome()
+        return Path.of(userHome).resolve(".gradle")
+    }
+
+    private fun getCacheRedirectorInitScriptPath(): Path {
+        return createTempFile("lsp-test-cache-redirector-patch", ".gradle").also {
+            it.writeText(
+                """
+                allprojects {
+                    repositories {
+                        maven {
+                            url = 'https://repo.labs.intellij.net/repo1'
+                        }
+                    }
+                }
+            """.trimIndent()
+            )
         }
     }
 }
