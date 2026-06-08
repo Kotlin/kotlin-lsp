@@ -258,6 +258,7 @@ fun MutableEntityStorage.importWorkspaceData(
         if (ignoreDuplicateLibsAndSdks && SdkId(sdkData.name, sdkData.type) in storage) {
             continue
         }
+        val sdkHome = sdkData.homePath?.takeUnless { it.isPlaceholder() }
         storage addEntity SdkEntity(
             name = sdkData.name,
             type = sdkData.type,
@@ -274,23 +275,23 @@ fun MutableEntityStorage.importWorkspaceData(
                                 })
                         }
                     }
-                    sdkData.homePath?.isPlaceholder() == true -> {
-                        // unresolvable placeholder, a path variable
-                    }
-                    sdkData.homePath != null -> {
-                        val sdkHome = toAbsolutePath(sdkData.homePath, workspacePath)
-                        JavaSdkImpl.findClasses(sdkHome, false).mapTo(this) {
+                    sdkHome != null -> {
+                        val path = toAbsolutePath(sdkHome, workspacePath)
+                        JavaSdkImpl.findClasses(path, false).mapTo(this) {
                             SdkRoot(
                                 it.replace("!/", "!/modules/").toIntellijUri(virtualFileUrlManager),
                                 SdkRootTypeId.CLASSES
                             )
                         }
-                        JavaSdkImpl.findSources(sdkHome).mapTo(this) {
+                        JavaSdkImpl.findSources(path).mapTo(this) {
                             SdkRoot(
                                 it.toIntellijUri(virtualFileUrlManager),
                                 SdkRootTypeId.SOURCES
                             )
                         }
+                    }
+                    sdkData.homePath != null -> {
+                        // unresolvable placeholder, a path variable
                     }
                     else -> LOG.warn("SDK has no home or roots: ${sdkData.name}")
                 }
@@ -299,7 +300,7 @@ fun MutableEntityStorage.importWorkspaceData(
             entitySource = entitySource
         ) {
             version = sdkData.version
-            homePath = sdkData.homePath?.toIntellijUri(virtualFileUrlManager)
+            homePath = sdkHome?.toIntellijUri(virtualFileUrlManager)
         }
     }
 

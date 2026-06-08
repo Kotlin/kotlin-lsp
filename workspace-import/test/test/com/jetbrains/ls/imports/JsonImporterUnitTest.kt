@@ -17,6 +17,7 @@ import com.jetbrains.ls.imports.json.flattenExportedDependencies
 import com.jetbrains.ls.imports.json.importWorkspaceData
 import com.jetbrains.ls.imports.json.workspaceData
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -36,6 +37,7 @@ class JsonImporterUnitTest {
 
         val sdk = storage.entities<SdkEntity>().single()
         assertTrue(sdk.roots.isEmpty(), "Placeholder JDK home must not be resolved to SDK roots")
+        assertNull(sdk.homePath, "Placeholder JDK home must not be stored as a path")
     }
 
     /**
