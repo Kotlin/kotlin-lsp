@@ -133,11 +133,11 @@
             "type": "TEST",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-api/6.1.0/#####/junit-jupiter-api-6.1.0-sources.jar",
-                    "type": "SOURCES"
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-api/6.1.0/#####/junit-jupiter-api-6.1.0.jar"
                 },
                 {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-api/6.1.0/#####/junit-jupiter-api-6.1.0.jar"
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-api/6.1.0/#####/junit-jupiter-api-6.1.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {

@@ -515,10 +515,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.google.guava/guava/32.1.1-jre/#####/guava-32.1.1-jre.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/com.google.guava/guava/32.1.1-jre/#####/guava-32.1.1-jre-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -557,10 +553,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.squareup.moshi/moshi/1.15.0/#####/moshi-1.15.0.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/com.squareup.moshi/moshi/1.15.0/#####/moshi-1.15.0-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -580,7 +572,7 @@
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.squareup.okio/okio/2.10.0/#####/okio-jvm-2.10.0.jar"
                 },
                 {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/com.squareup.okio/okio/2.10.0/#####/okio-2.10.0-sources.jar",
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/com.squareup.okio/okio/2.10.0/#####/okio-jvm-2.10.0.jar",
                     "type": "SOURCES"
                 }
             ],
@@ -704,10 +696,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/junit/junit/4.13.2/#####/junit-4.13.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/junit/junit/4.13.2/#####/junit-4.13.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -830,10 +818,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/#####/hamcrest-core-1.3.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/#####/hamcrest-core-1.3-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -851,10 +835,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-reflect/1.8.20/#####/kotlin-reflect-1.8.20.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-reflect/1.8.20/#####/kotlin-reflect-1.8.20-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1040,10 +1020,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-engine/5.10.1/#####/junit-jupiter-engine-5.10.1.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-engine/5.10.1/#####/junit-jupiter-engine-5.10.1-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1124,10 +1100,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-engine/1.10.1/#####/junit-platform-engine-1.10.1.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-engine/1.10.1/#####/junit-platform-engine-1.10.1-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1145,10 +1117,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-launcher/1.10.1/#####/junit-platform-launcher-1.10.1.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-launcher/1.10.1/#####/junit-platform-launcher-1.10.1-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {

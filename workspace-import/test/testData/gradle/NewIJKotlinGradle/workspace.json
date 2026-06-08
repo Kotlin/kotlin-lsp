@@ -937,6 +937,10 @@
                     "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/gradle-installation-beacon-9.2.0.jar"
                 },
                 {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/gradle-installation-beacon-9.2.0.jar",
+                    "type": "SOURCES"
+                },
+                {
                     "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-4.0.28.jar"
                 },
                 {
@@ -1000,6 +1004,10 @@
                     "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/gradle-kotlin-dsl-tooling-models-9.2.0.jar"
                 },
                 {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/gradle-kotlin-dsl-tooling-models-9.2.0.jar",
+                    "type": "SOURCES"
+                },
+                {
                     "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-4.0.28.jar"
                 },
                 {
@@ -1052,6 +1060,10 @@
                 },
                 {
                     "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/gradle-installation-beacon-9.2.0.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/gradle-installation-beacon-9.2.0.jar",
+                    "type": "SOURCES"
                 },
                 {
                     "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-4.0.28.jar"
@@ -1130,6 +1142,10 @@
                 },
                 {
                     "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/javaparser-core-3.27.0.jar"
+                },
+                {
+                    "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/javaparser-core-3.27.0.jar",
+                    "type": "SOURCES"
                 }
             ]
         },
@@ -1139,10 +1155,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.google.code.gson/gson/2.11.0/#####/gson-2.11.0.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/com.google.code.gson/gson/2.11.0/#####/gson-2.11.0-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1160,10 +1172,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.google.errorprone/error_prone_annotations/2.27.0/#####/error_prone_annotations-2.27.0.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/com.google.errorprone/error_prone_annotations/2.27.0/#####/error_prone_annotations-2.27.0-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1244,10 +1252,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-4.0.28.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.groovy/groovy/4.0.28/#####/groovy-4.0.28-sources.jar",
-                    "type": "SOURCES"
                 }
             ]
         },
@@ -1257,10 +1261,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-ant-4.0.28.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.groovy/groovy-ant/4.0.28/#####/groovy-ant-4.0.28-sources.jar",
-                    "type": "SOURCES"
                 }
             ]
         },
@@ -1270,10 +1270,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-astbuilder-4.0.28.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.groovy/groovy-astbuilder/4.0.28/#####/groovy-astbuilder-4.0.28-sources.jar",
-                    "type": "SOURCES"
                 }
             ]
         },
@@ -1283,10 +1279,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-datetime-4.0.28.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.groovy/groovy-datetime/4.0.28/#####/groovy-datetime-4.0.28-sources.jar",
-                    "type": "SOURCES"
                 }
             ]
         },
@@ -1296,10 +1288,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-dateutil-4.0.28.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.groovy/groovy-dateutil/4.0.28/#####/groovy-dateutil-4.0.28-sources.jar",
-                    "type": "SOURCES"
                 }
             ]
         },
@@ -1309,10 +1297,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-groovydoc-4.0.28.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.groovy/groovy-groovydoc/4.0.28/#####/groovy-groovydoc-4.0.28-sources.jar",
-                    "type": "SOURCES"
                 }
             ]
         },
@@ -1322,10 +1306,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-json-4.0.28.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.groovy/groovy-json/4.0.28/#####/groovy-json-4.0.28-sources.jar",
-                    "type": "SOURCES"
                 }
             ]
         },
@@ -1335,10 +1315,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-nio-4.0.28.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.groovy/groovy-nio/4.0.28/#####/groovy-nio-4.0.28-sources.jar",
-                    "type": "SOURCES"
                 }
             ]
         },
@@ -1348,10 +1324,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-templates-4.0.28.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.groovy/groovy-templates/4.0.28/#####/groovy-templates-4.0.28-sources.jar",
-                    "type": "SOURCES"
                 }
             ]
         },
@@ -1361,10 +1333,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_DIST>/gradle-9.2.0-bin/#####/gradle-9.2.0/lib/groovy-xml-4.0.28.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apache.groovy/groovy-xml/4.0.28/#####/groovy-xml-4.0.28-sources.jar",
-                    "type": "SOURCES"
                 }
             ]
         },
@@ -1422,10 +1390,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/abi-tools-api/2.3.0/#####/abi-tools-api-2.3.0.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/abi-tools-api/2.3.0/#####/abi-tools-api-2.3.0-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1445,7 +1409,7 @@
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/fus-statistics-gradle-plugin/2.3.0/#####/fus-statistics-gradle-plugin-2.3.0-gradle813.jar"
                 },
                 {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/fus-statistics-gradle-plugin/2.3.0/#####/fus-statistics-gradle-plugin-2.3.0-sources.jar",
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/fus-statistics-gradle-plugin/2.3.0/#####/fus-statistics-gradle-plugin-2.3.0-gradle813-sources.jar",
                     "type": "SOURCES"
                 }
             ],
@@ -1464,10 +1428,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-build-statistics/2.3.0/#####/kotlin-build-statistics-2.3.0.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-build-statistics/2.3.0/#####/kotlin-build-statistics-2.3.0-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1506,10 +1466,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-compiler-runner/2.3.0/#####/kotlin-compiler-runner-2.3.0.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-compiler-runner/2.3.0/#####/kotlin-compiler-runner-2.3.0-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1527,10 +1483,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-daemon-client/2.3.0/#####/kotlin-daemon-client-2.3.0.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-daemon-client/2.3.0/#####/kotlin-daemon-client-2.3.0-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1571,7 +1523,7 @@
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-gradle-plugin-api/2.3.0/#####/kotlin-gradle-plugin-api-2.3.0-gradle813.jar"
                 },
                 {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-gradle-plugin-api/2.3.0/#####/kotlin-gradle-plugin-api-2.3.0-sources.jar",
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-gradle-plugin-api/2.3.0/#####/kotlin-gradle-plugin-api-2.3.0-gradle813-sources.jar",
                     "type": "SOURCES"
                 }
             ],
@@ -1590,10 +1542,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-gradle-plugin-idea-proto/2.3.0/#####/kotlin-gradle-plugin-idea-proto-2.3.0.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-gradle-plugin-idea-proto/2.3.0/#####/kotlin-gradle-plugin-idea-proto-2.3.0-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1611,10 +1559,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-gradle-plugin-idea/2.3.0/#####/kotlin-gradle-plugin-idea-2.3.0.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-gradle-plugin-idea/2.3.0/#####/kotlin-gradle-plugin-idea-2.3.0-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1634,7 +1578,7 @@
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-gradle-plugin/2.3.0/#####/kotlin-gradle-plugin-2.3.0-gradle813.jar"
                 },
                 {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-gradle-plugin/2.3.0/#####/kotlin-gradle-plugin-2.3.0-sources.jar",
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-gradle-plugin/2.3.0/#####/kotlin-gradle-plugin-2.3.0-gradle813-sources.jar",
                     "type": "SOURCES"
                 }
             ],
@@ -1653,10 +1597,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-klib-commonizer-api/2.3.0/#####/kotlin-klib-commonizer-api-2.3.0.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-klib-commonizer-api/2.3.0/#####/kotlin-klib-commonizer-api-2.3.0-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1673,11 +1613,11 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-native-utils/2.3.0/#####/kotlin-native-utils-2.3.0.jar"
-                },
-                {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-native-utils/2.3.0/#####/kotlin-native-utils-2.3.0-sources.jar",
                     "type": "SOURCES"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-native-utils/2.3.0/#####/kotlin-native-utils-2.3.0.jar"
                 }
             ],
             "properties": {
@@ -1736,11 +1676,11 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.3.0/#####/kotlin-stdlib-2.3.0.jar"
-                },
-                {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.3.0/#####/kotlin-stdlib-2.3.0-sources.jar",
                     "type": "SOURCES"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.3.0/#####/kotlin-stdlib-2.3.0.jar"
                 }
             ],
             "properties": {
@@ -1757,11 +1697,11 @@
             "type": "TEST",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-test-junit5/2.3.0/#####/kotlin-test-junit5-2.3.0.jar"
-                },
-                {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-test-junit5/2.3.0/#####/kotlin-test-junit5-2.3.0-sources.jar",
                     "type": "SOURCES"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-test-junit5/2.3.0/#####/kotlin-test-junit5-2.3.0.jar"
                 }
             ],
             "properties": {
@@ -1778,11 +1718,11 @@
             "type": "TEST",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-test/2.3.0/#####/kotlin-test-2.3.0.jar"
-                },
-                {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-test/2.3.0/#####/kotlin-test-2.3.0-sources.jar",
                     "type": "SOURCES"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-test/2.3.0/#####/kotlin-test-2.3.0.jar"
                 }
             ],
             "properties": {
@@ -1820,11 +1760,11 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-util-io/2.3.0/#####/kotlin-util-io-2.3.0.jar"
-                },
-                {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-util-io/2.3.0/#####/kotlin-util-io-2.3.0-sources.jar",
                     "type": "SOURCES"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-util-io/2.3.0/#####/kotlin-util-io-2.3.0.jar"
                 }
             ],
             "properties": {
@@ -1842,10 +1782,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-util-klib-metadata/2.3.0/#####/kotlin-util-klib-metadata-2.3.0.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-util-klib-metadata/2.3.0/#####/kotlin-util-klib-metadata-2.3.0-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1863,10 +1799,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-util-klib/2.3.0/#####/kotlin-util-klib-2.3.0.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-util-klib/2.3.0/#####/kotlin-util-klib-2.3.0-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1905,10 +1837,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-core-jvm/1.8.0/#####/kotlinx-coroutines-core-jvm-1.8.0.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-core-jvm/1.8.0/#####/kotlinx-coroutines-core-jvm-1.8.0-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1925,11 +1853,11 @@
             "type": "RUNTIME",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-datetime-jvm/0.7.1/#####/kotlinx-datetime-jvm-0.7.1.jar"
-                },
-                {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-datetime-jvm/0.7.1/#####/kotlinx-datetime-jvm-0.7.1-sources.jar",
                     "type": "SOURCES"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-datetime-jvm/0.7.1/#####/kotlinx-datetime-jvm-0.7.1.jar"
                 }
             ],
             "properties": {
@@ -1946,11 +1874,11 @@
             "type": "RUNTIME",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-serialization-core-jvm/1.9.0/#####/kotlinx-serialization-core-jvm-1.9.0.jar"
-                },
-                {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-serialization-core-jvm/1.9.0/#####/kotlinx-serialization-core-jvm-1.9.0-sources.jar",
                     "type": "SOURCES"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-serialization-core-jvm/1.9.0/#####/kotlinx-serialization-core-jvm-1.9.0.jar"
                 }
             ],
             "properties": {
@@ -1967,11 +1895,11 @@
             "type": "RUNTIME",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-serialization-json-jvm/1.9.0/#####/kotlinx-serialization-json-jvm-1.9.0.jar"
-                },
-                {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-serialization-json-jvm/1.9.0/#####/kotlinx-serialization-json-jvm-1.9.0-sources.jar",
                     "type": "SOURCES"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-serialization-json-jvm/1.9.0/#####/kotlinx-serialization-json-jvm-1.9.0.jar"
                 }
             ],
             "properties": {
@@ -1988,11 +1916,11 @@
             "type": "PROVIDED",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0.jar"
-                },
-                {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0-sources.jar",
                     "type": "SOURCES"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0.jar"
                 }
             ],
             "properties": {
@@ -2030,11 +1958,11 @@
             "type": "TEST",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-api/5.10.1/#####/junit-jupiter-api-5.10.1.jar"
-                },
-                {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-api/5.10.1/#####/junit-jupiter-api-5.10.1-sources.jar",
                     "type": "SOURCES"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-api/5.10.1/#####/junit-jupiter-api-5.10.1.jar"
                 }
             ],
             "properties": {
@@ -2052,10 +1980,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-engine/5.10.1/#####/junit-jupiter-engine-5.10.1.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-engine/5.10.1/#####/junit-jupiter-engine-5.10.1-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2094,10 +2018,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-engine/1.10.1/#####/junit-platform-engine-1.10.1.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-engine/1.10.1/#####/junit-platform-engine-1.10.1-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2115,10 +2035,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-launcher/1.10.1/#####/junit-platform-launcher-1.10.1.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-launcher/1.10.1/#####/junit-platform-launcher-1.10.1-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {

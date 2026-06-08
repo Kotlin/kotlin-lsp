@@ -331,7 +331,9 @@ abstract class AbstractProjectImportTest {
             moduleData.copy(
                 dependencies = moduleData.dependencies.sortedWith { first, second -> first.compare(second) }
             )
-        }
+        },
+        libraries = libraries.sortedBy { it.name }
+            .map { library -> library.copy(roots = library.roots.sortedBy { root -> root.path + root.type }) }
     )
 
     private fun DependencyData.compare(other: DependencyData): Int {
