@@ -47,6 +47,7 @@ import com.jetbrains.ls.api.features.impl.kotlin.symbols.LSKotlinDocumentSymbolP
 import com.jetbrains.ls.api.features.impl.kotlin.symbols.LSKotlinWorkspaceSymbolProvider
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.snapshot.api.impl.core.AnalyzerContextKind
+import com.jetbrains.ls.snapshot.api.impl.core.LSConfigurationData
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceComponent
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceEvent
 import com.jetbrains.lsp.protocol.FoldingRangeKind
@@ -107,7 +108,7 @@ private data class KotlinWorkspaceState(
 )
 
 private object KotlinWorkspaceComponent : WorkspaceComponent<KotlinWorkspaceState> {
-    override fun init(): KotlinWorkspaceState =
+    override fun init(configData: LSConfigurationData): KotlinWorkspaceState =
         KotlinWorkspaceState()
 
     override fun handleEvent(event: WorkspaceEvent, state: KotlinWorkspaceState): KotlinWorkspaceState =

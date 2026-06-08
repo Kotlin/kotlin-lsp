@@ -14,6 +14,7 @@ import com.jetbrains.ls.api.features.impl.common.definitions.LSCommonDefinitionP
 import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.snapshot.api.impl.core.AnalyzerContextKind
+import com.jetbrains.ls.snapshot.api.impl.core.LSConfigurationData
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceComponent
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceEvent
 import com.jetbrains.lsp.protocol.URI
@@ -45,7 +46,7 @@ val LSJavaBaseLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece
 )
 
 private object JavaBaseWorkspaceComponent : WorkspaceComponent<Unit> {
-    override fun init() {
+    override fun init(configData: LSConfigurationData) {
     }
 
     override fun handleEvent(event: WorkspaceEvent, state: Unit) {

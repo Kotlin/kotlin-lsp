@@ -12,6 +12,10 @@ import {
 } from 'vscode';
 import { registerDecompiler, registerOpeningJars } from './decompiler';
 import { getLspClient, initLspClient, startLspClient } from './lspClient';
+export {
+    registerInitializationOptionsContributor,
+    type InitializationOptionsContributor,
+} from './lspClient';
 import { LSPErrorCodes, RequestType0, ResponseError } from 'vscode-languageclient/node';
 import { registerStatusBarItem } from './statusBar';
 import { registerDapServer } from './dap';

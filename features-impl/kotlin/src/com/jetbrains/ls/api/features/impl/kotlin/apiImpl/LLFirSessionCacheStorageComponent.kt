@@ -11,6 +11,7 @@ import com.jetbrains.analyzer.kotlin.invalidate
 import com.jetbrains.analyzer.kotlin.registerLLFirSessionServices
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceComponent
 import com.jetbrains.ls.snapshot.api.impl.core.AnalyzerContextKind
+import com.jetbrains.ls.snapshot.api.impl.core.LSConfigurationData
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceEvent
 import com.jetbrains.ls.snapshot.api.impl.core.rocks.toList
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
@@ -31,7 +32,7 @@ import org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.cache.LLFirSessi
  * ([NoOpValueReferenceCleaner]), so they live while at least one request uses them.
  */
 internal object LLFirSessionCacheStorageComponent : WorkspaceComponent<LLFirSessionCacheStorage> {
-    override fun init(): LLFirSessionCacheStorage =
+    override fun init(configData: LSConfigurationData): LLFirSessionCacheStorage =
         newStorage()
 
     override fun handleEvent(event: WorkspaceEvent, state: LLFirSessionCacheStorage): LLFirSessionCacheStorage =
