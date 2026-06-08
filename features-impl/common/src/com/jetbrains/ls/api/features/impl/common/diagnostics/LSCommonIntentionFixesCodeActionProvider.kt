@@ -2,6 +2,10 @@
 package com.jetbrains.ls.api.features.impl.common.diagnostics
 
 import com.intellij.codeInsight.intention.IntentionManager
+import com.intellij.codeInspection.LocalInspectionToolSession
+import com.intellij.codeInspection.ProblemHighlightType
+import com.intellij.codeInspection.ProblemsHolder
+import com.intellij.codeInspection.ex.InspectionManagerEx
 import com.intellij.modcommand.ActionContext
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.getOrHandleException
@@ -9,6 +13,9 @@ import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
+import com.intellij.psi.util.parents
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
@@ -35,7 +42,9 @@ class LSCommonIntentionFixesCodeActionProvider(
     override val supportedLanguages: Set<LSLanguage>,
     private val intentionBlacklist: Blacklist = Blacklist(),
     private val quickFixBlacklist: Blacklist = Blacklist(),
+    inspectionBlacklist: Blacklist = Blacklist(),
 ) : LSCodeActionProvider {
+    private val lsInspectionManager = LSInspectionManager(inspectionBlacklist, quickFixBlacklist)
 
     override val providesOnlyKinds: Set<CodeActionKind> get() = setOf(codeActionKind)
 
@@ -48,70 +57,123 @@ class LSCommonIntentionFixesCodeActionProvider(
                 val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
                 val document = virtualFile.findDocument() ?: return@readAction emptyList()
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
+                val offset = params.range.toTextRange(document).startOffset
+                val psiElement = psiFile.findElementAt(offset)
 
                 // TODO(bartekpacia): centralize common logging so it's not repeated N times across all LS*Providers
                 LOG.debug("request textDocument/diagnostic for ${virtualFile.name}")
 
-                val actionContext = run {
-                    val offset = params.range.toTextRange(document).startOffset
-                    val selection = TextRange(offset, offset) // empty selection
-                    ActionContext(project, psiFile, offset, selection, null)
-                }
-
-                val codeActions = IntentionManager.getInstance()
-                    .getAvailableIntentions(languageIds)
-                    .asSequence()
-                    .mapNotNull { intentionAction -> intentionAction.asModCommandAction() }
-                    .filterNot { modCommandAction ->
-                        val actionClass = modCommandAction.javaClass.name
-                        val blacklistEntry = quickFixBlacklist.getImplementationBlacklistEntry(actionClass)
-                        if (blacklistEntry != null) {
-                            LOG.trace("Quick fix $actionClass is blacklisted because of ${blacklistEntry.reason}")
-                            true
-                        } else {
-                            false
-                        }
-                    }
-
-                    .filterNot { modCommandAction -> intentionBlacklist.containsImplementation(modCommandAction.javaClass.name) }
-                    .mapNotNull { modCommandAction ->
-                        val presentation = runCatching {
-                            // If some ModCommand is not available, calling getPresentation() in such case should return null, not throw.
-                            // We want to know if getPresentation() throws, since it may point to missing registration of some extensions in the LSP.
-                            modCommandAction.getPresentation(actionContext)
-                        }.getOrHandleException {
-                            LOG.warn("Failed to get presentation from mod command action $modCommandAction", it)
-                        }
-
-                        if (presentation == null) {
-                            // This case is equivalent to getting false from IntentionAction#isAvailable
-                            return@mapNotNull null
-                        }
-
-                        val modCommand = runCatching {
-                            modCommandAction.perform(actionContext)
-                        }.getOrHandleException {
-                            LOG.warn("Failed to perform mod command action $modCommandAction", it)
-                        } ?: return@mapNotNull null
-                        val modCommandData = ModCommandData.from(modCommand) ?: return@mapNotNull null
-
-                        CodeAction(
-                            title = presentation.name,
-                            kind = codeActionKind,
-                            command = Command(
-                                title = LSApplyFixCommandDescriptorProvider.commandDescriptor.title,
-                                command = LSApplyFixCommandDescriptorProvider.commandDescriptor.name,
-                                arguments = listOf(
-                                    LSP.json.encodeToJsonElement(modCommandData),
-                                ),
-                            ),
-                        )
-                    }
+                val codeActions =
+                    (infoInspections(psiFile, offset, psiElement) + intentions(psiFile, offset))
                     .toList()
 
                 return@readAction codeActions
             }
         }.forEach { codeAction -> emit(codeAction) }
+    }
+    
+    private fun infoInspections(psiFile: PsiFile, offset: Int, psiElement: PsiElement?): Sequence<CodeAction> {
+        if (psiElement == null) return emptySequence()
+        val project = psiFile.project
+        val inspectionManager = InspectionManagerEx(project)
+        val problemsHolder = ProblemsHolder(inspectionManager, psiFile, true)
+        val infoInspections = lsInspectionManager.getLocalInspections(psiFile, true) +
+                lsInspectionManager.getSharedLocalInspectionsFromGlobalTools(psiFile.language, true)
+        val normalInspections = lsInspectionManager.getLocalInspections(psiFile, false) +
+                lsInspectionManager.getSharedLocalInspectionsFromGlobalTools(psiFile.language, false)
+        val fileRange = psiFile.textRange
+        val session = LocalInspectionToolSession(psiFile, fileRange, fileRange, null)
+        val result = mutableListOf<CodeAction>()
+        for ((isInfo, list) in listOf(false to normalInspections, true to infoInspections)) {
+            for (localInspection in list) {
+                val visitor = localInspection.buildVisitor(problemsHolder, true, session)
+                psiElement.parents(true).forEach { element ->
+                    runCatching {
+                        element.accept(visitor)
+                    }.getOrHandleException {
+                        LOG.warn(it)
+                    }
+                    for (descriptor in problemsHolder.results) {
+                        if ((isInfo || descriptor.highlightType == ProblemHighlightType.INFORMATION) &&
+                            !localInspection.isSuppressedFor(descriptor.psiElement)) {
+                            val range = descriptor.textRangeInElement?.shiftRight(descriptor.psiElement.textRange.startOffset) 
+                                ?: descriptor.psiElement.textRange
+                            if (!range.contains(offset)) continue
+                            for ((name, modCommandData) in lsInspectionManager.createDiagnosticData(descriptor, project).fixes) {
+                                result.add(CodeAction(
+                                    title = name,
+                                    kind = codeActionKind,
+                                    command = Command(
+                                        title = LSApplyFixCommandDescriptorProvider.commandDescriptor.title,
+                                        command = LSApplyFixCommandDescriptorProvider.commandDescriptor.name,
+                                        arguments = listOf(
+                                            LSP.json.encodeToJsonElement(modCommandData),
+                                        ),
+                                    )))
+                            }
+                        }
+                    }
+                    problemsHolder.clearResults()
+                }
+            }
+        }
+        return result.asSequence()
+    }
+
+    private fun intentions(psiFile: PsiFile, offset: Int): Sequence<CodeAction> {
+        val actionContext = run {
+            val selection = TextRange(offset, offset) // empty selection
+            ActionContext(psiFile.project, psiFile, offset, selection, null)
+        }
+
+        return IntentionManager.getInstance()
+            .getAvailableIntentions(languageIds)
+            .asSequence()
+            .mapNotNull { intentionAction -> intentionAction.asModCommandAction() }
+            .filterNot { modCommandAction ->
+                val actionClass = modCommandAction.javaClass.name
+                val blacklistEntry = quickFixBlacklist.getImplementationBlacklistEntry(actionClass)
+                if (blacklistEntry != null) {
+                    LOG.trace("Quick fix $actionClass is blacklisted because of ${blacklistEntry.reason}")
+                    true
+                } else {
+                    false
+                }
+            }
+            .filterNot { modCommandAction -> intentionBlacklist.containsImplementation(modCommandAction.javaClass.name) }
+            .mapNotNull { modCommandAction ->
+                val presentation = runCatching {
+                    // If some ModCommand is not available, calling getPresentation() in such case should return null, not throw.
+                    // We want to know if getPresentation() throws, since it may point to missing registration of some extensions in the LSP.
+                    modCommandAction.getPresentation(actionContext)
+                }.getOrHandleException {
+                    LOG.warn("Failed to get presentation from mod command action $modCommandAction", it)
+                }
+
+                if (presentation == null) {
+                    // This case is equivalent to getting false from IntentionAction#isAvailable
+                    return@mapNotNull null
+                }
+
+                val modCommand = runCatching {
+                    modCommandAction.perform(actionContext)
+                }.getOrHandleException {
+                    LOG.warn("Failed to perform mod command action $modCommandAction", it)
+                } ?: return@mapNotNull null
+                val modCommandData = ModCommandData.from(modCommand) ?: return@mapNotNull null
+
+                CodeAction(
+                    title = presentation.name,
+                    kind = codeActionKind,
+                    command = Command(
+                        title = LSApplyFixCommandDescriptorProvider.commandDescriptor.title,
+                        command = LSApplyFixCommandDescriptorProvider.commandDescriptor.name,
+                        arguments = listOf(
+                            LSP.json.encodeToJsonElement(modCommandData),
+                        ),
+                    ),
+                )
+            }
     }
 
     private val codeActionKind: CodeActionKind = CodeActionKind.Refactor

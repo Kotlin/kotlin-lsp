@@ -1,14 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.diagnostics
 
-import com.intellij.codeHighlighting.HighlightDisplayLevel
 import com.intellij.codeInsight.daemon.ProblemHighlightFilter
-import com.intellij.codeInsight.intention.IntentionAction
-import com.intellij.codeInspection.GlobalInspectionTool
-import com.intellij.codeInspection.GlobalSimpleInspectionTool
-import com.intellij.codeInspection.InspectionEP
-import com.intellij.codeInspection.InspectionProfileEntry
-import com.intellij.codeInspection.LocalInspectionEP
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.LocalInspectionToolSession
 import com.intellij.codeInspection.ProblemDescriptionsProcessor
@@ -16,15 +9,8 @@ import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.ProblemDescriptorUtil
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
-import com.intellij.codeInspection.QuickFix
 import com.intellij.codeInspection.ex.InspectionManagerEx
-import com.intellij.lang.Language
-import com.intellij.lang.Language.findLanguageByID
-import com.intellij.modcommand.ActionContext
-import com.intellij.modcommand.ModCommand
-import com.intellij.modcommand.ModCommandQuickFix
 import com.intellij.openapi.application.readAction
-import com.intellij.openapi.diagnostic.ReportingClassSubstitutor
 import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
@@ -36,7 +22,6 @@ import com.intellij.platform.diagnostic.telemetry.TelemetryManager
 import com.intellij.platform.diagnostic.telemetry.helpers.use
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
-import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
@@ -48,7 +33,6 @@ import com.jetbrains.ls.api.features.impl.common.utils.toLspSeverity
 import com.jetbrains.ls.api.features.impl.common.utils.toLspTags
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.utils.isSource
-import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.Diagnostic
 import com.jetbrains.lsp.protocol.DocumentDiagnosticParams
@@ -68,9 +52,11 @@ private enum class InspectionKind(val attributeValue: String, val spanName: Stri
 // TODO: LSP-278 Optimize performance of inspections
 class LSCommonInspectionDiagnosticProvider(
     override val supportedLanguages: Set<LSLanguage>,
-    private val inspectionBlacklist: Blacklist = Blacklist(),
-    private val quickFixBlacklist: Blacklist = Blacklist(),
+    inspectionBlacklist: Blacklist = Blacklist(),
+    quickFixBlacklist: Blacklist = Blacklist(),
 ) : LSDiagnosticProvider {
+    private val lsInspectionManager = LSInspectionManager(inspectionBlacklist, quickFixBlacklist)
+    
     companion object {
         val diagnosticSource: DiagnosticSource = DiagnosticSource("inspection")
 
@@ -100,7 +86,8 @@ class LSCommonInspectionDiagnosticProvider(
                 val problemsHolder = ProblemsHolder(inspectionManager, psiFile, onTheFly)
 
                 tracer.spanBuilder(SPAN_LOCAL_INSPECTIONS).use {
-                    val localInspections = getLocalInspections(psiFile) + getSharedLocalInspectionsFromGlobalTools(psiFile.language)
+                    val localInspections = lsInspectionManager.getLocalInspections(psiFile) +
+                            lsInspectionManager.getSharedLocalInspectionsFromGlobalTools(psiFile.language)
                     val fileRange = psiFile.textRange
                     val session = LocalInspectionToolSession(psiFile, fileRange, fileRange, null)
                     for (localInspection in localInspections) {
@@ -131,7 +118,7 @@ class LSCommonInspectionDiagnosticProvider(
 
                 tracer.spanBuilder(SPAN_GLOBAL_INSPECTIONS).use {
                     val globalInspectionContext = inspectionManager.createNewGlobalContext()
-                    val globalInspections = getSimpleGlobalInspections(psiFile.language)
+                    val globalInspections = lsInspectionManager.getSimpleGlobalInspections(psiFile.language)
                     for (simpleGlobalInspection in globalInspections) {
                         runInspection(kind = InspectionKind.Global, inspectionId = simpleGlobalInspection.shortName) {
                             val diagnosticsBeforeInspection = diagnostics.size
@@ -148,7 +135,7 @@ class LSCommonInspectionDiagnosticProvider(
                                 LOG.warn(it)
                             }
                             for (problemDescriptor in problemsHolder.results) {
-                                val data = problemDescriptor.createDiagnosticData(project)
+                                val data = lsInspectionManager.createDiagnosticData(problemDescriptor, project)
                                 val range = problemDescriptor.range()?.toLspRange(document) ?: continue
                                 val message = ProblemDescriptorUtil.renderDescriptor(
                                     problemDescriptor, problemDescriptor.psiElement, ProblemDescriptorUtil.NONE
@@ -185,60 +172,6 @@ class LSCommonInspectionDiagnosticProvider(
             }
     }
 
-    private fun getEnabledInspectionTools(extensionList: List<InspectionEP>, languageId: String): Sequence<InspectionProfileEntry> {
-        return extensionList
-            .asSequence()
-            .filter { inspectionEP ->
-                inspectionEP.language == languageId || languageDialectIsSupportedByInspection(
-                    inspectionEP.language,
-                    languageId
-                ) || isLanguageInspection(inspectionEP, languageId)
-            }
-            .filter { inspectionEP -> inspectionEP.enabledByDefault }
-            .filter { inspectionEP -> HighlightDisplayLevel.find(inspectionEP.level) != HighlightDisplayLevel.DO_NOT_SHOW }
-            .filterNot { inspectionBlacklist.containsImplementation(it.implementationClass) }
-            .mapNotNull { inspectionEP ->
-                runCatching {
-                    inspectionEP.instantiateTool()
-                }.getOrHandleException {
-                    LOG.warn(it)
-                }
-            }
-            .filterNot { inspectionBlacklist.containsSuperClass(it) }
-    }
-
-    private fun languageDialectIsSupportedByInspection(inspectionLanguageId: String?, fileLanguageId: String): Boolean {
-        val fileLanguage = findLanguageByID(fileLanguageId)
-        val inspectionLanguage = findLanguageByID(inspectionLanguageId)
-        return fileLanguage?.isKindOf(inspectionLanguage) ?: false
-    }
-
-    /* Maybe this doesn't need now */
-    private fun isLanguageInspection(inspectionEP: InspectionEP, languageId: String): Boolean {
-        return inspectionEP.language?.uppercase() == "UAST" && (languageId == "JAVA" || languageId == "KT")
-    }
-
-    private fun getLocalInspections(psiFile: PsiFile): List<LocalInspectionTool> {
-        return getEnabledInspectionTools(LocalInspectionEP.LOCAL_INSPECTION.extensionList, psiFile.language.id)
-            .filterIsInstance<LocalInspectionTool>()
-            .filter { localInspectionTool -> localInspectionTool.isAvailableForFile(psiFile) }
-            .toList()
-    }
-
-    private fun getSimpleGlobalInspections(language: Language): List<GlobalSimpleInspectionTool> {
-        return getEnabledInspectionTools(InspectionEP.GLOBAL_INSPECTION.extensionList, language.id)
-            .filterIsInstance<GlobalSimpleInspectionTool>()
-            .toList()
-    }
-
-    private fun getSharedLocalInspectionsFromGlobalTools(language: Language): List<LocalInspectionTool> {
-        return getEnabledInspectionTools(InspectionEP.GLOBAL_INSPECTION.extensionList, language.id)
-            .filterIsInstance<GlobalInspectionTool>()
-            .mapNotNull { globalInspectionTool -> globalInspectionTool.sharedLocalInspectionTool }
-            .filterNot { inspectionBlacklist.containsSuperClass(it) }
-            .toList()
-    }
-
     private fun ProblemsHolder.collectDiagnostics(
         file: VirtualFile,
         project: Project,
@@ -249,7 +182,7 @@ class LSCommonInspectionDiagnosticProvider(
             .filter { problemDescriptor -> problemDescriptor.highlightType != ProblemHighlightType.INFORMATION }
             .filter { !localInspectionTool.isSuppressedFor(it.psiElement) }
             .mapNotNull { problemDescriptor ->
-                val data = problemDescriptor.createDiagnosticData(project)
+                val data = lsInspectionManager.createDiagnosticData(problemDescriptor, project)
                 val message = ProblemDescriptorUtil.renderDescriptor(
                     problemDescriptor, problemDescriptor.psiElement, ProblemDescriptorUtil.NONE
                 )
@@ -262,49 +195,6 @@ class LSCommonInspectionDiagnosticProvider(
                     data = LSP.json.encodeToJsonElement(data),
                 )
             }
-    }
-
-    private fun ProblemDescriptor.createDiagnosticData(project: Project): SimpleDiagnosticData {
-        return SimpleDiagnosticData(
-            diagnosticSource = diagnosticSource,
-            fixes = fixes.orEmpty().mapNotNull { quickFix ->
-                val modCommand = getModCommand(quickFix, project, this) ?: return@mapNotNull null
-                val modCommandData = ModCommandData.from(modCommand) ?: return@mapNotNull null
-                SimpleDiagnosticQuickfixData(name = quickFix.name, modCommandData = modCommandData)
-            },
-        )
-    }
-
-    private fun getModCommand(fix: QuickFix<*>, project: Project, problemDescriptor: ProblemDescriptor): ModCommand? {
-        val fixClass = ReportingClassSubstitutor.getClassToReport(fix).name
-        val blacklistEntry = quickFixBlacklist.getImplementationBlacklistEntry(fixClass)
-
-        if (fix is ModCommandQuickFix) {
-            if (blacklistEntry != null) {
-                LOG.trace("Quick fix $fixClass is a ModCommandQuickFix, but it is blacklisted because of ${blacklistEntry.reason}")
-                return null
-            }
-
-            return fix.perform(project, problemDescriptor)
-        }
-
-        if (fix is IntentionAction) {
-            if (blacklistEntry != null) {
-                LOG.trace("Quick fix $fixClass is an IntentionAction, but it is blacklisted because of ${blacklistEntry.reason}")
-                return null
-            }
-
-            val modCommandAction = fix.asModCommandAction()
-            if (modCommandAction != null) {
-                return modCommandAction.perform(ActionContext.from(problemDescriptor))
-            }
-        }
-
-        if (blacklistEntry == null) {
-            LOG.warn("Unknown quick fix type: $fixClass. Please add it to the blacklist and create a YouTrack issue.")
-        }
-
-        return null
     }
 }
 
