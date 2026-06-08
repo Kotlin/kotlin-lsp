@@ -1,0 +1,13 @@
+<idea-plugin>
+  <extensions defaultExtensionNs="com.intellij">
+    <refactoring.moveDirectoryWithClassesHelper
+            id="kotlin.moveDirectoryWithClasses"
+            implementation="org.jetbrains.kotlin.idea.k2.refactoring.move.processor.K2MoveDirectoryWithClassesHelper"/>
+    <refactoring.moveClassHandler
+            order="first"
+            implementation="org.jetbrains.kotlin.idea.refactoring.move.MoveKotlinAliasClassHandler"/>
+    <moveFileHandler
+            id="kotlin.moveFiles"
+            implementation="org.jetbrains.kotlin.idea.k2.refactoring.move.processor.K2MoveFilesHandler"/>
+  </extensions>
+</idea-plugin>

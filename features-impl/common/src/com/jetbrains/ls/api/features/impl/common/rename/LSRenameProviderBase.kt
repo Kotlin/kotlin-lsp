@@ -12,6 +12,10 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
+import com.jetbrains.ls.api.features.impl.common.processors.RefactoringContext
+import com.jetbrains.ls.api.features.impl.common.processors.RenameContext
+import com.jetbrains.ls.api.features.impl.common.processors.createProcessor
+import com.jetbrains.ls.api.features.impl.common.processors.doRefactoring
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.rename.LSRenameProvider
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.DiffGranularity
@@ -35,16 +39,20 @@ abstract class LSRenameProviderBase(
                 val offset = document.offsetByPosition(params.position)
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction null
                 val targets = extractTargets(psiFile, offset)
-                val target = targets.firstOrNull(::isAllowedToRename)
+                val target = targets.firstOrNull()
                     ?: throwLspError(RenameRequestType, "This element cannot be renamed", Unit, ErrorCodes.InvalidParams, null)
 
-                RenameContext(target, params.newName, DiffGranularity.CHARACTER, null)
+                createContext(target, params.newName, psiFile)
             } ?: return@withWriteAnalysisContext emptyList()
-
-            doRename(context)
+            val processor = createProcessor(context) ?: return@withWriteAnalysisContext emptyList()
+            doRefactoring(processor, DiffGranularity.CHARACTER, null)
         }
 
         return WorkspaceEdit(documentChanges = changes)
+    }
+
+    protected open fun createContext(target: PsiElement, newName: String, contextFile: PsiFile): RefactoringContext {
+        return RenameContext(target, newName)
     }
 
     open fun extractTargets(psiFile: PsiFile, offset: Int): List<PsiElement> {
@@ -63,17 +71,15 @@ abstract class LSRenameProviderBase(
                 val virtualFile = params.oldUri.findVirtualFile() ?: return@readAction null
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction null
                 val target = getTargetClass(psiFile, nameChange.oldName) ?: return@readAction null
-                RenameContext(target, nameChange.newName, DiffGranularity.WORD, params.oldUri)
+                RenameContext(target, nameChange.newName)
             } ?: return@withWriteAnalysisContext null
 
-            doRename(context)
+            val renamer = createProcessor(context) ?: return@withWriteAnalysisContext null
+            doRefactoring(renamer, DiffGranularity.WORD, params.oldUri)
         }
 
         return WorkspaceEdit(documentChanges = edits)
     }
 
     protected abstract fun getTargetClass(psiFile: PsiFile, name: String): PsiElement?
-
-    protected open fun isAllowedToRename(target: PsiElement): Boolean = true
-
 }

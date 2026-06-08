@@ -1,4 +1,8 @@
 <idea-plugin>
+  <extensionPoints>
+    <extensionPoint qualifiedName="com.intellij.refactoring.moveClassHandler"
+                    interface="com.intellij.refactoring.move.moveClassesOrPackages.MoveClassHandler" dynamic="true"/>
+  </extensionPoints>
   <extensions defaultExtensionNs="com.intellij">
     <applicationService serviceInterface="com.intellij.codeInsight.folding.JavaCodeFoldingSettings"
                         serviceImplementation="com.intellij.codeInsight.folding.impl.JavaCodeFoldingSettingsBase"/>
