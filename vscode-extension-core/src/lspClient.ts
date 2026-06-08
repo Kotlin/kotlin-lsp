@@ -45,6 +45,16 @@ let _client: LanguageClient | undefined;
 
 const clientSubscriptions: ((client: LanguageClient, stateChange: StateChangeEvent) => void)[] = [];
 
+export type InitializationOptionsContributor = () => Record<string, unknown>;
+
+const initializationOptionsContributors: InitializationOptionsContributor[] = [];
+
+export function registerInitializationOptionsContributor(
+    contributor: InitializationOptionsContributor,
+): void {
+    initializationOptionsContributors.push(contributor);
+}
+
 export function initLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): void {
     getContext().subscriptions.push(
         Disposable.create(async () => await stopLspClient()),
@@ -449,19 +459,27 @@ async function createLspClient(
     getAcceptedEulaHash: AcceptedEulaHashProvider,
 ): Promise<LanguageClient | null> {
     const folders = workspace.workspaceFolders ?? [];
+    const builtinInitializationOptions = {
+        defaultSdk: configOption(OPT_DEFAULT_WORKSPACE_SDK),
+        buildTools: Object.fromEntries(
+            folders.map((folder) => [
+                folder.uri.toString(),
+                configOption<string>(OPT_BUILD_TOOL, folder.uri),
+            ]),
+        ),
+        eulaHash: getAcceptedEulaHash(getContext()),
+    };
+    const contributedInitializationOptions = Object.assign(
+        {},
+        ...initializationOptionsContributors.map((c) => c()),
+    );
     const clientOptions: LanguageClientOptions = {
         documentSelector: buildDocumentSelector(),
         progressOnInitialization: true,
         outputChannel: getOutputChannel(),
         initializationOptions: {
-            defaultSdk: configOption(OPT_DEFAULT_WORKSPACE_SDK),
-            buildTools: Object.fromEntries(
-                folders.map((folder) => [
-                    folder.uri.toString(),
-                    configOption<string>(OPT_BUILD_TOOL, folder.uri),
-                ]),
-            ),
-            eulaHash: getAcceptedEulaHash(getContext()),
+            ...contributedInitializationOptions,
+            ...builtinInitializationOptions,
         },
         middleware: middleware,
         markdown: {
