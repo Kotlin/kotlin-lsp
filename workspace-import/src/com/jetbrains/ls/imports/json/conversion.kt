@@ -45,6 +45,7 @@ import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.entities
 import com.intellij.platform.workspace.storage.url.VirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
+import com.intellij.util.PathUtil
 import com.intellij.util.descriptors.ConfigFileItem
 import com.intellij.util.system.OS
 import com.intellij.util.text.nullize
@@ -233,15 +234,14 @@ private fun toRelativePath(url: VirtualFileUrl, workspacePath: Path): String {
     return toRelativePath(url.toPath(), workspacePath)
 }
 
-private fun toRelativePath(path: Path, workspacePath: Path): String {
-    var pathString = when {
+fun toRelativePath(path: Path, workspacePath: Path): String {
+    val pathString = when {
         path.startsWith(workspacePath) -> WORKSPACE_PREFIX + workspacePath.relativize(path)
         path.startsWith(m2Repo) -> MAVEN_PREFIX + m2Repo.relativize(path)
         path.startsWith(userHome) -> USER_HOME_PREFIX + userHome.relativize(path)
         else -> path.absolutePathString()
     }
-    pathString = FileUtilRt.toSystemIndependentName(pathString)
-    return pathString
+    return PathUtil.toSystemIndependentName(pathString)
 }
 
 
@@ -273,6 +273,9 @@ fun MutableEntityStorage.importWorkspaceData(
                                     else -> SdkRootTypeId(it.type)
                                 })
                         }
+                    }
+                    sdkData.homePath?.isPlaceholder() == true -> {
+                        // unresolvable placeholder, a path variable
                     }
                     sdkData.homePath != null -> {
                         val sdkHome = toAbsolutePath(sdkData.homePath, workspacePath)
@@ -505,6 +508,11 @@ private fun String.replaceAbsolutePathWithPrefix(absolute: Path, prefix: String)
 private fun String.replacePrefixWithAbsolutePath(prefix: String, absolute: Path): String = when (OS.CURRENT) {
     OS.Windows if contains("\\\\") -> replace(prefix.replace("/", "\\\\"), "${absolute.toAbsolutePath()}\\".replace("\\", "\\\\"))
     else -> replace(prefix, "${FileUtilRt.toSystemIndependentName(absolute.toAbsolutePath().toString())}/")
+}
+
+private fun String.isPlaceholder(): Boolean {
+    val length = length
+    return length > 0 && get(0) == '<' && indexOf('>') == length - 1
 }
 
 internal fun toAbsolutePath(path: String, workspacePath: Path): Path {
