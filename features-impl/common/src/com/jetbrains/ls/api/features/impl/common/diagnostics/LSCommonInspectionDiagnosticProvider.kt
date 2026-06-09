@@ -180,7 +180,7 @@ class LSCommonInspectionDiagnosticProvider(
         val document = file.findDocument() ?: return emptyList()
         return results
             .filter { problemDescriptor -> problemDescriptor.highlightType != ProblemHighlightType.INFORMATION }
-            .filter { !localInspectionTool.isSuppressedFor(it.psiElement) }
+            .filter { !isSuppressed(localInspectionTool, it) }
             .mapNotNull { problemDescriptor ->
                 val data = lsInspectionManager.createDiagnosticData(problemDescriptor, project)
                 val message = ProblemDescriptorUtil.renderDescriptor(

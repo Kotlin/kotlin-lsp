@@ -128,3 +128,12 @@ internal class LSInspectionManager(
         return null
     }
 }
+
+internal fun isSuppressed(
+    localInspection: LocalInspectionTool,
+    descriptor: ProblemDescriptor
+): Boolean = runCatching {
+    localInspection.isSuppressedFor(descriptor.psiElement)
+}.getOrHandleException {
+    LOG.warn(it)
+} ?: false

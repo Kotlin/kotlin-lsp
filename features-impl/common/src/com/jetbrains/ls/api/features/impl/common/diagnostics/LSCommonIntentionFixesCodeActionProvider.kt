@@ -95,7 +95,8 @@ class LSCommonIntentionFixesCodeActionProvider(
                     }
                     for (descriptor in problemsHolder.results) {
                         if ((isInfo || descriptor.highlightType == ProblemHighlightType.INFORMATION) &&
-                            !localInspection.isSuppressedFor(descriptor.psiElement)) {
+                            !isSuppressed(localInspection, descriptor)
+                        ) {
                             val range = descriptor.textRangeInElement?.shiftRight(descriptor.psiElement.textRange.startOffset) 
                                 ?: descriptor.psiElement.textRange
                             if (!range.contains(offset)) continue
