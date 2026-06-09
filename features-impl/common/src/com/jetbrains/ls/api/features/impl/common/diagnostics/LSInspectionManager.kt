@@ -133,7 +133,8 @@ internal fun isSuppressed(
     localInspection: LocalInspectionTool,
     descriptor: ProblemDescriptor
 ): Boolean = runCatching {
-    localInspection.isSuppressedFor(descriptor.psiElement)
+    val element = descriptor.psiElement ?: descriptor.startElement
+    element != null && localInspection.isSuppressedFor(element)
 }.getOrHandleException {
     LOG.warn(it)
 } ?: false
