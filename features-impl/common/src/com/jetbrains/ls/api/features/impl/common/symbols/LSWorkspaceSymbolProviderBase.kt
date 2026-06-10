@@ -7,6 +7,7 @@ import com.intellij.navigation.ChooseByNameContributorEx2
 import com.intellij.navigation.GotoClassContributor
 import com.intellij.navigation.NavigationItem
 import com.intellij.openapi.application.readAction
+import com.intellij.util.Processor
 import com.intellij.util.indexing.FindSymbolParameters
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
@@ -64,33 +65,57 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
         // collecting into a set to deduplicate names that appear in multiple indices
         // (e.g. a field name present in both FIELDS and RECORD_COMPONENTS for Java records).
         val names: Set<String> = readAction {
-            buildSet {
-                when (contributor) {
-                    is ChooseByNameContributorEx2 -> contributor.processNames({ add(it); true }, parameters)
-                    is ChooseByNameContributorEx -> contributor.processNames({ add(it); true }, searchScope, /* filter = */ null)
-                    else -> addAll(contributor.getNames(project, /* includeNonProjectItems = */ true))
+            val collector = NameCollector(shortName)
+            when (contributor) {
+                is ChooseByNameContributorEx2 -> {
+                    contributor.processNames(collector, parameters)
+                    collector.set
                 }
+
+                is ChooseByNameContributorEx -> {
+                    contributor.processNames(collector, searchScope, /* filter = */ null)
+                    collector.set
+                }
+
+                else -> contributor.getNames(project, /* includeNonProjectItems = */ true)
+                    .filter { name -> isApplicableName(name, shortName) }
+                    .toSet()
             }
         }
-        if (names.isEmpty()) return
         for (name in names) {
-            if (shortName.isEmpty() || name.contains(shortName, ignoreCase = true)) {
-                val items = readAction {
-                    val result = mutableListOf<NavigationItem>()
-                    when (contributor) {
-                        is ChooseByNameContributorEx -> contributor.processElementsWithName(name, result::add, parameters)
-                        else -> result.addAll(contributor.getItemsByName(name, shortName, project, /* includeNonProjectItems = */ true))
-                    }
-                    if (qualifiedName != null && contributor is GotoClassContributor) {
-                        result.filter { contributor.getQualifiedName(it)?.contains(qualifiedName, ignoreCase = true) == true }
-                    } else {
-                        result
-                    }
+            val items = readAction {
+                val result = mutableListOf<NavigationItem>()
+                when (contributor) {
+                    is ChooseByNameContributorEx -> contributor.processElementsWithName(name, result::add, parameters)
+                    else -> result.addAll(contributor.getItemsByName(name, shortName, project, /* includeNonProjectItems = */ true))
                 }
-                for (item in items) {
-                    readAction { createWorkspaceSymbol(item, contributor, qualifiedName != null) }?.let { channel.send(it) }
+                if (qualifiedName != null && contributor is GotoClassContributor) {
+                    result.filter { contributor.getQualifiedName(it)?.contains(qualifiedName, ignoreCase = true) == true }
+                } else {
+                    result
+                }
+            }
+            for (item in items) {
+                readAction { createWorkspaceSymbol(item, contributor, qualifiedName != null) }?.let {
+                    channel.send(it)
                 }
             }
         }
+    }
+
+    private class NameCollector(private val shortName: String) : Processor<String> {
+        val set = mutableSetOf<String>()
+
+        override fun process(name: String?): Boolean {
+            if (name == null) return true
+            if (isApplicableName(name, shortName)) {
+                set.add(name)
+            }
+            return true
+        }
+    }
+
+    companion object {
+        private fun isApplicableName(name: String, shortName: String) = shortName.isEmpty() || name.contains(shortName, ignoreCase = true)
     }
 }
