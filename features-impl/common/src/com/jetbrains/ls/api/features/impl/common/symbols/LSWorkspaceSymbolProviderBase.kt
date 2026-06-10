@@ -65,17 +65,10 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
         // collecting into a set to deduplicate names that appear in multiple indices
         // (e.g. a field name present in both FIELDS and RECORD_COMPONENTS for Java records).
         val names: Set<String> = readAction {
-            val collector = NameCollector(shortName)
             when (contributor) {
-                is ChooseByNameContributorEx2 -> {
-                    contributor.processNames(collector, parameters)
-                    collector.set
-                }
+                is ChooseByNameContributorEx2 -> NameCollector(shortName).let { contributor.processNames(it, parameters); it.result }
 
-                is ChooseByNameContributorEx -> {
-                    contributor.processNames(collector, searchScope, /* filter = */ null)
-                    collector.set
-                }
+                is ChooseByNameContributorEx -> NameCollector(shortName).let { contributor.processNames(it, searchScope, /* filter = */ null); it.result }
 
                 else -> contributor.getNames(project, /* includeNonProjectItems = */ true)
                     .filter { name -> isApplicableName(name, shortName) }
@@ -104,18 +97,26 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
     }
 
     private class NameCollector(private val shortName: String) : Processor<String> {
-        val set = mutableSetOf<String>()
+        val result: Set<String>
+            field = mutableSetOf()
 
         override fun process(name: String?): Boolean {
             if (name == null) return true
             if (isApplicableName(name, shortName)) {
-                set.add(name)
+                result.add(name)
             }
-            return true
+            return result.size < NAVIGATION_ITEM_LIMIT
         }
     }
 
     companion object {
+        /**
+         * Maximum number of names that one contributor can provide.
+         * NB: for 1 name there could be multiple [NavigationItem],
+         * but usually their size is not too big
+         */
+        private const val NAVIGATION_ITEM_LIMIT = 1000
+
         private fun isApplicableName(name: String, shortName: String) = shortName.isEmpty() || name.contains(shortName, ignoreCase = true)
     }
 }
