@@ -36,13 +36,14 @@ abstract class LSHoverProviderBase : LSHoverProvider {
                 val virtualFile = params.findVirtualFile() ?: return@readAction null
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction null
                 val document = virtualFile.findDocument() ?: return@readAction null
+                val offset = document.offsetByPosition(params.position)
                 val targets = psiFile
-                    .getDocumentationTargetAtPosition(params.position, document)
+                    .getDocumentationTargetAtPosition(offset)
                     .filter { psiElement -> acceptTarget(psiElement) }
                 if (targets.isEmpty()) return@readAction null
 
                 val markdown = targets.mapNotNull { psiElement ->
-                    generateMarkdownForPsiElementTarget(psiElement, psiFile)
+                    generateMarkdownForPsiElementTarget(psiElement, psiFile, offset)
                 }.joinToString("\n---\n")
                 if (markdown.isEmpty()) return@readAction null
 
@@ -62,7 +63,7 @@ abstract class LSHoverProviderBase : LSHoverProvider {
     }
 
     context(server: LSServer, analysisContext: LSAnalysisContext)
-    abstract fun generateMarkdownForPsiElementTarget(target: PsiElement, from: PsiFile): String?
+    abstract fun generateMarkdownForPsiElementTarget(target: PsiElement, from: PsiFile, offset: Int): String?
 
     interface LSMarkdownDocProvider {
         fun getMarkdownDoc(element: PsiElement): String?

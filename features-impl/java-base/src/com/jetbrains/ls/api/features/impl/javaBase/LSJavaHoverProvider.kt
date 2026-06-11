@@ -13,6 +13,8 @@ import com.intellij.psi.util.PsiFormatUtil.formatMethod
 import com.intellij.psi.util.PsiFormatUtilBase
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.util.positionByOffset
+import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.features.impl.common.hover.LSHoverProviderBase
 import com.jetbrains.ls.api.features.impl.common.hover.markdownMultilineCode
 import com.jetbrains.ls.api.features.language.LSLanguage
@@ -22,14 +24,52 @@ open class LSJavaHoverProvider : LSHoverProviderBase() {
 
 
     context(server: LSServer, analysisContext: LSAnalysisContext)
-    override fun generateMarkdownForPsiElementTarget(target: PsiElement, from: PsiFile): String? {
+    override fun generateMarkdownForPsiElementTarget(target: PsiElement, from: PsiFile, offset: Int): String? {
         val renderedDeclaration = render(target) ?: return null
         val documentation = LSMarkdownDocProvider.getMarkdownDoc(target)
 
         return buildString {
+            links(target, from, offset)?.let { appendLine(it) } 
             documentation?.let { appendLine(it) }
             append(markdownMultilineCode(renderedDeclaration, language = LSJavaLanguage.lspName))
         }
+    }
+
+    private fun links(element: PsiElement, from: PsiFile, offset: Int): String? {
+        return when (element) {
+            is PsiMethod -> {
+                if (!atDeclaration(element, from, offset)) null
+                else {
+                    val superMethods = element.findSuperMethods()
+                    when (superMethods.size) {
+                        0 -> null
+                        1 -> "[Go to Super Implementation](${makeLinkTo(superMethods.single())})"
+                        else -> "Go to Super Implementation: " +
+                                superMethods.map { m ->
+                                    "[${m.containingClass?.name ?: "???"}](${makeLinkTo(m)})"
+                                }.sorted().joinToString(" | ", "[", "]")
+                    }
+                }
+            }
+            else -> null
+        }
+    }
+
+    private fun atDeclaration(method: PsiMethod, from: PsiFile, offset: Int): Boolean {
+        val methodFile = method.containingFile
+        if (methodFile != from) return false
+        if (!method.textRange.containsOffset(offset)) return false
+        val body = method.body
+        if (body != null && body.textRange.containsOffset(offset)) return false
+        return true
+    }
+
+    private fun makeLinkTo(element: PsiMethod): String {
+        val target = element.originalElement
+        val navigationOffset = target.textOffset
+        val psiFile = target.containingFile
+        val (line, column) = psiFile.fileDocument.positionByOffset(navigationOffset)
+        return psiFile.virtualFile.uri.uri + "#" + (line + 1) + "," + (column + 1)
     }
 
     private fun render(element: PsiElement): String? {

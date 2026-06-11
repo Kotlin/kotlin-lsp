@@ -5,7 +5,6 @@ import com.intellij.lang.documentation.impl.documentationTargets
 import com.intellij.model.psi.PsiSymbolService
 import com.intellij.model.psi.impl.targetDeclarationAndReferenceSymbols
 import com.intellij.openapi.editor.Document
-import com.intellij.platform.backend.documentation.DocumentationTarget
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
@@ -28,18 +27,9 @@ fun PsiFile.getTargetsAtPosition(position: Position, document: Document, targetK
     }
 }
 
-fun PsiFile.getDocumentationTargetAtPosition(position: Position, doc: Document): List<PsiElement> {
-    val targets = getTargets(doc, position)
-    return targets.mapNotNull { it.navigatable as? PsiElement }
-}
-
-fun PsiFile.getTargets(
-    doc: Document,
-    position: Position
-): List<DocumentationTarget> {
-    val offset = doc.offsetByPosition(position)
+fun PsiFile.getDocumentationTargetAtPosition(offset: Int): List<PsiElement> {
     val targets = documentationTargets(this, offset, false)
-    return targets
+    return targets.mapNotNull { it.navigatable as? PsiElement }
 }
 
 enum class TargetKind {

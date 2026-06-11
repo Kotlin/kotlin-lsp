@@ -44,7 +44,7 @@ internal object LSKotlinHoverProvider : LSHoverProviderBase() {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSKotlinLanguage)
 
     context(server: LSServer, analysisContext: LSAnalysisContext)
-    override fun generateMarkdownForPsiElementTarget(target: PsiElement, from: PsiFile): String? {
+    override fun generateMarkdownForPsiElementTarget(target: PsiElement, from: PsiFile, offset: Int): String? {
         if (from !is KtFile) return null
 
         return analyze(from) {
