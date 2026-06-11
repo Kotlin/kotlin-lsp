@@ -85,6 +85,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                 entitySource,
                 virtualFileUrlManager,
                 ignoreDuplicateLibsAndSdks = true,
+                "GRADLE"
             )
             fixMissingProjectSdk(defaultSdkPath, virtualFileUrlManager)
         }

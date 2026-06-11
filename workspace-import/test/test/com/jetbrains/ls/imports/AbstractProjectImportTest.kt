@@ -266,7 +266,7 @@ abstract class AbstractProjectImportTest {
         compareWithTestdata(projectDir / "workspace.json", cropJarPaths(toJson(data)))
 
         val storageFromData = MutableEntityStorage.create().apply {
-            importWorkspaceData(data, projectDir, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(true))
+            importWorkspaceData(data, projectDir, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(true), false, null)
         }
         assertEquals(data, workspaceData(storageFromData, projectDir))
     }

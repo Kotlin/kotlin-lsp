@@ -10,6 +10,7 @@ import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.platform.workspace.jps.entities.ContentRootEntity
 import com.intellij.platform.workspace.jps.entities.DependencyScope
 import com.intellij.platform.workspace.jps.entities.ExcludeUrlEntity
+import com.intellij.platform.workspace.jps.entities.ExternalSystemModuleOptionsEntity
 import com.intellij.platform.workspace.jps.entities.FacetEntity
 import com.intellij.platform.workspace.jps.entities.FacetEntityBuilder
 import com.intellij.platform.workspace.jps.entities.FacetEntityTypeId
@@ -37,6 +38,7 @@ import com.intellij.platform.workspace.jps.entities.SdkRoot
 import com.intellij.platform.workspace.jps.entities.SdkRootTypeId
 import com.intellij.platform.workspace.jps.entities.SourceRootEntity
 import com.intellij.platform.workspace.jps.entities.SourceRootTypeId
+import com.intellij.platform.workspace.jps.entities.exModuleOptions
 import com.intellij.platform.workspace.jps.entities.libraryProperties
 import com.intellij.platform.workspace.jps.serialization.impl.toPath
 import com.intellij.platform.workspace.storage.EntitySource
@@ -252,6 +254,7 @@ fun MutableEntityStorage.importWorkspaceData(
     entitySource: EntitySource,
     virtualFileUrlManager: VirtualFileUrlManager,
     ignoreDuplicateLibsAndSdks: Boolean = false,
+    externalSystemId: String? = null
 ) {
     val storage = this
     for (sdkData in data.sdks) {
@@ -349,6 +352,13 @@ fun MutableEntityStorage.importWorkspaceData(
             ) {
                 sourceRoots =
                     contentRootData.sourceRoots.map { SourceRootEntity(toAbsolutePath(it.path, workspacePath).toIntellijUri(virtualFileUrlManager), SourceRootTypeId(it.type), entitySource) }
+            }
+        }
+
+        if(externalSystemId != null) {
+            exModuleOptions =  ExternalSystemModuleOptionsEntity(entitySource) {
+                linkedProjectPath = workspacePath.toString()
+                externalSystem = externalSystemId
             }
         }
 
