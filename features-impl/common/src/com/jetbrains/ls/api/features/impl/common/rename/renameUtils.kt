@@ -31,8 +31,8 @@ private fun computeDirectoryNameChange(old: URI, new: URI): NameChange? {
     if (oldName == newName) return null
 
     return NameChange(
-        oldName,
-        newName
+        Name(oldName, ""),
+        Name(newName, ""),
     )
 }
 
@@ -47,17 +47,29 @@ private fun computeFileNameChange(old: URI, new: URI): NameChange? {
     val newName = new.fileName
     if (oldName == newName) return null
     return NameChange(
-        oldName.getPureName(oldExtension),
-        newName.getPureName(newExtension)
+        oldName.getName(oldExtension),
+        newName.getName(newExtension)
     )
 }
 
-private fun String.getPureName(extension: String) = removeSuffix(extension).trimEnd { it == '.' }
-
+private fun String.getName(extension: String): Name {
+    val pureName = removeSuffix(extension).trimEnd { it == '.' }
+    val suffix = substring(pureName.length)
+    return Name(pureName, suffix)
+}
 /**
  * Represents the difference in the name when `workspace/willRenameFiles` request occurs.
+ * @param oldName name of the file before the refactoring without extension
+ * @param newName name of the file after the refactoring without extension
  */
 class NameChange(
-    val oldName: String,
-    val newName: String
+    val oldName: Name,
+    val newName: Name
 )
+
+class Name(
+    val fileName: String,
+    val suffix: String
+) {
+    fun fullName(): String = "$fileName$suffix"
+}
