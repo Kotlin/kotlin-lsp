@@ -13,10 +13,9 @@ import com.intellij.psi.util.PsiFormatUtil.formatMethod
 import com.intellij.psi.util.PsiFormatUtilBase
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.core.util.positionByOffset
-import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.features.impl.common.hover.LSHoverProviderBase
 import com.jetbrains.ls.api.features.impl.common.hover.markdownMultilineCode
+import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
 import com.jetbrains.ls.api.features.language.LSLanguage
 
 open class LSJavaHoverProvider : LSHoverProviderBase() {
@@ -43,10 +42,10 @@ open class LSJavaHoverProvider : LSHoverProviderBase() {
                     val superMethods = element.findSuperMethods()
                     when (superMethods.size) {
                         0 -> null
-                        1 -> "[Go to Super Implementation](${makeLinkTo(superMethods.single())})"
-                        else -> "Go to Super Implementation: " +
+                        1 -> "[Go to Super Method](${makeLinkTo(superMethods.single()) ?: return null})"
+                        else -> "Go to Super Method: " +
                                 superMethods.map { m ->
-                                    "[${m.containingClass?.name ?: "???"}](${makeLinkTo(m)})"
+                                    "[${m.containingClass?.name ?: "???"}](${makeLinkTo(m) ?: return null})"
                                 }.sorted().joinToString(" | ", "[", "]")
                     }
                 }
@@ -64,12 +63,9 @@ open class LSJavaHoverProvider : LSHoverProviderBase() {
         return true
     }
 
-    private fun makeLinkTo(element: PsiMethod): String {
-        val target = element.originalElement
-        val navigationOffset = target.textOffset
-        val psiFile = target.containingFile
-        val (line, column) = psiFile.fileDocument.positionByOffset(navigationOffset)
-        return psiFile.virtualFile.uri.uri + "#" + (line + 1) + "," + (column + 1)
+    private fun makeLinkTo(element: PsiMethod): String? {
+        val location = element.getLspLocationForDefinition() ?: return null
+        return location.uri.uri.uri + "#" + (location.range.start.line + 1) + "," + (location.range.start.character + 1)
     }
 
     private fun render(element: PsiElement): String? {
