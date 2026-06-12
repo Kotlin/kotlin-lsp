@@ -4,11 +4,14 @@ package com.jetbrains.ls.api.features.impl.common.processors
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.application.writeIntentReadAction
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
+import com.intellij.platform.ide.progress.runWithModalProgressBlocking
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiDirectoryContainer
 import com.intellij.psi.PsiFile
 import com.intellij.util.IncorrectOperationException
+import com.intellij.util.concurrency.annotations.RequiresEdt
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.DiffGranularity
@@ -104,6 +107,17 @@ suspend fun createProcessor(context: RefactoringContext): RefactoringProcessor? 
     is RenameContext -> Renamer.create(context)
     is RenameSingleDirectoryContext -> DirectoryMover.create(context)
     else -> throw IllegalArgumentException("Unknown refactoring context: $context")
+}
+
+@RequiresEdt
+internal fun <T> runReadActionInBgt(project: Project, action: () -> T): T {
+    return runWithModalProgressBlocking(project, "") {
+        try {
+            Result.success(readAction(action))
+        } catch (e: Throwable) {
+            Result.failure(e)
+        }
+    }.getOrThrow()
 }
 
 private fun isParentUri(parent: URI?, candidate: URI): Boolean {

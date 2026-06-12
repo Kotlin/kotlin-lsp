@@ -62,6 +62,7 @@ jvm_library(
         "//language-server/api.impl.analyzer",
         "//language-server/dap/platform",
         "@community//platform/ide-core-impl",
+        "@community//platform/progress/shared:ide-progress",
     ],
 )
 
@@ -111,6 +112,7 @@ jvm_library(
         "//language-server/api.impl.analyzer:api.impl.analyzer_test_lib",
         "//language-server/dap/platform:platform_test_lib",
         "@community//platform/ide-core-impl:ide-core-impl_test_lib",
+        "@community//platform/progress/shared:ide-progress_test_lib",
     ],
 )
 ### auto-generated section `build language-server.api.features.impl.common` end
