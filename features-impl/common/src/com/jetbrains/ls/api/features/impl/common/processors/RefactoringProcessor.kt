@@ -1,8 +1,6 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.processors
 
-import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.project.DumbService
@@ -90,14 +88,9 @@ internal fun execute(processor: RefactoringProcessor) : Map<FileUrl, Pair<PsiFil
     return originals
 }
 
+  context(_: LSAnalysisContext)
 private fun findUsages(processor: RefactoringProcessor): Array<UsageInfo>? {
-    val initialUsages = ApplicationManager.getApplication().executeOnPooledThread<Result<Array<UsageInfo>?>> {
-        try {
-            Result.success(ReadAction.computeBlocking<Array<UsageInfo>?, Throwable>(processor::findUsages))
-        } catch (e: Throwable) {
-            Result.failure(e)
-        }
-    }.get().getOrThrow() ?: return null
+      val initialUsages = runReadActionInBgt(project, processor::findUsages) ?: return null
 
     val conflicts = MultiMap<PsiElement, String>()
     val refUsages = create(initialUsages)
