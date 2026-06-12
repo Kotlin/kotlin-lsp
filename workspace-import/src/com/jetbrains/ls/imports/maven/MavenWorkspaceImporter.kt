@@ -25,6 +25,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
+import java.io.File
 import java.io.InputStream
 import java.nio.file.Path
 import kotlin.io.path.createTempFile
@@ -42,6 +43,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
     const val LSP_MAVEN_PROJECT_OFFLINE_PROPERTY: String = "com.jetbrains.ls.imports.maven.offline"
     const val LSP_MAVEN_PROJECT_MAVEN_USER_HOME_PROPERTY: String = "com.jetbrains.ls.imports.maven.mavenUserHome"
     const val LSP_MAVEN_PROJECT_MAVEN_OPTS_PROPERTY: String = "com.jetbrains.ls.imports.maven.opts"
+    const val LSP_MAVEN_PROJECT_PATH_PREPEND_PROPERTY: String = "com.jetbrains.ls.imports.maven.path.prepend"
 
 
     fun useMavenAndJava(mavenHome: Path, javaHome: Path) {
@@ -133,6 +135,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
 
         val mavenUserHomeProperty = System.getProperty(LSP_MAVEN_PROJECT_MAVEN_USER_HOME_PROPERTY)
         val mavenOpts = System.getProperty(LSP_MAVEN_PROJECT_MAVEN_OPTS_PROPERTY)
+        val pathPrepend = System.getProperty(LSP_MAVEN_PROJECT_PATH_PREPEND_PROPERTY)
         val workspaceJsonFile = createTempFile("workspace", ".json")
         try {
             val command = listOf(
@@ -167,6 +170,9 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                     }
                     mavenOpts?.let {
                         environment()["MAVEN_OPTS"] = it
+                    }
+                    pathPrepend?.let {
+                        prependToPath(environment(), it)
                     }
 
                 }
@@ -211,6 +217,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         val mavenPluginPomFile = createTempFile("mavenPlugin-pom", ".xml")
         val mavenUserHomeProperty = System.getProperty(LSP_MAVEN_PROJECT_MAVEN_USER_HOME_PROPERTY)
         val mavenOpts = System.getProperty(LSP_MAVEN_PROJECT_MAVEN_OPTS_PROPERTY)
+        val pathPrepend = System.getProperty(LSP_MAVEN_PROJECT_PATH_PREPEND_PROPERTY)
         try {
             mavenPluginPomFile.writeText(pluginPom)
             val command = listOf(
@@ -234,6 +241,9 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                     mavenOpts?.let {
                         environment()["MAVEN_OPTS"] = it
                     }
+                    pathPrepend?.let {
+                        prependToPath(environment(), it)
+                    }
                 }
                 .directory(projectDirectory.toFile())
                 .runWithErrorReporting("Maven", progress)
@@ -241,5 +251,10 @@ object MavenWorkspaceImporter : WorkspaceImporter {
             mavenPluginPomFile.delete()
         }
     }
-}
 
+    private fun prependToPath(environment: MutableMap<String, String>, path: String) {
+        val pathKey = environment.keys.firstOrNull { it.equals("PATH", ignoreCase = true) } ?: "PATH"
+        val currentPath = environment[pathKey]
+        environment[pathKey] = if (currentPath.isNullOrEmpty()) path else "$path${File.pathSeparator}$currentPath"
+    }
+}
