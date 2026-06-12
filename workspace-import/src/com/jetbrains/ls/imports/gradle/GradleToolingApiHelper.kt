@@ -46,6 +46,7 @@ object GradleToolingApiHelper {
 
     const val LSP_GRADLE_JAVA_HOME_PROPERTY: String = "com.jetbrains.ls.imports.gradle.java.home"
 
+    const val LSP_GRADLE_PROJECT_INIT_SCRIPTS: String = "com.jetbrains.ls.imports.gradle.init.scripts"
     const val LSP_GRADLE_PROJECT_OFFLINE_PROPERTY: String = "com.jetbrains.ls.imports.gradle.offline"
     const val LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY: String = "com.jetbrains.ls.imports.gradle.gradleUserHome"
     const val LSP_GRADLE_PROJECT_SELF_CONTAINED_INIT_SCRIPT: String = "com.jetbrains.ls.imports.gradle.selfContainedInitScript"
@@ -134,9 +135,21 @@ object GradleToolingApiHelper {
     fun <T> withDaemonInitScripts(action: (Iterable<Path>) -> T): T {
         val initScripts = LinkedList<Path>()
         initScripts.add(getLspGradlePluginInitScript())
+        initScripts.add(getIdeaPluginConfiguratorInitScript())
         if (getProperty(LSP_GRADLE_PROJECT_OFFLINE_PROPERTY)?.toBoolean() == true) {
             val selfContainedInitScript = getProperty(LSP_GRADLE_PROJECT_SELF_CONTAINED_INIT_SCRIPT)?.toNioPathOrNull()
             initScripts.addIfNotNull(selfContainedInitScript)
+        }
+        getProperty(LSP_GRADLE_PROJECT_INIT_SCRIPTS)?.let {
+            val scripts = it.split(",")
+            for (scriptPath in scripts) {
+                val processedScriptPath = Path.of(scriptPath.trim())
+                if (processedScriptPath.exists()) {
+                    initScripts.add(processedScriptPath)
+                } else {
+                    LOG.error("Invalid init script path: $processedScriptPath")
+                }
+            }
         }
         try {
             return action(initScripts)
@@ -144,6 +157,51 @@ object GradleToolingApiHelper {
             initScripts.forEach {
                 it.delete()
             }
+        }
+    }
+
+    private fun getIdeaPluginConfiguratorInitScript() : Path {
+        return createTempFile("lsp-gradle-idea-configurator", ".gradle").also {
+            it.writeText("""
+                import java.util.function.Consumer
+                import org.gradle.util.GradleVersion
+
+                static void beforeProject(Gradle gradle, Consumer<Project> action) {
+                  if (IdeaPluginConfigurator.isCurrentGradleAtLeast("8.8")) {
+                    gradle.getLifecycle().beforeProject {
+                      action.accept(it)
+                    }
+                    return
+                  }
+                  gradle.allprojects {
+                    action.accept(it)
+                  }
+                }
+
+                beforeProject(gradle) { Project project ->
+                  IdeaPluginConfigurator.toggleSources(project.plugins, !IdeaPluginConfigurator.isCurrentGradleAtLeast("7.5"))
+                }
+
+                class IdeaPluginConfigurator {
+                  static void toggleSources(PluginContainer plugins, boolean value) {
+                    plugins.withType(IdeaPlugin).all { IdeaPlugin plugin ->
+                      overridePluginSourcesPolicy(plugin, value)
+                    }
+                  }
+                  
+                  static boolean isCurrentGradleAtLeast(String version) {
+                    return GradleVersion.current().getBaseVersion().compareTo(GradleVersion.version(version)) >= 0
+                  }
+                  
+                  private static void overridePluginSourcesPolicy(IdeaPlugin plugin, boolean value) {
+                    def module = plugin?.model?.module
+                    if (module != null) {
+                      module.downloadJavadoc = false
+                      module.downloadSources = value
+                    }
+                  }
+                }
+            """.trimIndent())
         }
     }
 

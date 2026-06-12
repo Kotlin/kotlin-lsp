@@ -1,0 +1,205 @@
+{
+    "modules": [
+        {
+            "name": "untitled1",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "17",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/"
+                }
+            ]
+        },
+        {
+            "name": "untitled1.main",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "17",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/src/main"
+                }
+            ]
+        },
+        {
+            "name": "untitled1.test",
+            "dependencies": [
+                {
+                    "type": "module",
+                    "name": "untitled1.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.platform:junit-platform-commons:6.1.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.jupiter:junit-jupiter-api:6.1.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.opentest4j:opentest4j:1.3.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.apiguardian:apiguardian-api:1.1.2",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jspecify:jspecify:1.0.0",
+                    "scope": "provided"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "17",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/src/test"
+                }
+            ]
+        }
+    ],
+    "libraries": [
+        {
+            "name": "Gradle: org.apiguardian:apiguardian-api:1.1.2",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apiguardian/apiguardian-api/1.1.2/#####/apiguardian-api-1.1.2.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apiguardian/apiguardian-api/1.1.2/#####/apiguardian-api-1.1.2-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.apiguardian",
+                    "artifactId": "apiguardian-api",
+                    "version": "1.1.2",
+                    "baseVersion": "1.1.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.jspecify:jspecify:1.0.0",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jspecify/jspecify/1.0.0/#####/jspecify-1.0.0.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jspecify/jspecify/1.0.0/#####/jspecify-1.0.0-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.jspecify",
+                    "artifactId": "jspecify",
+                    "version": "1.0.0",
+                    "baseVersion": "1.0.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.jupiter:junit-jupiter-api:6.1.0",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-api/6.1.0/#####/junit-jupiter-api-6.1.0.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-api/6.1.0/#####/junit-jupiter-api-6.1.0-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.jupiter",
+                    "artifactId": "junit-jupiter-api",
+                    "version": "6.1.0",
+                    "baseVersion": "6.1.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.platform:junit-platform-commons:6.1.0",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-commons/6.1.0/#####/junit-platform-commons-6.1.0.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-commons/6.1.0/#####/junit-platform-commons-6.1.0-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.platform",
+                    "artifactId": "junit-platform-commons",
+                    "version": "6.1.0",
+                    "baseVersion": "6.1.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.opentest4j:opentest4j:1.3.0",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.opentest4j/opentest4j/1.3.0/#####/opentest4j-1.3.0.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.opentest4j/opentest4j/1.3.0/#####/opentest4j-1.3.0-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.opentest4j",
+                    "artifactId": "opentest4j",
+                    "version": "1.3.0",
+                    "baseVersion": "1.3.0"
+                }
+            }
+        }
+    ],
+    "sdks": [
+        {
+            "name": "17",
+            "type": "jdk",
+            "version": "JDK_17",
+            "homePath": null,
+            "roots": [],
+            "additionalData": ""
+        }
+    ]
+}

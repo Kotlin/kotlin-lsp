@@ -45,12 +45,19 @@ fi
 fi
 
 if [[ -z "$PACKAGE_DIR" ]]; then
-  PACKAGE_DIR="$SCRIPT_DIR"
-  if [[ -n "$WORKSPACE_DIR" && "$BUNDLE_TYPE" != "$DEFAULT_BUNDLE_TYPE" ]]; then
-    workspace_package_dir="$(pnpm --dir "$WORKSPACE_DIR" --filter "$BUNDLE_TYPE" exec pwd 2>/dev/null || true)"
-    if [[ -d "$workspace_package_dir" ]]; then
-      PACKAGE_DIR="$workspace_package_dir"
+  if [[ "$BUNDLE_TYPE" == "$DEFAULT_BUNDLE_TYPE" ]]; then
+    PACKAGE_DIR="$SCRIPT_DIR"
+  else
+    if [[ -z "$WORKSPACE_DIR" ]]; then
+      echo "Error: bundle type '$BUNDLE_TYPE' requires a pnpm workspace checkout" >&2
+      exit 1
     fi
+    PACKAGE_DIR="$(pnpm --reporter=silent --dir "$WORKSPACE_DIR" --filter "$BUNDLE_TYPE" exec pwd 2>/dev/null | tail -n1 || true)"
+  fi
+
+  if [[ ! -d "$PACKAGE_DIR" ]]; then
+    echo "Error: package directory for bundle type '$BUNDLE_TYPE' not found: $PACKAGE_DIR" >&2
+    exit 1
   fi
 fi
 

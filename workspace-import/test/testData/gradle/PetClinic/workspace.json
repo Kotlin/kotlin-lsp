@@ -2484,10 +2484,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.18.2/#####/jackson-annotations-2.18.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.18.2/#####/jackson-annotations-2.18.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2505,10 +2501,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-core/2.18.2/#####/jackson-core-2.18.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-core/2.18.2/#####/jackson-core-2.18.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2526,10 +2518,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.18.2/#####/jackson-databind-2.18.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.18.2/#####/jackson-databind-2.18.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2547,10 +2535,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-jdk8/2.18.2/#####/jackson-datatype-jdk8-2.18.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-jdk8/2.18.2/#####/jackson-datatype-jdk8-2.18.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2568,10 +2552,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-jsr310/2.18.2/#####/jackson-datatype-jsr310-2.18.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-jsr310/2.18.2/#####/jackson-datatype-jsr310-2.18.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2589,10 +2569,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/com.fasterxml.jackson.module/jackson-module-parameter-names/2.18.2/#####/jackson-module-parameter-names-2.18.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/com.fasterxml.jackson.module/jackson-module-parameter-names/2.18.2/#####/jackson-module-parameter-names-2.18.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -2946,10 +2922,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/io.projectreactor/reactor-core/3.7.2/#####/reactor-core-3.7.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/io.projectreactor/reactor-core/3.7.2/#####/reactor-core-3.7.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -4353,10 +4325,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot-devtools/3.4.2/#####/spring-boot-devtools-3.4.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework.boot/spring-boot-devtools/3.4.2/#####/spring-boot-devtools-3.4.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -4773,10 +4741,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-aop/6.2.2/#####/spring-aop-6.2.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-aop/6.2.2/#####/spring-aop-6.2.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -4794,10 +4758,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-aspects/6.2.2/#####/spring-aspects-6.2.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-aspects/6.2.2/#####/spring-aspects-6.2.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -4815,10 +4775,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-beans/6.2.2/#####/spring-beans-6.2.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-beans/6.2.2/#####/spring-beans-6.2.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -4836,10 +4792,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-context-support/6.2.2/#####/spring-context-support-6.2.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-context-support/6.2.2/#####/spring-context-support-6.2.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -4857,10 +4809,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-context/6.2.2/#####/spring-context-6.2.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-context/6.2.2/#####/spring-context-6.2.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -4878,10 +4826,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-core/6.2.2/#####/spring-core-6.2.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-core/6.2.2/#####/spring-core-6.2.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -4899,10 +4843,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-expression/6.2.2/#####/spring-expression-6.2.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-expression/6.2.2/#####/spring-expression-6.2.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -4920,10 +4860,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-jcl/6.2.2/#####/spring-jcl-6.2.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-jcl/6.2.2/#####/spring-jcl-6.2.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -4941,10 +4877,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-jdbc/6.2.2/#####/spring-jdbc-6.2.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-jdbc/6.2.2/#####/spring-jdbc-6.2.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -4962,10 +4894,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-orm/6.2.2/#####/spring-orm-6.2.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-orm/6.2.2/#####/spring-orm-6.2.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -4983,10 +4911,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-test/6.2.2/#####/spring-test-6.2.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-test/6.2.2/#####/spring-test-6.2.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -5004,10 +4928,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-tx/6.2.2/#####/spring-tx-6.2.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-tx/6.2.2/#####/spring-tx-6.2.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -5025,10 +4945,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-web/6.2.2/#####/spring-web-6.2.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-web/6.2.2/#####/spring-web-6.2.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -5046,10 +4962,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-webmvc/6.2.2/#####/spring-webmvc-6.2.2.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.springframework/spring-webmvc/6.2.2/#####/spring-webmvc-6.2.2-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {

@@ -99,7 +99,8 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                     ),
                     projectDirectory,
                     WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager)),
-                    virtualFileUrlManager
+                    virtualFileUrlManager, false,
+                    "MAVEN"
                 )
                 fixMissingProjectSdk(defaultSdkPath, virtualFileUrlManager)
             }

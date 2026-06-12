@@ -10,7 +10,6 @@ import com.jetbrains.ls.imports.json.LibraryData
 import com.jetbrains.ls.imports.json.LibraryRootData
 import com.jetbrains.ls.imports.json.XmlElement
 import org.gradle.tooling.model.idea.IdeaSingleEntryLibraryDependency
-import java.io.File
 
 internal class ProjectLibraryIndex {
 
@@ -29,33 +28,28 @@ internal class ProjectLibraryIndex {
     }
 
     fun add(moduleName: String, dependency: ExternalModuleDependency) {
-        index.compute(dependency.mavenCoordinates) { _, libraryData ->
-            return@compute libraryData?.withRoot(dependency.file) ?: dependency.toLibraryData(moduleName)
+        index.compute(dependency.getLibraryName()) { _, libraryData ->
+            return@compute libraryData?.withAdditionalRoots(dependency.getLibraryRoots()) ?: dependency.toLibraryData(moduleName)
         }
     }
 
     fun getLibraries(): List<LibraryData> = index.values.toList()
+
+    private fun ExternalModuleDependency.getLibraryRoots(): List<LibraryRootData> = mutableListOf<LibraryRootData>().apply {
+        add(LibraryRootData(file.path, "CLASSES"))
+        sources?.let {
+            add(LibraryRootData(it.path, "SOURCES"))
+        }
+    }
 
     private fun ExternalModuleDependency.toLibraryData(moduleName: String): LibraryData {
         return LibraryData(
             name = "Gradle: ${mavenCoordinates}",
             module = moduleName,
             type = "COMPILE",
-            roots = this.let {
-                val result = mutableListOf<LibraryRootData>()
-                it.file.run { if (exists()) result.add(LibraryRootData(path, "CLASSES")) }
-                result
-            }
+            roots = getLibraryRoots()
         )
     }
-
-    private fun LibraryData.withRoot(root: File) = withAdditionalRoots(
-        listOf(
-            LibraryRootData(
-                path = root.path
-            )
-        )
-    )
 
     private fun LibraryData.withAdditionalRoots(additionalRoots: List<LibraryRootData>): LibraryData {
         val newRoots: MutableList<LibraryRootData> = mutableListOf()
@@ -66,7 +60,7 @@ internal class ProjectLibraryIndex {
             }
         }
         if (newRoots != roots) {
-            return copy(roots = newRoots.sortedBy { it.path })
+            return copy(roots = newRoots)
         } else {
             return this
         }
@@ -90,6 +84,8 @@ internal class ProjectLibraryIndex {
             properties = getProperties()
         )
     }
+
+    private fun ExternalModuleDependency.getLibraryName(): String = "Gradle: $mavenCoordinates"
 
     private fun IdeaSingleEntryLibraryDependency.getProperties(): XmlElement? {
         if (gradleModuleVersion == null) {

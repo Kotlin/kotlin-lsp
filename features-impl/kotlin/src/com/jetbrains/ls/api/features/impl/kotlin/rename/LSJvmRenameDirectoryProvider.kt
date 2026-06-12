@@ -26,7 +26,7 @@ internal object LSJvmRenameDirectoryProvider : LSRenameDirectoryProvider {
                 val nameChange = computeNameChange(params.oldUri, params.newUri, true) ?: return@readAction null
                 val virtualFile = params.oldUri.findVirtualFile() ?: return@readAction null
                 val directory = virtualFile.findPsiDirectory(project) ?: return@readAction null
-                RenameSingleDirectoryContext(directory, nameChange.newName)
+                RenameSingleDirectoryContext(directory, nameChange.newName.fileName)
             } ?: return@withWriteAnalysisContext null
 
             val renamer = createProcessor(context) ?: return@withWriteAnalysisContext null

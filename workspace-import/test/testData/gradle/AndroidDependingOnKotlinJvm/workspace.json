@@ -1281,11 +1281,11 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.3.20/#####/kotlin-stdlib-2.3.20-sources.jar",
-                    "type": "SOURCES"
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.3.20/#####/kotlin-stdlib-2.3.20.jar"
                 },
                 {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.3.20/#####/kotlin-stdlib-2.3.20.jar"
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.3.20/#####/kotlin-stdlib-2.3.20-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -1336,11 +1336,11 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0-sources.jar",
-                    "type": "SOURCES"
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0.jar"
                 },
                 {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0.jar"
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0-sources.jar",
+                    "type": "SOURCES"
                 }
             ],
             "properties": {

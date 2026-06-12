@@ -3,6 +3,91 @@
 This file contains TeamCity auto-generated download links that are updated on a weekly basis.
 These are pre-alpha builds that are built directly from `master` branch after the initial acceptance.
 
+### v262.7569.0
+- :test_tube: **"Kotlin by JetBrains" extension v0.0.4 for VS Code **
+
+  Includes Kotlin Language Server bundled for use with Visual Studio Code. 
+  
+  The extension is also available on the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=JetBrains.kotlin-server).
+    * [Download for macOS-x64](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-0.0.4-mac-amd64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-0.0.4-mac-amd64.vsix.sha256)
+    * [Download for macOS-arm64](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-0.0.4-mac-aarch64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-0.0.4-mac-aarch64.vsix.sha256)
+    * [Download for Linux-x64](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-0.0.4-linux-amd64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-0.0.4-linux-amd64.vsix.sha256)
+    * [Download for Linux-arm64](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-0.0.4-linux-aarch64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-0.0.4-linux-aarch64.vsix.sha256)
+    * [Download for Windows-x64](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-0.0.4-win-amd64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-0.0.4-win-amd64.vsix.sha256)
+    * [Download for Windows-arm64](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-0.0.4-win-aarch64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-0.0.4-win-aarch64.vsix.sha256)
+
+
+- :card_index_dividers: **Standalone Kotlin LSP Archive**
+
+  Standalone Kotlin Language Server version for editors other than VS Code.
+    * [Download for macOS-x64](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-262.7569.0.sit)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-262.7569.0.sit.sha256)
+    * [Download for macOS-arm64](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-262.7569.0-aarch64.sit)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-262.7569.0-aarch64.sit.sha256)
+    * [Download for Linux-x64](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-262.7569.0.tar.gz)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-262.7569.0.tar.gz.sha256)
+    * [Download for Linux-arm64](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-262.7569.0-aarch64.tar.gz)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-262.7569.0-aarch64.tar.gz.sha256)
+    * [Download for Windows-x64](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-262.7569.0.win.zip)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-262.7569.0.win.zip.sha256)
+    * [Download for Windows-arm64](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-262.7569.0-aarch64.win.zip)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/kotlin-lsp/262.7569.0/kotlin-server-262.7569.0-aarch64.win.zip.sha256)
+
+##### Changelog
+
+#### 🎉 Extension is now published to the VS Code Marketplace
+
+* "Kotlin by JetBrains" is now available on the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=JetBrains.kotlin-server), and can be installed to VS Code directly.
+* VS Code extension is now distributed under the [JetBrains Free Plugin License](LICENSE.txt) instead of Apache 2.0. <!-- LSP-947 -->
+
+> [!WARNING]
+> "Kotlin by JetBrains" extension now has a different VS Code Marketplace ID:
+>
+> Old one: `jetbrains.kotlin`
+>
+> New one: `jetbrains.kotlin-server`
+>
+> When you install a newer `jetbrains.kotlin-server`, a dialog will offer to uninstall the older `jetbrains.kotlin` extension, if present.
+>  <details>
+>  <summary>Example of the dialog.</summary>
+>  <img width="263" height="292" alt="image" src="https://gist.github.com/user-attachments/assets/d909ceef-e1d8-4709-87eb-290eb5334e14" />
+>  </details>
+>
+> Accept it and reload the window — the new extension cannot properly activate while the old `jetbrains.kotlin`
+> extension is present.
+
+#### 🛠 LSP capabilities
+
+* Workspace model is now persisted across server restarts, which reduces cold-start time on subsequent launches of the same project. <!-- LSP-198 -->
+* New inspections from the IntelliJ Kotlin Plugin:
+    * [KTIJ-20597](https://youtrack.jetbrains.com/issue/KTIJ-20597): Replace `myMap.map { it.ket }.toSet()` chains with direct call on `myMap.keys`.
+
+#### 📦 Import & build systems
+
+* More fine-grained progress reporting during project import in VS Code. <!-- LSP-948 -->
+* The Kotlin LSP document selector now also covers `.java` files in mixed Kotlin/Java projects, improving cross-language updates when Java files change. <!-- LSP-1053 -->
+
+#### ⌨️ Editor / typing
+
+* Various Enter-key and auto-indent handling fixes — multi-line strings, multi-line comments, KDoc, class type parameter/argument lists, function parameter lists, and more. <!-- LSP-988, LSP-994, LSP-1060, LSP-1101, LSP-1103, LSP-1104, LSP-1105 -->
+* Correct handling of CRLF line endings in document edits, bracket/parenthesis completion, and extra-line insertion. <!-- LSP-1043, LSP-1058, LSP-1082 -->
+* Completion of multi-line comments. <!-- LSP-1086 -->
+
+#### 🐛 Bug fixes
+
+* Kotlin `languageVersion` is now propagated from Gradle and Maven into the imported workspace, matching IntelliJ behavior. <!-- LSP-1097 -->
+* Gradle import no longer throws `NoSuchElementException` when no JDK is configured — a clearer error is surfaced instead. <!-- LSP-1147 -->
+* False positive `REDUNDANT_ELSE_IN_WHEN` diagnostic is addressed. Fixes <https://github.com/Kotlin/kotlin-lsp/issues/190> and <https://github.com/Kotlin/kotlin-lsp/issues/124>. <!-- LSP-1035 -->
+* Document URLs are now computed correctly for unsaved/orphan files. Potentially fixes <https://github.com/Kotlin/kotlin-lsp/issues/185>. <!-- LSP-1016 -->
+* Hover documentation links now use properly rendered URIs, fixing broken links on Windows and for project paths that contain spaces. <!-- LSP-1074, LSP-1098 -->
+* "Find References" of Kotlin type aliases is now supported. <!-- LSP-1075 -->
+* `Format Document` now applies to files created from templates. <!-- LSP-928 -->
+* `PROJECT_NAME` interpolation in file templates is now resolved correctly. <!-- LSP-998 -->
+* Fixed the broken link to `file_templates.md` in extension settings. <!-- LSP-995 -->
+* Many other small improvements and bug fixes.
+
+#### Other
+
+* :rocket: Completion and auto-import performance improvements, including a fix for the regression introduced by the RocksDB migration. Fixes <https://github.com/Kotlin/kotlin-lsp/issues/193>. <!-- LSP-893, LSP-1041, LSP-1064, LSP-1081 -->
+* The server now reports its log file location to the client on startup. <!-- LSP-1022 -->
+* Background coroutine exceptions are now captured and reported properly in the server log. <!-- LSP-1021 -->
+* `.editorconfig` files outside source roots are now honored. <!-- LSP-1070 -->
+* Fix for serialization of empty/optional values when handling LSP requests. Related to <https://github.com/Kotlin/kotlin-lsp/issues/104>. <!-- LSP-1093 -->
+
 ### v262.4739.0
 - :test_tube: **Kotlin LSP for VS Code Extension**
   Includes Kotlin Language Server bundled for use with Visual Studio Code

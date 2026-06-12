@@ -3,6 +3,7 @@ import {
     commands,
     type Extension,
     type ExtensionContext,
+    ExtensionMode,
     extensions,
     type OutputChannel,
     Uri,
@@ -150,6 +151,10 @@ export async function activateExtension(
 }
 
 function initOutputChannel(context: ExtensionContext): void {
+    if (context.extensionMode === ExtensionMode.Test) {
+        return
+    }
+
     const extension = extensions.getExtension(context.extension.id);
     const pkg = extension?.packageJSON as ExtensionPackageJson | undefined;
     _outputChannel = window.createOutputChannel(pkg?.displayName ?? 'JetBrains LSP');

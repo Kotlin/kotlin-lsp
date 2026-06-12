@@ -95,10 +95,12 @@ class LSCommonIntentionFixesCodeActionProvider(
                     }
                     for (descriptor in problemsHolder.results) {
                         if ((isInfo || descriptor.highlightType == ProblemHighlightType.INFORMATION) &&
-                            !localInspection.isSuppressedFor(descriptor.psiElement)) {
-                            val range = descriptor.textRangeInElement?.shiftRight(descriptor.psiElement.textRange.startOffset) 
-                                ?: descriptor.psiElement.textRange
-                            if (!range.contains(offset)) continue
+                            !isSuppressed(localInspection, descriptor)
+                        ) {
+                            val elementRange = (descriptor.psiElement ?: descriptor.startElement)?.textRange ?: continue
+                            val range = descriptor.textRangeInElement?.shiftRight(elementRange.startOffset) 
+                                ?: elementRange
+                            if (!range.containsOffset(offset)) continue
                             for ((name, modCommandData) in lsInspectionManager.createDiagnosticData(descriptor, project).fixes) {
                                 result.add(CodeAction(
                                     title = name,

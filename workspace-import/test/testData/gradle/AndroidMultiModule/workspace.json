@@ -2408,13 +2408,13 @@
             "type": "COMPILE",
             "roots": [
                 {
+                    "path": "<ANDROID_HOME>/platforms/android-36/android.jar"
+                },
+                {
                     "path": "<ANDROID_HOME>/build-tools/36.0.0/core-lambda-stubs.jar"
                 },
                 {
                     "path": "<ANDROID_HOME>/platforms/android-36.1/android.jar"
-                },
-                {
-                    "path": "<ANDROID_HOME>/platforms/android-36/android.jar"
                 }
             ],
             "properties": {
@@ -2461,10 +2461,10 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/9c6af1ad236fb59151209c09f8424777/transformed/activity-1.8.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/ebb81c0859db545e3c977774e3bc3675/transformed/activity-1.8.0/#####/classes.jar"
                 },
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/ebb81c0859db545e3c977774e3bc3675/transformed/activity-1.8.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/9c6af1ad236fb59151209c09f8424777/transformed/activity-1.8.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -2538,10 +2538,10 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/4c230b3993c0edafd27f0c2891ef454d/transformed/appcompat-1.7.1/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/b7e86a21dbf86f8769b942ffc78b477d/transformed/appcompat-1.7.1/#####/classes.jar"
                 },
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/b7e86a21dbf86f8769b942ffc78b477d/transformed/appcompat-1.7.1/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/4c230b3993c0edafd27f0c2891ef454d/transformed/appcompat-1.7.1/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3046,10 +3046,10 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/949914baaa855dac8a42ff6805db1e8d/transformed/core-viewtree-1.0.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/f4b486a48a1a79a722d7915d7a66277c/transformed/core-viewtree-1.0.0/#####/classes.jar"
                 },
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/f4b486a48a1a79a722d7915d7a66277c/transformed/core-viewtree-1.0.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/949914baaa855dac8a42ff6805db1e8d/transformed/core-viewtree-1.0.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3066,10 +3066,10 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/29888ed668487c3a4271c2b6ba9d91e2/transformed/core-1.18.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/69c24df88d51096bea5b8e72d75536d6/transformed/core-1.18.0/#####/classes.jar"
                 },
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/69c24df88d51096bea5b8e72d75536d6/transformed/core-1.18.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/29888ed668487c3a4271c2b6ba9d91e2/transformed/core-1.18.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3086,10 +3086,10 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/3508eb14d38f44e4c637dd62767ddb92/transformed/cursoradapter-1.0.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/96e2409650518d49bed5872e2f34d09b/transformed/cursoradapter-1.0.0/#####/classes.jar"
                 },
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/96e2409650518d49bed5872e2f34d09b/transformed/cursoradapter-1.0.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/3508eb14d38f44e4c637dd62767ddb92/transformed/cursoradapter-1.0.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3143,10 +3143,10 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/10ea1dc54d500f7a4185b3ef6f041f8f/transformed/drawerlayout-1.1.1/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/de9281ef0049891d25f5de33884b06d3/transformed/drawerlayout-1.1.1/#####/classes.jar"
                 },
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/de9281ef0049891d25f5de33884b06d3/transformed/drawerlayout-1.1.1/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/10ea1dc54d500f7a4185b3ef6f041f8f/transformed/drawerlayout-1.1.1/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3163,10 +3163,10 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/115307ceaf5721edd4644822790746dc/transformed/dynamicanimation-1.1.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/34c133db40833fae1d689dda355cebc7/transformed/dynamicanimation-1.1.0/#####/classes.jar"
                 },
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/34c133db40833fae1d689dda355cebc7/transformed/dynamicanimation-1.1.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/115307ceaf5721edd4644822790746dc/transformed/dynamicanimation-1.1.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3234,10 +3234,10 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/4c1b51534658bd90c0d83cfdf205749d/transformed/graphics-shapes-release/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/f6ee42756fee1d498f35665e67dccd11/transformed/graphics-shapes-release/#####/classes.jar"
                 },
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/f6ee42756fee1d498f35665e67dccd11/transformed/graphics-shapes-release/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/4c1b51534658bd90c0d83cfdf205749d/transformed/graphics-shapes-release/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3254,10 +3254,10 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/6aadd6f0edf24fdac8ae136574a35f84/transformed/interpolator-1.0.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/9221a8229e129fe2d42f01e488c99626/transformed/interpolator-1.0.0/#####/classes.jar"
                 },
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/9221a8229e129fe2d42f01e488c99626/transformed/interpolator-1.0.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/6aadd6f0edf24fdac8ae136574a35f84/transformed/interpolator-1.0.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3736,10 +3736,10 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/ebf2ee90fb5ba9d5bef9e751198d6447/transformed/recyclerview-1.2.1/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/ffdced1e9f73ee95818242d4ae7774e2/transformed/recyclerview-1.2.1/#####/classes.jar"
                 },
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/ffdced1e9f73ee95818242d4ae7774e2/transformed/recyclerview-1.2.1/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/ebf2ee90fb5ba9d5bef9e751198d6447/transformed/recyclerview-1.2.1/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3878,10 +3878,10 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/842423dcaa88f01d8df29f96ede6f8a7/transformed/espresso-idling-resource-3.7.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/f10a04d84eb3883643aed72fedbe16ad/transformed/espresso-idling-resource-3.7.0/#####/classes.jar"
                 },
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/f10a04d84eb3883643aed72fedbe16ad/transformed/espresso-idling-resource-3.7.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/842423dcaa88f01d8df29f96ede6f8a7/transformed/espresso-idling-resource-3.7.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3918,10 +3918,10 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/004dc0641c1661d617561d8701e8489f/transformed/storage-1.6.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/ac13f0ee35cec8755026b59e826d5447/transformed/storage-1.6.0/#####/classes.jar"
                 },
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/ac13f0ee35cec8755026b59e826d5447/transformed/storage-1.6.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/004dc0641c1661d617561d8701e8489f/transformed/storage-1.6.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3958,10 +3958,10 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/6fe5bd242f6374f9a3bf03ea156f7861/transformed/monitor-1.8.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/8e173c498f6917d2f332ffa0559aaba5/transformed/monitor-1.8.0/#####/classes.jar"
                 },
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/8e173c498f6917d2f332ffa0559aaba5/transformed/monitor-1.8.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/6fe5bd242f6374f9a3bf03ea156f7861/transformed/monitor-1.8.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -3978,10 +3978,10 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/55412f8afb55a35bfc93e8aa556289b4/transformed/runner-1.7.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/dd44cea578e8c2987ac8166ba4d5db37/transformed/runner-1.7.0/#####/classes.jar"
                 },
                 {
-                    "path": "<GRADLE_REPO>/9.4.1/transforms/dd44cea578e8c2987ac8166ba4d5db37/transformed/runner-1.7.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.4.1/transforms/55412f8afb55a35bfc93e8aa556289b4/transformed/runner-1.7.0/#####/classes.jar"
                 }
             ],
             "properties": {

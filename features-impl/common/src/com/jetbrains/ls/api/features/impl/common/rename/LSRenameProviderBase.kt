@@ -70,8 +70,9 @@ abstract class LSRenameProviderBase(
                 val nameChange = computeNameChange(params.oldUri, params.newUri, false) ?: return@readAction null
                 val virtualFile = params.oldUri.findVirtualFile() ?: return@readAction null
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction null
-                val target = getTargetClass(psiFile, nameChange.oldName) ?: return@readAction null
-                RenameContext(target, nameChange.newName)
+                val target = getTargetClass(psiFile, nameChange.oldName.fileName) ?: psiFile
+                val newName = if (target is PsiFile) nameChange.newName.fullName() else nameChange.newName.fileName
+                RenameContext(target, newName)
             } ?: return@withWriteAnalysisContext null
 
             val renamer = createProcessor(context) ?: return@withWriteAnalysisContext null

@@ -12,6 +12,7 @@ import com.intellij.modcommand.ModMoveFile
 import com.intellij.modcommand.ModNavigate
 import com.intellij.modcommand.ModNothing
 import com.intellij.modcommand.ModRegisterTabOut
+import com.intellij.modcommand.ModStartTemplate
 import com.intellij.modcommand.ModUpdateFileText
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.impl.DocumentImpl
@@ -107,6 +108,8 @@ sealed interface ModCommandData {
             is ModRegisterTabOut -> Nothing // We can safely skip the tab-out command
             // Highlighting could be important, but usually it's an additional helpful thing, not an essential one, so let's skip it for now
             is ModHighlight -> Nothing
+            // Templates are not fully supported yet
+            is ModStartTemplate -> if (command.optional) Nothing else null
             else -> {
                 LOG.debug("Unsupported command $command")
                 null

@@ -6,6 +6,7 @@ import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.components.ExpandMacroToPathMap
 import com.intellij.openapi.components.impl.getAllMacros
 import com.intellij.openapi.diagnostic.fileLogger
+import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.impl.JavaHomeFinder
@@ -52,6 +53,8 @@ import com.jetbrains.ls.imports.json.flattenExportedDependencies
 import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
 import com.jetbrains.ls.imports.utils.toIntellijUri
 import org.jdom.Element
+import org.jetbrains.idea.maven.aether.ArtifactRepositoryManager
+import org.jetbrains.idea.maven.aether.ProgressConsumer
 import org.jetbrains.jps.model.JpsElementFactory
 import org.jetbrains.jps.model.JpsModel
 import org.jetbrains.jps.model.java.JavaResourceRootType
@@ -59,8 +62,11 @@ import org.jetbrains.jps.model.java.JavaSourceRootType
 import org.jetbrains.jps.model.java.JpsJavaExtensionService
 import org.jetbrains.jps.model.java.JpsJavaModuleType
 import org.jetbrains.jps.model.java.JpsJavaSdkType
+import org.jetbrains.jps.model.library.JpsLibrary
 import org.jetbrains.jps.model.library.JpsLibraryType
+import org.jetbrains.jps.model.library.JpsMavenRepositoryLibraryDescriptor
 import org.jetbrains.jps.model.library.JpsOrderRootType
+import org.jetbrains.jps.model.library.JpsRepositoryLibraryType
 import org.jetbrains.jps.model.module.JpsLibraryDependency
 import org.jetbrains.jps.model.module.JpsModuleDependency
 import org.jetbrains.jps.model.module.JpsModuleSourceDependency
@@ -158,6 +164,9 @@ object JpsWorkspaceImporter : WorkspaceImporter {
         val entitySource = WorkspaceEntitySource(projectDirectory.toIntellijUri(virtualFileUrlManager))
         val libs = mutableSetOf<String>()
         val sdks = mutableSetOf<String>()
+        // Lazily created so the resolver (and its remote-repository setup) is only initialized when a library actually
+        // needs to be downloaded.
+        val repositoryManager = lazy { createArtifactRepositoryManager() }
 
         model.project.modules.forEach { module ->
             val kotlinFacetModuleExtension = module.container.getChild(JpsKotlinFacetModuleExtension.KIND)
@@ -168,25 +177,12 @@ object JpsWorkspaceImporter : WorkspaceImporter {
                     is JpsLibraryDependency -> {
                         val library = dependency.library ?: return@mapNotNull null
                         if (libs.add(library.name)) {
+                            val roots = resolveLibraryRoots(library, virtualFileUrlManager, progress, repositoryManager)
+                                ?: return@mapNotNull null
                             val libEntity = LibraryEntity(
                                 name = library.name,
                                 tableId = ProjectLibraryTableId,
-                                roots = buildList {
-                                    library.getRootUrls(JpsOrderRootType.COMPILED).mapNotNullTo(this) { url ->
-                                        val fileUrl = virtualFileUrlManager.getOrCreateFromUrl(url)
-                                        if (!Path.of(JpsPathUtil.urlToPath(url)).exists()) {
-                                            progress.onUnresolvedDependency(url)
-                                            return@mapNotNull null
-                                        }
-                                        LibraryRoot(
-                                            fileUrl,
-                                            LibraryRootTypeId.COMPILED
-                                        )
-                                    }
-                                    library.getRootUrls(JpsOrderRootType.SOURCES).mapTo(this) { url ->
-                                        LibraryRoot(virtualFileUrlManager.getOrCreateFromUrl(url), LibraryRootTypeId.SOURCES)
-                                    }
-                                },
+                                roots = roots,
                                 entitySource = entitySource
                             ) {
                                 typeId = LibraryTypeId(library.type.javaClass.simpleName)
@@ -432,6 +428,88 @@ private fun JpsLibraryType<*>.toSdkType(): String = when (this) {
     is JpsJavaSdkType -> JavaSdk.getInstance().name
     else -> toString()
 }
+
+/**
+ * Builds the workspace-model roots for [library].
+ *
+ * When some compiled roots are missing on disk (e.g. the artifact was never downloaded into the local Maven repository)
+ * and the library is a Maven repository library, the artifact together with its transitive dependencies is resolved and
+ * downloaded into the local Maven repository via [repositoryManager]. The downloaded files land at the macro-expanded
+ * paths the JPS roots already point to, so afterwards the roots are taken as serialized in the JPS model.
+ *
+ * Returns `null` when some compiled root still cannot be resolved, in which case the caller skips the dependency and the
+ * missing roots are reported as unresolved.
+ */
+private fun resolveLibraryRoots(
+    library: JpsLibrary,
+    virtualFileUrlManager: VirtualFileUrlManager,
+    progress: WorkspaceImportProgressReporter,
+    repositoryManager: Lazy<ArtifactRepositoryManager>,
+): List<LibraryRoot>? {
+    val compiledUrls = library.getRootUrls(JpsOrderRootType.COMPILED)
+
+    if (compiledUrls.any { !Path.of(JpsPathUtil.urlToPath(it)).exists() }) {
+        library.mavenRepositoryDescriptor()?.let { descriptor ->
+            downloadFromMavenRepository(repositoryManager.value, descriptor)
+        }
+    }
+
+    val missingCompiled = compiledUrls.filter { !Path.of(JpsPathUtil.urlToPath(it)).exists() }
+    if (missingCompiled.isNotEmpty()) {
+        missingCompiled.forEach(progress::onUnresolvedDependency)
+        return null
+    }
+
+    return buildList {
+        compiledUrls.mapTo(this) { url ->
+            LibraryRoot(virtualFileUrlManager.getOrCreateFromUrl(url), LibraryRootTypeId.COMPILED)
+        }
+        library.getRootUrls(JpsOrderRootType.SOURCES).mapTo(this) { url ->
+            LibraryRoot(virtualFileUrlManager.getOrCreateFromUrl(url), LibraryRootTypeId.SOURCES)
+        }
+    }
+}
+
+/** Returns the Maven coordinates of [this] library if it is a resolvable Maven repository library, otherwise `null`. */
+private fun JpsLibrary.mavenRepositoryDescriptor(): JpsMavenRepositoryLibraryDescriptor? =
+    asTyped(JpsRepositoryLibraryType.INSTANCE)?.properties?.data?.takeIf { it.mavenId != null }
+
+/**
+ * Resolves [descriptor] (and its transitive dependencies) from the configured Maven repositories, downloading the
+ * artifacts into the local Maven repository as a side effect. Failures are logged and swallowed; the caller then falls
+ * back to reporting the library as unresolved.
+ */
+private fun downloadFromMavenRepository(
+    repositoryManager: ArtifactRepositoryManager,
+    descriptor: JpsMavenRepositoryLibraryDescriptor,
+) {
+    try {
+        LOG.info("Library is missing locally, downloading from Maven repositories: ${descriptor.mavenId}")
+        repositoryManager.resolveDependency(
+            descriptor.groupId,
+            descriptor.artifactId,
+            descriptor.version,
+            descriptor.isIncludeTransitiveDependencies,
+            descriptor.excludedDependencies,
+        )
+    }
+    catch (e: ProcessCanceledException) {
+        throw e
+    }
+    catch (e: Exception) {
+        LOG.warn("Failed to download library '${descriptor.mavenId}' from Maven repositories", e)
+    }
+}
+
+/**
+ * Creates an [ArtifactRepositoryManager] that resolves against the project's local Maven repository and the default
+ * remote repositories (Maven Central, JBoss). Downloaded artifacts are placed into the local repository, matching the
+ * macro-expanded paths the JPS library roots point to.
+ */
+// ArtifactRepositoryManager only accepts a java.io.File for the local repository path.
+@Suppress("IO_FILE_USAGE")
+private fun createArtifactRepositoryManager(): ArtifactRepositoryManager =
+    ArtifactRepositoryManager(Path.of(JpsMavenSettings.getMavenRepositoryPath()).toFile(), ProgressConsumer.DEAF)
 
 /**
  * Returns linked external project directories paired with the importer that should handle them.

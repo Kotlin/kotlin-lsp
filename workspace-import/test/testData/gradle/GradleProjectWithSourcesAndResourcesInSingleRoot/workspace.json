@@ -160,10 +160,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-engine/5.10.0/#####/junit-jupiter-engine-5.10.0.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-engine/5.10.0/#####/junit-jupiter-engine-5.10.0-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -244,10 +240,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-engine/1.10.0/#####/junit-platform-engine-1.10.0.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-engine/1.10.0/#####/junit-platform-engine-1.10.0-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {
@@ -265,10 +257,6 @@
             "roots": [
                 {
                     "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-launcher/1.10.0/#####/junit-platform-launcher-1.10.0.jar"
-                },
-                {
-                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-launcher/1.10.0/#####/junit-platform-launcher-1.10.0-sources.jar",
-                    "type": "SOURCES"
                 }
             ],
             "properties": {

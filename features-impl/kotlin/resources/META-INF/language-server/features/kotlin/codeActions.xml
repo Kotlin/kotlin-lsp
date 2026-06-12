@@ -22,7 +22,7 @@
     <applicationService serviceImplementation="org.jetbrains.kotlin.idea.codeinsight.api.applicators.fixes.KotlinQuickFixService"/>
 
     <applicationService
-            serviceInterface="org.jetbrains.kotlin.idea.k2.codeinsight.inspections.PackageDirectoryMismatchInspection$EmptyPackageHighlightingFallback"
-            serviceImplementation="org.jetbrains.kotlin.idea.k2.codeinsight.inspections.PackageDirectoryMismatchInspection$EmptyPackageHighlightingFallback$FirstDeclarationName"/>
+            serviceInterface="org.jetbrains.kotlin.idea.codeInsight.inspections.PackageDirectoryMismatchInspection$EmptyPackageHighlightingFallback"
+            serviceImplementation="org.jetbrains.kotlin.idea.codeInsight.inspections.PackageDirectoryMismatchInspection$EmptyPackageHighlightingFallback$FirstDeclarationName"/>
   </extensions>
 </idea-plugin>

@@ -3,7 +3,6 @@
     <module name="language-server.api.features.impl.common"/>
     <module name="language-server.api.features.impl.java-base"/>
 
-    <module name="kotlin.code-insight.inspections.shared"/>
     <module name="kotlin.highlighting.shared"/>
     <module name="intellij.kotlin.analysis.platform"/>
     <module name="intellij.kotlin.base.analysis.platform"/>

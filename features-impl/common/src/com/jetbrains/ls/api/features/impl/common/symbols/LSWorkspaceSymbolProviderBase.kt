@@ -7,6 +7,7 @@ import com.intellij.navigation.ChooseByNameContributorEx2
 import com.intellij.navigation.GotoClassContributor
 import com.intellij.navigation.NavigationItem
 import com.intellij.openapi.application.readAction
+import com.intellij.util.Processor
 import com.intellij.util.indexing.FindSymbolParameters
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
@@ -64,33 +65,58 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
         // collecting into a set to deduplicate names that appear in multiple indices
         // (e.g. a field name present in both FIELDS and RECORD_COMPONENTS for Java records).
         val names: Set<String> = readAction {
-            buildSet {
-                when (contributor) {
-                    is ChooseByNameContributorEx2 -> contributor.processNames({ add(it); true }, parameters)
-                    is ChooseByNameContributorEx -> contributor.processNames({ add(it); true }, searchScope, /* filter = */ null)
-                    else -> addAll(contributor.getNames(project, /* includeNonProjectItems = */ true))
-                }
+            when (contributor) {
+                is ChooseByNameContributorEx2 -> NameCollector(shortName).let { contributor.processNames(it, parameters); it.result }
+
+                is ChooseByNameContributorEx -> NameCollector(shortName).let { contributor.processNames(it, searchScope, /* filter = */ null); it.result }
+
+                else -> contributor.getNames(project, /* includeNonProjectItems = */ true)
+                    .filter { name -> isApplicableName(name, shortName) }
+                    .toSet()
             }
         }
-        if (names.isEmpty()) return
         for (name in names) {
-            if (shortName.isEmpty() || name.contains(shortName, ignoreCase = true)) {
-                val items = readAction {
-                    val result = mutableListOf<NavigationItem>()
-                    when (contributor) {
-                        is ChooseByNameContributorEx -> contributor.processElementsWithName(name, result::add, parameters)
-                        else -> result.addAll(contributor.getItemsByName(name, shortName, project, /* includeNonProjectItems = */ true))
-                    }
-                    if (qualifiedName != null && contributor is GotoClassContributor) {
-                        result.filter { contributor.getQualifiedName(it)?.contains(qualifiedName, ignoreCase = true) == true }
-                    } else {
-                        result
-                    }
+            val items = readAction {
+                val result = mutableListOf<NavigationItem>()
+                when (contributor) {
+                    is ChooseByNameContributorEx -> contributor.processElementsWithName(name, result::add, parameters)
+                    else -> result.addAll(contributor.getItemsByName(name, shortName, project, /* includeNonProjectItems = */ true))
                 }
-                for (item in items) {
-                    readAction { createWorkspaceSymbol(item, contributor, qualifiedName != null) }?.let { channel.send(it) }
+                if (qualifiedName != null && contributor is GotoClassContributor) {
+                    result.filter { contributor.getQualifiedName(it)?.contains(qualifiedName, ignoreCase = true) == true }
+                } else {
+                    result
+                }
+            }
+            for (item in items) {
+                readAction { createWorkspaceSymbol(item, contributor, qualifiedName != null) }?.let {
+                    channel.send(it)
                 }
             }
         }
+    }
+
+    private class NameCollector(private val shortName: String) : Processor<String> {
+        val result: Set<String>
+            field = mutableSetOf()
+
+        override fun process(name: String?): Boolean {
+            if (name == null) return true
+            if (isApplicableName(name, shortName)) {
+                result.add(name)
+            }
+            return result.size < NAVIGATION_ITEM_LIMIT
+        }
+    }
+
+    companion object {
+        /**
+         * Maximum number of names that one contributor can provide.
+         * NB: for 1 name there could be multiple [NavigationItem],
+         * but usually their size is not too big
+         */
+        private const val NAVIGATION_ITEM_LIMIT = 1000
+
+        private fun isApplicableName(name: String, shortName: String) = shortName.isEmpty() || name.contains(shortName, ignoreCase = true)
     }
 }

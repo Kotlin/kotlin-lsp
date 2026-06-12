@@ -7,43 +7,43 @@ import com.jetbrains.ls.api.features.impl.common.diagnostics.BlacklistEntry
 internal val kotlinInspectionBlacklist = Blacklist(
     // Local inspections
     BlacklistEntry.Class(
-        fqcn = "org.jetbrains.kotlin.idea.k2.codeinsight.inspections.RemoveRedundantQualifierNameInspection",
+        fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.RemoveRedundantQualifierNameInspection",
         reason = "LSP-703",
     ),
     BlacklistEntry.Class(
-        fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.shared.KotlinUnusedImportInspection",
+        fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.KotlinUnusedImportInspection",
         reason = "LSP-704",
     ),
     BlacklistEntry.Class(
-        fqcn = "org.jetbrains.kotlin.idea.k2.codeinsight.inspections.diagnosticBased.UnusedVariableInspection",
+        fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.diagnosticBased.UnusedVariableInspection",
         reason = "LSP-705",
     ),
     BlacklistEntry.Class(
-        fqcn = "org.jetbrains.kotlin.idea.k2.codeinsight.inspections.diagnosticBased.KotlinUnreachableCodeInspection",
+        fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.diagnosticBased.KotlinUnreachableCodeInspection",
         reason = "LSP-706",
     ),
     BlacklistEntry.Class(
-        fqcn = "org.jetbrains.kotlin.idea.k2.codeinsight.inspections.RemoveExplicitTypeArgumentsInspection",
+        fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.RemoveExplicitTypeArgumentsInspection",
         reason = "LSP-707",
     ),
     BlacklistEntry.Class(
-        fqcn = "org.jetbrains.kotlin.idea.k2.codeinsight.inspections.K2MemberVisibilityCanBePrivateInspection",
+        fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.K2MemberVisibilityCanBePrivateInspection",
         reason = "LSP-708",
     ),
     BlacklistEntry.Class(
-        fqcn = "org.jetbrains.kotlin.idea.k2.codeinsight.inspections.diagnosticBased.VariableNeverReadInspection",
+        fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.diagnosticBased.VariableNeverReadInspection",
         reason = "LSP-709",
     ),
     BlacklistEntry.Class(
-        fqcn = "org.jetbrains.kotlin.idea.k2.codeinsight.inspections.diagnosticBased.AssignedValueIsNeverReadInspection",
+        fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.diagnosticBased.AssignedValueIsNeverReadInspection",
         reason = "LSP-710",
     ),
     BlacklistEntry.Class(
-        fqcn = "org.jetbrains.kotlin.idea.k2.codeinsight.inspections.PublicApiImplicitTypeInspection",
+        fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.PublicApiImplicitTypeInspection",
         reason = "LSP-711",
     ),
     BlacklistEntry.Class(
-        fqcn = "org.jetbrains.kotlin.idea.k2.codeinsight.inspections.UnusedSymbolInspection",
+        fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.UnusedSymbolInspection",
         reason = "LSP-1005",
     ),
     BlacklistEntry.SuperClass(
@@ -58,15 +58,15 @@ internal val kotlinInspectionBlacklist = Blacklist(
 
 internal val kotlinQuickFixBlacklist = Blacklist(
     BlacklistEntry.Class(
-        fqcn = $$"org.jetbrains.kotlin.idea.k2.codeinsight.inspections.PackageDirectoryMismatchInspection$MoveFileToPackageFix",
+        fqcn = $$"org.jetbrains.kotlin.idea.codeInsight.inspections.PackageDirectoryMismatchInspection$MoveFileToPackageFix",
         reason = "LSP-582",
     ),
     BlacklistEntry.Class(
-        fqcn = $$"org.jetbrains.kotlin.idea.k2.codeinsight.inspections.PackageDirectoryMismatchInspection$ChangePackageFix",
+        fqcn = $$"org.jetbrains.kotlin.idea.codeInsight.inspections.PackageDirectoryMismatchInspection$ChangePackageFix",
         reason = "LSP-583",
     ),
     BlacklistEntry.Class(
-        fqcn = $$"org.jetbrains.kotlin.idea.k2.codeinsight.inspections.EnumValuesSoftDeprecateInspection$K2ReplaceFix",
+        fqcn = $$"org.jetbrains.kotlin.idea.codeInsight.inspections.EnumValuesSoftDeprecateInspection$K2ReplaceFix",
         reason = "LSP-950",
     ),
     BlacklistEntry.Class(

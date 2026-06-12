@@ -62,19 +62,21 @@ class Renamer internal constructor(
 
     private fun initUsagesAndRenamers(): Array<UsageInfo> {
         val result = mutableListOf<UsageInfo>()
-        val usages = RenameUtil.findUsages(
-            primaryElement, newName, refactoringScope,
-            searchInComments, searchTextOccurrences, allRenames
-        )
-        val usagesList = listOf(*usages)
-        result.addAll(usagesList)
 
-        for (factory in AutomaticRenamerFactory.EP_NAME.extensionList) {
-            if (factory.getOptionName() == null && factory.isApplicable(primaryElement)) {
-                renamers.add(factory.createRenamer(primaryElement, newName, usagesList))
+        for (element in allRenames.keys) {
+            val usages = RenameUtil.findUsages(
+                element, newName, refactoringScope,
+                searchInComments, searchTextOccurrences, allRenames
+            )
+            val usagesList = listOf(*usages)
+            result.addAll(usagesList)
+
+            for (factory in AutomaticRenamerFactory.EP_NAME.extensionList) {
+                if (factory.getOptionName() == null && factory.isApplicable(primaryElement)) {
+                    renamers.add(factory.createRenamer(primaryElement, newName, usagesList))
+                }
             }
         }
-
         return UsageViewUtil.removeDuplicatedUsages(result.toTypedArray<UsageInfo>())
     }
 

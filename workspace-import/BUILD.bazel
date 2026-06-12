@@ -65,6 +65,7 @@ jvm_library(
         "@lib//:kotlin-gradle-plugin-idea-proto",
         "//language-server/analyzer.kotlin",
         "//language-server/api.impl.analyzer",
+        "@community//aether-dependency-resolver",
     ],
 )
 
@@ -111,6 +112,7 @@ jvm_library(
         "//libraries/gradle-tooling:gradle-tooling_test_lib",
         "//language-server/analyzer.kotlin:analyzer.kotlin_test_lib",
         "//language-server/api.impl.analyzer:api.impl.analyzer_test_lib",
+        "@community//aether-dependency-resolver:aether-dependency-resolver_test_lib",
     ],
 )
 ### auto-generated section `build language-server.workspace-import` end

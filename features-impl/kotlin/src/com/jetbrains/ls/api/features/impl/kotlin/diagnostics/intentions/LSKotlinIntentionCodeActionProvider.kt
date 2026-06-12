@@ -33,11 +33,11 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.encodeToJsonElement
 import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.idea.codeinsight.api.applicable.intentions.KotlinApplicableModCommandAction
-import org.jetbrains.kotlin.idea.k2.codeinsight.intentions.AddNameToArgumentIntention
-import org.jetbrains.kotlin.idea.k2.codeinsight.intentions.AddNamesToCallArgumentsIntention
-import org.jetbrains.kotlin.idea.k2.codeinsight.intentions.AddNamesToFollowingArgumentsIntention
-import org.jetbrains.kotlin.idea.k2.codeinsight.intentions.MovePropertyToConstructorIntention
-import org.jetbrains.kotlin.idea.k2.codeinsight.intentions.SpecifyTypeExplicitlyIntention
+import org.jetbrains.kotlin.idea.codeinsight.intentions.AddNameToArgumentIntention
+import org.jetbrains.kotlin.idea.codeinsight.intentions.AddNamesToCallArgumentsIntention
+import org.jetbrains.kotlin.idea.codeinsight.intentions.AddNamesToFollowingArgumentsIntention
+import org.jetbrains.kotlin.idea.codeinsight.intentions.MovePropertyToConstructorIntention
+import org.jetbrains.kotlin.idea.codeinsight.intentions.SpecifyTypeExplicitlyIntention
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtFile
 
