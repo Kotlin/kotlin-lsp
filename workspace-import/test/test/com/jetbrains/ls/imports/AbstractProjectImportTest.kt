@@ -25,6 +25,7 @@ import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.LSP_GRADLE_PROJECT
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
 import com.jetbrains.ls.imports.jps.JpsWorkspaceImporter
 import com.jetbrains.ls.imports.json.DependencyData
+import com.jetbrains.ls.imports.json.LibraryRootData
 import com.jetbrains.ls.imports.json.WorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData
 import com.jetbrains.ls.imports.json.toJson
@@ -333,8 +334,12 @@ abstract class AbstractProjectImportTest {
             )
         },
         libraries = libraries.sortedBy { it.name }
-            .map { library -> library.copy(roots = library.roots.sortedBy { root -> root.path + root.type }) }
+            .map { library -> library.copy(roots = library.roots.sortedBy { it.rootSortKey() }) }
     )
+
+    // Sort by jar file name, not the OS-specific absolute path, so the order matches across platforms.
+    private fun LibraryRootData.rootSortKey(): String =
+        path.replace('\\', '/').substringAfterLast('/') + " " + type
 
     private fun DependencyData.compare(other: DependencyData): Int {
         if (this is DependencyData.Library && other is DependencyData.Library) {
