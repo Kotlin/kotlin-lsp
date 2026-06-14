@@ -6,7 +6,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.jetbrains.analyzer.bootstrap.AnalyzerContainerBuilder
 import com.jetbrains.analyzer.java.initJavaApplicationContainer
-import com.jetbrains.analyzer.java.initJavaProjectContainer
 import com.jetbrains.analyzer.java.javaPlugin
 import com.jetbrains.ls.api.core.util.scheme
 import com.jetbrains.ls.api.core.util.uri
@@ -67,6 +66,5 @@ private object JavaBaseWorkspaceComponent : WorkspaceComponent<Unit> {
         state: Unit,
         contextKind: AnalyzerContextKind,
     ) {
-        initJavaProjectContainer(project)
     }
 }
