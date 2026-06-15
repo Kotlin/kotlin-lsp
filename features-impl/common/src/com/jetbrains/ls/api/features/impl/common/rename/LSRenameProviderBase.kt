@@ -1,6 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.rename
 
+import com.intellij.codeInsight.TargetElementUtil
 import com.intellij.model.psi.PsiSymbolService
 import com.intellij.model.psi.impl.targetSymbols
 import com.intellij.openapi.application.readAction
@@ -57,7 +58,8 @@ abstract class LSRenameProviderBase(
 
     open fun extractTargets(psiFile: PsiFile, offset: Int): List<PsiElement> {
         val psiSymbolService = PsiSymbolService.getInstance()
-        return targetSymbols(psiFile, offset).mapNotNull { psiSymbolService.extractElementFromSymbol(it) }
+        val adjustedOffset = TargetElementUtil.adjustOffset(psiFile, psiFile.fileDocument, offset)
+        return targetSymbols(psiFile, adjustedOffset).mapNotNull { psiSymbolService.extractElementFromSymbol(it) }
     }
 
     context(server: LSServer, handlerContext: LspHandlerContext)
