@@ -31,8 +31,7 @@ class LSCommonReferencesProvider(
             readAction {
                 val virtualFile = params.findVirtualFile() ?: return@readAction
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction
-                val document = virtualFile.findDocument() ?: return@readAction
-                val targets = psiFile.getTargetsAtPosition(params.position, document, targetKinds)
+                val targets = psiFile.getTargetsAtPosition(params.position, targetKinds)
                 if (targets.isEmpty()) return@readAction
 
                 val findUsagesManager = FindUsagesManager(project)

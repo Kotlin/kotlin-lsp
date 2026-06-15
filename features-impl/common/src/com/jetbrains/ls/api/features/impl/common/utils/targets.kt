@@ -1,19 +1,21 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.utils
 
+import com.intellij.codeInsight.TargetElementUtil
 import com.intellij.lang.documentation.impl.documentationTargets
 import com.intellij.model.psi.PsiSymbolService
 import com.intellij.model.psi.impl.targetDeclarationAndReferenceSymbols
-import com.intellij.openapi.editor.Document
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.lsp.protocol.Position
 
-fun PsiFile.getTargetsAtPosition(position: Position, document: Document, targetKinds: Set<TargetKind>): List<PsiElement> {
+fun PsiFile.getTargetsAtPosition(position: Position, targetKinds: Set<TargetKind>): List<PsiElement> {
+    val document = fileDocument
     val offset = document.offsetByPosition(position)
+    val adjustedOffset = TargetElementUtil.adjustOffset(this, document, offset)
     val psiSymbolService = PsiSymbolService.getInstance()
-    val (declared, referenced) = targetDeclarationAndReferenceSymbols(this, offset)
+    val (declared, referenced) = targetDeclarationAndReferenceSymbols(this, adjustedOffset)
     when {
         TargetKind.REFERENCE in targetKinds && referenced.isNotEmpty() -> {
             return referenced.mapNotNull { psiSymbolService.extractElementFromSymbol(it) }

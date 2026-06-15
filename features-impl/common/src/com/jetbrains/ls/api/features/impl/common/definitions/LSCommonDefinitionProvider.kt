@@ -28,8 +28,7 @@ class LSCommonDefinitionProvider(
             readAction {
                 val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
-                val document = virtualFile.findDocument() ?: return@readAction emptyList()
-                val targets = psiFile.getTargetsAtPosition(params.position, document, targetKinds)
+                val targets = psiFile.getTargetsAtPosition(params.position, targetKinds)
 
                 targets.mapNotNull { psiElement ->
                     psiElement.getLspLocationForDefinition()
