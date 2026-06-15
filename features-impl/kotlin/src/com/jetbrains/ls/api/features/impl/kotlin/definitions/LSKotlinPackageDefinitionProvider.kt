@@ -2,7 +2,6 @@
 package com.jetbrains.ls.api.features.impl.kotlin.definitions
 
 import com.intellij.openapi.application.readAction
-import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiPackage
 import com.intellij.psi.search.EverythingGlobalScope
@@ -11,9 +10,10 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.isFromLibrary
-import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.features.definition.LSDefinitionProvider
+import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
+import com.jetbrains.ls.api.features.impl.common.utils.getTargetsAtPosition
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.lsp.implementation.LspHandlerContext
@@ -27,6 +27,7 @@ import org.jetbrains.kotlin.idea.stubindex.KotlinExactPackagesIndex
 
 internal object LSKotlinPackageDefinitionProvider : LSDefinitionProvider {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSKotlinLanguage)
+    private val targetKinds = setOf(TargetKind.REFERENCE)
 
     context(server: LSServer, handlerContext: LspHandlerContext)
     override fun provideDefinitions(params: DefinitionParams): Flow<Location> = flow {
@@ -35,18 +36,17 @@ internal object LSKotlinPackageDefinitionProvider : LSDefinitionProvider {
             readAction {
                 val virtualFile = uri.findVirtualFile() ?: return@readAction emptyList()
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
-                val document = virtualFile.findDocument() ?: return@readAction emptyList()
-                val offset = document.offsetByPosition(params.position)
-                val reference = psiFile.findReferenceAt(offset) ?: return@readAction emptyList()
-                val psiPackage = (reference.resolve() as? PsiPackage) ?: return@readAction emptyList()
+                val targets = psiFile.getTargetsAtPosition(params.position, targetKinds)
 
-                // A hackish replacement for PsiPackage.directories which is not working because of the missing logic in FakePackageIndexImpl.
-                StubIndex.getInstance()
-                    .getContainingFilesIterator(KotlinExactPackagesIndex.NAME, psiPackage.qualifiedName, project, EverythingGlobalScope())
-                    .asSequence()
-                    .filterNot { it.isFromLibrary() }
-                    .mapNotNull { it.parent?.uri?.let { Location(DocumentUri(it), Range.BEGINNING) } }
-                    .toList()
+                targets.filterIsInstance<PsiPackage>().flatMap { pkg ->
+                    // A hackish replacement for PsiPackage.directories which is not working because of the missing logic in FakePackageIndexImpl.
+                    StubIndex.getInstance()
+                        .getContainingFilesIterator(KotlinExactPackagesIndex.NAME, pkg.qualifiedName, project, EverythingGlobalScope())
+                        .asSequence()
+                        .filterNot { it.isFromLibrary() }
+                        .mapNotNull { it.parent?.uri?.let { Location(DocumentUri(it), Range.BEGINNING) } }
+                        .toList()
+                }
             }
         }.forEach { emit(it) }
     }
