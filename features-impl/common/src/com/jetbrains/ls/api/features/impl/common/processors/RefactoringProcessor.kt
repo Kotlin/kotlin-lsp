@@ -88,9 +88,9 @@ internal fun execute(processor: RefactoringProcessor) : Map<FileUrl, Pair<PsiFil
     return originals
 }
 
-  context(_: LSAnalysisContext)
+context(_: LSAnalysisContext)
 private fun findUsages(processor: RefactoringProcessor): Array<UsageInfo>? {
-      val initialUsages = runReadActionInBgt(project, processor::findUsages) ?: return null
+    val initialUsages = runReadActionInBgt(project, processor::findUsages) ?: return null
 
     val conflicts = MultiMap<PsiElement, String>()
     val refUsages = create(initialUsages)
