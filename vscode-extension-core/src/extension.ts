@@ -5,7 +5,7 @@ import {
     type ExtensionContext,
     ExtensionMode,
     extensions,
-    type OutputChannel,
+    type LogOutputChannel,
     Uri,
     window,
     workspace,
@@ -43,13 +43,13 @@ interface ExtensionPackageJson {
 }
 
 let _context: ExtensionContext | undefined;
-let _outputChannel: OutputChannel | undefined;
+let _outputChannel: LogOutputChannel | undefined;
 
 export function getContext(): ExtensionContext {
     return _context!;
 }
 
-export function getOutputChannel(): OutputChannel {
+export function getOutputChannel(): LogOutputChannel {
     return _outputChannel!;
 }
 
@@ -152,10 +152,10 @@ export async function activateExtension(
 
 function initOutputChannel(context: ExtensionContext): void {
     if (context.extensionMode === ExtensionMode.Test) {
-        return
+        return;
     }
 
     const extension = extensions.getExtension(context.extension.id);
     const pkg = extension?.packageJSON as ExtensionPackageJson | undefined;
-    _outputChannel = window.createOutputChannel(pkg?.displayName ?? 'JetBrains LSP');
+    _outputChannel = window.createOutputChannel(pkg?.displayName ?? 'JetBrains LSP', { log: true });
 }
