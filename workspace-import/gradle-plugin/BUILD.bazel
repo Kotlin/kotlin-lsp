@@ -46,6 +46,7 @@ jvm_library(
         ["resources/**/*"],
     ),
     visibility = ["//visibility:public"],
+    runtime_deps = ["//libraries/gradle-tooling"],
     deps = [
         # do not sort,
         "@lib//:kotlin-stdlib",
@@ -80,6 +81,7 @@ jvm_library(
         "@community//libraries/groovy",
         "@community//libraries/groovy:groovy_test_lib",
         "@ultimate_lib//:gradle-provided",
+        "//libraries/gradle-tooling:gradle-tooling_test_lib",
         "@community//libraries/jspecify",
         "@community//libraries/jspecify:jspecify_test_lib",
         "@community//libraries/kotlinx/serialization/core",
@@ -90,7 +92,8 @@ jvm_library(
         "@lib//:slf4j-jdk14",
         "@community//libraries/junit5",
         "@community//libraries/junit5:junit5_test_lib",
-        "@lib//:kotlin-test",
+        "@community//libraries/kotlin/test:libraries-kotlinTest",
+        "@community//libraries/kotlin/test:libraries-kotlinTest_test_lib",
         "@lib//:kotlin-test-junit5",
     ],
 )

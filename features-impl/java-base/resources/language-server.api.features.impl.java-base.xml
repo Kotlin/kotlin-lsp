@@ -1,10 +1,12 @@
 <idea-plugin visibility="public">
   <dependencies>
-    <module name="language-server.api.features.impl.common"/>
-
-    <module name="intellij.java.impl"/>
+    <!-- region Generated dependencies - run `Generate Product Layouts` to regenerate -->
     <module name="intellij.java.backend"/>
-
+    <module name="intellij.java.frontback.psi"/>
+    <module name="intellij.java.impl"/>
+    <module name="intellij.java.psi"/>
     <module name="language-server.analyzer.java"/>
+    <module name="language-server.api.features.impl.common"/>
+    <!-- endregion -->
   </dependencies>
 </idea-plugin>

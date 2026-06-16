@@ -32,6 +32,7 @@
     <orderEntry type="library" scope="PROVIDED" name="javax-inject" level="project" />
     <orderEntry type="module" module-name="intellij.libraries.groovy" scope="PROVIDED" />
     <orderEntry type="library" scope="PROVIDED" name="Gradle" level="project" />
+    <orderEntry type="module" module-name="intellij.libraries.gradle.tooling" scope="RUNTIME" />
     <orderEntry type="library" name="kotlin-gradle-plugin-idea" level="project" />
     <orderEntry type="library" name="kotlin-tooling-core" level="project" />
     <orderEntry type="library" name="kotlin-gradle-plugin-idea-proto" level="project" />
@@ -43,7 +44,7 @@
     <orderEntry type="library" scope="PROVIDED" name="slf4j-api" level="project" />
     <orderEntry type="library" scope="TEST" name="slf4j-jdk14" level="project" />
     <orderEntry type="module" module-name="intellij.libraries.junit5" scope="TEST" />
-    <orderEntry type="library" scope="TEST" name="kotlin-test" level="project" />
+    <orderEntry type="module" module-name="intellij.libraries.kotlinTest" scope="TEST" />
     <orderEntry type="library" scope="TEST" name="kotlin-test-junit5" level="project" />
   </component>
 </module>
