@@ -8,6 +8,7 @@
     "./DocumentParser": "./src/DocumentParser.ts",
     "./handleKeyType": "./src/handleKeyType.ts",
     "./testing/keyHandlerTestUtils": "./src/keyHandlerTestUtils.ts",
+    "./testing/archiveExtraction": "./src/testing/archiveExtraction.ts",
     "./keyHandlerUtils": "./src/keyHandlerUtils.ts"
   },
   "scripts": {
