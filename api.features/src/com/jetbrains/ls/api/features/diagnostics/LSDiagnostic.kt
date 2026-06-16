@@ -4,6 +4,7 @@ package com.jetbrains.ls.api.features.diagnostics
 import com.intellij.platform.diagnostic.telemetry.Scope
 import com.intellij.platform.diagnostic.telemetry.TelemetryManager
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.diagnosticsEnabled
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.partialResults.LSConcurrentResponseHandler
 import com.jetbrains.ls.api.features.utils.traceProvider
@@ -18,7 +19,7 @@ object LSDiagnostic {
 
     context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
     suspend fun getDiagnostics(params: DocumentDiagnosticParams): DocumentDiagnosticReport {
-        if (server.indexingProgress.value !is LSServer.IndexingProgress.UpToDate) {
+        if (!server.indexingProgress.value.diagnosticsEnabled) {
             return DocumentDiagnosticReport.EMPTY_FULL
         }
 
@@ -46,7 +47,7 @@ object LSDiagnostic {
 
     context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
     suspend fun getCompilationErrors(params: DocumentDiagnosticParams): DocumentDiagnosticReport {
-        if (server.indexingProgress.value !is LSServer.IndexingProgress.UpToDate) {
+        if (!server.indexingProgress.value.diagnosticsEnabled) {
             return DocumentDiagnosticReport.EMPTY_FULL
         }
 
