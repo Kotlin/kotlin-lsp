@@ -50,12 +50,7 @@ object LSDiagnostic {
     suspend fun getCompilationErrors(params: DocumentDiagnosticParams): DocumentDiagnosticReport =
         when (server.indexingProgress.value) {
             is LSServer.IndexingProgress.Running ->
-                DocumentDiagnosticReport(
-                    kind = DocumentDiagnosticReportKind.Full,
-                    resultId = null,
-                    items = emptyList(),
-                    relatedDocuments = null,
-                )
+                DocumentDiagnosticReport.EMPTY_FULL
 
             LSServer.IndexingProgress.UpToDate -> {
                 val diagnostics = LSConcurrentResponseHandler.respondDirectlyWithResultsCollectedConcurrently(
