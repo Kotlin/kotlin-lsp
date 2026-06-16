@@ -93,6 +93,7 @@ internal object LSKotlinIntentionCodeActionProvider : LSCodeActionProvider {
         }.forEach { codeAction -> emit(codeAction) }
     }
 
+    context(server: LSServer)
     private fun toCodeAction(
         action: KotlinApplicableModCommandAction<*, *>,
         actionContext: ActionContext,
@@ -113,7 +114,7 @@ internal object LSKotlinIntentionCodeActionProvider : LSCodeActionProvider {
                 ActionContext(child.project, ktPsiFile, offset, selection, null)
             }
             val modCommand = modCommandAction.perform(actionContext)
-            val modCommandData = ModCommandData.from(modCommand) ?: return null
+            val modCommandData = ModCommandData.from(modCommand, server) ?: return null
             return CodeAction(
                 title = presentation.name,
                 kind = CodeActionKind.QuickFix,

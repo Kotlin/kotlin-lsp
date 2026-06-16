@@ -21,6 +21,7 @@ import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
+import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionDiagnosticProvider.Companion.diagnosticSource
 import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
 
@@ -85,12 +86,13 @@ internal class LSInspectionManager(
             .filterNot { inspectionBlacklist.containsSuperClass(it) }
     }
 
+    context(server: LSServer)
     internal fun createDiagnosticData(descriptor: ProblemDescriptor, project: Project): SimpleDiagnosticData {
         return SimpleDiagnosticData(
             diagnosticSource = diagnosticSource,
             fixes = descriptor.fixes.orEmpty().mapNotNull { quickFix ->
                 val modCommand = getModCommand(quickFix, project, descriptor) ?: return@mapNotNull null
-                val modCommandData = ModCommandData.from(modCommand) ?: return@mapNotNull null
+                val modCommandData = ModCommandData.from(modCommand, server) ?: return@mapNotNull null
                 SimpleDiagnosticQuickfixData(name = quickFix.name, modCommandData = modCommandData)
             },
         )

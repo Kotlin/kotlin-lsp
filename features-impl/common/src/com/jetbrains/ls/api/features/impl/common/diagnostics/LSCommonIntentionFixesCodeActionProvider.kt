@@ -71,7 +71,8 @@ class LSCommonIntentionFixesCodeActionProvider(
             }
         }.forEach { codeAction -> emit(codeAction) }
     }
-    
+
+    context(server: LSServer)
     private fun infoInspections(psiFile: PsiFile, offset: Int, psiElement: PsiElement?): Sequence<CodeAction> {
         if (psiElement == null) return emptySequence()
         val project = psiFile.project
@@ -122,6 +123,7 @@ class LSCommonIntentionFixesCodeActionProvider(
         return result.asSequence()
     }
 
+    context(server: LSServer)
     private fun intentions(psiFile: PsiFile, offset: Int): Sequence<CodeAction> {
         val actionContext = run {
             val selection = TextRange(offset, offset) // empty selection
@@ -162,7 +164,7 @@ class LSCommonIntentionFixesCodeActionProvider(
                 }.getOrHandleException {
                     LOG.warn("Failed to perform mod command action $modCommandAction", it)
                 } ?: return@mapNotNull null
-                val modCommandData = ModCommandData.from(modCommand) ?: return@mapNotNull null
+                val modCommandData = ModCommandData.from(modCommand, server) ?: return@mapNotNull null
 
                 CodeAction(
                     title = presentation.name,

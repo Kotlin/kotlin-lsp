@@ -15,10 +15,13 @@ import com.intellij.modcommand.ModRegisterTabOut
 import com.intellij.modcommand.ModStartTemplate
 import com.intellij.modcommand.ModUpdateFileText
 import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.impl.DocumentImpl
+import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.findDocument
 import com.jetbrains.ls.api.core.LSAnalysisContext
+import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.intellijUriToLspUri
 import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
@@ -42,6 +45,10 @@ import com.jetbrains.lsp.protocol.WorkspaceEdit
 import kotlinx.serialization.Serializable
 import java.util.Base64
 
+private val snippetEscapeCharacters = Regex("""[\\}$]""")
+private val snippetChoiceEscapeCharacters = Regex("""[\\}$,|]""")
+private const val SNIPPET_REPLACEMENT = $$"\\\\$0"
+
 /**
  * **Note**: [ModChooseAction] cannot be modeled with [ModCommandData];
  * see [ModChooseActionChain][com.jetbrains.ls.api.features.impl.common.modcommands.ModChooseActionChain]
@@ -58,6 +65,56 @@ sealed interface ModCommandData {
     @Serializable
     data class Navigate(val fileUrl: String, val selectionStart: Int, val selectionEnd: Int, val caret: Int) : ModCommandData
 
+    @Serializable
+    data class Snippet(val fileUrl: String, val vars: List<SnippetVar> = listOf()) : ModCommandData {
+        fun add(vararg vars: SnippetVar): Snippet = copy(vars = this.vars + vars.toList())
+
+        fun toTextEdit(text: Document): TextEdit {
+            val start = vars.minOf { it.start }
+            val end = vars.maxOf { it.end }
+            val snippet = toString(text.getText(TextRange(start, end)), start)
+            return TextEdit(Range(text.positionByOffset(start), text.positionByOffset(end)), snippet = snippet)
+        }
+        
+        fun toString(text: String, delta: Int = 0): String {
+            val sortedVars = vars.sortedBy { v -> v.start }
+            var pos = 0
+            val sb = StringBuilder()
+            for (v in sortedVars) {
+                val nextPos = v.start - delta
+                sb.append(
+                    text.substring(pos, nextPos).replace(
+                        snippetEscapeCharacters,
+                        SNIPPET_REPLACEMENT
+                    )
+                ).append(v.toString(text, delta))
+                pos = v.end - delta
+            }
+            sb.append(
+                text.substring(pos).replace(
+                    snippetEscapeCharacters,
+                    SNIPPET_REPLACEMENT
+                )
+            )
+            return sb.toString()
+        }
+
+    }
+
+    @Serializable
+    data class SnippetVar(val start: Int, val end: Int, val name: Int, val choices: List<String> = listOf()) {
+        fun toString(text: String, delta: Int = 0): String {
+            return $$"${" +
+                    name +
+                    (if (start == end || !choices.isEmpty()) ""
+                    else ":" + text.substring(start - delta, end - delta).replace(snippetEscapeCharacters, SNIPPET_REPLACEMENT)) +
+                    (if (choices.isEmpty()) ""
+                    else choices.joinToString(",", "|", "|") { it.replace(snippetChoiceEscapeCharacters, SNIPPET_REPLACEMENT) }) +
+                    "}"
+        }
+
+    }
+    
     @Serializable
     data class CreateFile(val fileUrl: String, val content: Content) : ModCommandData {
         @Serializable
@@ -89,9 +146,9 @@ sealed interface ModCommandData {
     companion object {
         private val LOG = logger<ModCommandData>()
 
-        fun from(command: ModCommand): ModCommandData? = when (command) {
+        fun from(command: ModCommand, server: LSServer? = null): ModCommandData? = when (command) {
             is ModNothing -> Nothing
-            is ModCompositeCommand -> Composite(command.commands.map { from(it) ?: return null })
+            is ModCompositeCommand -> Composite(command.commands.map { from(it, server) ?: return null })
             is ModNavigate -> Navigate(command.file.url, command.selectionStart, command.selectionEnd, command.caret)
             is ModCreateFile -> CreateFile(
                 command.file.url, when (val c = command.content) {
@@ -109,11 +166,57 @@ sealed interface ModCommandData {
             // Highlighting could be important, but usually it's an additional helpful thing, not an essential one, so let's skip it for now
             is ModHighlight -> Nothing
             // Templates are not fully supported yet
-            is ModStartTemplate -> if (command.optional) Nothing else null
+            is ModStartTemplate -> when {
+                server?.initializeParams?.capabilities?.workspace?.workspaceEdit?.snippetEditSupport == true -> convertTemplate(command)
+                command.optional -> Nothing
+                else -> null
+            }
             else -> {
                 LOG.debug("Unsupported command $command")
                 null
             }
+        }
+
+        fun convertTemplate(cmd: ModStartTemplate): Snippet {
+            val vars = mutableListOf<SnippetVar>()
+            val map = mutableMapOf<String, Int>()
+            var i = 0
+            for (field in cmd.fields) {
+                when (field) {
+                    is ModStartTemplate.EndField -> {
+                        val pos = field.range.startOffset
+                        vars.add(SnippetVar(pos, pos, 0))
+                    }
+
+                    is ModStartTemplate.ExpressionField -> {
+                        val start = field.range.startOffset
+                        val end = field.range.endOffset
+                        val varName = field.varName
+                        val num = if (varName == null) ++i else map.computeIfAbsent(varName) { ++i }
+                        val lookupStrings = field.expression().staticLookupStrings
+                        vars.add(SnippetVar(start, end, num, lookupStrings))
+                    }
+
+                    is ModStartTemplate.DependantVariableField -> {
+                        //skipped, will be processed lately, after collecting variables
+                    }
+                }
+            }
+            // process DependantVariableField and pass them as SnippetVar.
+            for (field in cmd.fields) {
+                if (field !is ModStartTemplate.DependantVariableField) continue
+                val start = field.range.startOffset
+                val end = field.range.endOffset
+                val sourceNum = map[field.dependantVariableName]
+                val sourceField = cmd.fields.asSequence()
+                    .filterIsInstance<ModStartTemplate.ExpressionField>()
+                    .firstOrNull { it.varName == field.dependantVariableName }
+                // TODO: check newtext equality, see how it's implemented in LSJavaCompletionProvider
+                val isMirror = sourceNum != null && sourceField != null
+                val num = if (isMirror) sourceNum else map.computeIfAbsent(field.varName) { ++i }
+                vars.add(SnippetVar(start, end, num))
+            }
+            return Snippet(cmd.file.url, vars)
         }
     }
 }
@@ -176,6 +279,30 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient, changedFi
                     ),
                 ),
             )
+        }
+
+        is ModCommandData.Snippet -> {
+            val doc =
+                changedFiles[command.fileUrl]?.let { DocumentImpl(it) } ?: VirtualFileManager.getInstance().findFileByUrl(command.fileUrl)
+                    ?.findDocument()
+            if (doc != null) {
+                client.request(
+                    requestType = ApplyEdit,
+                    params = ApplyWorkspaceEditParams(
+                        label = "Run snippet in ${command.fileUrl}",
+                        edit = WorkspaceEdit(
+                            documentChanges = listOf(
+                                TextDocumentEdit(
+                                    textDocument = TextDocumentIdentifier(DocumentUri(command.fileUrl.intellijUriToLspUri())),
+                                    edits = listOf(
+                                        command.toTextEdit(doc)
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                )
+            }
         }
 
         is ModCommandData.UpdateFileText -> {

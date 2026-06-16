@@ -172,6 +172,7 @@ class LSCommonInspectionDiagnosticProvider(
             }
     }
 
+    context(server: LSServer)
     private fun ProblemsHolder.collectDiagnostics(
         file: VirtualFile,
         project: Project,

@@ -79,7 +79,7 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
         }.forEach { emit(it) }
     }
 
-    context(kaSession: KaSession)
+    context(server: LSServer, kaSession: KaSession)
     private fun KotlinQuickFixService.getQuickFixesAsCodeActions(
         file: KtFile,
         editor: Editor,
@@ -104,7 +104,7 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
             }
             .mapNotNull { modCommandActionChain ->
                 val modCommand = modCommandActionChain.leaf.command
-                val modCommandData = ModCommandData.from(modCommand) ?: return@mapNotNull null
+                val modCommandData = ModCommandData.from(modCommand, server) ?: return@mapNotNull null
 
                 CodeAction(
                     modCommandActionChain.combinedPresentationNames(),
