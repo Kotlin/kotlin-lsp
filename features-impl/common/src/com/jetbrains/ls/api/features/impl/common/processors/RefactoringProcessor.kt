@@ -94,7 +94,7 @@ private fun findUsages(processor: RefactoringProcessor): Array<UsageInfo>? {
 
     val conflicts = MultiMap<PsiElement, String>()
     val refUsages = create(initialUsages)
-    processor.collectConflicts(refUsages, conflicts)
+    runReadActionInBgt(project) { processor.collectConflicts(refUsages, conflicts) }
     if (!conflicts.isEmpty()) {
         val conflictData = RefactoringEventData()
         conflictData.putUserData(CONFLICTS_KEY, conflicts.values())

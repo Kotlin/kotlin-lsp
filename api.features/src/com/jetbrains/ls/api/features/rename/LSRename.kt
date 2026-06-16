@@ -3,7 +3,10 @@ package com.jetbrains.ls.api.features.rename
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.fileExtension
+import com.jetbrains.ls.api.core.util.fileName
+import com.jetbrains.ls.api.core.util.toPath
 import com.jetbrains.ls.api.features.LSConfiguration
+import com.jetbrains.ls.api.features.move.LSMoveDirectoryProvider
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.FileRename
 import com.jetbrains.lsp.protocol.RenameFilesParams
@@ -20,17 +23,63 @@ object LSRename {
     suspend fun renameFile(params: RenameFilesParams): WorkspaceEdit? {
         val fileRename = params.files.singleOrNull() ?: return null
 
-        return if (isDirectoryRename(fileRename)) {
-            // Since it is unclear what language directory is renamed, it is up to callee to decide whether he should rename the directory or not.
-            configuration.entries<LSRenameDirectoryProvider>().firstNotNullOfOrNull { it.renameDirectory(fileRename) }
-        } else {
-            configuration.entriesFor<LSRenameProvider>(fileRename.oldUri).firstNotNullOfOrNull { it.renameFile(fileRename) }
+        return when (fileRename.toOperationKind()) {
+            OperationKind.MOVE_DIRECTORY -> configuration.entries<LSMoveDirectoryProvider>().firstNotNullOfOrNull { it.moveDirectory(fileRename) }
+            OperationKind.MOVE_FILE -> null
+            OperationKind.RENAME_DIRECTORY -> {
+                // Since it is unclear what language directory is renamed, it is up to callee to decide whether he should rename the directory or not.
+                configuration.entries<LSRenameDirectoryProvider>().firstNotNullOfOrNull { it.renameDirectory(fileRename) }
+            }
+            OperationKind.RENAME_FILE -> {
+                configuration.entriesFor<LSRenameProvider>(fileRename.oldUri).firstNotNullOfOrNull { it.renameFile(fileRename) }
+            }
+            OperationKind.UNKNOWN -> null
         }
     }
 
-    private fun isDirectoryRename(rename: FileRename): Boolean {
+    private fun isDirectoryOperation(rename: FileRename): Boolean {
         val oldUri = rename.oldUri
         val newUri = rename.newUri
         return oldUri.fileExtension == null && newUri.fileExtension == null
+    }
+
+    /**
+     * Calculates the [OperationKind] based on the difference in [FileRename]
+     */
+    private fun FileRename.toOperationKind(): OperationKind {
+        return if (isRename(this)) {
+            if (isDirectoryOperation(this)) OperationKind.RENAME_DIRECTORY else OperationKind.RENAME_FILE
+        } else if (isMove(this)) {
+            if (isDirectoryOperation(this)) OperationKind.MOVE_DIRECTORY else OperationKind.MOVE_FILE
+        } else {
+            OperationKind.UNKNOWN
+        }
+    }
+
+    private fun isRename(operation: FileRename): Boolean {
+        val oldUri = operation.oldUri
+        val newUri = operation.newUri
+
+        val oldParent = oldUri.toPath()?.parent ?: return false
+        val newParent = newUri.toPath()?.parent ?: return false
+        return oldUri.fileName != newUri.fileName && oldParent == newParent
+    }
+
+    private fun isMove(operation: FileRename): Boolean {
+        val oldUri = operation.oldUri
+        val newUri = operation.newUri
+
+        val oldParent = oldUri.toPath()?.parent ?: return false
+        val newParent = newUri.toPath()?.parent ?: return false
+
+        return oldUri.fileName == newUri.fileName && oldParent != newParent
+    }
+
+    private enum class OperationKind {
+        MOVE_DIRECTORY,
+        MOVE_FILE,
+        RENAME_DIRECTORY,
+        RENAME_FILE,
+        UNKNOWN,
     }
 }

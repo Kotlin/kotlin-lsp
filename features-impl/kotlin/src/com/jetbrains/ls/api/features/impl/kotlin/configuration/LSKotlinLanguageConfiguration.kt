@@ -39,6 +39,7 @@ import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.kotlinQuickFixBlack
 import com.jetbrains.ls.api.features.impl.kotlin.hover.LSKotlinHoverProvider
 import com.jetbrains.ls.api.features.impl.kotlin.inlayHints.LSKotlinInlayHintsProvider
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
+import com.jetbrains.ls.api.features.impl.kotlin.move.LSJvmMoveDirectoryProvider
 import com.jetbrains.ls.api.features.impl.kotlin.rename.LSJvmRenameDirectoryProvider
 import com.jetbrains.ls.api.features.impl.kotlin.rename.LSKotlinRenameProvider
 import com.jetbrains.ls.api.features.impl.kotlin.semanticTokens.LSKotlinSemanticTokensProvider
@@ -79,6 +80,7 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSKotlinSignatureHelpProvider,
         LSKotlinRenameProvider,
         LSJvmRenameDirectoryProvider,
+        LSJvmMoveDirectoryProvider,
         LSCommonFormattingProvider(setOf(LSKotlinLanguage)),
         LSCommonImplementationProvider(setOf(LSKotlinLanguage)),
         LSCommonTypeDefinitionProvider(setOf(LSKotlinLanguage)),

@@ -26,6 +26,7 @@ class DirectoryMover internal constructor(
     private val targetDirectory: PsiDirectory?,
     private val searchInComments: Boolean,
     private val searchInNonJavaFiles: Boolean,
+    includeSelf: Boolean,
     private val targetDirectoryProvider: (PsiDirectory) -> TargetDirectoryWrapper,
 ) : RefactoringProcessor {
     private val manager: PsiManager = PsiManager.getInstance(project)
@@ -35,7 +36,7 @@ class DirectoryMover internal constructor(
 
     init {
         directories.forEach { dir ->
-            MoveDirectoryWithClassesProcessorUtil.collectFiles2Move(filesToMove, nestedDirsToMove, dir, dir, targetDirectoryProvider(dir))
+            MoveDirectoryWithClassesProcessorUtil.collectFiles2Move(filesToMove, nestedDirsToMove, dir, if (includeSelf) dir.parentDirectory else dir, targetDirectoryProvider(dir))
         }
     }
 
@@ -81,7 +82,22 @@ class DirectoryMover internal constructor(
                 targetDirectory = null,
                 searchInComments = false,
                 searchInNonJavaFiles = false,
+                includeSelf = false,
                 targetDirectoryProvider = { dir -> TargetDirectoryWrapper(dir.parentDirectory, context.newName) }
+            )
+        }
+
+        suspend fun create(context: MoveSingleDirectoryContext): DirectoryMover? = readAction {
+            if (!context.targetDirectory.isValid || !context.directoryToMove.isValid) return@readAction null
+
+            DirectoryMover(
+                project = context.targetDirectory.project,
+                directories = arrayOf(context.directoryToMove),
+                targetDirectory = context.targetDirectory,
+                searchInComments = false,
+                searchInNonJavaFiles = false,
+                includeSelf = true,
+                targetDirectoryProvider = { TargetDirectoryWrapper(context.targetDirectory) }
             )
         }
     }
@@ -96,3 +112,9 @@ class RenameSingleDirectoryContext(
     val directory: PsiDirectory,
     val newName: String
 ): RefactoringContext
+
+
+class MoveSingleDirectoryContext(
+    val targetDirectory: PsiDirectory,
+    val directoryToMove: PsiDirectory,
+) : RefactoringContext
