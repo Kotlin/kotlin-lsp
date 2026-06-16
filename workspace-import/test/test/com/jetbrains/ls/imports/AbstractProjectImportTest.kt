@@ -3,6 +3,8 @@ package com.jetbrains.ls.imports
 
 import com.intellij.ide.starter.sdk.JdkDownloadItem
 import com.intellij.ide.starter.sdk.JdkDownloaderFacade
+import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.util.io.NioFiles
 import com.intellij.platform.workspace.jps.entities.LibraryEntity
 import com.intellij.platform.workspace.jps.entities.LibraryRoot
 import com.intellij.platform.workspace.jps.entities.LibraryRootTypeId
@@ -17,7 +19,7 @@ import com.jetbrains.analyzer.api.withProject
 import com.jetbrains.analyzer.bootstrap.AnalyzerProjectId
 import com.jetbrains.analyzer.bootstrap.WorkspaceModelSnapshot
 import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
-import com.jetbrains.ls.imports.api.EmptyWorkspaceProgressReporter
+import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.LSP_GRADLE_JAVA_HOME_PROPERTY
@@ -45,6 +47,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 import org.junit.jupiter.api.fail
+import java.io.IOException
 import java.nio.file.Path
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.Path
@@ -59,6 +62,11 @@ import kotlin.io.path.pathString
 import kotlin.io.path.relativeTo
 import kotlin.io.path.writeText
 import kotlin.time.Duration.Companion.minutes
+
+private val LOG = logger<AbstractProjectImportTest>()
+
+private const val GRADLE_CLEANUP_ATTEMPTS = 3
+private const val GRADLE_CLEANUP_RETRY_DELAY_MS = 300L
 
 abstract class AbstractProjectImportTest {
     protected abstract val testDataDir: Path
@@ -237,6 +245,7 @@ abstract class AbstractProjectImportTest {
         val projectDir = testDataDir / project
         require(projectDir.exists()) { "Project $project not found at $projectDir" }
 
+        val reporter = LoggingWorkspaceProgressReporter()
         val storage = timeoutRunBlocking(timeout = 10.minutes) {
             withAnalyzer(isUnitTestMode = true) { analyzer ->
                 val currentSnapshot = WorkspaceModelSnapshot.empty()
@@ -251,7 +260,17 @@ abstract class AbstractProjectImportTest {
                         projectInits = testProjectInits,
                     )
                 ) {
-                    importer.importWorkspace(it.project, projectDir, null, virtualFileUrlManager, EmptyWorkspaceProgressReporter())
+                    try {
+                        importer.importWorkspace(it.project, projectDir, null, virtualFileUrlManager, reporter)
+                    }
+                    catch (e: WorkspaceImportException) {
+                        throw AssertionError(
+                            "Import of '$project' failed: ${e.message}\n" +
+                            "logMessage: ${e.logMessage}\n" +
+                            "---- tool output ----\n${reporter.capturedOutput}",
+                            e
+                        )
+                    }
                 }
             }
         }
@@ -406,7 +425,25 @@ abstract class AbstractProjectImportTest {
             copyGradleDistribution(systemUserHome, gradleUserHomePath)
             action(gradleUserHomePath.toString())
         } finally {
-            gradleUserHomePath.deleteRecursively()
+            deleteRecursivelyBestEffort(gradleUserHomePath)
+        }
+    }
+
+    // The Gradle daemon may still hold files in '.gradle' right after import; a cleanup-only failure
+    // must not fail an otherwise-passing test. Retry briefly to let handles release, then give up quietly.
+    private fun deleteRecursivelyBestEffort(path: Path) {
+        repeat(GRADLE_CLEANUP_ATTEMPTS) { attempt ->
+            try {
+                NioFiles.deleteRecursively(path)
+                return
+            }
+            catch (e: IOException) {
+                if (attempt == GRADLE_CLEANUP_ATTEMPTS - 1) {
+                    LOG.warn("Best-effort cleanup of $path failed; leaving it for the test runner to reclaim", e)
+                    return
+                }
+                Thread.sleep(GRADLE_CLEANUP_RETRY_DELAY_MS)
+            }
         }
     }
 
