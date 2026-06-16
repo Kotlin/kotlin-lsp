@@ -17,53 +17,49 @@ object LSDiagnostic {
     private val tracer = TelemetryManager.getTracer(scope)
 
     context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
-    suspend fun getDiagnostics(params: DocumentDiagnosticParams): DocumentDiagnosticReport =
-        when (server.indexingProgress.value) {
-            is LSServer.IndexingProgress.Running ->
-                DocumentDiagnosticReport.EMPTY_FULL
-
-            LSServer.IndexingProgress.UpToDate -> {
-                // partial results in diagnotics, according to the LSP spec (https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#documentDiagnosticReportPartialResult),
-                // support only partial results for related diagnostics, not for the diagnostics for the current document,
-                // so we just collect results concurrently from all handlers
-                val diagnostics = LSConcurrentResponseHandler.respondDirectlyWithResultsCollectedConcurrently(
-                    providers = configuration.entriesFor<LSDiagnosticProvider>(params.textDocument),
-                    getResults = { diagnosticProvider ->
-                        tracer.traceProvider(
-                            spanName = "provider.diagnostic",
-                            provider = diagnosticProvider,
-                            resultsFlow = diagnosticProvider.getDiagnostics(params),
-                        )
-                    },
-                )
-
-                DocumentDiagnosticReport(
-                    DocumentDiagnosticReportKind.Full,
-                    resultId = null,
-                    items = diagnostics,
-                    relatedDocuments = null,
-                )
-            }
+    suspend fun getDiagnostics(params: DocumentDiagnosticParams): DocumentDiagnosticReport {
+        if (server.indexingProgress.value !is LSServer.IndexingProgress.UpToDate) {
+            return DocumentDiagnosticReport.EMPTY_FULL
         }
+
+        // partial results in diagnotics, according to the LSP spec (https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#documentDiagnosticReportPartialResult),
+        // support only partial results for related diagnostics, not for the diagnostics for the current document,
+        // so we just collect results concurrently from all handlers
+        val diagnostics = LSConcurrentResponseHandler.respondDirectlyWithResultsCollectedConcurrently(
+            providers = configuration.entriesFor<LSDiagnosticProvider>(params.textDocument),
+            getResults = { diagnosticProvider ->
+                tracer.traceProvider(
+                    spanName = "provider.diagnostic",
+                    provider = diagnosticProvider,
+                    resultsFlow = diagnosticProvider.getDiagnostics(params),
+                )
+            },
+        )
+
+        return DocumentDiagnosticReport(
+            DocumentDiagnosticReportKind.Full,
+            resultId = null,
+            items = diagnostics,
+            relatedDocuments = null,
+        )
+    }
 
     context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
-    suspend fun getCompilationErrors(params: DocumentDiagnosticParams): DocumentDiagnosticReport =
-        when (server.indexingProgress.value) {
-            is LSServer.IndexingProgress.Running ->
-                DocumentDiagnosticReport.EMPTY_FULL
-
-            LSServer.IndexingProgress.UpToDate -> {
-                val diagnostics = LSConcurrentResponseHandler.respondDirectlyWithResultsCollectedConcurrently(
-                    providers = configuration.entriesFor<LSCompilationDiagnosticProvider>(params.textDocument),
-                    getResults = { diagnosticProvider -> diagnosticProvider.getDiagnostics(params) },
-                ).map { it.copy(data = null) }
-
-                DocumentDiagnosticReport(
-                    kind = DocumentDiagnosticReportKind.Full,
-                    resultId = null,
-                    items = diagnostics,
-                    relatedDocuments = null,
-                )
-            }
+    suspend fun getCompilationErrors(params: DocumentDiagnosticParams): DocumentDiagnosticReport {
+        if (server.indexingProgress.value !is LSServer.IndexingProgress.UpToDate) {
+            return DocumentDiagnosticReport.EMPTY_FULL
         }
+
+        val diagnostics = LSConcurrentResponseHandler.respondDirectlyWithResultsCollectedConcurrently(
+            providers = configuration.entriesFor<LSCompilationDiagnosticProvider>(params.textDocument),
+            getResults = { diagnosticProvider -> diagnosticProvider.getDiagnostics(params) },
+        ).map { it.copy(data = null) }
+
+        return DocumentDiagnosticReport(
+            kind = DocumentDiagnosticReportKind.Full,
+            resultId = null,
+            items = diagnostics,
+            relatedDocuments = null,
+        )
+    }
 }
