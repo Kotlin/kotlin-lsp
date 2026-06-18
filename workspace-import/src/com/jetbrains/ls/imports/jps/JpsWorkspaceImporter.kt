@@ -53,6 +53,7 @@ import com.jetbrains.ls.imports.json.flattenExportedDependencies
 import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
 import com.jetbrains.ls.imports.utils.toIntellijUri
 import org.eclipse.aether.repository.RemoteRepository
+import com.jetbrains.ls.snapshot.api.impl.core.toFileUrl
 import org.jdom.Element
 import org.jetbrains.idea.maven.aether.ArtifactRepositoryManager
 import org.jetbrains.idea.maven.aether.ProgressConsumer
@@ -406,7 +407,9 @@ object JpsWorkspaceImporter : WorkspaceImporter {
                 },
                 additionalData = "",
                 entitySource = entitySource
-            )
+            ) {
+                homePath = virtualFileUrlManager.getOrCreateFromUrl(Path.of(sdk.path).toFileUrl().url)
+            }
         }
     }
 }
