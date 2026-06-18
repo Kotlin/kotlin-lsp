@@ -68,7 +68,7 @@ object JsonWorkspaceImporter : WorkspaceImporter {
                 ),
                 projectDirectory,
                 WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager)),
-                virtualFileUrlManager, false, null
+                virtualFileUrlManager, false, "JSON"
             )
             fixMissingProjectSdk(defaultSdkPath, virtualFileUrlManager)
         }
