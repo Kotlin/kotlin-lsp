@@ -7,6 +7,7 @@ import com.jetbrains.ls.api.core.util.fileName
 import com.jetbrains.ls.api.core.util.toPath
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.move.LSMoveDirectoryProvider
+import com.jetbrains.ls.api.features.move.LSMoveFileProvider
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.FileRename
 import com.jetbrains.lsp.protocol.RenameFilesParams
@@ -25,7 +26,7 @@ object LSRename {
 
         return when (fileRename.toOperationKind()) {
             OperationKind.MOVE_DIRECTORY -> configuration.entries<LSMoveDirectoryProvider>().firstNotNullOfOrNull { it.moveDirectory(fileRename) }
-            OperationKind.MOVE_FILE -> null
+            OperationKind.MOVE_FILE -> configuration.entriesFor<LSMoveFileProvider>(fileRename.oldUri).firstNotNullOfOrNull { it.moveFile(fileRename) }
             OperationKind.RENAME_DIRECTORY -> {
                 // Since it is unclear what language directory is renamed, it is up to callee to decide whether he should rename the directory or not.
                 configuration.entries<LSRenameDirectoryProvider>().firstNotNullOfOrNull { it.renameDirectory(fileRename) }

@@ -3,6 +3,7 @@ package com.jetbrains.ls.api.features.impl.common.processors
 
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.command.CommandProcessor
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Ref
@@ -11,6 +12,7 @@ import com.intellij.openapi.util.text.StringUtil.removeHtmlTags
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.impl.source.PostprocessReformattingAspect
 import com.intellij.refactoring.BaseRefactoringProcessor
 import com.intellij.refactoring.RefactoringHelper
 import com.intellij.refactoring.listeners.RefactoringEventData
@@ -25,6 +27,8 @@ import com.jetbrains.analyzer.api.FileUrl
 import com.jetbrains.analyzer.api.fileUrl
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.project
+
+private val LOG = logger<RefactoringProcessor>()
 
 /**
  * A re-implementation of some [com.intellij.refactoring.BaseRefactoringProcessor] methods without UI dependencies*.
@@ -143,6 +147,10 @@ private fun doRefactoring(processor: RefactoringProcessor, usages: Array<UsageIn
     }
 
     CommandProcessor.getInstance().executeCommand(project, Runnable {
+        val aspect = PostprocessReformattingAspect.getInstance(project)
+        if (aspect == null) {
+            LOG.error("PostprocessReformattingAspect is null")
+        }
         WriteAction.run<Throwable> {
             processor.performRefactoring(writableUsageInfos, transaction)
 
