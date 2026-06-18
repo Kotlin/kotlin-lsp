@@ -151,7 +151,7 @@ if (pnpm.file.startsWith('npm')) {
 // IDE run-configuration output.
 
 console.log(green(`Installing dependencies for ${bundleType} in ${WORKSPACE_ROOT}`));
-if (run(pnpm.file, [...pnpm.prefix, '--dir', WORKSPACE_ROOT, '--config.confirm-modules-purge=false', 'install', '--filter', `{./${bundleRelDir}}...`]) !== 0) {
+if (run(pnpm.file, [...pnpm.prefix, '--dir', WORKSPACE_ROOT, '--config.confirm-modules-purge=false', 'install', '--filter', `{./${bundleRelDir}}...`], { cwd: WORKSPACE_ROOT }) !== 0) {
     fail('Error: dependency install failed.');
 }
 
