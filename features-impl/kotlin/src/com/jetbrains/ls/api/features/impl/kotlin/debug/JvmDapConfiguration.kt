@@ -7,11 +7,17 @@ import com.jetbrains.dap.jvm.kotlinDebuggerCommonModule
 import com.jetbrains.dap.jvm.kotlinDebuggerK2Module
 import com.jetbrains.dap.lsp.features.completion.jvmDapLspPlugin
 import com.jetbrains.dap.lsp.features.completion.kotlinDapLspPlugin
+import com.jetbrains.dap.lsp.features.launch.LSResolveClassDocumentCommandDescriptorProvider
+import com.jetbrains.dap.lsp.features.launch.LSResolveClasspathCommandDescriptorProvider
+import com.jetbrains.dap.lsp.features.launch.LSResolveJavaExecutableCommandDescriptorProvider
 import com.jetbrains.ls.api.features.dap.DapPluginsProvider
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 
 val DapJvmConfiguration: LSConfigurationPiece = LSConfigurationPiece(
     entries = listOf(
+        LSResolveClassDocumentCommandDescriptorProvider,
+        LSResolveClasspathCommandDescriptorProvider,
+        LSResolveJavaExecutableCommandDescriptorProvider,
         DapPluginsProvider(
             plugins = listOf(
                 javaDebuggerModules,
