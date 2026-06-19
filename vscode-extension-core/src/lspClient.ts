@@ -5,6 +5,7 @@ import {
     Disposable,
     LanguageClient,
     LanguageClientOptions,
+    NotificationType,
     ServerOptions,
     State,
     StateChangeEvent,
@@ -15,7 +16,14 @@ import { rm } from 'node:fs/promises';
 import * as net from 'node:net';
 import * as os from 'node:os';
 import { type ChildProcessByStdio, spawn } from 'node:child_process';
-import { type AcceptedEulaHashProvider, getContext, getOutputChannel, logInfo } from './extension';
+import {
+    type AcceptedEulaHashProvider,
+    getBuildOutputChannel,
+    getContext,
+    getOutputChannel,
+    logInfo,
+} from './extension';
+import { clearBuildError, setBuildError } from './statusBar';
 import { middleware } from './middleware';
 import * as readline from 'node:readline';
 import { type Readable } from 'node:stream';
@@ -42,6 +50,13 @@ const OPT_BUILD_TOOL = 'intellij.buildTool';
 const INDEX_DIR_STATE_KEY = 'jetbrains.intellij.indexDir';
 
 let _client: LanguageClient | undefined;
+
+type ImportLogParams =
+    | { type: 1 | 2 | 3; message: string; failed?: false; succeeded?: false }
+    | { type: 1; message: string; failed: true; succeeded?: false; tool: string }
+    | { type: 3; message: string; failed?: false; succeeded: true };
+
+const importLogNotification = new NotificationType<ImportLogParams>('intellij/importLog');
 
 const clientSubscriptions: ((client: LanguageClient, stateChange: StateChangeEvent) => void)[] = [];
 
@@ -211,6 +226,7 @@ export async function startLspClient(getAcceptedEulaHash: AcceptedEulaHashProvid
 
     try {
         await runClient.start();
+        registerImportLogHandler(runClient);
     } catch (e) {
         if (
             e instanceof LanguageServerStartupError &&
@@ -237,6 +253,22 @@ export async function stopLspClient(): Promise<void> {
         await _client.stop();
     }
     _client = undefined;
+}
+
+function registerImportLogHandler(client: LanguageClient): void {
+    clearBuildError();
+    const subscription = client.onNotification(importLogNotification, (p) => {
+        const channel = getBuildOutputChannel();
+        channel.appendLine(p.message);
+        if (p.failed) {
+            // Terminal failure events reveal the Build output and leave a status item as an entry point.
+            void vscode.commands.executeCommand('jetbrains.showBuildLog');
+            setBuildError(p.tool);
+        } else if (p.succeeded) {
+            clearBuildError();
+        }
+    });
+    getContext().subscriptions.push(subscription);
 }
 
 export function packageJson(): ExtensionPackageJson | undefined {

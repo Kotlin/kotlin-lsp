@@ -26,6 +26,7 @@ function productTitle(options?: { shorten?: boolean }): string {
 }
 
 let statusBarItem: vscode.StatusBarItem | undefined;
+let buildStatusBarItem: vscode.StatusBarItem | undefined;
 
 export function registerStatusBarItem() {
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -33,11 +34,29 @@ export function registerStatusBarItem() {
     statusBarItem.command = STATUS_MENU_COMMAND;
     statusBarItem.show();
     updateView();
+
+    // Keep build failures separate from the LSP-state item.
+    buildStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 99);
+    buildStatusBarItem.command = 'jetbrains.showBuildLog';
+
     getContext().subscriptions.push(
         statusBarItem,
+        buildStatusBarItem,
         vscode.commands.registerCommand(STATUS_MENU_COMMAND, showLspStatusMenu),
     );
     subscribeToClientEvent(() => updateView());
+}
+
+export function setBuildError(tool: string): void {
+    if (!buildStatusBarItem) return;
+    buildStatusBarItem.text = `$(warning) ${tool}: Build Error`;
+    buildStatusBarItem.tooltip = 'Click to open the build log';
+    buildStatusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+    buildStatusBarItem.show();
+}
+
+export function clearBuildError(): void {
+    buildStatusBarItem?.hide();
 }
 
 function updateView() {

@@ -6,6 +6,7 @@ import {
     ExtensionMode,
     extensions,
     type LogOutputChannel,
+    type OutputChannel,
     Uri,
     window,
     workspace,
@@ -49,6 +50,7 @@ interface ExtensionPackageJson {
 
 let _context: ExtensionContext | undefined;
 let _outputChannel: LogOutputChannel | undefined;
+let _buildOutputChannel: OutputChannel | undefined;
 
 export function getContext(): ExtensionContext {
     return _context!;
@@ -56,6 +58,10 @@ export function getContext(): ExtensionContext {
 
 export function getOutputChannel(): LogOutputChannel {
     return _outputChannel!;
+}
+
+export function getBuildOutputChannel(): OutputChannel {
+    return _buildOutputChannel!;
 }
 
 export function logInfo(text: string): void {
@@ -106,6 +112,17 @@ export async function reloadWorkspace(): Promise<void> {
     }
 }
 
+function registerShowBuildLogCommand(context: ExtensionContext): void {
+    context.subscriptions.push(
+        commands.registerCommand('jetbrains.showBuildLog', () => {
+            getBuildOutputChannel().show(true);
+            setTimeout(() => {
+                void commands.executeCommand('workbench.action.output.action.scrollToBottom');
+            }, 0);
+        }),
+    );
+}
+
 function registerReloadWorkspaceCommand(context: ExtensionContext): void {
     context.subscriptions.push(
         commands.registerCommand('jetbrains.kotlin.reloadWorkspace', () => reloadWorkspace()),
@@ -147,6 +164,7 @@ export async function activateExtension(
     registerExportWorkspaceToJsonCommand(context);
     registerReloadWorkspaceCommand(context);
     registerAutoReloadWorkspace(context);
+    registerShowBuildLogCommand(context);
     registerStatusBarItem();
     registerFileTemplates(context);
 
@@ -165,5 +183,8 @@ function initOutputChannel(context: ExtensionContext): void {
 
     const extension = extensions.getExtension(context.extension.id);
     const pkg = extension?.packageJSON as ExtensionPackageJson | undefined;
-    _outputChannel = window.createOutputChannel(pkg?.displayName ?? 'JetBrains LSP', { log: true });
+    const displayName = pkg?.displayName ?? 'JetBrains LSP';
+    _outputChannel = window.createOutputChannel(displayName, { log: true });
+    _buildOutputChannel = window.createOutputChannel(`${displayName} — Build`);
+    context.subscriptions.push(_outputChannel, _buildOutputChannel);
 }
