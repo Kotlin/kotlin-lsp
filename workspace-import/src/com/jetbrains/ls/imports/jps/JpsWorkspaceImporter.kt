@@ -608,15 +608,15 @@ private fun loadIdeaXml(projectDirectory: Path, fileName: String): Element? {
     }
 }
 
-fun findJdks(projectPath: Path): Set<JavaHomeFinder.JdkEntry> {
+private fun findJdks(projectPath: Path): Set<JavaHomeFinder.JdkEntry> {
     val knownJdks = getFinder(projectPath.getEelDescriptor())
         .checkConfiguredJdks(false)
         .checkEmbeddedJava(false)
         .findExistingJdkEntries()
     if (knownJdks.isEmpty()) {
         throw WorkspaceImportException(
-            "Unable to find JDK for Gradle execution. No JDK's found on the machine!",
-            "There are no JDKs on the machine. Unable to run Gradle."
+            "Unable to find a JDK on the machine. JPS workspace import requires at least one configured JDK.",
+            "No JDKs found while importing the JPS (.iml) workspace."
         )
     }
     return knownJdks
