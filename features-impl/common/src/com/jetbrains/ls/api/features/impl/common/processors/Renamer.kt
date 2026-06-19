@@ -1,7 +1,6 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.processors
 
-import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Ref
@@ -263,14 +262,14 @@ class Renamer internal constructor(
          * Returns `null` if the target is no longer valid. Throws an LSP error if the target is a
          * [PsiCompiledElement] and therefore cannot be renamed.
          */
-        suspend fun create(context: RenameContext): Renamer? = readAction {
+        fun create(context: RenameContext): Renamer? {
             val target = context.target
-            if (!target.isValid) return@readAction null
+            if (!target.isValid) return null
             val primaryElement = RenamePsiElementProcessor.forElement(target).substituteElementToRename(target, null) ?: target
             if (primaryElement is PsiCompiledElement) {
                 throwLspError(RenameRequestType, "This element cannot be renamed", Unit, ErrorCodes.InvalidParams)
             }
-            Renamer(target.project, target, context.newName, false, false)
+            return Renamer(target.project, target, context.newName, false, false)
         }
 
         private fun classifyUsages(

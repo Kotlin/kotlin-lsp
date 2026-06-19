@@ -34,7 +34,7 @@ abstract class LSRenameProviderBase(
     context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun rename(params: RenameParams): WorkspaceEdit {
         val changes = server.withWriteAnalysisContext {
-            val context = readAction {
+            val processor = readAction {
                 val virtualFile = params.findVirtualFile() ?: return@readAction null
                 val document = virtualFile.findDocument() ?: return@readAction null
                 val offset = document.offsetByPosition(params.position)
@@ -43,9 +43,9 @@ abstract class LSRenameProviderBase(
                 val target = targets.firstOrNull()
                     ?: throwLspError(RenameRequestType, "This element cannot be renamed", Unit, ErrorCodes.InvalidParams, null)
 
-                createContext(target, params.newName, psiFile)
+                val context = createContext(target, params.newName, psiFile)
+                createProcessor(context)
             } ?: return@withWriteAnalysisContext emptyList()
-            val processor = createProcessor(context) ?: return@withWriteAnalysisContext emptyList()
             doRefactoring(processor, DiffGranularity.CHARACTER, null)
         }
 
@@ -65,7 +65,7 @@ abstract class LSRenameProviderBase(
     context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun renameFile(params: FileRename): WorkspaceEdit? {
         val edits = server.withWriteAnalysisContext {
-            val context = readAction {
+            val renamer = readAction {
                 // check that a file was already renamed on the previous step
                 if (params.newUri.findVirtualFile() != null) return@readAction null
 
@@ -74,10 +74,10 @@ abstract class LSRenameProviderBase(
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction null
                 val target = getTargetClass(psiFile, nameChange.oldName.fileName) ?: psiFile
                 val newName = if (target is PsiFile) nameChange.newName.fullName() else nameChange.newName.fileName
-                RenameContext(target, newName)
+                val context = RenameContext(target, newName)
+                createProcessor(context)
             } ?: return@withWriteAnalysisContext null
 
-            val renamer = createProcessor(context) ?: return@withWriteAnalysisContext null
             doRefactoring(renamer, DiffGranularity.WORD, params.oldUri)
         }
 

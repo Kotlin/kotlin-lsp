@@ -20,16 +20,16 @@ internal object LSJvmRenameDirectoryProvider : LSRenameDirectoryProvider {
     context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun renameDirectory(params: FileRename): WorkspaceEdit? {
         return server.withWriteAnalysisContext {
-            val context = readAction {
+            val renamer = readAction {
                 if (params.newUri.findVirtualFile() != null) return@readAction null
 
                 val nameChange = computeNameChange(params.oldUri, params.newUri, true) ?: return@readAction null
                 val virtualFile = params.oldUri.findVirtualFile() ?: return@readAction null
                 val directory = virtualFile.findPsiDirectory(project) ?: return@readAction null
-                RenameSingleDirectoryContext(directory, nameChange.newName.fileName)
+                val context = RenameSingleDirectoryContext(directory, nameChange.newName.fileName)
+                createProcessor(context)
             } ?: return@withWriteAnalysisContext null
 
-            val renamer = createProcessor(context) ?: return@withWriteAnalysisContext null
             doRefactoring(renamer, DiffGranularity.WORD, params.oldUri)
         }?.let { return WorkspaceEdit(documentChanges = it) }
     }

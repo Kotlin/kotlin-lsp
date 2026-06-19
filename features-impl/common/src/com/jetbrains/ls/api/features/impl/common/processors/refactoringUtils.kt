@@ -103,7 +103,7 @@ suspend fun doRefactoring(
     }
 }
 
-suspend fun createProcessor(context: RefactoringContext): RefactoringProcessor? = when (context) {
+fun createProcessor(context: RefactoringContext): RefactoringProcessor? = when (context) {
     is RenameContext -> Renamer.create(context)
     is RenameSingleDirectoryContext -> DirectoryMover.create(context)
     is MoveSingleDirectoryContext -> DirectoryMover.create(context)

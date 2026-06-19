@@ -1,7 +1,6 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.processors
 
-import com.intellij.openapi.application.readAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Ref
 import com.intellij.openapi.vfs.VirtualFile
@@ -73,10 +72,10 @@ class DirectoryMover internal constructor(
          *
          * Returns `null` if the source list is empty or any directory is no longer valid.
          */
-        suspend fun create(context: RenameSingleDirectoryContext): DirectoryMover? = readAction {
-            if (!context.directory.isValid) return@readAction null
+        fun create(context: RenameSingleDirectoryContext): DirectoryMover? {
+            if (!context.directory.isValid) return null
 
-            DirectoryMover(
+            return DirectoryMover(
                 project = context.directory.project,
                 directories = arrayOf(context.directory),
                 targetDirectory = null,
@@ -87,10 +86,10 @@ class DirectoryMover internal constructor(
             )
         }
 
-        suspend fun create(context: MoveSingleDirectoryContext): DirectoryMover? = readAction {
-            if (!context.targetDirectory.isValid || !context.directoryToMove.isValid) return@readAction null
+        fun create(context: MoveSingleDirectoryContext): DirectoryMover? {
+            if (!context.targetDirectory.isValid || !context.directoryToMove.isValid) return null
 
-            DirectoryMover(
+            return DirectoryMover(
                 project = context.targetDirectory.project,
                 directories = arrayOf(context.directoryToMove),
                 targetDirectory = context.targetDirectory,

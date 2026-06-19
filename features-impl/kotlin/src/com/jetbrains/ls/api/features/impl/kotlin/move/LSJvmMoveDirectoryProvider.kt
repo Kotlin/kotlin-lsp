@@ -22,7 +22,7 @@ internal object LSJvmMoveDirectoryProvider: LSMoveDirectoryProvider {
     context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun moveDirectory(params: FileRename): WorkspaceEdit? {
         return server.withWriteAnalysisContext {
-            val context = readAction {
+            val processor = readAction {
                 val newDestination = params.newUri.findVirtualFile()
                 if (newDestination != null) return@readAction null
 
@@ -35,10 +35,10 @@ internal object LSJvmMoveDirectoryProvider: LSMoveDirectoryProvider {
                 val sourceDirectory = sourceVFile.findPsiDirectory(project) ?: return@readAction null
                 if (!PsiPackageImplUtil.isDirectoryUnderPackage(sourceDirectory)) return@readAction null
 
-                MoveSingleDirectoryContext(targetDirectory, sourceDirectory)
+                val context = MoveSingleDirectoryContext(targetDirectory, sourceDirectory)
+                createProcessor(context)
             } ?: return@withWriteAnalysisContext null
 
-            val processor = createProcessor(context) ?: return@withWriteAnalysisContext null
             doRefactoring(processor, TextEditsComputer.DiffGranularity.WORD, params.oldUri)
         }?.let { return WorkspaceEdit(documentChanges = it) }
     }
