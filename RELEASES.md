@@ -3,6 +3,40 @@
 This file contains TeamCity auto-generated download links that are updated on a weekly basis.
 These are pre-alpha builds that are built directly from `master` branch after the initial acceptance.
 
+### v262.8190.0
+- :test_tube: "Kotlin by JetBrains" extension v0.0.5 for VS Code
+
+  Includes Kotlin Language Server bundled for use with Visual Studio Code.
+
+  The extension is also available on the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=JetBrains.kotlin-server).
+    * [Download for macOS-x64](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-0.0.5-mac-amd64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-0.0.5-mac-amd64.vsix.sha256)
+    * [Download for macOS-arm64](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-0.0.5-mac-aarch64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-0.0.5-mac-aarch64.vsix.sha256)
+    * [Download for Linux-x64](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-0.0.5-linux-amd64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-0.0.5-linux-amd64.vsix.sha256)
+    * [Download for Linux-arm64](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-0.0.5-linux-aarch64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-0.0.5-linux-aarch64.vsix.sha256)
+    * [Download for Windows-x64](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-0.0.5-win-amd64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-0.0.5-win-amd64.vsix.sha256)
+    * [Download for Windows-arm64](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-0.0.5-win-aarch64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-0.0.5-win-aarch64.vsix.sha256)
+
+
+- :card_index_dividers: **Standalone Kotlin LSP Archive**
+
+  Standalone Kotlin Language Server version for editors other than VS Code.
+
+    * [Download for macOS-x64](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-262.8190.0.sit)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-262.8190.0.sit.sha256)
+    * [Download for macOS-arm64](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-262.8190.0-aarch64.sit)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-262.8190.0-aarch64.sit.sha256)
+    * [Download for Linux-x64](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-262.8190.0.tar.gz)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-262.8190.0.tar.gz.sha256)
+    * [Download for Linux-arm64](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-262.8190.0-aarch64.tar.gz)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-262.8190.0-aarch64.tar.gz.sha256)
+    * [Download for Windows-x64](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-262.8190.0.win.zip)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-262.8190.0.win.zip.sha256)
+    * [Download for Windows-arm64](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-262.8190.0-aarch64.win.zip)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download-cdn.jetbrains.com/language-server/kotlin-server/262.8190.0/kotlin-server-262.8190.0-aarch64.win.zip.sha256)
+
+##### Changelog
+
+> [!NOTE]
+> This is a minor release based on [v262.7569.0](https://github.com/Kotlin/kotlin-lsp/releases/edit/kotlin-lsp%2Fv262.7569.0). See it's changelog for the recent changes.
+
+#### 🐛 Bug fixes
+
+- Fixed an issue with the extension importing nested projects too eagerly, resulting in huge workspace caches. Fixes <https://github.com/Kotlin/kotlin-lsp/issues/213>. <!-- LSP-1288 -->
+
 ### v262.7569.0
 - :test_tube: **"Kotlin by JetBrains" extension v0.0.4 for VS Code **
 
