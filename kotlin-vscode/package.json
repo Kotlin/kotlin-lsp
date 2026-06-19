@@ -92,7 +92,114 @@
         "languages": [
           "kotlin"
         ],
-        "configurationAttributes": {}
+        "configurationAttributes": {
+          "launch": {
+            "required": [
+              "mainClass"
+            ],
+            "properties": {
+              "mainClass": {
+                "type": "string",
+                "description": "Fully-qualified name of the main class to run."
+              },
+              "file": {
+                "type": "string",
+                "description": "Path to the source file declaring the main class. Used to launch directly from a file, and to disambiguate when the main class name is declared in more than one file. Supports ${file}."
+              },
+              "args": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Program arguments passed to the main class."
+              },
+              "vmArgs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "JVM arguments that are passed into the VM itself."
+              },
+              "classPaths": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Override classpath. If empty, the LSP server resolves it from the project model."
+              },
+              "modulePaths": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Module path entries for JPMS launches. Specify manually; the LSP server does not resolve these automatically."
+              },
+              "javaExec": {
+                "type": "string",
+                "description": "Path to the java executable. If empty, the project SDK is used."
+              },
+              "cwd": {
+                "type": "string",
+                "description": "Working directory for the launched process.",
+                "default": "${workspaceFolder}"
+              },
+              "env": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "Extra environment variables for the launched process."
+              }
+            }
+          },
+          "attach": {
+            "required": [
+              "port"
+            ],
+            "properties": {
+              "hostName": {
+                "type": "string",
+                "description": "Host the JVM is listening on.",
+                "default": "localhost"
+              },
+              "port": {
+                "type": "number",
+                "description": "JDWP port the JVM is listening on.",
+                "default": 5005
+              },
+              "timeout": {
+                "type": "number",
+                "description": "Connection timeout in milliseconds.",
+                "default": 30000
+              }
+            }
+          }
+        },
+        "initialConfigurations": [],
+        "configurationSnippets": [
+          {
+            "label": "IntelliJ: Launch main class",
+            "description": "Launch a JVM main class via the IntelliJ LSP.",
+            "body": {
+              "type": "intellij_debugger",
+              "request": "launch",
+              "name": "${2:Run main}",
+              "mainClass": "${1:com.example.Main}",
+              "cwd": "^\"\\${workspaceFolder}\""
+            }
+          },
+          {
+            "label": "IntelliJ: Attach to JVM",
+            "description": "Attach to a running JVM over JDWP via the IntelliJ LSP.",
+            "body": {
+              "type": "intellij_debugger",
+              "request": "attach",
+              "name": "${1:Attach to JVM}",
+              "hostName": "${2:localhost}",
+              "port": 5005
+            }
+          }
+        ]
       }
     ],
     "configuration": [
