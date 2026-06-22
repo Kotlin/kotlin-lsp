@@ -6,8 +6,10 @@ import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.entities
 import com.intellij.workspaceModel.ide.impl.IdeVirtualFileUrlManagerImpl
+import com.intellij.java.workspace.entities.JavaModuleCompilerOptionsEntity
 import com.jetbrains.ls.imports.json.DependencyData
 import com.jetbrains.ls.imports.json.DependencyDataScope
+import com.jetbrains.ls.imports.json.JavaSettingsData
 import com.jetbrains.ls.imports.json.LibraryData
 import com.jetbrains.ls.imports.json.LibraryRootData
 import com.jetbrains.ls.imports.json.ModuleData
@@ -86,5 +88,36 @@ class JsonImporterUnitTest {
 
         assertEquals(setOf("B", "C"), moduleDeps, "A should keep B and gain transitively-exported C")
         assertEquals(setOf("L", "M"), libraryDeps, "A should gain libraries reachable via the exported chain")
+    }
+
+    @Test
+    fun importsPerModuleJavacArgumentsIntoWorkspaceModel(@TempDir workspacePath: Path) {
+        val args = listOf("--add-exports", "java.base/sun.nio.ch=ALL-UNNAMED", "-parameters")
+        val data = WorkspaceData(
+            modules = listOf(ModuleData(name = "A", dependencies = emptyList())),
+            javaSettings = listOf(
+                JavaSettingsData(
+                    module = "A",
+                    inheritedCompilerOutput = true,
+                    excludeOutput = true,
+                    compilerOutput = null,
+                    compilerOutputForTests = null,
+                    languageLevelId = null,
+                    manifestAttributes = emptyMap(),
+                    compilerArguments = args,
+                )
+            ),
+        )
+
+        val storage = MutableEntityStorage.create()
+        storage.importWorkspaceData(data, workspacePath, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(true))
+
+        val optionsEntity = storage.entities<JavaModuleCompilerOptionsEntity>().single()
+        assertEquals("A", optionsEntity.module.name)
+        assertEquals(args, optionsEntity.additionalOptions)
+
+        // ...and the arguments round-trip back to the JSON model on export.
+        val exported = workspaceData(storage, workspacePath).javaSettings.single { it.module == "A" }
+        assertEquals(args, exported.compilerArguments)
     }
 }
