@@ -19,7 +19,7 @@ import com.intellij.util.containers.MultiMap
 /**
  * @see MoveDirectoryWithClassesProcessor
  */
-class DirectoryMover internal constructor(
+class MoveDirectoryProcessor internal constructor(
     private val project: Project,
     directories: Array<PsiDirectory>,
     private val targetDirectory: PsiDirectory?,
@@ -68,14 +68,14 @@ class DirectoryMover internal constructor(
 
     companion object {
         /**
-         * Validates [context] and constructs a [DirectoryMover] under a read action.
+         * Validates [context] and constructs a [MoveDirectoryProcessor] under a read action.
          *
          * Returns `null` if the source list is empty or any directory is no longer valid.
          */
-        fun create(context: RenameSingleDirectoryContext): DirectoryMover? {
+        fun create(context: RenameSingleDirectoryContext): MoveDirectoryProcessor? {
             if (!context.directory.isValid) return null
 
-            return DirectoryMover(
+            return MoveDirectoryProcessor(
                 project = context.directory.project,
                 directories = arrayOf(context.directory),
                 targetDirectory = null,
@@ -86,10 +86,10 @@ class DirectoryMover internal constructor(
             )
         }
 
-        fun create(context: MoveSingleDirectoryContext): DirectoryMover? {
+        fun create(context: MoveSingleDirectoryContext): MoveDirectoryProcessor? {
             if (!context.targetDirectory.isValid || !context.directoryToMove.isValid) return null
 
-            return DirectoryMover(
+            return MoveDirectoryProcessor(
                 project = context.targetDirectory.project,
                 directories = arrayOf(context.directoryToMove),
                 targetDirectory = context.targetDirectory,

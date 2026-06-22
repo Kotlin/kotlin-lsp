@@ -105,8 +105,8 @@ suspend fun doRefactoring(
 
 fun createProcessor(context: RefactoringContext): RefactoringProcessor? = when (context) {
     is RenameContext -> Renamer.create(context)
-    is RenameSingleDirectoryContext -> DirectoryMover.create(context)
-    is MoveSingleDirectoryContext -> DirectoryMover.create(context)
+    is RenameSingleDirectoryContext -> MoveDirectoryProcessor.create(context)
+    is MoveSingleDirectoryContext -> MoveDirectoryProcessor.create(context)
     else -> throw IllegalArgumentException("Unknown refactoring context: $context")
 }
 
