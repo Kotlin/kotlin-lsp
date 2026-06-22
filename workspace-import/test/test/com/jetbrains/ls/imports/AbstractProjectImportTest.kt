@@ -91,6 +91,14 @@ abstract class AbstractProjectImportTest {
     fun petClinic() = doGradleTest("PetClinic", ::withIgnoredJdkRoots)
 
     @Test
+    fun brokenPetClinic() = doTestBrokenProject(
+        "BrokenPetClinic",
+        "The supplied build action failed with an exception.",
+        GradleWorkspaceImporter,
+        testDataDir / "gradle"
+    )
+
+    @Test
     fun multiProjectKotlinDSL() = doGradleTest("MultiProjectKotlinDSL", ::withIgnoredJdkRoots)
 
     @Test
@@ -233,6 +241,40 @@ abstract class AbstractProjectImportTest {
             MavenWorkspaceImporter.useMavenAndJava(path, Path.of(System.getProperty("java.home")))
         }
         doTest(project, MavenWorkspaceImporter, testDataDir / "maven")
+    }
+
+    protected fun doTestBrokenProject(
+        project: String,
+        failureMessage: String,
+        importer: WorkspaceImporter,
+        testDataDir: Path,
+    ) {
+        val projectDir = testDataDir / project
+        require(projectDir.exists()) { "Project $project not found at $projectDir" }
+
+        val reporter = LoggingWorkspaceProgressReporter()
+        timeoutRunBlocking(timeout = 10.minutes) {
+            withAnalyzer(isUnitTestMode = true) { analyzer ->
+                val currentSnapshot = WorkspaceModelSnapshot.empty()
+                val virtualFileUrlManager = currentSnapshot.virtualFileUrlManager
+                analyzer.withProject(
+                    analyzerProjectConfigForImport(
+                        projectId = AnalyzerProjectId(),
+                        entities = currentSnapshot.entityStore,
+                        urlManager = virtualFileUrlManager,
+                        pluginSet = testPluginSet,
+                        applicationInits = testApplicationInitsForImport,
+                        projectInits = testProjectInits,
+                    )
+                ) {
+                    val result = runCatching {
+                        importer.importWorkspace(it.project, projectDir, null, virtualFileUrlManager, reporter)
+                    }
+                    assertTrue(result.isFailure)
+                    assertEquals(failureMessage, result.exceptionOrNull()!!.message)
+                }
+            }
+        }
     }
 
     protected fun doTest(

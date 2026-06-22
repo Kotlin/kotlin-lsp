@@ -13,8 +13,6 @@ import com.jetbrains.ls.imports.gradle.model.ModuleSourceSets;
 import com.jetbrains.ls.imports.gradle.utils.ProxyUtil;
 import org.gradle.tooling.BuildAction;
 import org.gradle.tooling.BuildController;
-import org.gradle.tooling.Failure;
-import org.gradle.tooling.FetchModelResult;
 import org.gradle.tooling.model.DomainObjectSet;
 import org.gradle.tooling.model.HierarchicalElement;
 import org.gradle.tooling.model.gradle.BasicGradleProject;
@@ -63,7 +61,7 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
         Map<String, Set<ModuleSourceSet>> sourceSets = new HashMap<>();
         Map<String, Set<ExternalModuleDependency>> externalModuleDependencySet = new HashMap<>();
         Map<String, AndroidProject> androidProjects = new HashMap<>();
-        List<InternalIdeaProject> ideaProjects = fetchProjects(controller);
+        List<InternalIdeaProject> ideaProjects = findProjects(controller);
         resolveModels(ideaProjects, controller, syncSettings, kotlinModules, sourceSets, externalModuleDependencySet, androidProjects);
         return new ProjectMetadata(
                 ideaProjects,
@@ -91,25 +89,23 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
                 module.setName(moduleFqn);
 
                 IdeaModule delegate = module.getDelegate();
-                KotlinModule kotlinModule = unwrapFetchedModel(controller.fetch(delegate, KotlinModule.class));
+                KotlinModule kotlinModule = controller.findModel(delegate, KotlinModule.class);
                 if (kotlinModule != null) {
                     kotlinModules.put(moduleFqn, kotlinModule);
                 }
-                ModuleSourceSets moduleSourceSets = unwrapFetchedModel(controller.fetch(delegate, ModuleSourceSets.class));
+                ModuleSourceSets moduleSourceSets = controller.findModel(delegate, ModuleSourceSets.class);
                 sourceSets.put(moduleFqn, moduleSourceSets == null ? Collections.emptySet() : moduleSourceSets.getSourceSets());
 
                 Class<? extends ExternalModuleDependencySet> dependencyModel = syncSettings.getDownloadLibrarySources()
                                                                                        ? ExternalModuleFullDependencySet.class
                                                                                        : ExternalModuleDependencySet.class;
-                ExternalModuleDependencySet moduleDependencies = unwrapFetchedModel(
-                        controller.fetch(delegate, dependencyModel)
-                );
+                ExternalModuleDependencySet moduleDependencies = controller.findModel(delegate, dependencyModel);
                 externalModuleDependencySet.put(
                         moduleFqn,
                         moduleDependencies == null ? Collections.emptySet() : moduleDependencies.getDependencies()
                 );
 
-                AndroidProject androidProject = unwrapFetchedModel(controller.fetch(delegate, AndroidProject.class));
+                AndroidProject androidProject = controller.findModel(delegate, AndroidProject.class);
                 if (androidProject != null) {
                     androidProjects.put(moduleFqn, ProxyUtil.unpackProxy(ProjectMetadata.class.getClassLoader(), androidProject));
                 }
@@ -130,15 +126,6 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
         return String.join(".", fqn);
     }
 
-    private static <Model> @Nullable Model unwrapFetchedModel(@NotNull FetchModelResult<Model> result) {
-        if (!result.getFailures().isEmpty()) {
-            for (Failure failure : result.getFailures()) {
-                System.err.println(failure.getMessage());
-            }
-        }
-        return result.getModel();
-    }
-
     private static @NotNull DomainObjectSet<? extends GradleBuild> getIncludedBuilds(@NotNull BuildController controller) {
         GradleBuild buildModel = controller.getBuildModel();
         if (GradleVersion.current().compareTo(INCLUDED_BUILD_API_GRADLE_VERSION) <= 0) {
@@ -151,15 +138,15 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
         return editableBuilds;
     }
 
-    private static @NotNull List<@NotNull InternalIdeaProject> fetchProjects(@NotNull BuildController controller) {
+    private static @NotNull List<@NotNull InternalIdeaProject> findProjects(@NotNull BuildController controller) {
         List<InternalIdeaProject> allProjects = new ArrayList<>();
-        IdeaProject rootProject = unwrapFetchedModel(controller.fetch(IdeaProject.class));
+        IdeaProject rootProject = controller.findModel(IdeaProject.class);
         if (rootProject != null) {
             allProjects.add(new InternalIdeaProject(rootProject));
         }
         for (GradleBuild includedBuild : getIncludedBuilds(controller)) {
             for (BasicGradleProject project : includedBuild.getProjects()) {
-                IdeaProject nestedProject = unwrapFetchedModel(controller.fetch(project, IdeaProject.class));
+                IdeaProject nestedProject = controller.findModel(project, IdeaProject.class);
                 if (nestedProject != null) {
                     InternalIdeaProject mappedProject = new InternalIdeaProject(nestedProject);
                     allProjects.add(mappedProject);
