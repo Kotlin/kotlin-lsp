@@ -53,7 +53,7 @@ let _client: LanguageClient | undefined;
 
 type ImportLogParams =
     | { type: 1 | 2 | 3; message: string; failed?: false; succeeded?: false }
-    | { type: 1; message: string; failed: true; succeeded?: false; tool: string }
+    | { type: 1; message: string; failed: true; succeeded?: false; tool?: string }
     | { type: 3; message: string; failed?: false; succeeded: true };
 
 const importLogNotification = new NotificationType<ImportLogParams>('intellij/importLog');
@@ -263,7 +263,7 @@ function registerImportLogHandler(client: LanguageClient): void {
         if (p.failed) {
             // Terminal failure events reveal the Build output and leave a status item as an entry point.
             void vscode.commands.executeCommand('jetbrains.showBuildLog');
-            setBuildError(p.tool);
+            setBuildError(p.tool ?? 'Build');
         } else if (p.succeeded) {
             clearBuildError();
         }
