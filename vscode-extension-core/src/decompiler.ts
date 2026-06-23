@@ -100,21 +100,15 @@ export function registerDecompiler(context: ExtensionContext) {
 
 export function registerOpeningJars() {
     /*
-     * Registers command for navigating to jar/jrt locations.
-     * See LSP-393
+     * Registers the command for navigating to a location, used both by inlay hints and by hover
+     * links the server emits as `command:` links (jar:/jrt: sources, but also regular file:
+     * sources). See LSP-393.
      */
     vscode.commands.registerCommand(
-        'jetbrains.navigateToJarLocation',
+        'jetbrains.navigateToLocation',
         async (uriString: string, line: number, character: number) => {
             try {
                 const uri = vscode.Uri.parse(uriString);
-
-                if (!supportedProtocols.includes(uri.scheme)) {
-                    console.error(
-                        `[NavigateToJar] Invalid URI decompiled scheme: ${uri.scheme}, expected 'jar' or 'jrt'`,
-                    );
-                    return;
-                }
 
                 const doc = await vscode.workspace.openTextDocument(uri);
 
@@ -125,7 +119,7 @@ export function registerOpeningJars() {
                     preserveFocus: false,
                 });
             } catch (e) {
-                console.error(`[NavigateToJar] Failed to navigate:`, e);
+                console.error(`[NavigateToLocation] Failed to navigate:`, e);
                 await vscode.window.showErrorMessage(`Failed to navigate: ${e}`);
             }
         },
