@@ -1,10 +1,10 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.kotlin.move
 
+import com.intellij.ide.util.PackageUtil
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.findPsiDirectory
-import com.intellij.psi.impl.file.PsiPackageImplUtil
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
@@ -33,7 +33,7 @@ internal object LSJvmMoveDirectoryProvider: LSMoveDirectoryProvider {
 
                 val sourceVFile = params.oldUri.findVirtualFile() ?: return@readAction null
                 val sourceDirectory = sourceVFile.findPsiDirectory(project) ?: return@readAction null
-                if (!PsiPackageImplUtil.isDirectoryUnderPackage(sourceDirectory)) return@readAction null
+                if (!PackageUtil.isDirectoryUnderPackage(sourceDirectory)) return@readAction null
 
                 val context = MoveSingleDirectoryContext(targetDirectory, sourceDirectory)
                 createProcessor(context)
