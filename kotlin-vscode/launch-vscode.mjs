@@ -134,34 +134,20 @@ if (pnpm.file.startsWith('npm')) {
     console.log(green(`pnpm not found; running it on demand via 'npm exec pnpm@${PNPM_VERSION}' (install pnpm for faster launches)`));
 }
 
-// --- 1. Install workspace deps for this bundle (+ its workspace deps) --------
-// Filtered (brace syntax `{./dir}...` -- a bare `./dir...` filter does NOT
-// include workspace deps in pnpm 11) so launching kotlin-server / intellij-server
-// does NOT build intellij-server-experimental's / datagrip-server's native
-// `tree-sitter-sql` (node-gyp, no prebuilds -- fails on Node >=24). Those bundles
-// pull it in via the filter and need Node 22.x to compile it. The install is fast
-// and idempotent when nothing changed, so we run it on every launch (no
-// node_modules guard -- that would skip a second bundle's deps after the first
-// launch). The compile step below must keep pnpm's deps re-check disabled, or it
-// would fall back to a full unfiltered install that rebuilds `tree-sitter-sql`.
-//
-// `--config.confirm-modules-purge=false`: narrowing from an existing full
-// install (e.g. a checkout that ran an older version of this script) makes pnpm
-// purge node_modules, which otherwise aborts in a non-TTY console such as the
-// IDE run-configuration output.
+// --- 1. Install the full pnpm workspace --------------------------------------
+// Unfiltered: the type check (step 2) uses the shared intellij-vscode/tsconfig.json,
+// which includes every bundle's sources, so all bundles' deps must be installed.
+// Idempotent and fast when nothing changed, so we run it on every launch.
 
-console.log(green(`Installing dependencies for ${bundleType} in ${WORKSPACE_ROOT}`));
-if (run(pnpm.file, [...pnpm.prefix, '--dir', WORKSPACE_ROOT, '--config.confirm-modules-purge=false', 'install', '--filter', `{./${bundleRelDir}}...`], { cwd: WORKSPACE_ROOT }) !== 0) {
+console.log(green(`Installing workspace dependencies in ${WORKSPACE_ROOT}`));
+if (run(pnpm.file, [...pnpm.prefix, '--dir', WORKSPACE_ROOT, 'install'], { cwd: WORKSPACE_ROOT }) !== 0) {
     fail('Error: dependency install failed.');
 }
 
 // --- 2. Compile the dev extension (from package sources) ---------------------
 
 console.log(green(`Compiling extension (${bundleType}) in ${extensionDir}`));
-// `--config.verify-deps-before-run=false`: step 1 already installed this bundle's
-// subtree; without this, pnpm's deps re-check would run a full unfiltered
-// workspace install and rebuild the experimental/datagrip `tree-sitter-sql`.
-if (run(pnpm.file, [...pnpm.prefix, '--dir', extensionDir, '--config.verify-deps-before-run=false', 'run', 'compile']) !== 0) {
+if (run(pnpm.file, [...pnpm.prefix, '--dir', extensionDir, 'run', 'compile']) !== 0) {
     fail('Error: extension compile failed.');
 }
 

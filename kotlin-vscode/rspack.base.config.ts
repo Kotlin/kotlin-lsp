@@ -93,13 +93,6 @@ export function createExtensionConfig(
                 typescript: {
                     configFile: tsconfig,
                     configOverwrite: {
-                        // Scope the type check to this bundle's own sources. The shared
-                        // intellij-vscode/tsconfig.json includes every bundle; without this
-                        // override, a filtered install (which installs only the requested
-                        // bundle's deps) would fail type-checking the other bundles' sources.
-                        include: sourceDirs.map((dir) =>
-                            path.relative(path.dirname(tsconfig), dir),
-                        ),
                         exclude: [
                             '**/node_modules',
                             '**/.*/',
