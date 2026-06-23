@@ -340,6 +340,17 @@ function startBundledServer(): ChildProcessByStdio<null, Readable, Readable> {
               IJ_LAUNCHER_DEBUG: '1',
           }
         : jvmOptions;
+    const telemetryLogger = vscode.env.createTelemetryLogger({
+        sendEventData() {},
+        sendErrorData() {},
+    });
+    if (telemetryLogger.isErrorsEnabled) {
+        env.INTELLIJ_REPORT_ERRORS = 'true';
+    }
+    if (telemetryLogger.isUsageEnabled) {
+        env.INTELLIJ_REPORT_USAGE = 'true';
+    }
+    telemetryLogger.dispose();
 
     logInfo('Starting language server');
     logInfo(`  command: ${launcherPath}`);
