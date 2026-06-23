@@ -52,6 +52,7 @@ jvm_library(
         "@community//java/java-frontback-psi-api:frontback-psi",
         "//language-server/community/api.features",
         "@community//fleet/lsp.protocol",
+        "@community//java/java-syntax:syntax",
     ],
 )
 
@@ -85,6 +86,7 @@ jvm_library(
         "@community//java/java-frontback-psi-api:frontback-psi_test_lib",
         "//language-server/community/api.features:api.features_test_lib",
         "@community//fleet/lsp.protocol:lsp.protocol_test_lib",
+        "@community//java/java-syntax:syntax_test_lib",
     ],
 )
 ### auto-generated section `build language-server.api.features.impl.java-base` end

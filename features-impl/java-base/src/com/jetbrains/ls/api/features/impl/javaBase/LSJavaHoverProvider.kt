@@ -1,6 +1,8 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.javaBase
 
+import com.intellij.java.syntax.parser.JavaKeywords
+import com.intellij.openapi.util.NlsSafe
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -28,7 +30,7 @@ open class LSJavaHoverProvider : LSHoverProviderBase() {
         val documentation = LSMarkdownDocProvider.getMarkdownDoc(target)
 
         return buildString {
-            links(target, from, offset)?.let { appendLine(it) } 
+            links(target, from, offset)?.let { appendLine(it) }
             documentation?.let { appendLine(it) }
             append(markdownMultilineCode(renderedDeclaration, language = LSJavaLanguage.lspName))
         }
@@ -50,6 +52,7 @@ open class LSJavaHoverProvider : LSHoverProviderBase() {
                     }
                 }
             }
+
             else -> null
         }
     }
@@ -72,13 +75,22 @@ open class LSJavaHoverProvider : LSHoverProviderBase() {
         return when (element) {
             is PsiMethod -> formatMethod(element, EMPTY, OPTIONS, OPTIONS)
             is PsiVariable -> PsiFormatUtil.formatVariable(element, OPTIONS, EMPTY)
-            is PsiClass -> {
-                // TODO LSP-238 this will not print the class/interface/etc keywords
-                PsiFormatUtil.formatClass(element, OPTIONS)
-            }
+            is PsiClass -> PsiFormatUtil.formatModifiers(element, PsiFormatUtilBase.SHOW_MODIFIERS)
+                .let { if (it.isEmpty()) "" else "$it " } +
+                    classKind(element) + ' ' +
+                    PsiFormatUtil.formatClass(element,
+                        OPTIONS and PsiFormatUtilBase.SHOW_MODIFIERS.inv())
             is PsiPackage -> "package ${element.qualifiedName}"
             else -> null
         }
+    }
+
+    private fun classKind(element: PsiClass): @NlsSafe String = when {
+        element.isEnum -> JavaKeywords.ENUM
+        element.isAnnotationType -> '@' + JavaKeywords.INTERFACE
+        element.isInterface -> JavaKeywords.INTERFACE
+        element.isRecord -> JavaKeywords.RECORD
+        else -> JavaKeywords.CLASS
     }
 
     companion object {
@@ -90,7 +102,8 @@ open class LSJavaHoverProvider : LSHoverProviderBase() {
                     PsiFormatUtilBase.SHOW_INITIALIZER or
                     PsiFormatUtilBase.SHOW_PARAMETERS or
                     PsiFormatUtilBase.SHOW_THROWS or
-                    PsiFormatUtilBase.SHOW_EXTENDS_IMPLEMENTS    }
+                    PsiFormatUtilBase.SHOW_EXTENDS_IMPLEMENTS
+    }
 
 
 }
