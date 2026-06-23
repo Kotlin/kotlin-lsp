@@ -204,7 +204,8 @@ data class JavaSettingsData(
     val compilerOutput: String?,
     val compilerOutputForTests: String?,
     val languageLevelId: String?,
-    val manifestAttributes: Map<String, String>
+    val manifestAttributes: Map<String, String>,
+    val compilerArguments: List<String> = emptyList()
 )
 
 @Serializable

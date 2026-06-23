@@ -4,6 +4,8 @@ package com.jetbrains.ls.imports.json
 
 import com.intellij.java.workspace.entities.JavaModuleSettingsEntity
 import com.intellij.java.workspace.entities.JavaModuleSettingsEntityBuilder
+import com.intellij.java.workspace.entities.JavaModuleCompilerOptionsEntity
+import com.intellij.java.workspace.entities.javaCompilerOptions
 import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
 import com.intellij.openapi.util.io.FileUtilRt
@@ -406,7 +408,13 @@ fun MutableEntityStorage.importWorkspaceData(
     }
 
     for (javaSettings in data.javaSettings) {
-        storage addEntity toEntity(javaSettings, entitySource, moduleBuilders[javaSettings.module]!!, workspacePath, virtualFileUrlManager)
+        val moduleBuilder = moduleBuilders[javaSettings.module]!!
+        storage addEntity toEntity(javaSettings, entitySource, moduleBuilder, workspacePath, virtualFileUrlManager)
+        if (javaSettings.compilerArguments.isNotEmpty()) {
+            storage addEntity JavaModuleCompilerOptionsEntity(javaSettings.compilerArguments, entitySource) {
+                this.module = moduleBuilder
+            }
+        }
     }
 }
 
@@ -483,7 +491,8 @@ private fun toDataClass(entity: JavaModuleSettingsEntity, workspacePath: Path): 
         compilerOutput = entity.compilerOutput?.let {  toRelativePath(it, workspacePath) },
         compilerOutputForTests = entity.compilerOutputForTests?.let {  toRelativePath(it, workspacePath) },
         languageLevelId = entity.languageLevelId,
-        manifestAttributes = entity.manifestAttributes
+        manifestAttributes = entity.manifestAttributes,
+        compilerArguments = entity.module.javaCompilerOptions?.additionalOptions ?: emptyList()
     )
 
 private fun addFacetRecursive(

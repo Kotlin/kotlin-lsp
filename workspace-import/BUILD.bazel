@@ -66,6 +66,7 @@ jvm_library(
         "//language-server/analyzer.kotlin",
         "//language-server/api.impl.analyzer",
         "@community//aether-dependency-resolver",
+        "@community//libraries/maven-resolver-provider",
     ],
 )
 
@@ -113,6 +114,7 @@ jvm_library(
         "//language-server/analyzer.kotlin:analyzer.kotlin_test_lib",
         "//language-server/api.impl.analyzer:api.impl.analyzer_test_lib",
         "@community//aether-dependency-resolver:aether-dependency-resolver_test_lib",
+        "@community//libraries/maven-resolver-provider:maven-resolver-provider_test_lib",
     ],
 )
 ### auto-generated section `build language-server.workspace-import` end

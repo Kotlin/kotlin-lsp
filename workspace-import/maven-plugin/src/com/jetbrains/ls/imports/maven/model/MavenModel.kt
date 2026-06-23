@@ -3,11 +3,13 @@ package com.jetbrains.ls.imports.maven.model
 
 import com.jetbrains.ls.imports.maven.DependencyDataScope
 import com.jetbrains.ls.imports.maven.JavaSettingsData
+import com.jetbrains.ls.imports.maven.findCompilerPlugin
 import com.jetbrains.ls.imports.maven.isValidName
 import com.jetbrains.ls.imports.maven.parseJavaFeatureNumber
 import com.jetbrains.ls.imports.maven.toAbsolutePath
 import org.apache.maven.artifact.Artifact
 import org.apache.maven.project.MavenProject
+import org.codehaus.plexus.util.xml.Xpp3Dom
 
 internal enum class StandardMavenModuleType {
     AGGREGATOR,
@@ -78,10 +80,76 @@ internal class MavenTreeModuleImportData(
                 compilerOutput = compilerOutput,
                 compilerOutputForTests = compilerOutputForTests,
                 languageLevelId = finalJdkLevel,
-                manifestAttributes = emptyMap()
+                manifestAttributes = emptyMap(),
+                compilerArguments = collectCompilerArguments(mavenProject, moduleData.type)
             )
         }
 }
+
+/**
+ * Collects the additional Java compiler arguments configured for [project]'s maven-compiler-plugin
+ * (`<compilerArgs>`, `<compilerArgument>`, `<compilerArguments>`, `<parameters>` and the
+ * `maven.compiler.parameters` property). For [StandardMavenModuleType.TEST_ONLY] modules the test-compile
+ * configuration is preferred.
+ */
+internal fun collectCompilerArguments(project: MavenProject, type: StandardMavenModuleType): List<String> {
+    val forTests = type == StandardMavenModuleType.TEST_ONLY
+    val result = mutableListOf<String>()
+    if (project.properties.getProperty("maven.compiler.parameters").toBoolean()) {
+        result.add("-parameters")
+    }
+
+    val plugin = findCompilerPlugin(project)
+    val goal = if (forTests) "testCompile" else "compile"
+    val config = plugin?.let {
+        (it.executions?.firstOrNull { execution -> execution.goals?.contains(goal) == true }?.configuration as? Xpp3Dom)
+        ?: it.configuration as? Xpp3Dom
+    } ?: return result
+
+    config.getChild("parameters")?.value?.let { parameters ->
+        if (parameters.toBoolean()) {
+            if ("-parameters" !in result) result.add("-parameters")
+        }
+        else {
+            result.remove("-parameters")
+        }
+    }
+
+    if (forTests) {
+        val testArgs = collectMapArgs(config, "testCompilerArguments") + listOfNotNull(singleArg(config, "testCompilerArgument"))
+        if (testArgs.isNotEmpty()) {
+            result.addAll(testArgs)
+            return result
+        }
+    }
+
+    result.addAll(collectMapArgs(config, "compilerArguments"))
+    config.getChild("compilerArgs")?.children?.forEach { arg ->
+        arg.value?.takeUnless { it.isBlank() }?.let { result.add(it) }
+    }
+    singleArg(config, "compilerArgument")?.let { result.add(it) }
+    return result
+}
+
+private fun collectMapArgs(config: Xpp3Dom, tag: String): List<String> {
+    val node = config.getChild(tag) ?: return emptyList()
+    val result = mutableListOf<String>()
+    for (child in node.children) {
+        val key = child.name.let { if (it.startsWith("-")) it else "-$it" }
+        val value = child.value?.takeUnless { it.isBlank() }
+        if (key.startsWith("-A") && value != null) {
+            result.add("$key=$value")
+        }
+        else {
+            result.add(key)
+            value?.let { result.add(it) }
+        }
+    }
+    return result
+}
+
+private fun singleArg(config: Xpp3Dom, tag: String): String? =
+    config.getChild(tag)?.value?.takeUnless { it.isBlank() }?.trim()
 
 internal data class LanguageLevels(
     val sourceLevel: String?,

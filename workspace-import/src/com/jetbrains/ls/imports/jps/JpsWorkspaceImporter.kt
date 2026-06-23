@@ -52,6 +52,7 @@ import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
 import com.jetbrains.ls.imports.json.flattenExportedDependencies
 import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
 import com.jetbrains.ls.imports.utils.toIntellijUri
+import org.eclipse.aether.repository.RemoteRepository
 import org.jdom.Element
 import org.jetbrains.idea.maven.aether.ArtifactRepositoryManager
 import org.jetbrains.idea.maven.aether.ProgressConsumer
@@ -166,7 +167,7 @@ object JpsWorkspaceImporter : WorkspaceImporter {
         val sdks = mutableSetOf<String>()
         // Lazily created so the resolver (and its remote-repository setup) is only initialized when a library actually
         // needs to be downloaded.
-        val repositoryManager = lazy { createArtifactRepositoryManager() }
+        val repositoryManager = lazy { createArtifactRepositoryManager(projectDirectory) }
 
         model.project.modules.forEach { module ->
             val kotlinFacetModuleExtension = module.container.getChild(JpsKotlinFacetModuleExtension.KIND)
@@ -502,14 +503,61 @@ private fun downloadFromMavenRepository(
 }
 
 /**
- * Creates an [ArtifactRepositoryManager] that resolves against the project's local Maven repository and the default
- * remote repositories (Maven Central, JBoss). Downloaded artifacts are placed into the local repository, matching the
- * macro-expanded paths the JPS library roots point to.
+ * Creates an [ArtifactRepositoryManager] that resolves against the project's local Maven repository.
+ *
+ * Remote repositories are taken from `.idea/jarRepositories.xml` when that file is present; otherwise the default
+ * remote repositories (Maven Central, JBoss) are used. Downloaded artifacts are placed into the local repository,
+ * matching the macro-expanded paths the JPS library roots point to.
  */
 // ArtifactRepositoryManager only accepts a java.io.File for the local repository path.
 @Suppress("IO_FILE_USAGE")
-private fun createArtifactRepositoryManager(): ArtifactRepositoryManager =
-    ArtifactRepositoryManager(Path.of(JpsMavenSettings.getMavenRepositoryPath()).toFile(), ProgressConsumer.DEAF)
+private fun createArtifactRepositoryManager(projectDirectory: Path): ArtifactRepositoryManager {
+    val remoteRepositories = readRemoteRepositories(projectDirectory)
+        ?: ArtifactRepositoryManager.createDefaultRemoteRepositories()
+    return ArtifactRepositoryManager(
+        Path.of(JpsMavenSettings.getMavenRepositoryPath()).toFile(),
+        remoteRepositories,
+        ProgressConsumer.DEAF,
+    )
+}
+
+/**
+ * Reads the remote repositories configured in `.idea/jarRepositories.xml`.
+ *
+ * The file stores each repository under a `RemoteRepositoriesConfiguration` component, e.g.:
+ * ```xml
+ * <component name="RemoteRepositoriesConfiguration">
+ *   <remote-repository>
+ *     <option name="id" value="central-proxy" />
+ *     <option name="name" value="Maven Central Proxy" />
+ *     <option name="url" value="https://cache-redirector.jetbrains.com/repo1.maven.org/maven2" />
+ *   </remote-repository>
+ * </component>
+ * ```
+ *
+ * The repository `id` matters because the Aether resolver matches it against authentication and mirror settings from
+ * `.m2/settings.xml`. Returns `null` when the file is absent or declares no usable repositories, so the caller falls
+ * back to the default remote repositories.
+ */
+private fun readRemoteRepositories(projectDirectory: Path): List<RemoteRepository>? {
+    val root = loadIdeaXml(projectDirectory, "jarRepositories.xml") ?: return null
+    val component = root.children
+        .firstOrNull { it.name == "component" && it.getAttributeValue("name") == "RemoteRepositoriesConfiguration" }
+        ?: return null
+    return component.children
+        .asSequence()
+        .filter { it.name == "remote-repository" }
+        .mapNotNull { repository ->
+            val options = repository.children.filter { it.name == "option" }
+            fun option(name: String): String? =
+                options.firstOrNull { it.getAttributeValue("name") == name }?.getAttributeValue("value")
+            val id = option("id") ?: return@mapNotNull null
+            val url = option("url") ?: return@mapNotNull null
+            ArtifactRepositoryManager.createRemoteRepository(id, url)
+        }
+        .toList()
+        .nullize()
+}
 
 /**
  * Returns linked external project directories paired with the importer that should handle them.

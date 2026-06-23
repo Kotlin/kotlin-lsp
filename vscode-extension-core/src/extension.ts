@@ -21,6 +21,7 @@ import { registerStatusBarItem } from './statusBar';
 import { registerDapServer } from './dap';
 import { registerFileTemplates } from './fileTemplates';
 import { checkLegacyKotlinExtensionConflict } from './legacyKotlinExtensionConflict';
+import { registerAutoReloadWorkspace } from './autoReloadWorkspace';
 
 export type ExtensionModule = (context: ExtensionContext) => void | Promise<void>;
 export type GeoRestrictionCheck = (extension: Extension<unknown>) => Promise<boolean>;
@@ -89,23 +90,25 @@ function registerExportWorkspaceToJsonCommand(context: ExtensionContext): void {
 
 const ReloadWorkspaceRequest = new RequestType0<null, void>('intellij/reloadWorkspace');
 
+export async function reloadWorkspace(): Promise<void> {
+    const client = getLspClient();
+    if (client === undefined || client.initializeResult === undefined) {
+        await window.showErrorMessage('Language server is not running');
+        return;
+    }
+    try {
+        await client.sendRequest(ReloadWorkspaceRequest);
+        await window.showInformationMessage('Workspace reloaded');
+    } catch (e) {
+        if (e instanceof ResponseError && e.code === LSPErrorCodes.RequestCancelled) return;
+        const message = e instanceof Error ? e.message : String(e);
+        await window.showErrorMessage(`Failed to reload workspace: ${message}`);
+    }
+}
+
 function registerReloadWorkspaceCommand(context: ExtensionContext): void {
     context.subscriptions.push(
-        commands.registerCommand('jetbrains.kotlin.reloadWorkspace', async () => {
-            const client = getLspClient();
-            if (client === undefined || client.initializeResult === undefined) {
-                await window.showErrorMessage('Language server is not running');
-                return;
-            }
-            try {
-                await client.sendRequest(ReloadWorkspaceRequest);
-                await window.showInformationMessage('Workspace reloaded');
-            } catch (e) {
-                if (e instanceof ResponseError && e.code === LSPErrorCodes.RequestCancelled) return;
-                const message = e instanceof Error ? e.message : String(e);
-                await window.showErrorMessage(`Failed to reload workspace: ${message}`);
-            }
-        }),
+        commands.registerCommand('jetbrains.kotlin.reloadWorkspace', () => reloadWorkspace()),
     );
 }
 export async function activateExtension(
@@ -143,6 +146,7 @@ export async function activateExtension(
     }
     registerExportWorkspaceToJsonCommand(context);
     registerReloadWorkspaceCommand(context);
+    registerAutoReloadWorkspace(context);
     registerStatusBarItem();
     registerFileTemplates(context);
 
