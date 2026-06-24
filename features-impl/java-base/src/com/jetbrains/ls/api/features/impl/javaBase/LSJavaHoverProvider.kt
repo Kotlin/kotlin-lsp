@@ -3,6 +3,7 @@ package com.jetbrains.ls.api.features.impl.javaBase
 
 import com.intellij.java.syntax.parser.JavaKeywords
 import com.intellij.openapi.util.NlsSafe
+import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -19,6 +20,8 @@ import com.jetbrains.ls.api.features.impl.common.hover.LSHoverProviderBase
 import com.jetbrains.ls.api.features.impl.common.hover.markdownMultilineCode
 import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
 import com.jetbrains.ls.api.features.language.LSLanguage
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 open class LSJavaHoverProvider : LSHoverProviderBase() {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSJavaLanguage)
@@ -62,13 +65,23 @@ open class LSJavaHoverProvider : LSHoverProviderBase() {
         if (methodFile != from) return false
         if (!method.textRange.containsOffset(offset)) return false
         val body = method.body
-        if (body != null && body.textRange.containsOffset(offset)) return false
-        return true
+        return body == null || !body.textRange.containsOffset(offset)
     }
 
     private fun makeLinkTo(element: PsiMethod): String? {
         val location = element.getLspLocationForDefinition() ?: return null
-        return location.uri.uri.uri + "#" + (location.range.start.line + 1) + "," + (location.range.start.character + 1)
+        // We cannot use a plain location link here: VS Code's hover markdown renderer drops links
+        // whose scheme is not in its allowlist (notably jar:/jrt:), and even allowed file: links do
+        // not navigate to a position from a hover. Instead we emit a `command:` link that runs the
+        // client's navigation command (registered by the IntelliJ VS Code extension, which also marks
+        // the hover markdown trusted so the command link renders). LSP coordinates are 0-based, which
+        // is exactly what the command expects as its line/character arguments.
+        val args = listOf(
+            '"'+StringUtil.escapeStringCharacters(location.uri.uri.uri)+'"',
+            location.range.start.line.toString(),
+            location.range.start.character.toString(),
+        ).joinToString(separator = ",", prefix = "[", postfix = "]")
+        return "command:$NAVIGATE_TO_LOCATION_COMMAND?${URLEncoder.encode(args, StandardCharsets.UTF_8)}"
     }
 
     private fun render(element: PsiElement): String? {
@@ -94,6 +107,12 @@ open class LSJavaHoverProvider : LSHoverProviderBase() {
     }
 
     companion object {
+        /**
+         * Command run by the IntelliJ VS Code extension to navigate to a location from a hover link.
+         * Must match the command id registered in the extension (`decompiler.ts`).
+         */
+        private const val NAVIGATE_TO_LOCATION_COMMAND: String = "jetbrains.navigateToLocation"
+
         private const val OPTIONS: Int =
             PsiFormatUtilBase.SHOW_NAME or
                     PsiFormatUtilBase.SHOW_MODIFIERS or
