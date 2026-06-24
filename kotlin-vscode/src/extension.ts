@@ -4,10 +4,10 @@ import kotlinModule from '@jetbrains/vscode-language-kotlin';
 import { checkGeoRestricted } from './geoRestriction';
 
 export async function activate(context: ExtensionContext): Promise<void> {
-    await activateExtension(context, {
-        checkGeoRestricted,
-        enableDapServer: true,
-        enableDecompiler: true,
-        modules: [kotlinModule],
-    });
+  await activateExtension(context, {
+    checkGeoRestricted,
+    enableDapServer: true,
+    enableDecompiler: true,
+    modules: [kotlinModule],
+  });
 }

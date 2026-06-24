@@ -8,11 +8,11 @@ import { reloadWorkspace } from './extension';
  *
  */
 export function registerAutoReloadWorkspace(context: ExtensionContext): void {
-    context.subscriptions.push(
-        workspace.onDidSaveTextDocument(async (document) => {
-            if (isBuildFilePath(document.uri.fsPath)) {
-                await reloadWorkspace();
-            }
-        }),
-    );
+  context.subscriptions.push(
+    workspace.onDidSaveTextDocument(async (document) => {
+      if (isBuildFilePath(document.uri.fsPath)) {
+        await reloadWorkspace();
+      }
+    }),
+  );
 }

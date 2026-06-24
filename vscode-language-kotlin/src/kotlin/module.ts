@@ -4,6 +4,6 @@ import { registerHandleKeyType } from '@jetbrains/vscode-extension-core/handleKe
 import keyHandler from './keyHandler';
 
 export default async (context: ExtensionContext) => {
-    const parser = await DocumentParser.create(context, 'kotlin');
-    registerHandleKeyType(context, parser, keyHandler);
+  const parser = await DocumentParser.create(context, 'kotlin');
+  registerHandleKeyType(context, parser, keyHandler);
 };
