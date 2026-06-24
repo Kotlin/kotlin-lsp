@@ -49,9 +49,9 @@ object LSCodeActions {
     context(configuration: LSConfiguration)
     private fun getProviders(params: CodeActionParams): List<LSCodeActionProvider> {
         val all = configuration.entriesFor<LSCodeActionProvider>(params.textDocument)
-        val only = params.context.only?.toSet() ?: return all
+        val only = params.context.only ?: return all
         return all.filter { provider ->
-            provider.providesOnlyKinds.any { it in only }
+            provider.providesOnlyKinds.any { provided -> only.any { requested -> provided.isKindOf(requested) } }
         }
     }
 }
