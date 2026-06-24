@@ -13,13 +13,23 @@ import com.jetbrains.lsp.protocol.CodeLens
 import com.jetbrains.lsp.protocol.CodeLensParams
 import com.jetbrains.lsp.protocol.Command
 import com.jetbrains.lsp.protocol.DocumentUri
+import com.jetbrains.lsp.protocol.LSP
 import com.jetbrains.lsp.protocol.Range
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.encodeToJsonElement
+import org.jetbrains.annotations.VisibleForTesting
+
+@VisibleForTesting
+@Serializable
+data class RunMainArgs(
+    val mainClass: String,
+    val uri: DocumentUri,
+    val noDebug: Boolean,
+)
 
 /**
  * Base class for the [LSCodeLensProvider]s that surface ▶ Run / 🐞 Debug lenses above each JVM `main` entry point in a file.
@@ -55,13 +65,7 @@ abstract class LSJvmRunMainCodeLensProvider : LSCodeLensProvider {
         val command = Command(
             title = title,
             command = RUN_COMMAND_NAME,
-            arguments = listOf(
-                buildJsonObject {
-                    put("mainClass", mainClass)
-                    put("uri", uri.uri.uri)
-                    put("noDebug", noDebug)
-                }
-            ),
+            arguments = listOf(LSP.json.encodeToJsonElement(RunMainArgs(mainClass = mainClass, uri = uri, noDebug = noDebug))),
         )
         return CodeLens(range, command, data = null)
     }
