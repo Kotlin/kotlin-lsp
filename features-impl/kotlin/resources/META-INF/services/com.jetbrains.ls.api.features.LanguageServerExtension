@@ -1,3 +1,2 @@
 com.jetbrains.ls.api.features.impl.kotlin.configuration.KotlinLanguageServerExtension
-com.jetbrains.ls.api.features.impl.kotlin.debug.KotlinDapServerExtension
 com.jetbrains.ls.imports.WorkspaceImportLanguageServerExtension

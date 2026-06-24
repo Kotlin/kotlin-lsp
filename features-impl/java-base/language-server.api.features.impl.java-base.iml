@@ -43,7 +43,6 @@
     <orderEntry type="module" module-name="intellij.platform.lang" />
     <orderEntry type="module" module-name="intellij.java.impl" />
     <orderEntry type="module" module-name="intellij.java.psi" />
-    <orderEntry type="module" module-name="intellij.java.backend" />
     <orderEntry type="module" module-name="intellij.java.frontback.psi" />
     <orderEntry type="module" module-name="language-server.api.features" />
     <orderEntry type="module" module-name="fleet.lsp.protocol" />

@@ -1,5 +1,5 @@
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
-load("@rules_jvm//:jvm.bzl", "jvm_library")
+load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_provided_library")
 
 ### auto-generated section `build language-server.api.features.impl.kotlin` start
 create_kotlinc_options(
@@ -12,6 +12,11 @@ create_kotlinc_options(
     ],
     x_context_parameters = True,
     x_when_guards = True,
+)
+
+jvm_provided_library(
+    name = "community_plugins_kotlin_code-insight_kotlin-codeInsight-inspections_provided",
+    lib = "@community//plugins/kotlin/code-insight/inspections-k2:kotlin-codeInsight-inspections",
 )
 
 jvm_library(
@@ -59,7 +64,6 @@ jvm_library(
         "@community//platform/indexing-api:indexing",
         "@community//plugins/kotlin/base/indices",
         "@community//plugins/kotlin/base/project-structure",
-        "@community//plugins/kotlin/code-insight/inspections-k2:kotlin-codeInsight-inspections",
         "@community//plugins/kotlin/code-insight/intentions-k2:kotlin-codeInsight-intentions",
         "@community//plugins/kotlin/formatter/minimal",
         "@community//plugins/kotlin/plugin/common",
@@ -81,12 +85,11 @@ jvm_library(
         "@community//plugins/kotlin/navigation",
         "@community//plugins/kotlin/code-insight/impl-base:kotlin-codeInsight-shared",
         "//language-server/analyzer.kotlin",
-        "//language-server/dap/jvm",
         "//language-server/api.impl.analyzer",
-        "//language-server/dap/jvm/lsp.features",
         "//language-server/community/workspace-import",
         "//language-server/community/features-impl/java-base",
         "@community//plugins/kotlin/references",
+        ":community_plugins_kotlin_code-insight_kotlin-codeInsight-inspections_provided",
     ],
 )
 
@@ -124,6 +127,7 @@ jvm_library(
         "@community//platform/indexing-api:indexing_test_lib",
         "@community//plugins/kotlin/base/indices:indices_test_lib",
         "@community//plugins/kotlin/base/project-structure:project-structure_test_lib",
+        "@community//plugins/kotlin/code-insight/inspections-k2:kotlin-codeInsight-inspections",
         "@community//plugins/kotlin/code-insight/inspections-k2:kotlin-codeInsight-inspections_test_lib",
         "@community//plugins/kotlin/code-insight/intentions-k2:kotlin-codeInsight-intentions_test_lib",
         "@community//plugins/kotlin/formatter/minimal:minimal_test_lib",
@@ -144,9 +148,7 @@ jvm_library(
         "@community//plugins/kotlin/navigation:navigation_test_lib",
         "@community//plugins/kotlin/code-insight/impl-base:kotlin-codeInsight-shared_test_lib",
         "//language-server/analyzer.kotlin:analyzer.kotlin_test_lib",
-        "//language-server/dap/jvm:jvm_test_lib",
         "//language-server/api.impl.analyzer:api.impl.analyzer_test_lib",
-        "//language-server/dap/jvm/lsp.features:lsp.features_test_lib",
         "//language-server/community/workspace-import:workspace-import_test_lib",
         "//language-server/community/features-impl/java-base:java-base_test_lib",
         "@community//plugins/kotlin/references:references_test_lib",

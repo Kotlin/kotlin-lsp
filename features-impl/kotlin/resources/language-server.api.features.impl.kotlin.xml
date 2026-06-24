@@ -1,4 +1,4 @@
-<idea-plugin>
+<idea-plugin visibility="internal">
   <!-- region Generated dependencies - run `Generate Product Layouts` to regenerate -->
   <dependencies>
     <module name="intellij.java.impl"/>
@@ -11,7 +11,6 @@
     <module name="intellij.kotlin.codeInsight.api"/>
     <module name="intellij.kotlin.codeInsight.base"/>
     <module name="intellij.kotlin.codeInsight.fixes"/>
-    <module name="intellij.kotlin.codeInsight.inspections"/>
     <module name="intellij.kotlin.codeInsight.intentions"/>
     <module name="intellij.kotlin.codeInsight.shared"/>
     <module name="intellij.kotlin.completion.impl"/>
@@ -22,8 +21,6 @@
     <module name="language-server.analyzer.kotlin"/>
     <module name="language-server.api.features.impl.common"/>
     <module name="language-server.api.features.impl.java-base"/>
-    <module name="language-server.dap.jvm"/>
-    <module name="language-server.dap.jvm.lsp.features"/>
     <module name="language-server.workspace-import"/>
   </dependencies>
   <!-- endregion -->
