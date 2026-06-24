@@ -12,6 +12,7 @@ import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.CodeLens
 import com.jetbrains.lsp.protocol.CodeLensParams
 import com.jetbrains.lsp.protocol.Command
+import com.jetbrains.lsp.protocol.DocumentUri
 import com.jetbrains.lsp.protocol.Range
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
@@ -32,8 +33,8 @@ abstract class LSJvmRunMainCodeLensProvider : LSCodeLensProvider {
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
                 findMainEntryPoints(psiFile).flatMap { (range, mainClass) ->
                     listOf(
-                        launchLens(range, mainClass, noDebug = true, title = "$(play) Run"),
-                        launchLens(range, mainClass, noDebug = false, title = "$(debug-alt) Debug"),
+                        launchLens(params.textDocument.uri, range, mainClass, noDebug = true, title = "$(play) Run"),
+                        launchLens(params.textDocument.uri, range, mainClass, noDebug = false, title = "$(debug-alt) Debug"),
                     )
                 }
             }
@@ -50,13 +51,14 @@ abstract class LSJvmRunMainCodeLensProvider : LSCodeLensProvider {
 
     protected data class MainEntryPoint(val range: Range, val mainClass: String)
 
-    private fun launchLens(range: Range, mainClass: String, noDebug: Boolean, title: String): CodeLens {
+    private fun launchLens(uri: DocumentUri, range: Range, mainClass: String, noDebug: Boolean, title: String): CodeLens {
         val command = Command(
             title = title,
             command = RUN_COMMAND_NAME,
             arguments = listOf(
                 buildJsonObject {
                     put("mainClass", mainClass)
+                    put("uri", uri.uri.uri)
                     put("noDebug", noDebug)
                 }
             ),

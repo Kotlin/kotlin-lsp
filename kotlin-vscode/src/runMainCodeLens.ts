@@ -5,8 +5,8 @@ const RUN_COMMAND = 'intellij_debugger.runMain';
 
 interface RunArgs {
   mainClass: string;
+  uri?: string;
   noDebug?: boolean;
-  projectName?: string;
 }
 
 export function registerRunMainCodeLens(context: vscode.ExtensionContext) {
@@ -21,7 +21,7 @@ export function registerRunMainCodeLens(context: vscode.ExtensionContext) {
         name: arg.mainClass.split('.').pop() ?? 'Run main',
         mainClass: arg.mainClass,
       };
-      if (arg.projectName) config.projectName = arg.projectName;
+      if (arg.uri) config.file = vscode.Uri.parse(arg.uri).fsPath;
       await vscode.debug.startDebugging(folder, config, { noDebug: arg.noDebug ?? false });
     }),
   );
