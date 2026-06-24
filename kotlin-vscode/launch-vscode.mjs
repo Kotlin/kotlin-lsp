@@ -44,7 +44,7 @@ function fail(message) {
 // Run a command, inheriting stdio. On Windows we go through the shell so that
 // `.cmd` shims (pnpm, corepack, code) resolve, quoting args that need it.
 function run(file, args, opts = {}) {
-  let spawnFile = file;
+  const spawnFile = file;
   let spawnArgs = args;
   if (IS_WIN) {
     spawnArgs = args.map((a) => (/[\s"]/.test(a) ? `"${a.replace(/"/g, '\\"')}"` : a));
