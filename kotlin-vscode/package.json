@@ -97,7 +97,7 @@
     ],
     "configuration": [
       {
-        "title": "IntelliJ Language Server",
+        "title": "Kotlin by JetBrains",
         "properties": {
           "intellij.dev.serverPort": {
             "type": "number",
@@ -143,7 +143,27 @@
         }
       },
       {
-        "title": "Inlay",
+        "title": "Data Sharing",
+        "properties": {
+          "intellij.dataSharing": {
+            "type": "string",
+            "enum": [
+              "full",
+              "anonymous",
+              "none"
+            ],
+            "enumDescriptions": [
+              "Send anonymous usage statistics and full error reports (including exception messages and attachments).",
+              "Send anonymous usage statistics and anonymized error reports (messages and user data stripped).",
+              "Do not send usage statistics or error reports."
+            ],
+            "default": "none",
+            "markdownDescription": "Controls what diagnostic data the language server shares with JetBrains.\n\nThe following table outlines what is sent at each level:\n\n| | Usage Data | Errors | Error Details (non-anonymized) |\n| --- | :---: | :---: | :---: |\n| `full` | ✓ | ✓ | ✓ |\n| `anonymous` | ✓ | ✓ | – |\n| `none` | – | – | – |"
+          }
+        }
+      },
+      {
+        "title": "Inlays",
         "properties": {
           "jetbrains.kotlin.hints.settings.types.property": {
             "type": "boolean",

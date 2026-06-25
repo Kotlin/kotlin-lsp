@@ -46,6 +46,7 @@ const OPT_LOG_LAUNCH = 'intellij.dev.logLaunch';
 const OPT_JVM_ARGS = 'intellij.additionalJvmArgs';
 const OPT_DEFAULT_WORKSPACE_SDK = 'intellij.jdkForSymbolResolution';
 const OPT_BUILD_TOOL = 'intellij.buildTool';
+const OPT_DATA_SHARING = 'intellij.dataSharing';
 
 const INDEX_DIR_STATE_KEY = 'jetbrains.intellij.indexDir';
 
@@ -338,17 +339,10 @@ function startBundledServer(): ChildProcessByStdio<null, Readable, Readable> {
         IJ_LAUNCHER_DEBUG: '1',
       }
     : jvmOptions;
-  const telemetryLogger = vscode.env.createTelemetryLogger({
-    sendEventData() {},
-    sendErrorData() {},
-  });
-  if (telemetryLogger.isErrorsEnabled) {
-    env.INTELLIJ_REPORT_ERRORS = 'true';
+  const dataSharing = configOption<string>(OPT_DATA_SHARING) ?? 'none';
+  if (dataSharing !== 'none') {
+    env.INTELLIJ_DATA_SHARING = dataSharing; // 'full' | 'anonymous'
   }
-  if (telemetryLogger.isUsageEnabled) {
-    env.INTELLIJ_REPORT_USAGE = 'true';
-  }
-  telemetryLogger.dispose();
 
   logInfo('Starting language server');
   logInfo(`  command: ${launcherPath}`);
