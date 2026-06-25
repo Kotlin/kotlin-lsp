@@ -13,6 +13,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import net from 'node:net';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 // kotlin-vscode -> community -> language-server (the pnpm workspace root).
@@ -189,6 +190,40 @@ if (!fs.existsSync(keybindingsFile)) {
 }
 
 // --- 4. Launch the isolated VS Code instance ---------------------------------
+const timeoutMs = 120_000;
+const intervalMs = 500;
+const host = '127.0.0.1';
+const port = serverPort;
+
+function waitForPort() {
+  const startedAt = Date.now();
+  console.log(
+    `Waiting ${timeoutMs / 1000}s for LSP server to be available on port ${port} before launching VSCode...`,
+  );
+
+  return new Promise((resolve, reject) => {
+    function tryConnect() {
+      const socket = net.createConnection({ host, port });
+
+      socket.on('connect', () => {
+        console.log(`Server is available at ${host}:${port}`);
+        socket.end();
+        resolve();
+      });
+
+      socket.on('error', () => {
+        socket.destroy();
+        if (Date.now() - startedAt > timeoutMs) {
+          reject(new Error(`Timed out waiting for ${host}:${port}`));
+          return;
+        }
+        setTimeout(tryConnect, intervalMs);
+      });
+    }
+    tryConnect();
+  });
+}
+await waitForPort();
 
 console.log(green(`Launching VS Code (port ${serverPort}, profile ${isoDir})`));
 const codeArgs = [
