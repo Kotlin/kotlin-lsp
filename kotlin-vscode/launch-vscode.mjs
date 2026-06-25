@@ -120,9 +120,23 @@ const bundleRelDir = BUNDLE_PACKAGE_DIRS[bundleType];
 if (!bundleRelDir) fail(`Unknown --bundle-type '${bundleType}'. Expected one of: ${bundleKeys}`);
 
 const extensionDir = path.join(WORKSPACE_ROOT, bundleRelDir);
-const isoDir = path.join(REPO_ROOT, 'out', 'language-server', `vscode-${bundleType}-lsp`);
-const userDataDir = path.join(isoDir, 'user-data');
+// Keep this path SHORT: VS Code creates its main IPC socket (e.g. "1.10-main.sock", ~15 chars)
+// directly inside --user-data-dir. macOS caps a Unix socket path at 103 usable chars
+// (sockaddr_un.sun_path is 104 incl. NUL), so a long user-data-dir makes VS Code exit on launch.
+const isoDir = path.join(REPO_ROOT, 'out', 'ls-vsc', bundleType);
+const userDataDir = isoDir; // socket lives directly here; keep it short
 const extensionsDir = path.join(isoDir, 'extensions');
+
+// Guard: VS Code's main IPC socket lives inside --user-data-dir; macOS caps the socket path
+// at 103 chars. Reserve room for the longest socket name VS Code appends (e.g. "/1.10-main.sock").
+const SOCKET_NAME_RESERVE = '/9.999.9-shared.sock'.length; // generous upper bound
+if (process.platform === 'darwin' && userDataDir.length + SOCKET_NAME_RESERVE > 103) {
+  fail(
+    'Error: --user-data-dir is too long for the macOS Unix-socket limit (103 chars):\n' +
+      `  ${userDataDir} (${userDataDir.length} chars)\n` +
+      'VS Code would exit immediately. Clone the repo to a shorter path.',
+  );
+}
 
 // --- Resolve toolchain -------------------------------------------------------
 
