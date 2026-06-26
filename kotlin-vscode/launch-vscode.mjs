@@ -204,7 +204,7 @@ if (!fs.existsSync(keybindingsFile)) {
 }
 
 // --- 4. Launch the isolated VS Code instance ---------------------------------
-const timeoutMs = 120_000;
+const timeoutMs = 360_000;
 const intervalMs = 500;
 const host = '127.0.0.1';
 const port = serverPort;
