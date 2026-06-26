@@ -13,7 +13,8 @@ import com.intellij.codeInspection.LocalQuickFix
 import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.QuickFix
 import com.intellij.lang.Language
-import com.intellij.lang.Language.findLanguageByID
+import com.intellij.lang.LanguageMatcher
+import com.intellij.lang.MetaLanguage
 import com.intellij.modcommand.ActionContext
 import com.intellij.modcommand.LocalQuickFixWithModCommandFallback
 import com.intellij.modcommand.ModCommand
@@ -34,46 +35,33 @@ internal class LSInspectionManager(
     private val quickFixBlacklist: Blacklist = Blacklist()) {
     
     internal fun getLocalInspections(psiFile: PsiFile, infoInspections: Boolean = false): List<LocalInspectionTool> {
-        return getEnabledInspectionTools(LocalInspectionEP.LOCAL_INSPECTION.extensionList, psiFile.language.id, infoInspections)
+        return getEnabledInspectionTools(LocalInspectionEP.LOCAL_INSPECTION.extensionList, psiFile.language, infoInspections)
             .filterIsInstance<LocalInspectionTool>()
             .filter { localInspectionTool -> localInspectionTool.isAvailableForFile(psiFile) }
             .toList()
     }
 
     internal fun getSimpleGlobalInspections(language: Language): List<GlobalSimpleInspectionTool> {
-        return getEnabledInspectionTools(InspectionEP.GLOBAL_INSPECTION.extensionList, language.id)
+        return getEnabledInspectionTools(InspectionEP.GLOBAL_INSPECTION.extensionList, language)
             .filterIsInstance<GlobalSimpleInspectionTool>()
             .toList()
     }
 
     internal fun getSharedLocalInspectionsFromGlobalTools(language: Language, infoInspections: Boolean = false): List<LocalInspectionTool> {
-        return getEnabledInspectionTools(InspectionEP.GLOBAL_INSPECTION.extensionList, language.id, infoInspections)
+        return getEnabledInspectionTools(InspectionEP.GLOBAL_INSPECTION.extensionList, language, infoInspections)
             .filterIsInstance<GlobalInspectionTool>()
             .mapNotNull { globalInspectionTool -> globalInspectionTool.sharedLocalInspectionTool }
             .filterNot { inspectionBlacklist.containsSuperClass(it) }
             .toList()
     }
 
-    private fun languageDialectIsSupportedByInspection(inspectionLanguageId: String?, fileLanguageId: String): Boolean {
-        val fileLanguage = findLanguageByID(fileLanguageId)
-        val inspectionLanguage = findLanguageByID(inspectionLanguageId)
-        return fileLanguage?.isKindOf(inspectionLanguage) ?: false
-    }
-
-    /* Maybe this doesn't need now */
-    private fun isLanguageInspection(inspectionEP: InspectionEP, languageId: String): Boolean {
-        return inspectionEP.language?.uppercase() == "UAST" && (languageId == "JAVA" || languageId == "KT")
-    }
-
-    private fun getEnabledInspectionTools(extensionList: List<InspectionEP>, languageId: String, infoInspections: Boolean = false): 
+    private fun getEnabledInspectionTools(extensionList: List<InspectionEP>, language: Language, infoInspections: Boolean = false):
             Sequence<InspectionProfileEntry> {
         return extensionList
             .asSequence()
             .filter { inspectionEP ->
-                inspectionEP.language == languageId || languageDialectIsSupportedByInspection(
-                    inspectionEP.language,
-                    languageId
-                ) || isLanguageInspection(inspectionEP, languageId)
+                val inspectionLanguageId = inspectionEP.language ?: return@filter false
+                isSupportAnyLanguage(inspectionLanguageId) || isLanguageSupportedByInspection(inspectionLanguageId, language)
             }
             .filter { inspectionEP -> inspectionEP.enabledByDefault }
             .filter { inspectionEP -> (HighlightDisplayLevel.find(inspectionEP.level) == HighlightDisplayLevel.DO_NOT_SHOW) == infoInspections }
@@ -86,6 +74,20 @@ internal class LSInspectionManager(
                 }
             }
             .filterNot { inspectionBlacklist.containsSuperClass(it) }
+    }
+
+    /** [com.intellij.lang.LanguageExtensionPoint.language] **/
+    private fun isSupportAnyLanguage(inspectionLanguageId: String): Boolean = inspectionLanguageId.isEmpty()
+
+    private fun isLanguageSupportedByInspection(inspectionLanguageId: String, fileLanguage: Language): Boolean {
+        val inspectionLanguage = findLanguageOrMetaLanguageByID(inspectionLanguageId) ?: return false
+
+        return LanguageMatcher.matchWithDialects(inspectionLanguage).matchesLanguage(fileLanguage)
+    }
+
+    private fun findLanguageOrMetaLanguageByID(languageId: String): Language? {
+        return Language.findLanguageByID(languageId)
+            ?: MetaLanguage.all().firstOrNull { it.id == languageId }
     }
 
     context(server: LSServer)
