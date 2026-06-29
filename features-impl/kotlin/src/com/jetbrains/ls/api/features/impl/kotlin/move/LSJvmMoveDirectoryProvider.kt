@@ -39,7 +39,7 @@ internal object LSJvmMoveDirectoryProvider: LSMoveDirectoryProvider {
                 createProcessor(context)
             } ?: return@withWriteAnalysisContext null
 
-            doRefactoring(processor, TextEditsComputer.DiffGranularity.WORD, params.oldUri)
+            doRefactoring(processor, TextEditsComputer.DiffGranularity.WORD, params.oldUri, true)
         }?.let { return WorkspaceEdit(documentChanges = it) }
     }
 }

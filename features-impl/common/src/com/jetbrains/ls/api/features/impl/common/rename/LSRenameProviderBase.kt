@@ -46,7 +46,7 @@ abstract class LSRenameProviderBase(
                 val context = createContext(target, params.newName, psiFile)
                 createProcessor(context)
             } ?: return@withWriteAnalysisContext emptyList()
-            doRefactoring(processor, DiffGranularity.CHARACTER, null)
+            doRefactoring(processor, DiffGranularity.CHARACTER, null, false)
         }
 
         return WorkspaceEdit(documentChanges = changes)
@@ -78,7 +78,7 @@ abstract class LSRenameProviderBase(
                 createProcessor(context)
             } ?: return@withWriteAnalysisContext null
 
-            doRefactoring(renamer, DiffGranularity.WORD, params.oldUri)
+            doRefactoring(renamer, DiffGranularity.WORD, params.oldUri, true)
         }
 
         return WorkspaceEdit(documentChanges = edits)

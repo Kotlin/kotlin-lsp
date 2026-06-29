@@ -30,7 +30,7 @@ internal object LSJvmRenameDirectoryProvider : LSRenameDirectoryProvider {
                 createProcessor(context)
             } ?: return@withWriteAnalysisContext null
 
-            doRefactoring(renamer, DiffGranularity.WORD, params.oldUri)
+            doRefactoring(renamer, DiffGranularity.WORD, params.oldUri, true)
         }?.let { return WorkspaceEdit(documentChanges = it) }
     }
 }

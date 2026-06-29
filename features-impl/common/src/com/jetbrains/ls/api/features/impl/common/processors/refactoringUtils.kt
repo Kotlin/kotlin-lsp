@@ -20,14 +20,19 @@ import com.jetbrains.ls.api.features.textEdits.fileChanges
 import com.jetbrains.ls.snapshot.api.impl.core.asURI
 import com.jetbrains.ls.snapshot.api.impl.core.toFileUrl
 import com.jetbrains.lsp.implementation.LspException
+import com.jetbrains.lsp.implementation.LspHandlerContext
+import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.implementation.throwLspError
 import com.jetbrains.lsp.protocol.CreateFile
 import com.jetbrains.lsp.protocol.DeleteFile
 import com.jetbrains.lsp.protocol.DocumentUri
 import com.jetbrains.lsp.protocol.ErrorCodes
 import com.jetbrains.lsp.protocol.FileChange
+import com.jetbrains.lsp.protocol.MessageType
 import com.jetbrains.lsp.protocol.RenameFile
 import com.jetbrains.lsp.protocol.RenameRequestType
+import com.jetbrains.lsp.protocol.ShowMessageNotificationType
+import com.jetbrains.lsp.protocol.ShowMessageParams
 import com.jetbrains.lsp.protocol.TextDocumentEdit
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 import com.jetbrains.lsp.protocol.URI
@@ -43,12 +48,14 @@ import kotlinx.coroutines.withContext
  *  `workspace/willRenameFiles` request is called. IntelliJ engine will simulate the whole rename
  *  operation and possibly return the result including move of the files in the params.
  *  Such changes should be ignored as they are handled by the client.
+ *  @param showNotificationWithError whether to send a notification to the client in case of error occurred.
  */
-context(server: LSServer, _: LSAnalysisContext)
+context(server: LSServer, _: LSAnalysisContext, _: LspHandlerContext)
 suspend fun doRefactoring(
     processor: RefactoringProcessor,
     granularity: DiffGranularity,
     uriToSkip: URI?,
+    showNotificationWithError : Boolean
 ): List<FileChange> {
     val originals = try {
         withContext(Dispatchers.EDT) {
@@ -63,6 +70,16 @@ suspend fun doRefactoring(
                 val cause = generateSequence(ex) { it.cause?.takeIf { c -> c != it } }
                     .filterIsInstance<IncorrectOperationException>()
                     .firstOrNull() ?: ex
+
+                if (showNotificationWithError) {
+                    lspClient.notify(
+                        ShowMessageNotificationType,
+                        ShowMessageParams(
+                            MessageType.Error,
+                            cause.message ?: "Error performing refactoring"
+                        )
+                    )
+                }
 
                 throwLspError(
                     RenameRequestType,

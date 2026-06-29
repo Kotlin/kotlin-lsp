@@ -40,7 +40,7 @@ abstract class LSMoveFileProviderBase(override val supportedLanguages: Set<LSLan
             } ?: return@withWriteAnalysisContext emptyList()
 
 
-            doRefactoring(processor = processor, granularity = TextEditsComputer.DiffGranularity.WORD, uriToSkip = params.oldUri)
+            doRefactoring(processor = processor, granularity = TextEditsComputer.DiffGranularity.WORD, uriToSkip = params.oldUri, true)
         }
 
         return WorkspaceEdit(documentChanges = changes)
