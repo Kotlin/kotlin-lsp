@@ -104,6 +104,11 @@
             "default": -1,
             "description": "Port for the locally started server to listen on. -1 to start the bundled server"
           },
+          "intellij.dev.serverTimeoutMs": {
+            "type": "number",
+            "default": 10000,
+            "description": "Timeout (ms) for connecting to the external dev server."
+          },
           "intellij.dev.logLaunch": {
             "type": "boolean",
             "default": false,

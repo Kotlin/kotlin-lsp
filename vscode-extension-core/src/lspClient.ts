@@ -42,6 +42,7 @@ const CONNECTION_RETRY_DELAY_MS = 100;
 
 const LANGUAGE_CLIENT_ID = 'intellij';
 const OPT_DEV_SERVER_PORT = 'intellij.dev.serverPort';
+const OPT_DEV_SERVER_TIMEOUT = 'intellij.dev.serverTimeoutMs';
 const OPT_LOG_LAUNCH = 'intellij.dev.logLaunch';
 const OPT_JVM_ARGS = 'intellij.additionalJvmArgs';
 const OPT_DEFAULT_WORKSPACE_SDK = 'intellij.jdkForSymbolResolution';
@@ -306,7 +307,11 @@ function getServerOptions(): ServerOptions {
   if (predefinedPort == -1) {
     return getStreamInfoForBundledServer;
   } else {
-    return () => getStreamInfoForRunningServer(predefinedPort, LOCAL_SERVER_CONNECTION_TIMEOUT_MS);
+    return () =>
+      getStreamInfoForRunningServer(
+        predefinedPort,
+        configOption<number>(OPT_DEV_SERVER_TIMEOUT) ?? LOCAL_SERVER_CONNECTION_TIMEOUT_MS,
+      );
   }
 }
 
