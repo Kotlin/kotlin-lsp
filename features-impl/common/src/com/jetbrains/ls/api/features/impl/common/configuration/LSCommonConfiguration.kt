@@ -1,8 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.configuration
 
-import com.intellij.ide.plugins.PluginMainDescriptor
-import com.jetbrains.analyzer.plugins.originalDescriptorSupplierForMakePlugin
+import com.jetbrains.analyzer.plugins.originalPlugins
 import com.jetbrains.ls.api.features.WorkspaceComponentEntry
 import com.jetbrains.ls.api.features.impl.common.api.commonLsApiPlugin
 import com.jetbrains.ls.api.features.impl.common.decompiler.LSDecompileCommandDescriptorProvider
@@ -22,12 +21,6 @@ val LSCommonConfiguration: LSConfigurationPiece = LSConfigurationPiece(
     plugins = listOf(
         lsApiPlugin,
         commonLsApiPlugin,
-        *platformPlugins(),
+        *originalPlugins("org.jetbrains.ls.plugin.editorconfig"),
     )
 )
-
-private fun platformPlugins(): Array<PluginMainDescriptor> = listOf(
-    "org.jetbrains.ls.plugin.editorconfig"
-)
-    .mapNotNull { originalDescriptorSupplierForMakePlugin(it) as? PluginMainDescriptor }
-    .toTypedArray()
