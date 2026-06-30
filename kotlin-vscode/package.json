@@ -118,7 +118,7 @@
                 "items": {
                   "type": "string"
                 },
-                "description": "JVM arguments that are passed into the VM itself."
+                "description": "JVM arguments."
               },
               "classPaths": {
                 "type": "array",
