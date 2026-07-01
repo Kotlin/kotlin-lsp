@@ -173,5 +173,31 @@
             "version": 5,
             "flushNeeded": false
         }
+    ],
+    "javaSettings": [
+        {
+            "module": "gradle-kotlin-language-version-custom.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/build/classes/kotlin/main",
+                "<WORKSPACE>/build/classes/java/main",
+                "<WORKSPACE>/build/resources/main"
+            ],
+            "languageLevelId": null,
+            "manifestAttributes": {}
+        },
+        {
+            "module": "gradle-kotlin-language-version-custom.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/build/classes/kotlin/test",
+                "<WORKSPACE>/build/classes/java/test",
+                "<WORKSPACE>/build/resources/test"
+            ],
+            "languageLevelId": null,
+            "manifestAttributes": {}
+        }
     ]
 }

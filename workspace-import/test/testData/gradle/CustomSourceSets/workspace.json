@@ -693,5 +693,91 @@
             "version": 5,
             "flushNeeded": false
         }
+    ],
+    "javaSettings": [
+        {
+            "module": "multi-project-source-sets.app.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/app/build/classes/kotlin/main",
+                "<WORKSPACE>/app/build/classes/java/main",
+                "<WORKSPACE>/app/build/resources/main"
+            ],
+            "languageLevelId": null,
+            "manifestAttributes": {}
+        },
+        {
+            "module": "multi-project-source-sets.app.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/app/build/classes/kotlin/test",
+                "<WORKSPACE>/app/build/classes/java/test",
+                "<WORKSPACE>/app/build/resources/test"
+            ],
+            "languageLevelId": null,
+            "manifestAttributes": {}
+        },
+        {
+            "module": "multi-project-source-sets.lib.integrationTest",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/lib/build/classes/kotlin/integrationTest",
+                "<WORKSPACE>/lib/build/classes/java/integrationTest",
+                "<WORKSPACE>/lib/build/resources/integrationTest"
+            ],
+            "languageLevelId": null,
+            "manifestAttributes": {}
+        },
+        {
+            "module": "multi-project-source-sets.lib.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/lib/build/classes/kotlin/main",
+                "<WORKSPACE>/lib/build/classes/java/main",
+                "<WORKSPACE>/lib/build/resources/main"
+            ],
+            "languageLevelId": null,
+            "manifestAttributes": {}
+        },
+        {
+            "module": "multi-project-source-sets.lib.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/lib/build/classes/kotlin/test",
+                "<WORKSPACE>/lib/build/classes/java/test",
+                "<WORKSPACE>/lib/build/resources/test"
+            ],
+            "languageLevelId": null,
+            "manifestAttributes": {}
+        },
+        {
+            "module": "multi-project-source-sets.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/build/classes/kotlin/main",
+                "<WORKSPACE>/build/classes/java/main",
+                "<WORKSPACE>/build/resources/main"
+            ],
+            "languageLevelId": null,
+            "manifestAttributes": {}
+        },
+        {
+            "module": "multi-project-source-sets.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/build/classes/kotlin/test",
+                "<WORKSPACE>/build/classes/java/test",
+                "<WORKSPACE>/build/resources/test"
+            ],
+            "languageLevelId": null,
+            "manifestAttributes": {}
+        }
     ]
 }

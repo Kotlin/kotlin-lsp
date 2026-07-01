@@ -1,8 +1,20 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.json
 
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonNames
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonPrimitive
 
 @Serializable
 data class WorkspaceData(
@@ -204,17 +216,53 @@ data class XmlElement(
     val text: String? = null
 )
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class JavaSettingsData(
     val module: String,
     val inheritedCompilerOutput: Boolean,
     val excludeOutput: Boolean,
-    val compilerOutput: String?,
-    val compilerOutputForTests: String?,
+    /**
+     * All production compiler-output roots of the module. The workspace model stores only one output per module, so
+     * the first element becomes `JavaModuleSettingsEntity.compilerOutput` and any further elements (e.g. Gradle's
+     * per-language class dirs plus resources) are stored on the module's `ModuleCustomImlDataEntity`. Build tools
+     * with a single output directory produce a one-element list.
+     *
+     * For backward compatibility with `workspace.json` written before compiler outputs became lists (e.g. the
+     * pre-baked PetClinic fixture and older exports), [CompilerOutputsSerializer] also accepts the legacy single
+     * form — the old `compilerOutput` key (via [JsonNames]) carrying a plain string or `null`.
+     */
+    @Serializable(with = CompilerOutputsSerializer::class)
+    @JsonNames("compilerOutput")
+    val compilerOutputs: List<String> = emptyList(),
+    /** Test compiler-output roots; the first element becomes `JavaModuleSettingsEntity.compilerOutputForTests`. */
+    @Serializable(with = CompilerOutputsSerializer::class)
+    @JsonNames("compilerOutputForTests")
+    val compilerOutputsForTests: List<String> = emptyList(),
     val languageLevelId: String?,
     val manifestAttributes: Map<String, String>,
-    val compilerArguments: List<String> = emptyList()
+    val compilerArguments: List<String> = emptyList(),
 )
+
+/**
+ * Reads compiler-output roots from either the current array form (`["a", "b"]`) or the legacy single-value form
+ * (`"a"`) produced before outputs became a list. Always writes the array form, so exports stay canonical.
+ */
+internal object CompilerOutputsSerializer : KSerializer<List<String>> {
+    private val delegate = ListSerializer(String.serializer())
+    override val descriptor: SerialDescriptor = delegate.descriptor
+
+    override fun serialize(encoder: Encoder, value: List<String>) = delegate.serialize(encoder, value)
+
+    override fun deserialize(decoder: Decoder): List<String> {
+        val jsonDecoder = decoder as? JsonDecoder ?: return delegate.deserialize(decoder)
+        return when (val element = jsonDecoder.decodeJsonElement()) {
+            is JsonArray -> element.map { it.jsonPrimitive.content }
+            is JsonPrimitive -> listOf(element.content)
+            else -> emptyList()
+        }
+    }
+}
 
 @Serializable
 data class KotlinJvmCompilerArguments(

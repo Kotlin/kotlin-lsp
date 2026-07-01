@@ -2252,11 +2252,33 @@
     ],
     "javaSettings": [
         {
+            "module": "NewIJKotlinGradle.app.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/app/build/classes/kotlin/main",
+                "<WORKSPACE>/app/build/classes/java/main",
+                "<WORKSPACE>/app/build/resources/main"
+            ],
+            "languageLevelId": null,
+            "manifestAttributes": {}
+        },
+        {
+            "module": "NewIJKotlinGradle.app.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/app/build/classes/kotlin/test",
+                "<WORKSPACE>/app/build/classes/java/test",
+                "<WORKSPACE>/app/build/resources/test"
+            ],
+            "languageLevelId": null,
+            "manifestAttributes": {}
+        },
+        {
             "module": "NewIJKotlinGradle.buildSrc",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
             "languageLevelId": "JDK_21",
             "manifestAttributes": {}
         },
@@ -2264,8 +2286,12 @@
             "module": "NewIJKotlinGradle.buildSrc.main",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
+            "compilerOutputs": [
+                "<WORKSPACE>/buildSrc/build/classes/kotlin/main",
+                "<WORKSPACE>/buildSrc/build/classes/java/main",
+                "<WORKSPACE>/buildSrc/build/classes/groovy/main",
+                "<WORKSPACE>/buildSrc/build/resources/main"
+            ],
             "languageLevelId": "JDK_21",
             "manifestAttributes": {}
         },
@@ -2273,9 +2299,37 @@
             "module": "NewIJKotlinGradle.buildSrc.test",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
+            "compilerOutputs": [
+                "<WORKSPACE>/buildSrc/build/classes/kotlin/test",
+                "<WORKSPACE>/buildSrc/build/classes/java/test",
+                "<WORKSPACE>/buildSrc/build/classes/groovy/test",
+                "<WORKSPACE>/buildSrc/build/resources/test"
+            ],
             "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "NewIJKotlinGradle.utils.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/utils/build/classes/kotlin/main",
+                "<WORKSPACE>/utils/build/classes/java/main",
+                "<WORKSPACE>/utils/build/resources/main"
+            ],
+            "languageLevelId": null,
+            "manifestAttributes": {}
+        },
+        {
+            "module": "NewIJKotlinGradle.utils.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/utils/build/classes/kotlin/test",
+                "<WORKSPACE>/utils/build/classes/java/test",
+                "<WORKSPACE>/utils/build/resources/test"
+            ],
+            "languageLevelId": null,
             "manifestAttributes": {}
         }
     ]

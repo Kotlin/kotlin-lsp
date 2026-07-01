@@ -140,8 +140,12 @@
             "module": "maven-kotlin-language-version-from-property",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
-            "compilerOutput": "<WORKSPACE>/target/classes",
-            "compilerOutputForTests": "<WORKSPACE>/target/test-classes",
+            "compilerOutputs": [
+                "<WORKSPACE>/target/classes"
+            ],
+            "compilerOutputsForTests": [
+                "<WORKSPACE>/target/test-classes"
+            ],
             "languageLevelId": "JDK_17",
             "manifestAttributes": {}
         }

@@ -204,5 +204,29 @@
             "roots": [],
             "additionalData": ""
         }
+    ],
+    "javaSettings": [
+        {
+            "module": "untitled1.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/build/classes/java/main",
+                "<WORKSPACE>/build/resources/main"
+            ],
+            "languageLevelId": null,
+            "manifestAttributes": {}
+        },
+        {
+            "module": "untitled1.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/build/classes/java/test",
+                "<WORKSPACE>/build/resources/test"
+            ],
+            "languageLevelId": null,
+            "manifestAttributes": {}
+        }
     ]
 }

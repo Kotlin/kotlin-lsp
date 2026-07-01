@@ -1872,5 +1872,55 @@
             "version": 5,
             "flushNeeded": false
         }
+    ],
+    "javaSettings": [
+        {
+            "module": "untitled1.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/untitled1/build/classes/kotlin/main",
+                "<WORKSPACE>/untitled1/build/classes/java/main",
+                "<WORKSPACE>/untitled1/build/resources/main"
+            ],
+            "languageLevelId": null,
+            "manifestAttributes": {}
+        },
+        {
+            "module": "untitled1.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/untitled1/build/classes/kotlin/test",
+                "<WORKSPACE>/untitled1/build/classes/java/test",
+                "<WORKSPACE>/untitled1/build/resources/test"
+            ],
+            "languageLevelId": null,
+            "manifestAttributes": {}
+        },
+        {
+            "module": "untitled2.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/untitled2/build/classes/kotlin/main",
+                "<WORKSPACE>/untitled2/build/classes/java/main",
+                "<WORKSPACE>/untitled2/build/resources/main"
+            ],
+            "languageLevelId": null,
+            "manifestAttributes": {}
+        },
+        {
+            "module": "untitled2.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/untitled2/build/classes/kotlin/test",
+                "<WORKSPACE>/untitled2/build/classes/java/test",
+                "<WORKSPACE>/untitled2/build/resources/test"
+            ],
+            "languageLevelId": null,
+            "manifestAttributes": {}
+        }
     ]
 }

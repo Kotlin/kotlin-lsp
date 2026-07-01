@@ -26,6 +26,7 @@ import com.intellij.platform.workspace.jps.entities.LibraryRootTypeId
 import com.intellij.platform.workspace.jps.entities.LibraryTableId
 import com.intellij.platform.workspace.jps.entities.LibraryTableId.ModuleLibraryTableId
 import com.intellij.platform.workspace.jps.entities.LibraryTypeId
+import com.intellij.platform.workspace.jps.entities.ModuleCustomImlDataEntity
 import com.intellij.platform.workspace.jps.entities.ModuleDependency
 import com.intellij.platform.workspace.jps.entities.ModuleDependencyItem
 import com.intellij.platform.workspace.jps.entities.ModuleEntity
@@ -40,6 +41,7 @@ import com.intellij.platform.workspace.jps.entities.SdkRoot
 import com.intellij.platform.workspace.jps.entities.SdkRootTypeId
 import com.intellij.platform.workspace.jps.entities.SourceRootEntity
 import com.intellij.platform.workspace.jps.entities.SourceRootTypeId
+import com.intellij.platform.workspace.jps.entities.customImlData
 import com.intellij.platform.workspace.jps.entities.exModuleOptions
 import com.intellij.platform.workspace.jps.entities.libraryProperties
 import com.intellij.platform.workspace.jps.serialization.impl.toPath
@@ -53,6 +55,7 @@ import com.intellij.util.PathUtil
 import com.intellij.util.descriptors.ConfigFileItem
 import com.intellij.util.system.OS
 import com.intellij.util.text.nullize
+import com.jetbrains.analyzer.workspace.LSModuleOutputRoots
 import com.jetbrains.ls.imports.api.ModuleCoordinateEntity
 import com.jetbrains.ls.imports.api.coordinateEntity
 import com.jetbrains.ls.imports.utils.toIntellijUri
@@ -429,7 +432,31 @@ fun MutableEntityStorage.importWorkspaceData(
                 this.module = moduleBuilder
             }
         }
+        // The workspace model keeps only the first output per role in the entity; the rest (e.g. a build tool's
+        // several production or test class/resource dirs) overflow to the side entity, kept separate by role.
+        val productionExtras = javaSettings.compilerOutputs.drop(1).map { toAbsolutePath(it, workspacePath).toString() }
+        val testExtras = javaSettings.compilerOutputsForTests.drop(1).map { toAbsolutePath(it, workspacePath).toString() }
+        if (productionExtras.isNotEmpty() || testExtras.isNotEmpty()) {
+            storage.addModuleOutputRoots(moduleBuilder, productionExtras, testExtras, entitySource)
+        }
     }
+}
+
+private fun MutableEntityStorage.addModuleOutputRoots(
+    module: ModuleEntityBuilder,
+    productionRoots: List<String>,
+    testRoots: List<String>,
+    entitySource: EntitySource,
+) {
+    val options = buildMap {
+        if (productionRoots.isNotEmpty()) put(LSModuleOutputRoots.PRODUCTION_KEY, LSModuleOutputRoots.encode(productionRoots))
+        if (testRoots.isNotEmpty()) put(LSModuleOutputRoots.TEST_KEY, LSModuleOutputRoots.encode(testRoots))
+    }
+    addEntity(
+        ModuleCustomImlDataEntity(customModuleOptions = options, entitySource = entitySource) {
+            this.module = module
+        }
+    )
 }
 
 private fun toEntity(
@@ -493,8 +520,8 @@ private fun toEntity(
     ) {
         this.module = module
         this.languageLevelId = javaSettingsData.languageLevelId
-        this.compilerOutput = javaSettingsData.compilerOutput?.let { toAbsolutePath(it, workspacePath).toIntellijUri(virtualFileUrlManager) }
-        this.compilerOutputForTests = javaSettingsData.compilerOutputForTests?.let { toAbsolutePath(it, workspacePath).toIntellijUri(virtualFileUrlManager) }
+        this.compilerOutput = javaSettingsData.compilerOutputs.firstOrNull()?.let { toAbsolutePath(it, workspacePath).toIntellijUri(virtualFileUrlManager) }
+        this.compilerOutputForTests = javaSettingsData.compilerOutputsForTests.firstOrNull()?.let { toAbsolutePath(it, workspacePath).toIntellijUri(virtualFileUrlManager) }
     }
 
 private fun toDataClass(entity: JavaModuleSettingsEntity, workspacePath: Path): JavaSettingsData =
@@ -502,11 +529,17 @@ private fun toDataClass(entity: JavaModuleSettingsEntity, workspacePath: Path): 
         module = entity.module.name,
         inheritedCompilerOutput = entity.inheritedCompilerOutput,
         excludeOutput = entity.excludeOutput,
-        compilerOutput = entity.compilerOutput?.let {  toRelativePath(it, workspacePath) },
-        compilerOutputForTests = entity.compilerOutputForTests?.let {  toRelativePath(it, workspacePath) },
+        compilerOutputs = listOfNotNull(entity.compilerOutput?.let { toRelativePath(it, workspacePath) }) +
+            LSModuleOutputRoots
+                .decode(entity.module.customImlData?.customModuleOptions?.get(LSModuleOutputRoots.PRODUCTION_KEY))
+                .map { toRelativePath(Path.of(it), workspacePath) },
+        compilerOutputsForTests = listOfNotNull(entity.compilerOutputForTests?.let { toRelativePath(it, workspacePath) }) +
+            LSModuleOutputRoots
+                .decode(entity.module.customImlData?.customModuleOptions?.get(LSModuleOutputRoots.TEST_KEY))
+                .map { toRelativePath(Path.of(it), workspacePath) },
         languageLevelId = entity.languageLevelId,
         manifestAttributes = entity.manifestAttributes,
-        compilerArguments = entity.module.javaCompilerOptions?.additionalOptions ?: emptyList()
+        compilerArguments = entity.module.javaCompilerOptions?.additionalOptions ?: emptyList(),
     )
 
 private fun addFacetRecursive(

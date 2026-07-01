@@ -30,8 +30,12 @@
             "module": "moduleB",
             "inheritedCompilerOutput": false,
             "excludeOutput": true,
-            "compilerOutput": "<WORKSPACE>/out/production",
-            "compilerOutputForTests": "<WORKSPACE>/out/test",
+            "compilerOutputs": [
+                "<WORKSPACE>/out/production"
+            ],
+            "compilerOutputsForTests": [
+                "<WORKSPACE>/out/test"
+            ],
             "languageLevelId": "JDK_17",
             "manifestAttributes": {}
         }

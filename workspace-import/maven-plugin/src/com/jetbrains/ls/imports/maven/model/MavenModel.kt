@@ -77,8 +77,8 @@ internal class MavenTreeModuleImportData(
                 module = moduleData.moduleName,
                 inheritedCompilerOutput = false,
                 excludeOutput = false,
-                compilerOutput = compilerOutput,
-                compilerOutputForTests = compilerOutputForTests,
+                compilerOutputs = listOfNotNull(compilerOutput),
+                compilerOutputsForTests = listOfNotNull(compilerOutputForTests),
                 languageLevelId = finalJdkLevel,
                 manifestAttributes = emptyMap(),
                 compilerArguments = collectCompilerArguments(mavenProject, moduleData.type)

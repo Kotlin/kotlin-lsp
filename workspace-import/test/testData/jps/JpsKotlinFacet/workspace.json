@@ -56,8 +56,6 @@
             "module": "moduleA",
             "inheritedCompilerOutput": true,
             "excludeOutput": true,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
             "languageLevelId": "JDK_1_8",
             "manifestAttributes": {}
         }

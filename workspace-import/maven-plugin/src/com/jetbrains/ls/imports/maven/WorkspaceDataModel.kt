@@ -219,11 +219,11 @@ data class JavaSettingsData(
     val module: String,
     val inheritedCompilerOutput: Boolean,
     val excludeOutput: Boolean,
-    val compilerOutput: String?,
-    val compilerOutputForTests: String?,
+    val compilerOutputs: List<String> = emptyList(),
+    val compilerOutputsForTests: List<String> = emptyList(),
     val languageLevelId: String?,
     val manifestAttributes: Map<String, String>,
-    val compilerArguments: List<String> = emptyList()
+    val compilerArguments: List<String> = emptyList(),
 )
 
 /**
