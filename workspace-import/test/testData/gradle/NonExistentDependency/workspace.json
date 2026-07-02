@@ -16,7 +16,8 @@
                 {
                     "path": "<WORKSPACE>/"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
         },
         {
             "name": "NonExistentDependency.main",
@@ -68,7 +69,8 @@
                         }
                     ]
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
         },
         {
             "name": "NonExistentDependency.test",
@@ -125,7 +127,8 @@
                         }
                     ]
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
         }
     ],
     "libraries": [

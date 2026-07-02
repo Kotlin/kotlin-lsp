@@ -16,7 +16,8 @@
                 {
                     "path": "<WORKSPACE>/"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
         }
     ],
     "sdks": [

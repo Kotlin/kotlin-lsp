@@ -2,9 +2,9 @@
 package com.jetbrains.ls.imports.json
 
 
+import com.intellij.java.workspace.entities.JavaModuleCompilerOptionsEntity
 import com.intellij.java.workspace.entities.JavaModuleSettingsEntity
 import com.intellij.java.workspace.entities.JavaModuleSettingsEntityBuilder
-import com.intellij.java.workspace.entities.JavaModuleCompilerOptionsEntity
 import com.intellij.java.workspace.entities.javaCompilerOptions
 import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
@@ -112,7 +112,10 @@ private fun toDataClass(entity: ModuleEntity, workspacePath: Path): ModuleData =
         contentRoots = entity.contentRoots.map { contentRoot ->
             toDataClass(contentRoot, workspacePath)
         },
-        facets = entity.facets.map { facet -> toDataClass(facet) }
+        facets = entity.facets.map { facet -> toDataClass(facet) },
+        externalProjectPath = entity.exModuleOptions?.linkedProjectPath
+            ?.takeUnless { it.isBlank() }
+            ?.let { toRelativePath(Path.of(it), workspacePath) },
     )
 
 private fun toDataClass(
@@ -362,7 +365,8 @@ fun MutableEntityStorage.importWorkspaceData(
 
         if(externalSystemId != null) {
             exModuleOptions =  ExternalSystemModuleOptionsEntity(entitySource) {
-                linkedProjectPath = workspacePath.toString()
+                val projectPath = moduleData.externalProjectPath ?: moduleData.contentRoots.firstOrNull()?.path
+                linkedProjectPath = projectPath?.let { toAbsolutePath(it, workspacePath).toString() } ?: workspacePath.toString()
                 externalSystem = externalSystemId
             }
         }

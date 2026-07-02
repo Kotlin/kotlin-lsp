@@ -168,6 +168,7 @@ internal class IdeaProjectMapper {
         } else {
             DependencyData.InheritedSdk
         }
+        val projectDirectory = module.gradleProject.projectDirectory.path
         modules[module.name] = ModuleData(
             name = module.name,
             dependencies = listOf(
@@ -175,8 +176,9 @@ internal class IdeaProjectMapper {
                 sdkDependencyData
             ),
             contentRoots = listOf(
-                ContentRootData(module.gradleProject.projectDirectory.path)
-            )
+                ContentRootData(projectDirectory)
+            ),
+            externalProjectPath = projectDirectory,
         )
         val associatedSourceSets = metadata.sourceSets[module.name]
         if (associatedSourceSets.isNullOrEmpty()) {
@@ -212,7 +214,10 @@ internal class IdeaProjectMapper {
                 name = "${module.name}.${sourceSet.name}",
                 coordinate = coordinate,
                 dependencies = sourceSetDependencies,
-                contentRoots = contentRootResolver.getContentRoots(module, sourceSet)
+                contentRoots = contentRootResolver.getContentRoots(module, sourceSet),
+                // The source-set module's content root is a source directory (e.g. src/main); a run should use the
+                // owning subproject directory as its working directory instead.
+                externalProjectPath = projectDirectory,
             )
             val sourceSetJavaSettings = getModuleJavaSettingsData(
                 "${module.name}.${sourceSet.name}",

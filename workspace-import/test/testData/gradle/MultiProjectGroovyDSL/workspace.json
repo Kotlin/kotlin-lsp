@@ -16,7 +16,8 @@
                 {
                     "path": "<WORKSPACE>/"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
         },
         {
             "name": "multi-project-example.api",
@@ -34,7 +35,8 @@
                 {
                     "path": "<WORKSPACE>/api"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/api"
         },
         {
             "name": "multi-project-example.api.main",
@@ -81,7 +83,8 @@
                         }
                     ]
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/api"
         },
         {
             "name": "multi-project-example.api.test",
@@ -133,7 +136,8 @@
                         }
                     ]
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/api"
         },
         {
             "name": "multi-project-example.core",
@@ -151,7 +155,8 @@
                 {
                     "path": "<WORKSPACE>/core"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/core"
         },
         {
             "name": "multi-project-example.core.main",
@@ -193,7 +198,8 @@
                         }
                     ]
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/core"
         },
         {
             "name": "multi-project-example.core.test",
@@ -240,7 +246,8 @@
                         }
                     ]
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/core"
         },
         {
             "name": "multi-project-example.service",
@@ -258,7 +265,8 @@
                 {
                     "path": "<WORKSPACE>/service"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/service"
         },
         {
             "name": "multi-project-example.service.main",
@@ -315,7 +323,8 @@
                         }
                     ]
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/service"
         },
         {
             "name": "multi-project-example.service.test",
@@ -377,7 +386,8 @@
                         }
                     ]
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/service"
         }
     ],
     "libraries": [

@@ -16,7 +16,8 @@
                 {
                     "path": "<WORKSPACE>/"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
         },
         {
             "name": "PetClinic.aot",
@@ -501,7 +502,8 @@
                 {
                     "path": "<WORKSPACE>/build/generated/aotResources"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
         },
         {
             "name": "PetClinic.aotTest",
@@ -1217,7 +1219,8 @@
                 {
                     "path": "<WORKSPACE>/build/generated/aotTestResources"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
         },
         {
             "name": "PetClinic.main",
@@ -1711,7 +1714,8 @@
                         }
                     ]
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
         },
         {
             "name": "PetClinic.test",
@@ -2436,7 +2440,8 @@
                         }
                     ]
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
         }
     ],
     "libraries": [

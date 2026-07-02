@@ -16,7 +16,8 @@
                 {
                     "path": "<WORKSPACE>/"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
         },
         {
             "name": "untitled1.main",
@@ -34,7 +35,8 @@
                 {
                     "path": "<WORKSPACE>/src/main"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
         },
         {
             "name": "untitled1.test",
@@ -82,7 +84,8 @@
                 {
                     "path": "<WORKSPACE>/src/test"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
         }
     ],
     "libraries": [

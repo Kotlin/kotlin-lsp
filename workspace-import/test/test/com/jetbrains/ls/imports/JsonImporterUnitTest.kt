@@ -1,12 +1,15 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports
 
+import com.intellij.java.workspace.entities.JavaModuleCompilerOptionsEntity
+import com.intellij.platform.workspace.jps.entities.ModuleEntity
 import com.intellij.platform.workspace.jps.entities.SdkEntity
+import com.intellij.platform.workspace.jps.entities.exModuleOptions
 import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.entities
 import com.intellij.workspaceModel.ide.impl.IdeVirtualFileUrlManagerImpl
-import com.intellij.java.workspace.entities.JavaModuleCompilerOptionsEntity
+import com.jetbrains.ls.imports.json.ContentRootData
 import com.jetbrains.ls.imports.json.DependencyData
 import com.jetbrains.ls.imports.json.DependencyDataScope
 import com.jetbrains.ls.imports.json.JavaSettingsData
@@ -90,6 +93,84 @@ class JsonImporterUnitTest {
 
         assertEquals(setOf("B", "C"), moduleDeps, "A should keep B and gain transitively-exported C")
         assertEquals(setOf("L", "M"), libraryDeps, "A should gain libraries reachable via the exported chain")
+    }
+
+    @Test
+    fun recordsExternalProjectPathAsLinkedProjectPath(@TempDir workspacePath: Path) {
+        // A Gradle-like source-set module: its content root is a source directory, but the external project path
+        // is the owning subproject. The linked project path must follow the external project path.
+        val data = WorkspaceData(
+            modules = listOf(
+                ModuleData(
+                    name = "app.main",
+                    contentRoots = listOf(ContentRootData(path = "<WORKSPACE>/app/src/main")),
+                    externalProjectPath = "<WORKSPACE>/app",
+                ),
+                // No external project path: the linked project path falls back to the module's content root.
+                ModuleData(
+                    name = "lib",
+                    contentRoots = listOf(ContentRootData(path = "<WORKSPACE>/lib")),
+                ),
+            ),
+        )
+
+        val storage = MutableEntityStorage.create()
+        storage.importWorkspaceData(
+            data, workspacePath, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(true), externalSystemId = "GRADLE",
+        )
+
+        val modules = storage.entities<ModuleEntity>().associateBy { it.name }
+        assertEquals(
+            workspacePath.resolve("app").toString(),
+            modules.getValue("app.main").exModuleOptions?.linkedProjectPath,
+            "source-set module should use its external project path as the linked project path",
+        )
+        assertEquals(
+            workspacePath.resolve("lib").toString(),
+            modules.getValue("lib").exModuleOptions?.linkedProjectPath,
+            "module without an external project path should fall back to its content root",
+        )
+    }
+
+    @Test
+    fun externalProjectPathSurvivesExportReimportRoundTrip(@TempDir workspacePath: Path) {
+        // `exportWorkspace` serializes the materialized model back to workspace.json, which is then re-imported
+        // on the next open. The external project path (a Gradle source-set module's owning subproject) must survive
+        // that round-trip, otherwise the linked project path regresses to the source-directory content root.
+        val data = WorkspaceData(
+            modules = listOf(
+                ModuleData(
+                    name = "app.main",
+                    contentRoots = listOf(ContentRootData(path = "<WORKSPACE>/app/src/main")),
+                    externalProjectPath = "<WORKSPACE>/app",
+                ),
+            ),
+        )
+
+        val storage = MutableEntityStorage.create()
+        storage.importWorkspaceData(
+            data, workspacePath, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(true), externalSystemId = "GRADLE",
+        )
+
+        // Export the model back to the JSON data classes.
+        val exported = workspaceData(storage, workspacePath).modules.single { it.name == "app.main" }
+        assertEquals(
+            "<WORKSPACE>/app",
+            exported.externalProjectPath,
+            "export must preserve the external project path",
+        )
+
+        // Re-import the exported data the way JsonWorkspaceImporter does (externalSystemId = "JSON").
+        val reimported = MutableEntityStorage.create()
+        reimported.importWorkspaceData(
+            WorkspaceData(modules = listOf(exported)),
+            workspacePath, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(true), externalSystemId = "JSON",
+        )
+        assertEquals(
+            workspacePath.resolve("app").toString(),
+            reimported.entities<ModuleEntity>().single { it.name == "app.main" }.exModuleOptions?.linkedProjectPath,
+            "linked project path must still point at the external project directory after a round-trip",
+        )
     }
 
     @Test

@@ -16,7 +16,8 @@
                 {
                     "path": "<WORKSPACE>/"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
         },
         {
             "name": "gradle-kotlin-language-version-default-from-plugin.main",
@@ -50,7 +51,8 @@
                         }
                     ]
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
         },
         {
             "name": "gradle-kotlin-language-version-default-from-plugin.test",
@@ -83,7 +85,8 @@
                 {
                     "path": "<WORKSPACE>/src/test"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
         }
     ],
     "libraries": [

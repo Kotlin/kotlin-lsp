@@ -21,6 +21,13 @@ data class ModuleData(
     val dependencies: List<DependencyData> = emptyList(),
     val contentRoots: List<ContentRootData> = emptyList(),
     val facets: List<FacetData> = emptyList(),
+    /**
+     * The module's external (build-system) project directory, i.e. the directory a run of this module should use
+     * as its working directory. For a Gradle source-set module this is the owning subproject directory, which
+     * differs from the module's content root (a source directory such as `src/main`). Null for modules with no
+     * external-system project (e.g. plain JPS modules), where the content root already is the project directory.
+     */
+    val externalProjectPath: String? = null,
 )
 
 @Serializable

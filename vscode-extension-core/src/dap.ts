@@ -34,6 +34,10 @@ interface ClasspathResponse {
   classpath: string[];
 }
 
+interface WorkingDirectoryResponse {
+  workingDirectory?: string;
+}
+
 interface JavaExecutableResponse {
   javaExec: string;
 }
@@ -136,6 +140,17 @@ async function resolveLaunchConfig(config: LaunchConfig): Promise<LaunchConfig |
         { uri },
       ]);
       config.classPaths = cp.classpath;
+    }
+
+    if (!config.cwd) {
+      // Default the working directory to the module's project directory. Without it the launched process
+      // inherits the language server's directory, so e.g. Spring Boot's docker-compose lookup fails.
+      const wd = await sendCommand<WorkingDirectoryResponse>(
+        client,
+        'intellij.java.resolveWorkingDirectory',
+        [{ uri }],
+      );
+      if (wd.workingDirectory) config.cwd = wd.workingDirectory;
     }
 
     if (!config.javaExec) {

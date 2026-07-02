@@ -16,7 +16,8 @@
                 {
                     "path": "<WORKSPACE>/"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
         },
         {
             "name": "untitled1",
@@ -34,7 +35,8 @@
                 {
                     "path": "<WORKSPACE>/untitled1"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled1"
         },
         {
             "name": "untitled1.main",
@@ -287,7 +289,8 @@
                         }
                     ]
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled1"
         },
         {
             "name": "untitled1.test",
@@ -555,7 +558,8 @@
                         }
                     ]
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled1"
         },
         {
             "name": "untitled2",
@@ -573,7 +577,8 @@
                 {
                     "path": "<WORKSPACE>/untitled2"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled2"
         },
         {
             "name": "untitled2.main",
@@ -612,7 +617,8 @@
                         }
                     ]
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled2"
         },
         {
             "name": "untitled2.test",
@@ -706,7 +712,8 @@
                         }
                     ]
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled2"
         }
     ],
     "libraries": [

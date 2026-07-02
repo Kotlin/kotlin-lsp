@@ -17,6 +17,7 @@ import com.intellij.platform.eel.provider.getEelDescriptor
 import com.intellij.platform.workspace.jps.entities.ContentRootEntity
 import com.intellij.platform.workspace.jps.entities.DependencyScope
 import com.intellij.platform.workspace.jps.entities.ExcludeUrlEntity
+import com.intellij.platform.workspace.jps.entities.ExternalSystemModuleOptionsEntity
 import com.intellij.platform.workspace.jps.entities.LibraryDependency
 import com.intellij.platform.workspace.jps.entities.LibraryEntity
 import com.intellij.platform.workspace.jps.entities.LibraryId
@@ -37,6 +38,7 @@ import com.intellij.platform.workspace.jps.entities.SdkRoot
 import com.intellij.platform.workspace.jps.entities.SdkRootTypeId
 import com.intellij.platform.workspace.jps.entities.SourceRootEntity
 import com.intellij.platform.workspace.jps.entities.SourceRootTypeId
+import com.intellij.platform.workspace.jps.entities.exModuleOptions
 import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
@@ -52,8 +54,8 @@ import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
 import com.jetbrains.ls.imports.json.flattenExportedDependencies
 import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
 import com.jetbrains.ls.imports.utils.toIntellijUri
-import org.eclipse.aether.repository.RemoteRepository
 import com.jetbrains.ls.snapshot.api.impl.core.toFileUrl
+import org.eclipse.aether.repository.RemoteRepository
 import org.jdom.Element
 import org.jetbrains.idea.maven.aether.ArtifactRepositoryManager
 import org.jetbrains.idea.maven.aether.ProgressConsumer
@@ -268,6 +270,12 @@ object JpsWorkspaceImporter : WorkspaceImporter {
                             )
                         }
                     }
+                }
+                val moduleProjectPath = JpsModelSerializationDataService.getBaseDirectoryPath(module)?.toString()
+                    ?: module.contentRootsList.urls.firstOrNull()?.let { JpsPathUtil.urlToPath(it) }
+                    ?: projectDirectory.toString()
+                this.exModuleOptions = ExternalSystemModuleOptionsEntity(entitySource) {
+                    this.linkedProjectPath = moduleProjectPath
                 }
                 if (kotlinFacetModuleExtension != null) {
                     val settings = kotlinFacetModuleExtension.settings
