@@ -419,7 +419,17 @@
   },
   "activationEvents": [
     "onCommand:jetbrains.activateLsp",
-    "onLanguage:kotlin"
+    "onLanguage:kotlin",
+    "workspaceContains:*/build.gradle",
+    "workspaceContains:*/build.gradle.kts",
+    "workspaceContains:*/pom.xml",
+    "workspaceContains:*/settings.gradle",
+    "workspaceContains:*/settings.gradle.kts",
+    "workspaceContains:build.gradle",
+    "workspaceContains:build.gradle.kts",
+    "workspaceContains:pom.xml",
+    "workspaceContains:settings.gradle",
+    "workspaceContains:settings.gradle.kts"
   ],
   "icon": "icons/kotlin.png",
   "engines": {
