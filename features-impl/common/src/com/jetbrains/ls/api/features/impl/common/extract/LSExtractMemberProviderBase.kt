@@ -7,12 +7,10 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.psi.PsiElement
-import com.intellij.psi.impl.source.PostprocessReformattingAspect
 import com.intellij.psi.util.startOffset
 import com.intellij.util.concurrency.annotations.RequiresReadLock
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.util.toTextRange
@@ -191,11 +189,6 @@ abstract class LSExtractMemberProviderBase<Context> : LSCodeActionProvider, LSCo
             val selection = data.selection.toTextRange(document)
             getWriteContext(file, selection, data.choice) to document.text
         } ?: return ExtractResult(emptyList(), null)
-
-        val postProcessReformatting = PostprocessReformattingAspect.getInstance(project)
-        if (postProcessReformatting == null) {
-            LOG.error("Wasn't able to initialize PostProcessReformattingAspect")
-        }
 
         val reference = doExtract(writeContext)
         val navigationRange = if (reference != null) readAction { TextRange(reference.startOffset, reference.startOffset) } else null

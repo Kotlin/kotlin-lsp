@@ -12,7 +12,6 @@ import com.intellij.openapi.util.text.StringUtil.removeHtmlTags
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.psi.impl.source.PostprocessReformattingAspect
 import com.intellij.refactoring.BaseRefactoringProcessor
 import com.intellij.refactoring.RefactoringHelper
 import com.intellij.refactoring.listeners.RefactoringEventData
@@ -147,10 +146,6 @@ private fun doRefactoring(processor: RefactoringProcessor, usages: Array<UsageIn
     }
 
     CommandProcessor.getInstance().executeCommand(project, Runnable {
-        val aspect = PostprocessReformattingAspect.getInstance(project)
-        if (aspect == null) {
-            LOG.error("PostprocessReformattingAspect is null")
-        }
         WriteAction.run<Throwable> {
             processor.performRefactoring(writableUsageInfos, transaction)
 
