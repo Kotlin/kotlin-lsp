@@ -9,11 +9,13 @@ import com.intellij.codeInspection.InspectionEP
 import com.intellij.codeInspection.InspectionProfileEntry
 import com.intellij.codeInspection.LocalInspectionEP
 import com.intellij.codeInspection.LocalInspectionTool
+import com.intellij.codeInspection.LocalQuickFix
 import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.QuickFix
 import com.intellij.lang.Language
 import com.intellij.lang.Language.findLanguageByID
 import com.intellij.modcommand.ActionContext
+import com.intellij.modcommand.LocalQuickFixWithModCommandFallback
 import com.intellij.modcommand.ModCommand
 import com.intellij.modcommand.ModCommandQuickFix
 import com.intellij.openapi.diagnostic.ReportingClassSubstitutor
@@ -120,6 +122,18 @@ internal class LSInspectionManager(
             val modCommandAction = fix.asModCommandAction()
             if (modCommandAction != null) {
                 return modCommandAction.perform(ActionContext.from(problemDescriptor))
+            }
+        }
+
+        if (fix is LocalQuickFix) {
+            if (blacklistEntry != null) {
+                LOG.trace("Quick fix $fixClass is a LocalQuickFix, but it is blacklisted because of ${blacklistEntry.reason}")
+                return null
+            }
+
+            val fallbackModCommandAction = fix.let(LocalQuickFixWithModCommandFallback::getFallbackModCommandActionFor)
+            if (fallbackModCommandAction != null) {
+                return fallbackModCommandAction.perform(ActionContext.from(problemDescriptor))
             }
         }
 
