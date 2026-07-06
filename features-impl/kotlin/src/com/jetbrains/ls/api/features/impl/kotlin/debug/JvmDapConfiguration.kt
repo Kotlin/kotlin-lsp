@@ -11,6 +11,7 @@ import com.jetbrains.dap.lsp.features.launch.LSResolveClassDocumentCommandDescri
 import com.jetbrains.dap.lsp.features.launch.LSResolveClasspathCommandDescriptorProvider
 import com.jetbrains.dap.lsp.features.launch.LSResolveJavaExecutableCommandDescriptorProvider
 import com.jetbrains.ls.api.features.dap.DapPluginsProvider
+import com.jetbrains.ls.api.features.impl.javaBase.LSJavaRunMainCodeLensProvider
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 
 val DapJvmConfiguration: LSConfigurationPiece = LSConfigurationPiece(
@@ -18,6 +19,8 @@ val DapJvmConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSResolveClassDocumentCommandDescriptorProvider,
         LSResolveClasspathCommandDescriptorProvider,
         LSResolveJavaExecutableCommandDescriptorProvider,
+        LSJavaRunMainCodeLensProvider,
+        LSKotlinRunMainCodeLensProvider,
         DapPluginsProvider(
             plugins = listOf(
                 javaDebuggerModules,
