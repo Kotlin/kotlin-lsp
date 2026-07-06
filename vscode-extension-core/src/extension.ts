@@ -12,12 +12,12 @@ import {
   workspace,
 } from 'vscode';
 import { registerDecompiler, registerOpeningJars } from './decompiler';
-import { getLspClient, initLspClient, startLspClient } from './lspClient';
+import { buildInitializationOptions, getLspClient, initLspClient, startLspClient } from './lspClient';
 export {
   registerInitializationOptionsContributor,
   type InitializationOptionsContributor,
 } from './lspClient';
-import { LSPErrorCodes, RequestType0, ResponseError } from 'vscode-languageclient/node';
+import { LSPErrorCodes, RequestType, ResponseError } from 'vscode-languageclient/node';
 import { registerStatusBarItem } from './statusBar';
 import { registerDapServer } from './dap';
 import { registerFileTemplates } from './fileTemplates';
@@ -94,16 +94,25 @@ function registerExportWorkspaceToJsonCommand(context: ExtensionContext): void {
   );
 }
 
-const ReloadWorkspaceRequest = new RequestType0<null, void>('intellij/reloadWorkspace');
+interface ReloadWorkspaceParams {
+    initializationOptions: Record<string, unknown>;
+}
 
-export async function reloadWorkspace(): Promise<void> {
+const ReloadWorkspaceRequest = new RequestType<ReloadWorkspaceParams, null, void>(
+  'intellij/reloadWorkspace',
+);
+
+export async function reloadWorkspace(getAcceptedEulaHash: AcceptedEulaHashProvider): Promise<void> {
   const client = getLspClient();
   if (client === undefined || client.initializeResult === undefined) {
     await window.showErrorMessage('Language server is not running');
     return;
   }
   try {
-    await client.sendRequest(ReloadWorkspaceRequest);
+    // Re-read settings now so changes (e.g. `intellij.projects`) take effect on reload.
+    await client.sendRequest(ReloadWorkspaceRequest, {
+      initializationOptions: buildInitializationOptions(getAcceptedEulaHash),
+    });
     await window.showInformationMessage('Workspace reloaded');
   } catch (e) {
     if (e instanceof ResponseError && e.code === LSPErrorCodes.RequestCancelled) return;
@@ -123,9 +132,12 @@ function registerShowBuildLogCommand(context: ExtensionContext): void {
   );
 }
 
-function registerReloadWorkspaceCommand(context: ExtensionContext): void {
+function registerReloadWorkspaceCommand(
+  context: ExtensionContext,
+  getAcceptedEulaHash: AcceptedEulaHashProvider,
+): void {
   context.subscriptions.push(
-    commands.registerCommand('jetbrains.kotlin.reloadWorkspace', () => reloadWorkspace()),
+    commands.registerCommand('jetbrains.kotlin.reloadWorkspace', () => reloadWorkspace(getAcceptedEulaHash)),
   );
 }
 export async function activateExtension(
@@ -162,8 +174,8 @@ export async function activateExtension(
     registerDapServer(context);
   }
   registerExportWorkspaceToJsonCommand(context);
-  registerReloadWorkspaceCommand(context);
-  registerAutoReloadWorkspace(context);
+  registerReloadWorkspaceCommand(context, getAcceptedEulaHash);
+  registerAutoReloadWorkspace(context, getAcceptedEulaHash);
   registerShowBuildLogCommand(context);
   registerStatusBarItem();
   registerFileTemplates(context);

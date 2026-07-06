@@ -20,19 +20,22 @@ public final class ProjectMetadata implements Serializable {
     private final @NotNull Map<String, Set<@NotNull ModuleSourceSet>> sourceSets;
     private final @NotNull Map<String, @NotNull Set<ExternalModuleDependency>> moduleDependencies;
     private final @NotNull Map<@NotNull String, @NotNull AndroidProject> androidProjects;
+    private final @NotNull Map<@NotNull String, @NotNull String> moduleCoordinates;
 
     public ProjectMetadata(
             @NotNull List<? extends IdeaProject> includedProjects,
             @NotNull Map<@NotNull String, @NotNull KotlinModule> kotlinModules,
             @NotNull Map<@NotNull String, @NotNull Set<@NotNull ModuleSourceSet>> sourceSets,
             @NotNull Map<String, @NotNull Set<ExternalModuleDependency>> moduleDependencies,
-            @NotNull Map<@NotNull String, @NotNull AndroidProject> androidProjects
+            @NotNull Map<@NotNull String, @NotNull AndroidProject> androidProjects,
+            @NotNull Map<@NotNull String, @NotNull String> moduleCoordinates
     ) {
         this.includedProjects = includedProjects;
         this.kotlinModules = kotlinModules;
         this.sourceSets = sourceSets;
         this.moduleDependencies = moduleDependencies;
         this.androidProjects = androidProjects;
+        this.moduleCoordinates = moduleCoordinates;
     }
 
     public @NotNull List<? extends IdeaProject> getIncludedProjects() {
@@ -53,5 +56,13 @@ public final class ProjectMetadata implements Serializable {
 
     public @NotNull Map<@NotNull String, @NotNull AndroidProject> getAndroidProjects() {
         return androidProjects;
+    }
+
+    /**
+     * Module FQN to its published Maven coordinate {@code groupId:artifactId:version}. Only contains entries
+     * for projects that declare a group and version. Used for dependency substitution.
+     */
+    public @NotNull Map<@NotNull String, @NotNull String> getModuleCoordinates() {
+        return moduleCoordinates;
     }
 }

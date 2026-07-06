@@ -48,6 +48,7 @@ const OPT_JVM_ARGS = 'intellij.additionalJvmArgs';
 const OPT_DEFAULT_WORKSPACE_SDK = 'intellij.jdkForSymbolResolution';
 const OPT_BUILD_TOOL = 'intellij.buildTool';
 const OPT_DATA_SHARING = 'intellij.dataSharing';
+const OPT_PROJECTS = 'intellij.projects';
 
 const INDEX_DIR_STATE_KEY = 'jetbrains.intellij.indexDir';
 
@@ -63,6 +64,25 @@ const importLogNotification = new NotificationType<ImportLogParams>('intellij/im
 const clientSubscriptions: ((client: LanguageClient, stateChange: StateChangeEvent) => void)[] = [];
 
 export type InitializationOptionsContributor = () => Record<string, unknown>;
+
+/**
+ * An externally configured project passed to the server via initialization options.
+ * Mirrors the `intellij.projects` setting and the server-side `ConfiguredProject` model.
+ */
+export interface ConfiguredProject {
+    /** Build tool / project type, e.g. "gradle", "maven", "bazel", "json". */
+    type: string;
+    /** URI pointing to the project's build file or workspace root. */
+    path: string;
+    /** Maven only: extra environment variables for the import process. */
+    env?: Record<string, string>;
+    /** Maven only: JVM system properties for the import process. */
+    'system-properties'?: Record<string, string>;
+    /** Maven only: path to the JDK home used to run the import. */
+    'java-home'?: string;
+    /** Bazel only: path to the Bazel project file, relative to the workspace root. */
+    'project-path'?: string;
+}
 
 const initializationOptionsContributors: InitializationOptionsContributor[] = [];
 
@@ -493,9 +513,15 @@ function buildDocumentSelector(): LanguageClientOptions['documentSelector'] {
   return selector;
 }
 
-async function createLspClient(
+/**
+ * Assembles the server `initializationOptions` from the current VS Code settings. Read fresh each
+ * time, so it reflects edits to e.g. `intellij.projects`. Used both for the initial `initialize` and
+ * for the `intellij/reloadWorkspace` request, so a reload picks up settings changes without
+ * reopening the folder.
+ */
+export function buildInitializationOptions(
   getAcceptedEulaHash: AcceptedEulaHashProvider,
-): Promise<LanguageClient | null> {
+): Record<string, unknown> {
   const folders = workspace.workspaceFolders ?? [];
   const builtinInitializationOptions = {
     defaultSdk: configOption(OPT_DEFAULT_WORKSPACE_SDK),
@@ -505,20 +531,27 @@ async function createLspClient(
         configOption<string>(OPT_BUILD_TOOL, folder.uri),
       ]),
     ),
+    projects: configOption<ConfiguredProject[]>(OPT_PROJECTS) ?? [],
     eulaHash: getAcceptedEulaHash(getContext()),
   };
   const contributedInitializationOptions = Object.assign(
     {},
     ...initializationOptionsContributors.map((c) => c()),
   );
+  return {
+    ...contributedInitializationOptions,
+    ...builtinInitializationOptions,
+  };
+}
+
+async function createLspClient(
+  getAcceptedEulaHash: AcceptedEulaHashProvider,
+): Promise<LanguageClient | null> {
   const clientOptions: LanguageClientOptions = {
     documentSelector: buildDocumentSelector(),
     progressOnInitialization: true,
     outputChannel: getOutputChannel(),
-    initializationOptions: {
-      ...contributedInitializationOptions,
-      ...builtinInitializationOptions,
-    },
+    initializationOptions: buildInitializationOptions(getAcceptedEulaHash),
     middleware: middleware,
     markdown: {
       supportHtml: true,

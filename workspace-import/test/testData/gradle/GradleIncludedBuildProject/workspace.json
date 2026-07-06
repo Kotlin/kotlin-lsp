@@ -577,6 +577,7 @@
         },
         {
             "name": "untitled2.main",
+            "coordinate": "org.example:untitled2:1.0-SNAPSHOT",
             "dependencies": [
                 {
                     "type": "library",
@@ -615,6 +616,7 @@
         },
         {
             "name": "untitled2.test",
+            "coordinate": "org.example:untitled2:1.0-SNAPSHOT:test",
             "dependencies": [
                 {
                     "type": "module",

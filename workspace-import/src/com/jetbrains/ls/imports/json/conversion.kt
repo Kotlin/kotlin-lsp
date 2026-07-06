@@ -53,6 +53,8 @@ import com.intellij.util.PathUtil
 import com.intellij.util.descriptors.ConfigFileItem
 import com.intellij.util.system.OS
 import com.intellij.util.text.nullize
+import com.jetbrains.ls.imports.api.ModuleCoordinateEntity
+import com.jetbrains.ls.imports.api.coordinateEntity
 import com.jetbrains.ls.imports.utils.toIntellijUri
 import kotlinx.serialization.json.Json
 import org.jetbrains.jps.model.serialization.JpsMavenSettings
@@ -103,6 +105,7 @@ private fun toDataClass(entity: ModuleEntity, workspacePath: Path): ModuleData =
     ModuleData(
         name = entity.name,
         type = entity.type?.name,
+        coordinate = entity.coordinateEntity?.coordinate,
         dependencies = entity.dependencies.map { dependency ->
             toDataClass(dependency)
         },
@@ -394,6 +397,13 @@ fun MutableEntityStorage.importWorkspaceData(
 
     for (kotlinSettingsData in data.kotlinSettings) {
         storage addEntity toEntity(kotlinSettingsData, entitySource, moduleBuilders[kotlinSettingsData.module]!!, workspacePath)
+    }
+
+    for (moduleData in data.modules) {
+        val coordinate = moduleData.coordinate ?: continue
+        storage addEntity ModuleCoordinateEntity(coordinate, entitySource) {
+            this.module = moduleBuilders[moduleData.name]!!
+        }
     }
 
     data.modules.forEach { moduleData ->

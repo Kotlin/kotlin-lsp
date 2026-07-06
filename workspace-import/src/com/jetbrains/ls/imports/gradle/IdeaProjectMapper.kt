@@ -199,8 +199,18 @@ internal class IdeaProjectMapper {
                     add(sdkDependencyData)
                 }
 
+            // The project's published coordinate goes on its source-set modules (a dependency on this project
+            // resolves to its `.main` module), with a `:test` classifier for test source sets — mirroring the
+            // Maven importer. The non-aggregating root module deliberately gets no coordinate.
+            val baseCoordinate = metadata.moduleCoordinates[module.name]
+            val coordinate = when {
+                baseCoordinate == null -> null
+                sourceSet.isTest() -> "$baseCoordinate:test"
+                else -> baseCoordinate
+            }
             modules["${module.name}.${sourceSet.name}"] = ModuleData(
                 name = "${module.name}.${sourceSet.name}",
+                coordinate = coordinate,
                 dependencies = sourceSetDependencies,
                 contentRoots = contentRootResolver.getContentRoots(module, sourceSet)
             )

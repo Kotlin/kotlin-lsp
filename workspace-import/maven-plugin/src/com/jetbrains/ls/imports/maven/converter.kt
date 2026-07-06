@@ -154,11 +154,18 @@ internal fun MavenTreeModuleImportData.toModuleData(kotlinSettingsList: List<Kot
     return ModuleData(
         name = module.moduleName,
         type = "JAVA_MODULE",
+        coordinate = mavenCoordinate(project, module.type),
         dependencies = dependencies,
         contentRoots =
             contentRootData(project, module, sourceRoots),
         facets = emptyList(),
     )
+}
+
+private fun mavenCoordinate(project: MavenProject, type: StandardMavenModuleType): String? {
+    if (type == StandardMavenModuleType.AGGREGATOR) return null
+    val base = "${project.groupId}:${project.artifactId}:${project.version}"
+    return if (type == StandardMavenModuleType.TEST_ONLY) "$base:test" else base
 }
 
 private fun dependencyData(importDependencies: List<MavenImportDependency>): List<DependencyData> = buildList {

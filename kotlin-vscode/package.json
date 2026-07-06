@@ -236,6 +236,102 @@
             "default": null,
             "description": "A build tool to use for a server, workspace, folder (null = any, \"\" = none)"
           },
+          "intellij.projects": {
+            "type": "array",
+            "default": [],
+            "description": "Externally configured projects to import. Each entry points to a project's build file or workspace root together with the build tool to use for it.",
+            "items": {
+              "type": "object",
+              "required": [
+                "type",
+                "path"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Build tool / project type",
+                  "enum": [
+                    "gradle",
+                    "maven",
+                    "bazel",
+                    "json"
+                  ]
+                },
+                "path": {
+                  "type": "string",
+                  "description": "URI pointing to the project's build file or workspace root, e.g. \"file:///proj-dir/pom.xml\""
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "type": {
+                        "const": "maven"
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "env": {
+                        "type": "object",
+                        "description": "Maven only: extra environment variables for the import process.",
+                        "additionalProperties": {
+                          "type": "string"
+                        }
+                      },
+                      "system-properties": {
+                        "type": "object",
+                        "description": "Maven only: JVM system properties for the import process.",
+                        "additionalProperties": {
+                          "type": "string"
+                        }
+                      },
+                      "java-home": {
+                        "type": "string",
+                        "description": "Maven only: path to the JDK home used to run the import."
+                      }
+                    }
+                  },
+                  "else": {
+                    "properties": {
+                      "env": false,
+                      "system-properties": false,
+                      "java-home": false
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "type": {
+                        "const": "bazel"
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "project-path": {
+                        "type": "string",
+                        "description": "Bazel only: path to the Bazel project file, relative to the workspace root."
+                      }
+                    }
+                  },
+                  "else": {
+                    "properties": {
+                      "project-path": false
+                    }
+                  }
+                }
+              ]
+            }
+          },
           "intellij.jdkForSymbolResolution": {
             "type": "string",
             "default": null,
@@ -418,6 +514,7 @@
     ]
   },
   "activationEvents": [
+    "onStartupFinished",
     "onCommand:jetbrains.activateLsp",
     "onLanguage:kotlin",
     "workspaceContains:*/build.gradle",

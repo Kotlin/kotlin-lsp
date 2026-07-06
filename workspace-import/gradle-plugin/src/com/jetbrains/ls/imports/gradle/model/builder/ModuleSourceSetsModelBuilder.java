@@ -64,10 +64,26 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
         }
 
         if (!result.isEmpty()) {
-            return new ModuleSourceSetsImpl(result);
+            return new ModuleSourceSetsImpl(result, moduleCoordinate(project));
         }
 
         return null;
+    }
+
+    /**
+     * The project's {@code groupId:artifactId:version}, or {@code null} when group/version are not set
+     * (e.g. Gradle's default {@code "unspecified"} version), in which case the project publishes nothing
+     * matchable for dependency substitution.
+     */
+    private static @Nullable String moduleCoordinate(@NotNull Project project) {
+        Object groupObject = project.getGroup();
+        Object versionObject = project.getVersion();
+        String group = groupObject.toString();
+        String version = versionObject.toString();
+        if (group.isEmpty() || version.isEmpty() || "unspecified".equals(version)) {
+            return null;
+        }
+        return group + ":" + project.getName() + ":" + version;
     }
 
     private static @NotNull Set<@NotNull ModuleSourceSet> readSourceSets(

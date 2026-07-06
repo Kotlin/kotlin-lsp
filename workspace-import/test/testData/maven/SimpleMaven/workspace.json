@@ -2,6 +2,7 @@
     "modules": [
         {
             "name": "simple-maven",
+            "coordinate": "com.example:simple-maven:1.0-SNAPSHOT",
             "dependencies": [
                 {
                     "type": "inheritedSdk"

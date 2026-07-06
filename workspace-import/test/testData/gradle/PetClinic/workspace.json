@@ -20,6 +20,7 @@
         },
         {
             "name": "PetClinic.aot",
+            "coordinate": "org.springframework.samples:PetClinic:3.4.0",
             "dependencies": [
                 {
                     "type": "module",
@@ -504,6 +505,7 @@
         },
         {
             "name": "PetClinic.aotTest",
+            "coordinate": "org.springframework.samples:PetClinic:3.4.0:test",
             "dependencies": [
                 {
                     "type": "module",
@@ -1219,6 +1221,7 @@
         },
         {
             "name": "PetClinic.main",
+            "coordinate": "org.springframework.samples:PetClinic:3.4.0",
             "dependencies": [
                 {
                     "type": "library",
@@ -1712,6 +1715,7 @@
         },
         {
             "name": "PetClinic.test",
+            "coordinate": "org.springframework.samples:PetClinic:3.4.0:test",
             "dependencies": [
                 {
                     "type": "module",

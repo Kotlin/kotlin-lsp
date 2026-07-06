@@ -20,6 +20,7 @@
         },
         {
             "name": "untitled1.main",
+            "coordinate": "com.intellij:untitled1:1.0-SNAPSHOT",
             "dependencies": [
                 {
                     "type": "moduleSource"
@@ -44,6 +45,7 @@
         },
         {
             "name": "untitled1.test",
+            "coordinate": "com.intellij:untitled1:1.0-SNAPSHOT:test",
             "dependencies": [
                 {
                     "type": "module",

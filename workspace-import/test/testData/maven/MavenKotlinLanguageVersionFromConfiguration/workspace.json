@@ -2,6 +2,7 @@
     "modules": [
         {
             "name": "maven-kotlin-language-version-from-configuration",
+            "coordinate": "com.example:maven-kotlin-language-version-from-configuration:1.0-SNAPSHOT",
             "dependencies": [
                 {
                     "type": "inheritedSdk"

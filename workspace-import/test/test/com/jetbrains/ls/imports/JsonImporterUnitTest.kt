@@ -17,6 +17,8 @@ import com.jetbrains.ls.imports.json.SdkData
 import com.jetbrains.ls.imports.json.WorkspaceData
 import com.jetbrains.ls.imports.json.flattenExportedDependencies
 import com.jetbrains.ls.imports.json.importWorkspaceData
+import com.jetbrains.ls.imports.api.substituteModuleDependencies
+import com.jetbrains.ls.imports.json.XmlElement
 import com.jetbrains.ls.imports.json.workspaceData
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -119,5 +121,60 @@ class JsonImporterUnitTest {
         // ...and the arguments round-trip back to the JSON model on export.
         val exported = workspaceData(storage, workspacePath).javaSettings.single { it.module == "A" }
         assertEquals(args, exported.compilerArguments)
+    }
+
+    /**
+     * Module `consumer` depends on the library `com.example:lib:1.0`, which is also produced by the imported
+     * module `lib` (its coordinate). After substitution `consumer` must depend on module `lib` instead of the
+     * library, while the unrelated library `com.other:other:2.0` stays a library dependency.
+     */
+    @Test
+    fun substitutesLibraryDependencyWithProducingModule(@TempDir workspacePath: Path) {
+        fun mavenProperties(group: String, artifact: String, version: String) = XmlElement(
+            tag = "properties",
+            attributes = mapOf("groupId" to group, "artifactId" to artifact, "version" to version, "baseVersion" to version),
+        )
+
+        val data = WorkspaceData(
+            modules = listOf(
+                ModuleData(
+                    name = "lib",
+                    coordinate = "com.example:lib:1.0",
+                ),
+                ModuleData(
+                    name = "consumer",
+                    dependencies = listOf(
+                        DependencyData.Library(name = "Maven: com.example:lib:1.0", scope = DependencyDataScope.COMPILE),
+                        DependencyData.Library(name = "Maven: com.other:other:2.0", scope = DependencyDataScope.COMPILE),
+                    ),
+                ),
+            ),
+            libraries = listOf(
+                LibraryData(
+                    name = "Maven: com.example:lib:1.0",
+                    type = "repository",
+                    roots = listOf(LibraryRootData(path = "lib/example.jar")),
+                    properties = mavenProperties("com.example", "lib", "1.0"),
+                ),
+                LibraryData(
+                    name = "Maven: com.other:other:2.0",
+                    type = "repository",
+                    roots = listOf(LibraryRootData(path = "lib/other.jar")),
+                    properties = mavenProperties("com.other", "other", "2.0"),
+                ),
+            ),
+        )
+
+        val storage = MutableEntityStorage.create()
+        storage.importWorkspaceData(data, workspacePath, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(true))
+
+        substituteModuleDependencies(storage)
+
+        val consumer = workspaceData(storage, workspacePath).modules.first { it.name == "consumer" }
+        val moduleDeps = consumer.dependencies.filterIsInstance<DependencyData.Module>().map { it.name }.toSet()
+        val libraryDeps = consumer.dependencies.filterIsInstance<DependencyData.Library>().map { it.name }.toSet()
+
+        assertEquals(setOf("lib"), moduleDeps, "consumer's library dep on com.example:lib:1.0 should become a module dep on lib")
+        assertEquals(setOf("Maven: com.other:other:2.0"), libraryDeps, "unmatched library dep must be left untouched")
     }
 }

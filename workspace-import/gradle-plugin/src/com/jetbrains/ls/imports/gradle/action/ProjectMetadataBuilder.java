@@ -61,14 +61,16 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
         Map<String, Set<ModuleSourceSet>> sourceSets = new HashMap<>();
         Map<String, Set<ExternalModuleDependency>> externalModuleDependencySet = new HashMap<>();
         Map<String, AndroidProject> androidProjects = new HashMap<>();
+        Map<String, String> moduleCoordinates = new HashMap<>();
         List<InternalIdeaProject> ideaProjects = findProjects(controller);
-        resolveModels(ideaProjects, controller, syncSettings, kotlinModules, sourceSets, externalModuleDependencySet, androidProjects);
+        resolveModels(ideaProjects, controller, syncSettings, kotlinModules, sourceSets, externalModuleDependencySet, androidProjects, moduleCoordinates);
         return new ProjectMetadata(
                 ideaProjects,
                 kotlinModules,
                 sourceSets,
                 externalModuleDependencySet,
-                androidProjects
+                androidProjects,
+                moduleCoordinates
         );
     }
 
@@ -79,7 +81,8 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
             @NotNull Map<@NotNull String, @NotNull KotlinModule> kotlinModules,
             @NotNull Map<@NotNull String, @NotNull Set<ModuleSourceSet>> sourceSets,
             @NotNull Map<@NotNull String, @NotNull Set<ExternalModuleDependency>> externalModuleDependencySet,
-            @NotNull Map<@NotNull String, @NotNull AndroidProject> androidProjects
+            @NotNull Map<@NotNull String, @NotNull AndroidProject> androidProjects,
+            @NotNull Map<@NotNull String, @NotNull String> moduleCoordinates
     ) {
         for (InternalIdeaProject project : ideaProjects) {
             for (InternalIdeaModule module : project.getModules()) {
@@ -95,6 +98,9 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
                 }
                 ModuleSourceSets moduleSourceSets = controller.findModel(delegate, ModuleSourceSets.class);
                 sourceSets.put(moduleFqn, moduleSourceSets == null ? Collections.emptySet() : moduleSourceSets.getSourceSets());
+                if (moduleSourceSets != null && moduleSourceSets.getModuleCoordinate() != null) {
+                    moduleCoordinates.put(moduleFqn, moduleSourceSets.getModuleCoordinate());
+                }
 
                 Class<? extends ExternalModuleDependencySet> dependencyModel = syncSettings.getDownloadLibrarySources()
                                                                                        ? ExternalModuleFullDependencySet.class

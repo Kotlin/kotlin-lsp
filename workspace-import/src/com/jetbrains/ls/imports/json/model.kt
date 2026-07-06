@@ -17,6 +17,7 @@ data class WorkspaceData(
 data class ModuleData(
     val name: String,
     val type: String? = "JAVA_MODULE",
+    val coordinate: String? = null,
     val dependencies: List<DependencyData> = emptyList(),
     val contentRoots: List<ContentRootData> = emptyList(),
     val facets: List<FacetData> = emptyList(),
