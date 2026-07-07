@@ -7,6 +7,7 @@ import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.codeInspection.ex.InspectionManagerEx
 import com.intellij.modcommand.ActionContext
+import com.intellij.modcommand.ModCommandAction
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
@@ -38,11 +39,16 @@ import kotlinx.serialization.json.encodeToJsonElement
 
 private val LOG = logger<LSCommonIntentionFixesCodeActionProvider>()
 
+/**
+ * @param converter an optional function that adapts ModCommand-based intention actions to LSP
+ * (e.g., for specific actions, it may modify it somehow to avoid using unsupported LSP stuff).
+ */
 class LSCommonIntentionFixesCodeActionProvider(
     override val supportedLanguages: Set<LSLanguage>,
     private val intentionBlacklist: Blacklist = Blacklist(),
     private val quickFixBlacklist: Blacklist = Blacklist(),
     inspectionBlacklist: Blacklist = Blacklist(),
+    private val converter: (ModCommandAction) -> ModCommandAction = {it}
 ) : LSCodeActionProvider {
     private val lsInspectionManager = LSInspectionManager(inspectionBlacklist, quickFixBlacklist)
 
@@ -145,6 +151,7 @@ class LSCommonIntentionFixesCodeActionProvider(
                 }
             }
             .filterNot { modCommandAction -> intentionBlacklist.containsImplementation(modCommandAction.javaClass.name) }
+            .map(converter)
             .mapNotNull { modCommandAction ->
                 val presentation = runCatching {
                     // If some ModCommand is not available, calling getPresentation() in such case should return null, not throw.

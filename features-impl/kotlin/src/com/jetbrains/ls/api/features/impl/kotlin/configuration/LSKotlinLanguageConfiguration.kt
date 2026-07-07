@@ -17,6 +17,7 @@ import com.jetbrains.ls.api.features.WorkspaceComponentEntry
 import com.jetbrains.ls.api.features.impl.common.definitions.LSCommonDefinitionProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionDiagnosticProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionFixesCodeActionProvider
+import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonIntentionFixesCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonSyntaxErrorDiagnosticProvider
 import com.jetbrains.ls.api.features.impl.common.foldingRange.LSCommonFoldingRangeProvider
 import com.jetbrains.ls.api.features.impl.common.formatting.LSCommonFormattingProvider
@@ -33,7 +34,7 @@ import com.jetbrains.ls.api.features.impl.kotlin.completion.LSKotlinCompletionPr
 import com.jetbrains.ls.api.features.impl.kotlin.definitions.LSKotlinPackageDefinitionProvider
 import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.compiler.LSKotlinCompilerDiagnosticsFixesCodeActionProvider
 import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.compiler.LSKotlinCompilerDiagnosticsProvider
-import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.intentions.LSKotlinIntentionCodeActionProvider
+import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.intentions.kotlinIntentionConverter
 import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.kotlinInspectionBlacklist
 import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.kotlinQuickFixBlacklist
 import com.jetbrains.ls.api.features.impl.kotlin.hover.LSKotlinHoverProvider
@@ -72,12 +73,17 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
             quickFixBlacklist = kotlinQuickFixBlacklist,
         ),
         LSCommonInspectionFixesCodeActionProvider(setOf(LSKotlinLanguage)),
+        LSCommonIntentionFixesCodeActionProvider(
+            supportedLanguages = setOf(LSKotlinLanguage),
+            inspectionBlacklist = kotlinInspectionBlacklist,
+            quickFixBlacklist = kotlinQuickFixBlacklist,
+            converter = kotlinIntentionConverter()
+        ),
         LSCommonSyntaxErrorDiagnosticProvider(setOf(LSKotlinLanguage)),
         LSKotlinCompilerDiagnosticsProvider,
         LSKotlinCompilerDiagnosticsFixesCodeActionProvider,
         LSKotlinWorkspaceSymbolProvider,
         LSKotlinDocumentSymbolProvider,
-        LSKotlinIntentionCodeActionProvider,
         LSKotlinSignatureHelpProvider,
         LSKotlinRenameProvider,
         LSJvmRenameDirectoryProvider,
