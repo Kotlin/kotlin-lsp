@@ -203,7 +203,7 @@ class LSCompletionProviderHelper(
                     documentation = readAction { computeDocumentation(completionData.lookup) },
                 )
                 // https://youtrack.jetbrains.com/issue/LSP-319/Fix-completion-in-Air
-                val isAir = server.initializeParams.clientInfo?.name?.equals("JetBrains Air") ?: false
+                val isAir = server.config.clientName == "JetBrains Air"
                 if (isAir) {
                     val insRes = applyCompletion(completionData, fileForModificationProvider)
                     completionItem.copy(

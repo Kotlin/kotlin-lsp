@@ -26,7 +26,6 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.intellijUriToLspUri
 import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
-import com.jetbrains.ls.snapshot.api.impl.core.InitializeOptions
 import com.jetbrains.lsp.implementation.LspClient
 import com.jetbrains.lsp.protocol.ApplyEditRequests.ApplyEdit
 import com.jetbrains.lsp.protocol.ApplyWorkspaceEditParams
@@ -171,7 +170,7 @@ sealed interface ModCommandData {
             // Relies on the custom `intellij/copyToClipboard` notification, so only clients,
             // which declare `intellijExtensions` can handle it; abort for the others.
             is ModCopyToClipboard -> when {
-                server != null && InitializeOptions.get(server.initializeParams).intellijExtensions ->
+                server?.config?.clientSupportsIntellijExtensions == true ->
                     CopyToClipboard(command.content)
                 else -> null
             }
@@ -180,7 +179,7 @@ sealed interface ModCommandData {
             is ModHighlight -> Nothing
             // Templates are not fully supported yet
             is ModStartTemplate -> when {
-                server?.initializeParams?.capabilities?.workspace?.workspaceEdit?.snippetEditSupport == true -> convertTemplate(command)
+                server?.config?.clientSupportsSnippetWorkspaceEdit == true -> convertTemplate(command)
                 command.optional -> Nothing
                 else -> null
             }

@@ -8,7 +8,6 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.features.codeLens.LSCodeLensProvider
-import com.jetbrains.ls.snapshot.api.impl.core.InitializeOptions
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.CodeLens
 import com.jetbrains.lsp.protocol.CodeLensParams
@@ -38,7 +37,7 @@ data class RunMainArgs(
 abstract class LSJvmRunMainCodeLensProvider : LSCodeLensProvider {
     context(server: LSServer, handlerContext: LspHandlerContext)
     final override fun getCodeLenses(params: CodeLensParams): Flow<CodeLens> = flow {
-        if (!InitializeOptions.get(server.initializeParams).runMainCodeLens) return@flow
+        if (!server.config.clientSupportsRunMainCodeLens) return@flow
         val lenses: List<CodeLens> = server.withAnalysisContext {
             readAction {
                 val virtualFile = params.textDocument.uri.uri.findVirtualFile() ?: return@readAction emptyList()
