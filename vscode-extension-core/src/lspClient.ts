@@ -21,6 +21,7 @@ import {
   getContext,
   getOutputChannel,
   logInfo,
+  revealBuildLog,
 } from './extension';
 import { runWithEulaGate } from './eulaGate';
 import { clearBuildError, setBuildError, updateLspStatusBar } from './statusBar';
@@ -75,10 +76,15 @@ let startLspClientPromise: Promise<void> | undefined;
 let restartRequestedDuringStart = false;
 let bundledServerLauncherCache: { key: string; promise: Promise<string> } | undefined;
 
-type ImportLogParams =
-  | { type: 1 | 2 | 3; message: string; failed?: false; succeeded?: false }
-  | { type: 1; message: string; failed: true; succeeded?: false; tool?: string }
-  | { type: 3; message: string; failed?: false; succeeded: true };
+interface ImportLogParams {
+  type: 1 | 2 | 3;
+  message: string;
+  /** Build-tool display name, e.g. "Maven" / "Gradle" / "Bazel". Set on started and failed events. */
+  tool?: string;
+  failed?: boolean;
+  succeeded?: boolean;
+  started?: boolean;
+}
 
 const importLogNotification = new NotificationType<ImportLogParams>('intellij/importLog');
 
@@ -362,6 +368,11 @@ function registerImportLogHandler(client: LanguageClient): void {
   clearBuildError();
   const subscription = client.onNotification(importLogNotification, (p) => {
     const channel = getBuildOutputChannel();
+    if (p.started) {
+      // Reveal the Build output while the import runs
+      revealBuildLog();
+      return;
+    }
     channel.appendLine(p.message);
     if (p.failed) {
       // Terminal failure events reveal the Build output and leave a status item as an entry point.

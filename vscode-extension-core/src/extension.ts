@@ -134,14 +134,16 @@ export async function reloadWorkspace(
   }
 }
 
+export function revealBuildLog(): void {
+  getBuildOutputChannel().show(true); // preserveFocus
+  setTimeout(() => {
+    void commands.executeCommand('workbench.action.output.action.scrollToBottom');
+  }, 0);
+}
+
 function registerShowBuildLogCommand(context: ExtensionContext): void {
   context.subscriptions.push(
-    commands.registerCommand('jetbrains.showBuildLog', () => {
-      getBuildOutputChannel().show(true);
-      setTimeout(() => {
-        void commands.executeCommand('workbench.action.output.action.scrollToBottom');
-      }, 0);
-    }),
+    commands.registerCommand('jetbrains.showBuildLog', () => revealBuildLog()),
   );
 }
 
