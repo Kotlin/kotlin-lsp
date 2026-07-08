@@ -2,7 +2,6 @@ load("@community//build:compiler-options.bzl", "create_kotlinc_options")
 load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_provided_library")
 
 ### auto-generated section `build language-server.workspace-import.maven-plugin` start
-
 create_kotlinc_options(
     name = "custom_maven-plugin",
     jvm_target = "8",

@@ -11,7 +11,6 @@ jps_test(
 ### skip generation section `test language-server.api.features.test`
 
 ### auto-generated section `build language-server.api.features.test` start
-
 jvm_library(
     name = "test",
     srcs = glob(

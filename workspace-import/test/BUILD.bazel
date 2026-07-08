@@ -13,7 +13,6 @@ jps_test(
 ### skip generation section `test language-server.workspace-import.test`
 
 ### auto-generated section `build language-server.workspace-import.test` start
-
 create_kotlinc_options(
     name = "custom_test",
     x_context_parameters = True,
