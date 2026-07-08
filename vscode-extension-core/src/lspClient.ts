@@ -53,6 +53,8 @@ const OPT_PROJECTS = 'intellij.projects';
 const INDEX_DIR_STATE_KEY = 'jetbrains.intellij.indexDir';
 
 let _client: LanguageClient | undefined;
+let startLspClientPromise: Promise<void> | undefined;
+let restartRequestedDuringStart = false;
 
 type ImportLogParams =
   | { type: 1 | 2 | 3; message: string; failed?: false; succeeded?: false }
@@ -70,18 +72,18 @@ export type InitializationOptionsContributor = () => Record<string, unknown>;
  * Mirrors the `intellij.projects` setting and the server-side `ConfiguredProject` model.
  */
 export interface ConfiguredProject {
-    /** Build tool / project type, e.g. "gradle", "maven", "bazel", "json". */
-    type: string;
-    /** URI pointing to the project's build file or workspace root. */
-    path: string;
-    /** Maven only: extra environment variables for the import process. */
-    env?: Record<string, string>;
-    /** Maven only: JVM system properties for the import process. */
-    'system-properties'?: Record<string, string>;
-    /** Maven only: path to the JDK home used to run the import. */
-    'java-home'?: string;
-    /** Bazel only: path to the Bazel project file, relative to the workspace root. */
-    'project-path'?: string;
+  /** Build tool / project type, e.g. "gradle", "maven", "bazel", "json". */
+  type: string;
+  /** URI pointing to the project's build file or workspace root. */
+  path: string;
+  /** Maven only: extra environment variables for the import process. */
+  env?: Record<string, string>;
+  /** Maven only: JVM system properties for the import process. */
+  'system-properties'?: Record<string, string>;
+  /** Maven only: path to the JDK home used to run the import. */
+  'java-home'?: string;
+  /** Bazel only: path to the Bazel project file, relative to the workspace root. */
+  'project-path'?: string;
 }
 
 const initializationOptionsContributors: InitializationOptionsContributor[] = [];
@@ -96,7 +98,7 @@ export function initLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): vo
   getContext().subscriptions.push(
     Disposable.create(async () => await stopLspClient()),
     vscode.commands.registerCommand('jetbrains.kotlin.restartLsp', async () => {
-      await startLspClient(getAcceptedEulaHash);
+      await startLspClient({ getAcceptedEulaHash, restartIfStarting: true });
       await vscode.window.showInformationMessage(extensionDisplayName() + ' restarted');
     }),
     vscode.commands.registerCommand('jetbrains.kotlin.clearCachesAndRestartLsp', async () => {
@@ -174,7 +176,7 @@ async function clearCachesAndRestart(getAcceptedEulaHash: AcceptedEulaHashProvid
 
   const cleared = indexDir ? await deleteIndexDir(indexDir) : false;
 
-  await startLspClient(getAcceptedEulaHash);
+  await startLspClient({ getAcceptedEulaHash, restartIfStarting: true });
 
   await vscode.window.showInformationMessage(
     cleared
@@ -213,15 +215,20 @@ async function deleteIndexDir(indexDir: string): Promise<boolean> {
  * We cannot subscribe to the client events directly because the client instance may be changed
  *
  * @param subscription - function to call on state change
+ * @returns a disposable that removes the subscription from the persistent `clientSubscriptions`
+ *   list, so a caller with a shorter lifetime than the module (or the extension across
+ *   activate/deactivate cycles) does not leak listeners.
  */
 export function subscribeToClientEvent(
   subscription: (client: LanguageClient, stateChange: StateChangeEvent) => void,
-) {
+): vscode.Disposable {
   clientSubscriptions.push(subscription);
-  if (_client) {
-    const client = _client;
-    getContext().subscriptions.push(client.onDidChangeState((e) => subscription(client, e)));
-  }
+  return {
+    dispose: () => {
+      const i = clientSubscriptions.indexOf(subscription);
+      if (i >= 0) clientSubscriptions.splice(i, 1);
+    },
+  };
 }
 
 /**
@@ -235,7 +242,32 @@ export function getLspClient(): LanguageClient | undefined {
 /**
  * Starts the LSP client applying all user options. If the client is already running, restarts it.
  */
-export async function startLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): Promise<void> {
+export interface StartLspClientOptions {
+  getAcceptedEulaHash: AcceptedEulaHashProvider;
+  restartIfStarting?: boolean;
+}
+
+export function startLspClient({
+  getAcceptedEulaHash,
+  restartIfStarting = false,
+}: StartLspClientOptions): Promise<void> {
+  if (startLspClientPromise !== undefined) {
+    if (restartIfStarting) restartRequestedDuringStart = true;
+    return startLspClientPromise;
+  }
+  const promise = (async () => {
+    do {
+      restartRequestedDuringStart = false;
+      await doStartLspClient(getAcceptedEulaHash);
+    } while (restartRequestedDuringStart);
+  })().finally(() => {
+    if (startLspClientPromise === promise) startLspClientPromise = undefined;
+  });
+  startLspClientPromise = promise;
+  return promise;
+}
+
+async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): Promise<void> {
   const runClient = await createLspClient(getAcceptedEulaHash);
   if (!runClient) return;
   await stopLspClient();
@@ -270,10 +302,20 @@ export async function startLspClient(getAcceptedEulaHash: AcceptedEulaHashProvid
 
 export async function stopLspClient(): Promise<void> {
   if (!_client) return;
-  if (_client.needsStop()) {
-    await _client.stop();
-  }
+  const client = _client;
   _client = undefined;
+  if (!client.needsStop()) {
+    return;
+  }
+  try {
+    await client.stop();
+  } catch (error) {
+    if (!isWriteAfterEndError(error)) throw error;
+  }
+}
+
+function isWriteAfterEndError(error: unknown): boolean {
+  return error instanceof Error && /\bwrite after end\b/i.test(error.message);
 }
 
 function registerImportLogHandler(client: LanguageClient): void {

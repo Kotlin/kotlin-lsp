@@ -168,6 +168,7 @@ build_extension() {
   copy_file_if_exists "$extension_dir" "README.md"
   cp "$RESOLVED_PACKAGE_JSON" "$extension_dir/package.json"
   copy_dir_if_exists "$extension_dir" "bin"
+  copy_dir_if_exists "$extension_dir" "extension-policy"
   copy_dir_if_exists "$extension_dir" "grammars"
   copy_dir_if_exists "$extension_dir" "icons"
   copy_dir_if_exists "$extension_dir" "resources"

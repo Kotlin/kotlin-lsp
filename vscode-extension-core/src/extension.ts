@@ -12,10 +12,19 @@ import {
   workspace,
 } from 'vscode';
 import { registerDecompiler, registerOpeningJars } from './decompiler';
-import { buildInitializationOptions, getLspClient, initLspClient, startLspClient } from './lspClient';
+import {
+  buildInitializationOptions,
+  getLspClient,
+  initLspClient,
+  startLspClient,
+  stopLspClient,
+} from './lspClient';
 export {
+  getLspClient,
   registerInitializationOptionsContributor,
   type InitializationOptionsContributor,
+  stopLspClient,
+  subscribeToClientEvent,
 } from './lspClient';
 import { LSPErrorCodes, RequestType, ResponseError } from 'vscode-languageclient/node';
 import { registerStatusBarItem } from './statusBar';
@@ -51,6 +60,7 @@ interface ExtensionPackageJson {
 let _context: ExtensionContext | undefined;
 let _outputChannel: LogOutputChannel | undefined;
 let _buildOutputChannel: OutputChannel | undefined;
+let serverActivated = false;
 
 export function getContext(): ExtensionContext {
   return _context!;
@@ -95,14 +105,16 @@ function registerExportWorkspaceToJsonCommand(context: ExtensionContext): void {
 }
 
 interface ReloadWorkspaceParams {
-    initializationOptions: Record<string, unknown>;
+  initializationOptions: Record<string, unknown>;
 }
 
 const ReloadWorkspaceRequest = new RequestType<ReloadWorkspaceParams, null, void>(
   'intellij/reloadWorkspace',
 );
 
-export async function reloadWorkspace(getAcceptedEulaHash: AcceptedEulaHashProvider): Promise<void> {
+export async function reloadWorkspace(
+  getAcceptedEulaHash: AcceptedEulaHashProvider,
+): Promise<void> {
   const client = getLspClient();
   if (client === undefined || client.initializeResult === undefined) {
     await window.showErrorMessage('Language server is not running');
@@ -137,7 +149,9 @@ function registerReloadWorkspaceCommand(
   getAcceptedEulaHash: AcceptedEulaHashProvider,
 ): void {
   context.subscriptions.push(
-    commands.registerCommand('jetbrains.kotlin.reloadWorkspace', () => reloadWorkspace(getAcceptedEulaHash)),
+    commands.registerCommand('jetbrains.kotlin.reloadWorkspace', () =>
+      reloadWorkspace(getAcceptedEulaHash),
+    ),
   );
 }
 export async function activateExtension(
@@ -147,9 +161,9 @@ export async function activateExtension(
   _context = context;
   const getAcceptedEulaHash: AcceptedEulaHashProvider =
     options.getAcceptedEulaHash ?? defaultGetAcceptedEulaHash;
-  const enableDecompiler = options.enableDecompiler ?? false;
-  const enableDapServer = options.enableDapServer ?? false;
-  initOutputChannel(context);
+  if (!serverActivated) {
+    initOutputChannel(context);
+  }
 
   const checkGeoRestrictedFn: GeoRestrictionCheck =
     options.checkGeoRestricted ?? defaultCheckGeoRestricted;
@@ -162,34 +176,54 @@ export async function activateExtension(
     return;
   }
 
-  if (checkLegacyKotlinExtensionConflict(context)) {
-    return;
+  // One-time contribution setup runs once per active extension context; geo and consent gates above
+  // still run on every activation attempt.
+  if (!serverActivated) {
+    const enableDecompiler = options.enableDecompiler ?? false;
+    const enableDapServer = options.enableDapServer ?? false;
+
+    if (checkLegacyKotlinExtensionConflict(context)) {
+      return;
+    }
+
+    if (enableDecompiler) {
+      registerDecompiler(context);
+      registerOpeningJars();
+    }
+    if (enableDapServer) {
+      registerDapServer(context);
+    }
+    registerExportWorkspaceToJsonCommand(context);
+    registerReloadWorkspaceCommand(context, getAcceptedEulaHash);
+    registerAutoReloadWorkspace(context, getAcceptedEulaHash);
+    registerShowBuildLogCommand(context);
+    registerStatusBarItem();
+    registerFileTemplates(context);
+
+    for (const module of options.modules) {
+      await module(context);
+    }
+
+    initLspClient(getAcceptedEulaHash);
+    serverActivated = true;
   }
 
-  if (enableDecompiler) {
-    registerDecompiler(context);
-    registerOpeningJars();
-  }
-  if (enableDapServer) {
-    registerDapServer(context);
-  }
-  registerExportWorkspaceToJsonCommand(context);
-  registerReloadWorkspaceCommand(context, getAcceptedEulaHash);
-  registerAutoReloadWorkspace(context, getAcceptedEulaHash);
-  registerShowBuildLogCommand(context);
-  registerStatusBarItem();
-  registerFileTemplates(context);
+  await startLspClient({ getAcceptedEulaHash });
+}
 
-  for (const module of options.modules) {
-    await module(context);
-  }
-
-  initLspClient(getAcceptedEulaHash);
-  await startLspClient(getAcceptedEulaHash);
+export async function deactivateExtension(): Promise<void> {
+  await stopLspClient();
+  serverActivated = false;
+  _context = undefined;
+  _outputChannel = undefined;
+  _buildOutputChannel = undefined;
 }
 
 function initOutputChannel(context: ExtensionContext): void {
   if (context.extensionMode === ExtensionMode.Test) {
+    return;
+  }
+  if (_outputChannel !== undefined && _buildOutputChannel !== undefined) {
     return;
   }
 
