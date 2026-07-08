@@ -36,6 +36,7 @@ import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.compiler.LSKotlinCo
 import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.compiler.LSKotlinCompilerDiagnosticsProvider
 import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.intentions.kotlinIntentionConverter
 import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.kotlinInspectionBlacklist
+import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.kotlinIntentionBlacklist
 import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.kotlinQuickFixBlacklist
 import com.jetbrains.ls.api.features.impl.kotlin.hover.LSKotlinHoverProvider
 import com.jetbrains.ls.api.features.impl.kotlin.inlayHints.LSKotlinInlayHintsProvider
@@ -76,6 +77,7 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSCommonIntentionFixesCodeActionProvider(
             supportedLanguages = setOf(LSKotlinLanguage),
             inspectionBlacklist = kotlinInspectionBlacklist,
+            intentionBlacklist = kotlinIntentionBlacklist,
             quickFixBlacklist = kotlinQuickFixBlacklist,
             converter = kotlinIntentionConverter()
         ),

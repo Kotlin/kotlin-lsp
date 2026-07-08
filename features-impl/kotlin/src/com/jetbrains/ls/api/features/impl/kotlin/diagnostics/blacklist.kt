@@ -56,6 +56,13 @@ internal val kotlinInspectionBlacklist = Blacklist(
     ),
 )
 
+internal val kotlinIntentionBlacklist = Blacklist(
+    BlacklistEntry.Class(
+        fqcn = "org.jetbrains.kotlin.idea.codeinsight.intentions.copyConcatenatedStringToClipboard.CopyConcatenatedStringToClipboardIntention",
+        reason = "LSP-1398, LSP-1400",
+    ),
+)
+
 internal val kotlinQuickFixBlacklist = Blacklist(
     BlacklistEntry.Class(
         fqcn = $$"org.jetbrains.kotlin.idea.codeInsight.inspections.PackageDirectoryMismatchInspection$MoveFileToPackageFix",
