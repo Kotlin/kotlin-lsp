@@ -170,6 +170,7 @@ build_extension() {
   copy_dir_if_exists "$extension_dir" "bin"
   copy_dir_if_exists "$extension_dir" "grammars"
   copy_dir_if_exists "$extension_dir" "icons"
+  copy_dir_if_exists "$extension_dir" "resources"
   copy_dir_if_exists "$extension_dir" "out/dist"
   copy_dir_if_exists "$extension_dir" "syntaxes"
   cp "$SCRIPT_DIR/unpack-server.mjs" "$extension_dir/unpack-server.mjs"
