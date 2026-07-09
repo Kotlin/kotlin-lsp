@@ -21,6 +21,7 @@ import {
 } from './lspClient';
 export {
   getLspClient,
+  prepareBundledServerLauncher,
   registerInitializationOptionsContributor,
   type InitializationOptionsContributor,
   stopLspClient,

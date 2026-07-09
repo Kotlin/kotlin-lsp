@@ -33,7 +33,7 @@ export function registerStatusBarItem() {
   statusBarItem.text = productTitle({ shorten: true });
   statusBarItem.command = STATUS_MENU_COMMAND;
   statusBarItem.show();
-  updateView();
+  updateLspStatusBar();
 
   // Keep build failures separate from the LSP-state item.
   buildStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 99);
@@ -44,7 +44,7 @@ export function registerStatusBarItem() {
     buildStatusBarItem,
     vscode.commands.registerCommand(STATUS_MENU_COMMAND, showLspStatusMenu),
   );
-  subscribeToClientEvent(() => updateView());
+  subscribeToClientEvent(() => updateLspStatusBar());
 }
 
 export function setBuildError(tool: string): void {
@@ -59,7 +59,7 @@ export function clearBuildError(): void {
   buildStatusBarItem?.hide();
 }
 
-function updateView() {
+export function updateLspStatusBar() {
   if (!statusBarItem) return;
   statusBarItem.tooltip = computeTooltip();
   statusBarItem.text = computeText();

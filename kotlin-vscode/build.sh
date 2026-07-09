@@ -16,6 +16,9 @@ fi
 PACKAGE_DIR="${PACKAGE_DIR:-}"
 BUNDLE_TYPE="${BUNDLE_TYPE:-}"
 VSCE_VERSION="${VSCE_VERSION:-}"
+THIN_BUNDLE="${THIN_BUNDLE:-false}"
+LSP_DOWNLOAD_BASE_URL="${LSP_DOWNLOAD_BASE_URL:-}"
+LSP_DOWNLOAD_URL_TEMPLATE="${LSP_DOWNLOAD_URL_TEMPLATE:-}"
 DEFAULT_BUNDLE_TYPE="kotlin-server"
 
 for arg in "$@"; do
@@ -23,8 +26,13 @@ for arg in "$@"; do
         --package-dir=*) PACKAGE_DIR="${arg#--package-dir=}" ;;
         --bundle-type=*) BUNDLE_TYPE="${arg#--bundle-type=}" ;;
         --vsce-version=*) VSCE_VERSION="${arg#--vsce-version=}" ;;
+        --thin) THIN_BUNDLE="true" ;;
+        --lsp-download-base-url=*) LSP_DOWNLOAD_BASE_URL="${arg#--lsp-download-base-url=}" ;;
+        --lsp-download-url-template=*) LSP_DOWNLOAD_URL_TEMPLATE="${arg#--lsp-download-url-template=}" ;;
     esac
 done
+
+export THIN_BUNDLE
 
 BUNDLE_TYPE="${BUNDLE_TYPE:-$DEFAULT_BUNDLE_TYPE}"
 
@@ -146,6 +154,46 @@ resolve_package_manifest() {
 
 resolve_package_manifest
 
+server_download_url() {
+  local archive_name="$1"
+  if [[ -n "$LSP_DOWNLOAD_URL_TEMPLATE" ]]; then
+    echo "${LSP_DOWNLOAD_URL_TEMPLATE//\{filename\}/$archive_name}"
+    return
+  fi
+  if [[ -n "$LSP_DOWNLOAD_BASE_URL" ]]; then
+    echo "${LSP_DOWNLOAD_BASE_URL%/}/$archive_name"
+    return
+  fi
+  echo ""
+}
+
+write_server_bundle_metadata() {
+  local extension_dir="$1"
+  local archive_name="$2"
+  local download_url="$3"
+  local sha256_sidecar="$4"
+
+  node - "$extension_dir/server-bundle.json" "$download_url" "$archive_name" "$sha256_sidecar" <<'NODE'
+const fs = require('node:fs');
+const path = require('node:path');
+const [target, url, archiveName, sidecarPath] = process.argv.slice(2);
+const value = fs.readFileSync(sidecarPath, 'utf8').trim();
+const match = /^([0-9a-fA-F]{64})(?:\s+\*?(.+))?$/.exec(value);
+if (!match) {
+  console.error(`Invalid SHA-256 sidecar: ${sidecarPath}`);
+  process.exit(1);
+}
+if (match[2] !== undefined && path.basename(match[2]) !== archiveName) {
+  console.error(
+    `SHA-256 sidecar ${sidecarPath} describes ${match[2]}, expected ${archiveName}`,
+  );
+  process.exit(1);
+}
+const sha256 = match[1].toLowerCase();
+fs.writeFileSync(target, JSON.stringify({ url, archiveName, sha256 }, null, 2) + '\n');
+NODE
+}
+
 build_extension() {
   local extension_dir="$1"
   local vsix_target_filename="$2"
@@ -154,8 +202,13 @@ build_extension() {
   local lsp_zip_path="$5"
   local log_prefix="$6"
 
-  if [[ ! -f "$lsp_zip_path" ]]; then
-    echo "Error: LSP zip not found: $lsp_zip_path" >&2
+  if [[ "$THIN_BUNDLE" == "true" ]]; then
+    if [[ ! -f "$lsp_zip_path.sha256" ]]; then
+      echo "Error: SHA-256 sidecar not found: $lsp_zip_path.sha256" >&2
+      exit 1
+    fi
+  elif [[ ! -f "$lsp_zip_path" ]]; then
+    echo "Error: LSP archive not found: $lsp_zip_path" >&2
     exit 1
   fi
 
@@ -174,14 +227,28 @@ build_extension() {
   copy_dir_if_exists "$extension_dir" "resources"
   copy_dir_if_exists "$extension_dir" "out/dist"
   copy_dir_if_exists "$extension_dir" "syntaxes"
-  cp "$SCRIPT_DIR/unpack-server.mjs" "$extension_dir/unpack-server.mjs"
 
   pushd "$extension_dir" > /dev/null
 
-  export LSP_ZIP_PATH="$lsp_zip_path"
+  if [[ "$THIN_BUNDLE" == "true" ]]; then
+    archive_name="$(basename -- "$lsp_zip_path")"
+    download_url="$(server_download_url "$archive_name")"
+    if [[ -z "$download_url" ]]; then
+      echo "Error: thin bundle requires --lsp-download-base-url or --lsp-download-url-template" >&2
+      exit 1
+    fi
+    write_server_bundle_metadata \
+      "$extension_dir" \
+      "$archive_name" \
+      "$download_url" \
+      "$lsp_zip_path.sha256"
+  else
+    cp "$SCRIPT_DIR/unpack-server.mjs" "$extension_dir/unpack-server.mjs"
+    export LSP_ZIP_PATH="$lsp_zip_path"
 
-  echo "$log_prefix Unpacking bundled language server..."
-  node unpack-server.mjs
+    echo "$log_prefix Unpacking bundled language server..."
+    node unpack-server.mjs
+  fi
 
   echo "$log_prefix Running vsce package..."
 
@@ -259,6 +326,9 @@ for productInfo in "$ARTIFACT_DIR"/*.product-info.json; do
     esac
     vsce_target="$vsce_os-$vsce_arch"
     vsix_target_filename="$BUNDLE_TYPE-$version-$platform.vsix"
+    if [[ "$THIN_BUNDLE" == "true" ]]; then
+      vsix_target_filename="$BUNDLE_TYPE-$version-$platform-thin.vsix"
+    fi
 
     EXTENSION_DIR="$BUILD_DIR/vscode-$platform"
 

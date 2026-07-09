@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { workspace } from 'vscode';
-import * as path from 'node:path';
 import {
   Disposable,
   LanguageClient,
@@ -23,10 +22,11 @@ import {
   getOutputChannel,
   logInfo,
 } from './extension';
-import { clearBuildError, setBuildError } from './statusBar';
+import { clearBuildError, setBuildError, updateLspStatusBar } from './statusBar';
 import { middleware } from './middleware';
 import * as readline from 'node:readline';
 import { type Readable } from 'node:stream';
+import { ensureServerLauncher } from './serverBundleDownload';
 
 interface ExtensionPackageJson {
   displayName?: string;
@@ -311,6 +311,7 @@ export async function stopLspClient(): Promise<void> {
   if (!_client) return;
   const client = _client;
   _client = undefined;
+  updateLspStatusBar();
   if (!client.needsStop()) {
     return;
   }
@@ -373,14 +374,31 @@ function configOption<T>(name: string, scope?: vscode.ConfigurationScope): T | u
   );
 }
 
-function getLauncherPath(): string {
-  const relative = path.join('server', 'bin');
-  const launcherName = os.platform() === 'win32' ? 'intellij-server.exe' : 'intellij-server';
-  const launcherPath = path.join(getContext().asAbsolutePath(relative), launcherName);
+async function ensureBundledServerLauncher(): Promise<string> {
+  const context = getContext();
+  const launcherPath = await vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Notification,
+      title: `${extensionDisplayName()}: language server setup`,
+    },
+    (progress) =>
+      ensureServerLauncher({
+        extensionPath: context.extensionPath,
+        storagePath: context.globalStorageUri.fsPath,
+        log: logInfo,
+        progress: (update) => progress.report(update),
+      }),
+  );
   if (os.platform() !== 'win32') {
     chmodSync(launcherPath, 0o755);
   }
   return launcherPath;
+}
+
+export async function prepareBundledServerLauncher(): Promise<string | undefined> {
+  const predefinedPort = configOption<number>(OPT_DEV_SERVER_PORT) ?? -1;
+  if (predefinedPort !== -1) return undefined;
+  return ensureBundledServerLauncher();
 }
 
 function getServerOptions(): ServerOptions {
@@ -397,7 +415,7 @@ function getServerOptions(): ServerOptions {
 }
 
 async function getStreamInfoForBundledServer(): Promise<StreamInfo> {
-  const serverProcess = startBundledServer();
+  const serverProcess = await startBundledServer();
   try {
     const port = await getPortForBundledServer(serverProcess);
     return await getStreamInfoForRunningServer(port, BUNDLED_SERVER_CONNECTION_TIMEOUT_MS);
@@ -407,9 +425,9 @@ async function getStreamInfoForBundledServer(): Promise<StreamInfo> {
   }
 }
 
-function startBundledServer(): ChildProcessByStdio<null, Readable, Readable> {
+async function startBundledServer(): Promise<ChildProcessByStdio<null, Readable, Readable>> {
   const debugLaunch = configOption<boolean>(OPT_LOG_LAUNCH) ?? false;
-  const launcherPath = getLauncherPath();
+  const launcherPath = await ensureBundledServerLauncher();
 
   const context = getContext();
   const args: string[] = [];
