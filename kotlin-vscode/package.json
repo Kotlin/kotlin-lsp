@@ -514,7 +514,6 @@
     ]
   },
   "activationEvents": [
-    "onStartupFinished",
     "onCommand:jetbrains.activateLsp",
     "onLanguage:kotlin",
     "workspaceContains:*/build.gradle",
