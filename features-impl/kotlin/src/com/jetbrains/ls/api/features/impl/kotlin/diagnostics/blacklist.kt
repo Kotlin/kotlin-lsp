@@ -57,10 +57,7 @@ internal val kotlinInspectionBlacklist = Blacklist(
 )
 
 internal val kotlinIntentionBlacklist = Blacklist(
-    BlacklistEntry.Class(
-        fqcn = "org.jetbrains.kotlin.idea.codeinsight.intentions.copyConcatenatedStringToClipboard.CopyConcatenatedStringToClipboardIntention",
-        reason = "LSP-1398, LSP-1400",
-    ),
+    // no blacklisted intentions
 )
 
 internal val kotlinQuickFixBlacklist = Blacklist(
