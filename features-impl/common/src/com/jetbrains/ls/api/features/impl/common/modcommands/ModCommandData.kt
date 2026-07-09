@@ -4,6 +4,7 @@ package com.jetbrains.ls.kotlinLsp.requests.core
 import com.intellij.modcommand.ModChooseAction
 import com.intellij.modcommand.ModCommand
 import com.intellij.modcommand.ModCompositeCommand
+import com.intellij.modcommand.ModCopyToClipboard
 import com.intellij.modcommand.ModCreateFile
 import com.intellij.modcommand.ModDeleteFile
 import com.intellij.modcommand.ModDisplayMessage
@@ -32,6 +33,7 @@ import com.jetbrains.lsp.protocol.CreateFile
 import com.jetbrains.lsp.protocol.DeleteFile
 import com.jetbrains.lsp.protocol.DocumentUri
 import com.jetbrains.lsp.protocol.MessageType
+import com.jetbrains.lsp.protocol.NotificationType
 import com.jetbrains.lsp.protocol.Range
 import com.jetbrains.lsp.protocol.RenameFile
 import com.jetbrains.lsp.protocol.ShowDocument
@@ -142,6 +144,9 @@ sealed interface ModCommandData {
     @Serializable
     data class DisplayMessage(val message: String, val messageKind: ModDisplayMessage.MessageKind) : ModCommandData
 
+    @Serializable
+    data class CopyToClipboard(val content: String) : ModCommandData
+
 
     companion object {
         private val LOG = logger<ModCommandData>()
@@ -162,6 +167,7 @@ sealed interface ModCommandData {
             is ModMoveFile -> MoveFile(command.file.url, command.targetFile.url.replace("mock://", "file://"))
             is ModUpdateFileText -> UpdateFileText(command.file.url, command.oldText, command.newText)
             is ModDisplayMessage -> DisplayMessage(command.messageText, command.kind)
+            is ModCopyToClipboard -> CopyToClipboard(command.content)
             is ModRegisterTabOut -> Nothing // We can safely skip the tab-out command
             // Highlighting could be important, but usually it's an additional helpful thing, not an essential one, so let's skip it for now
             is ModHighlight -> Nothing
@@ -363,5 +369,21 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient, changedFi
                 actions = null,
             ),
         )
+
+        is ModCommandData.CopyToClipboard -> client.notify(
+            notificationType = CopyToClipboardNotification,
+            params = CopyToClipboardParams(command.content),
+        )
     }
 }
+
+@Serializable
+data class CopyToClipboardParams(val content: String)
+
+/**
+ * A custom server -> client notification asking the client to put [CopyToClipboardParams.content]
+ * into the system clipboard. There is no standard LSP request for clipboard access, so this mirrors
+ * the `intellij/importLog` notification. Clients that do not support it simply ignore it.
+ */
+val CopyToClipboardNotification: NotificationType<CopyToClipboardParams> =
+    NotificationType("intellij/copyToClipboard", CopyToClipboardParams.serializer())

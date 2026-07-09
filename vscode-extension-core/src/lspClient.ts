@@ -63,6 +63,12 @@ type ImportLogParams =
 
 const importLogNotification = new NotificationType<ImportLogParams>('intellij/importLog');
 
+type CopyToClipboardParams = { content: string };
+
+const copyToClipboardNotification = new NotificationType<CopyToClipboardParams>(
+  'intellij/copyToClipboard',
+);
+
 const clientSubscriptions: ((client: LanguageClient, stateChange: StateChangeEvent) => void)[] = [];
 
 export type InitializationOptionsContributor = () => Record<string, unknown>;
@@ -279,6 +285,7 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
   try {
     await runClient.start();
     registerImportLogHandler(runClient);
+    registerCopyToClipboardHandler(runClient);
   } catch (e) {
     if (
       e instanceof LanguageServerStartupError &&
@@ -331,6 +338,18 @@ function registerImportLogHandler(client: LanguageClient): void {
       clearBuildError();
     }
   });
+  getContext().subscriptions.push(subscription);
+}
+
+/**
+ * Handles the `intellij/copyToClipboard` server notification (used by the ModCommand
+ * `ModCopyToClipboard`), writing the supplied text to the system clipboard.
+ */
+function registerCopyToClipboardHandler(client: LanguageClient): void {
+  const subscription = client.onNotification(
+    copyToClipboardNotification,
+    (p) => void vscode.env.clipboard.writeText(p.content),
+  );
   getContext().subscriptions.push(subscription);
 }
 
