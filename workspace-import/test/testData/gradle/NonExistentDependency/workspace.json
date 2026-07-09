@@ -283,8 +283,8 @@
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
             "compilerOutputs": [
-                "<WORKSPACE>/build/classes/kotlin/main",
                 "<WORKSPACE>/build/classes/java/main",
+                "<WORKSPACE>/build/classes/kotlin/main",
                 "<WORKSPACE>/build/resources/main"
             ],
             "languageLevelId": null,
@@ -295,8 +295,8 @@
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
             "compilerOutputs": [
-                "<WORKSPACE>/build/classes/kotlin/test",
                 "<WORKSPACE>/build/classes/java/test",
+                "<WORKSPACE>/build/classes/kotlin/test",
                 "<WORKSPACE>/build/resources/test"
             ],
             "languageLevelId": null,

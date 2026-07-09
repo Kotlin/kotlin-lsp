@@ -18,9 +18,6 @@ import org.gradle.api.Task
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition
 import org.gradle.api.plugins.JavaPluginExtension
 import java.io.File
-import kotlin.collections.map
-import kotlin.collections.orEmpty
-import kotlin.collections.plus
 
 fun Project.resolveAndroidSourceSets(): Set<ModuleSourceSet>? {
     if (!isAndroidProject()) return null
@@ -68,7 +65,8 @@ private fun AndroidComponentReflection.resolveToModuleSourceSet(): ModuleSourceS
         /* excludes = */emptySet(),
         /* runtimeClasspath = */emptySet(),
         /* compileClasspath = */bootClasspath + rClassJar + compileClasspath,
-        /* sourceSetOutput = */setOfNotNull(),
+        /* outputDirs = */emptySet(),
+        /* producedArchives = */emptySet(),
         /* friendSourceSets =*/  kotlinCompilation?.allAssociatedCompilations?.mapNotNull { it.name }.orEmpty().toSet() +
                 listOfNotNull(mainComponent.name.takeIf { it != name }),
         /* hasUnresolvedDependencies = */false,

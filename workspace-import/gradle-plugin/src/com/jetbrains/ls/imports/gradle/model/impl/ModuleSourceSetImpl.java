@@ -18,7 +18,8 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
     private final @NotNull Set<@NotNull String> excludes;
     private final @NotNull Set<@NotNull File> runtimeClasspath;
     private final @NotNull Set<@NotNull File> compileClasspath;
-    private final @NotNull Set<@NotNull File> sourceSetOutput;
+    private final @NotNull Set<@NotNull File> outputDirs;
+    private final @NotNull Set<@NotNull File> producedArchives;
     private final @NotNull Set<@NotNull String> friendSourceSets;
     private final boolean hasUnresolvedDependencies;
     private final @Nullable Integer toolchainVersion;
@@ -33,7 +34,8 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
             @NotNull Set<@NotNull String> excludes,
             @NotNull Set<@NotNull File> runtimeClasspath,
             @NotNull Set<@NotNull File> compileClasspath,
-            @NotNull Set<@NotNull File> sourceSetOutput,
+            @NotNull Set<@NotNull File> outputDirs,
+            @NotNull Set<@NotNull File> producedArchives,
             @NotNull Set<@NotNull String> friendSourceSets,
             boolean hasUnresolvedDependencies,
             @Nullable Integer toolchainVersion,
@@ -47,7 +49,8 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
         this.excludes = excludes;
         this.runtimeClasspath = runtimeClasspath;
         this.compileClasspath = compileClasspath;
-        this.sourceSetOutput = sourceSetOutput;
+        this.outputDirs = outputDirs;
+        this.producedArchives = producedArchives;
         this.friendSourceSets = friendSourceSets;
         this.hasUnresolvedDependencies = hasUnresolvedDependencies;
         this.toolchainVersion = toolchainVersion;
@@ -87,8 +90,13 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
     }
 
     @Override
-    public @NotNull Set<@NotNull File> getSourceSetOutput() {
-        return sourceSetOutput;
+    public @NotNull Set<@NotNull File> getOutputDirs() {
+        return outputDirs;
+    }
+
+    @Override
+    public @NotNull Set<@NotNull File> getProducedArchives() {
+        return producedArchives;
     }
 
     @Override

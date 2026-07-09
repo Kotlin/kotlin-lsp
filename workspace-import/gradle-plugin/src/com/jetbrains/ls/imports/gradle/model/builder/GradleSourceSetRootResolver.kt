@@ -68,15 +68,18 @@ class GradleSourceSetRootResolver(private val project: Project) {
         excludes.addAll(sources.excludes)
         excludes.addAll(resources.excludes)
 
-        val producedArtifacts: MutableSet<File> = mutableSetOf()
-        producedArtifacts.addAll(sourceSet.output.files)
-        producedArtifacts.addAll(SourceSetArtifactExtractor.extractSourceSetArtifacts(project, sourceSet))
+        // The source set's compiled-output directories (class dirs + resources dir) and its packaged archives
+        // (jar/war/ear/...) are kept apart: only the directories belong on a run classpath, while the archives are
+        // used solely to map a dependency on such an archive back to its producing module.
+        val outputDirs: Set<File> = sourceSet.output.files
+        val producedArchives: Set<File> = SourceSetArtifactExtractor.extractSourceSetArtifacts(project, sourceSet).toSet()
 
         return SourceSetRoots(
             sourceDirs,
             resourceDirs,
             excludes,
-            producedArtifacts
+            outputDirs,
+            producedArchives
         )
     }
 
@@ -84,7 +87,8 @@ class GradleSourceSetRootResolver(private val project: Project) {
         val sourceDirs: Set<File>,
         val resourceDirs: Set<File>,
         val excludedPatterns: Set<String>,
-        val producedArtifacts: Set<File>
+        val outputDirs: Set<File>,
+        val producedArchives: Set<File>
     )
 
     companion object {

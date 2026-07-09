@@ -21,7 +21,6 @@ import org.gradle.api.JavaVersion
 import org.gradle.tooling.model.idea.IdeaJavaLanguageSettings
 import org.gradle.tooling.model.idea.IdeaModule
 import org.gradle.tooling.model.idea.IdeaProject
-import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.exists
 
@@ -281,22 +280,13 @@ internal class IdeaProjectMapper {
         projectJavaLevel: String?,
         sourceSet: ModuleSourceSet?
     ): JavaSettingsData? {
-        // All source-set output *directories* (per-language class dirs + resources), in Gradle's order. The source
-        // set's packaged artifacts (jar/war/ear) are excluded: the run classpath uses the compiled output dirs, not
-        // the module's own (possibly stale or unbuilt) archive.
-        val outputDirs = sourceSet?.sourceSetOutput.orEmpty()
-            .map { it.path }
-            .distinct()
-            .filterNot { it.endsWith(".jar") || it.endsWith(".war") || it.endsWith(".ear") }
-        // Gradle does not populate the per-source-set `IdeaModule.compilerOutput`, so derive the compiled-classes
-        // directory from the source set output instead. This is what the run classpath launches against; without
-        // it a Gradle module's own classes are missing and `java` fails with "Could not find or load main class".
-        // The final fallback to the smallest output dir keeps the choice deterministic for a resources-only source
-        // set (no classes dir), so the canonical `compilerOutput` slot never depends on Gradle's iteration order.
-        val compilerOutput = sourceSet?.classesOutputPath() ?: module.compilerOutput?.outputDir?.path ?: outputDirs.minOrNull()
-        // The remaining output directories that don't fit the single `compilerOutput` slot. Recorded so the
-        // run-classpath resolver gets them without knowing Gradle's layout.
-        val additionalCompilerOutputs = outputDirs.filter { it != compilerOutput }
+        // A Gradle source set can have more than one output directory (e.g. `build/classes/java/main`,
+        // `build/classes/kotlin/main`, `build/resources/main`); they are collected here and sorted for a
+        // deterministic order. The workspace model keeps only the first as the module's `compilerOutput`, so the
+        // rest overflow to a side entity (see conversion.kt) — but all are put on the run classpath.
+        val compilerOutputs = sourceSet?.outputDirs.orEmpty().map { it.path }
+            .sorted()
+            .ifEmpty { listOfNotNull(module.compilerOutput?.outputDir?.path) }
 
         // project java settings should be used for the buildSrc project
         if (module.name.contains("buildSrc") && module.project.javaLanguageSettings.isSpecified()) {
@@ -304,7 +294,7 @@ internal class IdeaProjectMapper {
                 ?.targetBytecodeVersion
                 ?.getJavaVersion()
             if (targetJavaVersion != null) {
-                return getJavaSettingsData(moduleName, module, targetJavaVersion, compilerOutput, additionalCompilerOutputs)
+                return getJavaSettingsData(moduleName, module, targetJavaVersion, compilerOutputs)
             }
         }
         val targetJavaVersion = when {
@@ -316,26 +306,10 @@ internal class IdeaProjectMapper {
         // Record an explicit language level only when it differs from the project default (as before), but still
         // emit an entry when the module contributes its own compiler output to the run classpath.
         val languageLevelOverride = targetJavaVersion?.takeIf { it != projectJavaLevel }
-        if (languageLevelOverride == null && compilerOutput == null) {
+        if (languageLevelOverride == null && compilerOutputs.isEmpty()) {
             return null
         }
-        return getJavaSettingsData(moduleName, module, languageLevelOverride, compilerOutput, additionalCompilerOutputs)
-    }
-
-    /**
-     * The primary compiled-classes output directory for this source set. Gradle writes classes to
-     * `build/classes/<language>/<sourceSet>` and processed resources to `build/resources/<sourceSet>`, and the
-     * workspace model records only one compiler-output directory per module. Prefer the Kotlin output: for Kotlin
-     * modules the compiled classes (including the file-facade class that hosts a top-level `fun main`) live under
-     * `classes/kotlin`, while `classes/java` is often empty. The remaining output directories are appended to
-     * `compilerOutputs`, so mixed-language modules still get their Java classes and resources.
-     */
-    private fun ModuleSourceSet.classesOutputPath(): String? {
-        val classDirs = sourceSetOutput
-            .map { it.path }
-            .filter { it.contains("${File.separatorChar}classes${File.separatorChar}") }
-        return classDirs.firstOrNull { it.contains("${File.separatorChar}kotlin${File.separatorChar}") }
-            ?: classDirs.minOrNull()
+        return getJavaSettingsData(moduleName, module, languageLevelOverride, compilerOutputs)
     }
 
     private fun ModuleSourceSet?.isToolchainSpecified(): Boolean {
@@ -355,14 +329,12 @@ internal class IdeaProjectMapper {
         moduleName: String,
         module: IdeaModule,
         targetJavaVersion: String?,
-        compilerOutput: String?,
-        additionalCompilerOutputs: List<String> = emptyList(),
+        compilerOutputs: List<String>,
     ): JavaSettingsData =
         JavaSettingsData(
             module = moduleName,
             inheritedCompilerOutput = module.compilerOutput?.inheritOutputDirs ?: false,
-            // Canonical output first, then the remaining source-set output dirs.
-            compilerOutputs = listOfNotNull(compilerOutput) + additionalCompilerOutputs,
+            compilerOutputs = compilerOutputs,
             compilerOutputsForTests = listOfNotNull(module.compilerOutput?.testOutputDir?.path),
             languageLevelId = targetJavaVersion?.let { "JDK_$it" },
             manifestAttributes = emptyMap(),

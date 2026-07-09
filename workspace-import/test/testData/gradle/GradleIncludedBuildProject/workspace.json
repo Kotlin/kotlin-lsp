@@ -1879,8 +1879,8 @@
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
             "compilerOutputs": [
-                "<WORKSPACE>/untitled1/build/classes/kotlin/main",
                 "<WORKSPACE>/untitled1/build/classes/java/main",
+                "<WORKSPACE>/untitled1/build/classes/kotlin/main",
                 "<WORKSPACE>/untitled1/build/resources/main"
             ],
             "languageLevelId": null,
@@ -1891,8 +1891,8 @@
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
             "compilerOutputs": [
-                "<WORKSPACE>/untitled1/build/classes/kotlin/test",
                 "<WORKSPACE>/untitled1/build/classes/java/test",
+                "<WORKSPACE>/untitled1/build/classes/kotlin/test",
                 "<WORKSPACE>/untitled1/build/resources/test"
             ],
             "languageLevelId": null,
@@ -1903,8 +1903,8 @@
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
             "compilerOutputs": [
-                "<WORKSPACE>/untitled2/build/classes/kotlin/main",
                 "<WORKSPACE>/untitled2/build/classes/java/main",
+                "<WORKSPACE>/untitled2/build/classes/kotlin/main",
                 "<WORKSPACE>/untitled2/build/resources/main"
             ],
             "languageLevelId": null,
@@ -1915,8 +1915,8 @@
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
             "compilerOutputs": [
-                "<WORKSPACE>/untitled2/build/classes/kotlin/test",
                 "<WORKSPACE>/untitled2/build/classes/java/test",
+                "<WORKSPACE>/untitled2/build/classes/kotlin/test",
                 "<WORKSPACE>/untitled2/build/resources/test"
             ],
             "languageLevelId": null,

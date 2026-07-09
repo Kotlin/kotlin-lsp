@@ -23,7 +23,19 @@ public interface ModuleSourceSet extends Serializable {
 
     @NotNull Set<@NotNull File> getCompileClasspath();
 
-    @NotNull Set<@NotNull File> getSourceSetOutput();
+    /**
+     * The source set's compiled-output directories: the class dirs (one per language, e.g.
+     * {@code build/classes/java/main}, {@code build/classes/kotlin/main}) and the resources dir. These are what a
+     * run of the module should have on its classpath, since they always reflect the current compiled state.
+     */
+    @NotNull Set<@NotNull File> getOutputDirs();
+
+    /**
+     * The packaged archives this source set produces (the jar/war/ear/... files emitted by its archive tasks).
+     * Kept separate from {@link #getOutputDirs()} because they must not go on the run classpath (a package may be
+     * stale or unbuilt); they are used only to map a dependency on such an archive back to its producing module.
+     */
+    @NotNull Set<@NotNull File> getProducedArchives();
 
     /**
      * @return names of source sets (compilations) which are considered friends

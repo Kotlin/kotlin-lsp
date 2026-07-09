@@ -434,23 +434,23 @@ fun MutableEntityStorage.importWorkspaceData(
         }
         // The workspace model keeps only the first output per role in the entity; the rest (e.g. a build tool's
         // several production or test class/resource dirs) overflow to the side entity, kept separate by role.
-        val productionExtras = javaSettings.compilerOutputs.drop(1).map { toAbsolutePath(it, workspacePath).toString() }
-        val testExtras = javaSettings.compilerOutputsForTests.drop(1).map { toAbsolutePath(it, workspacePath).toString() }
-        if (productionExtras.isNotEmpty() || testExtras.isNotEmpty()) {
-            storage.addModuleOutputRoots(moduleBuilder, productionExtras, testExtras, entitySource)
+        val additionalProdRoots = javaSettings.compilerOutputs.drop(1).map { toAbsolutePath(it, workspacePath).toString() }
+        val additionalTestRoots = javaSettings.compilerOutputsForTests.drop(1).map { toAbsolutePath(it, workspacePath).toString() }
+        if (additionalProdRoots.isNotEmpty() || additionalTestRoots.isNotEmpty()) {
+            storage.addModuleOutputRoots(moduleBuilder, additionalProdRoots, additionalTestRoots, entitySource)
         }
     }
 }
 
 private fun MutableEntityStorage.addModuleOutputRoots(
     module: ModuleEntityBuilder,
-    productionRoots: List<String>,
-    testRoots: List<String>,
+    additionalProdRoots: List<String>,
+    additionalTestRoots: List<String>,
     entitySource: EntitySource,
 ) {
     val options = buildMap {
-        if (productionRoots.isNotEmpty()) put(LSModuleOutputRoots.PRODUCTION_KEY, LSModuleOutputRoots.encode(productionRoots))
-        if (testRoots.isNotEmpty()) put(LSModuleOutputRoots.TEST_KEY, LSModuleOutputRoots.encode(testRoots))
+        if (additionalProdRoots.isNotEmpty()) put(LSModuleOutputRoots.PRODUCTION_KEY, LSModuleOutputRoots.encode(additionalProdRoots))
+        if (additionalTestRoots.isNotEmpty()) put(LSModuleOutputRoots.TEST_KEY, LSModuleOutputRoots.encode(additionalTestRoots))
     }
     addEntity(
         ModuleCustomImlDataEntity(customModuleOptions = options, entitySource = entitySource) {

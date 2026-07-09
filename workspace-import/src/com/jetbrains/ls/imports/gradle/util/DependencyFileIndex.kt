@@ -59,7 +59,9 @@ internal class DependencyFileIndex {
     }
 
     fun add(moduleFqn: String, sourceSet: ModuleSourceSet) {
-        for (producedArtifact in sourceSet.sourceSetOutput) {
+        // A downstream module may depend on this source set either as a project (its output dirs) or via its
+        // packaged archive, so both forms must resolve back to the producing module.
+        for (producedArtifact in sourceSet.outputDirs + sourceSet.producedArchives) {
             storage(producedArtifact) {
                 add(
                     DependencyData.Module(
