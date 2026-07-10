@@ -26,6 +26,7 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.intellijUriToLspUri
 import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
+import com.jetbrains.ls.snapshot.api.impl.core.InitializeOptions
 import com.jetbrains.lsp.implementation.LspClient
 import com.jetbrains.lsp.protocol.ApplyEditRequests.ApplyEdit
 import com.jetbrains.lsp.protocol.ApplyWorkspaceEditParams
@@ -167,7 +168,13 @@ sealed interface ModCommandData {
             is ModMoveFile -> MoveFile(command.file.url, command.targetFile.url.replace("mock://", "file://"))
             is ModUpdateFileText -> UpdateFileText(command.file.url, command.oldText, command.newText)
             is ModDisplayMessage -> DisplayMessage(command.messageText, command.kind)
-            is ModCopyToClipboard -> CopyToClipboard(command.content)
+            // Relies on the custom `intellij/copyToClipboard` notification, so only clients,
+            // which declare `intellijExtensions` can handle it; abort for the others.
+            is ModCopyToClipboard -> when {
+                server != null && InitializeOptions.get(server.initializeParams).intellijExtensions ->
+                    CopyToClipboard(command.content)
+                else -> null
+            }
             is ModRegisterTabOut -> Nothing // We can safely skip the tab-out command
             // Highlighting could be important, but usually it's an additional helpful thing, not an essential one, so let's skip it for now
             is ModHighlight -> Nothing

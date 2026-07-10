@@ -101,6 +101,9 @@ export function registerInitializationOptionsContributor(
 }
 
 export function initLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): void {
+  // Declare that this is a JetBrains client so the server may use custom `intellij/*` protocol
+  // extensions (e.g. the `intellij/copyToClipboard` notification handled in this file).
+  registerInitializationOptionsContributor(() => ({ intellijExtensions: true }));
   getContext().subscriptions.push(
     Disposable.create(async () => await stopLspClient()),
     vscode.commands.registerCommand('jetbrains.kotlin.restartLsp', async () => {
