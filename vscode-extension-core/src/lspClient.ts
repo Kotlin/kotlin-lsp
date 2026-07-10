@@ -55,6 +55,7 @@ const INDEX_DIR_STATE_KEY = 'jetbrains.intellij.indexDir';
 let _client: LanguageClient | undefined;
 let startLspClientPromise: Promise<void> | undefined;
 let restartRequestedDuringStart = false;
+let bundledServerLauncherCache: { key: string; promise: Promise<string> } | undefined;
 
 type ImportLogParams =
   | { type: 1 | 2 | 3; message: string; failed?: false; succeeded?: false }
@@ -379,19 +380,35 @@ function configOption<T>(name: string, scope?: vscode.ConfigurationScope): T | u
 
 async function ensureBundledServerLauncher(): Promise<string> {
   const context = getContext();
-  const launcherPath = await vscode.window.withProgress(
-    {
-      location: vscode.ProgressLocation.Notification,
-      title: `${extensionDisplayName()}: language server setup`,
-    },
-    (progress) =>
-      ensureServerLauncher({
-        extensionPath: context.extensionPath,
-        storagePath: context.globalStorageUri.fsPath,
-        log: logInfo,
-        progress: (update) => progress.report(update),
-      }),
-  );
+  const cacheKey = `${context.extensionPath}\0${context.globalStorageUri.fsPath}`;
+  if (bundledServerLauncherCache?.key !== cacheKey) {
+    bundledServerLauncherCache = {
+      key: cacheKey,
+      promise: Promise.resolve(
+        vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title: `${extensionDisplayName()}: language server setup`,
+          },
+          (progress) =>
+            ensureServerLauncher({
+              extensionPath: context.extensionPath,
+              storagePath: context.globalStorageUri.fsPath,
+              log: logInfo,
+              progress: (update) => progress.report(update),
+            }),
+        ),
+      ),
+    };
+  }
+  const cache = bundledServerLauncherCache;
+  let launcherPath: string;
+  try {
+    launcherPath = await cache.promise;
+  } catch (error) {
+    if (bundledServerLauncherCache === cache) bundledServerLauncherCache = undefined;
+    throw error;
+  }
   if (os.platform() !== 'win32') {
     chmodSync(launcherPath, 0o755);
   }
