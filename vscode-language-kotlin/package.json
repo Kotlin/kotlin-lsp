@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@jetbrains/vscode-extension-core": "workspace:*",
-    "@tree-sitter-grammars/tree-sitter-kotlin": "catalog:",
     "web-tree-sitter": "catalog:"
   },
   "devDependencies": {

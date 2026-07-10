@@ -9,15 +9,7 @@ import {
 import kotlinKeyHandler from './keyHandler';
 
 const projectRoot = process.cwd();
-const parser = createParser(
-  path.join(
-    projectRoot,
-    'node_modules',
-    '@tree-sitter-grammars',
-    'tree-sitter-kotlin',
-    'tree-sitter-kotlin.wasm',
-  ),
-);
+const parser = createParser(path.join(projectRoot, 'grammars', 'tree-sitter-kotlin.wasm'));
 const doTest = createDoTest(parser, kotlinKeyHandler);
 const doTestKey = createDoTestKey(parser, kotlinKeyHandler);
 
