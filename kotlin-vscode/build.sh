@@ -17,8 +17,7 @@ PACKAGE_DIR="${PACKAGE_DIR:-}"
 BUNDLE_TYPE="${BUNDLE_TYPE:-}"
 VSCE_VERSION="${VSCE_VERSION:-}"
 THIN_BUNDLE="${THIN_BUNDLE:-false}"
-LSP_DOWNLOAD_BASE_URL="${LSP_DOWNLOAD_BASE_URL:-}"
-LSP_DOWNLOAD_URL_TEMPLATE="${LSP_DOWNLOAD_URL_TEMPLATE:-}"
+DOWNLOAD_BASE_URL="${DOWNLOAD_BASE_URL:-}"
 DEFAULT_BUNDLE_TYPE="kotlin-server"
 
 for arg in "$@"; do
@@ -27,8 +26,7 @@ for arg in "$@"; do
         --bundle-type=*) BUNDLE_TYPE="${arg#--bundle-type=}" ;;
         --vsce-version=*) VSCE_VERSION="${arg#--vsce-version=}" ;;
         --thin) THIN_BUNDLE="true" ;;
-        --lsp-download-base-url=*) LSP_DOWNLOAD_BASE_URL="${arg#--lsp-download-base-url=}" ;;
-        --lsp-download-url-template=*) LSP_DOWNLOAD_URL_TEMPLATE="${arg#--lsp-download-url-template=}" ;;
+        --download-base-url=*) DOWNLOAD_BASE_URL="${arg#--download-base-url=}" ;;
     esac
 done
 
@@ -156,12 +154,8 @@ resolve_package_manifest
 
 server_download_url() {
   local archive_name="$1"
-  if [[ -n "$LSP_DOWNLOAD_URL_TEMPLATE" ]]; then
-    echo "${LSP_DOWNLOAD_URL_TEMPLATE//\{filename\}/$archive_name}"
-    return
-  fi
-  if [[ -n "$LSP_DOWNLOAD_BASE_URL" ]]; then
-    echo "${LSP_DOWNLOAD_BASE_URL%/}/$archive_name"
+  if [[ -n "$DOWNLOAD_BASE_URL" ]]; then
+    echo "${DOWNLOAD_BASE_URL%/}/$archive_name"
     return
   fi
   echo ""
@@ -207,6 +201,7 @@ build_extension() {
   local vsce_target="$4"
   local lsp_zip_path="$5"
   local log_prefix="$6"
+  local download_archive_name="$7"
 
   if [[ "$THIN_BUNDLE" != "true" && ! -f "$lsp_zip_path" ]]; then
     echo "Error: LSP archive not found: $lsp_zip_path" >&2
@@ -232,15 +227,14 @@ build_extension() {
   pushd "$extension_dir" > /dev/null
 
   if [[ "$THIN_BUNDLE" == "true" ]]; then
-    archive_name="$(basename -- "$lsp_zip_path")"
-    download_url="$(server_download_url "$archive_name")"
+    download_url="$(server_download_url "$download_archive_name")"
     if [[ -z "$download_url" ]]; then
-      echo "Error: thin bundle requires --lsp-download-base-url or --lsp-download-url-template" >&2
+      echo "Error: thin bundle requires --download-base-url" >&2
       exit 1
     fi
     write_server_bundle_metadata \
       "$extension_dir" \
-      "$archive_name" \
+      "$download_archive_name" \
       "$download_url"
   else
     cp "$SCRIPT_DIR/unpack-server.mjs" "$extension_dir/unpack-server.mjs"
@@ -280,9 +274,9 @@ for productInfo in "$ARTIFACT_DIR"/*.product-info.json; do
     artifact_filename="$(basename -- "$bundle")"
     version_arch_ext="${artifact_filename#"${BUNDLE_TYPE}"-}"
     case "$version_arch_ext" in
-      *.tar.gz)  version_arch="${version_arch_ext%.tar.gz}" ;;
-      *.win.zip) version_arch="${version_arch_ext%.win.zip}" ;;
-      *.sit)     version_arch="${version_arch_ext%.sit}" ;;
+      *.tar.gz)  version_arch="${version_arch_ext%.tar.gz}"; archive_extension=".tar.gz" ;;
+      *.win.zip) version_arch="${version_arch_ext%.win.zip}"; archive_extension=".win.zip" ;;
+      *.sit)     version_arch="${version_arch_ext%.sit}"; archive_extension=".sit" ;;
       *)          echo "Error: unsupported bundle archive: $bundle" >&2; exit 1 ;;
     esac
 
@@ -313,6 +307,12 @@ for productInfo in "$ARTIFACT_DIR"/*.product-info.json; do
 
     version="${VSCE_VERSION:-$version}"
 
+    download_archive_name="$BUNDLE_TYPE-$version"
+    if [[ "$arch" != "amd64" ]]; then
+      download_archive_name+="-$arch"
+    fi
+    download_archive_name+="$archive_extension"
+
     case "$version_arch_ext" in
       *.tar.gz)  platform="linux-$arch"; vsce_os="linux"  ;;
       *.win.zip) platform="win-$arch";   vsce_os="win32"  ;;
@@ -332,7 +332,7 @@ for productInfo in "$ARTIFACT_DIR"/*.product-info.json; do
 
     EXTENSION_DIR="$BUILD_DIR/vscode-$platform"
 
-    build_extension "$EXTENSION_DIR" "$vsix_target_filename" "$version" "$vsce_target" "$bundle" "[$platform]" &
+    build_extension "$EXTENSION_DIR" "$vsix_target_filename" "$version" "$vsce_target" "$bundle" "[$platform]" "$download_archive_name" &
     pids+=($!)
 done
 
