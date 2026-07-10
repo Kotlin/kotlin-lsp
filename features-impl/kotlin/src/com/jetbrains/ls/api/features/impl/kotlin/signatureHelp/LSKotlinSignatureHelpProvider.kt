@@ -94,9 +94,7 @@ internal object LSKotlinSignatureHelpProvider : LSSignatureHelpProvider {
         argumentList: TArgumentList,
         isSingleCandidate: Boolean
     ): KotlinHighLevelParameterInfoWithCallHandlerBase.SignatureModel? {
-        val uiModel = with(handler) {
-            toUiModel(handler.getCurrentArgumentIndex(offset, argumentList), appendNoParametersMessage = !isSingleCandidate)
-        } ?: return null
+        val uiModel = toUiModel(handler.getCurrentArgumentIndex(offset, argumentList), appendNoParametersMessage = !isSingleCandidate) ?: return null
         return KotlinHighLevelParameterInfoWithCallHandlerBase.SignatureModel(
             buildList {
                 add(KotlinHighLevelParameterInfoWithCallHandlerBase.SignaturePart.Text(representation.beforeParameters + "("))
