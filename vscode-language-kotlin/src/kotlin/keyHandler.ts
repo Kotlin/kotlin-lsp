@@ -143,17 +143,43 @@ function handleDoubleQuoteKey(text: string, tree: Tree, index: number): KeyResul
   const node = tree.rootNode.descendantForIndex(index);
 
   // Kotlin overtypes an existing closing quote instead of inserting a duplicate one.
+  // fwcd's grammar hides the '"""' token, so detect triple-quote positions by text.
+  const isAtTripleQuoteDelimiter =
+    text.startsWith('"""', index) ||
+    (index >= 1 && text.startsWith('"""', index - 1)) ||
+    (index >= 2 && text.startsWith('"""', index - 2));
   if (
     node !== null &&
-    node.type !== '"""' &&
+    !isAtTripleQuoteDelimiter &&
     text[index + 1] === '"' &&
     (index === 0 || text[index - 1] !== '\\')
   ) {
     return keyResult('', index, index + 1, index + 1);
   }
 
+  // fwcd parses an incomplete `"""` (no closing delimiter) as an ERROR node, not
+  // string_literal, so handleSpecialNodeKey can't dispatch to handleStringLiteralKey.
+  // Use text-based logic for the opening-delimiter position.
+  if (isAtTripleQuoteDelimiter && (node === null || node.type !== 'string_literal')) {
+    const tripleStart = text.startsWith('"""', index)
+      ? index
+      : index >= 1 && text.startsWith('"""', index - 1)
+        ? index - 1
+        : index - 2;
+    const offsetFromTripleStart = index - tripleStart;
+    switch (offsetFromTripleStart) {
+      case 0:
+        return keyResult('"', index, index + 1, index + 1);
+      case 1:
+        return keyResult('', index, index + 1, index + 1);
+      default:
+        return keyResult('""""', index, index + 1, index + 1);
+    }
+  }
+
+  // Default fallback: pair quotes when outside any string context.
   return handleKeyWithSpecialNode(text, tree, `"`, index, handleSpecialNodeKey, () =>
-    keyResult('"', index, index + 1, index + 1),
+    keyResult('""', index, index + 1, index + 1),
   );
 }
 
@@ -169,11 +195,18 @@ function handleSpecialNodeKey(
   if (isTextNode(node)) {
     return keyResult(key, index, index + 1, index + 1);
   }
-  if (key === '"' && node.type === '"') {
-    return handleDoubleQuote(node, index);
-  }
-  if (key === '"' && node.type === '"""') {
-    return handleTripleQuote(node, index);
+  // fwcd hides the '"' and '"""' delimiter tokens; descendantForIndex at a delimiter
+  // position returns the enclosing string_literal (or a child of it) instead.
+  if (key === '"') {
+    const stringLiteralNode =
+      node.type === 'string_literal'
+        ? node
+        : node.parent?.type === 'string_literal'
+          ? node.parent
+          : null;
+    if (stringLiteralNode !== null) {
+      return handleStringLiteralKey(stringLiteralNode, text, index);
+    }
   }
   if (key === `'` && node.parent?.type === 'character_literal') {
     return getCharacterLiteralQuoteResult(text, index);
@@ -187,34 +220,47 @@ function getCharacterLiteralQuoteResult(text: string, index: number): KeyResult 
     : keyResult(`'`, index, index + 1, index + 1);
 }
 
-function handleTripleQuote(node: Node, index: number): KeyResult {
-  switch (index - node.startIndex) {
-    case 0:
-      return keyResult('"', index, index + 1, index + 1);
-    case 1:
-      return keyResult('', index, index + 1, index + 1);
-    default:
-      return keyResult('""""', index, index + 1, index + 1);
+/**
+ * Handles a `"` keystroke at a position inside or at the delimiter of a
+ * `string_literal` node, replicating the old per-token behavior now that
+ * fwcd's grammar hides the `"` and `"""` delimiter tokens.
+ */
+function handleStringLiteralKey(node: Node, text: string, index: number): KeyResult {
+  if (text.startsWith('"""', node.startIndex)) {
+    // Triple-quoted string: replicate handleTripleQuote for the opening delimiter,
+    // and mirror the same logic for the closing delimiter.
+    const offsetFromStart = index - node.startIndex;
+    if (offsetFromStart < 3) {
+      // Inside the opening """ delimiter
+      switch (offsetFromStart) {
+        case 0:
+          return keyResult('"', index, index + 1, index + 1);
+        case 1:
+          return keyResult('', index, index + 1, index + 1);
+        default:
+          return keyResult('""""', index, index + 1, index + 1);
+      }
+    }
+    const offsetFromEnd = node.endIndex - index; // 3=first char of closing """, 1=last
+    if (offsetFromEnd <= 3) {
+      // Inside the closing """ delimiter
+      const offsetInClosing = 3 - offsetFromEnd; // 0, 1, 2
+      switch (offsetInClosing) {
+        case 0:
+          return keyResult('"', index, index + 1, index + 1);
+        case 1:
+          return keyResult('', index, index + 1, index + 1);
+        default:
+          return keyResult('""""', index, index + 1, index + 1);
+      }
+    }
+    // Inside content
+    return keyResult('"', index, index + 1, index + 1);
   }
-}
-
-function handleDoubleQuote(node: Node, index: number): KeyResult {
-  const parent = node.parent;
-  if (parent === null) return keyResult('"', index, index + 1, index + 1);
-
-  switch (parent.type) {
-    case 'string_literal':
-      // The Kotlin grammar may eagerly attach this quote to a later closing quote,
-      // even though the user just started a new string. If this quote is the
-      // opening delimiter of that literal, keep pairing it as an opening quote.
-      return node.startIndex === parent.startIndex
-        ? keyResult('""', index, index + 1, index + 1)
-        : keyResult('"', index, index + 1, index + 1);
-    case 'string_content':
-      return keyResult('"', index, index + 1, index + 1);
-    default:
-      return keyResult('""', index, index + 1, index + 1);
-  }
+  // Single-quoted string: if at the opening delimiter, pair it; otherwise just insert.
+  return index === node.startIndex
+    ? keyResult('""', index, index + 1, index + 1)
+    : keyResult('"', index, index + 1, index + 1);
 }
 
 function handleEnter(text: string, tree: Tree, index: number, indentUnit: string): KeyResult {

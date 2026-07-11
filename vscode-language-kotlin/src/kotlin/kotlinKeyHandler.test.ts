@@ -88,7 +88,6 @@ describe('Handling key presses in Kotlin files', () => {
   describe('double quote handling', () => {
     test(
       'wraps in double quotes when opening a string',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTestKey('val x = <caret>', '"', 'val x = "<caret>"'),
     );
 
@@ -104,7 +103,6 @@ describe('Handling key presses in Kotlin files', () => {
 
     test(
       'fails because of a bug inn the grammar - adds a matching quote when opening a string when another string is near',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTestKey('val a = <caret>\nval b = ""', '"', 'val a = "<caret>"\nval b = ""'),
     );
   });
@@ -112,13 +110,11 @@ describe('Handling key presses in Kotlin files', () => {
   describe('triple-quoted string handling', () => {
     test(
       'completes multiline string delimiters on third quote',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTestKey('""<caret>', '"', '"""<caret>"""'),
     );
 
     test(
       'completes multiline string delimiters on third quote in an assignment',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTestKey('val str = ""<caret>', '"', 'val str = """<caret>"""'),
     );
 
@@ -180,6 +176,37 @@ describe('Handling key presses in Kotlin files', () => {
     test(
       'opens a new string after the closing delimiter in an assignment',
       doTestKey('val str = """text"""<caret>', '"', 'val str = """text""""<caret>'),
+    );
+
+    test(
+      'inserts first quote of opening triple-quote delimiter',
+      doTest('"<caret>""text"""', '"<caret>""text"""'),
+    );
+
+    test(
+      'overtypes second quote of opening triple-quote delimiter',
+      doTest('""<caret>"text"""', '""<caret>text"""'),
+    );
+
+    test(
+      'inserts first quote of closing triple-quote delimiter',
+      doTest('"""text"<caret>""', '"""text"<caret>""'),
+    );
+
+    test(
+      'overtypes second quote of closing triple-quote delimiter',
+      doTest('"""text""<caret>"', '"""text""<caret>'),
+    );
+
+    test(
+      'inserts a raw quote inside triple-quoted string content',
+      doTest('"""ab"<caret>cd"""', '"""ab"<caret>cd"""'),
+    );
+
+    test(
+      'does not overtype second quote of $$""" opening delimiter',
+      { todo: 'LSP-1410 $$""" multi-dollar quote completion — step 2b' },
+      doTest('$$""<caret>"text"""', '$$""<caret>text"""'),
     );
   });
 
