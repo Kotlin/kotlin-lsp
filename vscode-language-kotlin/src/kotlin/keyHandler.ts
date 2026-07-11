@@ -557,9 +557,22 @@ function getFunctionArgumentContinuationIndent(
   }
 
   const valueArguments = findAncestorAtEnter(node, index, 'value_arguments');
-  return valueArguments === null
-    ? null
-    : getExistingMultilineListItemIndent(text, valueArguments, index);
+  if (valueArguments === null) {
+    return null;
+  }
+
+  const existingIndent = getExistingMultilineListItemIndent(text, valueArguments, index);
+  if (existingIndent !== null) {
+    return existingIndent;
+  }
+
+  // When the call is in a parse-error context (e.g. used as a when-entry without ->),
+  // avoid adding an extra indent level: use the previous line's indent instead.
+  if (findAncestor(valueArguments, 'ERROR') !== null) {
+    return getPreviousNonEmptyLineIndent(text, index);
+  }
+
+  return null;
 }
 
 function getTypeArgumentContinuationIndent(

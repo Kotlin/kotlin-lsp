@@ -766,7 +766,6 @@ fun usage() {
 
     test(
       'does not insert string concatenation when Enter is pressed before an empty string literal in a when entry',
-      { todo: 'LSP-1392' },
       doTestKey(
         `
 fun usage() = when {
