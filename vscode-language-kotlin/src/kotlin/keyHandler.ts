@@ -214,6 +214,12 @@ function handleSpecialNodeKey(
   return null;
 }
 
+function isMultilineStringLiteral(text: string, node: Node): boolean {
+  // Handles plain `"""` and fwcd master's multi-dollar `$$"""` / `$$$"""` etc.
+  const slice = text.slice(node.startIndex, node.startIndex + 256);
+  return /^\$*"""/.test(slice);
+}
+
 function getCharacterLiteralQuoteResult(text: string, index: number): KeyResult {
   return text[index + 1] === `'` && (index === 0 || text[index - 1] !== '\\')
     ? keyResult('', index, index + 1, index + 1)
@@ -905,11 +911,17 @@ function handleStringLiteralEnter(
   index: number,
   indentUnit: string,
 ): KeyResult | null {
-  const multilineStringLiteral = findAncestorAtEnter(node, index, 'multiline_string_literal');
-  if (
-    multilineStringLiteral !== null &&
-    text.startsWith('"""', multilineStringLiteral.startIndex)
-  ) {
+  // multiline_comment nodes can appear as siblings of ERROR nodes; findEnclosingErrorNode
+  // may return an out-of-range ERROR sibling and trigger false string-split logic. Skip
+  // string handling entirely when the node itself is a block comment.
+  if (node.type === 'multiline_comment') {
+    return null;
+  }
+
+  // In fwcd's grammar both single- and triple-quoted strings are `string_literal`.
+  // Detect triple-quoted strings by the `"""` prefix on the enclosing literal.
+  const multilineStringLiteral = findAncestorAtEnter(node, index, 'string_literal');
+  if (multilineStringLiteral !== null && isMultilineStringLiteral(text, multilineStringLiteral)) {
     return handleMultilineStringLiteralEnter(text, multilineStringLiteral, index, indentUnit);
   }
 

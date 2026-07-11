@@ -238,7 +238,6 @@ describe('Handling key presses in Kotlin files', () => {
 
     test(
       'completes multi-lne comments within function body',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTest(
         `
 fun foo() {
@@ -358,7 +357,6 @@ fun foo() {
 
     test(
       'turns a one-line multiline string into a trimIndent call on enter',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTest(
         `
 class A {
@@ -414,7 +412,6 @@ class A {
 
     test(
       'does not append trimIndent in const multiline strings',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTest(
         `
 object O {
@@ -432,7 +429,6 @@ object O {
 
     test(
       'does not append trimIndent in annotation multiline strings with interpolation prefixes',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTest(
         `
 @Annotation($$"""
@@ -448,7 +444,6 @@ fun some() {}`,
 
     test(
       'keeps existing multiline string closing quotes aligned on enter',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTest(
         `
 fun some() {
@@ -467,7 +462,6 @@ fun some() {
 
     test(
       'moves a template entry onto the new multiline string line on enter',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTest(
         `
 val className = 1
@@ -522,7 +516,6 @@ val a =
 
     test(
       'reuses the previous trimIndent line indentation when entering before a closing brace',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTest(
         `
 fun test = """
@@ -545,7 +538,6 @@ fun test = """
 
     test(
       'keeps whitespace after the caret on the current trimIndent line when entering before a closing brace',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTest(
         `
 fun test = """
@@ -670,7 +662,6 @@ fun foo() {
 
     test(
       'properly indents inside a multi-line comment with CRLF',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTest(
         '         val c = """\r\n             line 1\r\n<caret>\r\n         """.trimIndent()',
         '         val c = """\r\n             line 1\r\n             <caret>\r\n         """.trimIndent()',
@@ -697,7 +688,6 @@ fun foo() {
 
     test(
       'properly indents inside a multi-line string',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTest(
         `
          val c = """
