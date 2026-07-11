@@ -783,6 +783,22 @@ fun usage() = when {
 }`,
       ),
     );
+
+    test(
+      'uses continuation indent for Enter after comma in a well-formed call when an unrelated parse error exists in the file',
+      doTest(
+        `class Foo {
+    fun bar() {
+        listOf(1,
+<caret>2)
+    }`,
+        `class Foo {
+    fun bar() {
+        listOf(1,
+            <caret>2)
+    }`,
+      ),
+    );
   });
 
   describe('no completion inside string content', () => {

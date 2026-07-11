@@ -548,6 +548,25 @@ function getFunctionParameterContinuationIndent(
   return null;
 }
 
+// Block-level node types that act as boundaries when searching for a local ERROR ancestor.
+// An ERROR beyond one of these boundaries is unrelated to the expression at hand.
+const LOCAL_ERROR_BOUNDARY_TYPES = new Set([
+  'statements',
+  'class_body',
+  'enum_class_body',
+  'source_file',
+  'function_body',
+  'lambda_literal',
+]);
+
+function hasLocalErrorAncestor(node: Node): boolean {
+  for (let current: Node | null = node.parent; current !== null; current = current.parent) {
+    if (current.type === 'ERROR') return true;
+    if (LOCAL_ERROR_BOUNDARY_TYPES.has(current.type)) return false;
+  }
+  return false;
+}
+
 function getFunctionArgumentContinuationIndent(
   text: string,
   node: Node | null,
@@ -569,7 +588,9 @@ function getFunctionArgumentContinuationIndent(
 
   // When the call is in a parse-error context (e.g. used as a when-entry without ->),
   // avoid adding an extra indent level: use the previous line's indent instead.
-  if (findAncestor(valueArguments, 'ERROR') !== null) {
+  // Only check ERROR nodes within the local expression scope; an ERROR beyond a
+  // block/statement boundary is unrelated to this call and must not affect indentation.
+  if (hasLocalErrorAncestor(valueArguments)) {
     return getPreviousNonEmptyLineIndent(text, index);
   }
 
