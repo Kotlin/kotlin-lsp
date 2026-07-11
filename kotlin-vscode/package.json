@@ -353,6 +353,21 @@
       {
         "title": "Data Sharing",
         "properties": {
+          "intellij.region": {
+            "type": "string",
+            "enum": [
+              "Not Specified",
+              "Africa",
+              "Americas",
+              "Asia (Except Mainland China)",
+              "Mainland China",
+              "Europe",
+              "Middle East",
+              "Oceania"
+            ],
+            "default": "Not Specified",
+            "description": "Your region for JetBrains product terms and data processing."
+          },
           "intellij.dataSharing": {
             "type": "string",
             "enum": [
