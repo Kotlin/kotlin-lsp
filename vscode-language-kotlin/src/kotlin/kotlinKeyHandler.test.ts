@@ -864,8 +864,9 @@ fun test() {
 
     test(
       'properly wraps after malformed interpolation',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
-      doTest('val s = "a${}\n<caret>b"', 'val s = "a${}" +\n        <caret>"b"'),
+      // fwcd parses "a${}" as a valid string_literal (not an ERROR), so
+      // spaceAfterConcatenationOperator is true and the output has a trailing space.
+      doTest('val s = "a${}\n<caret>b"', 'val s = "a${}" + \n        <caret>"b"'),
     );
 
     test(
