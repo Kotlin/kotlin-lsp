@@ -1255,15 +1255,23 @@ function getLiteralCallChain(multilineStringLiteral: Node): Node[] {
 
 function getCallName(text: string, callExpression: Node): string | null {
   const navigationExpression = callExpression.namedChild(0);
-  const identifier =
+  const rawIdentifier =
     navigationExpression?.type === 'navigation_expression'
       ? navigationExpression.namedChild(1)
       : null;
+  // fwcd wraps the method identifier in navigation_suffix (.foo); unwrap to get simple_identifier
+  const identifier =
+    rawIdentifier?.type === 'navigation_suffix' ? rawIdentifier.namedChild(0) : rawIdentifier;
   return identifier === null ? null : text.slice(identifier.startIndex, identifier.endIndex);
 }
 
 function getTrimMarginMarginChar(text: string, callExpression: Node): string {
-  const valueArguments = callExpression.namedChild(1);
+  const callSuffixOrValueArgs = callExpression.namedChild(1);
+  // fwcd wraps value_arguments in call_suffix; unwrap if needed
+  const valueArguments =
+    callSuffixOrValueArgs?.type === 'call_suffix'
+      ? callSuffixOrValueArgs.namedChild(0)
+      : callSuffixOrValueArgs;
   const valueArgument =
     valueArguments?.type === 'value_arguments' ? valueArguments.namedChild(0) : null;
   const argumentExpression = valueArgument?.namedChild(0);

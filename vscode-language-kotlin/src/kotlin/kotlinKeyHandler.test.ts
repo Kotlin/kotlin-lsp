@@ -374,7 +374,6 @@ class A {
 
     test(
       'preserves custom trimMargin markers when turning a one-line multiline string into two lines',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTest(
         `
 class A {
@@ -392,7 +391,6 @@ class A {
 
     test(
       'uses the default trimMargin marker when the trimMargin argument is dynamic',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTest(
         `
 class A {
@@ -476,7 +474,6 @@ val test = """
 
     test(
       'keeps trimMargin indentation when entering inside matching braces',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTest(
         `
 val a =
@@ -496,7 +493,6 @@ val a =
 
     test(
       'keeps whitespace after the caret on the current trimMargin line when entering before a closing brace',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTest(
         `
 val a =
