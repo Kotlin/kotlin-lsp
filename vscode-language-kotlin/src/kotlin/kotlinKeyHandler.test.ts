@@ -746,6 +746,24 @@ class RefreshSession {
 }`,
       ),
     );
+
+    test(
+      'does not insert string concatenation when Enter is pressed after a line containing an invalid string template',
+      doTest(
+        `
+fun usage() {
+    val foo = "\${}"
+<caret>
+    val boo = ""
+}`,
+        `
+fun usage() {
+    val foo = "\${}"
+    <caret>
+    val boo = ""
+}`,
+      ),
+    );
   });
 
   describe('no completion inside string content', () => {
