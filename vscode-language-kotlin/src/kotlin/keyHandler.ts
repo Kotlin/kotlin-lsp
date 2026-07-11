@@ -232,16 +232,22 @@ function getCharacterLiteralQuoteResult(text: string, index: number): KeyResult 
  * fwcd's grammar hides the `"` and `"""` delimiter tokens.
  */
 function handleStringLiteralKey(node: Node, text: string, index: number): KeyResult {
-  if (text.startsWith('"""', node.startIndex)) {
+  // Multi-dollar strings ($$""", $$$""", ...) prefix `"""` with $ signs; skip past them.
+  const dollarCount = text.slice(node.startIndex).match(/^\$*/)?.[0].length ?? 0;
+  const tripleQuoteStart = node.startIndex + dollarCount;
+  if (text.startsWith('"""', tripleQuoteStart)) {
     // Triple-quoted string: replicate handleTripleQuote for the opening delimiter,
     // and mirror the same logic for the closing delimiter.
-    const offsetFromStart = index - node.startIndex;
-    if (offsetFromStart < 3) {
+    const offsetFromTripleQuote = index - tripleQuoteStart;
+    if (offsetFromTripleQuote < 3) {
       // Inside the opening """ delimiter
-      switch (offsetFromStart) {
+      switch (offsetFromTripleQuote) {
         case 0:
           return keyResult('"', index, index + 1, index + 1);
         case 1:
+          if (dollarCount > 0) {
+            return keyResult('""', index, index + 1, index + 1);
+          }
           return keyResult('', index, index + 1, index + 1);
         default:
           return keyResult('""""', index, index + 1, index + 1);

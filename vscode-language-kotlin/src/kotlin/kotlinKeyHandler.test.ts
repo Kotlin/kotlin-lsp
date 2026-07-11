@@ -212,9 +212,8 @@ describe('Handling key presses in Kotlin files', () => {
     );
 
     test(
-      'does not overtype second quote of $$""" opening delimiter',
-      { todo: 'LSP-1410 $$""" multi-dollar quote completion — step 2b' },
-      doTest('$$""<caret>"text"""', '$$""<caret>text"""'),
+      'inserts matching quote for second quote of $$""" opening delimiter',
+      doTest('$$""<caret>"text"""', '$$""<caret>""text"""'),
     );
   });
 
