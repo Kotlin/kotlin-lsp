@@ -42,11 +42,7 @@ describe('Handling key presses in Kotlin files', () => {
   describe('angle bracket auto-completion', () => {
     test('completes after fun keyword', doTest('fun <<caret>', 'fun <<caret>>'));
 
-    test(
-      'completes after uppercase identifier',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
-      doTest('class Foo<<caret>', 'class Foo<<caret>>'),
-    );
+    test('completes after uppercase identifier', doTest('class Foo<<caret>', 'class Foo<<caret>>'));
 
     test(
       'no completion after lowercase identifier',
@@ -1355,7 +1351,6 @@ val x = a
 
     test(
       'indents in a primary constructor of a data class',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTest(
         `
 data class Foo(

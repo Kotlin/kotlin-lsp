@@ -42,7 +42,7 @@ const ENTER_LITERAL_ANCESTOR_TYPES = new Set([
   'character_literal',
 ]);
 const CONTINUATION_ALIGN_ANCESTOR_TYPES = ['type_parameters'];
-const PARAMETER_LIST_ANCESTOR_TYPES = ['function_value_parameters', 'class_parameters'];
+const PARAMETER_LIST_ANCESTOR_TYPES = ['function_value_parameters', 'primary_constructor'];
 const BLOCK_COMMENT_SCAN_ROOT_TYPES = new Set([
   'statements',
   'class_body',
@@ -619,7 +619,9 @@ function handleLeftAngle(text: string, tree: Tree, index: number): KeyResult {
     const prev = getPreviousLeaf(node);
     if (prev === null) return keyResult('<', index, index + 1, index + 1);
     switch (prev.type) {
-      case 'identifier': {
+      case 'identifier':
+      case 'simple_identifier':
+      case 'type_identifier': {
         const looksLikeAClass =
           prev.endIndex === node.startIndex && prev.text[0] === prev.text[0].toUpperCase();
         return looksLikeAClass
