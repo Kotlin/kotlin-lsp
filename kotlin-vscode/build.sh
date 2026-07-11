@@ -18,7 +18,6 @@ BUNDLE_TYPE="${BUNDLE_TYPE:-}"
 VSCE_VERSION="${VSCE_VERSION:-}"
 THIN_BUNDLE="${THIN_BUNDLE:-false}"
 DOWNLOAD_BASE_URL="${DOWNLOAD_BASE_URL:-}"
-export INTELLIJ_EULA_GATE="${INTELLIJ_EULA_GATE:-false}"
 DEFAULT_BUNDLE_TYPE="kotlin-server"
 
 for arg in "$@"; do
@@ -34,6 +33,14 @@ done
 export THIN_BUNDLE
 
 BUNDLE_TYPE="${BUNDLE_TYPE:-$DEFAULT_BUNDLE_TYPE}"
+
+if [[ -z "${INTELLIJ_EULA_GATE:-}" ]]; then
+  case "$BUNDLE_TYPE" in
+    kotlin-server|intellij-server-air) INTELLIJ_EULA_GATE="false" ;;
+    *) INTELLIJ_EULA_GATE="true" ;;
+  esac
+fi
+export INTELLIJ_EULA_GATE
 
 if ! command -v pnpm >/dev/null; then
   if ! command -v npm >/dev/null; then
