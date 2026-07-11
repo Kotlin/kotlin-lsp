@@ -766,7 +766,6 @@ fun usage() {
 
     test(
       'does not insert string concatenation when Enter is pressed inside a ${} interpolation block',
-      { todo: 'LSP-1414' },
       doTest('val foo = "${\n<caret>}"', 'val foo = "${\n    <caret>}"'),
     );
 

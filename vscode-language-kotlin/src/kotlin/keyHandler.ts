@@ -283,6 +283,7 @@ function handleEnter(text: string, tree: Tree, index: number, indentUnit: string
     indentUnit,
     [
       (node) => handleLineCommentEnter(text, node, index, 'line_comment', '//'),
+      (node) => handleStringInterpolationEnter(text, node, index, indentUnit),
       (node) => handleStringLiteralEnter(text, node, index, indentUnit),
       (node) =>
         hasAncestor(node, ENTER_LITERAL_ANCESTOR_TYPES)
@@ -922,6 +923,24 @@ interface StringLiteralContext {
   endIndex: number;
   wrapWithParens: boolean;
   spaceAfterConcatenationOperator: boolean;
+}
+
+function handleStringInterpolationEnter(
+  text: string,
+  node: Node,
+  index: number,
+  indentUnit: string,
+): KeyResult | null {
+  // The cursor is inside a ${...} interpolation block when the node lives inside a
+  // string_literal but is not string_content (which covers literal string text).
+  // In that case, apply regular code indentation instead of string concatenation.
+  if (node.type === 'string_content' || findAncestor(node, 'string_literal') === null) {
+    return null;
+  }
+  const previousLineIndent = getPreviousNonEmptyLineIndent(text, index);
+  const continuationIndent =
+    previousLineIndent !== null ? `${previousLineIndent}${indentUnit}` : null;
+  return getRegularEnterResult(text, index, previousLineIndent, continuationIndent);
 }
 
 function handleStringLiteralEnter(
