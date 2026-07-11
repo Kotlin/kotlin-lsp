@@ -721,7 +721,6 @@ val foo: () -> Unit = {
 
     test(
       'does not insert string concatenation when Enter is pressed inside an empty when block with a string nearby',
-      { todo: 'LSP-1367' },
       doTest(
         `
 class RefreshSession {

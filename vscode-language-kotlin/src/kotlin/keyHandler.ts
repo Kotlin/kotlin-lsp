@@ -987,6 +987,15 @@ function findMalformedInterpolationStringLiteral(
     return null;
   }
 
+  // Reject if the found quote is inside an already-parsed string_literal (i.e. it's a closing
+  // quote, not an opening one). This prevents false positives when unrelated string literals
+  // happen to precede the cursor inside a broad ERROR node.
+  const nodeAtStart = node.tree.rootNode.descendantForIndex(startIndex);
+  const existingStringAtStart = findAncestor(nodeAtStart, 'string_literal');
+  if (existingStringAtStart !== null && existingStringAtStart.startIndex < startIndex) {
+    return null;
+  }
+
   const endIndex = findNextUnescapedQuote(text, index + 1);
   return endIndex === null
     ? null
