@@ -188,11 +188,7 @@ describe('Handling key presses in Kotlin files', () => {
   });
 
   describe('no completion inside comments', () => {
-    test(
-      'no completion inside block comment',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
-      doTest('/* (<caret> */', '/* (<caret> */'),
-    );
+    test('no completion inside block comment', doTest('/* (<caret> */', '/* (<caret> */'));
 
     test('no completion inside line comment', doTest('// (<caret>', '// (<caret>'));
   });
@@ -265,13 +261,11 @@ fun foo() {
 
     test(
       'moves KDoc body text below the caret when entering before an unprefixed body line',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTest('/**\n<caret>    foo\n */', '/**\n * <caret>\n * foo\n */'),
     );
 
     test(
       'moves KDoc body text below the caret when entering before a prefixed body line',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTest('/**\n<caret>    * foo\n */', '/**\n * <caret>\n * foo\n */'),
     );
 
@@ -627,7 +621,6 @@ fun foo() {
 
     test(
       'properly indents inside a multi-line comment',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTest(
         `
 /*
@@ -655,7 +648,6 @@ fun foo() {
 
     test(
       'properly indents inside a multi-line doc comment',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTest(
         `
 /**
@@ -1195,7 +1187,6 @@ fun test() {
 
     test(
       'properly indents after a multi-line comment',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTest(
         `
 fun foo() {
@@ -1217,7 +1208,6 @@ fun foo() {
 
     test(
       'properly indents after a multi-line comment',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTest(
         `
 class C {

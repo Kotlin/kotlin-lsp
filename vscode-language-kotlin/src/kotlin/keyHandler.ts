@@ -35,7 +35,7 @@ import {
 
 const DEFAULT_TRIM_MARGIN_CHAR = '|';
 const MULTILINE_QUOTE = '"""';
-const TEXT_NODE_TYPES = new Set(['block_comment', 'line_comment', 'string_content']);
+const TEXT_NODE_TYPES = new Set(['multiline_comment', 'line_comment', 'string_content']);
 const ENTER_LITERAL_ANCESTOR_TYPES = new Set([
   'string_content',
   'string_literal',
@@ -44,16 +44,15 @@ const ENTER_LITERAL_ANCESTOR_TYPES = new Set([
 const CONTINUATION_ALIGN_ANCESTOR_TYPES = ['type_parameters'];
 const PARAMETER_LIST_ANCESTOR_TYPES = ['function_value_parameters', 'class_parameters'];
 const BLOCK_COMMENT_SCAN_ROOT_TYPES = new Set([
-  'block',
+  'statements',
   'class_body',
   'enum_class_body',
   'source_file',
 ]);
 const BLOCK_COMMENT_IGNORED_NODE_TYPES = new Set([
-  'block_comment',
+  'multiline_comment',
   'line_comment',
   'string_literal',
-  'multi_line_string_literal',
   'character_literal',
 ]);
 const NON_ANGLE_DELIMITER_ANCESTORS = new Set<string>();
@@ -164,7 +163,7 @@ function handleSpecialNodeKey(
   key: string,
   index: number,
 ): KeyResult | null {
-  if (node.type === 'block_comment') {
+  if (node.type === 'multiline_comment') {
     return handleBlockComment(node, key, text, index);
   }
   if (isTextNode(node)) {
@@ -723,7 +722,7 @@ function getPreviousBlockCommentIndent(node: Node, text: string, index: number):
   const commentEnd = previousLine.start + previousLine.text.lastIndexOf('*/') + 2;
   const blockComment = findAncestor(
     node.tree.rootNode.descendantForIndex(commentEnd - 1),
-    'block_comment',
+    'multiline_comment',
   );
   if (blockComment === null || blockComment.endIndex !== commentEnd) {
     return null;
@@ -1364,11 +1363,14 @@ function findBlockCommentContext(
   text: string,
   index: number,
 ): BlockCommentContext | null {
-  const blockComment = findAncestor(node, 'block_comment');
+  const blockComment = findAncestor(node, 'multiline_comment');
   if (blockComment !== null) {
+    // fwcd's master grammar represents unclosed `/*` as a multiline_comment node spanning
+    // to EOF. Treat it as unclosed (end=null) when the comment text lacks the closing `*/`.
+    const isClosed = blockComment.text.endsWith('*/');
     return {
       start: blockComment.startIndex,
-      end: blockComment.endIndex,
+      end: isClosed ? blockComment.endIndex : null,
       isDoc: blockComment.text.startsWith('/**'),
     };
   }
