@@ -676,6 +676,28 @@ fun foo() {
          """.trimIndent()`,
       ),
     );
+
+    test(
+      'does not insert string concatenation when Enter is pressed in a lambda body with context receivers nearby',
+      doTest(
+        `
+fun testMe(action: context(String) () -> Unit) {}
+
+val foo: () -> Unit = {
+    println("hello")
+<caret>
+    println("world")
+}`,
+        `
+fun testMe(action: context(String) () -> Unit) {}
+
+val foo: () -> Unit = {
+    println("hello")
+    <caret>
+    println("world")
+}`,
+      ),
+    );
   });
 
   describe('no completion inside string content', () => {
