@@ -186,7 +186,7 @@ async function downloadAndExtractServerBundle(
       }
     }
 
-    log('Extracting language server');
+    log(`Extracting language server to ${serverDir}`);
     progress?.({ message: 'Extracting language server', increment: 15 });
     await extractServerBundle(archivePath, extractDir);
     progress?.({ message: 'Installing language server', increment: 5 });
