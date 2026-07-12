@@ -173,27 +173,35 @@ write_server_bundle_metadata() {
   local extension_dir="$1"
   local archive_name="$2"
   local download_url="$3"
+  local sha256_file="$4"
   local sha256_url="${download_url}.sha256"
   local sha256_sidecar
+  local sha256_source
 
-  if ! sha256_sidecar="$(curl --fail --location --silent --show-error "$sha256_url")"; then
-    echo "Error: failed to download SHA-256 sidecar: $sha256_url" >&2
-    return 1
+  if [[ -f "$sha256_file" ]]; then
+    sha256_source="$sha256_file"
+    sha256_sidecar="$(<"$sha256_source")"
+  else
+    sha256_source="$sha256_url"
+    if ! sha256_sidecar="$(curl --fail --location --silent --show-error "$sha256_url")"; then
+      echo "Error: failed to download SHA-256 sidecar: $sha256_url" >&2
+      return 1
+    fi
   fi
 
-  node - "$extension_dir/server-bundle.json" "$download_url" "$archive_name" "$sha256_url" "$sha256_sidecar" <<'NODE'
+  node - "$extension_dir/server-bundle.json" "$download_url" "$archive_name" "$sha256_source" "$sha256_sidecar" <<'NODE'
 const fs = require('node:fs');
 const path = require('node:path');
-const [target, url, archiveName, sidecarUrl, sidecarValue] = process.argv.slice(2);
+const [target, url, archiveName, sidecarSource, sidecarValue] = process.argv.slice(2);
 const value = sidecarValue.trim();
 const match = /^([0-9a-fA-F]{64})(?:\s+\*?(.+))?$/.exec(value);
 if (!match) {
-  console.error(`Invalid SHA-256 sidecar: ${sidecarUrl}`);
+  console.error(`Invalid SHA-256 sidecar: ${sidecarSource}`);
   process.exit(1);
 }
 if (match[2] !== undefined && path.basename(match[2]) !== archiveName) {
   console.error(
-    `SHA-256 sidecar ${sidecarUrl} describes ${match[2]}, expected ${archiveName}`,
+    `SHA-256 sidecar ${sidecarSource} describes ${match[2]}, expected ${archiveName}`,
   );
   process.exit(1);
 }
@@ -243,7 +251,8 @@ build_extension() {
     write_server_bundle_metadata \
       "$extension_dir" \
       "$download_archive_name" \
-      "$download_url"
+      "$download_url" \
+      "${lsp_zip_path}.sha256"
   else
     cp "$SCRIPT_DIR/unpack-server.mjs" "$extension_dir/unpack-server.mjs"
     export LSP_ZIP_PATH="$lsp_zip_path"
