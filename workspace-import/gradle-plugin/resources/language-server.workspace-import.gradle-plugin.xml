@@ -2,6 +2,7 @@
   <!-- region Generated dependencies - run `Generate Product Layouts` to regenerate -->
   <dependencies>
     <module name="intellij.libraries.gradle.tooling"/>
+    <module name="intellij.libraries.kotlin.gradle.plugin.idea.proto"/>
   </dependencies>
   <!-- endregion -->
 </idea-plugin>
