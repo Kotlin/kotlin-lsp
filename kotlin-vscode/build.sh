@@ -178,7 +178,7 @@ write_server_bundle_metadata() {
   local sha256_sidecar
   local sha256_source
 
-  if [[ -f "$sha256_file" ]]; then
+  if [[ -n "${TEAMCITY_VERSION:-}" && -f "$sha256_file" ]]; then
     sha256_source="$sha256_file"
     sha256_sidecar="$(<"$sha256_source")"
   else

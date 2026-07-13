@@ -61,6 +61,7 @@ export async function ensureServerLauncher({
       `${downloadedServerDir}.lock`,
       log,
       () => fs.existsSync(downloadedLauncher),
+      () => progress?.({ message: 'Waiting for language server setup in another window' }),
       async () => {
         if (!fs.existsSync(downloadedLauncher)) {
           await downloadAndExtractServerBundle(
@@ -149,27 +150,42 @@ async function downloadAndExtractServerBundle(
 ): Promise<void> {
   await fsp.mkdir(storagePath, { recursive: true });
   const tmpRoot = await fsp.mkdtemp(path.join(storagePath, 'server-download-'));
-  const archivePath = path.join(tmpRoot, serverBundleArchiveName(metadata));
+  const downloadRoot = path.join(storagePath, 'server-downloads', serverBundleInstallDir(metadata));
+  const archivePath = path.join(downloadRoot, serverBundleArchiveName(metadata));
   const extractDir = path.join(tmpRoot, 'server');
 
   try {
-    log(`Downloading language server from ${metadata.url}`);
-    progress?.({ message: 'Downloading language server' });
+    await fsp.mkdir(downloadRoot, { recursive: true });
+    const existingArchiveBytes = metadata.sha256
+      ? ((await fsp.stat(archivePath).catch(() => undefined))?.size ?? 0)
+      : 0;
+    const downloadAction = existingArchiveBytes > 0 ? 'Resuming' : 'Downloading';
+    log(
+      existingArchiveBytes > 0
+        ? `Resuming language server download from ${existingArchiveBytes} bytes: ${metadata.url}`
+        : `Downloading language server from ${metadata.url}`,
+    );
+    progress?.({ message: `${downloadAction} language server` });
     let reportedDownloadIncrement = 0;
-    await downloadFile(metadata.url, archivePath, (downloadedBytes, totalBytes) => {
-      if (totalBytes === undefined) return;
-      const downloadRatio = Math.min(1, downloadedBytes / totalBytes);
-      const downloadPercentage = Math.floor(downloadRatio * 100);
-      const nextIncrement = Math.floor(downloadRatio * DOWNLOAD_PROGRESS_INCREMENT);
-      const increment = Math.max(0, nextIncrement - reportedDownloadIncrement);
-      if (increment > 0) {
-        reportedDownloadIncrement += increment;
-        progress?.({
-          message: `Downloading language server (${downloadPercentage}%)`,
-          increment,
-        });
-      }
-    });
+    await downloadFile(
+      metadata.url,
+      archivePath,
+      (downloadedBytes, totalBytes) => {
+        if (totalBytes === undefined) return;
+        const downloadRatio = Math.min(1, downloadedBytes / totalBytes);
+        const downloadPercentage = Math.floor(downloadRatio * 100);
+        const nextIncrement = Math.floor(downloadRatio * DOWNLOAD_PROGRESS_INCREMENT);
+        const increment = Math.max(0, nextIncrement - reportedDownloadIncrement);
+        if (increment > 0) {
+          reportedDownloadIncrement += increment;
+          progress?.({
+            message: `${downloadAction} language server (${downloadPercentage}%)`,
+            increment,
+          });
+        }
+      },
+      metadata.sha256 !== undefined,
+    );
     if (reportedDownloadIncrement < DOWNLOAD_PROGRESS_INCREMENT) {
       progress?.({
         message: 'Downloaded language server',
@@ -180,6 +196,7 @@ async function downloadAndExtractServerBundle(
       progress?.({ message: 'Verifying language server download', increment: 10 });
       const actual = await sha256(archivePath);
       if (actual.toLowerCase() !== metadata.sha256.toLowerCase()) {
+        await fsp.rm(archivePath, { force: true });
         throw new Error(
           `Language server download checksum mismatch: expected ${metadata.sha256}, got ${actual}`,
         );
@@ -191,6 +208,7 @@ async function downloadAndExtractServerBundle(
     await extractServerBundle(archivePath, extractDir);
     progress?.({ message: 'Installing language server', increment: 5 });
     await publishExtractedServerBundle(extractDir, serverDir);
+    await fsp.rm(downloadRoot, { recursive: true, force: true });
   } finally {
     await fsp.rm(tmpRoot, { recursive: true, force: true });
   }
@@ -221,10 +239,11 @@ async function quarantineIncompleteServerDir(serverDir: string): Promise<void> {
   await fsp.rm(staleServerDir, { recursive: true, force: true });
 }
 
-async function downloadFile(
+export async function downloadFile(
   url: string,
   destination: string,
   onProgress?: (downloadedBytes: number, totalBytes?: number) => void,
+  resume = true,
   redirectsLeft = 5,
 ): Promise<void> {
   await fsp.mkdir(path.dirname(destination), { recursive: true });
@@ -233,10 +252,21 @@ async function downloadFile(
     throw new Error(`Unsupported language server download URL protocol: ${parsed.protocol}`);
   }
   const client = parsed.protocol === 'https:' ? https : http;
+  const existingBytes = resume
+    ? ((await fsp.stat(destination).catch(() => undefined))?.size ?? 0)
+    : 0;
+  const headers = existingBytes > 0 ? { Range: `bytes=${existingBytes}-` } : undefined;
 
   await new Promise<void>((resolve, reject) => {
-    const request = client.get(parsed, (response) => {
+    const request = client.get(parsed, { headers }, (response) => {
       const status = response.statusCode ?? 0;
+      const restartDownload = () => {
+        response.resume();
+        fsp
+          .rm(destination, { force: true })
+          .then(() => downloadFile(url, destination, onProgress, false, redirectsLeft))
+          .then(resolve, reject);
+      };
       response.setTimeout(DOWNLOAD_IDLE_TIMEOUT_MS, () => {
         request.destroy(new Error(`Timed out downloading ${url}: no data received`));
       });
@@ -247,19 +277,45 @@ async function downloadFile(
           return;
         }
         const nextUrl = new URL(response.headers.location, parsed).toString();
-        downloadFile(nextUrl, destination, onProgress, redirectsLeft - 1).then(resolve, reject);
+        downloadFile(nextUrl, destination, onProgress, resume, redirectsLeft - 1).then(
+          resolve,
+          reject,
+        );
         return;
       }
 
-      if (status !== 200) {
+      if (existingBytes > 0 && status === 416) {
+        response.resume();
+        if (completedDownloadTotal(response.headers['content-range']) === existingBytes) {
+          onProgress?.(existingBytes, existingBytes);
+          resolve();
+          return;
+        }
+        restartDownload();
+        return;
+      }
+
+      const resumedTotalBytes =
+        status === 206
+          ? resumedDownloadTotal(response.headers['content-range'], existingBytes)
+          : undefined;
+      const append = existingBytes > 0 && status === 206 && resumedTotalBytes !== undefined;
+      if (existingBytes > 0 && status === 206 && !append) {
+        restartDownload();
+        return;
+      }
+      if (status !== 200 && !append) {
         response.resume();
         reject(new Error(`Failed to download ${url}: HTTP ${status}`));
         return;
       }
 
-      const output = fs.createWriteStream(destination);
-      const totalBytes = contentLength(response.headers['content-length']);
-      let downloadedBytes = 0;
+      const output = fs.createWriteStream(destination, { flags: append ? 'a' : 'w' });
+      const totalBytes = append
+        ? resumedTotalBytes
+        : contentLength(response.headers['content-length']);
+      let downloadedBytes = append ? existingBytes : 0;
+      onProgress?.(downloadedBytes, totalBytes);
       response.on('data', (chunk: Buffer) => {
         downloadedBytes += chunk.length;
         onProgress?.(downloadedBytes, totalBytes);
@@ -273,6 +329,25 @@ async function downloadFile(
   });
 }
 
+function resumedDownloadTotal(
+  value: string | undefined,
+  expectedStart: number,
+): number | undefined {
+  const match = /^bytes (\d+)-(\d+)\/(\d+)$/.exec(value ?? '');
+  if (match === null) return undefined;
+  const start = Number.parseInt(match[1], 10);
+  const end = Number.parseInt(match[2], 10);
+  const total = Number.parseInt(match[3], 10);
+  return start === expectedStart && end >= start && total > end ? total : undefined;
+}
+
+function completedDownloadTotal(value: string | undefined): number | undefined {
+  const match = /^bytes \*\/(\d+)$/.exec(value ?? '');
+  if (match === null) return undefined;
+  const total = Number.parseInt(match[1], 10);
+  return total > 0 ? total : undefined;
+}
+
 function contentLength(value: string | string[] | undefined): number | undefined {
   const raw = Array.isArray(value) ? value[0] : value;
   if (raw === undefined) return undefined;
@@ -284,6 +359,7 @@ async function withInstallLock<T>(
   lockDir: string,
   log: (message: string) => void,
   isComplete: () => boolean,
+  onWait: () => void,
   action: () => Promise<T>,
 ): Promise<T | undefined> {
   await fsp.mkdir(path.dirname(lockDir), { recursive: true });
@@ -300,6 +376,11 @@ async function withInstallLock<T>(
       break;
     } catch (e) {
       if (!isAlreadyExistsError(e)) throw e;
+      if ((await isInstallLockOwnerAlive(lockDir)) === false) {
+        log(`Removing abandoned language server install lock: ${lockDir}`);
+        await quarantineStaleInstallLock(lockDir);
+        continue;
+      }
       const lockFresh = await isInstallLockFresh(lockDir);
       if (!lockFresh && (await removeStaleInstallLock(lockDir, log))) {
         continue;
@@ -317,6 +398,7 @@ async function withInstallLock<T>(
       if (!loggedWait) {
         loggedWait = true;
         log(`Waiting for language server install lock: ${lockDir}`);
+        onWait();
       }
       await delay(INSTALL_LOCK_RETRY_DELAY_MS);
     }
@@ -389,6 +471,20 @@ async function installLockStat(lockDir: string): Promise<fs.Stats | undefined> {
   );
 }
 
+async function isInstallLockOwnerAlive(lockDir: string): Promise<boolean | undefined> {
+  const ownerPath = await findInstallLockOwnerPath(lockDir);
+  if (ownerPath === undefined) return undefined;
+  try {
+    const owner = JSON.parse(await fsp.readFile(ownerPath, 'utf8')) as { pid?: unknown };
+    if (!Number.isSafeInteger(owner.pid) || (owner.pid as number) <= 0) return undefined;
+    process.kill(owner.pid as number, 0);
+    return true;
+  } catch (e) {
+    if (isNoSuchProcessError(e)) return false;
+    return undefined;
+  }
+}
+
 async function quarantineStaleInstallLock(lockDir: string): Promise<void> {
   const staleLockDir = `${lockDir}.stale.${process.pid}.${Date.now()}`;
   try {
@@ -437,6 +533,10 @@ function isAlreadyExistsError(e: unknown): boolean {
 
 function isNoSuchFileError(e: unknown): boolean {
   return typeof e === 'object' && e !== null && 'code' in e && e.code === 'ENOENT';
+}
+
+function isNoSuchProcessError(e: unknown): boolean {
+  return typeof e === 'object' && e !== null && 'code' in e && e.code === 'ESRCH';
 }
 
 function delay(ms: number): Promise<void> {
