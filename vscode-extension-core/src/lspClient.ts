@@ -52,7 +52,19 @@ const OPT_JVM_ARGS = 'intellij.additionalJvmArgs';
 const OPT_DEFAULT_WORKSPACE_SDK = 'intellij.jdkForSymbolResolution';
 const OPT_BUILD_TOOL = 'intellij.buildTool';
 const OPT_DATA_SHARING = 'intellij.dataSharing';
+const OPT_REGION = 'intellij.region';
 const OPT_PROJECTS = 'intellij.projects';
+
+// Maps the `intellij.region` display values to `com.intellij.ide.Region`
+const REGION_NAMES: Record<string, string> = {
+  Africa: 'africa',
+  Americas: 'americas',
+  'Asia (Except Mainland China)': 'apac',
+  'Mainland China': 'china',
+  Europe: 'europe',
+  'Middle East': 'middle_east',
+  Oceania: 'oceania',
+};
 
 const INDEX_DIR_STATE_KEY = 'jetbrains.intellij.indexDir';
 
@@ -449,17 +461,9 @@ async function startBundledServer(): Promise<ChildProcessByStdio<null, Readable,
     args.push('--system-path', context.storageUri.fsPath);
   }
   const userJvmOptions = getUserJvmOptions();
-  const jvmOptions = buildJvmOptionsEnv(process.env, userJvmOptions);
-  const env: NodeJS.ProcessEnv = debugLaunch
-    ? {
-        ...jvmOptions,
-        IJ_LAUNCHER_DEBUG: '1',
-      }
-    : jvmOptions;
   const dataSharing = configOption<string>(OPT_DATA_SHARING) ?? 'none';
-  if (dataSharing !== 'none') {
-    env.INTELLIJ_DATA_SHARING = dataSharing; // 'full' | 'anonymous'
-  }
+  const region = configOption<string>(OPT_REGION);
+  const env = buildLaunchEnvironment(process.env, userJvmOptions, debugLaunch, dataSharing, region);
 
   logInfo('Starting language server');
   logInfo(`  command: ${launcherPath}`);
@@ -663,17 +667,31 @@ function getUserJvmOptions(): string[] {
   return configOption<string[]>(OPT_JVM_ARGS) ?? [];
 }
 
-function buildJvmOptionsEnv(baseEnv: NodeJS.ProcessEnv, extraOptions: string[]): NodeJS.ProcessEnv {
-  if (extraOptions.length === 0) {
-    return baseEnv;
+function buildLaunchEnvironment(
+  baseEnv: NodeJS.ProcessEnv,
+  extraOptions: string[],
+  debugLaunch: boolean,
+  dataSharing: string,
+  region: string | undefined,
+): NodeJS.ProcessEnv {
+  const env = { ...baseEnv };
+  if (extraOptions.length > 0) {
+    const option = 'IJ_JAVA_OPTIONS';
+    const current = env[option] ?? '';
+    const extra = extraOptions.map(shellQuoteIfNeeded).join(' ');
+    env[option] = current ? `${current} ${extra}` : extra;
   }
-  const OPTION = 'IJ_JAVA_OPTIONS';
-  const env: NodeJS.ProcessEnv = { ...baseEnv };
+  if (debugLaunch) {
+    env.IJ_LAUNCHER_DEBUG = '1';
+  }
+  if (dataSharing !== 'none') {
+    env.INTELLIJ_DATA_SHARING = dataSharing; // 'full' | 'anonymous'
+  }
 
-  const current = env[OPTION] ?? '';
-  const extra = extraOptions.map(shellQuoteIfNeeded).join(' ');
-  env[OPTION] = current ? `${current} ${extra}` : extra;
-
+  const regionExternalName = region ? REGION_NAMES[region] : undefined;
+  if (regionExternalName) {
+    env.INTELLIJ_REGION = regionExternalName;
+  }
   return env;
 }
 
