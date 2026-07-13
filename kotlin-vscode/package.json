@@ -46,6 +46,7 @@
     "web-tree-sitter": "catalog:"
   },
   "devDependencies": {
+    "@jetbrains/intellij-vscode-extension-policy": "workspace:*",
     "@rspack/cli": "catalog:",
     "@rspack/core": "catalog:",
     "@types/node": "catalog:",
@@ -57,6 +58,22 @@
     "vscode-languageserver-types": "catalog:"
   },
   "contributes": {
+    "icons": {
+      "jetbrains-ij": {
+        "description": "JetBrains IntelliJ status bar icon",
+        "default": {
+          "fontPath": "./out/dist/icons/lsp-ij.woff",
+          "fontCharacter": "\\E900"
+        }
+      },
+      "jetbrains-ij-crossed": {
+        "description": "JetBrains IntelliJ status bar icon for invalid licenses",
+        "default": {
+          "fontPath": "./out/dist/icons/lsp-ij.woff",
+          "fontCharacter": "\\E901"
+        }
+      }
+    },
     "languages": [
       {
         "id": "kotlin",
