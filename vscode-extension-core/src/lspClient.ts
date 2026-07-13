@@ -27,6 +27,10 @@ import { middleware } from './middleware';
 import * as readline from 'node:readline';
 import { type Readable } from 'node:stream';
 import { ensureServerLauncher } from './serverBundleDownload';
+import {
+  registerCopyToClipboardHandler,
+  registerIntellijExtensionsInitOption,
+} from './intellijExtensions';
 
 interface ExtensionPackageJson {
   displayName?: string;
@@ -64,12 +68,6 @@ type ImportLogParams =
 
 const importLogNotification = new NotificationType<ImportLogParams>('intellij/importLog');
 
-type CopyToClipboardParams = { content: string };
-
-const copyToClipboardNotification = new NotificationType<CopyToClipboardParams>(
-  'intellij/copyToClipboard',
-);
-
 const clientSubscriptions: ((client: LanguageClient, stateChange: StateChangeEvent) => void)[] = [];
 
 export type InitializationOptionsContributor = () => Record<string, unknown>;
@@ -102,9 +100,7 @@ export function registerInitializationOptionsContributor(
 }
 
 export function initLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): void {
-  // Declare that this is a JetBrains client so the server may use custom `intellij/*` protocol
-  // extensions (e.g. the `intellij/copyToClipboard` notification handled in this file).
-  registerInitializationOptionsContributor(() => ({ intellijExtensions: true }));
+  registerIntellijExtensionsInitOption();
   getContext().subscriptions.push(
     Disposable.create(async () => await stopLspClient()),
     vscode.commands.registerCommand('jetbrains.kotlin.restartLsp', async () => {
@@ -343,18 +339,6 @@ function registerImportLogHandler(client: LanguageClient): void {
       clearBuildError();
     }
   });
-  getContext().subscriptions.push(subscription);
-}
-
-/**
- * Handles the `intellij/copyToClipboard` server notification (used by the ModCommand
- * `ModCopyToClipboard`), writing the supplied text to the system clipboard.
- */
-function registerCopyToClipboardHandler(client: LanguageClient): void {
-  const subscription = client.onNotification(
-    copyToClipboardNotification,
-    (p) => void vscode.env.clipboard.writeText(p.content),
-  );
   getContext().subscriptions.push(subscription);
 }
 
