@@ -14,7 +14,6 @@ internal val kotlinFeature: PluginMainDescriptor = makePlugin(
         "ls.kotlin.searchingBase" to "META-INF/searching-base.xml",
         "features/kotlin/usages" to "META-INF/language-server/features/kotlin/usages.xml",
         "features/kotlin/import" to "META-INF/language-server/features/kotlin/workspace-import.xml",
-        "ls.kotlin.formatter" to "META-INF/formatter.xml",
     ),
     dependencies = listOf(
         "org.jetbrains.ls.plugin.kotlin",
