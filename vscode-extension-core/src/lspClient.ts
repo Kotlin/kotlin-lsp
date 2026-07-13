@@ -380,6 +380,7 @@ function configOption<T>(name: string, scope?: vscode.ConfigurationScope): T | u
 
 async function ensureBundledServerLauncher(): Promise<string> {
   const context = getContext();
+  const isDevelopment = context.extensionMode === vscode.ExtensionMode.Development;
   const cacheKey = `${context.extensionPath}\0${context.globalStorageUri.fsPath}`;
   if (bundledServerLauncherCache?.key !== cacheKey) {
     bundledServerLauncherCache = {
@@ -390,13 +391,21 @@ async function ensureBundledServerLauncher(): Promise<string> {
             location: vscode.ProgressLocation.Notification,
             title: `${extensionDisplayName()}: language server setup`,
           },
-          (progress) =>
-            ensureServerLauncher({
+          async (progress) => {
+            const launcherPath = await ensureServerLauncher({
               extensionPath: context.extensionPath,
               storagePath: context.globalStorageUri.fsPath,
               log: logInfo,
               progress: (update) => progress.report(update),
-            }),
+              allowCachedServerWithoutMetadata: isDevelopment,
+            });
+            if (isDevelopment) {
+              void vscode.window.showInformationMessage(
+                `${extensionDisplayName()}: development mode is using language server ${launcherPath}`,
+              );
+            }
+            return launcherPath;
+          },
         ),
       ),
     };

@@ -30,6 +30,74 @@ describe('server bundle download metadata', () => {
     }
   });
 
+  test('uses the newest cached server without metadata during extension development', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'server-bundle-'));
+    try {
+      const extensionPath = path.join(root, 'extension');
+      const storagePath = path.join(root, 'storage');
+      const olderLauncher = await createCachedLauncher(storagePath, 'a');
+      const newerLauncher = await createCachedLauncher(storagePath, 'b');
+      const olderTime = new Date('2026-01-01T00:00:00Z');
+      const newerTime = new Date('2026-02-01T00:00:00Z');
+      await fs.utimes(path.dirname(path.dirname(olderLauncher)), olderTime, olderTime);
+      await fs.utimes(path.dirname(path.dirname(newerLauncher)), newerTime, newerTime);
+      const logs: string[] = [];
+
+      assert.equal(
+        await ensureServerLauncher({
+          extensionPath,
+          storagePath,
+          log: (message) => logs.push(message),
+          allowCachedServerWithoutMetadata: true,
+        }),
+        newerLauncher,
+      );
+      assert.ok(logs.some((message) => message.includes(newerLauncher)));
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test('requires metadata outside extension development when only a cached server exists', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'server-bundle-'));
+    try {
+      const extensionPath = path.join(root, 'extension');
+      const storagePath = path.join(root, 'storage');
+      await createCachedLauncher(storagePath, 'a');
+
+      await assert.rejects(
+        ensureServerLauncher({ extensionPath, storagePath, log: () => {} }),
+        /no download metadata was found/,
+      );
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test('ignores incomplete cached servers during extension development', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'server-bundle-'));
+    try {
+      const extensionPath = path.join(root, 'extension');
+      const storagePath = path.join(root, 'storage');
+      const incompleteLauncher = serverLauncherPath(
+        path.join(storagePath, 'downloaded-server', 'a'.repeat(64)),
+      );
+      await fs.mkdir(path.dirname(incompleteLauncher), { recursive: true });
+
+      await assert.rejects(
+        ensureServerLauncher({
+          extensionPath,
+          storagePath,
+          log: () => {},
+          allowCachedServerWithoutMetadata: true,
+        }),
+        /no download metadata was found/,
+      );
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
   test('reads valid metadata', async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'server-bundle-'));
     try {
@@ -217,6 +285,15 @@ async function listen(server: http.Server): Promise<string> {
   if (address === null || typeof address === 'string')
     throw new Error('Expected TCP server address');
   return `http://127.0.0.1:${address.port}/server.tar.gz`;
+}
+
+async function createCachedLauncher(storagePath: string, hashCharacter: string): Promise<string> {
+  const launcherPath = serverLauncherPath(
+    path.join(storagePath, 'downloaded-server', hashCharacter.repeat(64)),
+  );
+  await fs.mkdir(path.dirname(launcherPath), { recursive: true });
+  await fs.writeFile(launcherPath, '');
+  return launcherPath;
 }
 
 async function close(server: http.Server): Promise<void> {

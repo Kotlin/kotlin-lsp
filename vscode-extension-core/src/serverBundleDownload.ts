@@ -21,6 +21,7 @@ export interface EnsureServerLauncherOptions {
   storagePath: string;
   log: (message: string) => void;
   progress?: (progress: ServerBundleProgress) => void;
+  allowCachedServerWithoutMetadata?: boolean;
 }
 
 export interface ServerBundleProgress {
@@ -42,11 +43,21 @@ export async function ensureServerLauncher({
   storagePath,
   log,
   progress,
+  allowCachedServerWithoutMetadata = false,
 }: EnsureServerLauncherOptions): Promise<string> {
   const bundledServerDir = path.join(extensionPath, 'server');
   const bundledLauncher = serverLauncherPath(bundledServerDir);
   if (fs.existsSync(bundledLauncher)) {
     return bundledLauncher;
+  }
+
+  const metadataPath = path.join(extensionPath, SERVER_BUNDLE_METADATA_FILE);
+  if (allowCachedServerWithoutMetadata && !fs.existsSync(metadataPath)) {
+    const cachedLauncher = await findCachedServerLauncher(storagePath);
+    if (cachedLauncher !== undefined) {
+      log(`Using cached language server for extension development: ${cachedLauncher}`);
+      return cachedLauncher;
+    }
   }
 
   const metadata = await readServerBundleMetadata(extensionPath);
@@ -85,6 +96,27 @@ export async function ensureServerLauncher({
 export function serverLauncherPath(serverDir: string): string {
   const launcherName = os.platform() === 'win32' ? 'intellij-server.exe' : 'intellij-server';
   return path.join(serverDir, 'bin', launcherName);
+}
+
+async function findCachedServerLauncher(storagePath: string): Promise<string | undefined> {
+  const downloadedServerRoot = path.join(storagePath, 'downloaded-server');
+  const entries = await fsp.readdir(downloadedServerRoot, { withFileTypes: true }).catch(() => []);
+  const candidates: Array<{ launcherPath: string; mtimeMs: number }> = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory() || !/^[0-9a-fA-F]{64}$/.test(entry.name)) continue;
+    const serverDir = path.join(downloadedServerRoot, entry.name);
+    const launcherPath = serverLauncherPath(serverDir);
+    if (!fs.existsSync(launcherPath)) continue;
+    const stat = await fsp.stat(serverDir).catch(() => undefined);
+    if (stat !== undefined) {
+      candidates.push({ launcherPath, mtimeMs: stat.mtimeMs });
+    }
+  }
+  candidates.sort(
+    (left, right) =>
+      right.mtimeMs - left.mtimeMs || left.launcherPath.localeCompare(right.launcherPath),
+  );
+  return candidates[0]?.launcherPath;
 }
 
 export async function readServerBundleMetadata(
