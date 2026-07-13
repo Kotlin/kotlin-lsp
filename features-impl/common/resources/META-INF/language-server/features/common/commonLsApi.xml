@@ -18,6 +18,9 @@
   <extensions defaultExtensionNs="com.intellij">
     <customFoldingProvider implementation="com.intellij.lang.customFolding.NetBeansCustomFoldingProvider"/>
     <customFoldingProvider implementation="com.intellij.lang.customFolding.VisualStudioCustomFoldingProvider"/>
+    <!-- NOTE: provides a simplified, headless implementation of TaskSupport for the analysis/write/indexing (and debugger) contexts -->
+    <applicationService serviceInterface="com.intellij.platform.ide.progress.TaskSupport"
+                        serviceImplementation="com.jetbrains.ls.api.features.impl.common.progress.LSHeadlessTaskSupport"/>
   </extensions>
 
   <extensions defaultExtensionNs="com.intellij.platform.backend">
