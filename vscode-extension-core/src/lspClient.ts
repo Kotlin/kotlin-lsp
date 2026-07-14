@@ -26,7 +26,7 @@ import { clearBuildError, setBuildError, updateLspStatusBar } from './statusBar'
 import { middleware } from './middleware';
 import * as readline from 'node:readline';
 import { type Readable } from 'node:stream';
-import { ensureServerLauncher } from './serverBundleDownload';
+import { ensureServerLauncher, serverLauncherPath } from './serverBundleDownload';
 import {
   registerCopyToClipboardHandler,
   registerIntellijExtensionsInitOption,
@@ -39,14 +39,15 @@ interface ExtensionPackageJson {
   };
 }
 
-const BUNDLED_SERVER_START_TIMEOUT_MS = 60_000;
-const BUNDLED_SERVER_CONNECTION_TIMEOUT_MS = 10_000;
+const LAUNCHED_SERVER_START_TIMEOUT_MS = 60_000;
+const LAUNCHED_SERVER_CONNECTION_TIMEOUT_MS = 10_000;
 const LOCAL_SERVER_CONNECTION_TIMEOUT_MS = 10_000;
 const CONNECTION_RETRY_DELAY_MS = 100;
 
 const LANGUAGE_CLIENT_ID = 'intellij';
 const OPT_DEV_SERVER_PORT = 'intellij.dev.serverPort';
 const OPT_DEV_SERVER_TIMEOUT = 'intellij.dev.serverTimeoutMs';
+const OPT_SERVER_PATH = 'intellij.serverPath';
 const OPT_LOG_LAUNCH = 'intellij.dev.logLaunch';
 const OPT_JVM_ARGS = 'intellij.additionalJvmArgs';
 const OPT_DEFAULT_WORKSPACE_SDK = 'intellij.jdkForSymbolResolution';
@@ -423,36 +424,42 @@ async function ensureBundledServerLauncher(): Promise<string> {
 export async function prepareBundledServerLauncher(): Promise<string | undefined> {
   const predefinedPort = configOption<number>(OPT_DEV_SERVER_PORT) ?? -1;
   if (predefinedPort !== -1) return undefined;
-  return ensureBundledServerLauncher();
+  return configuredServerLauncherPath() ?? (await ensureBundledServerLauncher());
 }
 
 function getServerOptions(): ServerOptions {
   const predefinedPort = configOption<number>(OPT_DEV_SERVER_PORT) ?? -1;
-  if (predefinedPort == -1) {
-    return getStreamInfoForBundledServer;
-  } else {
+  if (predefinedPort !== -1) {
     return () =>
       getStreamInfoForRunningServer(
         predefinedPort,
         configOption<number>(OPT_DEV_SERVER_TIMEOUT) ?? LOCAL_SERVER_CONNECTION_TIMEOUT_MS,
       );
   }
+  return () => getStreamInfoForLaunchedServer(configuredServerLauncherPath());
 }
 
-async function getStreamInfoForBundledServer(): Promise<StreamInfo> {
-  const serverProcess = await startBundledServer();
+function configuredServerLauncherPath(): string | undefined {
+  const serverPath = configOption<string>(OPT_SERVER_PATH);
+  return serverPath === undefined ? undefined : serverLauncherPath(serverPath);
+}
+
+async function getStreamInfoForLaunchedServer(launcherPath?: string): Promise<StreamInfo> {
+  const serverProcess = await startServer(launcherPath);
   try {
-    const port = await getPortForBundledServer(serverProcess);
-    return await getStreamInfoForRunningServer(port, BUNDLED_SERVER_CONNECTION_TIMEOUT_MS);
+    const port = await getPortForLaunchedServer(serverProcess);
+    return await getStreamInfoForRunningServer(port, LAUNCHED_SERVER_CONNECTION_TIMEOUT_MS);
   } catch (e) {
     serverProcess.kill();
     throw e;
   }
 }
 
-async function startBundledServer(): Promise<ChildProcessByStdio<null, Readable, Readable>> {
+async function startServer(
+  configuredLauncherPath?: string,
+): Promise<ChildProcessByStdio<null, Readable, Readable>> {
   const debugLaunch = configOption<boolean>(OPT_LOG_LAUNCH) ?? false;
-  const launcherPath = await ensureBundledServerLauncher();
+  const launcherPath = configuredLauncherPath ?? (await ensureBundledServerLauncher());
 
   const context = getContext();
   const args: string[] = [];
@@ -508,7 +515,7 @@ class LanguageServerStartupError extends Error {
   }
 }
 
-function getPortForBundledServer(
+function getPortForLaunchedServer(
   serverProcess: ChildProcessByStdio<null, Readable, Readable>,
 ): Promise<number> {
   return new Promise<number>((resolve, reject) => {
@@ -527,7 +534,7 @@ function getPortForBundledServer(
       cleanup();
       serverProcess.kill();
       reject(new Error('Timed out waiting for language server port announcement'));
-    }, BUNDLED_SERVER_START_TIMEOUT_MS);
+    }, LAUNCHED_SERVER_START_TIMEOUT_MS);
 
     const rl = readline.createInterface({
       input: serverProcess.stdout,
