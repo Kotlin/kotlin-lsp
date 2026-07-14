@@ -205,7 +205,10 @@ export async function activateExtension(
       await module(context);
     }
 
-    initLspClient(getAcceptedEulaHash);
+    initLspClient({
+      getAcceptedEulaHash,
+      checkEulaAccepted: () => checkEulaAcceptedFn(context),
+    });
     serverActivated = true;
   }
 

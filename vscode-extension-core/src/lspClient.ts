@@ -22,6 +22,7 @@ import {
   getOutputChannel,
   logInfo,
 } from './extension';
+import { runWithEulaGate } from './eulaGate';
 import { clearBuildError, setBuildError, updateLspStatusBar } from './statusBar';
 import { middleware } from './middleware';
 import * as readline from 'node:readline';
@@ -112,16 +113,28 @@ export function registerInitializationOptionsContributor(
   initializationOptionsContributors.push(contributor);
 }
 
-export function initLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): void {
+interface LspClientPolicyOptions {
+  getAcceptedEulaHash: AcceptedEulaHashProvider;
+  checkEulaAccepted: () => Promise<boolean>;
+}
+
+export function initLspClient({
+  getAcceptedEulaHash,
+  checkEulaAccepted,
+}: LspClientPolicyOptions): void {
   registerIntellijExtensionsInitOption();
   getContext().subscriptions.push(
     Disposable.create(async () => await stopLspClient()),
     vscode.commands.registerCommand('jetbrains.kotlin.restartLsp', async () => {
-      await startLspClient({ getAcceptedEulaHash, restartIfStarting: true });
+      const restarted = await runWithEulaGate({
+        checkEulaAccepted,
+        action: () => startLspClient({ getAcceptedEulaHash, restartIfStarting: true }),
+      });
+      if (!restarted) return;
       await vscode.window.showInformationMessage(extensionDisplayName() + ' restarted');
     }),
     vscode.commands.registerCommand('jetbrains.kotlin.clearCachesAndRestartLsp', async () => {
-      await clearCachesAndRestart(getAcceptedEulaHash);
+      await clearCachesAndRestart({ getAcceptedEulaHash, checkEulaAccepted });
     }),
   );
   // Remember the index location the server reports on each successful start, so we can still
@@ -153,7 +166,10 @@ const INDEX_DELETE_RETRY_DELAY_MS = 200;
  * to the value persisted on the last successful start when the server isn't running. Deletion
  * happens while the server is down so the RocksDB lock on the directory is released first.
  */
-async function clearCachesAndRestart(getAcceptedEulaHash: AcceptedEulaHashProvider): Promise<void> {
+async function clearCachesAndRestart({
+  getAcceptedEulaHash,
+  checkEulaAccepted,
+}: LspClientPolicyOptions): Promise<void> {
   // Prefer the running server's reported location; fall back to the last one we persisted so the
   // action still works when the server fails to start (e.g. because of the very caches to clear).
   const indexDir =
@@ -190,6 +206,9 @@ async function clearCachesAndRestart(getAcceptedEulaHash: AcceptedEulaHashProvid
     'Clear and Restart',
   );
   if (confirmation !== 'Clear and Restart') return;
+
+  const eulaAccepted = await checkEulaAccepted();
+  if (!eulaAccepted) return;
 
   await stopLspClient();
 
