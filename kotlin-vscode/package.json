@@ -165,6 +165,21 @@
                   "type": "string"
                 },
                 "description": "Extra environment variables for the launched process."
+              },
+              "console": {
+                "type": "string",
+                "enum": [
+                  "internalConsole",
+                  "integratedTerminal",
+                  "externalTerminal"
+                ],
+                "enumDescriptions": [
+                  "Run in the Debug Console (the language server launches the process).",
+                  "Run in the integrated terminal (the editor launches the process and the debugger attaches).",
+                  "Run in an external terminal (the debugger attaches)."
+                ],
+                "default": "integratedTerminal",
+                "description": "Where to run the program."
               }
             }
           },
@@ -195,7 +210,7 @@
         "configurationSnippets": [
           {
             "label": "IntelliJ: Launch main class",
-            "description": "Launch a JVM main class via the IntelliJ LSP.",
+            "description": "Launch a JVM main class in the integrated terminal.",
             "body": {
               "type": "intellij_debugger",
               "request": "launch",
