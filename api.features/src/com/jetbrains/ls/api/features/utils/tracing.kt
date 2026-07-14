@@ -4,7 +4,6 @@ package com.jetbrains.ls.api.features.utils
 import com.intellij.openapi.diagnostic.rethrowControlFlowException
 import com.intellij.platform.diagnostic.telemetry.IJTracer
 import io.opentelemetry.api.trace.StatusCode
-import io.opentelemetry.context.Context
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
@@ -28,7 +27,7 @@ internal fun <T> IJTracer.traceProvider(
         .setAttribute("provider.class", provider.javaClass.simpleName)
         .startSpan()
     try {
-        emitAll(resultsFlow.flowOn(Context.current().with(span).asContextElement()))
+        emitAll(resultsFlow.flowOn(span.asContextElement()))
     } catch (e: Throwable) {
         rethrowControlFlowException(e)
         span.recordException(e)
