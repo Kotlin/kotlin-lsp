@@ -488,16 +488,8 @@ async function startServer(
     args.push('--system-path', context.storageUri.fsPath);
   }
   const userJvmOptions = getUserJvmOptions();
-  const configuredDataSharing = dataSharingLevel(explicitConfigOption(OPT_DATA_SHARING));
-  const inheritedDataSharing = dataSharingLevel(process.env.INTELLIJ_DATA_SHARING);
-  const dataSharing = inheritedDataSharing ?? configuredDataSharing ?? 'none';
-  const configuredRegion = specifiedRegion(explicitConfigOption(OPT_REGION));
-  const inheritedRegion = specifiedRegion(process.env.INTELLIJ_REGION);
-  const region = inheritedRegion ?? configuredRegion;
-  await Promise.all([
-    persistLaunchEnvironmentSetting(OPT_DATA_SHARING, inheritedDataSharing),
-    persistLaunchEnvironmentSetting(OPT_REGION, inheritedRegion),
-  ]);
+  const dataSharing = dataSharingLevel(configOption(OPT_DATA_SHARING)) ?? 'none';
+  const region = specifiedRegion(configOption(OPT_REGION));
   const env = buildLaunchEnvironment(process.env, userJvmOptions, debugLaunch, dataSharing, region);
 
   logInfo('Starting language server');
@@ -710,21 +702,6 @@ function dataSharingLevel(value: unknown): DataSharingLevel | undefined {
 
 function specifiedRegion(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 && value !== 'not_set' ? value : undefined;
-}
-
-function explicitConfigOption(name: string): unknown {
-  const inspected = workspace.getConfiguration().inspect<unknown>(name);
-  return inspected?.workspaceFolderValue ?? inspected?.workspaceValue ?? inspected?.globalValue;
-}
-
-async function persistLaunchEnvironmentSetting(
-  name: string,
-  environmentValue: string | undefined,
-): Promise<void> {
-  if (environmentValue === undefined) return;
-  const configuration = workspace.getConfiguration();
-  if (configuration.inspect<string>(name)?.globalValue === environmentValue) return;
-  await configuration.update(name, environmentValue, vscode.ConfigurationTarget.Global);
 }
 
 function buildLaunchEnvironment(
