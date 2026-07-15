@@ -28,13 +28,18 @@ import { clearBuildError, setBuildError, updateLspStatusBar } from './statusBar'
 import { middleware } from './middleware';
 import * as readline from 'node:readline';
 import { type Readable } from 'node:stream';
-import { ensureServerLauncher, serverLauncherPath } from './serverBundleDownload';
+import {
+  ensureServerLauncher,
+  serverBundleStoragePath,
+  serverLauncherPath,
+} from './serverBundleDownload';
 import {
   registerCopyToClipboardHandler,
   registerIntellijExtensionsInitOption,
 } from './intellijExtensions';
 
 interface ExtensionPackageJson {
+  name?: string;
   displayName?: string;
   contributes?: {
     languages?: Array<{ id: string }>;
@@ -398,7 +403,8 @@ function configOption<T>(name: string, scope?: vscode.ConfigurationScope): T | u
 async function ensureBundledServerLauncher(): Promise<string> {
   const context = getContext();
   const isDevelopment = context.extensionMode === vscode.ExtensionMode.Development;
-  const cacheKey = `${context.extensionPath}\0${context.globalStorageUri.fsPath}`;
+  const serverRoot = serverBundleStoragePath(packageJson()?.name ?? 'intellij-server');
+  const cacheKey = context.extensionPath;
   if (bundledServerLauncherCache?.key !== cacheKey) {
     bundledServerLauncherCache = {
       key: cacheKey,
@@ -411,7 +417,7 @@ async function ensureBundledServerLauncher(): Promise<string> {
           async (progress) => {
             const launcherPath = await ensureServerLauncher({
               extensionPath: context.extensionPath,
-              storagePath: context.globalStorageUri.fsPath,
+              serverRoot,
               log: logInfo,
               progress: (update) => progress.report(update),
               allowCachedServerWithoutMetadata: isDevelopment,

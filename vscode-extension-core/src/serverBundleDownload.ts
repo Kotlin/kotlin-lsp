@@ -12,13 +12,14 @@ export const SERVER_BUNDLE_METADATA_FILE = 'server-bundle.json';
 
 export interface ServerBundleMetadata {
   url: string;
+  version: string;
   sha256?: string;
   archiveName?: string;
 }
 
 export interface EnsureServerLauncherOptions {
   extensionPath: string;
-  storagePath: string;
+  serverRoot: string;
   log: (message: string) => void;
   progress?: (progress: ServerBundleProgress) => void;
   allowCachedServerWithoutMetadata?: boolean;
@@ -27,6 +28,30 @@ export interface EnsureServerLauncherOptions {
 export interface ServerBundleProgress {
   message: string;
   increment?: number;
+}
+
+export function serverBundleStoragePath(
+  packageName: string,
+  platform: NodeJS.Platform = process.platform,
+  env: NodeJS.ProcessEnv = process.env,
+  homeDir: string = os.homedir(),
+): string {
+  const platformPath = platform === 'win32' ? path.win32 : path.posix;
+  let applicationDataRoot: string;
+  if (platform === 'darwin') {
+    applicationDataRoot = platformPath.join(homeDir, 'Library', 'Application Support');
+  } else if (platform === 'win32') {
+    applicationDataRoot = env.LOCALAPPDATA ?? platformPath.join(homeDir, 'AppData', 'Local');
+  } else {
+    applicationDataRoot = env.XDG_DATA_HOME ?? platformPath.join(homeDir, '.local', 'share');
+  }
+  return platformPath.join(
+    applicationDataRoot,
+    'JetBrains',
+    'IntelliJServer',
+    'servers',
+    packageName,
+  );
 }
 
 const INSTALL_LOCK_RETRY_DELAY_MS = 200;
@@ -40,7 +65,7 @@ const DOWNLOAD_PROGRESS_INCREMENT = 70;
 
 export async function ensureServerLauncher({
   extensionPath,
-  storagePath,
+  serverRoot,
   log,
   progress,
   allowCachedServerWithoutMetadata = false,
@@ -53,7 +78,7 @@ export async function ensureServerLauncher({
 
   const metadataPath = path.join(extensionPath, SERVER_BUNDLE_METADATA_FILE);
   if (allowCachedServerWithoutMetadata && !fs.existsSync(metadataPath)) {
-    const cachedLauncher = await findCachedServerLauncher(storagePath);
+    const cachedLauncher = await findCachedServerLauncher(serverRoot);
     if (cachedLauncher !== undefined) {
       log(`Using cached language server for extension development: ${cachedLauncher}`);
       return cachedLauncher;
@@ -61,11 +86,7 @@ export async function ensureServerLauncher({
   }
 
   const metadata = await readServerBundleMetadata(extensionPath);
-  const downloadedServerDir = path.join(
-    storagePath,
-    'downloaded-server',
-    serverBundleInstallDir(metadata),
-  );
+  const downloadedServerDir = path.join(serverRoot, metadata.version);
   const downloadedLauncher = serverLauncherPath(downloadedServerDir);
   if (!fs.existsSync(downloadedLauncher)) {
     await withInstallLock(
@@ -78,7 +99,7 @@ export async function ensureServerLauncher({
           await downloadAndExtractServerBundle(
             metadata,
             downloadedServerDir,
-            storagePath,
+            serverRoot,
             log,
             progress,
           );
@@ -98,13 +119,12 @@ export function serverLauncherPath(serverDir: string): string {
   return path.join(serverDir, 'bin', launcherName);
 }
 
-async function findCachedServerLauncher(storagePath: string): Promise<string | undefined> {
-  const downloadedServerRoot = path.join(storagePath, 'downloaded-server');
-  const entries = await fsp.readdir(downloadedServerRoot, { withFileTypes: true }).catch(() => []);
+async function findCachedServerLauncher(serverRoot: string): Promise<string | undefined> {
+  const entries = await fsp.readdir(serverRoot, { withFileTypes: true }).catch(() => []);
   const candidates: Array<{ launcherPath: string; mtimeMs: number }> = [];
   for (const entry of entries) {
-    if (!entry.isDirectory() || !/^[0-9a-fA-F]{64}$/.test(entry.name)) continue;
-    const serverDir = path.join(downloadedServerRoot, entry.name);
+    if (!entry.isDirectory()) continue;
+    const serverDir = path.join(serverRoot, entry.name);
     const launcherPath = serverLauncherPath(serverDir);
     if (!fs.existsSync(launcherPath)) continue;
     const stat = await fsp.stat(serverDir).catch(() => undefined);
@@ -145,6 +165,14 @@ export async function readServerBundleMetadata(
   if (typeof metadata.url !== 'string' || metadata.url.length === 0) {
     throw new Error(`Invalid language server download metadata: missing url in ${metadataPath}`);
   }
+  if (typeof metadata.version !== 'string' || metadata.version.length === 0) {
+    throw new Error(
+      `Invalid language server download metadata: missing version in ${metadataPath}`,
+    );
+  }
+  if (!/^[0-9A-Za-z][0-9A-Za-z._-]*$/.test(metadata.version)) {
+    throw new Error(`Invalid language server download metadata: bad version in ${metadataPath}`);
+  }
   if (metadata.sha256 !== undefined && !/^[0-9a-fA-F]{64}$/.test(metadata.sha256)) {
     throw new Error(`Invalid language server download metadata: bad sha256 in ${metadataPath}`);
   }
@@ -158,15 +186,10 @@ export async function readServerBundleMetadata(
   }
   return {
     url: metadata.url,
+    version: metadata.version,
     sha256: metadata.sha256,
     archiveName: metadata.archiveName,
   };
-}
-
-function serverBundleInstallDir(metadata: ServerBundleMetadata): string {
-  if (metadata.sha256) return metadata.sha256;
-  const archiveName = serverBundleArchiveName(metadata);
-  return createHash('sha256').update(metadata.url).update('\0').update(archiveName).digest('hex');
 }
 
 function serverBundleArchiveName(metadata: ServerBundleMetadata): string {
@@ -176,13 +199,13 @@ function serverBundleArchiveName(metadata: ServerBundleMetadata): string {
 async function downloadAndExtractServerBundle(
   metadata: ServerBundleMetadata,
   serverDir: string,
-  storagePath: string,
+  serverRoot: string,
   log: (message: string) => void,
   progress?: (progress: ServerBundleProgress) => void,
 ): Promise<void> {
-  await fsp.mkdir(storagePath, { recursive: true });
-  const tmpRoot = await fsp.mkdtemp(path.join(storagePath, 'server-download-'));
-  const downloadRoot = path.join(storagePath, 'server-downloads', serverBundleInstallDir(metadata));
+  await fsp.mkdir(serverRoot, { recursive: true });
+  const tmpRoot = await fsp.mkdtemp(path.join(serverRoot, 'server-download-'));
+  const downloadRoot = path.join(serverRoot, 'server-downloads', metadata.version);
   const archivePath = path.join(downloadRoot, serverBundleArchiveName(metadata));
   const extractDir = path.join(tmpRoot, 'server');
 

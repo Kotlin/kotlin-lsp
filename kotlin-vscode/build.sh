@@ -174,6 +174,7 @@ write_server_bundle_metadata() {
   local archive_name="$2"
   local download_url="$3"
   local sha256_file="$4"
+  local version="$5"
   local sha256_url="${download_url}.sha256"
   local sha256_sidecar
   local sha256_source
@@ -189,10 +190,10 @@ write_server_bundle_metadata() {
     fi
   fi
 
-  node - "$extension_dir/server-bundle.json" "$download_url" "$archive_name" "$sha256_source" "$sha256_sidecar" <<'NODE'
+  node - "$extension_dir/server-bundle.json" "$download_url" "$archive_name" "$version" "$sha256_source" "$sha256_sidecar" <<'NODE'
 const fs = require('node:fs');
 const path = require('node:path');
-const [target, url, archiveName, sidecarSource, sidecarValue] = process.argv.slice(2);
+const [target, url, archiveName, version, sidecarSource, sidecarValue] = process.argv.slice(2);
 const value = sidecarValue.trim();
 const match = /^([0-9a-fA-F]{64})(?:\s+\*?(.+))?$/.exec(value);
 if (!match) {
@@ -206,7 +207,7 @@ if (match[2] !== undefined && path.basename(match[2]) !== archiveName) {
   process.exit(1);
 }
 const sha256 = match[1].toLowerCase();
-fs.writeFileSync(target, JSON.stringify({ url, archiveName, sha256 }, null, 2) + '\n');
+fs.writeFileSync(target, JSON.stringify({ url, version, archiveName, sha256 }, null, 2) + '\n');
 NODE
 }
 
@@ -252,7 +253,8 @@ build_extension() {
       "$extension_dir" \
       "$download_archive_name" \
       "$download_url" \
-      "${lsp_zip_path}.sha256"
+      "${lsp_zip_path}.sha256" \
+      "$vsce_version"
   else
     cp "$SCRIPT_DIR/unpack-server.mjs" "$extension_dir/unpack-server.mjs"
     export LSP_ZIP_PATH="$lsp_zip_path"

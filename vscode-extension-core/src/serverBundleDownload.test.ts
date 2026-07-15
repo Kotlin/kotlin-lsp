@@ -8,21 +8,52 @@ import {
   downloadFile,
   ensureServerLauncher,
   readServerBundleMetadata,
+  serverBundleStoragePath,
   serverLauncherPath,
 } from './serverBundleDownload';
 
+const SERVER_VERSION = '263.12345.67';
+
 describe('server bundle download metadata', () => {
+  test('uses a host-independent JetBrains application data directory', () => {
+    assert.equal(
+      serverBundleStoragePath('intellij-server', 'darwin', {}, '/Users/test'),
+      path.join(
+        '/Users/test',
+        'Library',
+        'Application Support',
+        'JetBrains',
+        'IntelliJServer',
+        'servers',
+        'intellij-server',
+      ),
+    );
+    assert.equal(
+      serverBundleStoragePath(
+        'intellij-server',
+        'win32',
+        { LOCALAPPDATA: 'C:\\Local' },
+        'C:\\Users\\test',
+      ),
+      path.win32.join('C:\\Local', 'JetBrains', 'IntelliJServer', 'servers', 'intellij-server'),
+    );
+    assert.equal(
+      serverBundleStoragePath('intellij-server', 'linux', { XDG_DATA_HOME: '/data' }, '/home/test'),
+      path.join('/data', 'JetBrains', 'IntelliJServer', 'servers', 'intellij-server'),
+    );
+  });
+
   test('uses bundled server launcher when it is already present', async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'server-bundle-'));
     try {
       const extensionPath = path.join(root, 'extension');
-      const storagePath = path.join(root, 'storage');
+      const serverRoot = path.join(root, 'storage');
       const launcherPath = serverLauncherPath(path.join(extensionPath, 'server'));
       await fs.mkdir(path.dirname(launcherPath), { recursive: true });
       await fs.writeFile(launcherPath, '');
 
       assert.equal(
-        await ensureServerLauncher({ extensionPath, storagePath, log: () => {} }),
+        await ensureServerLauncher({ extensionPath, serverRoot, log: () => {} }),
         launcherPath,
       );
     } finally {
@@ -34,9 +65,9 @@ describe('server bundle download metadata', () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'server-bundle-'));
     try {
       const extensionPath = path.join(root, 'extension');
-      const storagePath = path.join(root, 'storage');
-      const olderLauncher = await createCachedLauncher(storagePath, 'a');
-      const newerLauncher = await createCachedLauncher(storagePath, 'b');
+      const serverRoot = path.join(root, 'storage');
+      const olderLauncher = await createCachedLauncher(serverRoot, 'a');
+      const newerLauncher = await createCachedLauncher(serverRoot, 'b');
       const olderTime = new Date('2026-01-01T00:00:00Z');
       const newerTime = new Date('2026-02-01T00:00:00Z');
       await fs.utimes(path.dirname(path.dirname(olderLauncher)), olderTime, olderTime);
@@ -46,7 +77,7 @@ describe('server bundle download metadata', () => {
       assert.equal(
         await ensureServerLauncher({
           extensionPath,
-          storagePath,
+          serverRoot,
           log: (message) => logs.push(message),
           allowCachedServerWithoutMetadata: true,
         }),
@@ -62,11 +93,11 @@ describe('server bundle download metadata', () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'server-bundle-'));
     try {
       const extensionPath = path.join(root, 'extension');
-      const storagePath = path.join(root, 'storage');
-      await createCachedLauncher(storagePath, 'a');
+      const serverRoot = path.join(root, 'storage');
+      await createCachedLauncher(serverRoot, 'a');
 
       await assert.rejects(
-        ensureServerLauncher({ extensionPath, storagePath, log: () => {} }),
+        ensureServerLauncher({ extensionPath, serverRoot, log: () => {} }),
         /no download metadata was found/,
       );
     } finally {
@@ -78,16 +109,14 @@ describe('server bundle download metadata', () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'server-bundle-'));
     try {
       const extensionPath = path.join(root, 'extension');
-      const storagePath = path.join(root, 'storage');
-      const incompleteLauncher = serverLauncherPath(
-        path.join(storagePath, 'downloaded-server', 'a'.repeat(64)),
-      );
+      const serverRoot = path.join(root, 'storage');
+      const incompleteLauncher = serverLauncherPath(path.join(serverRoot, 'a'.repeat(64)));
       await fs.mkdir(path.dirname(incompleteLauncher), { recursive: true });
 
       await assert.rejects(
         ensureServerLauncher({
           extensionPath,
-          storagePath,
+          serverRoot,
           log: () => {},
           allowCachedServerWithoutMetadata: true,
         }),
@@ -105,6 +134,7 @@ describe('server bundle download metadata', () => {
         path.join(root, 'server-bundle.json'),
         JSON.stringify({
           url: 'https://download.example.test/server.tar.gz',
+          version: SERVER_VERSION,
           archiveName: 'server.tar.gz',
           sha256: 'a'.repeat(64),
         }),
@@ -112,6 +142,7 @@ describe('server bundle download metadata', () => {
 
       assert.deepEqual(await readServerBundleMetadata(root), {
         url: 'https://download.example.test/server.tar.gz',
+        version: SERVER_VERSION,
         archiveName: 'server.tar.gz',
         sha256: 'a'.repeat(64),
       });
@@ -127,11 +158,43 @@ describe('server bundle download metadata', () => {
         path.join(root, 'server-bundle.json'),
         JSON.stringify({
           url: 'https://download.example.test/server.tar.gz',
+          version: SERVER_VERSION,
           archiveName: '../server.tar.gz',
         }),
       );
 
       await assert.rejects(readServerBundleMetadata(root), /bad archiveName/);
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test('rejects versions with paths', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'server-bundle-'));
+    try {
+      await fs.writeFile(
+        path.join(root, 'server-bundle.json'),
+        JSON.stringify({
+          url: 'https://download.example.test/server.tar.gz',
+          version: '../263.12345.67',
+        }),
+      );
+
+      await assert.rejects(readServerBundleMetadata(root), /bad version/);
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test('requires a version', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'server-bundle-'));
+    try {
+      await fs.writeFile(
+        path.join(root, 'server-bundle.json'),
+        JSON.stringify({ url: 'https://download.example.test/server.tar.gz' }),
+      );
+
+      await assert.rejects(readServerBundleMetadata(root), /missing version/);
     } finally {
       await fs.rm(root, { recursive: true, force: true });
     }
@@ -155,21 +218,22 @@ describe('server bundle download metadata', () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'server-bundle-'));
     try {
       const extensionPath = path.join(root, 'extension');
-      const storagePath = path.join(root, 'storage');
+      const serverRoot = path.join(root, 'storage');
       const sha256 = '0'.repeat(64);
       await fs.mkdir(extensionPath, { recursive: true });
       await fs.writeFile(
         path.join(extensionPath, 'server-bundle.json'),
         JSON.stringify({
           url: 'file:///server.tar.gz',
+          version: SERVER_VERSION,
           archiveName: 'server.tar.gz',
           sha256,
         }),
       );
 
-      const ensure = () => ensureServerLauncher({ extensionPath, storagePath, log: () => {} });
+      const ensure = () => ensureServerLauncher({ extensionPath, serverRoot, log: () => {} });
       await assert.rejects(ensure, /Unsupported language server download URL protocol/);
-      await assert.rejects(fs.stat(path.join(storagePath, 'downloaded-server', `${sha256}.lock`)), {
+      await assert.rejects(fs.stat(path.join(serverRoot, `${SERVER_VERSION}.lock`)), {
         code: 'ENOENT',
       });
       await assert.rejects(ensure, /Unsupported language server download URL protocol/);
@@ -182,14 +246,15 @@ describe('server bundle download metadata', () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'server-bundle-'));
     try {
       const extensionPath = path.join(root, 'extension');
-      const storagePath = path.join(root, 'storage');
+      const serverRoot = path.join(root, 'storage');
       const sha256 = '0'.repeat(64);
-      const lockPath = path.join(storagePath, 'downloaded-server', `${sha256}.lock`);
+      const lockPath = path.join(serverRoot, `${SERVER_VERSION}.lock`);
       await fs.mkdir(extensionPath, { recursive: true });
       await fs.writeFile(
         path.join(extensionPath, 'server-bundle.json'),
         JSON.stringify({
           url: 'file:///server.tar.gz',
+          version: SERVER_VERSION,
           archiveName: 'server.tar.gz',
           sha256,
         }),
@@ -202,7 +267,7 @@ describe('server bundle download metadata', () => {
       const logs: string[] = [];
 
       await assert.rejects(
-        ensureServerLauncher({ extensionPath, storagePath, log: (message) => logs.push(message) }),
+        ensureServerLauncher({ extensionPath, serverRoot, log: (message) => logs.push(message) }),
         /Unsupported language server download URL protocol/,
       );
 
@@ -287,10 +352,8 @@ async function listen(server: http.Server): Promise<string> {
   return `http://127.0.0.1:${address.port}/server.tar.gz`;
 }
 
-async function createCachedLauncher(storagePath: string, hashCharacter: string): Promise<string> {
-  const launcherPath = serverLauncherPath(
-    path.join(storagePath, 'downloaded-server', hashCharacter.repeat(64)),
-  );
+async function createCachedLauncher(serverRoot: string, hashCharacter: string): Promise<string> {
+  const launcherPath = serverLauncherPath(path.join(serverRoot, hashCharacter.repeat(64)));
   await fs.mkdir(path.dirname(launcherPath), { recursive: true });
   await fs.writeFile(launcherPath, '');
   return launcherPath;
