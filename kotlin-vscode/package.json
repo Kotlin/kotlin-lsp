@@ -373,7 +373,15 @@
           "intellij.region": {
             "type": "string",
             "enum": [
-              "Not Specified",
+              "africa",
+              "americas",
+              "apac",
+              "china",
+              "europe",
+              "middle_east",
+              "oceania"
+            ],
+            "enumItemLabels": [
               "Africa",
               "Americas",
               "Asia (Except Mainland China)",
@@ -382,7 +390,7 @@
               "Middle East",
               "Oceania"
             ],
-            "default": "Not Specified",
+            "default": "none",
             "description": "Your region for JetBrains product terms and data processing."
           },
           "intellij.dataSharing": {

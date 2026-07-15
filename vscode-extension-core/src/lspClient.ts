@@ -58,17 +58,6 @@ const OPT_DATA_SHARING = 'intellij.dataSharing';
 const OPT_REGION = 'intellij.region';
 const OPT_PROJECTS = 'intellij.projects';
 
-// Maps the `intellij.region` display values to `com.intellij.ide.Region`
-const REGION_NAMES: Record<string, string> = {
-  Africa: 'africa',
-  Americas: 'americas',
-  'Asia (Except Mainland China)': 'apac',
-  'Mainland China': 'china',
-  Europe: 'europe',
-  'Middle East': 'middle_east',
-  Oceania: 'oceania',
-};
-
 const INDEX_DIR_STATE_KEY = 'jetbrains.intellij.indexDir';
 
 let _client: LanguageClient | undefined;
@@ -129,6 +118,7 @@ export function initLspClient({
   checkEulaAccepted,
 }: LspClientPolicyOptions): void {
   registerIntellijExtensionsInitOption();
+  // TODO: Send the updated region to the backend when runtime region updates are supported.
   getContext().subscriptions.push(
     Disposable.create(async () => await stopLspClient()),
     vscode.commands.registerCommand('jetbrains.kotlin.restartLsp', async () => {
@@ -498,8 +488,16 @@ async function startServer(
     args.push('--system-path', context.storageUri.fsPath);
   }
   const userJvmOptions = getUserJvmOptions();
-  const dataSharing = configOption<string>(OPT_DATA_SHARING) ?? 'none';
-  const region = configOption<string>(OPT_REGION);
+  const configuredDataSharing = dataSharingLevel(explicitConfigOption(OPT_DATA_SHARING));
+  const inheritedDataSharing = dataSharingLevel(process.env.INTELLIJ_DATA_SHARING);
+  const dataSharing = inheritedDataSharing ?? configuredDataSharing ?? 'none';
+  const configuredRegion = specifiedRegion(explicitConfigOption(OPT_REGION));
+  const inheritedRegion = specifiedRegion(process.env.INTELLIJ_REGION);
+  const region = inheritedRegion ?? configuredRegion;
+  await Promise.all([
+    persistLaunchEnvironmentSetting(OPT_DATA_SHARING, inheritedDataSharing),
+    persistLaunchEnvironmentSetting(OPT_REGION, inheritedRegion),
+  ]);
   const env = buildLaunchEnvironment(process.env, userJvmOptions, debugLaunch, dataSharing, region);
 
   logInfo('Starting language server');
@@ -704,6 +702,31 @@ function getUserJvmOptions(): string[] {
   return configOption<string[]>(OPT_JVM_ARGS) ?? [];
 }
 
+type DataSharingLevel = 'full' | 'anonymous' | 'none';
+
+function dataSharingLevel(value: unknown): DataSharingLevel | undefined {
+  return value === 'full' || value === 'anonymous' || value === 'none' ? value : undefined;
+}
+
+function specifiedRegion(value: unknown): string | undefined {
+  return typeof value === 'string' && value.length > 0 && value !== 'not_set' ? value : undefined;
+}
+
+function explicitConfigOption(name: string): unknown {
+  const inspected = workspace.getConfiguration().inspect<unknown>(name);
+  return inspected?.workspaceFolderValue ?? inspected?.workspaceValue ?? inspected?.globalValue;
+}
+
+async function persistLaunchEnvironmentSetting(
+  name: string,
+  environmentValue: string | undefined,
+): Promise<void> {
+  if (environmentValue === undefined) return;
+  const configuration = workspace.getConfiguration();
+  if (configuration.inspect<string>(name)?.globalValue === environmentValue) return;
+  await configuration.update(name, environmentValue, vscode.ConfigurationTarget.Global);
+}
+
 function buildLaunchEnvironment(
   baseEnv: NodeJS.ProcessEnv,
   extraOptions: string[],
@@ -721,13 +744,14 @@ function buildLaunchEnvironment(
   if (debugLaunch) {
     env.IJ_LAUNCHER_DEBUG = '1';
   }
+  delete env.INTELLIJ_DATA_SHARING;
   if (dataSharing !== 'none') {
     env.INTELLIJ_DATA_SHARING = dataSharing; // 'full' | 'anonymous'
   }
 
-  const regionExternalName = region ? REGION_NAMES[region] : undefined;
-  if (regionExternalName) {
-    env.INTELLIJ_REGION = regionExternalName;
+  delete env.INTELLIJ_REGION;
+  if (region) {
+    env.INTELLIJ_REGION = region;
   }
   return env;
 }
