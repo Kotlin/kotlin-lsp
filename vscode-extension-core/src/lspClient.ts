@@ -449,9 +449,12 @@ async function ensureBundledServerLauncher(): Promise<string> {
 
 export type ServerLauncherPreparation = { kind: 'external' } | { kind: 'launcher'; path: string };
 
+export function isExternalServerConfigured(): boolean {
+  return (configOption<number>(OPT_DEV_SERVER_PORT) ?? -1) !== -1;
+}
+
 export async function prepareBundledServerLauncher(): Promise<ServerLauncherPreparation> {
-  const predefinedPort = configOption<number>(OPT_DEV_SERVER_PORT) ?? -1;
-  if (predefinedPort !== -1) return { kind: 'external' };
+  if (isExternalServerConfigured()) return { kind: 'external' };
   return {
     kind: 'launcher',
     path: configuredServerLauncherPath() ?? (await ensureBundledServerLauncher()),

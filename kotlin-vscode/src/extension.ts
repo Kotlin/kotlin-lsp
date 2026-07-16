@@ -2,6 +2,7 @@ import { type ExtensionContext } from 'vscode';
 import {
   activateExtension,
   deactivateExtension,
+  isExternalServerConfigured,
   stopLspClient,
 } from '@jetbrains/vscode-extension-core';
 import kotlinModule from '@jetbrains/vscode-language-kotlin';
@@ -16,6 +17,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
 
   await runPolicyGatedActivation(context, {
     stopServer: stopLspClient,
+    usesExternalServer: isExternalServerConfigured(),
     startServer: (options) =>
       activateExtension(context, {
         checkEulaAccepted: (ctx) => checkEulaAccepted(ctx, undefined, options),
