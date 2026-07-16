@@ -24,6 +24,7 @@ export {
   prepareBundledServerLauncher,
   registerInitializationOptionsContributor,
   type InitializationOptionsContributor,
+  type ServerLauncherPreparation,
   stopLspClient,
   subscribeToClientEvent,
 } from './lspClient';
