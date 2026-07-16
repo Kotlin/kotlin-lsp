@@ -170,13 +170,11 @@ describe('Handling key presses in Kotlin files', () => {
 
     test(
       'opens a new string after the closing delimiter',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTestKey('"""text"""<caret>', '"', '"""text""""<caret>'),
     );
 
     test(
       'opens a new string after the closing delimiter in an assignment',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTestKey('val str = """text"""<caret>', '"', 'val str = """text""""<caret>'),
     );
 
