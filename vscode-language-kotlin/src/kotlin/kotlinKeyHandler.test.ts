@@ -175,6 +175,16 @@ describe('Handling key presses in Kotlin files', () => {
       'overtypes third quote of the closing delimiter in an assignment',
       doTestKey('val str = """text""<caret>"', '"', 'val str = """text"""<caret>'),
     );
+
+    test(
+      'opens a new string after the closing delimiter',
+      doTestKey('"""text"""<caret>', '"', '"""text""""<caret>'),
+    );
+
+    test(
+      'opens a new string after the closing delimiter in an assignment',
+      doTestKey('val str = """text"""<caret>', '"', 'val str = """text""""<caret>'),
+    );
   });
 
   describe('no completion inside comments', () => {
