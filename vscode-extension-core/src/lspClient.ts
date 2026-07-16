@@ -312,7 +312,17 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
   await stopLspClient();
   _client = runClient;
   getContext().subscriptions.push(
-    _client.onDidChangeState((e) => clientSubscriptions.forEach((s) => s(runClient, e))),
+    _client.onDidChangeState((e) => {
+      for (const subscription of clientSubscriptions.slice()) {
+        try {
+          subscription(runClient, e);
+        } catch (error) {
+          logInfo(
+            `Language client state subscriber failed: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`,
+          );
+        }
+      }
+    }),
   );
 
   try {
