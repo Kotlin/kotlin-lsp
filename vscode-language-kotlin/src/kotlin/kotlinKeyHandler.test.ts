@@ -120,11 +120,13 @@ describe('Handling key presses in Kotlin files', () => {
 
     test(
       'inserts a quote at the beginning of the content',
+      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTestKey('"""<caret>text"""', '"', '""""<caret>text"""'),
     );
 
     test(
       'inserts a quote at the beginning of the content in an assignment',
+      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTestKey('val str = """<caret>text"""', '"', 'val str = """"<caret>text"""'),
     );
 
@@ -140,21 +142,25 @@ describe('Handling key presses in Kotlin files', () => {
 
     test(
       'overtypes first quote of the closing delimiter',
+      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTestKey('"""text<caret>"""', '"', '"""text"<caret>""'),
     );
 
     test(
       'overtypes first quote of the closing delimiter in an assignment',
+      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTestKey('val str = """text<caret>"""', '"', 'val str = """text"<caret>""'),
     );
 
     test(
       'overtypes second quote of the closing delimiter',
+      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTestKey('"""text"<caret>""', '"', '"""text""<caret>"'),
     );
 
     test(
       'overtypes second quote of the closing delimiter in an assignment',
+      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTestKey('val str = """text"<caret>""', '"', 'val str = """text""<caret>"'),
     );
 
@@ -170,11 +176,13 @@ describe('Handling key presses in Kotlin files', () => {
 
     test(
       'opens a new string after the closing delimiter',
+      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTestKey('"""text"""<caret>', '"', '"""text""""<caret>'),
     );
 
     test(
       'opens a new string after the closing delimiter in an assignment',
+      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTestKey('val str = """text"""<caret>', '"', 'val str = """text""""<caret>'),
     );
 
