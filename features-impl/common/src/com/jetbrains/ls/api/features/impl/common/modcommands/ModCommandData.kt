@@ -72,8 +72,15 @@ sealed interface ModCommandData {
         fun add(vararg vars: SnippetVar): Snippet = copy(vars = this.vars + vars.toList())
 
         fun toTextEdit(text: Document): TextEdit {
-            val start = vars.minOf { it.start }
+            var start = vars.minOf { it.start }
             val end = vars.maxOf { it.end }
+            val startLine = text.getLineNumber(start)
+            val endLine = text.getLineNumber(end)
+            if (startLine != endLine) {
+                // It looks like when we create a multiline text edit for snippet, VS Code adds automatic indent.
+                // Let's start from the line beginning to work this around.
+                start = text.getLineStartOffset(startLine)
+            }
             val snippet = toString(text.getText(TextRange(start, end)), start)
             return TextEdit(Range(text.positionByOffset(start), text.positionByOffset(end)), snippet = snippet)
         }
