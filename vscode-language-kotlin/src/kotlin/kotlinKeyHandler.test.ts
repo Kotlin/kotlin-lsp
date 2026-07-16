@@ -120,6 +120,61 @@ describe('Handling key presses in Kotlin files', () => {
       'completes multiline string delimiters on third quote',
       doTestKey('""<caret>', '"', '"""<caret>"""'),
     );
+
+    test(
+      'completes multiline string delimiters on third quote in an assignment',
+      doTestKey('val str = ""<caret>', '"', 'val str = """<caret>"""'),
+    );
+
+    test(
+      'inserts a quote at the beginning of the content',
+      doTestKey('"""<caret>text"""', '"', '""""<caret>text"""'),
+    );
+
+    test(
+      'inserts a quote at the beginning of the content in an assignment',
+      doTestKey('val str = """<caret>text"""', '"', 'val str = """"<caret>text"""'),
+    );
+
+    test(
+      'inserts a quote in the middle of the content',
+      doTestKey('"""te<caret>xt"""', '"', '"""te"<caret>xt"""'),
+    );
+
+    test(
+      'inserts a quote in the middle of the content in an assignment',
+      doTestKey('val str = """te<caret>xt"""', '"', 'val str = """te"<caret>xt"""'),
+    );
+
+    test(
+      'overtypes first quote of the closing delimiter',
+      doTestKey('"""text<caret>"""', '"', '"""text"<caret>""'),
+    );
+
+    test(
+      'overtypes first quote of the closing delimiter in an assignment',
+      doTestKey('val str = """text<caret>"""', '"', 'val str = """text"<caret>""'),
+    );
+
+    test(
+      'overtypes second quote of the closing delimiter',
+      doTestKey('"""text"<caret>""', '"', '"""text""<caret>"'),
+    );
+
+    test(
+      'overtypes second quote of the closing delimiter in an assignment',
+      doTestKey('val str = """text"<caret>""', '"', 'val str = """text""<caret>"'),
+    );
+
+    test(
+      'overtypes third quote of the closing delimiter',
+      doTestKey('"""text""<caret>"', '"', '"""text"""<caret>'),
+    );
+
+    test(
+      'overtypes third quote of the closing delimiter in an assignment',
+      doTestKey('val str = """text""<caret>"', '"', 'val str = """text"""<caret>'),
+    );
   });
 
   describe('no completion inside comments', () => {
