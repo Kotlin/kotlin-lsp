@@ -120,13 +120,11 @@ describe('Handling key presses in Kotlin files', () => {
 
     test(
       'inserts a quote at the beginning of the content',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTestKey('"""<caret>text"""', '"', '""""<caret>text"""'),
     );
 
     test(
       'inserts a quote at the beginning of the content in an assignment',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTestKey('val str = """<caret>text"""', '"', 'val str = """"<caret>text"""'),
     );
 
