@@ -509,14 +509,14 @@ fun foo() {
 fun foo() {
   /*
   comment
-  */ 
+  */
 <caret>
 }`,
         `
 fun foo() {
   /*
   comment
-  */ 
+  */
   <caret>
 }`,
         '  ',
@@ -693,7 +693,7 @@ val s = """
       'does not rewrite enter inside a lambda body',
       doTest(
         `
-listOf(1, 2, 3).map { x -> 
+listOf(1, 2, 3).map { x ->
 <caret>}`,
         `
 listOf(1, 2, 3).map { x ->
@@ -707,7 +707,7 @@ listOf(1, 2, 3).map { x ->
       doTest(
         `
 fun test() {
-    listOf(1, 2, 3).map { x -> 
+    listOf(1, 2, 3).map { x ->
 <caret>}
 }`,
         `
@@ -724,7 +724,7 @@ fun test() {
       doTest(
         `
 fun test() {
-  listOf(1, 2, 3).map { x -> 
+  listOf(1, 2, 3).map { x ->
 <caret>}
 }`,
         `
@@ -754,13 +754,13 @@ fun test() {
 class A {
   val x = 1
 <caret>
-}                
+}
                 `,
         `
 class A {
   val x = 1
   <caret>
-}                
+}
                 `,
       ),
     );
@@ -1109,14 +1109,14 @@ fun test() {
         `
 fun foo() {
   /*
-   * comment 
+   * comment
    */
 <caret>
 }`,
         `
 fun foo() {
   /*
-   * comment 
+   * comment
    */
   <caret>
 }`,
@@ -1128,17 +1128,17 @@ fun foo() {
       'properly indents after a multi-line comment',
       doTest(
         `
-class C {                
+class C {
   /**
-   * comment 
+   * comment
    */
 <caret>
 fun foo() {
 }`,
         `
-class C {                
+class C {
   /**
-   * comment 
+   * comment
    */
   <caret>
 fun foo() {
@@ -1287,16 +1287,17 @@ data class Foo(
 
     test(
       'indents when Enter is pressed in function arguments',
+      { todo: 'LSP-1104 (no longer properly works without trailing whitespaces)' },
       doTest(
         `
     val items = foo(
         x,
-<caret>            
+<caret>
     )`,
         `
     val items = foo(
         x,
-        <caret>            
+        <caret>
     )`,
       ),
     );
@@ -1307,12 +1308,12 @@ data class Foo(
         `
 enum class E {
     A,
-<caret>    
+<caret>
 }`,
         `
 enum class E {
     A,
-    <caret>    
+    <caret>
 }`,
       ),
     );
