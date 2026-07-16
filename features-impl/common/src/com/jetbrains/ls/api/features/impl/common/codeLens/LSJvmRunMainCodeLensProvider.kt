@@ -45,7 +45,7 @@ abstract class LSJvmRunMainCodeLensProvider : LSCodeLensProvider {
                 findMainEntryPoints(psiFile).flatMap { (range, mainClass) ->
                     listOf(
                         launchLens(params.textDocument.uri, range, mainClass, noDebug = true, title = "$(play) Run"),
-                        launchLens(params.textDocument.uri, range, mainClass, noDebug = false, title = "$(debug-alt) Debug"),
+                        launchLens(params.textDocument.uri, range, mainClass, noDebug = false, title = "$(debug) Debug"),
                     )
                 }
             }
