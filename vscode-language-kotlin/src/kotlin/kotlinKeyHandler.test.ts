@@ -3,6 +3,7 @@ import { describe, test } from 'node:test';
 import * as path from 'path';
 import {
   createDoTest,
+  createDoTestKey,
   createParser,
 } from '@jetbrains/vscode-extension-core/testing/keyHandlerTestUtils';
 import kotlinKeyHandler from './keyHandler';
@@ -18,6 +19,7 @@ const parser = createParser(
   ),
 );
 const doTest = createDoTest(parser, kotlinKeyHandler);
+const doTestKey = createDoTestKey(parser, kotlinKeyHandler);
 
 describe('Handling key presses in Kotlin files', () => {
   describe('bracket auto-completion', () => {
@@ -94,29 +96,29 @@ describe('Handling key presses in Kotlin files', () => {
   describe('double quote handling', () => {
     test(
       'wraps in double quotes when opening a string',
-      doTest('val x = "<caret>', 'val x = "<caret>"'),
+      doTestKey('val x = <caret>', '"', 'val x = "<caret>"'),
     );
 
     test(
       'no auto-close when typing closing quote of an existing string',
-      doTest('val x = "hello"<caret>', 'val x = "hello"<caret>'),
+      doTestKey('val x = "hello<caret>', '"', 'val x = "hello"<caret>'),
     );
 
     test(
       'skips an existing closing quote',
-      doTest('val x = "hello"<caret>"', 'val x = "hello"<caret>'),
+      doTestKey('val x = "hello<caret>"', '"', 'val x = "hello"<caret>'),
     );
 
     test(
       'fails because of a bug inn the grammar - adds a matching quote when opening a string when another string is near',
-      doTest('val a = "<caret>\nval b = ""', 'val a = "<caret>"\nval b = ""'),
+      doTestKey('val a = <caret>\nval b = ""', '"', 'val a = "<caret>"\nval b = ""'),
     );
   });
 
   describe('triple-quoted string handling', () => {
     test(
       'completes multiline string delimiters on third quote',
-      doTest('"""<caret>', '"""<caret>"""'),
+      doTestKey('""<caret>', '"', '"""<caret>"""'),
     );
   });
 
