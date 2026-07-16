@@ -140,25 +140,21 @@ describe('Handling key presses in Kotlin files', () => {
 
     test(
       'overtypes first quote of the closing delimiter',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTestKey('"""text<caret>"""', '"', '"""text"<caret>""'),
     );
 
     test(
       'overtypes first quote of the closing delimiter in an assignment',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTestKey('val str = """text<caret>"""', '"', 'val str = """text"<caret>""'),
     );
 
     test(
       'overtypes second quote of the closing delimiter',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTestKey('"""text"<caret>""', '"', '"""text""<caret>"'),
     );
 
     test(
       'overtypes second quote of the closing delimiter in an assignment',
-      { todo: 'LSP-1410 fwcd grammar AST differences' },
       doTestKey('val str = """text"<caret>""', '"', 'val str = """text""<caret>"'),
     );
 
