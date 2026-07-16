@@ -141,6 +141,7 @@ function handleSingleQuote(text: string, tree: Tree, index: number): KeyResult {
 
 function handleDoubleQuoteKey(text: string, tree: Tree, index: number): KeyResult {
   const node = tree.rootNode.descendantForIndex(index);
+  const stringLiteralNode = getStringLiteralNode(node);
 
   // Kotlin overtypes an existing closing quote instead of inserting a duplicate one.
   // fwcd's grammar hides the '"""' token, so detect triple-quote positions by text.
@@ -160,7 +161,7 @@ function handleDoubleQuoteKey(text: string, tree: Tree, index: number): KeyResul
   // fwcd parses an incomplete `"""` (no closing delimiter) as an ERROR node, not
   // string_literal, so handleSpecialNodeKey can't dispatch to handleStringLiteralKey.
   // Use text-based logic for the opening-delimiter position.
-  if (isAtTripleQuoteDelimiter && (node === null || node.type !== 'string_literal')) {
+  if (isAtTripleQuoteDelimiter && stringLiteralNode === null) {
     const tripleStart = text.startsWith('"""', index)
       ? index
       : index >= 1 && text.startsWith('"""', index - 1)
@@ -192,26 +193,29 @@ function handleSpecialNodeKey(
   if (node.type === 'multiline_comment') {
     return handleBlockComment(node, key, text, index);
   }
-  if (isTextNode(node)) {
-    return keyResult(key, index, index + 1, index + 1);
-  }
   // fwcd hides the '"' and '"""' delimiter tokens; descendantForIndex at a delimiter
   // position returns the enclosing string_literal (or a child of it) instead.
   if (key === '"') {
-    const stringLiteralNode =
-      node.type === 'string_literal'
-        ? node
-        : node.parent?.type === 'string_literal'
-          ? node.parent
-          : null;
+    const stringLiteralNode = getStringLiteralNode(node);
     if (stringLiteralNode !== null) {
       return handleStringLiteralKey(stringLiteralNode, text, index);
     }
+  }
+  if (isTextNode(node)) {
+    return keyResult(key, index, index + 1, index + 1);
   }
   if (key === `'` && node.parent?.type === 'character_literal') {
     return getCharacterLiteralQuoteResult(text, index);
   }
   return null;
+}
+
+function getStringLiteralNode(node: Node | null): Node | null {
+  return node?.type === 'string_literal'
+    ? node
+    : node?.parent?.type === 'string_literal'
+      ? node.parent
+      : null;
 }
 
 function isMultilineStringLiteral(text: string, node: Node): boolean {
@@ -236,6 +240,11 @@ function handleStringLiteralKey(node: Node, text: string, index: number): KeyRes
   const dollarCount = text.slice(node.startIndex).match(/^\$*/)?.[0].length ?? 0;
   const tripleQuoteStart = node.startIndex + dollarCount;
   if (text.startsWith('"""', tripleQuoteStart)) {
+    const quoteRunStart = getQuoteRunStartAt(text, index);
+    if (quoteRunStart === tripleQuoteStart && index - quoteRunStart >= MULTILINE_QUOTE.length) {
+      return keyResult('"', index, index + 1, index + 1);
+    }
+
     // Triple-quoted string: replicate handleTripleQuote for the opening delimiter,
     // and mirror the same logic for the closing delimiter.
     const offsetFromTripleQuote = index - tripleQuoteStart;
@@ -252,6 +261,13 @@ function handleStringLiteralKey(node: Node, text: string, index: number): KeyRes
         default:
           return keyResult('""""', index, index + 1, index + 1);
       }
+    }
+    const trailingQuoteRunStart = getTrailingQuoteRunStart(text, node.endIndex);
+    if (trailingQuoteRunStart !== null && index >= trailingQuoteRunStart) {
+      if (index === node.endIndex - 1) {
+        return keyResult('"', index, index + 1, index + 1);
+      }
+      return keyResult('', index, index + 1, index + 1);
     }
     const offsetFromEnd = node.endIndex - index; // 3=first char of closing """, 1=last
     if (offsetFromEnd <= 3) {
@@ -273,6 +289,25 @@ function handleStringLiteralKey(node: Node, text: string, index: number): KeyRes
   return index === node.startIndex
     ? keyResult('""', index, index + 1, index + 1)
     : keyResult('"', index, index + 1, index + 1);
+}
+
+function getQuoteRunStartAt(text: string, index: number): number | null {
+  if (text[index] !== '"') {
+    return null;
+  }
+  let start = index;
+  while (start > 0 && text[start - 1] === '"') {
+    start--;
+  }
+  return start;
+}
+
+function getTrailingQuoteRunStart(text: string, endIndex: number): number | null {
+  let current = endIndex;
+  while (current > 0 && text[current - 1] === '"') {
+    current--;
+  }
+  return endIndex - current > MULTILINE_QUOTE.length ? current : null;
 }
 
 function handleEnter(text: string, tree: Tree, index: number, indentUnit: string): KeyResult {
