@@ -65,6 +65,7 @@ const OPT_BUILD_TOOL = 'intellij.buildTool';
 const OPT_DATA_SHARING = 'intellij.dataSharing';
 const OPT_REGION = 'intellij.region';
 const OPT_PROJECTS = 'intellij.projects';
+const OPT_DISABLE_ROCKS_DB_WAL = 'intellij.disableRocksDBWriteAheadLog';
 
 const INDEX_DIR_STATE_KEY = 'jetbrains.intellij.indexDir';
 
@@ -730,6 +731,7 @@ export function buildInitializationOptions(
       ]),
     ),
     projects: configOption<ConfiguredProject[]>(OPT_PROJECTS) ?? [],
+    disableRocksDBWriteAheadLog: configOption<boolean>(OPT_DISABLE_ROCKS_DB_WAL) ?? false,
     eulaHash: getAcceptedEulaHash(getContext()),
   };
   const contributedInitializationOptions = Object.assign(
