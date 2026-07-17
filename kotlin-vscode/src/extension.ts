@@ -2,9 +2,9 @@ import { type ExtensionContext } from 'vscode';
 import {
   activateExtension,
   deactivateExtension,
+  initializeExtension,
   isExternalServerConfigured,
   prepareBundledServerLauncher,
-  registerDevCommands,
   stopLspClient,
 } from '@jetbrains/vscode-extension-core';
 import kotlinModule from '@jetbrains/vscode-language-kotlin';
@@ -15,7 +15,7 @@ import {
 import { checkGeoRestricted } from './geoRestriction';
 
 export async function activate(context: ExtensionContext): Promise<void> {
-  await registerDevCommands(context);
+  await initializeExtension(context);
   if (await checkGeoRestricted(context.extension)) return;
 
   await runPolicyGatedActivation(context, {

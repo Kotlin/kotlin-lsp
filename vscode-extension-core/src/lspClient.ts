@@ -510,6 +510,16 @@ export async function prepareBundledServerLauncher(): Promise<ServerLauncherPrep
   };
 }
 
+export function prefetchBundledServerLauncher(): void {
+  void prepareBundledServerLauncher().catch((error) => {
+    logInfo(
+      `Failed to prepare language server in the background: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+  });
+}
+
 function getServerOptions(): ServerOptions {
   const predefinedPort = configOption<number>(OPT_DEV_SERVER_PORT) ?? -1;
   if (predefinedPort !== -1) {

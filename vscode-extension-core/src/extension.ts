@@ -16,6 +16,7 @@ import {
   buildInitializationOptions,
   getLspClient,
   initLspClient,
+  prefetchBundledServerLauncher,
   removeDownloadedServerLauncher,
   startLspClient,
   stopLspClient,
@@ -68,6 +69,7 @@ let _outputChannel: LogOutputChannel | undefined;
 let _buildOutputChannel: OutputChannel | undefined;
 let serverActivated = false;
 const devCommandsRegistered = new WeakSet<ExtensionContext>();
+const initializedExtensions = new WeakSet<ExtensionContext>();
 
 export function getContext(): ExtensionContext {
   return _context!;
@@ -192,12 +194,19 @@ export async function registerDevCommands(context: ExtensionContext): Promise<vo
   );
 }
 
+export async function initializeExtension(context: ExtensionContext): Promise<void> {
+  if (initializedExtensions.has(context)) return;
+  await registerDevCommands(context);
+  initializedExtensions.add(context);
+  prefetchBundledServerLauncher();
+}
+
 export async function activateExtension(
   context: ExtensionContext,
   options: ActivationOptions,
 ): Promise<void> {
   _context = context;
-  await registerDevCommands(context);
+  await initializeExtension(context);
   const getAcceptedEulaHash: AcceptedEulaHashProvider =
     options.getAcceptedEulaHash ?? defaultGetAcceptedEulaHash;
   if (!serverActivated) {
