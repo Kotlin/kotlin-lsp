@@ -10,4 +10,8 @@
   ```
   Requires Docker with `emscripten/emsdk` image. The package's pre-generated `src/parser.c` is used; no `tree-sitter generate` step needed.
 
-To rebuild after a dependency bump, update the commit SHA in `pnpm-workspace.yaml` (catalog entry `tree-sitter-kotlin`), run `pnpm install`, then re-run the build command pointing at the updated source in `node_modules/.pnpm/tree-sitter-kotlin@.../node_modules/tree-sitter-kotlin`.
+To rebuild after a source update, check out the desired commit of the source repo, then run the build command pointing at that checkout:
+```
+tree-sitter build --wasm <path-to-tree-sitter-kotlin-source>
+```
+Copy the generated `tree-sitter-kotlin.wasm` into this directory and update the **Commit** reference above.

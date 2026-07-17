@@ -17,7 +17,6 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "@types/vscode": "catalog:",
-    "tree-sitter-kotlin": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:"
   }
