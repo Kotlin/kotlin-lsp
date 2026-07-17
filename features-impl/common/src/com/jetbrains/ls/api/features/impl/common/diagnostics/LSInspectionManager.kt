@@ -115,6 +115,7 @@ internal class LSInspectionManager(
             return fix.perform(project, problemDescriptor)
         }
 
+        val context = ActionContext.from(problemDescriptor)
         if (fix is IntentionAction) {
             if (blacklistEntry != null) {
                 LOG.trace("Quick fix $fixClass is an IntentionAction, but it is blacklisted because of ${blacklistEntry.reason}")
@@ -122,8 +123,8 @@ internal class LSInspectionManager(
             }
 
             val modCommandAction = fix.asModCommandAction()
-            if (modCommandAction != null) {
-                return modCommandAction.perform(ActionContext.from(problemDescriptor))
+            if (modCommandAction != null && modCommandAction.getPresentation(context) != null) {
+                return modCommandAction.perform(context)
             }
         }
 
@@ -133,9 +134,10 @@ internal class LSInspectionManager(
                 return null
             }
 
-            val fallbackModCommandAction = fix.let(LocalQuickFixWithModCommandFallback::getFallbackModCommandActionFor)
-            if (fallbackModCommandAction != null) {
-                return fallbackModCommandAction.perform(ActionContext.from(problemDescriptor))
+
+            val fallbackModCommandAction = LocalQuickFixWithModCommandFallback.getFallbackModCommandActionFor(fix)
+            if (fallbackModCommandAction != null && fallbackModCommandAction.getPresentation(context) != null) {
+                return fallbackModCommandAction.perform(context)
             }
         }
 
