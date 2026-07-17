@@ -36,6 +36,7 @@ import {
   serverLauncherPath,
 } from './serverBundleDownload';
 import {
+  registerChooseActionMenuHandler,
   registerCopyToClipboardHandler,
   registerIntellijExtensionsInitOption,
 } from './intellijExtensions';
@@ -331,6 +332,7 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
     await runClient.start();
     registerImportLogHandler(runClient);
     registerCopyToClipboardHandler(runClient);
+    registerChooseActionMenuHandler(runClient);
   } catch (e) {
     if (
       e instanceof LanguageServerStartupError &&
