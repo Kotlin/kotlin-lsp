@@ -29,6 +29,7 @@ import { middleware } from './middleware';
 import * as readline from 'node:readline';
 import { type Readable } from 'node:stream';
 import {
+  discardServerBundleDownload,
   ensureServerLauncher,
   serverBundleStoragePath,
   serverLauncherPath,
@@ -423,21 +424,29 @@ async function ensureBundledServerLauncher(): Promise<string> {
           {
             location: vscode.ProgressLocation.Notification,
             title: `${extensionDisplayName()}: language server setup`,
+            cancellable: true,
           },
-          async (progress) => {
-            const launcherPath = await ensureServerLauncher({
-              extensionPath: context.extensionPath,
-              serverRoot,
-              log: logInfo,
-              progress: (update) => progress.report(update),
-              allowCachedServerWithoutMetadata: isDevelopment,
-            });
-            if (isDevelopment) {
-              void vscode.window.showInformationMessage(
-                `${extensionDisplayName()}: development mode is using language server ${launcherPath}`,
-              );
+          async (progress, token) => {
+            const controller = new AbortController();
+            const cancellation = token.onCancellationRequested(() => controller.abort());
+            try {
+              const launcherPath = await ensureServerLauncher({
+                extensionPath: context.extensionPath,
+                serverRoot,
+                log: logInfo,
+                progress: (update) => progress.report(update),
+                signal: controller.signal,
+                allowCachedServerWithoutMetadata: isDevelopment,
+              });
+              if (isDevelopment) {
+                void vscode.window.showInformationMessage(
+                  `${extensionDisplayName()}: development mode is using language server ${launcherPath}`,
+                );
+              }
+              return launcherPath;
+            } finally {
+              cancellation.dispose();
             }
-            return launcherPath;
           },
         ),
       ),
@@ -449,12 +458,33 @@ async function ensureBundledServerLauncher(): Promise<string> {
     launcherPath = await cache.promise;
   } catch (error) {
     if (bundledServerLauncherCache === cache) bundledServerLauncherCache = undefined;
+    if (isAbortError(error)) {
+      const action = await vscode.window.showInformationMessage(
+        `${extensionDisplayName()}: language server download cancelled`,
+        'Delete downloaded files',
+      );
+      if (action === 'Delete downloaded files') {
+        try {
+          await discardServerBundleDownload(context.extensionPath, serverRoot, logInfo);
+        } catch (discardError) {
+          logInfo(
+            `Failed to discard cancelled language server download: ${
+              discardError instanceof Error ? discardError.message : String(discardError)
+            }`,
+          );
+        }
+      }
+    }
     throw error;
   }
   if (os.platform() !== 'win32') {
     chmodSync(launcherPath, 0o755);
   }
   return launcherPath;
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof Error && error.name === 'AbortError';
 }
 
 export type ServerLauncherPreparation = { kind: 'external' } | { kind: 'launcher'; path: string };

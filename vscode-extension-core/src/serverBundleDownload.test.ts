@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { describe, test } from 'node:test';
 import {
+  discardServerBundleDownload,
   downloadFile,
   ensureServerLauncher,
   readServerBundleMetadata,
@@ -146,6 +147,69 @@ describe('server bundle download metadata', () => {
         archiveName: 'server.tar.gz',
         sha256: 'a'.repeat(64),
       });
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test('discards a partial download for the metadata version', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'server-bundle-'));
+    try {
+      const extensionPath = path.join(root, 'extension');
+      const serverRoot = path.join(root, 'storage');
+      await fs.mkdir(extensionPath, { recursive: true });
+      await fs.writeFile(
+        path.join(extensionPath, 'server-bundle.json'),
+        JSON.stringify({
+          url: 'https://download.example.test/server.tar.gz',
+          version: SERVER_VERSION,
+          archiveName: 'server.tar.gz',
+        }),
+      );
+      const downloadRoot = path.join(serverRoot, 'server-downloads', SERVER_VERSION);
+      await fs.mkdir(downloadRoot, { recursive: true });
+      await fs.writeFile(path.join(downloadRoot, 'server.tar.gz'), 'partial');
+      await fs.mkdir(path.join(downloadRoot, 'server-download-partial'));
+
+      await discardServerBundleDownload(extensionPath, serverRoot);
+
+      await assert.rejects(fs.stat(downloadRoot), { code: 'ENOENT' });
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test('waits for the active installer before discarding a partial download', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'server-bundle-'));
+    try {
+      const extensionPath = path.join(root, 'extension');
+      const serverRoot = path.join(root, 'storage');
+      await fs.mkdir(extensionPath, { recursive: true });
+      await fs.writeFile(
+        path.join(extensionPath, 'server-bundle.json'),
+        JSON.stringify({
+          url: 'https://download.example.test/server.tar.gz',
+          version: SERVER_VERSION,
+          archiveName: 'server.tar.gz',
+        }),
+      );
+      const downloadRoot = path.join(serverRoot, 'server-downloads', SERVER_VERSION);
+      await fs.mkdir(downloadRoot, { recursive: true });
+      await fs.writeFile(path.join(downloadRoot, 'server.tar.gz'), 'partial');
+      const lockDir = path.join(serverRoot, `${SERVER_VERSION}.lock`);
+      await fs.mkdir(lockDir);
+      await fs.writeFile(
+        path.join(lockDir, 'owner.test.json'),
+        JSON.stringify({ pid: process.pid }),
+      );
+
+      const discard = discardServerBundleDownload(extensionPath, serverRoot);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      assert.equal((await fs.stat(downloadRoot)).isDirectory(), true);
+
+      await fs.rm(lockDir, { recursive: true });
+      await discard;
+      await assert.rejects(fs.stat(downloadRoot), { code: 'ENOENT' });
     } finally {
       await fs.rm(root, { recursive: true, force: true });
     }
@@ -335,6 +399,81 @@ describe('server bundle download metadata', () => {
 
       assert.equal(await fs.readFile(destination, 'utf8'), 'complete');
     } finally {
+      await close(server);
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test('aborts an in-progress download', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'server-bundle-'));
+    const destination = path.join(root, 'server.tar.gz');
+    let requestReceived!: () => void;
+    const requestStarted = new Promise<void>((resolve) => {
+      requestReceived = resolve;
+    });
+    const server = http.createServer((_request, response) => {
+      response.writeHead(200, { 'Content-Length': '100' });
+      response.write('partial');
+      requestReceived();
+    });
+    const controller = new AbortController();
+    try {
+      const url = await listen(server);
+      const download = downloadFile(url, destination, { signal: controller.signal });
+      await requestStarted;
+      controller.abort();
+      await assert.rejects(download, (error: unknown) => {
+        assert.equal((error as Error).name, 'AbortError');
+        return true;
+      });
+    } finally {
+      server.closeAllConnections();
+      await close(server);
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test('removes the temporary extraction directory after cancellation', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'server-bundle-'));
+    const extensionPath = path.join(root, 'extension');
+    const serverRoot = path.join(root, 'storage');
+    let requestReceived!: () => void;
+    const requestStarted = new Promise<void>((resolve) => {
+      requestReceived = resolve;
+    });
+    const server = http.createServer((_request, response) => {
+      response.writeHead(200, { 'Content-Length': '100' });
+      response.write('partial');
+      requestReceived();
+    });
+    const controller = new AbortController();
+    try {
+      const url = await listen(server);
+      await fs.mkdir(extensionPath, { recursive: true });
+      await fs.writeFile(
+        path.join(extensionPath, 'server-bundle.json'),
+        JSON.stringify({ url, version: SERVER_VERSION, archiveName: 'server.tar.gz' }),
+      );
+      const setup = ensureServerLauncher({
+        extensionPath,
+        serverRoot,
+        log: () => {},
+        signal: controller.signal,
+      });
+      await requestStarted;
+      controller.abort();
+
+      await assert.rejects(setup, (error: unknown) => {
+        assert.equal((error as Error).name, 'AbortError');
+        return true;
+      });
+      const downloadRoot = path.join(serverRoot, 'server-downloads', SERVER_VERSION);
+      assert.equal(
+        (await fs.readdir(downloadRoot)).some((name) => name.startsWith('server-download-')),
+        false,
+      );
+    } finally {
+      server.closeAllConnections();
       await close(server);
       await fs.rm(root, { recursive: true, force: true });
     }

@@ -22,12 +22,20 @@ export interface EnsureServerLauncherOptions {
   serverRoot: string;
   log: (message: string) => void;
   progress?: (progress: ServerBundleProgress) => void;
+  signal?: AbortSignal;
   allowCachedServerWithoutMetadata?: boolean;
 }
 
 export interface ServerBundleProgress {
   message: string;
   increment?: number;
+}
+
+interface DownloadFileOptions {
+  onProgress?: (downloadedBytes: number, totalBytes?: number) => void;
+  resume?: boolean;
+  redirectsLeft?: number;
+  signal?: AbortSignal;
 }
 
 export function serverBundleStoragePath(
@@ -68,6 +76,7 @@ export async function ensureServerLauncher({
   serverRoot,
   log,
   progress,
+  signal,
   allowCachedServerWithoutMetadata = false,
 }: EnsureServerLauncherOptions): Promise<string> {
   const bundledServerDir = path.join(extensionPath, 'server');
@@ -75,6 +84,7 @@ export async function ensureServerLauncher({
   if (fs.existsSync(bundledLauncher)) {
     return bundledLauncher;
   }
+  throwIfAborted(signal);
 
   const metadataPath = path.join(extensionPath, SERVER_BUNDLE_METADATA_FILE);
   if (allowCachedServerWithoutMetadata && !fs.existsSync(metadataPath)) {
@@ -95,6 +105,7 @@ export async function ensureServerLauncher({
       () => fs.existsSync(downloadedLauncher),
       () => progress?.({ message: 'Waiting for language server setup in another window' }),
       async () => {
+        throwIfAborted(signal);
         if (!fs.existsSync(downloadedLauncher)) {
           await downloadAndExtractServerBundle(
             metadata,
@@ -102,9 +113,11 @@ export async function ensureServerLauncher({
             serverRoot,
             log,
             progress,
+            signal,
           );
         }
       },
+      signal,
     );
   }
 
@@ -192,6 +205,23 @@ export async function readServerBundleMetadata(
   };
 }
 
+export async function discardServerBundleDownload(
+  extensionPath: string,
+  serverRoot: string,
+  log: (message: string) => void = () => {},
+): Promise<void> {
+  const metadata = await readServerBundleMetadata(extensionPath);
+  const serverDir = path.join(serverRoot, metadata.version);
+  const downloadRoot = path.join(serverRoot, 'server-downloads', metadata.version);
+  await withInstallLock(
+    `${serverDir}.lock`,
+    log,
+    () => false,
+    () => {},
+    () => fsp.rm(downloadRoot, { recursive: true, force: true }),
+  );
+}
+
 function serverBundleArchiveName(metadata: ServerBundleMetadata): string {
   return (metadata.archiveName ?? path.basename(new URL(metadata.url).pathname)) || 'server-bundle';
 }
@@ -202,15 +232,17 @@ async function downloadAndExtractServerBundle(
   serverRoot: string,
   log: (message: string) => void,
   progress?: (progress: ServerBundleProgress) => void,
+  signal?: AbortSignal,
 ): Promise<void> {
+  throwIfAborted(signal);
   await fsp.mkdir(serverRoot, { recursive: true });
-  const tmpRoot = await fsp.mkdtemp(path.join(serverRoot, 'server-download-'));
   const downloadRoot = path.join(serverRoot, 'server-downloads', metadata.version);
   const archivePath = path.join(downloadRoot, serverBundleArchiveName(metadata));
+  await fsp.mkdir(downloadRoot, { recursive: true });
+  const tmpRoot = await fsp.mkdtemp(path.join(downloadRoot, 'server-download-'));
   const extractDir = path.join(tmpRoot, 'server');
 
   try {
-    await fsp.mkdir(downloadRoot, { recursive: true });
     const existingArchiveBytes = metadata.sha256
       ? ((await fsp.stat(archivePath).catch(() => undefined))?.size ?? 0)
       : 0;
@@ -222,10 +254,8 @@ async function downloadAndExtractServerBundle(
     );
     progress?.({ message: `${downloadAction} language server` });
     let reportedDownloadIncrement = 0;
-    await downloadFile(
-      metadata.url,
-      archivePath,
-      (downloadedBytes, totalBytes) => {
+    await downloadFile(metadata.url, archivePath, {
+      onProgress: (downloadedBytes, totalBytes) => {
         if (totalBytes === undefined) return;
         const downloadRatio = Math.min(1, downloadedBytes / totalBytes);
         const downloadPercentage = Math.floor(downloadRatio * 100);
@@ -239,14 +269,16 @@ async function downloadAndExtractServerBundle(
           });
         }
       },
-      metadata.sha256 !== undefined,
-    );
+      resume: metadata.sha256 !== undefined,
+      signal,
+    });
     if (reportedDownloadIncrement < DOWNLOAD_PROGRESS_INCREMENT) {
       progress?.({
         message: 'Downloaded language server',
         increment: DOWNLOAD_PROGRESS_INCREMENT - reportedDownloadIncrement,
       });
     }
+    throwIfAborted(signal);
     if (metadata.sha256) {
       progress?.({ message: 'Verifying language server download', increment: 10 });
       const actual = await sha256(archivePath);
@@ -260,7 +292,7 @@ async function downloadAndExtractServerBundle(
 
     log(`Extracting language server to ${serverDir}`);
     progress?.({ message: 'Extracting language server', increment: 15 });
-    await extractServerBundle(archivePath, extractDir);
+    await extractServerBundle(archivePath, extractDir, signal);
     progress?.({ message: 'Installing language server', increment: 5 });
     await publishExtractedServerBundle(extractDir, serverDir);
     await fsp.rm(downloadRoot, { recursive: true, force: true });
@@ -297,10 +329,9 @@ async function quarantineIncompleteServerDir(serverDir: string): Promise<void> {
 export async function downloadFile(
   url: string,
   destination: string,
-  onProgress?: (downloadedBytes: number, totalBytes?: number) => void,
-  resume = true,
-  redirectsLeft = 5,
+  { onProgress, resume = true, redirectsLeft = 5, signal }: DownloadFileOptions = {},
 ): Promise<void> {
+  throwIfAborted(signal);
   await fsp.mkdir(path.dirname(destination), { recursive: true });
   const parsed = new URL(url);
   if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
@@ -319,7 +350,14 @@ export async function downloadFile(
         response.resume();
         fsp
           .rm(destination, { force: true })
-          .then(() => downloadFile(url, destination, onProgress, false, redirectsLeft))
+          .then(() =>
+            downloadFile(url, destination, {
+              onProgress,
+              resume: false,
+              redirectsLeft,
+              signal,
+            }),
+          )
           .then(resolve, reject);
       };
       response.setTimeout(DOWNLOAD_IDLE_TIMEOUT_MS, () => {
@@ -332,10 +370,12 @@ export async function downloadFile(
           return;
         }
         const nextUrl = new URL(response.headers.location, parsed).toString();
-        downloadFile(nextUrl, destination, onProgress, resume, redirectsLeft - 1).then(
-          resolve,
-          reject,
-        );
+        downloadFile(nextUrl, destination, {
+          onProgress,
+          resume,
+          redirectsLeft: redirectsLeft - 1,
+          signal,
+        }).then(resolve, reject);
         return;
       }
 
@@ -380,6 +420,10 @@ export async function downloadFile(
     request.setTimeout(DOWNLOAD_IDLE_TIMEOUT_MS, () => {
       request.destroy(new Error(`Timed out downloading ${url}: no response received`));
     });
+    const abort = () => request.destroy(createAbortError());
+    signal?.addEventListener('abort', abort, { once: true });
+    const cleanup = () => signal?.removeEventListener('abort', abort);
+    request.once('close', cleanup);
     request.on('error', reject);
   });
 }
@@ -416,12 +460,14 @@ async function withInstallLock<T>(
   isComplete: () => boolean,
   onWait: () => void,
   action: () => Promise<T>,
+  signal?: AbortSignal,
 ): Promise<T | undefined> {
   await fsp.mkdir(path.dirname(lockDir), { recursive: true });
   let deadline = Date.now() + INSTALL_LOCK_TIMEOUT_MS;
   let loggedWait = false;
   const token = `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   while (true) {
+    throwIfAborted(signal);
     if (isComplete()) {
       return undefined;
     }
@@ -455,7 +501,7 @@ async function withInstallLock<T>(
         log(`Waiting for language server install lock: ${lockDir}`);
         onWait();
       }
-      await delay(INSTALL_LOCK_RETRY_DELAY_MS);
+      await delay(INSTALL_LOCK_RETRY_DELAY_MS, signal);
     }
   }
 
@@ -594,8 +640,20 @@ function isNoSuchProcessError(e: unknown): boolean {
   return typeof e === 'object' && e !== null && 'code' in e && e.code === 'ESRCH';
 }
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function delay(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const abort = () => {
+      clearTimeout(timer);
+      signal?.removeEventListener('abort', abort);
+      reject(createAbortError());
+    };
+    const timer = setTimeout(() => {
+      signal?.removeEventListener('abort', abort);
+      resolve();
+    }, ms);
+    signal?.addEventListener('abort', abort, { once: true });
+    if (signal?.aborted) abort();
+  });
 }
 
 async function sha256(file: string): Promise<string> {
@@ -607,7 +665,12 @@ async function sha256(file: string): Promise<string> {
   return hash.digest('hex');
 }
 
-async function extractServerBundle(archivePath: string, serverDir: string): Promise<void> {
+async function extractServerBundle(
+  archivePath: string,
+  serverDir: string,
+  signal?: AbortSignal,
+): Promise<void> {
+  throwIfAborted(signal);
   const lower = archivePath.toLowerCase();
   const tmpDir = `${serverDir}.tmp`;
 
@@ -617,13 +680,13 @@ async function extractServerBundle(archivePath: string, serverDir: string): Prom
   // Keep archive layout handling in sync with community/kotlin-vscode/unpack-server.mjs.
   if (lower.endsWith('.tar.gz') || lower.endsWith('.tgz')) {
     await fsp.mkdir(serverDir, { recursive: true });
-    await run(tarCommand(), ['-xzf', archivePath, '--strip-components=1', '-C', serverDir]);
+    await run(tarCommand(), ['-xzf', archivePath, '--strip-components=1', '-C', serverDir], signal);
   } else if (lower.endsWith('.zip')) {
     await fsp.mkdir(serverDir, { recursive: true });
-    await run(tarCommand(), ['-xf', archivePath, '-C', serverDir]);
+    await run(tarCommand(), ['-xf', archivePath, '-C', serverDir], signal);
   } else if (lower.endsWith('.sit')) {
     await fsp.mkdir(tmpDir, { recursive: true });
-    await run(tarCommand(), ['-xf', archivePath, '-C', tmpDir]);
+    await run(tarCommand(), ['-xf', archivePath, '-C', tmpDir], signal);
     await promoteSitContentsToServer(tmpDir, serverDir);
     await fsp.rm(tmpDir, { recursive: true, force: true });
   } else {
@@ -660,9 +723,12 @@ async function promoteSitContentsToServer(tmpDir: string, serverDir: string): Pr
   }
 }
 
-function run(command: string, args: string[]): Promise<void> {
+function run(command: string, args: string[], signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, { stdio: ['ignore', 'pipe', 'pipe'] });
+    const abort = () => child.kill();
+    signal?.addEventListener('abort', abort, { once: true });
+    if (signal?.aborted) abort();
     let stdout = '';
     let stderr = '';
     child.stdout.setEncoding('utf8');
@@ -675,15 +741,28 @@ function run(command: string, args: string[]): Promise<void> {
     });
     child.on('error', reject);
     child.on('exit', (code) =>
-      code === 0
+      code === 0 && !signal?.aborted
         ? resolve()
-        : reject(
-            new Error(
-              `${command} ${args.join(' ')} exited with code ${code}. stdout: ${stdout} stderr: ${stderr}`,
+        : signal?.aborted
+          ? reject(createAbortError())
+          : reject(
+              new Error(
+                `${command} ${args.join(' ')} exited with code ${code}. stdout: ${stdout} stderr: ${stderr}`,
+              ),
             ),
-          ),
     );
+    child.once('close', () => signal?.removeEventListener('abort', abort));
   });
+}
+
+function throwIfAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) throw createAbortError();
+}
+
+function createAbortError(): Error {
+  const error = new Error('Language server download cancelled');
+  error.name = 'AbortError';
+  return error;
 }
 
 function appendProcessOutput(previousOutput: string, chunk: string): string {
