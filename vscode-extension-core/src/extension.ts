@@ -16,6 +16,7 @@ import {
   buildInitializationOptions,
   getLspClient,
   initLspClient,
+  removeDownloadedServerLauncher,
   startLspClient,
   stopLspClient,
 } from './lspClient';
@@ -29,12 +30,14 @@ export {
   stopLspClient,
   subscribeToClientEvent,
 } from './lspClient';
+export { removeDownloadedServerBundle, serverBundleStoragePath } from './serverBundleDownload';
 import { LSPErrorCodes, RequestType, ResponseError } from 'vscode-languageclient/node';
 import { registerStatusBarItem } from './statusBar';
 import { registerDapServer } from './dap';
 import { registerFileTemplates } from './fileTemplates';
 import { checkLegacyKotlinExtensionConflict } from './legacyKotlinExtensionConflict';
 import { registerAutoReloadWorkspace } from './autoReloadWorkspace';
+import { SERVER_BUNDLE_METADATA_FILE } from './serverBundleDownload';
 
 export type ExtensionModule = (context: ExtensionContext) => void | Promise<void>;
 export type GeoRestrictionCheck = (extension: Extension<unknown>) => Promise<boolean>;
@@ -64,6 +67,7 @@ let _context: ExtensionContext | undefined;
 let _outputChannel: LogOutputChannel | undefined;
 let _buildOutputChannel: OutputChannel | undefined;
 let serverActivated = false;
+const devCommandsRegistered = new WeakSet<ExtensionContext>();
 
 export function getContext(): ExtensionContext {
   return _context!;
@@ -159,11 +163,41 @@ function registerReloadWorkspaceCommand(
     ),
   );
 }
+
+export async function registerDevCommands(context: ExtensionContext): Promise<void> {
+  if (devCommandsRegistered.has(context)) return;
+  devCommandsRegistered.add(context);
+  _context = context;
+  const isThinExtension = await workspace.fs
+    .stat(Uri.joinPath(context.extensionUri, SERVER_BUNDLE_METADATA_FILE))
+    .then(
+      () => true,
+      () => false,
+    );
+  context.subscriptions.push(
+    commands.registerCommand('jetbrains.dev.removeDownloadedLsp', async () => {
+      if (!isThinExtension) {
+        await window.showInformationMessage('This command is only available for thin extensions.');
+        return;
+      }
+      await removeDownloadedServerLauncher();
+      const action = await window.showInformationMessage(
+        'Downloaded language server removed',
+        'Reload Window',
+      );
+      if (action === 'Reload Window') {
+        await commands.executeCommand('workbench.action.reloadWindow');
+      }
+    }),
+  );
+}
+
 export async function activateExtension(
   context: ExtensionContext,
   options: ActivationOptions,
 ): Promise<void> {
   _context = context;
+  await registerDevCommands(context);
   const getAcceptedEulaHash: AcceptedEulaHashProvider =
     options.getAcceptedEulaHash ?? defaultGetAcceptedEulaHash;
   if (!serverActivated) {

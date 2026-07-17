@@ -31,6 +31,7 @@ import { type Readable } from 'node:stream';
 import {
   discardServerBundleDownload,
   ensureServerLauncher,
+  removeDownloadedServerBundle,
   serverBundleStoragePath,
   serverLauncherPath,
 } from './serverBundleDownload';
@@ -481,6 +482,14 @@ async function ensureBundledServerLauncher(): Promise<string> {
     chmodSync(launcherPath, 0o755);
   }
   return launcherPath;
+}
+
+export async function removeDownloadedServerLauncher(): Promise<void> {
+  await stopLspClient();
+  bundledServerLauncherCache = undefined;
+  const context = getContext();
+  const serverRoot = serverBundleStoragePath(packageJson()?.name ?? 'intellij-server');
+  await removeDownloadedServerBundle(context.extensionPath, serverRoot, logInfo);
 }
 
 function isAbortError(error: unknown): boolean {

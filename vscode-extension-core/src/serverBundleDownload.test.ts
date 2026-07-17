@@ -9,6 +9,7 @@ import {
   downloadFile,
   ensureServerLauncher,
   readServerBundleMetadata,
+  removeDownloadedServerBundle,
   serverBundleStoragePath,
   serverLauncherPath,
 } from './serverBundleDownload';
@@ -209,6 +210,34 @@ describe('server bundle download metadata', () => {
 
       await fs.rm(lockDir, { recursive: true });
       await discard;
+      await assert.rejects(fs.stat(downloadRoot), { code: 'ENOENT' });
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test('removes the installed and partial server bundle for the metadata version', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'server-bundle-'));
+    try {
+      const extensionPath = path.join(root, 'extension');
+      const serverRoot = path.join(root, 'storage');
+      await fs.mkdir(extensionPath, { recursive: true });
+      await fs.writeFile(
+        path.join(extensionPath, 'server-bundle.json'),
+        JSON.stringify({
+          url: 'https://download.example.test/server.tar.gz',
+          version: SERVER_VERSION,
+          archiveName: 'server.tar.gz',
+        }),
+      );
+      const serverDir = path.join(serverRoot, SERVER_VERSION);
+      const downloadRoot = path.join(serverRoot, 'server-downloads', SERVER_VERSION);
+      await fs.mkdir(serverDir, { recursive: true });
+      await fs.mkdir(downloadRoot, { recursive: true });
+
+      await removeDownloadedServerBundle(extensionPath, serverRoot);
+
+      await assert.rejects(fs.stat(serverDir), { code: 'ENOENT' });
       await assert.rejects(fs.stat(downloadRoot), { code: 'ENOENT' });
     } finally {
       await fs.rm(root, { recursive: true, force: true });

@@ -550,8 +550,21 @@
         "command": "jetbrains.kotlin.reloadWorkspace",
         "category": "IntelliJ",
         "title": "Reload Workspace"
+      },
+      {
+        "command": "jetbrains.dev.removeDownloadedLsp",
+        "category": "IntelliJ (Developer)",
+        "title": "Remove Downloaded Language Server"
       }
-    ]
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "jetbrains.dev.removeDownloadedLsp",
+          "when": "config.intellij.dev.commands"
+        }
+      ]
+    }
   },
   "activationEvents": [
     "onCommand:jetbrains.activateLsp",

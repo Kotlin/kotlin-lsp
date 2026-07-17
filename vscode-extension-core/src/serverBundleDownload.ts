@@ -210,6 +210,23 @@ export async function discardServerBundleDownload(
   serverRoot: string,
   log: (message: string) => void = () => {},
 ): Promise<void> {
+  await removeServerBundleFiles(extensionPath, serverRoot, false, log);
+}
+
+export async function removeDownloadedServerBundle(
+  extensionPath: string,
+  serverRoot: string,
+  log: (message: string) => void = () => {},
+): Promise<void> {
+  await removeServerBundleFiles(extensionPath, serverRoot, true, log);
+}
+
+async function removeServerBundleFiles(
+  extensionPath: string,
+  serverRoot: string,
+  removeInstalledServer: boolean,
+  log: (message: string) => void,
+): Promise<void> {
   const metadata = await readServerBundleMetadata(extensionPath);
   const serverDir = path.join(serverRoot, metadata.version);
   const downloadRoot = path.join(serverRoot, 'server-downloads', metadata.version);
@@ -218,7 +235,12 @@ export async function discardServerBundleDownload(
     log,
     () => false,
     () => {},
-    () => fsp.rm(downloadRoot, { recursive: true, force: true }),
+    async () => {
+      await fsp.rm(downloadRoot, { recursive: true, force: true });
+      if (removeInstalledServer) {
+        await fsp.rm(serverDir, { recursive: true, force: true });
+      }
+    },
   );
 }
 
