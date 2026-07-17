@@ -11,6 +11,7 @@ import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
+import com.jetbrains.ls.imports.api.WorkspaceImportOptions
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.addInitScripts
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.configureLogging
@@ -48,7 +49,8 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         projectDirectory: Path,
         defaultSdkPath: Path?,
         virtualFileUrlManager: VirtualFileUrlManager,
-        progress: WorkspaceImportProgressReporter
+        progress: WorkspaceImportProgressReporter,
+        options: WorkspaceImportOptions,
     ): EntityStorage? {
         if (!canImportWorkspace(projectDirectory)) {
             return null

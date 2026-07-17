@@ -48,6 +48,7 @@ import com.intellij.util.lang.JavaVersion
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
+import com.jetbrains.ls.imports.api.WorkspaceImportOptions
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.api.applyChangesWithDeduplication
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
@@ -107,7 +108,8 @@ object JpsWorkspaceImporter : WorkspaceImporter {
         projectDirectory: Path,
         defaultSdkPath: Path?,
         virtualFileUrlManager: VirtualFileUrlManager,
-        progress: WorkspaceImportProgressReporter
+        progress: WorkspaceImportProgressReporter,
+        options: WorkspaceImportOptions,
     ): EntityStorage? {
         if (!canImportWorkspace(projectDirectory)) return null
         return try {
@@ -142,6 +144,7 @@ object JpsWorkspaceImporter : WorkspaceImporter {
                     defaultSdkPath = defaultSdkPath,
                     virtualFileUrlManager = virtualFileUrlManager,
                     progress = progress,
+                    options = options,
                 ) ?: return@forEach
                 storage.applyChangesWithDeduplication(diff)
             }

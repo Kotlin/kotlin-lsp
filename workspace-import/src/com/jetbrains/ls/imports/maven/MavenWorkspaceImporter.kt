@@ -14,6 +14,7 @@ import com.intellij.util.io.delete
 import com.intellij.util.system.OS
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
+import com.jetbrains.ls.imports.api.WorkspaceImportOptions
 import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
@@ -61,13 +62,16 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         defaultSdkPath: Path?,
         virtualFileUrlManager: VirtualFileUrlManager,
         progress: WorkspaceImportProgressReporter,
+        options: WorkspaceImportOptions,
     ): EntityStorage? {
         if (!canImportWorkspace(projectDirectory)) return null
 
         LOG.info("Importing Maven project from: $projectDirectory")
         val wrapper = projectDirectory / (if (OS.CURRENT == OS.Windows) "mvnw.cmd" else "mvnw")
         val mavenHome = System.getProperty(JB_MAVEN_HOME)?.let { Path.of(it) }
-        val javaHome = System.getProperty(JB_MAVEN_JAVA_HOME)
+        // A `java-home` configured for this project wins over the JVM property and the ambient environment.
+        val javaHome = options.javaHome?.toString()
+            ?: System.getProperty(JB_MAVEN_JAVA_HOME)
             ?: if (System.getenv()["JAVA_HOME"] == null) System.getProperty("java.home") else null
         val execPath = when {
             wrapper.exists() -> wrapper
@@ -79,14 +83,14 @@ object MavenWorkspaceImporter : WorkspaceImporter {
 
         val offlineOpts = if (System.getProperty(LSP_MAVEN_PROJECT_OFFLINE_PROPERTY).toBoolean()) listOf("-o") else emptyList()
         progress.progressStatus("Installing Maven plugin...")
-        installMavenPlugin(execPath, javaHome, projectDirectory, progress, offlineOpts)
+        installMavenPlugin(execPath, javaHome, projectDirectory, progress, offlineOpts, options)
 
 
         progress.progressStatus("Collecting Maven model...")
-        val modelWithDeps = runMavenPluginGoal(execPath, javaHome, projectDirectory, "model-with-deps", progress, offlineOpts)
+        val modelWithDeps = runMavenPluginGoal(execPath, javaHome, projectDirectory, "model-with-deps", progress, offlineOpts, options)
         progress.progressStatus("Generating sources...")
         val modelWithGeneratedSources =
-            runMavenPluginGoal(execPath, javaHome, projectDirectory, "model-process-sources", progress, offlineOpts)
+            runMavenPluginGoal(execPath, javaHome, projectDirectory, "model-process-sources", progress, offlineOpts, options)
         progress.progressStatus("Maven model collected, commiting...")
         val mergedModels = mergeResults(modelWithDeps, modelWithGeneratedSources)
 
@@ -115,12 +119,13 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         projectDirectory: Path,
         pluginGoal: String,
         progress: WorkspaceImportProgressReporter,
-        additionalParams: List<String> = emptyList()
+        additionalParams: List<String> = emptyList(),
+        options: WorkspaceImportOptions = WorkspaceImportOptions.EMPTY,
     ): MavenRunResult {
         return runGoal(
             execPath, javaHome, projectDirectory,
             "com.jetbrains.ls:imports-maven-plugin:$pluginGoal",
-            progress, additionalParams
+            progress, additionalParams, options
         )
     }
 
@@ -130,12 +135,15 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         projectDirectory: Path,
         goal: String,
         progress: WorkspaceImportProgressReporter,
-        additionalParams: List<String> = emptyList()
+        additionalParams: List<String> = emptyList(),
+        options: WorkspaceImportOptions = WorkspaceImportOptions.EMPTY,
     ): MavenRunResult {
 
         val mavenUserHomeProperty = System.getProperty(LSP_MAVEN_PROJECT_MAVEN_USER_HOME_PROPERTY)
         val mavenOpts = System.getProperty(LSP_MAVEN_PROJECT_MAVEN_OPTS_PROPERTY)
         val pathPrepend = System.getProperty(LSP_MAVEN_PROJECT_PATH_PREPEND_PROPERTY)
+        // Per-project `system-properties` are forwarded to the build as `-Dkey=value`.
+        val extraSystemProps = options.systemProperties.map { (key, value) -> "-D$key=$value" }
         val workspaceJsonFile = createTempFile("workspace", ".json")
         try {
             val command = listOf(
@@ -151,7 +159,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                 "-Dair.check.skip-enforcer=true"
 
             )
-            ProcessBuilder(command + additionalParams)
+            ProcessBuilder(command + extraSystemProps + additionalParams)
                 .apply {
                     javaHome?.let {
                         environment()["JAVA_HOME"] = it
@@ -174,7 +182,8 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                     pathPrepend?.let {
                         prependToPath(environment(), it)
                     }
-
+                    // Per-project `env` is applied last so it wins over the defaults above.
+                    environment().putAll(options.environment)
                 }
                 .directory(projectDirectory.toFile())
                 .runWithErrorReporting("Maven", progress)
@@ -205,7 +214,8 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         javaHome: String?,
         projectDirectory: Path,
         progress: WorkspaceImportProgressReporter,
-        additionalParams: List<String> = emptyList()
+        additionalParams: List<String> = emptyList(),
+        options: WorkspaceImportOptions = WorkspaceImportOptions.EMPTY,
     ) {
         val pomResourcePath = "/META-INF/maven/com.jetbrains.ls/imports.maven.plugin/pom.xml"
         val pluginJar = PathManager.getResourceRoot(this::class.java, pomResourcePath)
@@ -244,6 +254,8 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                     pathPrepend?.let {
                         prependToPath(environment(), it)
                     }
+                    // Per-project `env` is applied last so it wins over the defaults above.
+                    environment().putAll(options.environment)
                 }
                 .directory(projectDirectory.toFile())
                 .runWithErrorReporting("Maven", progress)

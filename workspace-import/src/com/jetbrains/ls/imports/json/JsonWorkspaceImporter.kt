@@ -9,6 +9,7 @@ import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
+import com.jetbrains.ls.imports.api.WorkspaceImportOptions
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -31,7 +32,8 @@ object JsonWorkspaceImporter : WorkspaceImporter {
         projectDirectory: Path,
         defaultSdkPath: Path?,
         virtualFileUrlManager: VirtualFileUrlManager,
-        progress: WorkspaceImportProgressReporter
+        progress: WorkspaceImportProgressReporter,
+        options: WorkspaceImportOptions,
     ): EntityStorage? {
         if (!canImportWorkspace(projectDirectory)) return null
         val jsonPath = projectDirectory / "workspace.json"
