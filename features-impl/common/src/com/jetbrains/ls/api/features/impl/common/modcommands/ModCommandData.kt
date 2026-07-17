@@ -1,4 +1,4 @@
-// Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.kotlinLsp.requests.core
 
 import com.intellij.modcommand.ModChooseAction
@@ -57,18 +57,18 @@ private const val SNIPPET_REPLACEMENT = $$"\\\\$0"
  * for details and utilities related to that.
  */
 @Serializable
-sealed interface ModCommandData {
+sealed class ModCommandData {
     @Serializable
-    data object Nothing : ModCommandData
+    data object Nothing : ModCommandData()
 
     @Serializable
-    data class Composite(val commands: List<ModCommandData>) : ModCommandData
+    data class Composite(val commands: List<ModCommandData>) : ModCommandData()
 
     @Serializable
-    data class Navigate(val fileUrl: String, val selectionStart: Int, val selectionEnd: Int, val caret: Int) : ModCommandData
+    data class Navigate(val fileUrl: String, val selectionStart: Int, val selectionEnd: Int, val caret: Int) : ModCommandData()
 
     @Serializable
-    data class Snippet(val fileUrl: String, val vars: List<SnippetVar> = listOf()) : ModCommandData {
+    data class Snippet(val fileUrl: String, val vars: List<SnippetVar> = listOf()) : ModCommandData() {
         fun add(vararg vars: SnippetVar): Snippet = copy(vars = this.vars + vars.toList())
 
         fun toTextEdit(text: Document): TextEdit {
@@ -125,7 +125,7 @@ sealed interface ModCommandData {
     }
     
     @Serializable
-    data class CreateFile(val fileUrl: String, val content: Content) : ModCommandData {
+    data class CreateFile(val fileUrl: String, val content: Content) : ModCommandData() {
         @Serializable
         sealed interface Content {
             @Serializable
@@ -140,19 +140,19 @@ sealed interface ModCommandData {
     }
 
     @Serializable
-    data class DeleteFile(val fileUrl: String) : ModCommandData
+    data class DeleteFile(val fileUrl: String) : ModCommandData()
 
     @Serializable
-    data class MoveFile(val fileUrl: String, val targetUrl: String) : ModCommandData
+    data class MoveFile(val fileUrl: String, val targetUrl: String) : ModCommandData()
 
     @Serializable
-    data class UpdateFileText(val fileUrl: String, val oldText: String, val newText: String) : ModCommandData
+    data class UpdateFileText(val fileUrl: String, val oldText: String, val newText: String) : ModCommandData()
 
     @Serializable
-    data class DisplayMessage(val message: String, val messageKind: ModDisplayMessage.MessageKind) : ModCommandData
+    data class DisplayMessage(val message: String, val messageKind: ModDisplayMessage.MessageKind) : ModCommandData()
 
     @Serializable
-    data class CopyToClipboard(val content: String) : ModCommandData
+    data class CopyToClipboard(val content: String) : ModCommandData()
 
 
     companion object {
@@ -160,7 +160,18 @@ sealed interface ModCommandData {
 
         fun from(command: ModCommand, server: LSServer? = null): ModCommandData? = when (command) {
             is ModNothing -> Nothing
-            is ModCompositeCommand -> Composite(command.commands.map { from(it, server) ?: return null })
+            is ModCompositeCommand -> {
+                val commands = command.commands.map { from(it, server) ?: return null }
+                Composite(
+                    if (commands.all { it is UpdateFileText }) {
+                        commands.mapIndexed { index, data -> data to index }
+                            .sortedWith(compareBy({ (it.first as UpdateFileText).fileUrl }, { it.second }))
+                            .map { it.first }
+                    } else {
+                        commands
+                    }
+                )
+            }
             is ModNavigate -> Navigate(command.file.url, command.selectionStart, command.selectionEnd, command.caret)
             is ModCreateFile -> CreateFile(
                 command.file.url, when (val c = command.content) {
