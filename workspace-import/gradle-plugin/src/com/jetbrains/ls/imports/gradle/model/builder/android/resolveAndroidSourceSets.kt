@@ -27,12 +27,22 @@ fun Project.resolveAndroidSourceSets(): Set<ModuleSourceSet>? {
 }
 
 private fun resolveAndroidVariant(variant: AndroidVariantReflection): Set<ModuleSourceSet>? {
-    val main = variant.resolveToModuleSourceSet() ?: return null
+    val main = variant.resolveToModuleSourceSetSafe() ?: return null
     val nested = variant.nestedComponents.orEmpty()
-        .mapNotNull { nested -> nested.resolveToModuleSourceSet() }
+        .mapNotNull { nested -> nested.resolveToModuleSourceSetSafe() }
 
     return setOf(main, *nested.toTypedArray())
 }
+
+/**
+ * Source directory providers may be backed by tasks that did not run (e.g. code generators
+ * registered on a component whose task was never requested). Querying such a provider throws;
+ * a single failing component must not discard the source sets of the whole module.
+ */
+private fun AndroidComponentReflection.resolveToModuleSourceSetSafe(): ModuleSourceSet? =
+    runCatching { resolveToModuleSourceSet() }
+        .onFailure { e -> project.logger.warn("Failed to resolve sources for Android component '$name'", e) }
+        .getOrNull()
 
 private fun AndroidComponentReflection.resolveToModuleSourceSet(): ModuleSourceSet? {
     val mainComponent = project.androidVariants?.selectActiveVariant() ?: return null
