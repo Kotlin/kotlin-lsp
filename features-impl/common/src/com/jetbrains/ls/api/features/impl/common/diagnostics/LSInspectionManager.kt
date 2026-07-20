@@ -96,7 +96,7 @@ internal class LSInspectionManager(
             diagnosticSource = diagnosticSource,
             fixes = descriptor.fixes.orEmpty().mapNotNull { quickFix ->
                 val modCommand = getModCommand(quickFix, project, descriptor) ?: return@mapNotNull null
-                val modCommandData = ModCommandData.from(modCommand, server) ?: return@mapNotNull null
+                val modCommandData = ModCommandData.from(modCommand, ActionContext.from(descriptor), server) ?: return@mapNotNull null
                 SimpleDiagnosticQuickfixData(name = quickFix.name, modCommandData = modCommandData)
             },
         )

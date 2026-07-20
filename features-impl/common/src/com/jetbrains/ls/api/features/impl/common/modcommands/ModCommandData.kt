@@ -1,8 +1,10 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.kotlinLsp.requests.core
 
+import com.intellij.modcommand.ActionContext
 import com.intellij.modcommand.ModChooseAction
 import com.intellij.modcommand.ModCommand
+import com.intellij.modcommand.ModCommandAction
 import com.intellij.modcommand.ModCompositeCommand
 import com.intellij.modcommand.ModCopyToClipboard
 import com.intellij.modcommand.ModCreateFile
@@ -25,6 +27,8 @@ import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.intellijUriToLspUri
 import com.jetbrains.ls.api.core.util.positionByOffset
+import com.jetbrains.ls.api.core.util.uri
+import com.jetbrains.ls.snapshot.api.impl.core.ChooseActionSessionComponent
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
 import com.jetbrains.lsp.implementation.LspClient
 import com.jetbrains.lsp.protocol.ApplyEditRequests.ApplyEdit
@@ -42,6 +46,7 @@ import com.jetbrains.lsp.protocol.ShowMessageRequestParams
 import com.jetbrains.lsp.protocol.TextDocumentEdit
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 import com.jetbrains.lsp.protocol.TextEdit
+import com.jetbrains.lsp.protocol.URI
 import com.jetbrains.lsp.protocol.Window
 import com.jetbrains.lsp.protocol.WorkspaceEdit
 import kotlinx.serialization.Serializable
@@ -154,14 +159,36 @@ sealed class ModCommandData {
     @Serializable
     data class CopyToClipboard(val content: String) : ModCommandData()
 
+    /**
+     * A [ModChooseAction] asks the UI to present a chooser of further actions. LSP has no native primitive for
+     * this (see https://github.com/microsoft/language-server-protocol/issues/994), so it is modeled via the
+     * custom `intellij/chooseAction` notification: the client shows a menu of [entries] and, once the user picks
+     * one, invokes the `chooseModCommandAction` command with [sessionId] and the chosen [Entry.index]. The live
+     * choice actions themselves cannot be serialized, so they are kept server-side in
+     * [ChooseActionSessionComponent][com.jetbrains.ls.snapshot.api.impl.core.ChooseActionSessionComponent],
+     * keyed by [sessionId]. Only clients that declare `intellijExtensions` can handle it; [from] aborts for the others.
+     */
+    @Serializable
+    data class ChooseAction(val sessionId: Long, val title: String, val entries: List<Entry>) : ModCommandData() {
+        @Serializable
+        data class Entry(val index: Int, val name: String)
+    }
+
 
     companion object {
         private val LOG = logger<ModCommandData>()
 
-        fun from(command: ModCommand, server: LSServer? = null): ModCommandData? = when (command) {
+        /** A selectable [ModChooseAction] option: its original [index], the [action], and its presentation [name]. */
+        private data class Choice(val index: Int, val action: ModCommandAction, val name: String)
+
+        fun from(
+            command: ModCommand,
+            actionContext: ActionContext,
+            server: LSServer? = null,
+        ): ModCommandData? = when (command) {
             is ModNothing -> Nothing
             is ModCompositeCommand -> {
-                val commands = command.commands.map { from(it, server) ?: return null }
+                val commands = command.commands.map { from(it, actionContext, server) ?: return null }
                 Composite(
                     if (commands.all { it is UpdateFileText }) {
                         commands.mapIndexed { index, data -> data to index }
@@ -190,6 +217,45 @@ sealed class ModCommandData {
             is ModCopyToClipboard -> when {
                 server?.config?.clientSupportsIntellijExtensions == true ->
                     CopyToClipboard(command.content)
+                else -> null
+            }
+            // Relies on the custom `intellij/chooseAction` notification and a server-side session cache, so
+            // only clients that declare `intellijExtensions` can handle it; abort for the others.
+            is ModChooseAction -> when {
+                server?.config?.clientSupportsIntellijExtensions == true && !command.isEmpty -> {
+                    // Selectable choices (those with an available presentation), keeping the original index so it
+                    // stays aligned with the stored action list used to look the choice up later.
+                    val choices = command.actions.mapIndexedNotNull { index, action ->
+                        val name = runCatching { action.getPresentation(actionContext)?.name }.getOrNull()
+                        name?.let { Choice(index, action, it) }
+                    }
+                    when (choices.size) {
+                        0 -> null
+                        // A single choice needs no menu: perform it right away and convert its result. This also
+                        // collapses nested single-choice chains, since the performed command is fed back into `from`.
+                        1 -> {
+                            val choice = choices.single()
+                            runCatching {
+                                choice.action.perform(actionContext)
+                            }.getOrElse {
+                                LOG.warn("Failed to perform the single choice action ${choice.action}", it)
+                                null
+                            }?.let { from(it, actionContext, server) }
+                        }
+                        else -> {
+                            val session = ChooseActionSession(
+                                fileUri = actionContext.file.virtualFile.uri,
+                                offset = actionContext.offset,
+                                selection = actionContext.selection,
+                                title = command.title,
+                                actions = command.actions.toList(),
+                            )
+                            val id = server[ChooseActionSessionComponent].register(session)
+                            val entries = choices.map { ChooseAction.Entry(it.index, it.name) }
+                            ChooseAction(id.id, command.title, entries)
+                        }
+                    }
+                }
                 else -> null
             }
             is ModRegisterTabOut -> Nothing // We can safely skip the tab-out command
@@ -398,6 +464,15 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient, changedFi
             notificationType = CopyToClipboardNotification,
             params = CopyToClipboardParams(command.content),
         )
+
+        is ModCommandData.ChooseAction -> client.notify(
+            notificationType = ShowChooseActionMenuNotification,
+            params = ShowChooseActionMenuParams(
+                sessionId = command.sessionId,
+                title = command.title,
+                entries = command.entries.map { ChooseActionMenuEntry(it.index, it.name) },
+            ),
+        )
     }
 }
 
@@ -411,3 +486,31 @@ data class CopyToClipboardParams(val content: String)
  */
 val CopyToClipboardNotification: NotificationType<CopyToClipboardParams> =
     NotificationType("intellij/copyToClipboard", CopyToClipboardParams.serializer())
+
+/**
+ * The live payload stored in
+ * [ChooseActionSessionComponent][com.jetbrains.ls.snapshot.api.impl.core.ChooseActionSessionComponent]
+ * for a shown [ModChooseAction] menu, recovered when the client reports the user's selection.
+ */
+class ChooseActionSession(
+    val fileUri: URI,
+    val offset: Int,
+    val selection: TextRange,
+    val title: String,
+    val actions: List<ModCommandAction>,
+)
+
+@Serializable
+data class ChooseActionMenuEntry(val index: Int, val name: String)
+
+@Serializable
+data class ShowChooseActionMenuParams(val sessionId: Long, val title: String, val entries: List<ChooseActionMenuEntry>)
+
+/**
+ * A custom server -> client notification (used by the ModCommand [ModChooseAction]) asking the client to show a
+ * chooser menu of [ShowChooseActionMenuParams.entries]. Once the user picks an entry, the client is expected to
+ * invoke the `chooseModCommandAction` command with the [ShowChooseActionMenuParams.sessionId] and the chosen
+ * [ChooseActionMenuEntry.index]. Clients that do not support it simply ignore it.
+ */
+val ShowChooseActionMenuNotification: NotificationType<ShowChooseActionMenuParams> =
+    NotificationType("intellij/chooseAction", ShowChooseActionMenuParams.serializer())
