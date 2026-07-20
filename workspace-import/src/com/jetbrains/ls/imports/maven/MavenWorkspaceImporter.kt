@@ -15,6 +15,7 @@ import com.intellij.util.system.OS
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportOptions
+import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
@@ -58,12 +59,13 @@ object MavenWorkspaceImporter : WorkspaceImporter {
 
     override suspend fun importWorkspace(
         project: Project,
-        projectDirectory: Path,
-        defaultSdkPath: Path?,
+        parameters: WorkspaceImportParameters,
         virtualFileUrlManager: VirtualFileUrlManager,
         progress: WorkspaceImportProgressReporter,
-        options: WorkspaceImportOptions,
     ): EntityStorage? {
+        val projectDirectory = parameters.projectDirectory
+        val defaultSdkPath = parameters.defaultSdkPath
+        val options = parameters.options
         if (!canImportWorkspace(projectDirectory)) return null
 
         LOG.info("Importing Maven project from: $projectDirectory")

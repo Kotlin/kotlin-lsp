@@ -48,7 +48,7 @@ import com.intellij.util.lang.JavaVersion
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
-import com.jetbrains.ls.imports.api.WorkspaceImportOptions
+import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.api.applyChangesWithDeduplication
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
@@ -105,12 +105,13 @@ private val LOG = fileLogger()
 object JpsWorkspaceImporter : WorkspaceImporter {
     override suspend fun importWorkspace(
         project: Project,
-        projectDirectory: Path,
-        defaultSdkPath: Path?,
+        parameters: WorkspaceImportParameters,
         virtualFileUrlManager: VirtualFileUrlManager,
         progress: WorkspaceImportProgressReporter,
-        options: WorkspaceImportOptions,
     ): EntityStorage? {
+        val projectDirectory = parameters.projectDirectory
+        val defaultSdkPath = parameters.defaultSdkPath
+        val options = parameters.options
         if (!canImportWorkspace(projectDirectory)) return null
         return try {
             val model = JpsElementFactory.getInstance().createModel()
@@ -140,11 +141,13 @@ object JpsWorkspaceImporter : WorkspaceImporter {
                 LOG.info("Importing linked project: $path")
                 val diff = importer.importWorkspace(
                     project = project,
-                    projectDirectory = path,
-                    defaultSdkPath = defaultSdkPath,
+                    parameters = WorkspaceImportParameters(
+                        projectDirectory = path,
+                        defaultSdkPath = defaultSdkPath,
+                        options = options,
+                    ),
                     virtualFileUrlManager = virtualFileUrlManager,
                     progress = progress,
-                    options = options,
                 ) ?: return@forEach
                 storage.applyChangesWithDeduplication(diff)
             }

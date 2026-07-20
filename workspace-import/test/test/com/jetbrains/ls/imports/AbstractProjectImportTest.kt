@@ -20,6 +20,7 @@ import com.jetbrains.analyzer.bootstrap.AnalyzerProjectId
 import com.jetbrains.analyzer.bootstrap.WorkspaceModelSnapshot
 import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
 import com.jetbrains.ls.imports.api.WorkspaceImportException
+import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.LSP_GRADLE_JAVA_HOME_PROPERTY
@@ -268,7 +269,7 @@ abstract class AbstractProjectImportTest {
                     )
                 ) {
                     val result = runCatching {
-                        importer.importWorkspace(it.project, projectDir, null, virtualFileUrlManager, reporter)
+                        importer.importWorkspace(it.project, WorkspaceImportParameters(projectDir, null), virtualFileUrlManager, reporter)
                     }
                     assertTrue(result.isFailure)
                     assertEquals(failureMessage, result.exceptionOrNull()!!.message)
@@ -303,7 +304,7 @@ abstract class AbstractProjectImportTest {
                     )
                 ) {
                     try {
-                        importer.importWorkspace(it.project, projectDir, null, virtualFileUrlManager, reporter)
+                        importer.importWorkspace(it.project, WorkspaceImportParameters(projectDir, null), virtualFileUrlManager, reporter)
                     }
                     catch (e: WorkspaceImportException) {
                         throw AssertionError(
