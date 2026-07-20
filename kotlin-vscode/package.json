@@ -270,6 +270,8 @@
                     "gradle",
                     "maven",
                     "bazel",
+                    "jps",
+                    "gomodules",
                     "json"
                   ]
                 },
