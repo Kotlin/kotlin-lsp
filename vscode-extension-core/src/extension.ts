@@ -14,6 +14,7 @@ import {
 import { registerDecompiler, registerOpeningJars } from './decompiler';
 import {
   buildInitializationOptions,
+  type ClientFeatureFactory,
   getLspClient,
   initLspClient,
   prefetchBundledServerLauncher,
@@ -27,6 +28,7 @@ export {
   prepareBundledServerLauncher,
   registerInitializationOptionsContributor,
   type InitializationOptionsContributor,
+  type ClientFeatureFactory,
   type ServerLauncherPreparation,
   stopLspClient,
   subscribeToClientEvent,
@@ -51,6 +53,8 @@ const defaultGetAcceptedEulaHash: AcceptedEulaHashProvider = () => undefined;
 
 export interface ActivationOptions {
   modules: ExtensionModule[];
+  /** Creates additional features for each language client, including clients recreated after a restart. */
+  clientFeatureFactories?: ClientFeatureFactory[];
   /** Defaults to false. */
   enableDecompiler?: boolean;
   /** Defaults to false. */
@@ -255,6 +259,7 @@ export async function activateExtension(
     initLspClient({
       getAcceptedEulaHash,
       checkEulaAccepted: () => checkEulaAcceptedFn(context),
+      clientFeatureFactories: options.clientFeatureFactories,
     });
     serverActivated = true;
   }

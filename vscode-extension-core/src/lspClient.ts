@@ -37,6 +37,7 @@ import {
   serverBundleStoragePath,
   serverLauncherPath,
 } from './serverBundleDownload';
+import { type ClientFeatureFactory, startClientWithFeatures } from './clientFeatureFactories';
 import {
   registerChooseActionMenuHandler,
   registerCopyToClipboardHandler,
@@ -80,6 +81,7 @@ let startLspClientPromise: Promise<void> | undefined;
 let restartRequestedDuringStart = false;
 let bundledServerLauncherCache: { key: string; promise: Promise<string> } | undefined;
 let bundledServerSetupPhase: ServerBundlePhase = 'downloading';
+let configuredClientFeatureFactories: ClientFeatureFactory[] = [];
 
 interface ImportLogParams {
   type: 1 | 2 | 3;
@@ -96,6 +98,7 @@ const importLogNotification = new NotificationType<ImportLogParams>('intellij/im
 const clientSubscriptions: ((client: LanguageClient, stateChange: StateChangeEvent) => void)[] = [];
 
 export type InitializationOptionsContributor = () => Record<string, unknown>;
+export type { ClientFeatureFactory } from './clientFeatureFactories';
 
 /**
  * An externally configured project passed to the server via initialization options.
@@ -127,12 +130,15 @@ export function registerInitializationOptionsContributor(
 interface LspClientPolicyOptions {
   getAcceptedEulaHash: AcceptedEulaHashProvider;
   checkEulaAccepted: () => Promise<boolean>;
+  clientFeatureFactories?: ClientFeatureFactory[];
 }
 
 export function initLspClient({
   getAcceptedEulaHash,
   checkEulaAccepted,
+  clientFeatureFactories = [],
 }: LspClientPolicyOptions): void {
+  configuredClientFeatureFactories = [...clientFeatureFactories];
   registerIntellijExtensionsInitOption();
   // TODO: Send the updated region to the backend when runtime region updates are supported.
   getContext().subscriptions.push(
@@ -337,7 +343,7 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
   );
 
   try {
-    await runClient.start();
+    await startClientWithFeatures(runClient, configuredClientFeatureFactories);
     registerImportLogHandler(runClient);
     registerCopyToClipboardHandler(runClient);
     registerChooseActionMenuHandler(runClient);
