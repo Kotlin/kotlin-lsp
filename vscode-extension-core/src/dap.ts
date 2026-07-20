@@ -142,6 +142,9 @@ async function resolveLaunchConfig(config: LaunchConfig): Promise<DebugConfigura
     const needsClasspath = !config.classPaths || config.classPaths.length === 0;
     const needsCwd = !config.cwd;
     const needsJavaExec = !config.javaExec;
+    // classPaths and javaExec are required to launch, so failing to resolve them aborts the launch (the
+    // rejection propagates to the catch below). The working directory is optional — the server falls back to
+    // the module/project directory — so tolerate its failure instead of failing the whole launch.
     const [cp, wd, java] = await Promise.all([
       needsClasspath
         ? sendCommand<ClasspathResponse>(client, 'intellij.java.resolveClasspath', [{ uri }])
@@ -149,7 +152,12 @@ async function resolveLaunchConfig(config: LaunchConfig): Promise<DebugConfigura
       needsCwd
         ? sendCommand<WorkingDirectoryResponse>(client, 'intellij.java.resolveWorkingDirectory', [
             { uri },
-          ])
+          ]).catch((e) => {
+            getOutputChannel().appendLine(
+              `[launch.json] working directory resolution failed, using default: ${errorMessage(e)}`,
+            );
+            return undefined;
+          })
         : Promise.resolve(undefined),
       needsJavaExec
         ? sendCommand<JavaExecutableResponse>(client, 'intellij.java.resolveJavaExecutable', [
