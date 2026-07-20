@@ -162,11 +162,14 @@ function handleDoubleQuoteKey(text: string, tree: Tree, index: number): KeyResul
   // string_literal, so handleSpecialNodeKey can't dispatch to handleStringLiteralKey.
   // Use text-based logic for the opening-delimiter position.
   if (isAtTripleQuoteDelimiter && stringLiteralNode === null) {
-    const tripleStart = text.startsWith('"""', index)
-      ? index
-      : index >= 1 && text.startsWith('"""', index - 1)
-        ? index - 1
-        : index - 2;
+    let tripleStart: number;
+    if (text.startsWith('"""', index)) {
+      tripleStart = index;
+    } else if (index >= 1 && text.startsWith('"""', index - 1)) {
+      tripleStart = index - 1;
+    } else {
+      tripleStart = index - 2;
+    }
     const offsetFromTripleStart = index - tripleStart;
     switch (offsetFromTripleStart) {
       case 0:
@@ -211,11 +214,13 @@ function handleSpecialNodeKey(
 }
 
 function getStringLiteralNode(node: Node | null): Node | null {
-  return node?.type === 'string_literal'
-    ? node
-    : node?.parent?.type === 'string_literal'
-      ? node.parent
-      : null;
+  if (node?.type === 'string_literal') {
+    return node;
+  } else if (node?.parent?.type === 'string_literal') {
+    return node.parent;
+  } else {
+    return null;
+  }
 }
 
 function isMultilineStringLiteral(text: string, node: Node): boolean {
@@ -551,12 +556,14 @@ function getClassTypeArgumentContinuationIndent(
   }
 
   const typeArguments = findAncestorAtEnter(node, index, 'type_arguments');
-  const indentAnchor =
-    typeArguments?.parent?.type === 'user_type'
-      ? typeArguments.parent
-      : typeArguments === null
-        ? null
-        : findAncestor(typeArguments, 'call_expression');
+  let indentAnchor: Node | null;
+  if (typeArguments?.parent?.type === 'user_type') {
+    indentAnchor = typeArguments.parent;
+  } else if (typeArguments === null) {
+    indentAnchor = null;
+  } else {
+    indentAnchor = findAncestor(typeArguments, 'call_expression');
+  }
   if (indentAnchor === null) {
     return null;
   }
