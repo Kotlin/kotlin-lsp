@@ -38,6 +38,7 @@ internal class LSInspectionManager(
         return getEnabledInspectionTools(LocalInspectionEP.LOCAL_INSPECTION.extensionList, psiFile.language, infoInspections)
             .filterIsInstance<LocalInspectionTool>()
             .filter { localInspectionTool -> localInspectionTool.isAvailableForFile(psiFile) }
+            .filterNot { localInspectionTool -> (localInspectionTool.nameProvider as? LocalInspectionEP)?.editorAttributes == "REASSIGNED_LOCAL_VARIABLE_ATTRIBUTES" }
             .toList()
     }
 
