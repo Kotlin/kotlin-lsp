@@ -47,8 +47,8 @@ import com.intellij.util.containers.nullize
 import com.intellij.util.lang.JavaVersion
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
-import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
+import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.api.applyChangesWithDeduplication
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
@@ -56,6 +56,10 @@ import com.jetbrains.ls.imports.json.flattenExportedDependencies
 import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
 import com.jetbrains.ls.imports.utils.toIntellijUri
 import com.jetbrains.ls.snapshot.api.impl.core.toFileUrl
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
 import org.eclipse.aether.repository.RemoteRepository
 import org.jdom.Element
 import org.jetbrains.idea.maven.aether.ArtifactRepositoryManager
@@ -84,6 +88,7 @@ import org.jetbrains.jps.model.serialization.JpsProjectLoader
 import org.jetbrains.jps.model.serialization.PathMacroUtil
 import org.jetbrains.jps.model.serialization.impl.JpsPathVariablesConfigurationImpl
 import org.jetbrains.jps.util.JpsPathUtil
+import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.copyOf
 import org.jetbrains.kotlin.config.isHmpp
 import org.jetbrains.kotlin.idea.facet.KotlinFacetType
@@ -314,7 +319,7 @@ object JpsWorkspaceImporter : WorkspaceImporter {
                                         }.toTypedArray()
                                     }
                                 }
-                                CompilerArgumentsSerializer.serializeToString(args)
+                                serializeNonDefaultCompilerArguments(args)
                             }
                             this.compilerSettings = settings.compilerSettings.toCompilerSettingsData()
                             this.targetPlatform = settings.targetPlatform.toString()
@@ -671,6 +676,27 @@ private fun loadIdeaXml(projectDirectory: Path, fileName: String): Element? {
         LOG.warn("Failed to parse $xml: ${e.message}")
         null
     }
+}
+
+/**
+ * Serializes only the arguments that differ from the defaults of the arguments class, so workspace JSON dumps
+ * do not churn whenever the Kotlin compiler gains new flags. [CompilerArgumentsSerializer.deserializeFromString]
+ * restores omitted fields to defaults, as it already does for the compact strings produced by the Gradle and
+ * Maven importers.
+ */
+private fun serializeNonDefaultCompilerArguments(arguments: CommonCompilerArguments): String {
+    val serialized = CompilerArgumentsSerializer.serializeToString(arguments)!!
+    val defaultArguments = arguments.javaClass.getDeclaredConstructor().newInstance()
+    val serializedDefaults = CompilerArgumentsSerializer.serializeToString(defaultArguments)!!
+    val allFields = Json.parseToJsonElement(serialized.drop(1)).jsonObject
+    val defaultFields = Json.parseToJsonElement(serializedDefaults.drop(1)).jsonObject
+    val nonDefaultFields = buildJsonObject {
+        (allFields.keys + defaultFields.keys).forEach { key ->
+            val value = allFields[key]
+            if (value != defaultFields[key]) put(key, value ?: JsonNull)
+        }
+    }
+    return serialized.take(1) + nonDefaultFields
 }
 
 private fun findJdks(projectPath: Path): Set<JavaHomeFinder.JdkEntry> {
