@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features.impl.common.modcommands
 
 import com.intellij.modcommand.ActionContext
+import com.intellij.modcommand.ModCommand
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
@@ -27,6 +28,8 @@ import kotlinx.serialization.json.jsonPrimitive
 
 private val LOG = logger<LSChooseActionCommandDescriptorProvider>()
 
+private const val errorMessage = "This action is no longer available, please try again"
+
 /**
  * Provides the command invoked by the client after the user picks an entry in a `ModChooseAction` menu shown via
  * the `intellij/chooseAction` notification. It recovers the [ChooseActionSession] stashed in
@@ -51,7 +54,7 @@ object LSChooseActionCommandDescriptorProvider : LSCommandDescriptorProvider {
                 null -> {
                     lspClient.notify(
                         notificationType = ShowMessageNotificationType,
-                        params = ShowMessageParams(MessageType.Error, "This action is no longer available, please try again"),
+                        params = ShowMessageParams(MessageType.Error, errorMessage),
                     )
                 }
 
@@ -63,16 +66,16 @@ object LSChooseActionCommandDescriptorProvider : LSCommandDescriptorProvider {
                         val data = readAction {
                             val virtualFile = session.fileUri.findVirtualFile() ?: return@readAction null
                             val psiFile = virtualFile.findPsiFile(project) ?: return@readAction null
-                            val action = session.actions.getOrNull(index) ?: run {
+                            val action = session.actions.getOrNull(index)
+                            if (action == null) {
                                 LOG.warn("Choice index $index is out of bounds for session with ${session.actions.size} actions")
-                                return@readAction null
                             }
                             val context = ActionContext(psiFile.project, psiFile, session.offset, session.selection, null)
                             val modCommand = runCatching {
-                                action.perform(context)
+                                action?.perform(context)
                             }.getOrHandleException {
                                 LOG.warn("Failed to perform chosen mod command action $action", it)
-                            } ?: return@readAction null
+                            } ?: ModCommand.error(errorMessage)
                             ModCommandData.from(modCommand, context, server)
                         }
                         if (data != null) {

@@ -57,9 +57,8 @@ private val snippetChoiceEscapeCharacters = Regex("""[\\}$,|]""")
 private const val SNIPPET_REPLACEMENT = $$"\\\\$0"
 
 /**
- * **Note**: [ModChooseAction] cannot be modeled with [ModCommandData];
- * see [ModChooseActionChain][com.jetbrains.ls.api.features.impl.common.modcommands.ModChooseActionChain]
- * for details and utilities related to that.
+ * See [ModChooseActionChain][com.jetbrains.ls.api.features.impl.common.modcommands.ModChooseActionChain]
+ * for fallback implementation of ModChooseAction support if client doesn't provide intellijExtensions capabilities.
  */
 @Serializable
 sealed class ModCommandData {
@@ -243,8 +242,9 @@ sealed class ModCommandData {
                             }?.let { from(it, actionContext, server) }
                         }
                         else -> {
+                            val virtualFile = actionContext.file.virtualFile ?: return null
                             val session = ChooseActionSession(
-                                fileUri = actionContext.file.virtualFile.uri,
+                                fileUri = virtualFile.uri,
                                 offset = actionContext.offset,
                                 selection = actionContext.selection,
                                 title = command.title,
