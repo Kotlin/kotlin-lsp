@@ -40,6 +40,7 @@ import {
   registerCopyToClipboardHandler,
   registerIntellijExtensionsInitOption,
 } from './intellijExtensions';
+import { handleCancelledServerDownload } from './serverDownloadCancellation';
 
 interface ExtensionPackageJson {
   name?: string;
@@ -463,21 +464,22 @@ async function ensureBundledServerLauncher(): Promise<string> {
   } catch (error) {
     if (bundledServerLauncherCache === cache) bundledServerLauncherCache = undefined;
     if (isAbortError(error)) {
-      const action = await vscode.window.showInformationMessage(
-        `${extensionDisplayName()}: language server download cancelled`,
-        'Delete downloaded files',
-      );
-      if (action === 'Delete downloaded files') {
-        try {
-          await discardServerBundleDownload(context.extensionPath, serverRoot, logInfo);
-        } catch (discardError) {
-          logInfo(
-            `Failed to discard cancelled language server download: ${
-              discardError instanceof Error ? discardError.message : String(discardError)
-            }`,
-          );
-        }
-      }
+      await handleCancelledServerDownload({
+        showInformationMessage: (message, ...actions) =>
+          vscode.window.showInformationMessage(message, ...actions),
+        resumeDownload: ensureBundledServerLauncher,
+        deleteDownloadedFiles: async () => {
+          try {
+            await discardServerBundleDownload(context.extensionPath, serverRoot, logInfo);
+          } catch (discardError) {
+            logInfo(
+              `Failed to discard cancelled language server download: ${
+                discardError instanceof Error ? discardError.message : String(discardError)
+              }`,
+            );
+          }
+        },
+      });
     }
     throw error;
   }
