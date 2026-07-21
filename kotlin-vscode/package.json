@@ -281,7 +281,7 @@
                   "label": "Configured project",
                   "description": "Project workspace root or build file together with the build tool to import it with.",
                   "body": {
-                    "type": "${1|gradle,maven,bazel,jps,gomodules,json|}",
+                    "type": "${1|gradle,maven,bazel,jps,gomodules,gomodules-recursive-scan,json|}",
                     "path": "file:///${2:path/to/project}"
                   }
                 }
@@ -289,13 +289,14 @@
               "properties": {
                 "type": {
                   "type": "string",
-                  "markdownDescription": "Build system or project format used to import and analyze this project. Possible values: `gradle`, `maven`, `bazel`, `jps`, `gomodules`, `json`.",
+                  "markdownDescription": "Build system or project format used to import and analyze this project. Possible values: `gradle`, `maven`, `bazel`, `jps`, `gomodules`, `gomodules-recursive-scan`, `json`.",
                   "enum": [
                     "gradle",
                     "maven",
                     "bazel",
                     "jps",
                     "gomodules",
+                    "gomodules-recursive-scan",
                     "json"
                   ]
                 },
