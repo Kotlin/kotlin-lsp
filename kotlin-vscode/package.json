@@ -41,7 +41,6 @@
   "dependencies": {
     "@jetbrains/vscode-extension-core": "workspace:*",
     "@jetbrains/vscode-language-kotlin": "workspace:*",
-    "@tree-sitter-grammars/tree-sitter-kotlin": "catalog:",
     "vscode-languageclient": "catalog:",
     "web-tree-sitter": "catalog:"
   },
@@ -271,6 +270,8 @@
                     "gradle",
                     "maven",
                     "bazel",
+                    "jps",
+                    "gomodules",
                     "json"
                   ]
                 },
