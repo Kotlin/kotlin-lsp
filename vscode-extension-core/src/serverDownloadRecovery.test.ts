@@ -10,6 +10,7 @@ describe('server download recovery', () => {
     const calls: string[] = [];
 
     const result = await handleCancelledServerDownload({
+      phase: 'downloading',
       showInformationMessage: async (message, ...actions) => {
         assert.equal(
           message,
@@ -35,6 +36,7 @@ describe('server download recovery', () => {
     const calls: string[] = [];
 
     await handleCancelledServerDownload({
+      phase: 'downloading',
       showInformationMessage: async () => 'Delete Downloaded Files',
       resumeDownload: async () => {
         calls.push('resume');
@@ -51,6 +53,7 @@ describe('server download recovery', () => {
     const calls: string[] = [];
 
     await handleCancelledServerDownload({
+      phase: 'downloading',
       showInformationMessage: async () => undefined,
       resumeDownload: async () => {
         calls.push('resume');
@@ -61,6 +64,24 @@ describe('server download recovery', () => {
     });
 
     assert.deepEqual(calls, []);
+  });
+
+  it('describes cancellation during extraction as setup recovery', async () => {
+    const result = await handleCancelledServerDownload({
+      phase: 'extracting',
+      showInformationMessage: async (message, ...actions) => {
+        assert.equal(
+          message,
+          'Language server extraction cancelled. Resume now, or run ‘Restart Language Server’ later from the Command Palette.',
+        );
+        assert.deepEqual(actions, ['Resume Setup', 'Delete Downloaded Files']);
+        return 'Resume Setup';
+      },
+      resumeDownload: async () => '/server/bin/intellij-server',
+      deleteDownloadedFiles: async () => {},
+    });
+
+    assert.equal(result, '/server/bin/intellij-server');
   });
 
   it('redownloads after a checksum mismatch', async () => {

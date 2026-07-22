@@ -33,6 +33,7 @@ import {
   ensureServerLauncher,
   removeDownloadedServerBundle,
   ServerBundleChecksumError,
+  type ServerBundlePhase,
   serverBundleStoragePath,
   serverLauncherPath,
 } from './serverBundleDownload';
@@ -78,6 +79,7 @@ let _client: LanguageClient | undefined;
 let startLspClientPromise: Promise<void> | undefined;
 let restartRequestedDuringStart = false;
 let bundledServerLauncherCache: { key: string; promise: Promise<string> } | undefined;
+let bundledServerSetupPhase: ServerBundlePhase = 'downloading';
 
 interface ImportLogParams {
   type: 1 | 2 | 3;
@@ -426,6 +428,7 @@ async function ensureBundledServerLauncher(): Promise<string> {
   const serverRoot = serverBundleStoragePath(packageJson()?.name ?? 'intellij-server');
   const cacheKey = context.extensionPath;
   if (bundledServerLauncherCache?.key !== cacheKey) {
+    bundledServerSetupPhase = 'downloading';
     bundledServerLauncherCache = {
       key: cacheKey,
       promise: Promise.resolve(
@@ -443,7 +446,10 @@ async function ensureBundledServerLauncher(): Promise<string> {
                 extensionPath: context.extensionPath,
                 serverRoot,
                 log: logInfo,
-                progress: (update) => progress.report(update),
+                progress: (update) => {
+                  bundledServerSetupPhase = update.phase;
+                  progress.report(update);
+                },
                 signal: controller.signal,
                 allowCachedServerWithoutMetadata: isDevelopment,
               });
@@ -469,6 +475,7 @@ async function ensureBundledServerLauncher(): Promise<string> {
     if (bundledServerLauncherCache === cache) bundledServerLauncherCache = undefined;
     if (isAbortError(error)) {
       const resumedLauncher = await handleCancelledServerDownload({
+        phase: bundledServerSetupPhase,
         showInformationMessage: (message, ...actions) =>
           vscode.window.showInformationMessage(message, ...actions),
         resumeDownload: ensureBundledServerLauncher,

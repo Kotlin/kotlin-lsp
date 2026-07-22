@@ -27,9 +27,17 @@ export interface EnsureServerLauncherOptions {
 }
 
 export interface ServerBundleProgress {
+  phase: ServerBundlePhase;
   message: string;
   increment?: number;
 }
+
+export type ServerBundlePhase =
+  | 'waiting'
+  | 'downloading'
+  | 'verifying'
+  | 'extracting'
+  | 'installing';
 
 export class ServerBundleChecksumError extends Error {
   constructor(expected: string, actual: string) {
@@ -109,7 +117,11 @@ export async function ensureServerLauncher({
       `${downloadedServerDir}.lock`,
       log,
       () => fs.existsSync(downloadedLauncher),
-      () => progress?.({ message: 'Waiting for language server setup in another window' }),
+      () =>
+        progress?.({
+          phase: 'waiting',
+          message: 'Waiting for language server setup in another window',
+        }),
       async () => {
         throwIfAborted(signal);
         if (!fs.existsSync(downloadedLauncher)) {
@@ -280,7 +292,7 @@ async function downloadAndExtractServerBundle(
         ? `Resuming language server download from ${existingArchiveBytes} bytes: ${metadata.url}`
         : `Downloading language server from ${metadata.url}`,
     );
-    progress?.({ message: `${downloadAction} language server` });
+    progress?.({ phase: 'downloading', message: `${downloadAction} language server` });
     let reportedDownloadIncrement = 0;
     await downloadFile(metadata.url, archivePath, {
       onProgress: (downloadedBytes, totalBytes) => {
@@ -292,6 +304,7 @@ async function downloadAndExtractServerBundle(
         if (increment > 0) {
           reportedDownloadIncrement += increment;
           progress?.({
+            phase: 'downloading',
             message: `${downloadAction} language server (${downloadPercentage}%)`,
             increment,
           });
@@ -302,13 +315,18 @@ async function downloadAndExtractServerBundle(
     });
     if (reportedDownloadIncrement < DOWNLOAD_PROGRESS_INCREMENT) {
       progress?.({
+        phase: 'downloading',
         message: 'Downloaded language server',
         increment: DOWNLOAD_PROGRESS_INCREMENT - reportedDownloadIncrement,
       });
     }
     throwIfAborted(signal);
     if (metadata.sha256) {
-      progress?.({ message: 'Verifying language server download', increment: 10 });
+      progress?.({
+        phase: 'verifying',
+        message: 'Verifying language server download',
+        increment: 10,
+      });
       const actual = await sha256(archivePath);
       if (actual.toLowerCase() !== metadata.sha256.toLowerCase()) {
         await fsp.rm(archivePath, { force: true });
@@ -317,9 +335,9 @@ async function downloadAndExtractServerBundle(
     }
 
     log(`Extracting language server to ${serverDir}`);
-    progress?.({ message: 'Extracting language server', increment: 15 });
+    progress?.({ phase: 'extracting', message: 'Extracting language server', increment: 15 });
     await extractServerBundle(archivePath, extractDir, signal);
-    progress?.({ message: 'Installing language server', increment: 5 });
+    progress?.({ phase: 'installing', message: 'Installing language server', increment: 5 });
     await publishExtractedServerBundle(extractDir, serverDir);
     await fsp.rm(downloadRoot, { recursive: true, force: true });
   } finally {
