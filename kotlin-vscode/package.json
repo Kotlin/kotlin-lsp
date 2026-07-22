@@ -388,6 +388,7 @@
         "properties": {
           "intellij.region": {
             "type": "string",
+            "scope": "application",
             "enum": [
               "africa",
               "americas",
@@ -411,6 +412,7 @@
           },
           "intellij.dataSharing": {
             "type": "string",
+            "scope": "application",
             "enum": [
               "full",
               "anonymous",
