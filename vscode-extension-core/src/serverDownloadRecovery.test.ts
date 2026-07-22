@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { handleCancelledServerDownload } from './serverDownloadCancellation';
+import {
+  handleCancelledServerDownload,
+  handleServerDownloadChecksumMismatch,
+} from './serverDownloadRecovery';
 
-describe('cancelled server download', () => {
-  it('resumes the download', async () => {
+describe('server download recovery', () => {
+  it('resumes a cancelled download', async () => {
     const calls: string[] = [];
 
     const result = await handleCancelledServerDownload({
@@ -28,7 +31,7 @@ describe('cancelled server download', () => {
     assert.equal(result, '/server/bin/intellij-server');
   });
 
-  it('deletes downloaded files', async () => {
+  it('deletes files from a cancelled download', async () => {
     const calls: string[] = [];
 
     await handleCancelledServerDownload({
@@ -44,7 +47,7 @@ describe('cancelled server download', () => {
     assert.deepEqual(calls, ['delete']);
   });
 
-  it('does nothing when the notification is dismissed', async () => {
+  it('does nothing when the cancellation notification is dismissed', async () => {
     const calls: string[] = [];
 
     await handleCancelledServerDownload({
@@ -58,5 +61,31 @@ describe('cancelled server download', () => {
     });
 
     assert.deepEqual(calls, []);
+  });
+
+  it('redownloads after a checksum mismatch', async () => {
+    const result = await handleServerDownloadChecksumMismatch({
+      showErrorMessage: async (message, ...actions) => {
+        assert.equal(message, 'Language server download failed verification.');
+        assert.deepEqual(actions, ['Redownload Server']);
+        return 'Redownload Server';
+      },
+      redownloadServer: async () => '/server/bin/intellij-server',
+    });
+
+    assert.equal(result, '/server/bin/intellij-server');
+  });
+
+  it('does not redownload when the checksum notification is dismissed', async () => {
+    let redownloaded = false;
+    const result = await handleServerDownloadChecksumMismatch({
+      showErrorMessage: async () => undefined,
+      redownloadServer: async () => {
+        redownloaded = true;
+      },
+    });
+
+    assert.equal(redownloaded, false);
+    assert.equal(result, undefined);
   });
 });

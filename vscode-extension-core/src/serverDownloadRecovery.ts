@@ -1,5 +1,6 @@
 const RESUME_DOWNLOAD = 'Resume Download';
 const DELETE_DOWNLOADED_FILES = 'Delete Downloaded Files';
+const REDOWNLOAD_SERVER = 'Redownload Server';
 
 interface CancelledServerDownloadOptions<T> {
   showInformationMessage: (
@@ -26,4 +27,20 @@ export async function handleCancelledServerDownload<T>({
     await deleteDownloadedFiles();
   }
   return undefined;
+}
+
+interface ServerDownloadChecksumMismatchOptions<T> {
+  showErrorMessage: (message: string, ...actions: string[]) => PromiseLike<string | undefined>;
+  redownloadServer: () => Promise<T>;
+}
+
+export async function handleServerDownloadChecksumMismatch<T>({
+  showErrorMessage,
+  redownloadServer,
+}: ServerDownloadChecksumMismatchOptions<T>): Promise<T | undefined> {
+  const action = await showErrorMessage(
+    'Language server download failed verification.',
+    REDOWNLOAD_SERVER,
+  );
+  return action === REDOWNLOAD_SERVER ? redownloadServer() : undefined;
 }

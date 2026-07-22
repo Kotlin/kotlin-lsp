@@ -10,6 +10,7 @@ import {
   ensureServerLauncher,
   readServerBundleMetadata,
   removeDownloadedServerBundle,
+  ServerBundleChecksumError,
   serverBundleStoragePath,
   serverLauncherPath,
 } from './serverBundleDownload';
@@ -331,6 +332,41 @@ describe('server bundle download metadata', () => {
       });
       await assert.rejects(ensure, /Unsupported language server download URL protocol/);
     } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test('removes the bad archive after a checksum mismatch', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'server-bundle-'));
+    const extensionPath = path.join(root, 'extension');
+    const serverRoot = path.join(root, 'storage');
+    const server = http.createServer((_request, response) => {
+      response.writeHead(200, { 'Content-Length': '7' });
+      response.end('invalid');
+    });
+    try {
+      const url = await listen(server);
+      await fs.mkdir(extensionPath, { recursive: true });
+      await fs.writeFile(
+        path.join(extensionPath, 'server-bundle.json'),
+        JSON.stringify({
+          url,
+          version: SERVER_VERSION,
+          archiveName: 'server.tar.gz',
+          sha256: '0'.repeat(64),
+        }),
+      );
+
+      await assert.rejects(
+        ensureServerLauncher({ extensionPath, serverRoot, log: () => {} }),
+        ServerBundleChecksumError,
+      );
+      await assert.rejects(
+        fs.stat(path.join(serverRoot, 'server-downloads', SERVER_VERSION, 'server.tar.gz')),
+        { code: 'ENOENT' },
+      );
+    } finally {
+      await close(server);
       await fs.rm(root, { recursive: true, force: true });
     }
   });

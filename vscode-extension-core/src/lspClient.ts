@@ -32,6 +32,7 @@ import {
   discardServerBundleDownload,
   ensureServerLauncher,
   removeDownloadedServerBundle,
+  ServerBundleChecksumError,
   serverBundleStoragePath,
   serverLauncherPath,
 } from './serverBundleDownload';
@@ -40,7 +41,10 @@ import {
   registerCopyToClipboardHandler,
   registerIntellijExtensionsInitOption,
 } from './intellijExtensions';
-import { handleCancelledServerDownload } from './serverDownloadCancellation';
+import {
+  handleCancelledServerDownload,
+  handleServerDownloadChecksumMismatch,
+} from './serverDownloadRecovery';
 
 interface ExtensionPackageJson {
   name?: string;
@@ -481,6 +485,13 @@ async function ensureBundledServerLauncher(): Promise<string> {
         },
       });
       if (resumedLauncher !== undefined) return resumedLauncher;
+    } else if (error instanceof ServerBundleChecksumError) {
+      const redownloadedLauncher = await handleServerDownloadChecksumMismatch({
+        showErrorMessage: (message, ...actions) =>
+          vscode.window.showErrorMessage(message, ...actions),
+        redownloadServer: ensureBundledServerLauncher,
+      });
+      if (redownloadedLauncher !== undefined) return redownloadedLauncher;
     }
     throw error;
   }

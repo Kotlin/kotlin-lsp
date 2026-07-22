@@ -31,6 +31,12 @@ export interface ServerBundleProgress {
   increment?: number;
 }
 
+export class ServerBundleChecksumError extends Error {
+  constructor(expected: string, actual: string) {
+    super(`Language server download checksum mismatch: expected ${expected}, got ${actual}`);
+  }
+}
+
 interface DownloadFileOptions {
   onProgress?: (downloadedBytes: number, totalBytes?: number) => void;
   resume?: boolean;
@@ -306,9 +312,7 @@ async function downloadAndExtractServerBundle(
       const actual = await sha256(archivePath);
       if (actual.toLowerCase() !== metadata.sha256.toLowerCase()) {
         await fsp.rm(archivePath, { force: true });
-        throw new Error(
-          `Language server download checksum mismatch: expected ${metadata.sha256}, got ${actual}`,
-        );
+        throw new ServerBundleChecksumError(metadata.sha256, actual);
       }
     }
 
