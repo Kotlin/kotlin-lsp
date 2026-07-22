@@ -464,7 +464,7 @@ async function ensureBundledServerLauncher(): Promise<string> {
   } catch (error) {
     if (bundledServerLauncherCache === cache) bundledServerLauncherCache = undefined;
     if (isAbortError(error)) {
-      await handleCancelledServerDownload({
+      const resumedLauncher = await handleCancelledServerDownload({
         showInformationMessage: (message, ...actions) =>
           vscode.window.showInformationMessage(message, ...actions),
         resumeDownload: ensureBundledServerLauncher,
@@ -480,6 +480,7 @@ async function ensureBundledServerLauncher(): Promise<string> {
           }
         },
       });
+      if (resumedLauncher !== undefined) return resumedLauncher;
     }
     throw error;
   }

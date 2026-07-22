@@ -6,7 +6,7 @@ describe('cancelled server download', () => {
   it('resumes the download', async () => {
     const calls: string[] = [];
 
-    await handleCancelledServerDownload({
+    const result = await handleCancelledServerDownload({
       showInformationMessage: async (message, ...actions) => {
         assert.equal(
           message,
@@ -17,6 +17,7 @@ describe('cancelled server download', () => {
       },
       resumeDownload: async () => {
         calls.push('resume');
+        return '/server/bin/intellij-server';
       },
       deleteDownloadedFiles: async () => {
         calls.push('delete');
@@ -24,6 +25,7 @@ describe('cancelled server download', () => {
     });
 
     assert.deepEqual(calls, ['resume']);
+    assert.equal(result, '/server/bin/intellij-server');
   });
 
   it('deletes downloaded files', async () => {
