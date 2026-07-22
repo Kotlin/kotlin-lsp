@@ -186,18 +186,7 @@ sealed class ModCommandData {
             server: LSServer? = null,
         ): ModCommandData? = when (command) {
             is ModNothing -> Nothing
-            is ModCompositeCommand -> {
-                val commands = command.commands.map { from(it, actionContext, server) ?: return null }
-                Composite(
-                    if (commands.all { it is UpdateFileText }) {
-                        commands.mapIndexed { index, data -> data to index }
-                            .sortedWith(compareBy({ (it.first as UpdateFileText).fileUrl }, { it.second }))
-                            .map { it.first }
-                    } else {
-                        commands
-                    }
-                )
-            }
+            is ModCompositeCommand -> Composite(command.commands.map { from(it, actionContext, server) ?: return null })
             is ModNavigate -> Navigate(command.file.url, command.selectionStart, command.selectionEnd, command.caret)
             is ModCreateFile -> CreateFile(
                 command.file.url, when (val c = command.content) {
