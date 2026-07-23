@@ -407,7 +407,7 @@
               "Middle East",
               "Oceania"
             ],
-            "default": "none",
+            "default": "not_set",
             "description": "Your region for JetBrains product terms and data processing."
           },
           "intellij.dataSharing": {
