@@ -396,7 +396,8 @@
               "china",
               "europe",
               "middle_east",
-              "oceania"
+              "oceania",
+              "not_set"
             ],
             "enumItemLabels": [
               "Africa",
@@ -405,7 +406,8 @@
               "Mainland China",
               "Europe",
               "Middle East",
-              "Oceania"
+              "Oceania",
+              "Select a region to continue"
             ],
             "default": "not_set",
             "description": "Your region for JetBrains product terms and data processing."
@@ -416,14 +418,16 @@
             "enum": [
               "full",
               "anonymous",
-              "none"
+              "none",
+              "not_set"
             ],
             "enumDescriptions": [
               "Send anonymous usage statistics and full error reports (including exception messages and attachments).",
               "Send anonymous usage statistics and anonymized error reports (messages and user data stripped).",
-              "Do not send usage statistics or error reports."
+              "Do not send usage statistics or error reports.",
+              "Select a data-sharing preference to continue."
             ],
-            "default": "none",
+            "default": "not_set",
             "markdownDescription": "Controls what diagnostic data the language server shares with JetBrains.\n\nThe following table outlines what is sent at each level:\n\n| | Usage Data | Errors | Error Details (non-anonymized) |\n| --- | :---: | :---: | :---: |\n| `full` | ✓ | ✓ | ✓ |\n| `anonymous` | ✓ | ✓ | – |\n| `none` | – | – | – |"
           }
         }
