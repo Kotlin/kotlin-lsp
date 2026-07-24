@@ -13,7 +13,11 @@ import {
   WorkspaceFolder,
 } from 'vscode';
 import type { LanguageClient } from 'vscode-languageclient/node';
-import { getLspClient, registerInitializationOptionsContributor } from './lspClient';
+import {
+  getLspClient,
+  registerInitializationOptionsContributor,
+  sendLspCommand,
+} from './lspClient';
 import { getOutputChannel } from './extension';
 import { internalConsoleOptionsFor } from './consoleOptions';
 import {
@@ -59,7 +63,6 @@ const LEGACY_JVM_DEBUG_TYPE = 'intellij_debugger';
 const DEBUG_TYPE_BY_TOOL: Record<string, string> = { gradle: GRADLE_DEBUG_TYPE };
 
 const RUN_MAIN_COMMAND = 'intellij.jvm.runMain';
-const LSP_REQUEST_TIMEOUT_MS = 30_000;
 const DEFAULT_CONSOLE = 'integratedTerminal';
 
 export type ConsoleKind = 'internalConsole' | 'integratedTerminal' | 'externalTerminal';
@@ -318,7 +321,7 @@ async function lensBuildTool(uri: string, mainClass: string): Promise<string | u
   const client = getLspClient();
   if (!client) return undefined;
   try {
-    const response = await sendCommand<BuildToolLaunchResponse>(
+    const response = await sendLspCommand<BuildToolLaunchResponse>(
       client,
       'intellij.java.resolveBuildToolLaunch',
       [{ uri, mainClass }],
@@ -387,7 +390,7 @@ async function launchTargetUri(
   config: CommonLaunchConfig,
 ): Promise<string> {
   if (config.file) return client.code2ProtocolConverter.asUri(Uri.file(config.file));
-  const response = await sendCommand<ClassDocumentResponse>(
+  const response = await sendLspCommand<ClassDocumentResponse>(
     client,
     'intellij.java.resolveClassDocument',
     [{ fqn: config.mainClass }],
@@ -421,7 +424,7 @@ async function resolveJvmLaunchConfig(
   const client = launchPrerequisites(config);
   if (!client) return undefined;
   try {
-    const paths = await sendCommand<JvmLaunchPaths>(client, 'intellij.java.resolveLaunch', [
+    const paths = await sendLspCommand<JvmLaunchPaths>(client, 'intellij.java.resolveLaunch', [
       {
         uri: await launchTargetUri(client, config),
         cwd: config.cwd,
@@ -467,7 +470,7 @@ async function resolveGradleLaunchConfig(
   if (!client) return undefined;
   try {
     const uri = await launchTargetUri(client, config);
-    const response = await sendCommand<BuildToolLaunchResponse>(
+    const response = await sendLspCommand<BuildToolLaunchResponse>(
       client,
       'intellij.java.resolveBuildToolLaunch',
       [{ uri, mainClass: config.mainClass }],
@@ -518,32 +521,4 @@ function withConsoleDefaults(config: CommonLaunchConfig): DebugConfiguration {
   // console the user actually launched into, so focus follows `console` instead.
   config.internalConsoleOptions = internalConsoleOptionsFor(config.console);
   return config;
-}
-
-async function sendCommand<T>(
-  client: LanguageClient,
-  command: string,
-  args: unknown[],
-): Promise<T> {
-  return await withTimeout(
-    client.sendRequest('workspace/executeCommand', { command, arguments: args }) as Promise<T>,
-    LSP_REQUEST_TIMEOUT_MS,
-    command,
-  );
-}
-
-function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    const t = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
-    promise.then(
-      (v) => {
-        clearTimeout(t);
-        resolve(v);
-      },
-      (e) => {
-        clearTimeout(t);
-        reject(e);
-      },
-    );
-  });
 }

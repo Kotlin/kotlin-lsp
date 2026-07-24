@@ -31,6 +31,7 @@ export {
   prepareBundledServerLauncher,
   reportActivationFailure,
   registerInitializationOptionsContributor,
+  sendLspCommand,
   type InitializationOptionsContributor,
   type ClientFeatureFactory,
   type ServerLauncherPreparation,

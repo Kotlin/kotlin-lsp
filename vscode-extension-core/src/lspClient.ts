@@ -408,6 +408,30 @@ export async function withLspClientStartPending<T>(action: () => Promise<T>): Pr
   }
 }
 
+const LSP_REQUEST_TIMEOUT_MS = 30_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    promise.then(
+      (v) => {
+        clearTimeout(t);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(t);
+        reject(e);
+      },
+    );
+  });
+}
+
+/** Sends a `workspace/executeCommand` request — the shape every LSP-driven command here uses — with a timeout. */
+export const sendLspCommand = async <T>(client: LanguageClient, command: string, args: unknown[]): Promise<T> =>
+        await withTimeout(
+                client.sendRequest('workspace/executeCommand', {command, arguments: args}) as Promise<T>,
+                LSP_REQUEST_TIMEOUT_MS, command,);
+
 /**
  * Starts the LSP client applying all user options. If the client is already running, restarts it.
  */
