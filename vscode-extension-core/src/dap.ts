@@ -15,11 +15,14 @@ import {
 import type { LanguageClient } from 'vscode-languageclient/node';
 import { getLspClient, registerInitializationOptionsContributor } from './lspClient';
 import { getOutputChannel } from './extension';
+import { internalConsoleOptionsFor } from './consoleOptions';
 
 const DEBUG_TYPE = 'intellij_debugger';
 const RUN_MAIN_COMMAND = 'intellij_debugger.runMain';
 const LSP_REQUEST_TIMEOUT_MS = 30_000;
 const DEFAULT_CONSOLE = 'integratedTerminal';
+
+export type ConsoleKind = 'internalConsole' | 'integratedTerminal' | 'externalTerminal';
 
 interface RunMainArgs {
   mainClass: string;
@@ -57,7 +60,8 @@ interface LaunchConfig extends DebugConfiguration {
   javaExec?: string;
   cwd?: string;
   env?: Record<string, string>;
-  console?: 'internalConsole' | 'integratedTerminal' | 'externalTerminal';
+  console?: ConsoleKind;
+  internalConsoleOptions?: 'neverOpen' | 'openOnSessionStart' | 'openOnFirstSessionStart';
 }
 
 export function registerDapServer(context: ExtensionContext) {
@@ -192,6 +196,9 @@ async function resolveLaunchConfig(config: LaunchConfig): Promise<DebugConfigura
   //    program inside a terminal shell (no "terminal process terminated" alert; real TTY; VS Code does quoting).
   //  - internalConsole → the server spawns the process itself and streams output to the Debug Console.
   config.console = config.console ?? DEFAULT_CONSOLE;
+  // Keep VSCode from popping the Debug Console (its default `internalConsoleOptions`) on top of the
+  // console the user actually launched into, so focus follows `console` instead.
+  config.internalConsoleOptions = internalConsoleOptionsFor(config.console);
   return config;
 }
 
