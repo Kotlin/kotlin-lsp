@@ -58,7 +58,6 @@
     <orderEntry type="module" module-name="intellij.kotlin.codeInsight.inspections" scope="PROVIDED" />
     <orderEntry type="module" module-name="intellij.kotlin.codeInsight.intentions" />
     <orderEntry type="module" module-name="intellij.kotlin.formatter.minimal" />
-    <orderEntry type="module" module-name="kotlin.plugin.common" />
     <orderEntry type="module" module-name="intellij.platform.editor.ex" />
     <orderEntry type="module" module-name="intellij.platform.editor.ui" />
     <orderEntry type="module" module-name="intellij.kotlin.searching" />
