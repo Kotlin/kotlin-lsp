@@ -45,6 +45,7 @@ import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.PathUtil
 import com.intellij.util.containers.nullize
 import com.intellij.util.lang.JavaVersion
+import com.jetbrains.ls.imports.api.ConflictAverseImporter
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
@@ -107,7 +108,7 @@ import kotlin.io.path.isRegularFile
 
 private val LOG = fileLogger()
 
-object JpsWorkspaceImporter : WorkspaceImporter {
+object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
     override suspend fun importWorkspace(
         project: Project,
         parameters: WorkspaceImportParameters,
