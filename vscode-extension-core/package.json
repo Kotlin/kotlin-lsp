@@ -13,6 +13,7 @@
     "./handleKeyType": "./src/handleKeyType.ts",
     "./testing/keyHandlerTestUtils": "./src/keyHandlerTestUtils.ts",
     "./testing/archiveExtraction": "./src/testing/archiveExtraction.ts",
+    "./testing/serviceMessages": "./src/testing/serviceMessages.ts",
     "./keyHandlerUtils": "./src/keyHandlerUtils.ts"
   },
   "scripts": {
