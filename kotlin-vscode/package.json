@@ -251,11 +251,6 @@
             "default": 10000,
             "description": "Timeout (ms) for connecting to the external dev server."
           },
-          "intellij.dev.logLaunch": {
-            "type": "boolean",
-            "default": false,
-            "description": "Enable debug logging for the bundled server launcher (logs launcher output and env)"
-          },
           "intellij.dev.commands": {
             "type": "boolean",
             "default": false,

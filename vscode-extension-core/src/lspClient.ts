@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
 import { workspace } from 'vscode';
 import {
+  CloseAction,
   Disposable,
+  ErrorHandler,
   LanguageClient,
   LanguageClientOptions,
   NotificationType,
@@ -14,7 +16,7 @@ import { chmodSync } from 'fs';
 import { rm } from 'node:fs/promises';
 import * as net from 'node:net';
 import * as os from 'node:os';
-import { type ChildProcessByStdio, spawn } from 'node:child_process';
+import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import {
   type AcceptedEulaHashProvider,
   getBuildOutputChannel,
@@ -27,7 +29,6 @@ import { runWithEulaGate } from './eulaGate';
 import { clearBuildError, setBuildError, updateLspStatusBar } from './statusBar';
 import { middleware } from './middleware';
 import * as readline from 'node:readline';
-import { type Readable } from 'node:stream';
 import {
   discardServerBundleDownload,
   ensureServerLauncher,
@@ -39,6 +40,11 @@ import {
 } from './serverBundleDownload';
 import { type ClientFeatureFactory, startClientWithFeatures } from './clientFeatureFactories';
 import { isDataSharingChoice, isRegion } from './consentValues';
+import {
+  type LaunchedServerState,
+  LaunchedServerStartup,
+  shouldSuppressRestart,
+} from './launchedServerStartup';
 import {
   registerChooseActionMenuHandler,
   registerCopyToClipboardHandler,
@@ -58,7 +64,7 @@ interface ExtensionPackageJson {
 }
 
 const LAUNCHED_SERVER_START_TIMEOUT_MS = 60_000;
-const LAUNCHED_SERVER_CONNECTION_TIMEOUT_MS = 10_000;
+const LAUNCHED_SERVER_EXIT_WAIT_MS = 1_000;
 const LOCAL_SERVER_CONNECTION_TIMEOUT_MS = 10_000;
 const CONNECTION_RETRY_DELAY_MS = 100;
 
@@ -66,7 +72,6 @@ const LANGUAGE_CLIENT_ID = 'intellij';
 const OPT_DEV_SERVER_PORT = 'intellij.dev.serverPort';
 const OPT_DEV_SERVER_TIMEOUT = 'intellij.dev.serverTimeoutMs';
 const OPT_SERVER_PATH = 'intellij.serverPath';
-const OPT_LOG_LAUNCH = 'intellij.dev.logLaunch';
 const OPT_JVM_ARGS = 'intellij.additionalJvmArgs';
 const OPT_DEFAULT_WORKSPACE_SDK = 'intellij.jdkForSymbolResolution';
 const OPT_BUILD_TOOL = 'intellij.buildTool';
@@ -83,6 +88,8 @@ let restartRequestedDuringStart = false;
 let bundledServerLauncherCache: { key: string; promise: Promise<string> } | undefined;
 let bundledServerSetupPhase: ServerBundlePhase = 'downloading';
 let configuredClientFeatureFactories: ClientFeatureFactory[] = [];
+/** The launched server outliving a single start, so a later stop can still terminate it. */
+let launchedServer: LaunchedServerStartup | undefined;
 
 interface ImportLogParams {
   type: 1 | 2 | 3;
@@ -325,12 +332,16 @@ export function startLspClient({
 }
 
 async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): Promise<void> {
-  const runClient = await createLspClient(getAcceptedEulaHash);
+  const launchedServerState: LaunchedServerState = { initialStartSettled: false };
+  const runClient = await createLspClient(getAcceptedEulaHash, launchedServerState);
   if (!runClient) return;
   await stopLspClient();
   _client = runClient;
   getContext().subscriptions.push(
     _client.onDidChangeState((e) => {
+      // Running means the server answered initialize, so its startup no longer needs a watchdog.
+      // This also covers the client's own restarts, which do not go through doStartLspClient.
+      if (e.newState === State.Running) launchedServerState.currentAttempt?.settle();
       for (const subscription of clientSubscriptions.slice()) {
         try {
           subscription(runClient, e);
@@ -349,10 +360,23 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
     registerCopyToClipboardHandler(runClient);
     registerChooseActionMenuHandler(runClient);
   } catch (e) {
-    if (
-      e instanceof LanguageServerStartupError &&
-      e.code === LanguageServerStartupError.LICENSE_ERROR_CODE
-    ) {
+    const launchedServerAttempt = launchedServerState.currentAttempt;
+    await launchedServerAttempt?.waitForExit(LAUNCHED_SERVER_EXIT_WAIT_MS);
+    try {
+      await runClient.dispose();
+    } catch {
+      // dispose() marks the client as disposed before stop(), which can reject in StartFailed state.
+      // The disposed flag prevents an already queued restart from starting another server.
+    }
+    launchedServerAttempt?.kill();
+    // A second chance to observe the exit code: only the first exit is latched, so the kill above
+    // cannot mask a natural one, and expiredBuild below needs it to classify the failure.
+    await launchedServerAttempt?.waitForExit(LAUNCHED_SERVER_EXIT_WAIT_MS);
+    if (_client === runClient) _client = undefined;
+    if (launchedServer === launchedServerAttempt) launchedServer = undefined;
+    updateLspStatusBar();
+
+    if (launchedServerAttempt?.expiredBuild) {
       void vscode.window.showErrorMessage(
         `"${extensionDisplayName()}" could not properly start the language server.`,
         {
@@ -361,26 +385,35 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
             'The bundled language server build has expired. Update the extension and try again.',
         },
       );
-
       return;
     }
-
-    throw e;
+    const cause = e instanceof Error ? e : new Error(String(e));
+    throw launchedServerAttempt?.startupError(cause) ?? cause;
+  } finally {
+    launchedServerState.initialStartSettled = true;
+    launchedServerState.currentAttempt?.settle();
   }
 }
 
 export async function stopLspClient(): Promise<void> {
-  if (!_client) return;
+  if (!_client) {
+    launchedServer?.kill();
+    launchedServer = undefined;
+    return;
+  }
   const client = _client;
   _client = undefined;
   updateLspStatusBar();
-  if (!client.needsStop()) {
-    return;
-  }
   try {
-    await client.stop();
+    if (client.needsStop()) {
+      await client.stop();
+    }
   } catch (error) {
     if (!isWriteAfterEndError(error)) throw error;
+  } finally {
+    // kill() is a no-op once the shutdown handshake above made the process exit on its own.
+    launchedServer?.kill();
+    launchedServer = undefined;
   }
 }
 
@@ -551,7 +584,7 @@ export function prefetchBundledServerLauncher(): void {
   });
 }
 
-function getServerOptions(): ServerOptions {
+function getServerOptions(launchedServerState: LaunchedServerState): ServerOptions {
   const predefinedPort = configOption<number>(OPT_DEV_SERVER_PORT) ?? -1;
   if (predefinedPort !== -1) {
     return () =>
@@ -560,7 +593,14 @@ function getServerOptions(): ServerOptions {
         configOption<number>(OPT_DEV_SERVER_TIMEOUT) ?? LOCAL_SERVER_CONNECTION_TIMEOUT_MS,
       );
   }
-  return () => getStreamInfoForLaunchedServer(configuredServerLauncherPath());
+  return () => {
+    const launchedServerAttempt = new LaunchedServerStartup();
+    launchedServerState.currentAttempt = launchedServerAttempt;
+    return getStreamInfoForLaunchedServer({
+      launchedServerAttempt,
+      launcherPath: configuredServerLauncherPath(),
+    });
+  };
 }
 
 function configuredServerLauncherPath(): string | undefined {
@@ -568,26 +608,29 @@ function configuredServerLauncherPath(): string | undefined {
   return serverPath === undefined ? undefined : serverLauncherPath(serverPath);
 }
 
-async function getStreamInfoForLaunchedServer(launcherPath?: string): Promise<StreamInfo> {
-  const serverProcess = await startServer(launcherPath);
-  try {
-    const port = await getPortForLaunchedServer(serverProcess);
-    return await getStreamInfoForRunningServer(port, LAUNCHED_SERVER_CONNECTION_TIMEOUT_MS);
-  } catch (e) {
-    serverProcess.kill();
-    throw e;
-  }
+async function getStreamInfoForLaunchedServer({
+  launchedServerAttempt,
+  launcherPath,
+}: {
+  launchedServerAttempt: LaunchedServerStartup;
+  launcherPath?: string;
+}): Promise<StreamInfo> {
+  const serverProcess = await startServer({ launchedServerAttempt, launcherPath });
+  return { reader: serverProcess.stdout, writer: serverProcess.stdin };
 }
 
-async function startServer(
-  configuredLauncherPath?: string,
-): Promise<ChildProcessByStdio<null, Readable, Readable>> {
-  const debugLaunch = configOption<boolean>(OPT_LOG_LAUNCH) ?? false;
+async function startServer({
+  launchedServerAttempt,
+  launcherPath: configuredLauncherPath,
+}: {
+  launchedServerAttempt: LaunchedServerStartup;
+  launcherPath?: string;
+}): Promise<ChildProcessWithoutNullStreams> {
   const launcherPath = configuredLauncherPath ?? (await ensureBundledServerLauncher());
 
   const context = getContext();
   const args: string[] = [];
-  args.push('--socket', '0');
+  args.push('--stdio');
   if (context.storageUri) {
     args.push('--system-path', context.storageUri.fsPath);
   }
@@ -596,96 +639,36 @@ async function startServer(
   const dataSharing = isDataSharingChoice(rawDataSharing) ? rawDataSharing : 'none';
   const rawRegion = configOption(OPT_REGION);
   const region = isRegion(rawRegion) ? rawRegion : undefined;
-  const env = buildLaunchEnvironment(process.env, userJvmOptions, debugLaunch, dataSharing, region);
+  const env = buildLaunchEnvironment(process.env, userJvmOptions, dataSharing, region);
 
   logInfo('Starting language server');
   logInfo(`  command: ${launcherPath}`);
   logInfo(`  args   : ${JSON.stringify(args)}`);
   logInfo(`  VM opts: ${JSON.stringify(userJvmOptions)}`);
-  if (debugLaunch) {
-    logInfo(`  env: ${JSON.stringify(env)}`);
-  }
   logInfo('');
 
   const serverProcess = spawn(launcherPath, args, {
     env,
-    stdio: ['ignore', 'pipe', 'pipe'],
+    stdio: ['pipe', 'pipe', 'pipe'],
   });
+  launchedServerAttempt.setProcess(serverProcess, (error) =>
+    logInfo(`Language server process error: ${error.message}`),
+  );
+  launchedServer = launchedServerAttempt;
 
-  if (debugLaunch) {
-    const rl = readline.createInterface({
-      input: serverProcess.stdout,
-      terminal: false,
-    });
-    rl.on('line', (line: string) => logInfo(`[stdout] ${line}`));
-    serverProcess.once('exit', () => rl.close());
+  const rlErr = readline.createInterface({
+    input: serverProcess.stderr,
+    terminal: false,
+  });
+  rlErr.on('line', (line: string) => logInfo(`[stderr] ${line}`));
+  serverProcess.once('close', () => rlErr.close());
 
-    const rlErr = readline.createInterface({
-      input: serverProcess.stderr,
-      terminal: false,
-    });
-    rlErr.on('line', (line: string) => logInfo(`[stderr] ${line}`));
-    serverProcess.once('exit', () => rlErr.close());
-  }
+  await launchedServerAttempt.waitForSpawn();
+
+  // Every launch is guarded, including the client's own restarts: its crash budget only reacts to a
+  // closed connection, so a server that spawns but never answers initialize is invisible to it.
+  launchedServerAttempt.startTimeout(LAUNCHED_SERVER_START_TIMEOUT_MS);
   return serverProcess;
-}
-
-class LanguageServerStartupError extends Error {
-  static readonly LICENSE_ERROR_CODE: number = 7;
-
-  constructor(
-    public code: number | null,
-    public signal: NodeJS.Signals | null,
-  ) {
-    super(`Language server process exited before announcing port (code=${code}, signal=${signal})`);
-  }
-}
-
-function getPortForLaunchedServer(
-  serverProcess: ChildProcessByStdio<null, Readable, Readable>,
-): Promise<number> {
-  return new Promise<number>((resolve, reject) => {
-    const cleanup = () => {
-      serverProcess.removeAllListeners('exit');
-      serverProcess.removeAllListeners('error');
-
-      clearTimeout(timer);
-    };
-
-    const onExit = (code: number | null, signal: NodeJS.Signals | null) => {
-      reject(new LanguageServerStartupError(code, signal));
-    };
-
-    const timer = setTimeout(() => {
-      cleanup();
-      serverProcess.kill();
-      reject(new Error('Timed out waiting for language server port announcement'));
-    }, LAUNCHED_SERVER_START_TIMEOUT_MS);
-
-    const rl = readline.createInterface({
-      input: serverProcess.stdout,
-      terminal: false,
-    });
-
-    rl.on('line', (line: string) => {
-      if (line.indexOf('Server is listening on ') >= 0) {
-        const pos = line.lastIndexOf(':');
-        if (pos > 0) {
-          const portString = line.substring(pos + 1);
-          const parsedPort = Number(portString);
-          if (Number.isInteger(parsedPort)) {
-            cleanup();
-            rl.close();
-            serverProcess.stdout.resume();
-            resolve(parsedPort);
-          }
-        }
-      }
-    });
-
-    serverProcess.once('error', reject);
-    serverProcess.once('exit', onExit);
-  });
 }
 
 async function getStreamInfoForRunningServer(port: number, timeoutMs: number): Promise<StreamInfo> {
@@ -776,6 +759,7 @@ export function buildInitializationOptions(
 
 async function createLspClient(
   getAcceptedEulaHash: AcceptedEulaHashProvider,
+  launchedServerState: LaunchedServerState,
 ): Promise<LanguageClient | null> {
   const clientOptions: LanguageClientOptions = {
     documentSelector: buildDocumentSelector(),
@@ -787,14 +771,33 @@ async function createLspClient(
       supportHtml: true,
     },
   };
-  const serverOptions = getServerOptions();
+  const serverOptions = getServerOptions(launchedServerState);
   if (!serverOptions) return null;
-  return new LanguageClient(
+  // eslint-disable-next-line prefer-const -- initialized after LanguageClient construction
+  let defaultErrorHandler: ErrorHandler | undefined;
+  const delegate = (): ErrorHandler => {
+    if (!defaultErrorHandler) {
+      throw new Error('Language client error handler used before initialization');
+    }
+    return defaultErrorHandler;
+  };
+  clientOptions.errorHandler = {
+    error: (error, message, count) => delegate().error(error, message, count),
+    closed: async () => {
+      if (await shouldSuppressRestart(launchedServerState, LAUNCHED_SERVER_EXIT_WAIT_MS)) {
+        return { action: CloseAction.DoNotRestart, handled: true };
+      }
+      return delegate().closed();
+    },
+  };
+  const client = new LanguageClient(
     LANGUAGE_CLIENT_ID,
     extensionDisplayName(),
     serverOptions,
     clientOptions,
   );
+  defaultErrorHandler = client.createDefaultErrorHandler();
+  return client;
 }
 
 function getUserJvmOptions(): string[] {
@@ -804,7 +807,6 @@ function getUserJvmOptions(): string[] {
 function buildLaunchEnvironment(
   baseEnv: NodeJS.ProcessEnv,
   extraOptions: string[],
-  debugLaunch: boolean,
   dataSharing: string,
   region: string | undefined,
 ): NodeJS.ProcessEnv {
@@ -815,9 +817,8 @@ function buildLaunchEnvironment(
     const extra = extraOptions.map(shellQuoteIfNeeded).join(' ');
     env[option] = current ? `${current} ${extra}` : extra;
   }
-  if (debugLaunch) {
-    env.IJ_LAUNCHER_DEBUG = '1';
-  }
+  // the launcher's debug log goes to stdout, which is the protocol channel in --stdio mode
+  delete env.IJ_LAUNCHER_DEBUG;
   delete env.INTELLIJ_DATA_SHARING;
   if (dataSharing !== 'none') {
     env.INTELLIJ_DATA_SHARING = dataSharing; // 'full' | 'anonymous'
