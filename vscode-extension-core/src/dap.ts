@@ -33,6 +33,8 @@ interface ClassDocumentResponse {
 
 interface ClasspathResponse {
   classpath: string[];
+  modulePath?: string[];
+  moduleName?: string;
 }
 
 interface WorkingDirectoryResponse {
@@ -46,6 +48,7 @@ interface JavaExecutableResponse {
 interface LaunchConfig extends DebugConfiguration {
   request: 'launch';
   mainClass?: string;
+  moduleName?: string;
   file?: string;
   args?: string[];
   vmArgs?: string[];
@@ -165,7 +168,13 @@ async function resolveLaunchConfig(config: LaunchConfig): Promise<DebugConfigura
           ])
         : Promise.resolve(undefined),
     ]);
-    if (cp) config.classPaths = cp.classpath;
+    if (cp) {
+      config.classPaths = cp.classpath;
+      // For a JPMS launch the server also returns the module path and the owning module name, so the main
+      // class is run from the module path (`-m moduleName/mainClass`) instead of the class path.
+      if (cp.modulePath && cp.modulePath.length > 0) config.modulePaths = cp.modulePath;
+      if (cp.moduleName) config.moduleName = cp.moduleName;
+    }
     // Default the working directory to the module's project directory. Without it the launched process
     // inherits the language server's directory, so e.g. Spring Boot's docker-compose lookup fails.
     if (wd?.workingDirectory) config.cwd = wd.workingDirectory;

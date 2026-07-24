@@ -148,7 +148,11 @@
                 "items": {
                   "type": "string"
                 },
-                "description": "Module path entries for JPMS launches. Specify manually; the LSP server does not resolve these automatically."
+                "description": "Override the JPMS module path. If empty, the LSP server resolves it from the project model when the main class belongs to a named Java module."
+              },
+              "moduleName": {
+                "type": "string",
+                "description": "Name of the JPMS module that owns the main class, launched as `-m moduleName/mainClass`. If empty, the LSP server resolves it from the project model."
               },
               "javaExec": {
                 "type": "string",
