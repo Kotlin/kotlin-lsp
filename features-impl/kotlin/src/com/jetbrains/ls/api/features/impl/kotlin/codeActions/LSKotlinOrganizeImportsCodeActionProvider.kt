@@ -8,6 +8,7 @@ import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.toLspRange
+import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.codeActions.LSSimpleCodeActionProvider
 import com.jetbrains.ls.api.features.codeActions.LSSimpleCodeActionProvider.NoData
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
@@ -16,6 +17,7 @@ import com.jetbrains.lsp.protocol.CodeActionKind
 import com.jetbrains.lsp.protocol.CodeActionParams
 import com.jetbrains.lsp.protocol.TextEdit
 import kotlinx.serialization.KSerializer
+import org.jetbrains.annotations.Nls
 import org.jetbrains.kotlin.idea.base.codeInsight.KotlinOptimizeImportsFacility
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtPsiFactory
@@ -24,7 +26,7 @@ import org.jetbrains.kotlin.resolve.ImportPath
 internal object LSKotlinOrganizeImportsCodeActionProvider : LSSimpleCodeActionProvider<NoData>() {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSKotlinLanguage)
 
-    override val title: String get() = "Organize Imports"
+    override val title: @Nls String get() = LspServerBundle.message("command.organize.imports")
     override val commandName: String get() = "kotlin.organize.imports"
     override val kind: CodeActionKind get() = CodeActionKind.SourceOrganizeImports
     override val dataSerializer: KSerializer<NoData> get() = NoData.serializer()

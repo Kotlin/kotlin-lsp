@@ -14,6 +14,7 @@ import com.intellij.util.IncorrectOperationException
 import com.intellij.util.concurrency.annotations.RequiresEdt
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.DiffGranularity
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
 import com.jetbrains.ls.api.features.textEdits.fileChanges
@@ -76,14 +77,14 @@ suspend fun doRefactoring(
                         ShowMessageNotificationType,
                         ShowMessageParams(
                             MessageType.Error,
-                            cause.message ?: "Error performing refactoring"
+                            cause.message ?: LspServerBundle.message("error.performing.refactoring")
                         )
                     )
                 }
 
                 throwLspError(
                     RenameRequestType,
-                    cause.message ?: "Error performing refactoring",
+                    cause.message ?: LspServerBundle.message("error.performing.refactoring"),
                     Unit,
                     ErrorCodes.InvalidParams,
                     cause

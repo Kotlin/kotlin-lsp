@@ -7,6 +7,7 @@ import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
+import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.codeLens.LSCodeLensProvider
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.CodeLens
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.encodeToJsonElement
+import org.jetbrains.annotations.Nls
 import org.jetbrains.annotations.VisibleForTesting
 
 @VisibleForTesting
@@ -44,8 +46,8 @@ abstract class LSJvmRunMainCodeLensProvider : LSCodeLensProvider {
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
                 findMainEntryPoints(psiFile).flatMap { (range, mainClass) ->
                     listOf(
-                        launchLens(params.textDocument.uri, range, mainClass, noDebug = true, title = "$(play) Run"),
-                        launchLens(params.textDocument.uri, range, mainClass, noDebug = false, title = "$(debug) Debug"),
+                        launchLens(params.textDocument.uri, range, mainClass, noDebug = true, title = LspServerBundle.message("command.play.run")),
+                        launchLens(params.textDocument.uri, range, mainClass, noDebug = false, title = LspServerBundle.message("command.debug.debug")),
                     )
                 }
             }
@@ -62,7 +64,7 @@ abstract class LSJvmRunMainCodeLensProvider : LSCodeLensProvider {
 
     protected data class MainEntryPoint(val range: Range, val mainClass: String)
 
-    private fun launchLens(uri: DocumentUri, range: Range, mainClass: String, noDebug: Boolean, title: String): CodeLens {
+    private fun launchLens(uri: DocumentUri, range: Range, mainClass: String, noDebug: Boolean, title: @Nls String): CodeLens {
         val command = Command(
             title = title,
             command = RUN_COMMAND_NAME,

@@ -24,9 +24,10 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.encodeToJsonElement
+import org.jetbrains.annotations.Nls
 
 abstract class LSSimpleCodeActionProvider<P : Any> : LSCodeActionProvider, LSCommandDescriptorProvider {
-    protected abstract val title: String
+    protected abstract val title: @Nls String
     protected abstract val kind: CodeActionKind
     protected open val isPreferred: Boolean? = null
     protected open val commandName: String get() = title

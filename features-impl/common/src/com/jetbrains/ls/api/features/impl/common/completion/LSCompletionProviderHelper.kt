@@ -22,6 +22,7 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
+import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.completion.LSCompletionCandidate
 import com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider
@@ -77,7 +78,7 @@ class LSCompletionProviderHelper(
 
     fun createCommandDescriptors(fileForModificationProvider: FileForModificationProvider): List<LSCommandDescriptor> = listOf(
             LSCommandDescriptor(
-                title = "Apply Completion Item",
+                title = LspServerBundle.message("command.apply.completion.item"),
                 name = applyCompletionCommandKey,
                 executor = { arguments ->
                     val server = contextOf<LSServer>()
@@ -87,7 +88,7 @@ class LSCompletionProviderHelper(
                         null -> {
                             lspClient.notify(
                                 notificationType = ShowMessageNotificationType,
-                                params = ShowMessageParams(MessageType.Error, "Your completion session has expired, please try again"),
+                                params = ShowMessageParams(MessageType.Error, LspServerBundle.message("error.session.expired")),
                             )
                         }
 
@@ -166,7 +167,7 @@ class LSCompletionProviderHelper(
                                     kind = LSCompletionItemKindProvider.getKind(CompletionCandidate(lookup, language)),
                                     textEdit = CompletionItem.Edit.emptyAtPosition(params.position),
                                     command = Command(
-                                        "Apply Completion",
+                                        LspServerBundle.message("command.apply.completion"),
                                         command = applyCompletionCommandKey,
                                         arguments = listOf(key.toJson())
                                     ),
@@ -209,7 +210,7 @@ class LSCompletionProviderHelper(
                     completionItem.copy(
                         additionalTextEdits = insRes.edits,
                         command = Command(
-                            title = "Move cursor",
+                            title = LspServerBundle.message("command.move.cursor"),
                             command = "cursorMove",
                             arguments = listOf(
                                 buildJsonObject {

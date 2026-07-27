@@ -11,6 +11,7 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
+import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.kotlinLsp.requests.core.ChooseActionSession
@@ -28,8 +29,6 @@ import kotlinx.serialization.json.jsonPrimitive
 
 private val LOG = logger<LSChooseActionCommandDescriptorProvider>()
 
-private const val errorMessage = "This action is no longer available, please try again"
-
 /**
  * Provides the command invoked by the client after the user picks an entry in a `ModChooseAction` menu shown via
  * the `intellij/chooseAction` notification. It recovers the [ChooseActionSession] stashed in
@@ -43,7 +42,7 @@ object LSChooseActionCommandDescriptorProvider : LSCommandDescriptorProvider {
     override val commandDescriptors: List<LSCommandDescriptor> get() = listOf(commandDescriptor)
 
     val commandDescriptor: LSCommandDescriptor = LSCommandDescriptor(
-        title = "Choose ModCommand Action",
+        title = LspServerBundle.message("command.choose.action"),
         name = "chooseModCommandAction",
         executor = { arguments ->
             require(arguments.size == 2) { "Expected 2 arguments (sessionId, index), got: ${arguments.size}" }
@@ -54,7 +53,7 @@ object LSChooseActionCommandDescriptorProvider : LSCommandDescriptorProvider {
                 null -> {
                     lspClient.notify(
                         notificationType = ShowMessageNotificationType,
-                        params = ShowMessageParams(MessageType.Error, errorMessage),
+                        params = ShowMessageParams(MessageType.Error, LspServerBundle.message("error.action.not.available")),
                     )
                 }
 
@@ -75,7 +74,7 @@ object LSChooseActionCommandDescriptorProvider : LSCommandDescriptorProvider {
                                 action?.perform(context)
                             }.getOrHandleException {
                                 LOG.warn("Failed to perform chosen mod command action $action", it)
-                            } ?: ModCommand.error(errorMessage)
+                            } ?: ModCommand.error(LspServerBundle.message("error.action.not.available"))
                             ModCommandData.from(modCommand, context, server)
                         }
                         if (data != null) {

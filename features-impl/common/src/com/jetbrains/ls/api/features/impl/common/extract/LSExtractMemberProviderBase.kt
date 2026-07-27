@@ -19,6 +19,7 @@ import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.commands.LSCommandExecutor
+import com.jetbrains.ls.api.features.commands.LspCommand
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.lspClient
@@ -45,6 +46,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
+import org.jetbrains.annotations.Nls
 
 /**
  * Base class for extract refactorings (variable, method, etc.) in LSP.
@@ -55,7 +57,7 @@ import kotlinx.serialization.json.encodeToJsonElement
  */
 abstract class LSExtractMemberProviderBase<Context> : LSCodeActionProvider, LSCommandDescriptorProvider {
     protected abstract val commandName: String
-    protected abstract val descriptorTitle: String
+    protected abstract val descriptorTitle: @LspCommand String
     protected abstract val extractActionKind: CodeActionKind
 
     override val commandDescriptors: List<LSCommandDescriptor>
@@ -238,8 +240,8 @@ abstract class LSExtractMemberProviderBase<Context> : LSCodeActionProvider, LSCo
     }
 
     protected sealed interface ChoicesResult {
-        data class Choices(val choices: List<String>, val selection: TextRange) : ChoicesResult
-        data class Error(val defaultTitle: String, val errorMessage: String) : ChoicesResult
+        data class Choices(val choices: List<@Nls String>, val selection: TextRange) : ChoicesResult
+        data class Error(val defaultTitle: @Nls String, val errorMessage: @Nls String) : ChoicesResult
     }
 
     @Serializable
@@ -248,7 +250,7 @@ abstract class LSExtractMemberProviderBase<Context> : LSCodeActionProvider, LSCo
         data class Data(val selection: Range, val choice: String) : Payload
 
         @Serializable
-        data class Error(val message: String) : Payload
+        data class Error(val message: @Nls String) : Payload
     }
 
     companion object {
