@@ -32,14 +32,21 @@ import {
   discardServerBundleDownload,
   ensureServerLauncher,
   removeDownloadedServerBundle,
+  ServerBundleChecksumError,
+  type ServerBundlePhase,
   serverBundleStoragePath,
   serverLauncherPath,
 } from './serverBundleDownload';
+import { type ClientFeatureFactory, startClientWithFeatures } from './clientFeatureFactories';
 import {
   registerChooseActionMenuHandler,
   registerCopyToClipboardHandler,
   registerIntellijExtensionsInitOption,
 } from './intellijExtensions';
+import {
+  handleCancelledServerDownload,
+  handleServerDownloadChecksumMismatch,
+} from './serverDownloadRecovery';
 
 interface ExtensionPackageJson {
   name?: string;
@@ -65,6 +72,7 @@ const OPT_BUILD_TOOL = 'intellij.buildTool';
 const OPT_DATA_SHARING = 'intellij.dataSharing';
 const OPT_REGION = 'intellij.region';
 const OPT_PROJECTS = 'intellij.projects';
+const OPT_DISABLE_ROCKS_DB_WAL = 'intellij.disableRocksDBWriteAheadLog';
 
 const INDEX_DIR_STATE_KEY = 'jetbrains.intellij.indexDir';
 
@@ -72,6 +80,8 @@ let _client: LanguageClient | undefined;
 let startLspClientPromise: Promise<void> | undefined;
 let restartRequestedDuringStart = false;
 let bundledServerLauncherCache: { key: string; promise: Promise<string> } | undefined;
+let bundledServerSetupPhase: ServerBundlePhase = 'downloading';
+let configuredClientFeatureFactories: ClientFeatureFactory[] = [];
 
 interface ImportLogParams {
   type: 1 | 2 | 3;
@@ -88,6 +98,7 @@ const importLogNotification = new NotificationType<ImportLogParams>('intellij/im
 const clientSubscriptions: ((client: LanguageClient, stateChange: StateChangeEvent) => void)[] = [];
 
 export type InitializationOptionsContributor = () => Record<string, unknown>;
+export type { ClientFeatureFactory } from './clientFeatureFactories';
 
 /**
  * An externally configured project passed to the server via initialization options.
@@ -119,12 +130,15 @@ export function registerInitializationOptionsContributor(
 interface LspClientPolicyOptions {
   getAcceptedEulaHash: AcceptedEulaHashProvider;
   checkEulaAccepted: () => Promise<boolean>;
+  clientFeatureFactories?: ClientFeatureFactory[];
 }
 
 export function initLspClient({
   getAcceptedEulaHash,
   checkEulaAccepted,
+  clientFeatureFactories = [],
 }: LspClientPolicyOptions): void {
+  configuredClientFeatureFactories = [...clientFeatureFactories];
   registerIntellijExtensionsInitOption();
   // TODO: Send the updated region to the backend when runtime region updates are supported.
   getContext().subscriptions.push(
@@ -329,7 +343,7 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
   );
 
   try {
-    await runClient.start();
+    await startClientWithFeatures(runClient, configuredClientFeatureFactories);
     registerImportLogHandler(runClient);
     registerCopyToClipboardHandler(runClient);
     registerChooseActionMenuHandler(runClient);
@@ -420,6 +434,7 @@ async function ensureBundledServerLauncher(): Promise<string> {
   const serverRoot = serverBundleStoragePath(packageJson()?.name ?? 'intellij-server');
   const cacheKey = context.extensionPath;
   if (bundledServerLauncherCache?.key !== cacheKey) {
+    bundledServerSetupPhase = 'downloading';
     bundledServerLauncherCache = {
       key: cacheKey,
       promise: Promise.resolve(
@@ -437,7 +452,10 @@ async function ensureBundledServerLauncher(): Promise<string> {
                 extensionPath: context.extensionPath,
                 serverRoot,
                 log: logInfo,
-                progress: (update) => progress.report(update),
+                progress: (update) => {
+                  bundledServerSetupPhase = update.phase;
+                  progress.report(update);
+                },
                 signal: controller.signal,
                 allowCachedServerWithoutMetadata: isDevelopment,
               });
@@ -462,21 +480,31 @@ async function ensureBundledServerLauncher(): Promise<string> {
   } catch (error) {
     if (bundledServerLauncherCache === cache) bundledServerLauncherCache = undefined;
     if (isAbortError(error)) {
-      const action = await vscode.window.showInformationMessage(
-        `${extensionDisplayName()}: language server download cancelled`,
-        'Delete downloaded files',
-      );
-      if (action === 'Delete downloaded files') {
-        try {
-          await discardServerBundleDownload(context.extensionPath, serverRoot, logInfo);
-        } catch (discardError) {
-          logInfo(
-            `Failed to discard cancelled language server download: ${
-              discardError instanceof Error ? discardError.message : String(discardError)
-            }`,
-          );
-        }
-      }
+      const resumedLauncher = await handleCancelledServerDownload({
+        phase: bundledServerSetupPhase,
+        showInformationMessage: (message, ...actions) =>
+          vscode.window.showInformationMessage(message, ...actions),
+        resumeDownload: ensureBundledServerLauncher,
+        deleteDownloadedFiles: async () => {
+          try {
+            await discardServerBundleDownload(context.extensionPath, serverRoot, logInfo);
+          } catch (discardError) {
+            logInfo(
+              `Failed to discard cancelled language server download: ${
+                discardError instanceof Error ? discardError.message : String(discardError)
+              }`,
+            );
+          }
+        },
+      });
+      if (resumedLauncher !== undefined) return resumedLauncher;
+    } else if (error instanceof ServerBundleChecksumError) {
+      const redownloadedLauncher = await handleServerDownloadChecksumMismatch({
+        showErrorMessage: (message, ...actions) =>
+          vscode.window.showErrorMessage(message, ...actions),
+        redownloadServer: ensureBundledServerLauncher,
+      });
+      if (redownloadedLauncher !== undefined) return redownloadedLauncher;
     }
     throw error;
   }
@@ -730,6 +758,7 @@ export function buildInitializationOptions(
       ]),
     ),
     projects: configOption<ConfiguredProject[]>(OPT_PROJECTS) ?? [],
+    disableRocksDBWriteAheadLog: configOption<boolean>(OPT_DISABLE_ROCKS_DB_WAL) ?? false,
     eulaHash: getAcceptedEulaHash(getContext()),
   };
   const contributedInitializationOptions = Object.assign(

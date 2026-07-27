@@ -1,25 +1,32 @@
-<idea-plugin>
+<idea-plugin visibility="internal">
+  <!-- region Generated dependencies - run `Generate Product Layouts` to regenerate -->
   <dependencies>
-    <!-- region Generated dependencies - run `Generate Product Layouts` to regenerate -->
     <module name="intellij.java.impl"/>
     <module name="intellij.java.psi"/>
     <module name="intellij.java.psi.impl"/>
+    <module name="intellij.kotlin.base.analysis"/>
+    <module name="intellij.kotlin.base.analysis.utils"/>
+    <module name="intellij.kotlin.base.codeInsight"/>
+    <module name="intellij.kotlin.base.indices"/>
+    <module name="intellij.kotlin.base.projectStructure"/>
+    <module name="intellij.kotlin.base.util"/>
     <module name="intellij.kotlin.codeInsight"/>
+    <module name="intellij.kotlin.codeInsight.api"/>
     <module name="intellij.kotlin.codeInsight.base"/>
     <module name="intellij.kotlin.codeInsight.fixes"/>
-    <module name="intellij.kotlin.codeInsight.inspections"/>
     <module name="intellij.kotlin.codeInsight.intentions"/>
     <module name="intellij.kotlin.codeInsight.shared"/>
+    <module name="intellij.kotlin.completion.api"/>
     <module name="intellij.kotlin.completion.impl"/>
     <module name="intellij.kotlin.formatter.minimal"/>
     <module name="intellij.kotlin.navigation"/>
+    <module name="intellij.kotlin.references"/>
     <module name="intellij.kotlin.searching"/>
+    <module name="kotlin.fir"/>
     <module name="language-server.analyzer.kotlin"/>
     <module name="language-server.api.features.impl.common"/>
     <module name="language-server.api.features.impl.java-base"/>
-    <module name="language-server.dap.jvm"/>
-    <module name="language-server.dap.jvm.lsp.features"/>
     <module name="language-server.workspace-import"/>
-    <!-- endregion -->
   </dependencies>
+  <!-- endregion -->
 </idea-plugin>

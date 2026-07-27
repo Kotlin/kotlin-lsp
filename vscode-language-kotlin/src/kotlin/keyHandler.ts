@@ -35,25 +35,24 @@ import {
 
 const DEFAULT_TRIM_MARGIN_CHAR = '|';
 const MULTILINE_QUOTE = '"""';
-const TEXT_NODE_TYPES = new Set(['block_comment', 'line_comment', 'string_content']);
+const TEXT_NODE_TYPES = new Set(['multiline_comment', 'line_comment', 'string_content']);
 const ENTER_LITERAL_ANCESTOR_TYPES = new Set([
   'string_content',
   'string_literal',
   'character_literal',
 ]);
 const CONTINUATION_ALIGN_ANCESTOR_TYPES = ['type_parameters'];
-const PARAMETER_LIST_ANCESTOR_TYPES = ['function_value_parameters', 'class_parameters'];
+const PARAMETER_LIST_ANCESTOR_TYPES = ['function_value_parameters', 'primary_constructor'];
 const BLOCK_COMMENT_SCAN_ROOT_TYPES = new Set([
-  'block',
+  'statements',
   'class_body',
   'enum_class_body',
   'source_file',
 ]);
 const BLOCK_COMMENT_IGNORED_NODE_TYPES = new Set([
-  'block_comment',
+  'multiline_comment',
   'line_comment',
   'string_literal',
-  'multi_line_string_literal',
   'character_literal',
 ]);
 const NON_ANGLE_DELIMITER_ANCESTORS = new Set<string>();
@@ -142,19 +141,49 @@ function handleSingleQuote(text: string, tree: Tree, index: number): KeyResult {
 
 function handleDoubleQuoteKey(text: string, tree: Tree, index: number): KeyResult {
   const node = tree.rootNode.descendantForIndex(index);
+  const stringLiteralNode = getStringLiteralNode(node);
 
   // Kotlin overtypes an existing closing quote instead of inserting a duplicate one.
+  // fwcd's grammar hides the '"""' token, so detect triple-quote positions by text.
+  const isAtTripleQuoteDelimiter =
+    text.startsWith('"""', index) ||
+    (index >= 1 && text.startsWith('"""', index - 1)) ||
+    (index >= 2 && text.startsWith('"""', index - 2));
   if (
     node !== null &&
-    node.type !== '"""' &&
+    !isAtTripleQuoteDelimiter &&
     text[index + 1] === '"' &&
     (index === 0 || text[index - 1] !== '\\')
   ) {
     return keyResult('', index, index + 1, index + 1);
   }
 
+  // fwcd parses an incomplete `"""` (no closing delimiter) as an ERROR node, not
+  // string_literal, so handleSpecialNodeKey can't dispatch to handleStringLiteralKey.
+  // Use text-based logic for the opening-delimiter position.
+  if (isAtTripleQuoteDelimiter && stringLiteralNode === null) {
+    let tripleStart: number;
+    if (text.startsWith('"""', index)) {
+      tripleStart = index;
+    } else if (index >= 1 && text.startsWith('"""', index - 1)) {
+      tripleStart = index - 1;
+    } else {
+      tripleStart = index - 2;
+    }
+    const offsetFromTripleStart = index - tripleStart;
+    switch (offsetFromTripleStart) {
+      case 0:
+        return keyResult('"', index, index + 1, index + 1);
+      case 1:
+        return keyResult('', index, index + 1, index + 1);
+      default:
+        return keyResult('""""', index, index + 1, index + 1);
+    }
+  }
+
+  // Default fallback: pair quotes when outside any string context.
   return handleKeyWithSpecialNode(text, tree, `"`, index, handleSpecialNodeKey, () =>
-    keyResult('"', index, index + 1, index + 1),
+    keyResult('""', index, index + 1, index + 1),
   );
 }
 
@@ -164,22 +193,40 @@ function handleSpecialNodeKey(
   key: string,
   index: number,
 ): KeyResult | null {
-  if (node.type === 'block_comment') {
+  if (node.type === 'multiline_comment') {
     return handleBlockComment(node, key, text, index);
+  }
+  // fwcd hides the '"' and '"""' delimiter tokens; descendantForIndex at a delimiter
+  // position returns the enclosing string_literal (or a child of it) instead.
+  if (key === '"') {
+    const stringLiteralNode = getStringLiteralNode(node);
+    if (stringLiteralNode !== null) {
+      return handleStringLiteralKey(stringLiteralNode, text, index);
+    }
   }
   if (isTextNode(node)) {
     return keyResult(key, index, index + 1, index + 1);
-  }
-  if (key === '"' && node.type === '"') {
-    return handleDoubleQuote(node, index);
-  }
-  if (key === '"' && node.type === '"""') {
-    return handleTripleQuote(node, index);
   }
   if (key === `'` && node.parent?.type === 'character_literal') {
     return getCharacterLiteralQuoteResult(text, index);
   }
   return null;
+}
+
+function getStringLiteralNode(node: Node | null): Node | null {
+  if (node?.type === 'string_literal') {
+    return node;
+  } else if (node?.parent?.type === 'string_literal') {
+    return node.parent;
+  } else {
+    return null;
+  }
+}
+
+function isMultilineStringLiteral(text: string, node: Node): boolean {
+  // Handles plain `"""` and fwcd master's multi-dollar `$$"""` / `$$$"""` etc.
+  const slice = text.slice(node.startIndex, node.startIndex + 256);
+  return /^\$*"""/.test(slice);
 }
 
 function getCharacterLiteralQuoteResult(text: string, index: number): KeyResult {
@@ -188,34 +235,84 @@ function getCharacterLiteralQuoteResult(text: string, index: number): KeyResult 
     : keyResult(`'`, index, index + 1, index + 1);
 }
 
-function handleTripleQuote(node: Node, index: number): KeyResult {
-  switch (index - node.startIndex) {
-    case 0:
+/**
+ * Handles a `"` keystroke at a position inside or at the delimiter of a
+ * `string_literal` node, replicating the old per-token behavior now that
+ * fwcd's grammar hides the `"` and `"""` delimiter tokens.
+ */
+function handleStringLiteralKey(node: Node, text: string, index: number): KeyResult {
+  // Multi-dollar strings ($$""", $$$""", ...) prefix `"""` with $ signs; skip past them.
+  const dollarCount = text.slice(node.startIndex).match(/^\$*/)?.[0].length ?? 0;
+  const tripleQuoteStart = node.startIndex + dollarCount;
+  if (text.startsWith('"""', tripleQuoteStart)) {
+    const quoteRunStart = getQuoteRunStartAt(text, index);
+    if (quoteRunStart === tripleQuoteStart && index - quoteRunStart >= MULTILINE_QUOTE.length) {
       return keyResult('"', index, index + 1, index + 1);
-    case 1:
+    }
+
+    // Triple-quoted string: replicate handleTripleQuote for the opening delimiter,
+    // and mirror the same logic for the closing delimiter.
+    const offsetFromTripleQuote = index - tripleQuoteStart;
+    if (offsetFromTripleQuote < 3) {
+      // Inside the opening """ delimiter
+      switch (offsetFromTripleQuote) {
+        case 0:
+          return keyResult('"', index, index + 1, index + 1);
+        case 1:
+          if (dollarCount > 0) {
+            return keyResult('""', index, index + 1, index + 1);
+          }
+          return keyResult('', index, index + 1, index + 1);
+        default:
+          return keyResult('""""', index, index + 1, index + 1);
+      }
+    }
+    const trailingQuoteRunStart = getTrailingQuoteRunStart(text, node.endIndex);
+    if (trailingQuoteRunStart !== null && index >= trailingQuoteRunStart) {
+      if (index === node.endIndex - 1) {
+        return keyResult('"', index, index + 1, index + 1);
+      }
       return keyResult('', index, index + 1, index + 1);
-    default:
-      return keyResult('""""', index, index + 1, index + 1);
+    }
+    const offsetFromEnd = node.endIndex - index; // 3=first char of closing """, 1=last
+    if (offsetFromEnd <= 3) {
+      // Inside the closing """ delimiter
+      const offsetInClosing = 3 - offsetFromEnd; // 0, 1, 2
+      switch (offsetInClosing) {
+        case 0:
+          return keyResult('"', index, index + 1, index + 1);
+        case 1:
+          return keyResult('', index, index + 1, index + 1);
+        default:
+          return keyResult('""""', index, index + 1, index + 1);
+      }
+    }
+    // Inside content
+    return keyResult('"', index, index + 1, index + 1);
   }
+  // Single-quoted string: if at the opening delimiter, pair it; otherwise just insert.
+  return index === node.startIndex
+    ? keyResult('""', index, index + 1, index + 1)
+    : keyResult('"', index, index + 1, index + 1);
 }
 
-function handleDoubleQuote(node: Node, index: number): KeyResult {
-  const parent = node.parent;
-  if (parent === null) return keyResult('"', index, index + 1, index + 1);
-
-  switch (parent.type) {
-    case 'string_literal':
-      // The Kotlin grammar may eagerly attach this quote to a later closing quote,
-      // even though the user just started a new string. If this quote is the
-      // opening delimiter of that literal, keep pairing it as an opening quote.
-      return node.startIndex === parent.startIndex
-        ? keyResult('""', index, index + 1, index + 1)
-        : keyResult('"', index, index + 1, index + 1);
-    case 'string_content':
-      return keyResult('"', index, index + 1, index + 1);
-    default:
-      return keyResult('""', index, index + 1, index + 1);
+function getQuoteRunStartAt(text: string, index: number): number | null {
+  if (text[index] !== '"') {
+    return null;
   }
+  let start = index;
+  while (start > 0 && text[start - 1] === '"') {
+    start--;
+  }
+  return start;
+}
+
+function getTrailingQuoteRunStart(text: string, endIndex: number): number | null {
+  let current = endIndex;
+  while (current > 0 && text[current - 1] === '"') {
+    current--;
+  }
+  return endIndex - current > MULTILINE_QUOTE.length ? current : null;
 }
 
 function handleEnter(text: string, tree: Tree, index: number, indentUnit: string): KeyResult {
@@ -226,6 +323,7 @@ function handleEnter(text: string, tree: Tree, index: number, indentUnit: string
     indentUnit,
     [
       (node) => handleLineCommentEnter(text, node, index, 'line_comment', '//'),
+      (node) => handleStringInterpolationEnter(text, node, index, indentUnit),
       (node) => handleStringLiteralEnter(text, node, index, indentUnit),
       (node) =>
         hasAncestor(node, ENTER_LITERAL_ANCESTOR_TYPES)
@@ -458,12 +556,14 @@ function getClassTypeArgumentContinuationIndent(
   }
 
   const typeArguments = findAncestorAtEnter(node, index, 'type_arguments');
-  const indentAnchor =
-    typeArguments?.parent?.type === 'user_type'
-      ? typeArguments.parent
-      : typeArguments === null
-        ? null
-        : findAncestor(typeArguments, 'call_expression');
+  let indentAnchor: Node | null;
+  if (typeArguments?.parent?.type === 'user_type') {
+    indentAnchor = typeArguments.parent;
+  } else if (typeArguments === null) {
+    indentAnchor = null;
+  } else {
+    indentAnchor = findAncestor(typeArguments, 'call_expression');
+  }
   if (indentAnchor === null) {
     return null;
   }
@@ -490,6 +590,25 @@ function getFunctionParameterContinuationIndent(
   return null;
 }
 
+// Block-level node types that act as boundaries when searching for a local ERROR ancestor.
+// An ERROR beyond one of these boundaries is unrelated to the expression at hand.
+const LOCAL_ERROR_BOUNDARY_TYPES = new Set([
+  'statements',
+  'class_body',
+  'enum_class_body',
+  'source_file',
+  'function_body',
+  'lambda_literal',
+]);
+
+function hasLocalErrorAncestor(node: Node): boolean {
+  for (let current: Node | null = node.parent; current !== null; current = current.parent) {
+    if (current.type === 'ERROR') return true;
+    if (LOCAL_ERROR_BOUNDARY_TYPES.has(current.type)) return false;
+  }
+  return false;
+}
+
 function getFunctionArgumentContinuationIndent(
   text: string,
   node: Node | null,
@@ -500,9 +619,24 @@ function getFunctionArgumentContinuationIndent(
   }
 
   const valueArguments = findAncestorAtEnter(node, index, 'value_arguments');
-  return valueArguments === null
-    ? null
-    : getExistingMultilineListItemIndent(text, valueArguments, index);
+  if (valueArguments === null) {
+    return null;
+  }
+
+  const existingIndent = getExistingMultilineListItemIndent(text, valueArguments, index);
+  if (existingIndent !== null) {
+    return existingIndent;
+  }
+
+  // When the call is in a parse-error context (e.g. used as a when-entry without ->),
+  // avoid adding an extra indent level: use the previous line's indent instead.
+  // Only check ERROR nodes within the local expression scope; an ERROR beyond a
+  // block/statement boundary is unrelated to this call and must not affect indentation.
+  if (hasLocalErrorAncestor(valueArguments)) {
+    return getPreviousNonEmptyLineIndent(text, index);
+  }
+
+  return null;
 }
 
 function getTypeArgumentContinuationIndent(
@@ -620,7 +754,9 @@ function handleLeftAngle(text: string, tree: Tree, index: number): KeyResult {
     const prev = getPreviousLeaf(node);
     if (prev === null) return keyResult('<', index, index + 1, index + 1);
     switch (prev.type) {
-      case 'identifier': {
+      case 'identifier':
+      case 'simple_identifier':
+      case 'type_identifier': {
         const looksLikeAClass =
           prev.endIndex === node.startIndex && prev.text[0] === prev.text[0].toUpperCase();
         return looksLikeAClass
@@ -723,7 +859,7 @@ function getPreviousBlockCommentIndent(node: Node, text: string, index: number):
   const commentEnd = previousLine.start + previousLine.text.lastIndexOf('*/') + 2;
   const blockComment = findAncestor(
     node.tree.rootNode.descendantForIndex(commentEnd - 1),
-    'block_comment',
+    'multiline_comment',
   );
   if (blockComment === null || blockComment.endIndex !== commentEnd) {
     return null;
@@ -852,17 +988,41 @@ interface StringLiteralContext {
   spaceAfterConcatenationOperator: boolean;
 }
 
+function handleStringInterpolationEnter(
+  text: string,
+  node: Node,
+  index: number,
+  indentUnit: string,
+): KeyResult | null {
+  // The cursor is inside a ${...} interpolation block when the node lives inside a
+  // string_literal but is not string_content (which covers literal string text).
+  // In that case, apply regular code indentation instead of string concatenation.
+  if (node.type === 'string_content' || findAncestor(node, 'string_literal') === null) {
+    return null;
+  }
+  const previousLineIndent = getPreviousNonEmptyLineIndent(text, index);
+  const continuationIndent =
+    previousLineIndent !== null ? `${previousLineIndent}${indentUnit}` : null;
+  return getRegularEnterResult(text, index, previousLineIndent, continuationIndent);
+}
+
 function handleStringLiteralEnter(
   text: string,
   node: Node,
   index: number,
   indentUnit: string,
 ): KeyResult | null {
-  const multilineStringLiteral = findAncestorAtEnter(node, index, 'multiline_string_literal');
-  if (
-    multilineStringLiteral !== null &&
-    text.startsWith('"""', multilineStringLiteral.startIndex)
-  ) {
+  // multiline_comment nodes can appear as siblings of ERROR nodes; findEnclosingErrorNode
+  // may return an out-of-range ERROR sibling and trigger false string-split logic. Skip
+  // string handling entirely when the node itself is a block comment.
+  if (node.type === 'multiline_comment') {
+    return null;
+  }
+
+  // In fwcd's grammar both single- and triple-quoted strings are `string_literal`.
+  // Detect triple-quoted strings by the `"""` prefix on the enclosing literal.
+  const multilineStringLiteral = findAncestorAtEnter(node, index, 'string_literal');
+  if (multilineStringLiteral !== null && isMultilineStringLiteral(text, multilineStringLiteral)) {
     return handleMultilineStringLiteralEnter(text, multilineStringLiteral, index, indentUnit);
   }
 
@@ -919,6 +1079,15 @@ function findMalformedInterpolationStringLiteral(
 
   const startIndex = findPreviousUnescapedQuote(text, errorNode.startIndex, index - 1);
   if (startIndex === null || text.startsWith(MULTILINE_QUOTE, startIndex)) {
+    return null;
+  }
+
+  // Reject if the found quote is inside an already-parsed string_literal (i.e. it's a closing
+  // quote, not an opening one). This prevents false positives when unrelated string literals
+  // happen to precede the cursor inside a broad ERROR node.
+  const nodeAtStart = node.tree.rootNode.descendantForIndex(startIndex);
+  const existingStringAtStart = findAncestor(nodeAtStart, 'string_literal');
+  if (existingStringAtStart !== null && existingStringAtStart.startIndex < startIndex) {
     return null;
   }
 
@@ -1196,15 +1365,23 @@ function getLiteralCallChain(multilineStringLiteral: Node): Node[] {
 
 function getCallName(text: string, callExpression: Node): string | null {
   const navigationExpression = callExpression.namedChild(0);
-  const identifier =
+  const rawIdentifier =
     navigationExpression?.type === 'navigation_expression'
       ? navigationExpression.namedChild(1)
       : null;
+  // fwcd wraps the method identifier in navigation_suffix (.foo); unwrap to get simple_identifier
+  const identifier =
+    rawIdentifier?.type === 'navigation_suffix' ? rawIdentifier.namedChild(0) : rawIdentifier;
   return identifier === null ? null : text.slice(identifier.startIndex, identifier.endIndex);
 }
 
 function getTrimMarginMarginChar(text: string, callExpression: Node): string {
-  const valueArguments = callExpression.namedChild(1);
+  const callSuffixOrValueArgs = callExpression.namedChild(1);
+  // fwcd wraps value_arguments in call_suffix; unwrap if needed
+  const valueArguments =
+    callSuffixOrValueArgs?.type === 'call_suffix'
+      ? callSuffixOrValueArgs.namedChild(0)
+      : callSuffixOrValueArgs;
   const valueArgument =
     valueArguments?.type === 'value_arguments' ? valueArguments.namedChild(0) : null;
   const argumentExpression = valueArgument?.namedChild(0);
@@ -1364,11 +1541,14 @@ function findBlockCommentContext(
   text: string,
   index: number,
 ): BlockCommentContext | null {
-  const blockComment = findAncestor(node, 'block_comment');
+  const blockComment = findAncestor(node, 'multiline_comment');
   if (blockComment !== null) {
+    // fwcd's master grammar represents unclosed `/*` as a multiline_comment node spanning
+    // to EOF. Treat it as unclosed (end=null) when the comment text lacks the closing `*/`.
+    const isClosed = blockComment.text.endsWith('*/');
     return {
       start: blockComment.startIndex,
-      end: blockComment.endIndex,
+      end: isClosed ? blockComment.endIndex : null,
       isDoc: blockComment.text.startsWith('/**'),
     };
   }

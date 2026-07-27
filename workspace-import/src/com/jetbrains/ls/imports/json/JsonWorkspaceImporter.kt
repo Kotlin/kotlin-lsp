@@ -6,9 +6,11 @@ import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
+import com.jetbrains.ls.imports.api.ConflictAverseImporter
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
+import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -21,18 +23,19 @@ import kotlin.io.path.exists
 import kotlin.io.path.inputStream
 import kotlin.io.path.notExists
 
-object JsonWorkspaceImporter : WorkspaceImporter {
+object JsonWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
 
     override fun canImportWorkspace(projectDirectory: Path): Boolean =
         (projectDirectory / "workspace.json").exists()
 
     override suspend fun importWorkspace(
         project: Project,
-        projectDirectory: Path,
-        defaultSdkPath: Path?,
+        parameters: WorkspaceImportParameters,
         virtualFileUrlManager: VirtualFileUrlManager,
-        progress: WorkspaceImportProgressReporter
+        progress: WorkspaceImportProgressReporter,
     ): EntityStorage? {
+        val projectDirectory = parameters.projectDirectory
+        val defaultSdkPath = parameters.defaultSdkPath
         if (!canImportWorkspace(projectDirectory)) return null
         val jsonPath = projectDirectory / "workspace.json"
         return importWorkspaceJson(

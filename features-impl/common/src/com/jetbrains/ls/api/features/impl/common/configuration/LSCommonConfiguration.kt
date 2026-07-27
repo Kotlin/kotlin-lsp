@@ -7,15 +7,19 @@ import com.jetbrains.ls.api.features.impl.common.api.commonLsApiPlugin
 import com.jetbrains.ls.api.features.impl.common.decompiler.LSDecompileCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.fileTemplates.LSInterpolateFileTemplateCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDescriptorProvider
+import com.jetbrains.ls.api.features.impl.common.modcommands.LSChooseActionCommandDescriptorProvider
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.api.features.lsApiPlugin
+import com.jetbrains.ls.snapshot.api.impl.core.ChooseActionSessionComponent
 import com.jetbrains.ls.snapshot.api.impl.core.LatestCompletionSessionComponent
 
 val LSCommonConfiguration: LSConfigurationPiece = LSConfigurationPiece(
     entries = listOf(
         WorkspaceComponentEntry { LatestCompletionSessionComponent },
+        WorkspaceComponentEntry { ChooseActionSessionComponent },
         LSDecompileCommandDescriptorProvider,
         LSApplyFixCommandDescriptorProvider,
+        LSChooseActionCommandDescriptorProvider,
         LSInterpolateFileTemplateCommandDescriptorProvider,
     ),
     plugins = listOf(

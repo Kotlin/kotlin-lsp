@@ -11,10 +11,8 @@ internal val kotlinFeature: PluginMainDescriptor = makePlugin(
         "features/kotlin/completion" to "META-INF/language-server/features/kotlin/completion.xml",
         "features/kotlin/codeActions" to "META-INF/language-server/features/kotlin/codeActions.xml",
         "features/kotlin/refactoring" to "META-INF/language-server/features/kotlin/refactoring.xml",
-        "ls.kotlin.searchingBase" to "META-INF/searching-base.xml",
         "features/kotlin/usages" to "META-INF/language-server/features/kotlin/usages.xml",
         "features/kotlin/import" to "META-INF/language-server/features/kotlin/workspace-import.xml",
-        "ls.kotlin.formatter" to "META-INF/formatter.xml",
     ),
     dependencies = listOf(
         "org.jetbrains.ls.plugin.kotlin",
