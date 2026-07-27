@@ -54,6 +54,12 @@ internal val kotlinInspectionBlacklist = Blacklist(
         fqcn = "org.jetbrains.kotlin.idea.codeinsight.api.applicable.inspections.KotlinPsiDiagnosticBasedInspectionBase",
         reason = "LSP-713",
     ),
+    BlacklistEntry.Class(
+        fqcn = "com.intellij.codeInspection.test.TestFailedLineInspection",
+        // Needs TestStateStorage (persistent test-run history), which is meaningless in a headless
+        // language server and collides ("storage already registered") across analysis contexts.
+        reason = "LSP-1507; requires TestStateStorage; irrelevant and storage-conflicting in the language server",
+    )
 )
 
 internal val kotlinIntentionBlacklist = Blacklist(
