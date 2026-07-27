@@ -804,8 +804,18 @@ function dataSharingLevel(value: unknown): DataSharingLevel | undefined {
   return value === 'full' || value === 'anonymous' || value === 'none' ? value : undefined;
 }
 
+const REGIONS = [
+  'africa',
+  'americas',
+  'apac',
+  'china',
+  'europe',
+  'middle_east',
+  'oceania',
+] as const;
+
 function specifiedRegion(value: unknown): string | undefined {
-  return typeof value === 'string' && value.length > 0 && value !== 'not_set' ? value : undefined;
+  return REGIONS.find((region) => region === value);
 }
 
 function buildLaunchEnvironment(

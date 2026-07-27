@@ -140,7 +140,13 @@ export async function reloadWorkspace(
     });
     await window.showInformationMessage('Workspace reloaded');
   } catch (e) {
-    if (e instanceof ResponseError && e.code === LSPErrorCodes.RequestCancelled) return;
+    // `ServerCancelled` is the licensing gate's quiet refusal; the licensing UI explains it.
+    if (
+      e instanceof ResponseError &&
+      (e.code === LSPErrorCodes.RequestCancelled || e.code === LSPErrorCodes.ServerCancelled)
+    ) {
+      return;
+    }
     const message = e instanceof Error ? e.message : String(e);
     await window.showErrorMessage(`Failed to reload workspace: ${message}`);
   }
