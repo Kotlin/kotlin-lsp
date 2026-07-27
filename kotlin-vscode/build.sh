@@ -219,6 +219,7 @@ build_extension() {
   local lsp_zip_path="$5"
   local log_prefix="$6"
   local download_archive_name="$7"
+  local server_version="$8"
 
   if [[ "$THIN_BUNDLE" != "true" && ! -f "$lsp_zip_path" ]]; then
     echo "Error: LSP archive not found: $lsp_zip_path" >&2
@@ -254,7 +255,7 @@ build_extension() {
       "$download_archive_name" \
       "$download_url" \
       "${lsp_zip_path}.sha256" \
-      "$vsce_version"
+      "$server_version"
   else
     cp "$SCRIPT_DIR/unpack-server.mjs" "$extension_dir/unpack-server.mjs"
     export LSP_ZIP_PATH="$lsp_zip_path"
@@ -324,9 +325,11 @@ for productInfo in "$ARTIFACT_DIR"/*.product-info.json; do
         version="${version%.SNAPSHOT}-SNAPSHOT"
     fi
 
-    version="${VSCE_VERSION:-$version}"
+    # The extension version is independent of the language-server artifact version.
+    server_version="$version"
+    vsce_version="${VSCE_VERSION:-$server_version}"
 
-    download_archive_name="$BUNDLE_TYPE-$version"
+    download_archive_name="$BUNDLE_TYPE-$server_version"
     if [[ "$arch" != "amd64" ]]; then
       download_archive_name+="-$arch"
     fi
@@ -344,14 +347,14 @@ for productInfo in "$ARTIFACT_DIR"/*.product-info.json; do
       *)       echo "Error: unknown arch '$arch' for vsce --target" >&2; exit 1 ;;
     esac
     vsce_target="$vsce_os-$vsce_arch"
-    vsix_target_filename="$BUNDLE_TYPE-$version-$platform.vsix"
+    vsix_target_filename="$BUNDLE_TYPE-$vsce_version-$platform.vsix"
     if [[ "$THIN_BUNDLE" == "true" ]]; then
-      vsix_target_filename="$BUNDLE_TYPE-$version-$platform-thin.vsix"
+      vsix_target_filename="$BUNDLE_TYPE-$vsce_version-$platform-thin.vsix"
     fi
 
     EXTENSION_DIR="$BUILD_DIR/vscode-$platform"
 
-    build_extension "$EXTENSION_DIR" "$vsix_target_filename" "$version" "$vsce_target" "$bundle" "[$platform]" "$download_archive_name" &
+    build_extension "$EXTENSION_DIR" "$vsix_target_filename" "$vsce_version" "$vsce_target" "$bundle" "[$platform]" "$download_archive_name" "$server_version" &
     pids+=($!)
 done
 
