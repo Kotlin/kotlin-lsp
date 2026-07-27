@@ -11,8 +11,19 @@
     <module name="intellij.libraries.kotlin.gradle.plugin.idea"/>
     <module name="intellij.libraries.kotlin.gradle.plugin.idea.proto"/>
     <module name="intellij.libraries.kotlin.tooling.core"/>
+    <module name="intellij.libraries.kotlinx.coroutines.core"/>
+    <module name="intellij.libraries.kotlinx.serialization.core"/>
+    <module name="intellij.libraries.kotlinx.serialization.json"/>
     <module name="intellij.libraries.maven.resolver.provider"/>
+    <module name="intellij.platform.core"/>
+    <module name="intellij.platform.execution"/>
+    <module name="intellij.platform.externalSystem.impl"/>
+    <module name="intellij.platform.lang.core"/>
+    <module name="intellij.platform.projectModel"/>
+    <module name="intellij.platform.util.ex"/>
+    <module name="language-server.analyzer"/>
     <module name="language-server.analyzer.kotlin"/>
+    <module name="language-server.api.impl.analyzer"/>
     <module name="language-server.workspace-import.gradle-plugin"/>
   </dependencies>
   <!-- endregion -->

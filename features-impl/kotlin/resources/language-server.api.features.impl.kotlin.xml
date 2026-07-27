@@ -22,10 +22,23 @@
     <module name="intellij.kotlin.navigation"/>
     <module name="intellij.kotlin.references"/>
     <module name="intellij.kotlin.searching"/>
+    <module name="intellij.libraries.kotlinx.coroutines.core"/>
+    <module name="intellij.libraries.kotlinx.serialization.core"/>
+    <module name="intellij.libraries.kotlinx.serialization.json"/>
+    <module name="intellij.platform.analysis"/>
+    <module name="intellij.platform.core"/>
+    <module name="intellij.platform.core.impl"/>
+    <module name="intellij.platform.editor.ex"/>
+    <module name="intellij.platform.editor.ui"/>
+    <module name="intellij.platform.indexing"/>
+    <module name="intellij.platform.lang"/>
     <module name="kotlin.fir"/>
+    <module name="language-server.analyzer"/>
     <module name="language-server.analyzer.kotlin"/>
+    <module name="language-server.api.features"/>
     <module name="language-server.api.features.impl.common"/>
     <module name="language-server.api.features.impl.java-base"/>
+    <module name="language-server.api.impl.analyzer"/>
     <module name="language-server.workspace-import"/>
   </dependencies>
   <!-- endregion -->
