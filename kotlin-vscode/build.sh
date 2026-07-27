@@ -17,6 +17,7 @@ PACKAGE_DIR="${PACKAGE_DIR:-}"
 BUNDLE_TYPE="${BUNDLE_TYPE:-}"
 VSCE_VERSION="${VSCE_VERSION:-}"
 THIN_BUNDLE="${THIN_BUNDLE:-false}"
+PUBLISH_ARTIFACTS="${PUBLISH_ARTIFACTS:-true}"
 DOWNLOAD_BASE_URL="${DOWNLOAD_BASE_URL:-}"
 DEFAULT_BUNDLE_TYPE="kotlin-server"
 
@@ -26,11 +27,13 @@ for arg in "$@"; do
         --bundle-type=*) BUNDLE_TYPE="${arg#--bundle-type=}" ;;
         --vsce-version=*) VSCE_VERSION="${arg#--vsce-version=}" ;;
         --thin) THIN_BUNDLE="true" ;;
+        --no-publish) PUBLISH_ARTIFACTS="false" ;;
         --download-base-url=*) DOWNLOAD_BASE_URL="${arg#--download-base-url=}" ;;
     esac
 done
 
 export THIN_BUNDLE
+export PUBLISH_ARTIFACTS
 
 BUNDLE_TYPE="${BUNDLE_TYPE:-$DEFAULT_BUNDLE_TYPE}"
 
@@ -284,7 +287,9 @@ build_extension() {
     exit 1
   fi
 
-  echo "##teamcity[publishArtifacts '$BUILD_DIR/$vsix_target_filename=>$BUNDLE_TYPE']"
+  if [[ "$PUBLISH_ARTIFACTS" == "true" ]]; then
+    echo "##teamcity[publishArtifacts '$BUILD_DIR/$vsix_target_filename=>$BUNDLE_TYPE']"
+  fi
 }
 
 pids=()
