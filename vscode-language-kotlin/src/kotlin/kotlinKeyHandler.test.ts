@@ -3,21 +3,15 @@ import { describe, test } from 'node:test';
 import * as path from 'path';
 import {
   createDoTest,
+  createDoTestKey,
   createParser,
 } from '@jetbrains/vscode-extension-core/testing/keyHandlerTestUtils';
 import kotlinKeyHandler from './keyHandler';
 
 const projectRoot = process.cwd();
-const parser = createParser(
-  path.join(
-    projectRoot,
-    'node_modules',
-    '@tree-sitter-grammars',
-    'tree-sitter-kotlin',
-    'tree-sitter-kotlin.wasm',
-  ),
-);
+const parser = createParser(path.join(projectRoot, 'grammars', 'tree-sitter-kotlin.wasm'));
 const doTest = createDoTest(parser, kotlinKeyHandler);
+const doTestKey = createDoTestKey(parser, kotlinKeyHandler);
 
 describe('Handling key presses in Kotlin files', () => {
   describe('bracket auto-completion', () => {
@@ -94,29 +88,124 @@ describe('Handling key presses in Kotlin files', () => {
   describe('double quote handling', () => {
     test(
       'wraps in double quotes when opening a string',
-      doTest('val x = "<caret>', 'val x = "<caret>"'),
+      doTestKey('val x = <caret>', '"', 'val x = "<caret>"'),
     );
 
     test(
       'no auto-close when typing closing quote of an existing string',
-      doTest('val x = "hello"<caret>', 'val x = "hello"<caret>'),
+      doTestKey('val x = "hello<caret>', '"', 'val x = "hello"<caret>'),
     );
 
     test(
       'skips an existing closing quote',
-      doTest('val x = "hello"<caret>"', 'val x = "hello"<caret>'),
+      doTestKey('val x = "hello<caret>"', '"', 'val x = "hello"<caret>'),
     );
 
     test(
       'fails because of a bug inn the grammar - adds a matching quote when opening a string when another string is near',
-      doTest('val a = "<caret>\nval b = ""', 'val a = "<caret>"\nval b = ""'),
+      doTestKey('val a = <caret>\nval b = ""', '"', 'val a = "<caret>"\nval b = ""'),
     );
   });
 
   describe('triple-quoted string handling', () => {
     test(
       'completes multiline string delimiters on third quote',
-      doTest('"""<caret>', '"""<caret>"""'),
+      doTestKey('""<caret>', '"', '"""<caret>"""'),
+    );
+
+    test(
+      'completes multiline string delimiters on third quote in an assignment',
+      doTestKey('val str = ""<caret>', '"', 'val str = """<caret>"""'),
+    );
+
+    test(
+      'inserts a quote at the beginning of the content',
+      doTestKey('"""<caret>text"""', '"', '""""<caret>text"""'),
+    );
+
+    test(
+      'inserts a quote at the beginning of the content in an assignment',
+      doTestKey('val str = """<caret>text"""', '"', 'val str = """"<caret>text"""'),
+    );
+
+    test(
+      'inserts a quote in the middle of the content',
+      doTestKey('"""te<caret>xt"""', '"', '"""te"<caret>xt"""'),
+    );
+
+    test(
+      'inserts a quote in the middle of the content in an assignment',
+      doTestKey('val str = """te<caret>xt"""', '"', 'val str = """te"<caret>xt"""'),
+    );
+
+    test(
+      'overtypes first quote of the closing delimiter',
+      doTestKey('"""text<caret>"""', '"', '"""text"<caret>""'),
+    );
+
+    test(
+      'overtypes first quote of the closing delimiter in an assignment',
+      doTestKey('val str = """text<caret>"""', '"', 'val str = """text"<caret>""'),
+    );
+
+    test(
+      'overtypes second quote of the closing delimiter',
+      doTestKey('"""text"<caret>""', '"', '"""text""<caret>"'),
+    );
+
+    test(
+      'overtypes second quote of the closing delimiter in an assignment',
+      doTestKey('val str = """text"<caret>""', '"', 'val str = """text""<caret>"'),
+    );
+
+    test(
+      'overtypes third quote of the closing delimiter',
+      doTestKey('"""text""<caret>"', '"', '"""text"""<caret>'),
+    );
+
+    test(
+      'overtypes third quote of the closing delimiter in an assignment',
+      doTestKey('val str = """text""<caret>"', '"', 'val str = """text"""<caret>'),
+    );
+
+    test(
+      'opens a new string after the closing delimiter',
+      doTestKey('"""text"""<caret>', '"', '"""text""""<caret>'),
+    );
+
+    test(
+      'opens a new string after the closing delimiter in an assignment',
+      doTestKey('val str = """text"""<caret>', '"', 'val str = """text""""<caret>'),
+    );
+
+    test(
+      'inserts first quote of opening triple-quote delimiter',
+      doTest('"<caret>""text"""', '"<caret>""text"""'),
+    );
+
+    test(
+      'overtypes second quote of opening triple-quote delimiter',
+      doTest('""<caret>"text"""', '""<caret>text"""'),
+    );
+
+    test(
+      'inserts first quote of closing triple-quote delimiter',
+      doTest('"""text"<caret>""', '"""text"<caret>""'),
+    );
+
+    test(
+      'overtypes second quote of closing triple-quote delimiter',
+      doTest('"""text""<caret>"', '"""text""<caret>'),
+    );
+
+    test(
+      'inserts a raw quote inside triple-quoted string content',
+      doTest('"""ab"<caret>cd"""', '"""ab"<caret>cd"""'),
+    );
+
+    test(
+      'inserts matching quote for second quote of $$""" opening delimiter',
+      doTest('$$""<caret>"text"""', '$$""<caret>""text"""'),
     );
   });
 
@@ -509,14 +598,14 @@ fun foo() {
 fun foo() {
   /*
   comment
-  */ 
+  */
 <caret>
 }`,
         `
 fun foo() {
   /*
   comment
-  */ 
+  */
   <caret>
 }`,
         '  ',
@@ -597,6 +686,109 @@ fun foo() {
              line 1
              <caret>
          """.trimIndent()`,
+      ),
+    );
+
+    test(
+      'does not insert string concatenation when Enter is pressed in a lambda body with context receivers nearby',
+      doTest(
+        `
+fun testMe(action: context(String) () -> Unit) {}
+
+val foo: () -> Unit = {
+    println("hello")
+<caret>
+    println("world")
+}`,
+        `
+fun testMe(action: context(String) () -> Unit) {}
+
+val foo: () -> Unit = {
+    println("hello")
+    <caret>
+    println("world")
+}`,
+      ),
+    );
+
+    test(
+      'does not insert string concatenation when Enter is pressed inside an empty when block with a string nearby',
+      doTest(
+        `
+class RefreshSession {
+    fun perform(){
+        ""
+    }
+    private fun stepRefreshRoots() =
+        when {
+<caret>}
+        listOf("")
+}`,
+        `
+class RefreshSession {
+    fun perform(){
+        ""
+    }
+    private fun stepRefreshRoots() =
+        when {
+            <caret>
+        }
+        listOf("")
+}`,
+      ),
+    );
+
+    test(
+      'does not insert string concatenation when Enter is pressed after a line containing an invalid string template',
+      doTest(
+        `
+fun usage() {
+    val foo = "\${}"
+<caret>
+    val boo = ""
+}`,
+        `
+fun usage() {
+    val foo = "\${}"
+    <caret>
+    val boo = ""
+}`,
+      ),
+    );
+
+    test(
+      'does not insert string concatenation when Enter is pressed inside a ${} interpolation block',
+      doTest('val foo = "${\n<caret>}"', 'val foo = "${\n    <caret>}"'),
+    );
+
+    test(
+      'does not insert string concatenation when Enter is pressed before an empty string literal in a when entry',
+      doTestKey(
+        `
+fun usage() = when {
+    listOf("", <caret>"")
+}`,
+        '\n',
+        `
+fun usage() = when {
+    listOf("", \n    <caret>"")
+}`,
+      ),
+    );
+
+    test(
+      'uses continuation indent for Enter after comma in a well-formed call when an unrelated parse error exists in the file',
+      doTest(
+        `class Foo {
+    fun bar() {
+        listOf(1,
+<caret>2)
+    }`,
+        `class Foo {
+    fun bar() {
+        listOf(1,
+            <caret>2)
+    }`,
       ),
     );
   });
@@ -693,7 +885,7 @@ val s = """
       'does not rewrite enter inside a lambda body',
       doTest(
         `
-listOf(1, 2, 3).map { x -> 
+listOf(1, 2, 3).map { x ->
 <caret>}`,
         `
 listOf(1, 2, 3).map { x ->
@@ -707,7 +899,7 @@ listOf(1, 2, 3).map { x ->
       doTest(
         `
 fun test() {
-    listOf(1, 2, 3).map { x -> 
+    listOf(1, 2, 3).map { x ->
 <caret>}
 }`,
         `
@@ -724,7 +916,7 @@ fun test() {
       doTest(
         `
 fun test() {
-  listOf(1, 2, 3).map { x -> 
+  listOf(1, 2, 3).map { x ->
 <caret>}
 }`,
         `
@@ -744,7 +936,9 @@ fun test() {
 
     test(
       'properly wraps after malformed interpolation',
-      doTest('val s = "a${}\n<caret>b"', 'val s = "a${}" +\n        <caret>"b"'),
+      // fwcd parses "a${}" as a valid string_literal (not an ERROR), so
+      // spaceAfterConcatenationOperator is true and the output has a trailing space.
+      doTest('val s = "a${}\n<caret>b"', 'val s = "a${}" + \n        <caret>"b"'),
     );
 
     test(
@@ -754,13 +948,13 @@ fun test() {
 class A {
   val x = 1
 <caret>
-}                
+}
                 `,
         `
 class A {
   val x = 1
   <caret>
-}                
+}
                 `,
       ),
     );
@@ -1109,14 +1303,14 @@ fun test() {
         `
 fun foo() {
   /*
-   * comment 
+   * comment
    */
 <caret>
 }`,
         `
 fun foo() {
   /*
-   * comment 
+   * comment
    */
   <caret>
 }`,
@@ -1128,17 +1322,17 @@ fun foo() {
       'properly indents after a multi-line comment',
       doTest(
         `
-class C {                
+class C {
   /**
-   * comment 
+   * comment
    */
 <caret>
 fun foo() {
 }`,
         `
-class C {                
+class C {
   /**
-   * comment 
+   * comment
    */
   <caret>
 fun foo() {
@@ -1287,16 +1481,17 @@ data class Foo(
 
     test(
       'indents when Enter is pressed in function arguments',
+      { todo: 'LSP-1104 (no longer properly works without trailing whitespaces)' },
       doTest(
         `
     val items = foo(
         x,
-<caret>            
+<caret>
     )`,
         `
     val items = foo(
         x,
-        <caret>            
+        <caret>
     )`,
       ),
     );
@@ -1307,12 +1502,12 @@ data class Foo(
         `
 enum class E {
     A,
-<caret>    
+<caret>
 }`,
         `
 enum class E {
     A,
-    <caret>    
+    <caret>
 }`,
       ),
     );

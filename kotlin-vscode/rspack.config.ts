@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from '@rspack/cli';
-import { createExtensionConfig, dependencyWasm } from './rspack.base.config';
+import { copyToPackage, createExtensionConfig, dependencyWasm } from './rspack.base.config';
 import { configureExtensionPolicyConsumer } from '../../intellij-vscode/extension-policy/rspack.consumer';
 
 const packageDir = path.dirname(fileURLToPath(import.meta.url));
@@ -13,10 +13,10 @@ const config = createExtensionConfig(
   packageDir,
   [
     dependencyWasm(packageDir, 'web-tree-sitter', 'web-tree-sitter.wasm'),
-    dependencyWasm(
+    copyToPackage(
       packageDir,
-      '@tree-sitter-grammars/tree-sitter-kotlin',
-      'tree-sitter-kotlin.wasm',
+      path.resolve(communityDir, 'vscode-language-kotlin/grammars/tree-sitter-kotlin.wasm'),
+      'grammars/tree-sitter-kotlin.wasm',
     ),
   ],
   './src/extension.ts',

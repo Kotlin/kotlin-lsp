@@ -47,6 +47,28 @@ export function createDoTest(
   };
 }
 
+export function createDoTestKey(
+  parserPromise: Promise<Parser>,
+  handler: KeyHandler,
+): (
+  inputBeforePress: string,
+  key: string,
+  expected: string,
+  indentUnit?: string,
+) => () => Promise<void> {
+  const doTest = createDoTest(parserPromise, handler);
+  return (inputBeforePress, key, expected, indentUnit) => {
+    const caretIndex = inputBeforePress.indexOf(CARET_MARKER);
+    assert.notEqual(caretIndex, -1, `Input must contain ${CARET_MARKER} as caret marker`);
+    const input =
+      inputBeforePress.slice(0, caretIndex) +
+      key +
+      CARET_MARKER +
+      inputBeforePress.slice(caretIndex + CARET_MARKER.length);
+    return doTest(input, expected, indentUnit);
+  };
+}
+
 function applyEdit(source: string, result: KeyResult): string {
   return source.slice(0, result.startOffset) + result.text + source.slice(result.endOffset);
 }

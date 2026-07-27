@@ -55,7 +55,7 @@
     <orderEntry type="module" module-name="intellij.platform.indexing" />
     <orderEntry type="module" module-name="intellij.kotlin.base.indices" />
     <orderEntry type="module" module-name="intellij.kotlin.base.projectStructure" />
-    <orderEntry type="module" module-name="intellij.kotlin.codeInsight.inspections" />
+    <orderEntry type="module" module-name="intellij.kotlin.codeInsight.inspections" scope="PROVIDED" />
     <orderEntry type="module" module-name="intellij.kotlin.codeInsight.intentions" />
     <orderEntry type="module" module-name="intellij.kotlin.formatter.minimal" />
     <orderEntry type="module" module-name="kotlin.plugin.common" />
@@ -68,7 +68,6 @@
     <orderEntry type="module" module-name="intellij.java.psi.impl" />
     <orderEntry type="module" module-name="intellij.java.impl" />
     <orderEntry type="module" module-name="intellij.kotlin.base.util" />
-    <orderEntry type="module" module-name="kotlin.completion.impl.shared" />
     <orderEntry type="module" module-name="intellij.kotlin.codeInsight.base" />
     <orderEntry type="library" name="kotlinc.analysis-api-impl-base" level="project" />
     <orderEntry type="library" name="kotlinc.low-level-api-fir" level="project" />
@@ -77,9 +76,7 @@
     <orderEntry type="module" module-name="intellij.kotlin.navigation" />
     <orderEntry type="module" module-name="intellij.kotlin.codeInsight.shared" />
     <orderEntry type="module" module-name="language-server.analyzer.kotlin" />
-    <orderEntry type="module" module-name="language-server.dap.jvm" />
     <orderEntry type="module" module-name="language-server.api.impl.analyzer" />
-    <orderEntry type="module" module-name="language-server.dap.jvm.lsp.features" />
     <orderEntry type="module" module-name="language-server.workspace-import" />
     <orderEntry type="module" module-name="language-server.api.features.impl.java-base" />
     <orderEntry type="module" module-name="intellij.kotlin.references" />

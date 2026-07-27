@@ -15,10 +15,14 @@ import {
 import type { LanguageClient } from 'vscode-languageclient/node';
 import { getLspClient, registerInitializationOptionsContributor } from './lspClient';
 import { getOutputChannel } from './extension';
+import { internalConsoleOptionsFor } from './consoleOptions';
 
 const DEBUG_TYPE = 'intellij_debugger';
 const RUN_MAIN_COMMAND = 'intellij_debugger.runMain';
 const LSP_REQUEST_TIMEOUT_MS = 30_000;
+const DEFAULT_CONSOLE = 'integratedTerminal';
+
+export type ConsoleKind = 'internalConsole' | 'integratedTerminal' | 'externalTerminal';
 
 interface RunMainArgs {
   mainClass: string;
@@ -32,6 +36,8 @@ interface ClassDocumentResponse {
 
 interface ClasspathResponse {
   classpath: string[];
+  modulePath?: string[];
+  moduleName?: string;
 }
 
 interface WorkingDirectoryResponse {
@@ -45,6 +51,7 @@ interface JavaExecutableResponse {
 interface LaunchConfig extends DebugConfiguration {
   request: 'launch';
   mainClass?: string;
+  moduleName?: string;
   file?: string;
   args?: string[];
   vmArgs?: string[];
@@ -53,6 +60,8 @@ interface LaunchConfig extends DebugConfiguration {
   javaExec?: string;
   cwd?: string;
   env?: Record<string, string>;
+  console?: ConsoleKind;
+  internalConsoleOptions?: 'neverOpen' | 'openOnSessionStart' | 'openOnFirstSessionStart';
 }
 
 export function registerDapServer(context: ExtensionContext) {
@@ -113,7 +122,7 @@ function registerRunMainCodeLens(context: ExtensionContext) {
   );
 }
 
-async function resolveLaunchConfig(config: LaunchConfig): Promise<LaunchConfig | undefined> {
+async function resolveLaunchConfig(config: LaunchConfig): Promise<DebugConfiguration | undefined> {
   const client = getLspClient();
   if (!client) {
     // Do not await: awaiting blocks the config resolver until the toast is dismissed,
@@ -135,32 +144,45 @@ async function resolveLaunchConfig(config: LaunchConfig): Promise<LaunchConfig |
           ])
         ).uri;
 
-    if (!config.classPaths || config.classPaths.length === 0) {
-      const cp = await sendCommand<ClasspathResponse>(client, 'intellij.java.resolveClasspath', [
-        { uri },
-      ]);
+    // These three lookups are independent once we have the URI, so run them concurrently instead of
+    // sequentially — three back-to-back LSP round-trips were a big chunk of the startup latency.
+    const needsClasspath = !config.classPaths || config.classPaths.length === 0;
+    const needsCwd = !config.cwd;
+    const needsJavaExec = !config.javaExec;
+    // classPaths and javaExec are required to launch, so failing to resolve them aborts the launch (the
+    // rejection propagates to the catch below). The working directory is optional — the server falls back to
+    // the module/project directory — so tolerate its failure instead of failing the whole launch.
+    const [cp, wd, java] = await Promise.all([
+      needsClasspath
+        ? sendCommand<ClasspathResponse>(client, 'intellij.java.resolveClasspath', [{ uri }])
+        : Promise.resolve(undefined),
+      needsCwd
+        ? sendCommand<WorkingDirectoryResponse>(client, 'intellij.java.resolveWorkingDirectory', [
+            { uri },
+          ]).catch((e) => {
+            getOutputChannel().appendLine(
+              `[launch.json] working directory resolution failed, using default: ${errorMessage(e)}`,
+            );
+            return undefined;
+          })
+        : Promise.resolve(undefined),
+      needsJavaExec
+        ? sendCommand<JavaExecutableResponse>(client, 'intellij.java.resolveJavaExecutable', [
+            { uri },
+          ])
+        : Promise.resolve(undefined),
+    ]);
+    if (cp) {
       config.classPaths = cp.classpath;
+      // For a JPMS launch the server also returns the module path and the owning module name, so the main
+      // class is run from the module path (`-m moduleName/mainClass`) instead of the class path.
+      if (cp.modulePath && cp.modulePath.length > 0) config.modulePaths = cp.modulePath;
+      if (cp.moduleName) config.moduleName = cp.moduleName;
     }
-
-    if (!config.cwd) {
-      // Default the working directory to the module's project directory. Without it the launched process
-      // inherits the language server's directory, so e.g. Spring Boot's docker-compose lookup fails.
-      const wd = await sendCommand<WorkingDirectoryResponse>(
-        client,
-        'intellij.java.resolveWorkingDirectory',
-        [{ uri }],
-      );
-      if (wd.workingDirectory) config.cwd = wd.workingDirectory;
-    }
-
-    if (!config.javaExec) {
-      const java = await sendCommand<JavaExecutableResponse>(
-        client,
-        'intellij.java.resolveJavaExecutable',
-        [{ uri }],
-      );
-      config.javaExec = java.javaExec;
-    }
+    // Default the working directory to the module's project directory. Without it the launched process
+    // inherits the language server's directory, so e.g. Spring Boot's docker-compose lookup fails.
+    if (wd?.workingDirectory) config.cwd = wd.workingDirectory;
+    if (java) config.javaExec = java.javaExec;
   } catch (e) {
     const message = errorMessage(e);
     getOutputChannel().appendLine(`[launch.json] resolution failed: ${message}`);
@@ -168,6 +190,15 @@ async function resolveLaunchConfig(config: LaunchConfig): Promise<LaunchConfig |
     return undefined;
   }
 
+  // Default the console to the integrated terminal (matching java-debug) and hand the resolved config to the
+  // DAP server, which decides where to run based on `console`:
+  //  - integratedTerminal / externalTerminal → the server issues a `runInTerminal` request and VS Code runs the
+  //    program inside a terminal shell (no "terminal process terminated" alert; real TTY; VS Code does quoting).
+  //  - internalConsole → the server spawns the process itself and streams output to the Debug Console.
+  config.console = config.console ?? DEFAULT_CONSOLE;
+  // Keep VSCode from popping the Debug Console (its default `internalConsoleOptions`) on top of the
+  // console the user actually launched into, so focus follows `console` instead.
+  config.internalConsoleOptions = internalConsoleOptionsFor(config.console);
   return config;
 }
 

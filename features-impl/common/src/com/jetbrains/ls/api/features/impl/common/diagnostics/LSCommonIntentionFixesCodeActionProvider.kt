@@ -171,7 +171,7 @@ class LSCommonIntentionFixesCodeActionProvider(
                 }.getOrHandleException {
                     LOG.warn("Failed to perform mod command action $modCommandAction", it)
                 } ?: return@mapNotNull null
-                val modCommandData = ModCommandData.from(modCommand, server) ?: return@mapNotNull null
+                val modCommandData = ModCommandData.from(modCommand, actionContext, server) ?: return@mapNotNull null
 
                 CodeAction(
                     title = presentation.name,

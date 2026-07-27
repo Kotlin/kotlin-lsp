@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features.impl.kotlin.diagnostics.compiler
 
 import com.intellij.modcommand.ActionContext
+import com.intellij.modcommand.ModCommandAction
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
@@ -99,26 +100,63 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
             }
             .flatMap { modCommandAction ->
                 val context = ActionContext.from(editor, file)
-
-                modCommandAction.flattenChoiceActions(context)
-            }
-            .mapNotNull { modCommandActionChain ->
-                val modCommand = modCommandActionChain.leaf.command
-                val modCommandData = ModCommandData.from(modCommand, server) ?: return@mapNotNull null
-
-                CodeAction(
-                    modCommandActionChain.combinedPresentationNames(),
-                    CodeActionKind.QuickFix,
-                    diagnostics = listOf(lspDiagnostic),
-                    command = Command(
-                        LSApplyFixCommandDescriptorProvider.commandDescriptor.title,
-                        LSApplyFixCommandDescriptorProvider.commandDescriptor.name,
-                        arguments = listOf(
-                            LSP.json.encodeToJsonElement(modCommandData),
-                        ),
-                    ),
-                )
+                if (server.config.clientSupportsIntellijExtensions) {
+                    // A ModChooseAction is represented natively (a menu shown at execution time), so a single
+                    // code action is emitted and the choice tree does not need to be flattened up front.
+                    nativeCodeActions(modCommandAction, context, lspDiagnostic)
+                } else {
+                    // Generic LSP clients cannot show a choice menu, so expand top-level ModChooseActions into
+                    // separate flat code actions.
+                    flattenedCodeActions(modCommandAction, context, lspDiagnostic)
+                }
             }
             .toList()
     }
+
+    context(server: LSServer)
+    private fun nativeCodeActions(
+        modCommandAction: ModCommandAction,
+        context: ActionContext,
+        lspDiagnostic: Diagnostic,
+    ): List<CodeAction> {
+        val presentation = runCatching {
+            modCommandAction.getPresentation(context)
+        }.getOrHandleException {
+            LOG.warn("Failed to get presentation from mod command action $modCommandAction", it)
+        } ?: return emptyList()
+
+        val modCommand = runCatching {
+            modCommandAction.perform(context)
+        }.getOrHandleException {
+            LOG.warn("Failed to perform mod command action $modCommandAction", it)
+        } ?: return emptyList()
+
+        val modCommandData = ModCommandData.from(modCommand, context, server) ?: return emptyList()
+        return listOf(codeAction(presentation.name, modCommandData, lspDiagnostic))
+    }
+
+    context(server: LSServer)
+    private fun flattenedCodeActions(
+        modCommandAction: ModCommandAction,
+        context: ActionContext,
+        lspDiagnostic: Diagnostic,
+    ): List<CodeAction> =
+        modCommandAction.flattenChoiceActions(context).mapNotNull { chain ->
+            val modCommandData = ModCommandData.from(chain.leaf.command, context, server) ?: return@mapNotNull null
+            codeAction(chain.combinedPresentationNames(), modCommandData, lspDiagnostic)
+        }
+
+    private fun codeAction(title: String, modCommandData: ModCommandData, lspDiagnostic: Diagnostic): CodeAction =
+        CodeAction(
+            title,
+            CodeActionKind.QuickFix,
+            diagnostics = listOf(lspDiagnostic),
+            command = Command(
+                LSApplyFixCommandDescriptorProvider.commandDescriptor.title,
+                LSApplyFixCommandDescriptorProvider.commandDescriptor.name,
+                arguments = listOf(
+                    LSP.json.encodeToJsonElement(modCommandData),
+                ),
+            ),
+        )
 }
