@@ -13,7 +13,7 @@ import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.testFramework.common.timeoutRunBlocking
 import com.intellij.util.SystemProperties
-import com.intellij.workspaceModel.ide.impl.IdeVirtualFileUrlManagerImpl
+import com.intellij.workspaceModel.ide.impl.createIdeVirtualFileUrlManager
 import com.jetbrains.analyzer.api.withAnalyzer
 import com.jetbrains.analyzer.api.withProject
 import com.jetbrains.analyzer.bootstrap.AnalyzerProjectId
@@ -329,7 +329,7 @@ abstract class AbstractProjectImportTest {
         compareWithTestdata(projectDir / "workspace.json", cropJarPaths(toJson(data)))
 
         val storageFromData = MutableEntityStorage.create().apply {
-            importWorkspaceData(data, projectDir, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(true), false, "JSON")
+            importWorkspaceData(data, projectDir, object : EntitySource {}, createIdeVirtualFileUrlManager(true), false, "JSON")
         }
         assertEquals(data, workspaceData(storageFromData, projectDir))
     }
