@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/extension.ts",
     "./DocumentParser": "./src/DocumentParser.ts",
+    "./consentValues": "./src/consentValues.ts",
     "./handleKeyType": "./src/handleKeyType.ts",
     "./testing/keyHandlerTestUtils": "./src/keyHandlerTestUtils.ts",
     "./testing/archiveExtraction": "./src/testing/archiveExtraction.ts",

@@ -38,6 +38,7 @@ import {
   serverLauncherPath,
 } from './serverBundleDownload';
 import { type ClientFeatureFactory, startClientWithFeatures } from './clientFeatureFactories';
+import { isDataSharingChoice, isRegion } from './consentValues';
 import {
   registerChooseActionMenuHandler,
   registerCopyToClipboardHandler,
@@ -591,8 +592,10 @@ async function startServer(
     args.push('--system-path', context.storageUri.fsPath);
   }
   const userJvmOptions = getUserJvmOptions();
-  const dataSharing = dataSharingLevel(configOption(OPT_DATA_SHARING)) ?? 'none';
-  const region = specifiedRegion(configOption(OPT_REGION));
+  const rawDataSharing = configOption(OPT_DATA_SHARING);
+  const dataSharing = isDataSharingChoice(rawDataSharing) ? rawDataSharing : 'none';
+  const rawRegion = configOption(OPT_REGION);
+  const region = isRegion(rawRegion) ? rawRegion : undefined;
   const env = buildLaunchEnvironment(process.env, userJvmOptions, debugLaunch, dataSharing, region);
 
   logInfo('Starting language server');
@@ -796,26 +799,6 @@ async function createLspClient(
 
 function getUserJvmOptions(): string[] {
   return configOption<string[]>(OPT_JVM_ARGS) ?? [];
-}
-
-type DataSharingLevel = 'full' | 'anonymous' | 'none';
-
-function dataSharingLevel(value: unknown): DataSharingLevel | undefined {
-  return value === 'full' || value === 'anonymous' || value === 'none' ? value : undefined;
-}
-
-const REGIONS = [
-  'africa',
-  'americas',
-  'apac',
-  'china',
-  'europe',
-  'middle_east',
-  'oceania',
-] as const;
-
-function specifiedRegion(value: unknown): string | undefined {
-  return REGIONS.find((region) => region === value);
 }
 
 function buildLaunchEnvironment(
