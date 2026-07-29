@@ -34,11 +34,15 @@ export {
   subscribeToClientEvent,
 } from './lspClient';
 export { removeDownloadedServerBundle, serverBundleStoragePath } from './serverBundleDownload';
+export { registerExtensionConflictHandler } from './extensionConflict';
+export type { ExtensionConflictOptions } from './extensionConflict';
+export { registerKotlinExtensionConflictHandler } from './legacyKotlinExtensionConflict';
 import { LSPErrorCodes, RequestType, ResponseError } from 'vscode-languageclient/node';
 import { registerStatusBarItem } from './statusBar';
 import { registerDapServer } from './dap';
 import { registerFileTemplates } from './fileTemplates';
 import { checkLegacyKotlinExtensionConflict } from './legacyKotlinExtensionConflict';
+import { promptReloadWindow } from './reloadWindow';
 import { registerAutoReloadWorkspace } from './autoReloadWorkspace';
 import { SERVER_BUNDLE_METADATA_FILE } from './serverBundleDownload';
 
@@ -193,13 +197,10 @@ export async function registerDevCommands(context: ExtensionContext): Promise<vo
         return;
       }
       await removeDownloadedServerLauncher();
-      const action = await window.showInformationMessage(
-        'Downloaded language server removed',
-        'Reload Window',
-      );
-      if (action === 'Reload Window') {
-        await commands.executeCommand('workbench.action.reloadWindow');
-      }
+      await promptReloadWindow({
+        message: 'Downloaded language server removed',
+        modal: false,
+      });
     }),
   );
 }

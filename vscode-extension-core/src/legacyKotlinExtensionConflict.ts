@@ -1,14 +1,23 @@
 import { commands, type ExtensionContext, extensions, window } from 'vscode';
 import { logInfo } from './extension';
+import { promptReloadWindow } from './reloadWindow';
+import { registerExtensionConflictHandler } from './extensionConflict';
 
 const KOTLIN_SERVER_EXTENSION_ID = 'jetbrains.kotlin-server';
 const LEGACY_KOTLIN_EXTENSION_ID = 'jetbrains.kotlin';
 
 const UNINSTALL_EXTENSION_COMMAND = 'workbench.extensions.uninstallExtension';
-const RELOAD_WINDOW_COMMAND = 'workbench.action.reloadWindow';
 
 const UNINSTALL_OUTDATED_EXTENSION_ACTION = 'Uninstall outdated extension';
-const RELOAD_WINDOW_ACTION = 'Reload Window';
+
+export function registerKotlinExtensionConflictHandler(
+  context: ExtensionContext,
+): Promise<boolean> {
+  return registerExtensionConflictHandler({
+    context,
+    conflictingExtensionIds: [KOTLIN_SERVER_EXTENSION_ID, LEGACY_KOTLIN_EXTENSION_ID],
+  });
+}
 
 /**
  * Checks whether Kotlin Server should be blocked because the legacy Kotlin extension is installed.
@@ -20,6 +29,8 @@ const RELOAD_WINDOW_ACTION = 'Reload Window';
  * the uninstall action, the legacy extension is uninstalled and a reload prompt is shown.
  *
  * The UI flow is handled asynchronously; callers must not continue activation when this function returns `true`.
+ *
+ * See `registerExtensionConflictHandler` for the parameterized variant; keep the two in sync.
  */
 export function checkLegacyKotlinExtensionConflict(context: ExtensionContext): boolean {
   const currentExtensionId = context.extension.id.toLowerCase();
@@ -80,29 +91,17 @@ async function handleLegacyKotlinExtensionConflict(): Promise<void> {
       `Uninstalled conflicting extension '${LEGACY_KOTLIN_EXTENSION_ID}' while activating '${KOTLIN_SERVER_EXTENSION_ID}'`,
     );
 
-    const reloadWindowAction = await window.showInformationMessage(
-      'The outdated "Kotlin by JetBrains" extension was uninstalled.',
-      {
-        modal: true,
-        detail: `Reload the window to finish switching to the new extension "${KOTLIN_SERVER_EXTENSION_ID}".`,
-      },
-      RELOAD_WINDOW_ACTION,
-    );
+    const reloaded = await promptReloadWindow({
+      message: 'The outdated "Kotlin by JetBrains" extension was uninstalled.',
+      detail: `Reload the window to finish switching to the new extension "${KOTLIN_SERVER_EXTENSION_ID}".`,
+      dismissedMessage: 'Reload the window to complete activation of "Kotlin by JetBrains".',
+    });
 
-    if (reloadWindowAction === RELOAD_WINDOW_ACTION) {
+    if (!reloaded) {
       logInfo(
-        `Reloading window after uninstalling '${LEGACY_KOTLIN_EXTENSION_ID}' for '${KOTLIN_SERVER_EXTENSION_ID}'`,
+        `User dismissed reload prompt after uninstalling '${LEGACY_KOTLIN_EXTENSION_ID}' for '${KOTLIN_SERVER_EXTENSION_ID}'`,
       );
-      await commands.executeCommand(RELOAD_WINDOW_COMMAND);
-      return;
     }
-
-    logInfo(
-      `User dismissed reload prompt after uninstalling '${LEGACY_KOTLIN_EXTENSION_ID}' for '${KOTLIN_SERVER_EXTENSION_ID}'`,
-    );
-    await window.showInformationMessage(
-      'Reload the window to complete activation of "Kotlin by JetBrains".',
-    );
   } catch (error) {
     logInfo(
       `Handling conflicting extension '${LEGACY_KOTLIN_EXTENSION_ID}' for '${KOTLIN_SERVER_EXTENSION_ID}' failed with error: ${error}`,
