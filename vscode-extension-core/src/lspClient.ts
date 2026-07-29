@@ -711,7 +711,7 @@ function buildDocumentSelector(): LanguageClientOptions['documentSelector'] {
 
   logInfo(`Serving languages: ${contributedLanguageIds.join(', ')}`);
 
-  const supportedSchemes = ['file', 'jar', 'jrt'];
+  const supportedSchemes = ['file', 'jar', 'jrt', 'untitled'];
   const selector: NonNullable<LanguageClientOptions['documentSelector']> = [
     { scheme: 'jar', language: 'plaintext' },
     { scheme: 'jrt', language: 'plaintext' },
