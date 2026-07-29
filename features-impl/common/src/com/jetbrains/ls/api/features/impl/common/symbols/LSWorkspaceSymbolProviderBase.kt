@@ -33,7 +33,7 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
         server.withAnalysisContext {
             coroutineScope {
                 for (contributor in getContributors()) {
-                    launch { handleContributor(contributor, params.query, channel) }
+                    launch { handleContributor(contributor, params.query, params.excludeLibraries == true, channel) }
                 }
             }
         }
@@ -43,6 +43,7 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
     private suspend fun handleContributor(
         contributor: ChooseByNameContributor,
         query: String,
+        excludeLibraries: Boolean,
         channel: SendChannel<WorkspaceSymbol>
     ) {
         if (query.isBlank()) return
@@ -59,7 +60,7 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
                 }
             }
         }
-        val searchScope = FindSymbolParameters.searchScopeFor(project, /* searchInLibraries = */ true)
+        val searchScope = FindSymbolParameters.searchScopeFor(project, /* searchInLibraries = */ !excludeLibraries)
         val parameters = FindSymbolParameters(query, shortName, searchScope)
         // Mirrors ContributorsBasedGotoByModel.doProcessContributorNames: dispatch on Ex2/Ex/base,
         // collecting into a set to deduplicate names that appear in multiple indices
@@ -70,7 +71,7 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
 
                 is ChooseByNameContributorEx -> NameCollector(shortName).let { contributor.processNames(it, searchScope, /* filter = */ null); it.result }
 
-                else -> contributor.getNames(project, /* includeNonProjectItems = */ true)
+                else -> contributor.getNames(project, /* includeNonProjectItems = */ !excludeLibraries)
                     .filter { name -> isApplicableName(name, shortName) }
                     .toSet()
             }
@@ -80,7 +81,12 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
                 val result = mutableListOf<NavigationItem>()
                 when (contributor) {
                     is ChooseByNameContributorEx -> contributor.processElementsWithName(name, result::add, parameters)
-                    else -> result.addAll(contributor.getItemsByName(name, shortName, project, /* includeNonProjectItems = */ true))
+                    else -> result.addAll(
+                        contributor.getItemsByName(
+                            name, shortName, project,
+                            /* includeNonProjectItems = */ !excludeLibraries,
+                        )
+                    )
                 }
                 if (qualifiedName != null && contributor is GotoClassContributor) {
                     result.filter { contributor.getQualifiedName(it)?.contains(qualifiedName, ignoreCase = true) == true }
