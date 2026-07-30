@@ -13,9 +13,9 @@ import com.intellij.codeInspection.ex.InspectionManagerEx
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.editor.Document
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
-import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.platform.diagnostic.telemetry.TelemetryManager
@@ -92,8 +92,11 @@ class LSCommonInspectionDiagnosticProvider(
                     val session = LocalInspectionToolSession(psiFile, fileRange, fileRange, null)
                     for (localInspection in localInspections) {
                         runInspection(kind = InspectionKind.Local, inspectionId = localInspection.id) {
-                            val diagnosticsBeforeInspection = diagnostics.size
                             val visitor = localInspection.buildVisitor(problemsHolder, onTheFly, session)
+                            if (visitor == PsiElementVisitor.EMPTY_VISITOR) {
+                                return@runInspection 0
+                            }
+                            val diagnosticsBeforeInspection = diagnostics.size
 
                             fun collect(element: PsiElement) {
                                 runCatching {
@@ -101,7 +104,11 @@ class LSCommonInspectionDiagnosticProvider(
                                 }.getOrHandleException {
                                     LOG.warn(it)
                                 }
-                                diagnostics.addAll(problemsHolder.collectDiagnostics(virtualFile, project, localInspection))
+                                diagnostics.addAll(problemsHolder.collectDiagnostics(
+                                    project,
+                                    document,
+                                    localInspection
+                                ))
                                 problemsHolder.clearResults()
                             }
 
@@ -174,11 +181,10 @@ class LSCommonInspectionDiagnosticProvider(
 
     context(server: LSServer)
     private fun ProblemsHolder.collectDiagnostics(
-        file: VirtualFile,
         project: Project,
+        document: Document,
         localInspectionTool: LocalInspectionTool,
     ): List<Diagnostic> {
-        val document = file.findDocument() ?: return emptyList()
         return results
             .filter { problemDescriptor -> problemDescriptor.highlightType != ProblemHighlightType.INFORMATION }
             .filter { !isSuppressed(localInspectionTool, it) }
