@@ -11,20 +11,48 @@ function displayNameOf(extension: Extension<unknown>): string | undefined {
   return typeof displayName === 'string' && displayName.trim() !== '' ? displayName : undefined;
 }
 
-/**
- * The id is kept alongside the display name because conflicting extensions may share one — both
- * `jetbrains.kotlin` and `jetbrains.kotlin-server` present themselves as "Kotlin by JetBrains".
- */
 function describeExtension(extension: Extension<unknown>): string {
   const displayName = displayNameOf(extension);
   return displayName === undefined ? `"${extension.id}"` : `"${displayName}" (${extension.id})`;
 }
 
-interface ConflictScenario {
-  warningTitle: string;
-  uninstallDetail: (conflictingExtension: string) => string;
-  declineWarning: (conflictingExtension: string) => string;
+/**
+ * Falls back to the id when both sides share a display name — `jetbrains.kotlin` and
+ * `jetbrains.kotlin-server` both present themselves as "Kotlin by JetBrains".
+ */
+function describeProduct(product: Extension<unknown>, conflicting: Extension<unknown>): string {
+  const displayName = displayNameOf(product);
+  if (displayName === undefined) return `"${product.id}"`;
+  if (displayName !== displayNameOf(conflicting)) return `"${displayName}"`;
+  return `"${displayName}" (${product.id})`;
 }
+
+interface ConflictNames {
+  product: string;
+  conflicting: string;
+}
+
+interface ConflictScenario {
+  warningTitle: (names: ConflictNames) => string;
+  uninstallDetail: (names: ConflictNames) => string;
+  declineWarning: (names: ConflictNames) => string;
+}
+
+const activationBlocked: ConflictScenario = {
+  warningTitle: ({ product }) => `An extension incompatible with ${product} is installed.`,
+  uninstallDetail: ({ product, conflicting }) =>
+    `Uninstall the conflicting extension ${conflicting} and reload the window to activate ${product}.`,
+  declineWarning: ({ product, conflicting }) =>
+    `${product} cannot complete activation while ${conflicting} is installed.`,
+};
+
+const alreadyActive: ConflictScenario = {
+  warningTitle: ({ product }) => `You are installing an extension that conflicts with ${product}.`,
+  uninstallDetail: ({ product, conflicting }) =>
+    `${conflicting} has been installed but is not active yet. Uninstall it and reload the window to keep ${product} working correctly.`,
+  declineWarning: ({ product, conflicting }) =>
+    `${conflicting} is not active yet, and will stop ${product} from working correctly once it starts.`,
+};
 
 export interface ExtensionConflictOptions {
   context: ExtensionContext;
@@ -39,8 +67,6 @@ export interface ExtensionConflictOptions {
  * We ask the user to reload the window instead of restarting activation ourselves: an uninstalled
  * extension stays in `extensions.all` until the window reloads, so there is no reliable way to
  * observe that the uninstall finished.
- *
- * See `checkLegacyKotlinExtensionConflict` for the Kotlin Server variant; keep the two in sync.
  */
 export function registerExtensionConflictHandler(
   options: ExtensionConflictOptions,
@@ -48,23 +74,6 @@ export function registerExtensionConflictHandler(
   const { context, conflictingExtensionIds } = options;
   const conflictingIds = new Set(conflictingExtensionIds.map((id) => id.toLowerCase()));
   conflictingIds.delete(context.extension.id.toLowerCase());
-  const productDisplayName = displayNameOf(context.extension) ?? context.extension.id;
-
-  const activationBlocked: ConflictScenario = {
-    warningTitle: `An extension incompatible with "${productDisplayName}" is installed.`,
-    uninstallDetail: (extension) =>
-      `Uninstall the conflicting extension ${extension} and reload the window to activate "${productDisplayName}".`,
-    declineWarning: (extension) =>
-      `"${productDisplayName}" cannot complete activation while ${extension} is installed.`,
-  };
-
-  const alreadyActive: ConflictScenario = {
-    warningTitle: `You are installing an extension that conflicts with "${productDisplayName}".`,
-    uninstallDetail: (extension) =>
-      `Uninstall the conflicting extension ${extension} and reload the window to keep "${productDisplayName}" working correctly.`,
-    declineWarning: (extension) =>
-      `${extension} may prevent "${productDisplayName}" from working correctly.`,
-  };
 
   // `prompting` guards re-entry, since `onDidChange` can fire repeatedly while a modal is open.
   // `awaitingReload` is terminal, so the uninstall never runs twice.
@@ -88,13 +97,16 @@ export function registerExtensionConflictHandler(
     state = 'prompting';
     try {
       logInfo(`Detected conflicting extension '${conflictingExtension.id}'`);
-      const description = describeExtension(conflictingExtension);
+      const names: ConflictNames = {
+        product: describeProduct(context.extension, conflictingExtension),
+        conflicting: describeExtension(conflictingExtension),
+      };
 
       const selectedAction = await window.showWarningMessage(
-        scenario.warningTitle,
+        scenario.warningTitle(names),
         {
           modal: true,
-          detail: scenario.uninstallDetail(description),
+          detail: scenario.uninstallDetail(names),
         },
         UNINSTALL_AND_RELOAD_ACTION,
       );
@@ -102,7 +114,7 @@ export function registerExtensionConflictHandler(
       if (selectedAction !== UNINSTALL_AND_RELOAD_ACTION) {
         logInfo('User dismissed the conflicting extension warning');
         const reconsidered = await window.showWarningMessage(
-          scenario.declineWarning(description),
+          scenario.declineWarning(names),
           UNINSTALL_AND_RELOAD_ACTION,
         );
         if (reconsidered !== UNINSTALL_AND_RELOAD_ACTION) return true;

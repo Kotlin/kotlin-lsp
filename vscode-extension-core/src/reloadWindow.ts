@@ -9,35 +9,9 @@ export async function reloadWindow(): Promise<void> {
   await commands.executeCommand(RELOAD_WINDOW_COMMAND);
 }
 
-export interface PromptReloadWindowOptions {
-  message: string;
-  modal?: boolean;
-  /** Rendered by modal dialogs only; VS Code ignores it for notifications. */
-  detail?: string;
-  dismissedMessage?: string;
-}
-
-export async function promptReloadWindow({
-  message,
-  modal = true,
-  detail,
-  dismissedMessage,
-}: PromptReloadWindowOptions): Promise<boolean> {
-  let selectedAction = await window.showInformationMessage(
-    message,
-    {
-      modal,
-      detail,
-    },
-    RELOAD_WINDOW_ACTION,
-  );
-
-  if (selectedAction !== RELOAD_WINDOW_ACTION && dismissedMessage !== undefined) {
-    selectedAction = await window.showInformationMessage(dismissedMessage, RELOAD_WINDOW_ACTION);
+export async function promptReloadWindow(message: string): Promise<void> {
+  const selectedAction = await window.showInformationMessage(message, RELOAD_WINDOW_ACTION);
+  if (selectedAction === RELOAD_WINDOW_ACTION) {
+    await reloadWindow();
   }
-
-  if (selectedAction !== RELOAD_WINDOW_ACTION) return false;
-
-  await reloadWindow();
-  return true;
 }

@@ -36,12 +36,11 @@ export {
 export { removeDownloadedServerBundle, serverBundleStoragePath } from './serverBundleDownload';
 export { registerExtensionConflictHandler } from './extensionConflict';
 export type { ExtensionConflictOptions } from './extensionConflict';
-export { registerKotlinExtensionConflictHandler } from './legacyKotlinExtensionConflict';
+export { registerKotlinExtensionConflictHandler } from './kotlinExtensionConflict';
 import { LSPErrorCodes, RequestType, ResponseError } from 'vscode-languageclient/node';
 import { registerStatusBarItem } from './statusBar';
 import { registerDapServer } from './dap';
 import { registerFileTemplates } from './fileTemplates';
-import { checkLegacyKotlinExtensionConflict } from './legacyKotlinExtensionConflict';
 import { promptReloadWindow } from './reloadWindow';
 import { registerAutoReloadWorkspace } from './autoReloadWorkspace';
 import { SERVER_BUNDLE_METADATA_FILE } from './serverBundleDownload';
@@ -197,10 +196,7 @@ export async function registerDevCommands(context: ExtensionContext): Promise<vo
         return;
       }
       await removeDownloadedServerLauncher();
-      await promptReloadWindow({
-        message: 'Downloaded language server removed',
-        modal: false,
-      });
+      await promptReloadWindow('Downloaded language server removed');
     }),
   );
 }
@@ -240,10 +236,6 @@ export async function activateExtension(
   if (!serverActivated) {
     const enableDecompiler = options.enableDecompiler ?? false;
     const enableDapServer = options.enableDapServer ?? false;
-
-    if (checkLegacyKotlinExtensionConflict(context)) {
-      return;
-    }
 
     if (enableDecompiler) {
       registerDecompiler(context);
