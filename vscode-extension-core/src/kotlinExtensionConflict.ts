@@ -10,5 +10,6 @@ export function registerKotlinExtensionConflictHandler(
   return registerExtensionConflictHandler({
     context,
     conflictingExtensionIds: [KOTLIN_SERVER_EXTENSION_ID, LEGACY_KOTLIN_EXTENSION_ID],
+    deprecatedExtensionIds: [LEGACY_KOTLIN_EXTENSION_ID],
   });
 }

@@ -34,8 +34,6 @@ export {
   subscribeToClientEvent,
 } from './lspClient';
 export { removeDownloadedServerBundle, serverBundleStoragePath } from './serverBundleDownload';
-export { registerExtensionConflictHandler } from './extensionConflict';
-export type { ExtensionConflictOptions } from './extensionConflict';
 export { registerKotlinExtensionConflictHandler } from './kotlinExtensionConflict';
 import { LSPErrorCodes, RequestType, ResponseError } from 'vscode-languageclient/node';
 import { registerStatusBarItem } from './statusBar';
