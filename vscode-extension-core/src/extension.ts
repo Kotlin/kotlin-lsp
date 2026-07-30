@@ -1,7 +1,6 @@
 import * as path from 'node:path';
 import {
   commands,
-  type Extension,
   type ExtensionContext,
   ExtensionMode,
   extensions,
@@ -45,11 +44,9 @@ import { registerAutoReloadWorkspace } from './autoReloadWorkspace';
 import { SERVER_BUNDLE_METADATA_FILE } from './serverBundleDownload';
 
 export type ExtensionModule = (context: ExtensionContext) => void | Promise<void>;
-export type GeoRestrictionCheck = (extension: Extension<unknown>) => Promise<boolean>;
 export type EulaAcceptanceCheck = (context: ExtensionContext) => Promise<boolean>;
 export type AcceptedEulaHashProvider = (context: ExtensionContext) => string | undefined;
 
-const defaultCheckGeoRestricted: GeoRestrictionCheck = async () => false;
 const defaultCheckEulaAccepted: EulaAcceptanceCheck = async () => true;
 const defaultGetAcceptedEulaHash: AcceptedEulaHashProvider = () => undefined;
 
@@ -61,7 +58,6 @@ export interface ActivationOptions {
   enableDecompiler?: boolean;
   /** Defaults to false. */
   enableDapServer?: boolean;
-  checkGeoRestricted?: GeoRestrictionCheck;
   checkEulaAccepted?: EulaAcceptanceCheck;
   getAcceptedEulaHash?: AcceptedEulaHashProvider;
 }
@@ -212,19 +208,14 @@ export async function activateExtension(
     initOutputChannel(context);
   }
 
-  const checkGeoRestrictedFn: GeoRestrictionCheck =
-    options.checkGeoRestricted ?? defaultCheckGeoRestricted;
-  if (await checkGeoRestrictedFn(context.extension)) {
-    return;
-  }
   const checkEulaAcceptedFn: EulaAcceptanceCheck =
     options.checkEulaAccepted ?? defaultCheckEulaAccepted;
   if (!(await checkEulaAcceptedFn(context))) {
     return;
   }
 
-  // One-time contribution setup runs once per active extension context; geo and consent gates above
-  // still run on every activation attempt.
+  // One-time contribution setup runs once per active extension context; the consent gate above
+  // still runs on every activation attempt.
   if (!serverActivated) {
     const enableDecompiler = options.enableDecompiler ?? false;
     const enableDapServer = options.enableDapServer ?? false;
