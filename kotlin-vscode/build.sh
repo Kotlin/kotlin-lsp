@@ -16,6 +16,7 @@ fi
 PACKAGE_DIR="${PACKAGE_DIR:-}"
 BUNDLE_TYPE="${BUNDLE_TYPE:-}"
 VSCE_VERSION="${VSCE_VERSION:-}"
+DOWNLOAD_VERSION="${DOWNLOAD_VERSION:-}"
 THIN_BUNDLE="${THIN_BUNDLE:-false}"
 PUBLISH_ARTIFACTS="${PUBLISH_ARTIFACTS:-true}"
 DOWNLOAD_BASE_URL="${DOWNLOAD_BASE_URL:-}"
@@ -26,6 +27,7 @@ for arg in "$@"; do
         --package-dir=*) PACKAGE_DIR="${arg#--package-dir=}" ;;
         --bundle-type=*) BUNDLE_TYPE="${arg#--bundle-type=}" ;;
         --vsce-version=*) VSCE_VERSION="${arg#--vsce-version=}" ;;
+        --download-version=*) DOWNLOAD_VERSION="${arg#--download-version=}" ;;
         --thin) THIN_BUNDLE="true" ;;
         --no-publish) PUBLISH_ARTIFACTS="false" ;;
         --download-base-url=*) DOWNLOAD_BASE_URL="${arg#--download-base-url=}" ;;
@@ -222,7 +224,7 @@ build_extension() {
   local lsp_zip_path="$5"
   local log_prefix="$6"
   local download_archive_name="$7"
-  local server_version="$8"
+  local download_version="$8"
 
   if [[ "$THIN_BUNDLE" != "true" && ! -f "$lsp_zip_path" ]]; then
     echo "Error: LSP archive not found: $lsp_zip_path" >&2
@@ -258,7 +260,7 @@ build_extension() {
       "$download_archive_name" \
       "$download_url" \
       "${lsp_zip_path}.sha256" \
-      "$server_version"
+      "$download_version"
   else
     cp "$SCRIPT_DIR/unpack-server.mjs" "$extension_dir/unpack-server.mjs"
     export LSP_ZIP_PATH="$lsp_zip_path"
@@ -333,8 +335,9 @@ for productInfo in "$ARTIFACT_DIR"/*.product-info.json; do
     # The extension version is independent of the language-server artifact version.
     server_version="$version"
     vsce_version="${VSCE_VERSION:-$server_version}"
+    download_version="${DOWNLOAD_VERSION:-$server_version}"
 
-    download_archive_name="$BUNDLE_TYPE-$server_version"
+    download_archive_name="$BUNDLE_TYPE-$download_version"
     if [[ "$arch" != "amd64" ]]; then
       download_archive_name+="-$arch"
     fi
@@ -359,7 +362,7 @@ for productInfo in "$ARTIFACT_DIR"/*.product-info.json; do
 
     EXTENSION_DIR="$BUILD_DIR/vscode-$platform"
 
-    build_extension "$EXTENSION_DIR" "$vsix_target_filename" "$vsce_version" "$vsce_target" "$bundle" "[$platform]" "$download_archive_name" "$server_version" &
+    build_extension "$EXTENSION_DIR" "$vsix_target_filename" "$vsce_version" "$vsce_target" "$bundle" "[$platform]" "$download_archive_name" "$download_version" &
     pids+=($!)
 done
 
