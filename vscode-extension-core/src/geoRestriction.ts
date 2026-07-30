@@ -1,6 +1,5 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 import { type Extension, window } from 'vscode';
-import { logInfo } from './extension';
 
 const GEO_CHECK_URL = 'https://download.jetbrains.com/check-location';
 const UNAVAILABLE_FOR_LEGAL_REASONS_STATUS = 451;
@@ -20,7 +19,8 @@ export async function checkGeoRestricted(extension: Extension<unknown>): Promise
     });
 
     if (result.status === UNAVAILABLE_FOR_LEGAL_REASONS_STATUS) {
-      logInfo(`Geo-restriction check returned status ${result.status}`);
+      // The output channel is not yet initialized at this point; use console.log.
+      console.log(`Geo-restriction check returned status ${result.status}`);
 
       const errorMessage = result.headers.get('error-message') ?? FALLBACK_MESSAGE;
       void window.showErrorMessage(`Unavailable For Legal Reasons: ${errorMessage}`);
@@ -28,7 +28,7 @@ export async function checkGeoRestricted(extension: Extension<unknown>): Promise
       return true;
     }
   } catch (e) {
-    logInfo(`Geo-restriction check failed with error: ${e}`);
+    console.log(`Geo-restriction check failed with error: ${e}`);
   }
 
   return false;
