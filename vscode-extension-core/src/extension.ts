@@ -126,9 +126,7 @@ const ReloadWorkspaceRequest = new RequestType<ReloadWorkspaceParams, null, void
   'intellij/reloadWorkspace',
 );
 
-export async function reloadWorkspace(
-  getAcceptedEulaHash: AcceptedEulaHashProvider,
-): Promise<void> {
+export async function reloadWorkspace(): Promise<void> {
   const client = getLspClient();
   if (client === undefined || client.initializeResult === undefined) {
     await window.showErrorMessage('Language server is not running');
@@ -137,7 +135,7 @@ export async function reloadWorkspace(
   try {
     // Re-read settings now so changes (e.g. `intellij.projects`) take effect on reload.
     await client.sendRequest(ReloadWorkspaceRequest, {
-      initializationOptions: buildInitializationOptions(getAcceptedEulaHash),
+      initializationOptions: buildInitializationOptions(),
     });
     await window.showInformationMessage('Workspace reloaded');
   } catch (e) {
@@ -166,14 +164,9 @@ function registerShowBuildLogCommand(context: ExtensionContext): void {
   );
 }
 
-function registerReloadWorkspaceCommand(
-  context: ExtensionContext,
-  getAcceptedEulaHash: AcceptedEulaHashProvider,
-): void {
+function registerReloadWorkspaceCommand(context: ExtensionContext): void {
   context.subscriptions.push(
-    commands.registerCommand('jetbrains.kotlin.reloadWorkspace', () =>
-      reloadWorkspace(getAcceptedEulaHash),
-    ),
+    commands.registerCommand('jetbrains.kotlin.reloadWorkspace', () => reloadWorkspace()),
   );
 }
 
@@ -243,8 +236,8 @@ export async function activateExtension(
       registerDapServer(context);
     }
     registerExportWorkspaceToJsonCommand(context);
-    registerReloadWorkspaceCommand(context, getAcceptedEulaHash);
-    registerAutoReloadWorkspace(context, getAcceptedEulaHash);
+    registerReloadWorkspaceCommand(context);
+    registerAutoReloadWorkspace(context);
     registerShowBuildLogCommand(context);
     registerStatusBarItem();
     registerFileTemplates(context);

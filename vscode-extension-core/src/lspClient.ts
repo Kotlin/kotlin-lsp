@@ -584,9 +584,14 @@ export function prefetchBundledServerLauncher(): void {
   });
 }
 
-function getServerOptions(launchedServerState: LaunchedServerState): ServerOptions {
+function getServerOptions(
+  launchedServerState: LaunchedServerState,
+  getAcceptedEulaHash: AcceptedEulaHashProvider,
+): ServerOptions {
   const predefinedPort = configOption<number>(OPT_DEV_SERVER_PORT) ?? -1;
   if (predefinedPort !== -1) {
+    // Connecting to an already-running (dev) server: we didn't start it, so we can't pass `--eula`.
+    // The server skips EULA enforcement when running from sources, so no hash is needed here.
     return () =>
       getStreamInfoForRunningServer(
         predefinedPort,
@@ -599,6 +604,7 @@ function getServerOptions(launchedServerState: LaunchedServerState): ServerOptio
     return getStreamInfoForLaunchedServer({
       launchedServerAttempt,
       launcherPath: configuredServerLauncherPath(),
+      getAcceptedEulaHash,
     });
   };
 }
@@ -611,20 +617,24 @@ function configuredServerLauncherPath(): string | undefined {
 async function getStreamInfoForLaunchedServer({
   launchedServerAttempt,
   launcherPath,
+  getAcceptedEulaHash,
 }: {
   launchedServerAttempt: LaunchedServerStartup;
   launcherPath?: string;
+  getAcceptedEulaHash: AcceptedEulaHashProvider;
 }): Promise<StreamInfo> {
-  const serverProcess = await startServer({ launchedServerAttempt, launcherPath });
+  const serverProcess = await startServer({ launchedServerAttempt, launcherPath, getAcceptedEulaHash });
   return { reader: serverProcess.stdout, writer: serverProcess.stdin };
 }
 
 async function startServer({
   launchedServerAttempt,
   launcherPath: configuredLauncherPath,
+  getAcceptedEulaHash,
 }: {
   launchedServerAttempt: LaunchedServerStartup;
   launcherPath?: string;
+  getAcceptedEulaHash: AcceptedEulaHashProvider;
 }): Promise<ChildProcessWithoutNullStreams> {
   const launcherPath = configuredLauncherPath ?? (await ensureBundledServerLauncher());
 
@@ -633,6 +643,12 @@ async function startServer({
   args.push('--stdio');
   if (context.storageUri) {
     args.push('--system-path', context.storageUri.fsPath);
+  }
+  // The launcher owns the accepted-EULA hash: we start the process, so we pass it on the command line.
+  // Clients that only connect to an already-running server cannot, which is why this is not in `initialize`.
+  const eulaHash = getAcceptedEulaHash(context);
+  if (eulaHash !== undefined) {
+    args.push('--eula', eulaHash);
   }
   const userJvmOptions = getUserJvmOptions();
   const rawDataSharing = configOption(OPT_DATA_SHARING);
@@ -731,9 +747,7 @@ function buildDocumentSelector(): LanguageClientOptions['documentSelector'] {
  * for the `intellij/reloadWorkspace` request, so a reload picks up settings changes without
  * reopening the folder.
  */
-export function buildInitializationOptions(
-  getAcceptedEulaHash: AcceptedEulaHashProvider,
-): Record<string, unknown> {
+export function buildInitializationOptions(): Record<string, unknown> {
   const folders = workspace.workspaceFolders ?? [];
   const builtinInitializationOptions = {
     defaultSdk: configOption(OPT_DEFAULT_WORKSPACE_SDK),
@@ -745,7 +759,6 @@ export function buildInitializationOptions(
     ),
     projects: configOption<ConfiguredProject[]>(OPT_PROJECTS) ?? [],
     disableRocksDBWriteAheadLog: configOption<boolean>(OPT_DISABLE_ROCKS_DB_WAL) ?? false,
-    eulaHash: getAcceptedEulaHash(getContext()),
   };
   const contributedInitializationOptions = Object.assign(
     {},
@@ -765,13 +778,13 @@ async function createLspClient(
     documentSelector: buildDocumentSelector(),
     progressOnInitialization: true,
     outputChannel: getOutputChannel(),
-    initializationOptions: buildInitializationOptions(getAcceptedEulaHash),
+    initializationOptions: buildInitializationOptions(),
     middleware: middleware,
     markdown: {
       supportHtml: true,
     },
   };
-  const serverOptions = getServerOptions(launchedServerState);
+  const serverOptions = getServerOptions(launchedServerState, getAcceptedEulaHash);
   if (!serverOptions) return null;
   // eslint-disable-next-line prefer-const -- initialized after LanguageClient construction
   let defaultErrorHandler: ErrorHandler | undefined;
