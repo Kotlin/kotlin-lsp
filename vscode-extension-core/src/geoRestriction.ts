@@ -1,6 +1,6 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 import { type Extension, window } from 'vscode';
-import { logInfo } from '@jetbrains/vscode-extension-core';
+import { logInfo } from './extension';
 
 const GEO_CHECK_URL = 'https://download.jetbrains.com/check-location';
 const UNAVAILABLE_FOR_LEGAL_REASONS_STATUS = 451;

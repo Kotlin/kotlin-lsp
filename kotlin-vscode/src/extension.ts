@@ -1,6 +1,7 @@
 import { type ExtensionContext } from 'vscode';
 import {
   activateExtension,
+  checkGeoRestricted,
   deactivateExtension,
   initializeExtension,
   isExternalServerConfigured,
@@ -13,7 +14,6 @@ import {
   checkBundledServerEulaAccepted,
   runPolicyGatedActivation,
 } from '@jetbrains/intellij-vscode-extension-policy';
-import { checkGeoRestricted } from './geoRestriction';
 
 export async function activate(context: ExtensionContext): Promise<void> {
   const geoRestricted = await checkGeoRestricted(context.extension);
