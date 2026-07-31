@@ -244,32 +244,32 @@
           "intellij.dev.serverPort": {
             "type": "number",
             "default": -1,
-            "description": "Port for the locally started server to listen on. -1 to start the bundled server"
+            "markdownDescription": "Port for a locally started language server. Specify `-1` to use the bundled server."
           },
           "intellij.dev.serverTimeoutMs": {
             "type": "number",
             "default": 10000,
-            "description": "Timeout (ms) for connecting to the external dev server."
+            "description": "Timeout (ms) for connecting to an external language server"
           },
           "intellij.dev.commands": {
             "type": "boolean",
             "default": false,
-            "description": "Expose developer-only commands."
+            "description": "Exposes developer-only commands"
           },
           "intellij.additionalJvmArgs": {
             "type": "array",
             "default": [],
-            "description": "Additional JVM arguments to pass to the LSP server"
+            "description": "Additional JVM arguments to pass to the language server"
           },
           "intellij.buildTool": {
             "type": "string",
             "default": null,
-            "description": "A build tool to use for a server, workspace, folder (null = any, \"\" = none)"
+            "markdownDescription": "Build tool to use when importing projects. Select `null` to detect the build tool automatically or `\"\"` to disable project import."
           },
           "intellij.projects": {
             "type": "array",
             "default": [],
-            "description": "Externally configured projects to import. Each entry points to a project's build file or workspace root together with the build tool to use for it.",
+            "description": "Externally configured projects to import automatically. Each entry specifies a workspace root or build file together with the build tool to use.",
             "items": {
               "type": "object",
               "required": [
@@ -279,7 +279,7 @@
               "properties": {
                 "type": {
                   "type": "string",
-                  "description": "Build tool / project type",
+                  "markdownDescription": "Build system or project format used to import and analyze this project. Possible values: `gradle`, `maven`, `bazel`, `jps`, `gomodules`, `json`.",
                   "enum": [
                     "gradle",
                     "maven",
@@ -291,7 +291,7 @@
                 },
                 "path": {
                   "type": "string",
-                  "description": "URI pointing to the project's build file or workspace root, e.g. \"file:///proj-dir/pom.xml\""
+                  "markdownDescription": "URI of the project workspace root or build file. For example: `file:///proj-dir/pom.xml`."
                 }
               },
               "allOf": [
@@ -310,21 +310,21 @@
                     "properties": {
                       "env": {
                         "type": "object",
-                        "description": "Maven only: extra environment variables for the import process.",
+                        "description": "Additional environment variables to use during Maven project import",
                         "additionalProperties": {
                           "type": "string"
                         }
                       },
                       "system-properties": {
                         "type": "object",
-                        "description": "Maven only: JVM system properties for the import process.",
+                        "description": "JVM system properties to use during Maven project import",
                         "additionalProperties": {
                           "type": "string"
                         }
                       },
                       "java-home": {
                         "type": "string",
-                        "description": "Maven only: path to the JDK home used to run the import."
+                        "description": "Path to the JDK used to run Maven project import"
                       }
                     }
                   },
@@ -367,7 +367,7 @@
           "intellij.jdkForSymbolResolution": {
             "type": "string",
             "default": null,
-            "description": "Path of the JDK for symbol resolution"
+            "description": "Path to the JDK used for symbol resolution"
           },
           "intellij.trace.server": {
             "scope": "window",
@@ -378,7 +378,7 @@
               "verbose"
             ],
             "default": "off",
-            "description": "Traces the communication between VS Code and the language server."
+            "description": "Traces communication between VS Code and the language server"
           }
         }
       },
@@ -409,7 +409,7 @@
               "Select a region to continue"
             ],
             "default": "not_set",
-            "description": "Your region for JetBrains product terms and data processing."
+            "description": "Region used for JetBrains product terms and data processing"
           },
           "intellij.dataSharing": {
             "type": "string",
@@ -427,72 +427,72 @@
               "Select a data-sharing preference to continue."
             ],
             "default": "not_set",
-            "markdownDescription": "Controls what diagnostic data the language server shares with JetBrains.\n\nThe following table outlines what is sent at each level:\n\n| | Usage Data | Errors | Error Details (non-anonymized) |\n| --- | :---: | :---: | :---: |\n| `full` | ✓ | ✓ | ✓ |\n| `anonymous` | ✓ | ✓ | – |\n| `none` | – | – | – |"
+            "markdownDescription": "Controls what diagnostic data the language server shares with JetBrains.\n\nThe following table shows the data sent at each level:\n\n| | Usage Data | Errors | Error Details (non-anonymized) |\n| --- | :---: | :---: | :---: |\n| `full` | ✓ | ✓ | ✓ |\n| `anonymous` | ✓ | ✓ | – |\n| `none` | – | – | – |"
           }
         }
       },
       {
-        "title": "Inlays",
+        "title": "Inlay Hints",
         "properties": {
           "jetbrains.kotlin.hints.settings.types.property": {
             "type": "boolean",
             "default": true,
-            "description": "Show inlay hints for property types"
+            "description": "Shows property types"
           },
           "jetbrains.kotlin.hints.settings.types.variable": {
             "type": "boolean",
             "default": true,
-            "description": "Show inlay hints for local variable types"
+            "description": "Shows local variable types"
           },
           "jetbrains.kotlin.hints.type.function.return": {
             "type": "boolean",
             "default": true,
-            "description": "Show inlay hints for function return types"
+            "description": "Shows function return types"
           },
           "jetbrains.kotlin.hints.type.function.parameter": {
             "type": "boolean",
             "default": true,
-            "description": "Show inlay hints for function parameter types"
+            "description": "Shows function parameter types"
           },
           "jetbrains.kotlin.hints.settings.lambda.return": {
             "type": "boolean",
             "default": true,
-            "description": "Show inlay hints for return expressions"
+            "description": "Shows return expressions"
           },
           "jetbrains.kotlin.hints.lambda.receivers.parameters": {
             "type": "boolean",
             "default": true,
-            "description": "Show inlay hints for implicit receivers and parameters"
+            "description": "Shows implicit receivers and parameters"
           },
           "jetbrains.kotlin.hints.settings.value.ranges": {
             "type": "boolean",
             "default": true,
-            "description": "Show inlay hints for ranges"
+            "description": "Shows ranges"
           },
           "jetbrains.kotlin.hints.value.kotlin.time": {
             "type": "boolean",
             "default": true,
-            "description": "Show kotlin.time package warning inlay hints"
+            "markdownDescription": "Shows `24h` hints for day-based `kotlin.time.Duration` expressions"
           },
           "jetbrains.kotlin.hints.parameters": {
             "type": "boolean",
             "default": true,
-            "description": "Show parameter names"
+            "description": "Shows parameter names"
           },
           "jetbrains.kotlin.hints.parameters.compiled": {
             "type": "boolean",
             "default": true,
-            "description": "Show compiled parameter names"
+            "description": "Shows compiled parameter names"
           },
           "jetbrains.kotlin.hints.parameters.excluded": {
             "type": "boolean",
             "default": false,
-            "description": "Show excluded parameter names"
+            "description": "Shows excluded parameter names"
           },
           "jetbrains.kotlin.hints.call.chains": {
             "type": "boolean",
             "default": false,
-            "description": "Function return type in call chains"
+            "description": "Shows function return types in call chains"
           }
         }
       },
