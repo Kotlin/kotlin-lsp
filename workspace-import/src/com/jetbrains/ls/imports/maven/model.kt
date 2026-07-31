@@ -10,9 +10,10 @@ internal sealed interface MavenRunResult
 internal class SuccessResult(val workspaceData: WorkspaceData) : MavenRunResult
 internal class ErrorResult(val e: Throwable) : MavenRunResult
 
+/** [resultGenSources] is `null` when the source-generating goal was skipped; the deps model is then used as is. */
 internal fun mergeResults(
     resultDeps: MavenRunResult,
-    resultGenSources: MavenRunResult
+    resultGenSources: MavenRunResult?
 ): MavenRunResult {
     val sourcesWD = (resultGenSources as? SuccessResult)?.workspaceData
     val resultWD = (resultDeps as? SuccessResult)?.workspaceData ?: return resultDeps

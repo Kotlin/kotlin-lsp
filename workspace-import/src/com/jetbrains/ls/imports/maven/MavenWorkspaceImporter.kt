@@ -47,6 +47,17 @@ object MavenWorkspaceImporter : WorkspaceImporter {
     const val LSP_MAVEN_PROJECT_MAVEN_OPTS_PROPERTY: String = "com.jetbrains.ls.imports.maven.opts"
     const val LSP_MAVEN_PROJECT_PATH_PREPEND_PROPERTY: String = "com.jetbrains.ls.imports.maven.path.prepend"
 
+    /**
+     * Skips the `model-process-sources` goal, whose forked `generate-sources` lifecycle actually runs the project's
+     * code generators. The import gets faster and nothing is written to `target/`, at the cost of the source roots
+     * that only become visible after the generating plugins have run.
+     *
+     * The environment variable is for clients that launch the server but do not control its command line
+     * (the property wins when both are set).
+     */
+    const val LSP_MAVEN_PROJECT_SKIP_GENERATE_SOURCES_PROPERTY: String = "com.jetbrains.ls.imports.maven.skipGenerateSources"
+    const val LSP_MAVEN_PROJECT_SKIP_GENERATE_SOURCES_ENV: String = "INTELLIJ_MAVEN_SKIP_GENERATE_SOURCES"
+
 
     fun useMavenAndJava(mavenHome: Path, javaHome: Path) {
         System.setProperty(JB_MAVEN_HOME, mavenHome.toString())
@@ -90,9 +101,13 @@ object MavenWorkspaceImporter : WorkspaceImporter {
 
         progress.progressStatus("Collecting Maven model...")
         val modelWithDeps = runMavenPluginGoal(execPath, javaHome, projectDirectory, "model-with-deps", progress, offlineOpts, options)
-        progress.progressStatus("Generating sources...")
-        val modelWithGeneratedSources =
+        val modelWithGeneratedSources = if (skipGenerateSources()) {
+            LOG.info("Skipping source generation: $LSP_MAVEN_PROJECT_SKIP_GENERATE_SOURCES_PROPERTY is set")
+            null
+        } else {
+            progress.progressStatus("Generating sources...")
             runMavenPluginGoal(execPath, javaHome, projectDirectory, "model-process-sources", progress, offlineOpts, options)
+        }
         progress.progressStatus("Maven model collected, commiting...")
         val mergedModels = mergeResults(modelWithDeps, modelWithGeneratedSources)
 
@@ -114,6 +129,10 @@ object MavenWorkspaceImporter : WorkspaceImporter {
             }
         }
     }
+
+    private fun skipGenerateSources(): Boolean =
+        (System.getProperty(LSP_MAVEN_PROJECT_SKIP_GENERATE_SOURCES_PROPERTY)
+         ?: System.getenv(LSP_MAVEN_PROJECT_SKIP_GENERATE_SOURCES_ENV)).toBoolean()
 
     private suspend fun runMavenPluginGoal(
         execPath: Path?,
