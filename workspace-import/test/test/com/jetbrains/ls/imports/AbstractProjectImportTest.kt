@@ -89,6 +89,9 @@ abstract class AbstractProjectImportTest {
     }
 
     @Test
+    fun javaLanguageLevels() = doGradleTest("JavaLanguageLevels", JdkDownloaderFacade.jdk21, ::withIgnoredJdkRoots)
+
+    @Test
     fun petClinic() = doGradleTest("PetClinic", ::withIgnoredJdkRoots)
 
     @Test

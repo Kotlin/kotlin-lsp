@@ -22,6 +22,7 @@ import org.gradle.tooling.model.idea.IdeaJavaLanguageSettings
 import org.gradle.tooling.model.idea.IdeaModule
 import org.gradle.tooling.model.idea.IdeaProject
 import java.nio.file.Path
+import kotlin.collections.containsKey
 import kotlin.io.path.exists
 
 internal class IdeaProjectMapper {
@@ -219,24 +220,33 @@ internal class IdeaProjectMapper {
                 // owning subproject directory as its working directory instead.
                 externalProjectPath = projectDirectory,
             )
-            val sourceSetJavaSettings = getModuleJavaSettingsData(
-                "${module.name}.${sourceSet.name}",
-                module,
-                projectJavaLevel,
-                sourceSet
-            )
+            val sourceSetJavaSettings = getModuleJavaSettingsData(module, projectJavaLevel, sourceSet)
             moduleJavaSettings.addIfNotNull(sourceSetJavaSettings)
         }
-        val rootModuleJavaSettings = moduleJavaSettings
-            .filter { it.languageLevelId != null }
-            .minByOrNull { com.intellij.util.lang.JavaVersion.parse(it.languageLevelId!!) }
-        if (rootModuleJavaSettings != null) {
-            // The aggregate module borrows only the language level from its source sets, never their
-            // compiler output (that belongs to the per-source-set modules).
-            moduleJavaSettings.add(rootModuleJavaSettings.copy(module = module.name, compilerOutputs = emptyList(), compilerOutputsForTests = emptyList()))
+
+        // special case for the root project module
+        if (projectJavaLanguageLevel.containsKey(module.name)) {
+            val projectJavaSettings = getJavaSettingsData(
+                module = module,
+                moduleName = module.name,
+                targetJavaVersion = projectJavaLevel,
+                compilerOutputs = emptyList(),
+            )
+            moduleJavaSettings.add(projectJavaSettings)
         } else {
-            moduleJavaSettings.addIfNotNull(getModuleJavaSettingsData(module.name, module, projectJavaLevel, null))
+            val rootModuleJavaSettings = moduleJavaSettings
+                .mapNotNull { it.languageLevelId }
+                .minByOrNull { com.intellij.util.lang.JavaVersion.parse(it) }
+                ?.replace("JDK_", "") ?: projectJavaLevel
+            val projectJavaSettings = getJavaSettingsData(
+                module = module,
+                moduleName = module.name,
+                targetJavaVersion = rootModuleJavaSettings,
+                compilerOutputs = emptyList(),
+            )
+            moduleJavaSettings.add(projectJavaSettings)
         }
+
         moduleJavaSettings.forEach { javaSettingsConsumer(it) }
         return modules
     }
@@ -246,7 +256,13 @@ internal class IdeaProjectMapper {
     }
 
     private fun IdeaProject.getJavaLanguageLevel(projectMetadata: ProjectMetadata): String? {
-        val mayBeJavaLevel = modules
+        return languageLevel?.level?.replace("JDK_", "")
+            ?: javaLanguageSettings?.languageLevel?.getJavaVersion()
+            ?: calculateMinimalJavaLanguageLevelOfProject(projectMetadata)
+    }
+
+    private fun IdeaProject.calculateMinimalJavaLanguageLevelOfProject(projectMetadata: ProjectMetadata): String? {
+        return modules
             .associate { it.javaLanguageSettings to (projectMetadata.sourceSets[it.name] ?: emptySet()) }
             .flatMap { javaLanguageToSourceSets ->
                 val moduleSourceSets = javaLanguageToSourceSets.value
@@ -260,12 +276,7 @@ internal class IdeaProjectMapper {
                     return@flatMap listOf(com.intellij.util.lang.JavaVersion.parse(javaSettings))
                 }
                 return@flatMap emptyList()
-            }.minOrNull()
-        if (mayBeJavaLevel != null) {
-            return mayBeJavaLevel.toString()
-        }
-        return languageLevel?.level?.replace("JDK_", "")
-            ?: javaLanguageSettings?.languageLevel?.getJavaVersion()
+            }.minOrNull()?.toString()
     }
 
     private fun ModuleData.hasValidSourceRoots(): Boolean {
@@ -275,11 +286,10 @@ internal class IdeaProjectMapper {
     }
 
     private fun getModuleJavaSettingsData(
-        moduleName: String,
         module: IdeaModule,
         projectJavaLevel: String?,
         sourceSet: ModuleSourceSet?
-    ): JavaSettingsData? {
+    ): JavaSettingsData {
         // A Gradle source set can have more than one output directory (e.g. `build/classes/java/main`,
         // `build/classes/kotlin/main`, `build/resources/main`); they are collected here and sorted for a
         // deterministic order. The workspace model keeps only the first as the module's `compilerOutput`, so the
@@ -287,29 +297,35 @@ internal class IdeaProjectMapper {
         val compilerOutputs = sourceSet?.outputDirs.orEmpty().map { it.path }
             .sorted()
             .ifEmpty { listOfNotNull(module.compilerOutput?.outputDir?.path) }
+        val languageLevel = module.getLanguageLevel(projectJavaLevel, sourceSet)
 
+        val moduleName = if (sourceSet == null) module.name else "${module.name}.${sourceSet.name}"
+        return getJavaSettingsData(moduleName, module, languageLevel, compilerOutputs)
+    }
+
+    private fun IdeaModule.getLanguageLevel(
+        projectJavaLevel: String?,
+        sourceSet: ModuleSourceSet?,
+    ): String? {
         // project java settings should be used for the buildSrc project
-        if (module.name.contains("buildSrc") && module.project.javaLanguageSettings.isSpecified()) {
-            val targetJavaVersion = module.project.javaLanguageSettings
-                ?.targetBytecodeVersion
-                ?.getJavaVersion()
-            if (targetJavaVersion != null) {
-                return getJavaSettingsData(moduleName, module, targetJavaVersion, compilerOutputs)
+        if (name.contains("buildSrc")) {
+            if (project.javaLanguageSettings.isSpecified()) {
+                return project.javaLanguageSettings
+                    ?.targetBytecodeVersion
+                    ?.getJavaVersion() ?: projectJavaLevel
             }
+            return projectJavaLevel
         }
-        val targetJavaVersion = when {
-            sourceSet.isToolchainSpecified() -> sourceSet!!.toolchainVersion.toString()
-            sourceSet.isCompileTaskSpecified() -> sourceSet!!.targetCompatibility ?: sourceSet.sourceCompatibility
-            module.javaLanguageSettings.isSpecified() -> module.javaLanguageSettings?.targetBytecodeVersion?.getJavaVersion()
+        val moduleJavaLevel = when {
+            sourceSet.isToolchainSpecified() -> sourceSet?.toolchainVersion.toString()
+            sourceSet.isCompileTaskSpecified() -> sourceSet?.targetCompatibility ?: sourceSet?.sourceCompatibility
+            javaLanguageSettings.isSpecified() -> javaLanguageSettings?.targetBytecodeVersion?.getJavaVersion()
             else -> null
         }
-        // Record an explicit language level only when it differs from the project default (as before), but still
-        // emit an entry when the module contributes its own compiler output to the run classpath.
-        val languageLevelOverride = targetJavaVersion?.takeIf { it != projectJavaLevel }
-        if (languageLevelOverride == null && compilerOutputs.isEmpty()) {
-            return null
+        if (moduleJavaLevel != null) {
+            return moduleJavaLevel
         }
-        return getJavaSettingsData(moduleName, module, languageLevelOverride, compilerOutputs)
+        return projectJavaLevel
     }
 
     private fun ModuleSourceSet?.isToolchainSpecified(): Boolean {

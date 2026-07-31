@@ -16,7 +16,8 @@
                 {
                     "path": "<WORKSPACE>/"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
         },
         {
             "name": "My Application.app",
@@ -34,7 +35,8 @@
                 {
                     "path": "<WORKSPACE>/app"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/app"
         },
         {
             "name": "My Application.app.debug",
@@ -241,7 +243,8 @@
                 {
                     "path": "<WORKSPACE>/app/src/debug"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/app"
         },
         {
             "name": "My Application.app.debugAndroidTest",
@@ -442,7 +445,8 @@
                 {
                     "path": "<WORKSPACE>/app/src/androidTestDebug"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/app"
         },
         {
             "name": "My Application.app.debugUnitTest",
@@ -643,7 +647,8 @@
                 {
                     "path": "<WORKSPACE>/app/src/testDebug"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/app"
         },
         {
             "name": "My Application.library",
@@ -661,7 +666,8 @@
                 {
                     "path": "<WORKSPACE>/library"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/library"
         },
         {
             "name": "My Application.library.main",
@@ -695,7 +701,8 @@
                         }
                     ]
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/library"
         },
         {
             "name": "My Application.library.test",
@@ -728,7 +735,8 @@
                 {
                     "path": "<WORKSPACE>/library/src/test"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/library"
         }
     ],
     "libraries": [
@@ -1428,8 +1436,6 @@
             "module": "My Application.app",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
             "languageLevelId": "JDK_11",
             "manifestAttributes": {}
         },
@@ -1437,8 +1443,6 @@
             "module": "My Application.app.debug",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
             "languageLevelId": "JDK_11",
             "manifestAttributes": {}
         },
@@ -1446,8 +1450,6 @@
             "module": "My Application.app.debugAndroidTest",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
             "languageLevelId": "JDK_11",
             "manifestAttributes": {}
         },
@@ -1455,9 +1457,38 @@
             "module": "My Application.app.debugUnitTest",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
             "languageLevelId": "JDK_11",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "My Application.library",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "My Application.library.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/library/build/classes/java/main",
+                "<WORKSPACE>/library/build/classes/kotlin/main",
+                "<WORKSPACE>/library/build/resources/main"
+            ],
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "My Application.library.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/library/build/classes/java/test",
+                "<WORKSPACE>/library/build/classes/kotlin/test",
+                "<WORKSPACE>/library/build/resources/test"
+            ],
+            "languageLevelId": "JDK_21",
             "manifestAttributes": {}
         }
     ]

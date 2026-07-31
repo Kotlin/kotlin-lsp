@@ -16,7 +16,8 @@
                 {
                     "path": "<WORKSPACE>/"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
         },
         {
             "name": "My Application.app",
@@ -34,7 +35,8 @@
                 {
                     "path": "<WORKSPACE>/app"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/app"
         },
         {
             "name": "My Application.app.debug",
@@ -390,7 +392,8 @@
                         }
                     ]
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/app"
         },
         {
             "name": "My Application.app.debugAndroidTest",
@@ -820,7 +823,8 @@
                 {
                     "path": "<WORKSPACE>/app/build/generated/data_binding_base_class_source_out/debugAndroidTest/out"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/app"
         },
         {
             "name": "My Application.app.debugUnitTest",
@@ -1177,7 +1181,8 @@
                 {
                     "path": "<WORKSPACE>/app/src/testDebug"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/app"
         },
         {
             "name": "My Application.library",
@@ -1195,7 +1200,8 @@
                 {
                     "path": "<WORKSPACE>/library"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/library"
         },
         {
             "name": "My Application.library.debug",
@@ -1557,7 +1563,8 @@
                 {
                     "path": "<WORKSPACE>/library/src/debug"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/library"
         },
         {
             "name": "My Application.library.debugAndroidTest",
@@ -2004,7 +2011,8 @@
                 {
                     "path": "<WORKSPACE>/library/src/androidTestDebug"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/library"
         },
         {
             "name": "My Application.library.debugUnitTest",
@@ -2381,7 +2389,8 @@
                 {
                     "path": "<WORKSPACE>/library/src/testDebug"
                 }
-            ]
+            ],
+            "externalProjectPath": "<WORKSPACE>/library"
         }
     ],
     "libraries": [
@@ -4575,8 +4584,6 @@
             "module": "My Application.app",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
             "languageLevelId": "JDK_11",
             "manifestAttributes": {}
         },
@@ -4584,8 +4591,6 @@
             "module": "My Application.app.debug",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
             "languageLevelId": "JDK_11",
             "manifestAttributes": {}
         },
@@ -4593,8 +4598,6 @@
             "module": "My Application.app.debugAndroidTest",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
             "languageLevelId": "JDK_11",
             "manifestAttributes": {}
         },
@@ -4602,8 +4605,6 @@
             "module": "My Application.app.debugUnitTest",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
             "languageLevelId": "JDK_11",
             "manifestAttributes": {}
         },
@@ -4611,8 +4612,6 @@
             "module": "My Application.library",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
             "languageLevelId": "JDK_11",
             "manifestAttributes": {}
         },
@@ -4620,8 +4619,6 @@
             "module": "My Application.library.debug",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
             "languageLevelId": "JDK_11",
             "manifestAttributes": {}
         },
@@ -4629,8 +4626,6 @@
             "module": "My Application.library.debugAndroidTest",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
             "languageLevelId": "JDK_11",
             "manifestAttributes": {}
         },
@@ -4638,8 +4633,6 @@
             "module": "My Application.library.debugUnitTest",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
-            "compilerOutput": null,
-            "compilerOutputForTests": null,
             "languageLevelId": "JDK_11",
             "manifestAttributes": {}
         }

@@ -1,0 +1,811 @@
+{
+    "modules": [
+        {
+            "name": "JavaLanguageLevels",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "21",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/"
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
+        },
+        {
+            "name": "JavaLanguageLevels.main",
+            "dependencies": [
+                {
+                    "type": "module",
+                    "name": "JavaLanguageLevels.untitled8.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "module",
+                    "name": "JavaLanguageLevels.untitled11.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "module",
+                    "name": "JavaLanguageLevels.untitled17.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "module",
+                    "name": "JavaLanguageLevels.untitled21.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "21",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/src/main",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/src/main/java",
+                            "type": "java-source"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
+        },
+        {
+            "name": "JavaLanguageLevels.test",
+            "dependencies": [
+                {
+                    "type": "module",
+                    "name": "JavaLanguageLevels.untitled8.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "module",
+                    "name": "JavaLanguageLevels.untitled11.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "module",
+                    "name": "JavaLanguageLevels.untitled17.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "module",
+                    "name": "JavaLanguageLevels.untitled21.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: unresolved dependency - project ' untitled17'",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: unresolved dependency - project ' untitled21'",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: unresolved dependency - org.junit.jupiter junit-jupiter",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: unresolved dependency - org.junit.platform junit-platform-launcher",
+                    "scope": "test"
+                },
+                {
+                    "type": "module",
+                    "name": "JavaLanguageLevels.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "21",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/src/test"
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
+        },
+        {
+            "name": "JavaLanguageLevels.untitled11",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "21",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/untitled11"
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled11"
+        },
+        {
+            "name": "JavaLanguageLevels.untitled11.main",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "21",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/untitled11/src/main",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/untitled11/src/main/java",
+                            "type": "java-source"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled11"
+        },
+        {
+            "name": "JavaLanguageLevels.untitled11.test",
+            "dependencies": [
+                {
+                    "type": "module",
+                    "name": "JavaLanguageLevels.untitled11.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "21",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/untitled11/src/test"
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled11"
+        },
+        {
+            "name": "JavaLanguageLevels.untitled17",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "21",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/untitled17"
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled17"
+        },
+        {
+            "name": "JavaLanguageLevels.untitled17.main",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "21",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/untitled17/src/main",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/untitled17/src/main/java",
+                            "type": "java-source"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled17"
+        },
+        {
+            "name": "JavaLanguageLevels.untitled17.test",
+            "dependencies": [
+                {
+                    "type": "module",
+                    "name": "JavaLanguageLevels.untitled17.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "21",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/untitled17/src/test"
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled17"
+        },
+        {
+            "name": "JavaLanguageLevels.untitled21",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "21",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/untitled21"
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled21"
+        },
+        {
+            "name": "JavaLanguageLevels.untitled21.main",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "21",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/untitled21/src/main",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/untitled21/src/main/java",
+                            "type": "java-source"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled21"
+        },
+        {
+            "name": "JavaLanguageLevels.untitled21.test",
+            "dependencies": [
+                {
+                    "type": "module",
+                    "name": "JavaLanguageLevels.untitled21.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "21",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/untitled21/src/test"
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled21"
+        },
+        {
+            "name": "JavaLanguageLevels.untitled8",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "21",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/untitled8"
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled8"
+        },
+        {
+            "name": "JavaLanguageLevels.untitled8.main",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "21",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/untitled8/src/main",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/untitled8/src/main/java",
+                            "type": "java-source"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled8"
+        },
+        {
+            "name": "JavaLanguageLevels.untitled8.test",
+            "dependencies": [
+                {
+                    "type": "module",
+                    "name": "JavaLanguageLevels.untitled8.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.jupiter:junit-jupiter:5.10.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.jupiter:junit-jupiter-params:5.10.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.jupiter:junit-jupiter-api:5.10.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.platform:junit-platform-commons:1.10.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.opentest4j:opentest4j:1.3.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.apiguardian:apiguardian-api:1.1.2",
+                    "scope": "provided"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.platform:junit-platform-launcher:1.10.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.10.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.junit.platform:junit-platform-engine:1.10.0",
+                    "scope": "runtime"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "21",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/untitled8/src/test",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/untitled8/src/test/java",
+                            "type": "java-test"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled8"
+        }
+    ],
+    "libraries": [
+        {
+            "name": "Gradle: org.apiguardian:apiguardian-api:1.1.2",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apiguardian/apiguardian-api/1.1.2/#####/apiguardian-api-1.1.2.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.apiguardian/apiguardian-api/1.1.2/#####/apiguardian-api-1.1.2-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.apiguardian",
+                    "artifactId": "apiguardian-api",
+                    "version": "1.1.2",
+                    "baseVersion": "1.1.2"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.jupiter:junit-jupiter-api:5.10.0",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-api/5.10.0/#####/junit-jupiter-api-5.10.0.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-api/5.10.0/#####/junit-jupiter-api-5.10.0-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.jupiter",
+                    "artifactId": "junit-jupiter-api",
+                    "version": "5.10.0",
+                    "baseVersion": "5.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.jupiter:junit-jupiter-engine:5.10.0",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-engine/5.10.0/#####/junit-jupiter-engine-5.10.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.jupiter",
+                    "artifactId": "junit-jupiter-engine",
+                    "version": "5.10.0",
+                    "baseVersion": "5.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.jupiter:junit-jupiter-params:5.10.0",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-params/5.10.0/#####/junit-jupiter-params-5.10.0.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter-params/5.10.0/#####/junit-jupiter-params-5.10.0-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.jupiter",
+                    "artifactId": "junit-jupiter-params",
+                    "version": "5.10.0",
+                    "baseVersion": "5.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.jupiter:junit-jupiter:5.10.0",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter/5.10.0/#####/junit-jupiter-5.10.0.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.jupiter/junit-jupiter/5.10.0/#####/junit-jupiter-5.10.0-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.jupiter",
+                    "artifactId": "junit-jupiter",
+                    "version": "5.10.0",
+                    "baseVersion": "5.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.platform:junit-platform-commons:1.10.0",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-commons/1.10.0/#####/junit-platform-commons-1.10.0.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-commons/1.10.0/#####/junit-platform-commons-1.10.0-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.platform",
+                    "artifactId": "junit-platform-commons",
+                    "version": "1.10.0",
+                    "baseVersion": "1.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.platform:junit-platform-engine:1.10.0",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-engine/1.10.0/#####/junit-platform-engine-1.10.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.platform",
+                    "artifactId": "junit-platform-engine",
+                    "version": "1.10.0",
+                    "baseVersion": "1.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.junit.platform:junit-platform-launcher:1.10.0",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.junit.platform/junit-platform-launcher/1.10.0/#####/junit-platform-launcher-1.10.0.jar"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.junit.platform",
+                    "artifactId": "junit-platform-launcher",
+                    "version": "1.10.0",
+                    "baseVersion": "1.10.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: org.opentest4j:opentest4j:1.3.0",
+            "type": "TEST",
+            "roots": [
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.opentest4j/opentest4j/1.3.0/#####/opentest4j-1.3.0.jar"
+                },
+                {
+                    "path": "<GRADLE_REPO>/modules-2/files-2.1/org.opentest4j/opentest4j/1.3.0/#####/opentest4j-1.3.0-sources.jar",
+                    "type": "SOURCES"
+                }
+            ],
+            "properties": {
+                "attributes": {
+                    "groupId": "org.opentest4j",
+                    "artifactId": "opentest4j",
+                    "version": "1.3.0",
+                    "baseVersion": "1.3.0"
+                }
+            }
+        },
+        {
+            "name": "Gradle: unresolved dependency - org.junit.jupiter junit-jupiter",
+            "type": "TEST",
+            "roots": []
+        },
+        {
+            "name": "Gradle: unresolved dependency - org.junit.platform junit-platform-launcher",
+            "type": "TEST",
+            "roots": []
+        },
+        {
+            "name": "Gradle: unresolved dependency - project ' untitled17'",
+            "type": "TEST",
+            "roots": []
+        },
+        {
+            "name": "Gradle: unresolved dependency - project ' untitled21'",
+            "type": "TEST",
+            "roots": []
+        }
+    ],
+    "sdks": [
+        {
+            "name": "21",
+            "type": "jdk",
+            "version": "JDK_21",
+            "homePath": null,
+            "roots": [],
+            "additionalData": ""
+        }
+    ],
+    "javaSettings": [
+        {
+            "module": "JavaLanguageLevels",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "JavaLanguageLevels.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/build/classes/java/main",
+                "<WORKSPACE>/build/resources/main"
+            ],
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "JavaLanguageLevels.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/build/classes/java/test",
+                "<WORKSPACE>/build/resources/test"
+            ],
+            "languageLevelId": "JDK_11",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "JavaLanguageLevels.untitled11",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "languageLevelId": "JDK_11",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "JavaLanguageLevels.untitled11.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/untitled11/build/classes/java/main",
+                "<WORKSPACE>/untitled11/build/resources/main"
+            ],
+            "languageLevelId": "JDK_11",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "JavaLanguageLevels.untitled11.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/untitled11/build/classes/java/test",
+                "<WORKSPACE>/untitled11/build/resources/test"
+            ],
+            "languageLevelId": "JDK_17",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "JavaLanguageLevels.untitled17",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "languageLevelId": "JDK_17",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "JavaLanguageLevels.untitled17.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/untitled17/build/classes/java/main",
+                "<WORKSPACE>/untitled17/build/resources/main"
+            ],
+            "languageLevelId": "JDK_17",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "JavaLanguageLevels.untitled17.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/untitled17/build/classes/java/test",
+                "<WORKSPACE>/untitled17/build/resources/test"
+            ],
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "JavaLanguageLevels.untitled21",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "JavaLanguageLevels.untitled21.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/untitled21/build/classes/java/main",
+                "<WORKSPACE>/untitled21/build/resources/main"
+            ],
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "JavaLanguageLevels.untitled21.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/untitled21/build/classes/java/test",
+                "<WORKSPACE>/untitled21/build/resources/test"
+            ],
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "JavaLanguageLevels.untitled8",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "languageLevelId": "JDK_1.8",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "JavaLanguageLevels.untitled8.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/untitled8/build/classes/java/main",
+                "<WORKSPACE>/untitled8/build/resources/main"
+            ],
+            "languageLevelId": "JDK_1.8",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "JavaLanguageLevels.untitled8.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/untitled8/build/classes/java/test",
+                "<WORKSPACE>/untitled8/build/resources/test"
+            ],
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        }
+    ]
+}

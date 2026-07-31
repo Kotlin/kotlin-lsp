@@ -2252,6 +2252,13 @@
     ],
     "javaSettings": [
         {
+            "module": "NewIJKotlinGradle.app",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
             "module": "NewIJKotlinGradle.app.main",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
@@ -2260,7 +2267,7 @@
                 "<WORKSPACE>/app/build/classes/kotlin/main",
                 "<WORKSPACE>/app/build/resources/main"
             ],
-            "languageLevelId": null,
+            "languageLevelId": "JDK_21",
             "manifestAttributes": {}
         },
         {
@@ -2272,7 +2279,7 @@
                 "<WORKSPACE>/app/build/classes/kotlin/test",
                 "<WORKSPACE>/app/build/resources/test"
             ],
-            "languageLevelId": null,
+            "languageLevelId": "JDK_21",
             "manifestAttributes": {}
         },
         {
@@ -2309,6 +2316,13 @@
             "manifestAttributes": {}
         },
         {
+            "module": "NewIJKotlinGradle.utils",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
             "module": "NewIJKotlinGradle.utils.main",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
@@ -2317,7 +2331,7 @@
                 "<WORKSPACE>/utils/build/classes/kotlin/main",
                 "<WORKSPACE>/utils/build/resources/main"
             ],
-            "languageLevelId": null,
+            "languageLevelId": "JDK_21",
             "manifestAttributes": {}
         },
         {
@@ -2329,7 +2343,7 @@
                 "<WORKSPACE>/utils/build/classes/kotlin/test",
                 "<WORKSPACE>/utils/build/resources/test"
             ],
-            "languageLevelId": null,
+            "languageLevelId": "JDK_21",
             "manifestAttributes": {}
         }
     ]

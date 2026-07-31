@@ -293,6 +293,13 @@
     ],
     "javaSettings": [
         {
+            "module": "untitled",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "languageLevelId": "JDK_11",
+            "manifestAttributes": {}
+        },
+        {
             "module": "untitled.main",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
@@ -300,7 +307,7 @@
                 "<WORKSPACE>/build/classes/java/main",
                 "<WORKSPACE>/build/resources/main"
             ],
-            "languageLevelId": null,
+            "languageLevelId": "JDK_11",
             "manifestAttributes": {}
         },
         {
@@ -311,7 +318,7 @@
                 "<WORKSPACE>/build/classes/java/test",
                 "<WORKSPACE>/build/resources/test"
             ],
-            "languageLevelId": null,
+            "languageLevelId": "JDK_11",
             "manifestAttributes": {}
         }
     ]

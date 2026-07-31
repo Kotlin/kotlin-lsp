@@ -307,6 +307,13 @@
     ],
     "javaSettings": [
         {
+            "module": "untitled2",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "languageLevelId": "JDK_17",
+            "manifestAttributes": {}
+        },
+        {
             "module": "untitled2.main",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
@@ -314,7 +321,7 @@
                 "<WORKSPACE>/build/classes/java/main",
                 "<WORKSPACE>/build/resources/main"
             ],
-            "languageLevelId": null,
+            "languageLevelId": "JDK_17",
             "manifestAttributes": {}
         },
         {
@@ -325,7 +332,7 @@
                 "<WORKSPACE>/build/classes/java/test",
                 "<WORKSPACE>/build/resources/test"
             ],
-            "languageLevelId": null,
+            "languageLevelId": "JDK_17",
             "manifestAttributes": {}
         }
     ]

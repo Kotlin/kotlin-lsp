@@ -176,6 +176,13 @@
     ],
     "javaSettings": [
         {
+            "module": "gradle-kotlin-language-version-custom",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "languageLevelId": "JDK_17",
+            "manifestAttributes": {}
+        },
+        {
             "module": "gradle-kotlin-language-version-custom.main",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
@@ -184,7 +191,7 @@
                 "<WORKSPACE>/build/classes/kotlin/main",
                 "<WORKSPACE>/build/resources/main"
             ],
-            "languageLevelId": null,
+            "languageLevelId": "JDK_17",
             "manifestAttributes": {}
         },
         {
@@ -196,7 +203,7 @@
                 "<WORKSPACE>/build/classes/kotlin/test",
                 "<WORKSPACE>/build/resources/test"
             ],
-            "languageLevelId": null,
+            "languageLevelId": "JDK_17",
             "manifestAttributes": {}
         }
     ]

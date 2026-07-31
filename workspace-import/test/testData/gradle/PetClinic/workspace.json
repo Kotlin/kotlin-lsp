@@ -5268,6 +5268,13 @@
     ],
     "javaSettings": [
         {
+            "module": "PetClinic",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "languageLevelId": "JDK_17",
+            "manifestAttributes": {}
+        },
+        {
             "module": "PetClinic.aot",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
@@ -5275,7 +5282,7 @@
                 "<WORKSPACE>/build/classes/java/aot",
                 "<WORKSPACE>/build/resources/aot"
             ],
-            "languageLevelId": null,
+            "languageLevelId": "JDK_17",
             "manifestAttributes": {}
         },
         {
@@ -5286,7 +5293,7 @@
                 "<WORKSPACE>/build/classes/java/aotTest",
                 "<WORKSPACE>/build/resources/aotTest"
             ],
-            "languageLevelId": null,
+            "languageLevelId": "JDK_17",
             "manifestAttributes": {}
         },
         {
@@ -5297,7 +5304,7 @@
                 "<WORKSPACE>/build/classes/java/main",
                 "<WORKSPACE>/build/resources/main"
             ],
-            "languageLevelId": null,
+            "languageLevelId": "JDK_17",
             "manifestAttributes": {}
         },
         {
@@ -5308,7 +5315,7 @@
                 "<WORKSPACE>/build/classes/java/test",
                 "<WORKSPACE>/build/resources/test"
             ],
-            "languageLevelId": null,
+            "languageLevelId": "JDK_17",
             "manifestAttributes": {}
         }
     ]

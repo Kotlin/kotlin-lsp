@@ -1,0 +1,8 @@
+plugins {
+    id 'java'
+}
+
+compileJava {
+    sourceCompatibility = 17
+    targetCompatibility = 17
+}

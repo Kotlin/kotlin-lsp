@@ -1,0 +1,32 @@
+plugins {
+    id 'java'
+}
+
+compileJava {
+    sourceCompatibility = 21
+    targetCompatibility = 21
+}
+
+compileTestJava {
+    sourceCompatibility = 11
+    targetCompatibility = 11
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation((project(":untitled8")))
+    implementation((project(":untitled11")))
+    implementation((project(":untitled17")))
+    implementation((project(":untitled21")))
+
+    testImplementation platform('org.junit:junit-bom:6.0.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+}

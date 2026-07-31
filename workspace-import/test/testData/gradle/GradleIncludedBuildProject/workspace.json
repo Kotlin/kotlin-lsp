@@ -1875,6 +1875,13 @@
     ],
     "javaSettings": [
         {
+            "module": "untitled1",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "languageLevelId": "JDK_17",
+            "manifestAttributes": {}
+        },
+        {
             "module": "untitled1.main",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
@@ -1883,7 +1890,7 @@
                 "<WORKSPACE>/untitled1/build/classes/kotlin/main",
                 "<WORKSPACE>/untitled1/build/resources/main"
             ],
-            "languageLevelId": null,
+            "languageLevelId": "JDK_17",
             "manifestAttributes": {}
         },
         {
@@ -1895,7 +1902,14 @@
                 "<WORKSPACE>/untitled1/build/classes/kotlin/test",
                 "<WORKSPACE>/untitled1/build/resources/test"
             ],
-            "languageLevelId": null,
+            "languageLevelId": "JDK_17",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "untitled2",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "languageLevelId": "JDK_17",
             "manifestAttributes": {}
         },
         {
@@ -1907,7 +1921,7 @@
                 "<WORKSPACE>/untitled2/build/classes/kotlin/main",
                 "<WORKSPACE>/untitled2/build/resources/main"
             ],
-            "languageLevelId": null,
+            "languageLevelId": "JDK_17",
             "manifestAttributes": {}
         },
         {
@@ -1919,7 +1933,7 @@
                 "<WORKSPACE>/untitled2/build/classes/kotlin/test",
                 "<WORKSPACE>/untitled2/build/resources/test"
             ],
-            "languageLevelId": null,
+            "languageLevelId": "JDK_17",
             "manifestAttributes": {}
         }
     ]
