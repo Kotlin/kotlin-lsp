@@ -14,7 +14,7 @@ describe('server download recovery', () => {
       showInformationMessage: async (message, ...actions) => {
         assert.equal(
           message,
-          'Language server download cancelled. Resume now, or run ‘Restart Language Server’ later from the Command Palette.',
+          'The download language server download was canceled. You can restart it later by running “Restart Language Server” from the Command Palette.',
         );
         assert.deepEqual(actions, ['Resume Download', 'Delete Downloaded Files']);
         return 'Resume Download';
@@ -72,7 +72,7 @@ describe('server download recovery', () => {
       showInformationMessage: async (message, ...actions) => {
         assert.equal(
           message,
-          'Language server extraction cancelled. Resume now, or run ‘Restart Language Server’ later from the Command Palette.',
+          'The extraction language server download was canceled. You can restart it later by running “Restart Language Server” from the Command Palette.',
         );
         assert.deepEqual(actions, ['Resume Setup', 'Delete Downloaded Files']);
         return 'Resume Setup';
@@ -87,7 +87,7 @@ describe('server download recovery', () => {
   it('redownloads after a checksum mismatch', async () => {
     const result = await handleServerDownloadChecksumMismatch({
       showErrorMessage: async (message, ...actions) => {
-        assert.equal(message, 'Language server download failed verification.');
+        assert.equal(message, 'Could not verify the language server download');
         assert.deepEqual(actions, ['Redownload Server']);
         return 'Redownload Server';
       },

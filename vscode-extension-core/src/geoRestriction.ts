@@ -23,7 +23,9 @@ export async function checkGeoRestricted(extension: Extension<unknown>): Promise
       console.log(`Geo-restriction check returned status ${result.status}`);
 
       const errorMessage = result.headers.get('error-message') ?? FALLBACK_MESSAGE;
-      void window.showErrorMessage(`Unavailable For Legal Reasons: ${errorMessage}`);
+      void window.showErrorMessage(
+        `This extension is unavailable due to legal restrictions: ${errorMessage}`,
+      );
 
       return true;
     }

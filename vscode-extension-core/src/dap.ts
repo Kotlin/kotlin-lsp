@@ -127,12 +127,14 @@ async function resolveLaunchConfig(config: LaunchConfig): Promise<DebugConfigura
   if (!client) {
     // Do not await: awaiting blocks the config resolver until the toast is dismissed,
     // which keeps VSCode in the "starting" state and prevents launching another config.
-    void window.showErrorMessage('IntelliJ LSP is not running');
+    void window.showErrorMessage('The language server for Java and Kotlin is not running');
     return undefined;
   }
 
   if (!config.mainClass) {
-    void window.showErrorMessage("launch.json must specify 'mainClass'");
+    void window.showErrorMessage(
+      'The "intellij_debugger" configuration requires "mainClass" in launch.json',
+    );
     return undefined;
   }
   try {

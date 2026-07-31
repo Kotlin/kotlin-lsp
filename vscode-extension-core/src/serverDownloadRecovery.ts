@@ -29,7 +29,7 @@ export async function handleCancelledServerDownload<T>({
 }: CancelledServerDownloadOptions<T>): Promise<T | undefined> {
   const { label, resumeAction } = CANCELLATION_PHASE_COPY[phase];
   const action = await showInformationMessage(
-    `Language server ${label} cancelled. Resume now, or run ‘Restart Language Server’ later from the Command Palette.`,
+    `The ${label} language server download was canceled. You can restart it later by running “Restart Language Server” from the Command Palette.`,
     resumeAction,
     DELETE_DOWNLOADED_FILES,
   );
@@ -51,7 +51,7 @@ export async function handleServerDownloadChecksumMismatch<T>({
   redownloadServer,
 }: ServerDownloadChecksumMismatchOptions<T>): Promise<T | undefined> {
   const action = await showErrorMessage(
-    'Language server download failed verification.',
+    'Could not verify the language server download',
     REDOWNLOAD_SERVER,
   );
   return action === REDOWNLOAD_SERVER ? redownloadServer() : undefined;

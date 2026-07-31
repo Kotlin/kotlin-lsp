@@ -103,7 +103,7 @@ function registerExportWorkspaceToJsonCommand(context: ExtensionContext): void {
       const rootPath = workspace.rootPath as string;
       await commands.executeCommand('exportWorkspace', rootPath);
       const choice = await window.showInformationMessage(
-        'Exported workspace structure to workspace.json.',
+        'Exported the workspace structure to workspace.json',
         'Open',
       );
       if (choice === 'Open') {
@@ -126,7 +126,7 @@ const ReloadWorkspaceRequest = new RequestType<ReloadWorkspaceParams, null, void
 export async function reloadWorkspace(): Promise<void> {
   const client = getLspClient();
   if (client === undefined || client.initializeResult === undefined) {
-    await window.showErrorMessage('Language server is not running');
+    await window.showErrorMessage('The language server is not running');
     return;
   }
   try {
@@ -144,7 +144,7 @@ export async function reloadWorkspace(): Promise<void> {
       return;
     }
     const message = e instanceof Error ? e.message : String(e);
-    await window.showErrorMessage(`Failed to reload workspace: ${message}`);
+    await window.showErrorMessage(`Failed to reload the workspace: ${message}`);
   }
 }
 
@@ -180,11 +180,11 @@ export async function registerDevCommands(context: ExtensionContext): Promise<vo
   context.subscriptions.push(
     commands.registerCommand('jetbrains.dev.removeDownloadedLsp', async () => {
       if (!isThinExtension) {
-        await window.showInformationMessage('This command is only available for thin extensions.');
+        await window.showInformationMessage('This command is available only for thin extensions');
         return;
       }
       await removeDownloadedServerLauncher();
-      await promptReloadWindow('Downloaded language server removed');
+      await promptReloadWindow('The downloaded language server was removed');
     }),
   );
 }

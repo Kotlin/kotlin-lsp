@@ -226,7 +226,7 @@ async function clearCachesAndRestart({
     {
       modal: true,
       detail: indexDir
-        ? `The index directory will be deleted and rebuilt from scratch:\n${indexDir}`
+        ? `The index directory will be deleted and rebuilt:\n${indexDir}`
         : 'The language server will be restarted. The index location is unknown (the server is not running), so no caches will be cleared.',
     },
     'Clear and Restart',
@@ -264,7 +264,7 @@ async function deleteIndexDir(indexDir: string): Promise<boolean> {
       const message = e instanceof Error ? e.message : String(e);
       if (attempt === INDEX_DELETE_MAX_ATTEMPTS) {
         logInfo(`Failed to clear index directory ${indexDir}: ${message}`);
-        await vscode.window.showErrorMessage(`Failed to clear caches at ${indexDir}: ${message}`);
+        await vscode.window.showErrorMessage(`Failed to clear caches in ${indexDir}: ${message}`);
         return false;
       }
       await new Promise((resolve) => setTimeout(resolve, INDEX_DELETE_RETRY_DELAY_MS));
@@ -378,12 +378,8 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
 
     if (launchedServerAttempt?.expiredBuild) {
       void vscode.window.showErrorMessage(
-        `"${extensionDisplayName()}" could not properly start the language server.`,
-        {
-          modal: true,
-          detail:
-            'The bundled language server build has expired. Update the extension and try again.',
-        },
+        `${extensionDisplayName()} could not start the language server because the bundled build has expired. Update the extension and try again.`,
+        { modal: true },
       );
       return;
     }
@@ -495,7 +491,7 @@ async function ensureBundledServerLauncher(): Promise<string> {
               });
               if (isDevelopment) {
                 void vscode.window.showInformationMessage(
-                  `${extensionDisplayName()}: development mode is using language server ${launcherPath}`,
+                  `${extensionDisplayName()} is running in development mode using the language server ${launcherPath}`,
                 );
               }
               return launcherPath;
@@ -623,7 +619,11 @@ async function getStreamInfoForLaunchedServer({
   launcherPath?: string;
   getAcceptedEulaHash: AcceptedEulaHashProvider;
 }): Promise<StreamInfo> {
-  const serverProcess = await startServer({ launchedServerAttempt, launcherPath, getAcceptedEulaHash });
+  const serverProcess = await startServer({
+    launchedServerAttempt,
+    launcherPath,
+    getAcceptedEulaHash,
+  });
   return { reader: serverProcess.stdout, writer: serverProcess.stdin };
 }
 
