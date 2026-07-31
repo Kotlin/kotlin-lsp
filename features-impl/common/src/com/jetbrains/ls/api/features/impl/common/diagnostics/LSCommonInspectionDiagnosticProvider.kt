@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features.impl.common.diagnostics
 
 import com.intellij.codeInsight.daemon.ProblemHighlightFilter
+import com.intellij.codeInsight.daemon.impl.InspectionVisitorOptimizer
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.LocalInspectionToolSession
 import com.intellij.codeInspection.ProblemDescriptionsProcessor
@@ -22,6 +23,7 @@ import com.intellij.platform.diagnostic.telemetry.TelemetryManager
 import com.intellij.platform.diagnostic.telemetry.helpers.use
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
+import com.intellij.psi.PsiRecursiveElementWalkingVisitor
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
@@ -78,6 +80,14 @@ class LSCommonInspectionDiagnosticProvider(
                 val document = virtualFile.findDocument() ?: return@readAction emptyList()
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
                 if (!ProblemHighlightFilter.shouldHighlightFile(psiFile)) return@readAction emptyList()
+                val elements = arrayListOf<PsiElement>()
+                psiFile.accept(object : PsiRecursiveElementWalkingVisitor() {
+                    override fun visitElement(element: PsiElement) {
+                        super.visitElement(element)
+                        elements.add(element)
+                    }
+                })
+                val optimizer = InspectionVisitorOptimizer(elements)
 
                 // TODO(bartekpacia): centralize common logging so it's not repeated N times across all LS*Providers
                 LOG.debug("request textDocument/diagnostic for ${virtualFile.name}")
@@ -98,26 +108,17 @@ class LSCommonInspectionDiagnosticProvider(
                             }
                             val diagnosticsBeforeInspection = diagnostics.size
 
-                            fun collect(element: PsiElement) {
-                                runCatching {
-                                    element.accept(visitor)
-                                }.getOrHandleException {
-                                    LOG.warn(it)
-                                }
-                                diagnostics.addAll(problemsHolder.collectDiagnostics(
-                                    project,
-                                    document,
-                                    localInspection
-                                ))
-                                problemsHolder.clearResults()
+                            runCatching {
+                                optimizer.acceptElements(elements, visitor)
+                            }.getOrHandleException {
+                                LOG.warn(it)
                             }
-
-                            psiFile.accept(object : PsiElementVisitor() {
-                                override fun visitElement(element: PsiElement) {
-                                    collect(element)
-                                    element.acceptChildren(this)
-                                }
-                            })
+                            diagnostics.addAll(problemsHolder.collectDiagnostics(
+                                project,
+                                document,
+                                localInspection
+                            ))
+                            problemsHolder.clearResults()
                             diagnostics.size - diagnosticsBeforeInspection
                         }
                     }
