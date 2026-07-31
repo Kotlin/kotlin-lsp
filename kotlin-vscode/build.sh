@@ -274,6 +274,7 @@ build_extension() {
   vsce_args=("$vsce_version"
              --out "$BUILD_DIR/$vsix_target_filename"
              --baseContentUrl=https://github.com/Kotlin/kotlin-lsp/tree/main/kotlin-vscode
+             --allow-missing-repository
              --no-dependencies)
   if [[ -n "$vsce_target" ]]; then
     vsce_args+=(--target "$vsce_target")
