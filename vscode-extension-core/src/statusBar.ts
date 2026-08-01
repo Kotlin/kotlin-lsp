@@ -83,7 +83,7 @@ function computeText(): string {
     case State.Running:
       return `$(check) ${title}`;
     case State.Starting:
-      return `$(sync) ${title}`;
+      return `$(loading~spin) ${title}`;
     default:
       return `$(stop) ${title}`;
   }
@@ -95,7 +95,7 @@ function stateText(): string {
     case State.Running:
       return '$(check) Running';
     case State.Starting:
-      return '$(sync) Starting';
+      return '$(loading~spin) Starting';
     default:
       return '$(stop) Stopped';
   }
