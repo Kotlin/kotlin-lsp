@@ -191,24 +191,21 @@ abstract class AbstractProjectImportTest {
     }
 
     @Test
-    fun gradleProjectLibrarySourcesAreDownloadedByDefault() = withCustomUserHome { gradleUserHomePath ->
-        withScopedSystemProperty(GradleToolingApiHelper.LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY, gradleUserHomePath) {
-            doGradleTest("GradleProjectLibrarySourcesAreDownloadedByDefault", JdkDownloaderFacade.jdk17, ::withIgnoredJdkRoots, { wsm ->
-                val libraries = wsm.entities(LibraryEntity::class.java).toList()
-                assertEquals(5, libraries.size)
-                val targetLibrary = libraries.find { it.name == "Gradle: org.junit.jupiter:junit-jupiter-api:6.1.0" }
-                    ?: fail("Required library does not exists in the Workspace Model")
-                val libraryRoots = targetLibrary.roots
-                assertEquals(2, libraryRoots.size, "Unexpected library root count. Two roots expected: a classes root and a sources root.")
-                libraryRoots.find { it.type == LibraryRootTypeId("CLASSES") }.run {
-                    assertExists()
-                }
-                libraryRoots.find { it.type == LibraryRootTypeId("SOURCES") }.run {
-                    assertExists()
-                }
-            })
-        }
-    }
+    fun gradleProjectLibrarySourcesAreDownloadedByDefault() =
+        doGradleTest("GradleProjectLibrarySourcesAreDownloadedByDefault", JdkDownloaderFacade.jdk17, ::withIgnoredJdkRoots, { wsm ->
+            val libraries = wsm.entities(LibraryEntity::class.java).toList()
+            assertEquals(5, libraries.size)
+            val targetLibrary = libraries.find { it.name == "Gradle: org.junit.jupiter:junit-jupiter-api:6.1.0" }
+                ?: fail("Required library does not exists in the Workspace Model")
+            val libraryRoots = targetLibrary.roots
+            assertEquals(2, libraryRoots.size, "Unexpected library root count. Two roots expected: a classes root and a sources root.")
+            libraryRoots.find { it.type == LibraryRootTypeId("CLASSES") }.run {
+                assertExists()
+            }
+            libraryRoots.find { it.type == LibraryRootTypeId("SOURCES") }.run {
+                assertExists()
+            }
+        })
 
     protected fun doGradleTest(project: String, resultMapper: (WorkspaceData) -> WorkspaceData = { it }) =
         doGradleTest(project, JdkDownloaderFacade.jdk17, resultMapper) { }
@@ -226,13 +223,21 @@ abstract class AbstractProjectImportTest {
         entityStorageVerifier: (EntityStorage) -> Unit
     ) {
         downloadGradleBinaries()
-        withConditionalScopedSystemProperty(
-            condition = { System.getenv("TEAMCITY_VERSION") != null && !project.contains("android", true) },
-            key = LSP_GRADLE_PROJECT_INIT_SCRIPTS,
-            value = getCacheRedirectorInitScriptPath().toString()
-        ) {
-            withScopedSystemProperty(key = LSP_GRADLE_JAVA_HOME_PROPERTY, value = jdkToUse.home.toString()) {
-                doTest(project, GradleWorkspaceImporter, testDataDir / "gradle", resultMapper, entityStorageVerifier)
+        // Run every Gradle test against its own fresh, isolated Gradle user home. This avoids sharing the
+        // machine-wide '~/.gradle' kotlin-dsl script compilation cache between tests, which is what makes
+        // 'Settings_gradle.<init>' NoSuchMethodError flakes appear (notably on Windows). withCustomUserHome
+        // copies the wrapper distribution over so the isolation does not force a re-download.
+        withCustomUserHome { gradleUserHomePath ->
+            withScopedSystemProperty(GradleToolingApiHelper.LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY, gradleUserHomePath) {
+                withConditionalScopedSystemProperty(
+                    condition = { System.getenv("TEAMCITY_VERSION") != null && !project.contains("android", true) },
+                    key = LSP_GRADLE_PROJECT_INIT_SCRIPTS,
+                    value = getCacheRedirectorInitScriptPath().toString()
+                ) {
+                    withScopedSystemProperty(key = LSP_GRADLE_JAVA_HOME_PROPERTY, value = jdkToUse.home.toString()) {
+                        doTest(project, GradleWorkspaceImporter, testDataDir / "gradle", resultMapper, entityStorageVerifier)
+                    }
+                }
             }
         }
     }
