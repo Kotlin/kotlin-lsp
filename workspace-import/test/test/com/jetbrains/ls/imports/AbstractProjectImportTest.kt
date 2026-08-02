@@ -4,6 +4,7 @@ package com.jetbrains.ls.imports
 import com.intellij.ide.starter.sdk.JdkDownloadItem
 import com.intellij.ide.starter.sdk.JdkDownloaderFacade
 import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.io.NioFiles
 import com.intellij.platform.workspace.jps.entities.LibraryEntity
 import com.intellij.platform.workspace.jps.entities.LibraryRoot
@@ -54,9 +55,8 @@ import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.Path
 import kotlin.io.path.copyToRecursively
 import kotlin.io.path.createDirectories
-import kotlin.io.path.createDirectory
+import kotlin.io.path.createTempDirectory
 import kotlin.io.path.createTempFile
-import kotlin.io.path.deleteRecursively
 import kotlin.io.path.div
 import kotlin.io.path.exists
 import kotlin.io.path.pathString
@@ -223,22 +223,30 @@ abstract class AbstractProjectImportTest {
         entityStorageVerifier: (EntityStorage) -> Unit
     ) {
         downloadGradleBinaries()
-        // Run every Gradle test against its own fresh, isolated Gradle user home. This avoids sharing the
-        // machine-wide '~/.gradle' kotlin-dsl script compilation cache between tests, which is what makes
-        // 'Settings_gradle.<init>' NoSuchMethodError flakes appear (notably on Windows). withCustomUserHome
-        // copies the wrapper distribution over so the isolation does not force a re-download.
-        withCustomUserHome { gradleUserHomePath ->
-            withScopedSystemProperty(GradleToolingApiHelper.LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY, gradleUserHomePath) {
-                withConditionalScopedSystemProperty(
-                    condition = { System.getenv("TEAMCITY_VERSION") != null && !project.contains("android", true) },
-                    key = LSP_GRADLE_PROJECT_INIT_SCRIPTS,
-                    value = getCacheRedirectorInitScriptPath().toString()
-                ) {
-                    withScopedSystemProperty(key = LSP_GRADLE_JAVA_HOME_PROPERTY, value = jdkToUse.home.toString()) {
-                        doTest(project, GradleWorkspaceImporter, testDataDir / "gradle", resultMapper, entityStorageVerifier)
-                    }
+        withGradleUserHomeIsolation {
+            withConditionalScopedSystemProperty(
+                condition = { System.getenv("TEAMCITY_VERSION") != null && !project.contains("android", true) },
+                key = LSP_GRADLE_PROJECT_INIT_SCRIPTS,
+                value = getCacheRedirectorInitScriptPath().toString()
+            ) {
+                withScopedSystemProperty(key = LSP_GRADLE_JAVA_HOME_PROPERTY, value = jdkToUse.home.toString()) {
+                    doTest(project, GradleWorkspaceImporter, testDataDir / "gradle", resultMapper, entityStorageVerifier)
                 }
             }
+        }
+    }
+
+    // Windows only: run against a fresh, isolated Gradle user home so tests don't share the machine-wide
+    // '~/.gradle' kotlin-dsl script compilation cache, whose Windows file-locking races produce the flaky
+    // 'Settings_gradle.<init>' NoSuchMethodError. On other OSes keep the shared home to reuse the daemon and
+    // its caches. withCustomUserHome copies the wrapper distribution over so isolation doesn't force a re-download.
+    private fun withGradleUserHomeIsolation(action: () -> Unit) {
+        if (!SystemInfo.isWindows) {
+            action()
+            return
+        }
+        withCustomUserHome { gradleUserHomePath ->
+            withScopedSystemProperty(GradleToolingApiHelper.LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY, gradleUserHomePath, action)
         }
     }
 
@@ -453,12 +461,6 @@ abstract class AbstractProjectImportTest {
         }
     }
 
-    @OptIn(ExperimentalPathApi::class)
-    private fun Path.recreateDir() {
-        deleteRecursively()
-        createDirectory()
-    }
-
     private fun LibraryRoot?.assertExists() {
         assertNotNull(this)
         assertTrue(Path.of(url.presentableUrl).exists(), "${url.presentableUrl} should exist on a disk!")
@@ -466,9 +468,13 @@ abstract class AbstractProjectImportTest {
 
     @OptIn(ExperimentalPathApi::class)
     private fun withCustomUserHome(action: (String) -> Unit) {
-        val gradleUserHomePath = Path.of(getRealTestDataDir()).resolve(".gradle")
-        gradleUserHomePath.recreateDir()
+        // Unique per test: never reuse (and never hard-delete) a home a lingering Gradle daemon may still
+        // lock on Windows, which is what the start-of-test recreateDir() used to fail on.
+        val gradleUserHomePath = createTempDirectory(Path.of(getRealTestDataDir()), ".gradle-")
         try {
+            // Single-use daemon: the Tooling API spawns a daemon that stops right after the build, releasing
+            // its file locks so best-effort cleanup succeeds and daemons do not pile up across tests.
+            (gradleUserHomePath / "gradle.properties").writeText("org.gradle.daemon=false\n")
             val systemUserHome = getGradleUserHome() ?: return
             copyGradleDistribution(systemUserHome, gradleUserHomePath)
             action(gradleUserHomePath.toString())
