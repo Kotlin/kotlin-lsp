@@ -182,6 +182,8 @@ object MavenWorkspaceImporter : WorkspaceImporter {
             )
             ProcessBuilder(command + extraSystemProps + additionalParams)
                 .apply {
+                    // ponytail: start from a clean env so the analyzer's own vars (e.g. JDK9+ JAVA_TOOL_OPTIONS=-Xlog) don't leak into a possibly-JDK8 Maven JVM.
+                    environment().clear()
                     javaHome?.let {
                         environment()["JAVA_HOME"] = it
                     }
@@ -263,6 +265,8 @@ object MavenWorkspaceImporter : WorkspaceImporter {
             )
             ProcessBuilder(command + additionalParams)
                 .apply {
+                    // ponytail: start from a clean env so the analyzer's own vars (e.g. JDK9+ JAVA_TOOL_OPTIONS=-Xlog) don't leak into a possibly-JDK8 Maven JVM.
+                    environment().clear()
                     javaHome?.let {
                         environment()["JAVA_HOME"] = it
                     }
