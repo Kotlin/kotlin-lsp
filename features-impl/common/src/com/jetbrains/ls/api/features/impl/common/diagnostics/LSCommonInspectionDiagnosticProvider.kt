@@ -187,10 +187,10 @@ class LSCommonInspectionDiagnosticProvider(
     ): List<Diagnostic> = readAction {
         tracer.spanBuilder(SPAN_GLOBAL_INSPECTIONS).use {
             val globalInspectionContext = inspectionManager.createNewGlobalContext()
-            val problemsHolder = ProblemsHolder(inspectionManager, psiFile, onTheFly)
             val document = psiFile.fileDocument
             inspections.flatMap { simpleGlobalInspection ->
                 runInspection(kind = InspectionKind.Global, inspectionId = simpleGlobalInspection.shortName) {
+                    val problemsHolder = ProblemsHolder(inspectionManager, psiFile, onTheFly)
                     val processor = object : ProblemDescriptionsProcessor {}
                     runCatching {
                         simpleGlobalInspection.checkFile(
@@ -218,7 +218,6 @@ class LSCommonInspectionDiagnosticProvider(
                             data = LSP.json.encodeToJsonElement<SimpleDiagnosticData>(data),
                         )
                     }
-                    problemsHolder.clearResults()
                     diagnostics
                 }
             }
