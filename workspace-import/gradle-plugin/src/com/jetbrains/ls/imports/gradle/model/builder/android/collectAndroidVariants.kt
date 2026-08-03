@@ -11,7 +11,7 @@ import org.gradle.api.invocation.Gradle
 import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.tooling.core.extrasKeyOf
 
-private val androidVariantsExtrasKey = extrasKeyOf<List<AndroidVariantReflection>>()
+private val androidVariantsExtrasKey = extrasKeyOf<AndroidVariantsHolder>()
 
 /**
  * Stores all collected "Android Variants" into as 'extra' to the project.
@@ -27,9 +27,9 @@ private val androidVariantsExtrasKey = extrasKeyOf<List<AndroidVariantReflection
  * method which is not available there.
  */
 internal var Project.androidVariants: List<AndroidVariantReflection>?
-    get() = extras[androidVariantsExtrasKey]
+    get() = extras[androidVariantsExtrasKey]?.variants
     set(value) {
-        if (value != null) extras[androidVariantsExtrasKey] = value
+        if (value != null) extras[androidVariantsExtrasKey] = AndroidVariantsHolder(value)
         else extras.remove(androidVariantsExtrasKey)
     }
 
