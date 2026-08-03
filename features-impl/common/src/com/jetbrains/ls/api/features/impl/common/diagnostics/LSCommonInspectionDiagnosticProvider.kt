@@ -46,6 +46,7 @@ import com.jetbrains.lsp.protocol.LSP
 import com.jetbrains.lsp.protocol.StringOrInt
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.encodeToJsonElement
@@ -150,21 +151,23 @@ class LSCommonInspectionDiagnosticProvider(
         val document = psiFile.fileDocument
         val fileRange = psiFile.textRange
         val session = LocalInspectionToolSession(psiFile, fileRange, fileRange, null)
-        inspections.map { localInspection ->
-            async {
-                readAction {
-                    runInspection(kind = InspectionKind.Local, inspectionId = localInspection.id) {
-                        val problemsHolder = ProblemsHolder(inspectionManager, psiFile, onTheFly)
-                        val visitor = localInspection.buildVisitor(problemsHolder, onTheFly, session)
-                        if (visitor == PsiElementVisitor.EMPTY_VISITOR) {
-                            return@runInspection emptyList()
+        coroutineScope {
+            inspections.map { localInspection ->
+                async {
+                    readAction {
+                        runInspection(kind = InspectionKind.Local, inspectionId = localInspection.id) {
+                            val problemsHolder = ProblemsHolder(inspectionManager, psiFile, onTheFly)
+                            val visitor = localInspection.buildVisitor(problemsHolder, onTheFly, session)
+                            if (visitor == PsiElementVisitor.EMPTY_VISITOR) {
+                                return@runInspection emptyList()
+                            }
+                            runCatching {
+                                optimizer.acceptElements(elements, visitor)
+                            }.getOrHandleException {
+                                LOG.warn(it)
+                            }
+                            problemsHolder.collectDiagnostics(project, document, localInspection)
                         }
-                        runCatching {
-                            optimizer.acceptElements(elements, visitor)
-                        }.getOrHandleException {
-                            LOG.warn(it)
-                        }
-                        problemsHolder.collectDiagnostics(project, document, localInspection)
                     }
                 }
             }
