@@ -469,8 +469,11 @@ abstract class AbstractProjectImportTest {
     @OptIn(ExperimentalPathApi::class)
     private fun withCustomUserHome(action: (String) -> Unit) {
         // Unique per test: never reuse (and never hard-delete) a home a lingering Gradle daemon may still
-        // lock on Windows, which is what the start-of-test recreateDir() used to fail on.
-        val gradleUserHomePath = createTempDirectory(Path.of(getRealTestDataDir()), ".gradle-")
+        // lock on Windows, which is what the start-of-test recreateDir() used to fail on. The uniqueness lives
+        // in the parent dir; the home leaf is kept named '.gradle' so cache jar paths still contain the
+        // literal 'gradle/caches' / 'gradle/wrapper/dists' that cropJarPaths normalizes in workspace.json.
+        val gradleHomeParent = createTempDirectory(Path.of(getRealTestDataDir()), "gradle-user-home-")
+        val gradleUserHomePath = (gradleHomeParent / ".gradle").also { it.createDirectories() }
         try {
             // Single-use daemon: the Tooling API spawns a daemon that stops right after the build, releasing
             // its file locks so best-effort cleanup succeeds and daemons do not pile up across tests.
@@ -479,7 +482,7 @@ abstract class AbstractProjectImportTest {
             copyGradleDistribution(systemUserHome, gradleUserHomePath)
             action(gradleUserHomePath.toString())
         } finally {
-            deleteRecursivelyBestEffort(gradleUserHomePath)
+            deleteRecursivelyBestEffort(gradleHomeParent)
         }
     }
 
