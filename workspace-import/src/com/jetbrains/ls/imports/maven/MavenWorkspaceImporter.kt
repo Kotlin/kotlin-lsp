@@ -125,7 +125,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                     virtualFileUrlManager, false,
                     "MAVEN"
                 )
-                fixMissingProjectSdk(defaultSdkPath, virtualFileUrlManager)
+                fixMissingProjectSdk(options.javaHome ?: defaultSdkPath, virtualFileUrlManager)
             }
         }
     }

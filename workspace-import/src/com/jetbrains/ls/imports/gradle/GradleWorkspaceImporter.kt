@@ -68,7 +68,9 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                     .prepareForExecution()
                     .addInitScripts(daemonInitScripts)
                     .forTasks(PREPARE_KOTLIN_IDEA_IMPORT_TASK_NAME)
-                val jdkToUse = findTheMostCompatibleJdk(project, projectDirectory)
+                // A `java-home` configured for this project wins over auto-detection.
+                val jdkToUse = parameters.options.javaHome?.toString()
+                    ?: findTheMostCompatibleJdk(project, projectDirectory)
                 if (jdkToUse != null) {
                     builder.setJavaHome(File(jdkToUse))
                 }
@@ -89,7 +91,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                 ignoreDuplicateLibsAndSdks = true,
                 "GRADLE"
             )
-            fixMissingProjectSdk(defaultSdkPath, virtualFileUrlManager)
+            fixMissingProjectSdk(parameters.options.javaHome ?: defaultSdkPath, virtualFileUrlManager)
         }
     }
 }
