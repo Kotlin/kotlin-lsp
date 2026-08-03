@@ -7,6 +7,7 @@ import com.jetbrains.ls.api.features.impl.common.api.commonLsApiPlugin
 import com.jetbrains.ls.api.features.impl.common.decompiler.LSDecompileCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.fileTemplates.LSInterpolateFileTemplateCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.highwatermark.LSHighWatermarkCommandDescriptorProvider
+import com.jetbrains.ls.api.features.impl.common.location.LSResolveLocationCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.modcommands.LSChooseActionCommandDescriptorProvider
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
@@ -23,6 +24,7 @@ val LSCommonConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSChooseActionCommandDescriptorProvider,
         LSInterpolateFileTemplateCommandDescriptorProvider,
         LSHighWatermarkCommandDescriptorProvider,
+        LSResolveLocationCommandDescriptorProvider,
     ),
     plugins = listOf(
         lsApiPlugin,
