@@ -226,7 +226,7 @@ sealed class ModCommandData {
                             runCatching {
                                 choice.action.perform(actionContext)
                             }.getOrElse {
-                                LOG.warn("Failed to perform the single choice action ${choice.action}", it)
+                                LOG.error("Failed to perform the single choice action ${choice.action}", it)
                                 null
                             }?.let { from(it, actionContext, server) }
                         }
