@@ -34,7 +34,8 @@ class WorkspaceImportOptionsEnvTest {
         // Client provides `Path`; the default `PATH` must not be added alongside it (would collide on Windows).
         val options = WorkspaceImportOptions(environment = mapOf("Path" to "/custom/bin"))
         val resolved = options.withResolvedEnvironment(systemEnv)
-        assertEquals(mapOf("Path" to "/custom/bin"), resolved.environment)
+        assertEquals("/custom/bin", resolved.environment["Path"])
+        assertFalse("PATH" in resolved.environment)
     }
 
     @Test
@@ -59,6 +60,28 @@ class WorkspaceImportOptionsEnvTest {
         val resolved = options.withResolvedEnvironment(systemEnv)
         assertEquals("", resolved.environment["MAVEN_OPTS"])
         assertFalse("JAVA_TOOL_OPTIONS" in resolved.environment)
+    }
+
+    @Test
+    fun `present default vars are injected and absent ones are dropped`() {
+        // Unix-style env: HOME/TMPDIR present, Windows-only SystemRoot absent -> must not leak as an empty var.
+        val unixEnv = mapOf("PATH" to "/usr/bin", "HOME" to "/home/me", "TMPDIR" to "/tmp", "LANG" to "en_US.UTF-8")
+        val resolved = WorkspaceImportOptions.EMPTY.withResolvedEnvironment(unixEnv)
+        assertEquals("/home/me", resolved.environment["HOME"])
+        assertEquals("/tmp", resolved.environment["TMPDIR"])
+        assertEquals("en_US.UTF-8", resolved.environment["LANG"])
+        assertFalse("SystemRoot" in resolved.environment)
+        assertFalse("TEMP" in resolved.environment)
+    }
+
+    @Test
+    fun `windows temp vars are injected from the environment`() {
+        val windowsEnv = mapOf("Path" to "C:\\Windows", "TEMP" to "C:\\Temp", "TMP" to "C:\\Temp", "SystemRoot" to "C:\\Windows")
+        val resolved = WorkspaceImportOptions.EMPTY.withResolvedEnvironment(windowsEnv)
+        assertEquals("C:\\Temp", resolved.environment["TEMP"])
+        assertEquals("C:\\Temp", resolved.environment["TMP"])
+        assertEquals("C:\\Windows", resolved.environment["SystemRoot"])
+        assertFalse("TMPDIR" in resolved.environment)
     }
 
     @Test
