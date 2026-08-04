@@ -22,6 +22,22 @@ class WorkspaceImportOptionsEnvTest {
     }
 
     @Test
+    fun `default PATH is resolved from a Windows-style lowercase Path key`() {
+        // On Windows System.getenv() exposes the variable as `Path`; the `${'$'}{env.PATH}` default must still resolve.
+        val windowsEnv = mapOf("Path" to "C:\\Windows;C:\\Windows\\System32")
+        val resolved = WorkspaceImportOptions.EMPTY.withResolvedEnvironment(windowsEnv)
+        assertEquals("C:\\Windows;C:\\Windows\\System32", resolved.environment["PATH"])
+    }
+
+    @Test
+    fun `client PATH in different case is not shadowed by the default`() {
+        // Client provides `Path`; the default `PATH` must not be added alongside it (would collide on Windows).
+        val options = WorkspaceImportOptions(environment = mapOf("Path" to "/custom/bin"))
+        val resolved = options.withResolvedEnvironment(systemEnv)
+        assertEquals(mapOf("Path" to "/custom/bin"), resolved.environment)
+    }
+
+    @Test
     fun `client env value overrides the default`() {
         val options = WorkspaceImportOptions(environment = mapOf("PATH" to "/custom/bin"))
         val resolved = options.withResolvedEnvironment(systemEnv)
