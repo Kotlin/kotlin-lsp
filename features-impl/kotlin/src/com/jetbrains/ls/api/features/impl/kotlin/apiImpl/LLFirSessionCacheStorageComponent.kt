@@ -13,7 +13,7 @@ import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceComponent
 import com.jetbrains.ls.snapshot.api.impl.core.AnalyzerContextKind
 import com.jetbrains.ls.snapshot.api.impl.core.LSConfigurationData
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceEvent
-import com.jetbrains.analyzer.filesystem.toList
+import com.jetbrains.ls.snapshot.api.impl.core.rocks.toList
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.KaPlatformInterface
 import org.jetbrains.kotlin.analysis.low.level.api.fir.LLFirInternals
