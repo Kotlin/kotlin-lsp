@@ -301,7 +301,7 @@ test('suppresses a restart after the server rejected initialize, even once start
   const state: LaunchedServerState = {
     currentAttempt: startup,
     initialStartSettled: true,
-    initializationRejected: true,
+    initializationRejection: 'EULA is not accepted',
   };
   setTimeout(() => process.emit('exit', 0, null), 5);
 
@@ -309,7 +309,10 @@ test('suppresses a restart after the server rejected initialize, even once start
 });
 
 test('suppresses a restart after an initialize rejection on an external dev server', async () => {
-  const state: LaunchedServerState = { initialStartSettled: true, initializationRejected: true };
+  const state: LaunchedServerState = {
+    initialStartSettled: true,
+    initializationRejection: 'EULA is not accepted',
+  };
 
   assert.equal(await shouldSuppressRestart(state, 50), true);
 });

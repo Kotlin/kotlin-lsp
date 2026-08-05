@@ -25,6 +25,7 @@ export {
   getLspClient,
   isExternalServerConfigured,
   prepareBundledServerLauncher,
+  reportActivationFailure,
   registerInitializationOptionsContributor,
   type InitializationOptionsContributor,
   type ClientFeatureFactory,

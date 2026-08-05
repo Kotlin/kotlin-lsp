@@ -7,6 +7,7 @@ import {
   LanguageClient,
   LanguageClientOptions,
   NotificationType,
+  ResponseError,
   ServerOptions,
   State,
   StateChangeEvent,
@@ -372,8 +373,10 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
       );
       return;
     }
-    // reportInitializationRejection already told the user, with the detail the server sent.
-    if (launchedServerState.initializationRejected) return;
+    // The server answered, so its own reason is the accurate one: report it instead of the exit
+    // that follows, and without the detail already written to the log.
+    const rejection = launchedServerState.initializationRejection;
+    if (rejection !== undefined) throw new Error(rejection);
     const cause = e instanceof Error ? e : new Error(String(e));
     throw launchedServerAttempt?.startupError(cause) ?? cause;
   } finally {
@@ -758,21 +761,26 @@ function reportSettingsProblems(problems: string[]): void {
 }
 
 /**
- * Keeps the server's diagnostics in the log: it attaches the bundled EULA to some `initialize`
- * rejections, and the client's own handler would put all of it in a notification.
+ * Keeps the server's diagnostics in the log, since it attaches the bundled EULA to some
+ * `initialize` rejections, and returns the one-line summary to report instead.
  */
-function reportInitializationRejection(error: unknown): void {
-  const detail = error instanceof Error ? error.message : String(error);
-  logInfo(`The language server rejected the initialize request:\n${detail}`);
-  const summary = detail.split('\n')[0]?.trim() || 'the initialize request was rejected';
-  void vscode.window
-    .showErrorMessage(
-      `${extensionDisplayName()} could not start the language server: ${summary}`,
-      SHOW_LOG_ACTION,
-    )
-    .then((choice) => {
-      if (choice === SHOW_LOG_ACTION) getOutputChannel().show(true);
-    });
+function logInitializationRejection(error: ResponseError<unknown>): string {
+  logInfo(`The language server rejected the initialize request:\n${error.message}`);
+  return error.message.split('\n')[0]?.trim() || 'the initialize request was rejected';
+}
+
+/**
+ * Reports a failed `activateExtension` for hosts that have no policy lifecycle to do it for them.
+ * The message carries the summary only, the detail is already in the log.
+ */
+export async function reportActivationFailure(error: unknown): Promise<void> {
+  const detail = (error instanceof Error ? error.message : String(error)).trim();
+  const summary = detail === '' ? 'could not start the language server' : detail;
+  const choice = await vscode.window.showErrorMessage(
+    `${extensionDisplayName()}: ${summary}`,
+    SHOW_LOG_ACTION,
+  );
+  if (choice === SHOW_LOG_ACTION) getOutputChannel().show(true);
 }
 
 /**
@@ -839,11 +847,15 @@ async function createLspClient(
     }
     return defaultErrorHandler;
   };
-  // A retry resends the same payload, so it can only fail the same way. Stay stopped until a
-  // settings edit or a restart command builds a fresh client.
+  // A retry resends the same payload, so it can only fail the same way. Prevent the language
+  // client's automatic retry, but let the failure propagate to the extension's lifecycle so an
+  // open setup panel can leave its loading state.
   clientOptions.initializationFailedHandler = (error) => {
-    launchedServerState.initializationRejected = true;
-    reportInitializationRejection(error);
+    // Only a response is the server's own verdict. A connection that never came up, or timed out,
+    // is a startup failure that the launch attempt classifies more accurately.
+    if (error instanceof ResponseError) {
+      launchedServerState.initializationRejection = logInitializationRejection(error);
+    }
     return false;
   };
   clientOptions.errorHandler = {

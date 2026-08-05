@@ -12,8 +12,11 @@ interface ServerProcessExit {
 export interface LaunchedServerState {
   currentAttempt?: LaunchedServerStartup;
   initialStartSettled: boolean;
-  /** Set when the server answered `initialize` with an error, which a retry can only repeat. */
-  initializationRejected?: boolean;
+  /**
+   * Summary of the error the server answered `initialize` with, which a retry can only repeat.
+   * Reported in place of the full response, whose detail goes to the log.
+   */
+  initializationRejection?: string;
 }
 
 /**
@@ -29,7 +32,7 @@ export async function shouldSuppressRestart(
   exitWaitMs: number,
 ): Promise<boolean> {
   const failedInitialStart = !state.initialStartSettled && state.currentAttempt !== undefined;
-  if (!state.initializationRejected && !failedInitialStart) return false;
+  if (state.initializationRejection === undefined && !failedInitialStart) return false;
   await state.currentAttempt?.waitForExit(exitWaitMs);
   return true;
 }
