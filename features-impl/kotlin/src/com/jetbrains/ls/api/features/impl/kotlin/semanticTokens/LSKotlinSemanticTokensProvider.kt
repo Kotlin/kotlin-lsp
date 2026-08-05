@@ -1,34 +1,26 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.kotlin.semanticTokens
 
-import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Document
-import com.intellij.openapi.vfs.findDocument
-import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.core.project
-import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticToken
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokenModifier
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokenModifierPredefined
-import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokenRegistry
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokenTypePredefined
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokenWithRange
-import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokensProvider
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokensProviderBase
 import com.jetbrains.ls.api.features.utils.allNonWhitespaceChildren
 import com.jetbrains.lsp.protocol.Range
-import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 import kotlinx.coroutines.CancellationException
 import org.jetbrains.annotations.ApiStatus
 import org.jetbrains.kotlin.analysis.api.KaSession
-import org.jetbrains.kotlin.analysis.api.analyze
+import org.jetbrains.kotlin.analysis.api.session.analyze
 import org.jetbrains.kotlin.analysis.api.symbols.KaBackingFieldSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaCallableSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassKind

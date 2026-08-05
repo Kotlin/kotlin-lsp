@@ -33,9 +33,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.encodeToJsonElement
 import org.jetbrains.kotlin.analysis.api.KaSession
-import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.analysis.api.components.KaDiagnosticCheckerFilter
+import org.jetbrains.kotlin.analysis.api.components.collectDiagnostics
 import org.jetbrains.kotlin.analysis.api.diagnostics.KaDiagnosticWithPsi
+import org.jetbrains.kotlin.analysis.api.session.analyze
 import org.jetbrains.kotlin.idea.codeinsight.api.applicators.fixes.KotlinQuickFixService
 import org.jetbrains.kotlin.psi.KtFile
 
@@ -86,8 +87,8 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
         editor: Editor,
         kaDiagnostic: KaDiagnosticWithPsi<*>,
         lspDiagnostic: Diagnostic,
-    ): List<CodeAction> = with(kaSession) {
-        return (getQuickFixesWithCatchingFor(kaDiagnostic) + getLazyQuickFixesWithCatchingFor(kaDiagnostic))
+    ): List<CodeAction> =
+        (getQuickFixesWithCatchingFor(kaDiagnostic) + getLazyQuickFixesWithCatchingFor(kaDiagnostic))
             .mapNotNull { fixes ->
                 fixes.getOrHandleException { LOG.warn(it) }
             }
@@ -111,7 +112,6 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
                 }
             }
             .toList()
-    }
 
     context(server: LSServer)
     private fun nativeCodeActions(
