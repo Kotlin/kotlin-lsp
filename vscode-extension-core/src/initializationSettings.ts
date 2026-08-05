@@ -25,10 +25,41 @@ export interface ConfiguredProject {
   'project-path'?: string;
 }
 
+export interface SettingProblem {
+  setting: string;
+  /** Self-contained sentence, naming the setting the ignored value came from. */
+  message: string;
+}
+
 export interface Sanitized<T> {
   value: T;
-  /** One self-contained sentence per ignored value, naming the setting it came from. */
-  problems: string[];
+  problems: SettingProblem[];
+}
+
+function problem(setting: string, reason: string): SettingProblem {
+  return { setting, message: `\`${setting}\` ${reason}` };
+}
+
+/** A file whose save can change any of these settings: user, workspace, or folder settings. */
+export function isSettingsDocument(path: string): boolean {
+  return path.endsWith('/settings.json') || path.endsWith('.code-workspace');
+}
+
+export type SettingsChangeAction = 'none' | 'start' | 'restart' | 'reload';
+
+/**
+ * How a settings change reaches the server. Launch settings become process arguments and
+ * environment, so only a new process picks them up; `initializationOptions` are resent by
+ * `intellij/reloadWorkspace` on the live connection.
+ */
+export function settingsChangeAction(change: {
+  affectsLaunch: boolean;
+  affectsInitializationOptions: boolean;
+  serverRunning: boolean;
+}): SettingsChangeAction {
+  if (!change.affectsLaunch && !change.affectsInitializationOptions) return 'none';
+  if (!change.serverRunning) return 'start';
+  return change.affectsLaunch ? 'restart' : 'reload';
 }
 
 const REQUIRED_STRING_FIELDS = ['type', 'path'] as const;
@@ -69,14 +100,14 @@ export function sanitizeConfiguredProjects(
   value: unknown,
 ): Sanitized<ConfiguredProject[]> {
   if (value === undefined || value === null) return { value: [], problems: [] };
-  if (!Array.isArray(value)) return { value: [], problems: [`\`${setting}\` must be an array`] };
+  if (!Array.isArray(value)) return { value: [], problems: [problem(setting, 'must be an array')] };
 
   const projects: ConfiguredProject[] = [];
-  const problems: string[] = [];
+  const problems: SettingProblem[] = [];
   value.forEach((entry, index) => {
     const reason = projectRejectionReason(entry);
     if (reason === undefined) projects.push(entry as ConfiguredProject);
-    else problems.push(`\`${setting}\` entry #${index} ${reason}`);
+    else problems.push(problem(setting, `entry #${index} ${reason}`));
   });
   return { value: projects, problems };
 }
@@ -87,13 +118,13 @@ export function sanitizeOptionalString(
 ): Sanitized<string | undefined> {
   if (value === undefined || value === null) return { value: undefined, problems: [] };
   if (typeof value === 'string') return { value, problems: [] };
-  return { value: undefined, problems: [`\`${setting}\` must be a string`] };
+  return { value: undefined, problems: [problem(setting, 'must be a string')] };
 }
 
 export function sanitizeBoolean(setting: string, value: unknown): Sanitized<boolean> {
   if (value === undefined || value === null) return { value: false, problems: [] };
   if (typeof value === 'boolean') return { value, problems: [] };
-  return { value: false, problems: [`\`${setting}\` must be a boolean`] };
+  return { value: false, problems: [problem(setting, 'must be a boolean')] };
 }
 
 /** Per-folder build tool overrides, keyed by folder URI. Folders without one are left out. */
@@ -102,11 +133,11 @@ export function sanitizeBuildTools(
   entries: readonly (readonly [string, unknown])[],
 ): Sanitized<Record<string, string>> {
   const buildTools: Record<string, string> = {};
-  const problems: string[] = [];
+  const problems: SettingProblem[] = [];
   for (const [uri, buildTool] of entries) {
     if (typeof buildTool === 'string') buildTools[uri] = buildTool;
     else if (buildTool !== undefined && buildTool !== null) {
-      problems.push(`\`${setting}\` for ${uri} must be a string`);
+      problems.push(problem(setting, `for ${uri} must be a string`));
     }
   }
   return { value: buildTools, problems };

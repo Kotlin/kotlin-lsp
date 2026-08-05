@@ -24,14 +24,19 @@ import {
   getContext,
   getOutputChannel,
   logInfo,
+  reloadWorkspace,
   revealBuildLog,
 } from './extension';
 import { runWithEulaGate } from './eulaGate';
 import {
+  isSettingsDocument,
   sanitizeBoolean,
   sanitizeBuildTools,
   sanitizeConfiguredProjects,
   sanitizeOptionalString,
+  type SettingProblem,
+  type SettingsChangeAction,
+  settingsChangeAction,
 } from './initializationSettings';
 import { clearBuildError, setBuildError, updateLspStatusBar } from './statusBar';
 import { middleware } from './middleware';
@@ -97,6 +102,14 @@ let bundledServerSetupPhase: ServerBundlePhase = 'downloading';
 let configuredClientFeatureFactories: ClientFeatureFactory[] = [];
 /** The launched server outliving a single start, so a later stop can still terminate it. */
 let launchedServer: LaunchedServerStartup | undefined;
+/**
+ * Settings changed since the server last read them. Cleared when it reads them again, including by
+ * a reload the user did not ask for, such as the one a saved build file triggers.
+ */
+let pendingInitializationOptionsChange = false;
+let pendingLaunchChange = false;
+/** What the server last received, to tell a real change from one that sanitizes away to the same. */
+let sentInitializationOptions: string | undefined;
 
 interface ImportLogParams {
   type: 1 | 2 | 3;
@@ -118,11 +131,15 @@ export type { ClientFeatureFactory } from './clientFeatureFactories';
 export type { ConfiguredProject } from './initializationSettings';
 
 const initializationOptionsContributors: InitializationOptionsContributor[] = [];
+/** Settings the contributors read, so a change to one is noticed like a change to a builtin. */
+const contributedSettings: string[] = [];
 
 export function registerInitializationOptionsContributor(
   contributor: InitializationOptionsContributor,
+  { settings = [] }: { settings?: readonly string[] } = {},
 ): void {
   initializationOptionsContributors.push(contributor);
+  contributedSettings.push(...settings);
 }
 
 interface LspClientPolicyOptions {
@@ -138,21 +155,22 @@ export function initLspClient({
 }: LspClientPolicyOptions): void {
   configuredClientFeatureFactories = [...clientFeatureFactories];
   registerIntellijExtensionsInitOption();
-  // TODO: Send the updated region to the backend when runtime region updates are supported.
+  const restartServer = (): Promise<boolean> =>
+    runWithEulaGate({
+      checkEulaAccepted,
+      action: () => startLspClient({ getAcceptedEulaHash, restartIfStarting: true }),
+    });
   getContext().subscriptions.push(
     Disposable.create(async () => await stopLspClient()),
     vscode.commands.registerCommand('jetbrains.kotlin.restartLsp', async () => {
-      const restarted = await runWithEulaGate({
-        checkEulaAccepted,
-        action: () => startLspClient({ getAcceptedEulaHash, restartIfStarting: true }),
-      });
-      if (!restarted) return;
+      if (!(await restartServer())) return;
       await vscode.window.showInformationMessage(extensionDisplayName() + ' restarted');
     }),
     vscode.commands.registerCommand('jetbrains.kotlin.clearCachesAndRestartLsp', async () => {
       await clearCachesAndRestart({ getAcceptedEulaHash, checkEulaAccepted });
     }),
   );
+  registerSettingsChangeWatcher(restartServer);
   // Remember the index location the server reports on each successful start, so we can still
   // clear caches when the server later fails to start (and thus reports no `indexDir`).
   subscribeToClientEvent((client, stateChange) => {
@@ -323,8 +341,9 @@ export function startLspClient({
 
 async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): Promise<void> {
   const launchedServerState: LaunchedServerState = { initialStartSettled: false };
-  const runClient = await createLspClient(getAcceptedEulaHash, launchedServerState);
-  if (!runClient) return;
+  const created = await createLspClient(getAcceptedEulaHash, launchedServerState);
+  if (!created) return;
+  const { client: runClient, initializationOptions } = created;
   await stopLspClient();
   _client = runClient;
   getContext().subscriptions.push(
@@ -344,8 +363,14 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
     }),
   );
 
+  // The process is spawned as the client starts, so this is what it will be launched with.
+  const launchSettings = launchSettingsSnapshot();
   try {
     await startClientWithFeatures(runClient, configuredClientFeatureFactories);
+    // A new process read the launch settings too, which a reload cannot. Edits made while it was
+    // starting are not in it, so they stay pending.
+    pendingLaunchChange = launchSettingsSnapshot() !== launchSettings;
+    markInitializationOptionsApplied(initializationOptions);
     registerImportLogHandler(runClient);
     registerCopyToClipboardHandler(runClient);
     registerChooseActionMenuHandler(runClient);
@@ -738,16 +763,143 @@ function buildDocumentSelector(): LanguageClientOptions['documentSelector'] {
 const OPEN_SETTINGS_ACTION = 'Open Settings';
 const SHOW_LOG_ACTION = 'Show Log';
 
+/**
+ * Settings the server reads only from `initializationOptions`; a workspace reload resends them.
+ * Language modules add their own through `registerInitializationOptionsContributor`.
+ */
+const INITIALIZATION_OPTION_SETTINGS = [
+  OPT_PROJECTS,
+  OPT_BUILD_TOOL,
+  OPT_DEFAULT_WORKSPACE_SDK,
+  OPT_DISABLE_ROCKS_DB_WAL,
+];
+/** Settings that become process arguments or environment, so only a new process applies them. */
+const LAUNCH_SETTINGS = [
+  OPT_JVM_ARGS,
+  OPT_SERVER_PATH,
+  OPT_DEV_SERVER_PORT,
+  OPT_DEV_SERVER_TIMEOUT,
+];
+
+/** Launch settings never reach `initializationOptions`, so their values are compared on their own. */
+function launchSettingsSnapshot(): string {
+  return JSON.stringify(LAUNCH_SETTINGS.map((setting) => configOption(setting)));
+}
+const SETTINGS_CHANGE_DEBOUNCE_MS = 500;
+/** An "Add Item" click writes an empty entry, so give the fields time to be filled in. */
+const INVALID_SETTINGS_SETTLE_MS = 10_000;
+const SETTINGS_CHANGE_ACTION_LABELS: Record<Exclude<SettingsChangeAction, 'none'>, string> = {
+  start: 'Start Server',
+  restart: 'Restart Server',
+  reload: 'Reload Workspace',
+};
+
+/**
+ * Applying a change reimports and reindexes, so it is offered rather than done silently.
+ * Editing settings.json fires repeatedly, hence the debounce: one prompt per burst of edits.
+ */
+function registerSettingsChangeWatcher(restartServer: () => Promise<boolean>): void {
+  let debounce: NodeJS.Timeout | undefined;
+  /** A save is the edit finished, so it needs no settle window even if a change event follows. */
+  let savedSinceLastPrompt = false;
+  let lastPromptedFor: string | undefined;
+  const schedule = (delayMs: number, settled: boolean): void => {
+    if (debounce) clearTimeout(debounce);
+    debounce = setTimeout(() => void prompt(settled), delayMs);
+  };
+  // An ignored notification never settles, so a pending prompt cannot gate the next one.
+  const prompt = async (timerSettled: boolean): Promise<void> => {
+    const settled = timerSettled || savedSinceLastPrompt;
+    // A client that is still starting is neither running nor absent, and labelling the action from
+    // that state gets it wrong. Wait for it to settle either way.
+    const client = getLspClient();
+    if (client !== undefined && client.state !== State.Running) {
+      schedule(SETTINGS_CHANGE_DEBOUNCE_MS, settled);
+      return;
+    }
+    const affectsLaunch = pendingLaunchChange;
+    const action = settingsChangeAction({
+      affectsLaunch,
+      affectsInitializationOptions: pendingInitializationOptionsChange,
+      serverRunning: client !== undefined,
+    });
+    // An entry the settings editor just added is invalid until its fields are filled in, so wait
+    // for the edits to stop before calling it broken.
+    const { options, problems } = initializationOptionsPayload();
+    if (problems.length > 0 && !settled) {
+      schedule(INVALID_SETTINGS_SETTLE_MS, true);
+      return;
+    }
+    // The pending flags stay set until the server accepts the settings, so a dismissed prompt or a
+    // failed reload still counts as waiting to be applied.
+    savedSinceLastPrompt = false;
+    // Applying a value the server cannot decode would only drop it, so say so instead.
+    reportSettingsProblems({ problems });
+    if (problems.length > 0) return;
+    // Deleting a value the server never received, such as an entry that was dropped as invalid,
+    // leaves it with exactly what it already has. Nothing to apply, nothing to ask about.
+    if (action === 'none') return;
+    const payload = JSON.stringify(options);
+    if (action === 'reload' && payload === sentInitializationOptions) return;
+    // Saving again with nothing new since the last prompt is not worth a second notification.
+    // Launch settings are not part of the payload, so their values make up the rest of the key.
+    const promptFor = `${launchSettingsSnapshot()} ${payload}`;
+    if (promptFor === lastPromptedFor) return;
+    lastPromptedFor = promptFor;
+    const label = SETTINGS_CHANGE_ACTION_LABELS[action];
+    const choice = await vscode.window.showWarningMessage(
+      `${extensionDisplayName()}: settings changed. ${label} to apply them.`,
+      label,
+    );
+    if (choice !== label) return;
+    // A notification can sit unanswered for a long time, so what to do is decided on the click.
+    if (!affectsLaunch && getLspClient()?.state === State.Running) await reloadWorkspace();
+    else await restartServer();
+    // Both flags clear only once the server has the settings. Either one still set means the apply
+    // did not take, and the change is still waiting, so it may be asked about again.
+    if (pendingLaunchChange || pendingInitializationOptionsChange) lastPromptedFor = undefined;
+  };
+  getContext().subscriptions.push(
+    workspace.onDidChangeConfiguration((event) => {
+      const launch = LAUNCH_SETTINGS.some((s) => event.affectsConfiguration(s));
+      const options = [...INITIALIZATION_OPTION_SETTINGS, ...contributedSettings].some((s) =>
+        event.affectsConfiguration(s),
+      );
+      if (!launch && !options) return;
+      pendingLaunchChange ||= launch;
+      pendingInitializationOptionsChange ||= options;
+      schedule(SETTINGS_CHANGE_DEBOUNCE_MS, false);
+    }),
+    // The only signal left when the saved value equals the current one, which raises no
+    // configuration event at all. Debounced like a change, because the configuration is applied
+    // after the save, and reading it here would still see the old value.
+    workspace.onDidSaveTextDocument((document) => {
+      if (!isSettingsDocument(document.uri.path)) return;
+      savedSinceLastPrompt = true;
+      schedule(SETTINGS_CHANGE_DEBOUNCE_MS, false);
+    }),
+    Disposable.create(() => clearTimeout(debounce)),
+  );
+}
+
 let reportedSettingsProblems: string | undefined;
 
-/** Logs every time, but only warns when the problems changed, so restarts do not nag. */
-function reportSettingsProblems(problems: string[]): void {
-  const detail = problems.join('; ');
+/**
+ * Logs every time, but only warns when the problems changed, so neither a restart nor a save with
+ * the same values still broken says it twice. Fixing them clears the memory, so breaking them the
+ * same way again warns again.
+ */
+function reportSettingsProblems({ problems }: { problems: SettingProblem[] }): void {
+  const detail = problems.map((p) => p.message).join('; ');
   const changed = reportedSettingsProblems !== detail;
   reportedSettingsProblems = detail;
   if (problems.length === 0) return;
   logInfo(`Ignoring invalid settings: ${detail}`);
   if (!changed) return;
+  // One bad setting opens on that setting; several open on this extension's settings.
+  const only = new Set(problems.map((p) => p.setting));
+  const query =
+    only.size === 1 ? `@id:${problems[0]?.setting}` : `@ext:${getContext().extension.id}`;
   void vscode.window
     .showWarningMessage(
       `${extensionDisplayName()} ignored invalid settings, so they will not apply: ${detail}.`,
@@ -755,7 +907,7 @@ function reportSettingsProblems(problems: string[]): void {
     )
     .then((choice) => {
       if (choice === OPEN_SETTINGS_ACTION) {
-        void vscode.commands.executeCommand('workbench.action.openSettings', 'intellij');
+        void vscode.commands.executeCommand('workbench.action.openSettings', query);
       }
     });
 }
@@ -783,13 +935,11 @@ export async function reportActivationFailure(error: unknown): Promise<void> {
   if (choice === SHOW_LOG_ACTION) getOutputChannel().show(true);
 }
 
-/**
- * Assembles the server `initializationOptions` from the current VS Code settings. Read fresh each
- * time, so it reflects edits to e.g. `intellij.projects`. Used both for the initial `initialize` and
- * for the `intellij/reloadWorkspace` request, so a reload picks up settings changes without
- * reopening the folder.
- */
-export function buildInitializationOptions(): Record<string, unknown> {
+/** The settings-derived options, with every value the server could not decode dropped. */
+function sanitizedInitializationSettings(): {
+  values: Record<string, unknown>;
+  problems: SettingProblem[];
+} {
   const folders = workspace.workspaceFolders ?? [];
   const defaultSdk = sanitizeOptionalString(
     OPT_DEFAULT_WORKSPACE_SDK,
@@ -804,34 +954,66 @@ export function buildInitializationOptions(): Record<string, unknown> {
     OPT_DISABLE_ROCKS_DB_WAL,
     configOption(OPT_DISABLE_ROCKS_DB_WAL),
   );
-  reportSettingsProblems(
-    [defaultSdk, buildTools, projects, disableWal].flatMap((setting) => setting.problems),
-  );
-  const builtinInitializationOptions = {
-    defaultSdk: defaultSdk.value,
-    buildTools: buildTools.value,
-    projects: projects.value,
-    disableRocksDBWriteAheadLog: disableWal.value,
+  return {
+    values: {
+      defaultSdk: defaultSdk.value,
+      buildTools: buildTools.value,
+      projects: projects.value,
+      disableRocksDBWriteAheadLog: disableWal.value,
+    },
+    problems: [defaultSdk, buildTools, projects, disableWal].flatMap((setting) => setting.problems),
   };
+}
+
+function initializationOptionsPayload(): {
+  options: Record<string, unknown>;
+  problems: SettingProblem[];
+} {
+  const { values: builtinInitializationOptions, problems } = sanitizedInitializationSettings();
   const contributedInitializationOptions = Object.assign(
     {},
     ...initializationOptionsContributors.map((c) => c()),
   );
   return {
-    ...contributedInitializationOptions,
-    ...builtinInitializationOptions,
+    options: { ...contributedInitializationOptions, ...builtinInitializationOptions },
+    problems,
   };
+}
+
+/**
+ * Assembles the server `initializationOptions` from the current VS Code settings. Read fresh each
+ * time, so it reflects edits to e.g. `intellij.projects`. Used both for the initial `initialize` and
+ * for the `intellij/reloadWorkspace` request, so a reload picks up settings changes without
+ * reopening the folder.
+ */
+export function buildInitializationOptions(): Record<string, unknown> {
+  const { options, problems } = initializationOptionsPayload();
+  reportSettingsProblems({ problems });
+  return options;
+}
+
+/**
+ * Records what the server accepted. Called once the request carrying them succeeded, since a
+ * reload that failed or was cancelled leaves the server with the options it already had, and the
+ * settings are still waiting to reach it. Settings edited while the request was in flight are not
+ * in what it accepted, so they stay pending.
+ */
+export function markInitializationOptionsApplied(options: Record<string, unknown>): void {
+  sentInitializationOptions = JSON.stringify(options);
+  pendingInitializationOptionsChange =
+    JSON.stringify(initializationOptionsPayload().options) !== sentInitializationOptions;
 }
 
 async function createLspClient(
   getAcceptedEulaHash: AcceptedEulaHashProvider,
   launchedServerState: LaunchedServerState,
-): Promise<LanguageClient | null> {
+): Promise<{ client: LanguageClient; initializationOptions: Record<string, unknown> } | null> {
+  const initializationOptions = buildInitializationOptions();
   const clientOptions: LanguageClientOptions = {
     documentSelector: buildDocumentSelector(),
     progressOnInitialization: true,
     outputChannel: getOutputChannel(),
-    initializationOptions: buildInitializationOptions(),
+    initializationOptions,
     middleware: middleware,
     markdown: {
       supportHtml: true,
@@ -874,7 +1056,7 @@ async function createLspClient(
     clientOptions,
   );
   defaultErrorHandler = client.createDefaultErrorHandler();
-  return client;
+  return { client, initializationOptions };
 }
 
 function getUserJvmOptions(): string[] {

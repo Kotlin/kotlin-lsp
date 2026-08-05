@@ -16,6 +16,7 @@ import {
   type ClientFeatureFactory,
   getLspClient,
   initLspClient,
+  markInitializationOptionsApplied,
   prefetchBundledServerLauncher,
   removeDownloadedServerLauncher,
   startLspClient,
@@ -132,9 +133,9 @@ export async function reloadWorkspace(): Promise<void> {
   }
   try {
     // Re-read settings now so changes (e.g. `intellij.projects`) take effect on reload.
-    await client.sendRequest(ReloadWorkspaceRequest, {
-      initializationOptions: buildInitializationOptions(),
-    });
+    const initializationOptions = buildInitializationOptions();
+    await client.sendRequest(ReloadWorkspaceRequest, { initializationOptions });
+    markInitializationOptionsApplied(initializationOptions);
     await window.showInformationMessage('Workspace reloaded');
   } catch (e) {
     // `ServerCancelled` is the licensing gate's quiet refusal; the licensing UI explains it.
