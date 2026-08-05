@@ -87,6 +87,7 @@ jvm_library(
         "//language-server/api.impl.analyzer",
         "//language-server/community/workspace-import",
         "//language-server/community/features-impl/java-base",
+        "//language-server/api.core.util",
         "@community//plugins/kotlin/references",
         ":community_plugins_kotlin_code-insight_kotlin-codeInsight-inspections_provided",
     ],
@@ -149,6 +150,7 @@ jvm_library(
         "//language-server/api.impl.analyzer:api.impl.analyzer_test_lib",
         "//language-server/community/workspace-import:workspace-import_test_lib",
         "//language-server/community/features-impl/java-base:java-base_test_lib",
+        "//language-server/api.core.util:api.core.util_test_lib",
         "@community//plugins/kotlin/references:references_test_lib",
     ],
 )

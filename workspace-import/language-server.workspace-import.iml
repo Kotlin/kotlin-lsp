@@ -66,6 +66,7 @@
     <orderEntry type="module" module-name="intellij.libraries.kotlin.gradle.plugin.idea.proto" />
     <orderEntry type="module" module-name="language-server.analyzer.kotlin" />
     <orderEntry type="module" module-name="language-server.api.impl.analyzer" />
+    <orderEntry type="module" module-name="language-server.api.core.util" />
     <orderEntry type="module" module-name="intellij.java.aetherDependencyResolver" />
     <orderEntry type="module" module-name="intellij.libraries.maven.resolver.provider" />
   </component>

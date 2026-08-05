@@ -41,6 +41,7 @@ jvm_library(
         "@community//libraries/kotlinx/serialization/core",
         "//language-server/analyzer",
         "//language-server/api.impl.analyzer",
+        "//language-server/api.core.util",
     ],
 )
 
@@ -70,6 +71,7 @@ jvm_library(
         "@community//libraries/kotlinx/serialization/core:core_test_lib",
         "//language-server/analyzer:analyzer_test_lib",
         "//language-server/api.impl.analyzer:api.impl.analyzer_test_lib",
+        "//language-server/api.core.util:api.core.util_test_lib",
     ],
 )
 ### auto-generated section `build language-server.api.features` end
