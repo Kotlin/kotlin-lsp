@@ -95,9 +95,9 @@ const ESCAPE_TABLE: Readonly<Record<string, string>> = {
   n: '\n',
   r: '\r',
   b: '\b',
-  x: '', // next-line character
-  l: ' ', // line-separator character
-  p: ' ', // paragraph-separator character
+  x: '\u0085', // next-line character
+  l: '\u2028', // line-separator character
+  p: '\u2029', // paragraph-separator character
   '|': '|',
   "'": "'",
   '[': '[',

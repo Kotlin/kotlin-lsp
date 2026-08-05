@@ -35,7 +35,7 @@ test('unescapes all documented single-character escape sequences', () => {
 
 test('unescapes the |x, |l and |p legacy separator escapes', () => {
   const message = ServiceMessage.parse("##teamcity[m v='a|xb|lc|pd']");
-  assert.equal(message?.attributes.v, 'ab c d');
+  assert.equal(message?.attributes.v, 'a\u0085b\u2028c\u2029d');
 });
 
 test('unescapes the |0xHHHH hex form used for non-ASCII characters', () => {

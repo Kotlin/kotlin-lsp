@@ -1,3 +1,4 @@
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 import * as vscode from 'vscode';
 import { workspace } from 'vscode';
 import {
@@ -66,8 +67,8 @@ import { type ClientFeatureFactory, startClientWithFeatures } from './clientFeat
 import { isDataSharingChoice, isRegion } from './consentValues';
 import type { ServerRestartState } from './serverRestartState';
 import {
-  type LaunchedServerState,
   LaunchedServerStartup,
+  type LaunchedServerState,
   shouldSuppressRestart,
 } from './launchedServerStartup';
 import {
@@ -427,10 +428,16 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 }
 
 /** Sends a `workspace/executeCommand` request — the shape every LSP-driven command here uses — with a timeout. */
-export const sendLspCommand = async <T>(client: LanguageClient, command: string, args: unknown[]): Promise<T> =>
-        await withTimeout(
-                client.sendRequest('workspace/executeCommand', {command, arguments: args}) as Promise<T>,
-                LSP_REQUEST_TIMEOUT_MS, command,);
+export const sendLspCommand = async <T>(
+  client: LanguageClient,
+  command: string,
+  args: unknown[],
+): Promise<T> =>
+  await withTimeout(
+    client.sendRequest('workspace/executeCommand', { command, arguments: args }) as Promise<T>,
+    LSP_REQUEST_TIMEOUT_MS,
+    command,
+  );
 
 /**
  * Starts the LSP client applying all user options. If the client is already running, restarts it.
