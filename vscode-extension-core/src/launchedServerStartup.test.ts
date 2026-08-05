@@ -294,6 +294,26 @@ test('suppresses a restart while the initial start is still failing', async () =
   assert.equal(startup.expiredBuild, true);
 });
 
+test('suppresses a restart after the server rejected initialize, even once started', async () => {
+  const startup = new LaunchedServerStartup();
+  const process = fakeProcess();
+  startup.setProcess(process);
+  const state: LaunchedServerState = {
+    currentAttempt: startup,
+    initialStartSettled: true,
+    initializationRejected: true,
+  };
+  setTimeout(() => process.emit('exit', 0, null), 5);
+
+  assert.equal(await shouldSuppressRestart(state, 50), true);
+});
+
+test('suppresses a restart after an initialize rejection on an external dev server', async () => {
+  const state: LaunchedServerState = { initialStartSettled: true, initializationRejected: true };
+
+  assert.equal(await shouldSuppressRestart(state, 50), true);
+});
+
 test('lets the client reconnect to an external dev server it did not launch', async () => {
   const state: LaunchedServerState = { initialStartSettled: false };
 

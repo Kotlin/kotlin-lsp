@@ -12,22 +12,25 @@ interface ServerProcessExit {
 export interface LaunchedServerState {
   currentAttempt?: LaunchedServerStartup;
   initialStartSettled: boolean;
+  /** Set when the server answered `initialize` with an error, which a retry can only repeat. */
+  initializationRejected?: boolean;
 }
 
 /**
- * Whether a closed connection must not trigger the language client's automatic restart. A failed
- * initial start is reported to the extension host instead, so restarting would race that report and
- * leave a second server behind. Waits for the exit first so the caller can classify the exit code.
+ * Whether a closed connection must not trigger the language client's automatic restart. The failure
+ * is reported to the extension host instead, so restarting would race that report and leave a second
+ * server behind. Waits for the exit first so the caller can classify the exit code.
  *
- * Only applies to servers we launched: an external dev server keeps the client's normal reconnect
- * behaviour, since nothing here owns its lifecycle.
+ * A failed initial start only applies to servers we launched: an external dev server keeps the
+ * client's normal reconnect behaviour, since nothing here owns its lifecycle.
  */
 export async function shouldSuppressRestart(
   state: LaunchedServerState,
   exitWaitMs: number,
 ): Promise<boolean> {
-  if (state.initialStartSettled || !state.currentAttempt) return false;
-  await state.currentAttempt.waitForExit(exitWaitMs);
+  const failedInitialStart = !state.initialStartSettled && state.currentAttempt !== undefined;
+  if (!state.initializationRejected && !failedInitialStart) return false;
+  await state.currentAttempt?.waitForExit(exitWaitMs);
   return true;
 }
 

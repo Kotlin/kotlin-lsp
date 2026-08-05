@@ -26,6 +26,12 @@ import {
   revealBuildLog,
 } from './extension';
 import { runWithEulaGate } from './eulaGate';
+import {
+  sanitizeBoolean,
+  sanitizeBuildTools,
+  sanitizeConfiguredProjects,
+  sanitizeOptionalString,
+} from './initializationSettings';
 import { clearBuildError, setBuildError, updateLspStatusBar } from './statusBar';
 import { middleware } from './middleware';
 import * as readline from 'node:readline';
@@ -108,24 +114,7 @@ const clientSubscriptions: ((client: LanguageClient, stateChange: StateChangeEve
 export type InitializationOptionsContributor = () => Record<string, unknown>;
 export type { ClientFeatureFactory } from './clientFeatureFactories';
 
-/**
- * An externally configured project passed to the server via initialization options.
- * Mirrors the `intellij.projects` setting and the server-side `ConfiguredProject` model.
- */
-export interface ConfiguredProject {
-  /** Build tool / project type, e.g. "gradle", "maven", "bazel", "json". */
-  type: string;
-  /** URI pointing to the project's build file or workspace root. */
-  path: string;
-  /** Maven only: extra environment variables for the import process. */
-  env?: Record<string, string>;
-  /** Maven only: JVM system properties for the import process. */
-  'system-properties'?: Record<string, string>;
-  /** Maven only: path to the JDK home used to run the import. */
-  'java-home'?: string;
-  /** Bazel only: path to the Bazel project file, relative to the workspace root. */
-  'project-path'?: string;
-}
+export type { ConfiguredProject } from './initializationSettings';
 
 const initializationOptionsContributors: InitializationOptionsContributor[] = [];
 
@@ -383,6 +372,8 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
       );
       return;
     }
+    // reportInitializationRejection already told the user, with the detail the server sent.
+    if (launchedServerState.initializationRejected) return;
     const cause = e instanceof Error ? e : new Error(String(e));
     throw launchedServerAttempt?.startupError(cause) ?? cause;
   } finally {
@@ -741,6 +732,49 @@ function buildDocumentSelector(): LanguageClientOptions['documentSelector'] {
   return selector;
 }
 
+const OPEN_SETTINGS_ACTION = 'Open Settings';
+const SHOW_LOG_ACTION = 'Show Log';
+
+let reportedSettingsProblems: string | undefined;
+
+/** Logs every time, but only warns when the problems changed, so restarts do not nag. */
+function reportSettingsProblems(problems: string[]): void {
+  const detail = problems.join('; ');
+  const changed = reportedSettingsProblems !== detail;
+  reportedSettingsProblems = detail;
+  if (problems.length === 0) return;
+  logInfo(`Ignoring invalid settings: ${detail}`);
+  if (!changed) return;
+  void vscode.window
+    .showWarningMessage(
+      `${extensionDisplayName()} ignored invalid settings, so they will not apply: ${detail}.`,
+      OPEN_SETTINGS_ACTION,
+    )
+    .then((choice) => {
+      if (choice === OPEN_SETTINGS_ACTION) {
+        void vscode.commands.executeCommand('workbench.action.openSettings', 'intellij');
+      }
+    });
+}
+
+/**
+ * Keeps the server's diagnostics in the log: it attaches the bundled EULA to some `initialize`
+ * rejections, and the client's own handler would put all of it in a notification.
+ */
+function reportInitializationRejection(error: unknown): void {
+  const detail = error instanceof Error ? error.message : String(error);
+  logInfo(`The language server rejected the initialize request:\n${detail}`);
+  const summary = detail.split('\n')[0]?.trim() || 'the initialize request was rejected';
+  void vscode.window
+    .showErrorMessage(
+      `${extensionDisplayName()} could not start the language server: ${summary}`,
+      SHOW_LOG_ACTION,
+    )
+    .then((choice) => {
+      if (choice === SHOW_LOG_ACTION) getOutputChannel().show(true);
+    });
+}
+
 /**
  * Assembles the server `initializationOptions` from the current VS Code settings. Read fresh each
  * time, so it reflects edits to e.g. `intellij.projects`. Used both for the initial `initialize` and
@@ -749,16 +783,27 @@ function buildDocumentSelector(): LanguageClientOptions['documentSelector'] {
  */
 export function buildInitializationOptions(): Record<string, unknown> {
   const folders = workspace.workspaceFolders ?? [];
+  const defaultSdk = sanitizeOptionalString(
+    OPT_DEFAULT_WORKSPACE_SDK,
+    configOption(OPT_DEFAULT_WORKSPACE_SDK),
+  );
+  const buildTools = sanitizeBuildTools(
+    OPT_BUILD_TOOL,
+    folders.map((folder) => [folder.uri.toString(), configOption(OPT_BUILD_TOOL, folder.uri)]),
+  );
+  const projects = sanitizeConfiguredProjects(OPT_PROJECTS, configOption(OPT_PROJECTS));
+  const disableWal = sanitizeBoolean(
+    OPT_DISABLE_ROCKS_DB_WAL,
+    configOption(OPT_DISABLE_ROCKS_DB_WAL),
+  );
+  reportSettingsProblems(
+    [defaultSdk, buildTools, projects, disableWal].flatMap((setting) => setting.problems),
+  );
   const builtinInitializationOptions = {
-    defaultSdk: configOption(OPT_DEFAULT_WORKSPACE_SDK),
-    buildTools: Object.fromEntries(
-      folders.map((folder) => [
-        folder.uri.toString(),
-        configOption<string>(OPT_BUILD_TOOL, folder.uri),
-      ]),
-    ),
-    projects: configOption<ConfiguredProject[]>(OPT_PROJECTS) ?? [],
-    disableRocksDBWriteAheadLog: configOption<boolean>(OPT_DISABLE_ROCKS_DB_WAL) ?? false,
+    defaultSdk: defaultSdk.value,
+    buildTools: buildTools.value,
+    projects: projects.value,
+    disableRocksDBWriteAheadLog: disableWal.value,
   };
   const contributedInitializationOptions = Object.assign(
     {},
@@ -793,6 +838,13 @@ async function createLspClient(
       throw new Error('Language client error handler used before initialization');
     }
     return defaultErrorHandler;
+  };
+  // A retry resends the same payload, so it can only fail the same way. Stay stopped until a
+  // settings edit or a restart command builds a fresh client.
+  clientOptions.initializationFailedHandler = (error) => {
+    launchedServerState.initializationRejected = true;
+    reportInitializationRejection(error);
+    return false;
   };
   clientOptions.errorHandler = {
     error: (error, message, count) => delegate().error(error, message, count),

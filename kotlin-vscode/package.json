@@ -276,6 +276,16 @@
                 "type",
                 "path"
               ],
+              "defaultSnippets": [
+                {
+                  "label": "Configured project",
+                  "description": "Project workspace root or build file together with the build tool to import it with.",
+                  "body": {
+                    "type": "${1|gradle,maven,bazel,jps,gomodules,json|}",
+                    "path": "file:///${2:path/to/project}"
+                  }
+                }
+              ],
               "properties": {
                 "type": {
                   "type": "string",
