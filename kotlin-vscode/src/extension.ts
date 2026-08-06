@@ -7,11 +7,13 @@ import {
   isExternalServerConfigured,
   prepareBundledServerLauncher,
   registerKotlinExtensionConflictHandler,
+  registerStatusBarContribution,
   stopLspClient,
 } from '@jetbrains/vscode-extension-core';
 import kotlinModule from '@jetbrains/vscode-language-kotlin';
 import {
   checkBundledServerEulaAccepted,
+  getExtensionStatusBarTitle,
   runPolicyGatedActivation,
 } from '@jetbrains/intellij-vscode-extension-policy';
 
@@ -25,6 +27,8 @@ export async function activate(context: ExtensionContext): Promise<void> {
   await initializeExtension(context);
 
   await runPolicyGatedActivation(context, {
+    registerStatusBarContribution,
+    statusBarTitle: getExtensionStatusBarTitle(context),
     stopServer: stopLspClient,
     usesExternalServer: isExternalServerConfigured(),
     startServer: (options) =>

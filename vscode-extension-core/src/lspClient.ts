@@ -38,7 +38,12 @@ import {
   type SettingsChangeAction,
   settingsChangeAction,
 } from './initializationSettings';
-import { clearBuildError, setBuildError, updateLspStatusBar } from './statusBar';
+import {
+  clearBuildError,
+  setBuildError,
+  setLspActionsAvailable,
+  updateLspStatusBar,
+} from './statusBar';
 import { middleware } from './middleware';
 import * as readline from 'node:readline';
 import {
@@ -153,6 +158,7 @@ export function initLspClient({
   checkEulaAccepted,
   clientFeatureFactories = [],
 }: LspClientPolicyOptions): void {
+  setLspActionsAvailable(true);
   configuredClientFeatureFactories = [...clientFeatureFactories];
   registerIntellijExtensionsInitOption();
   const restartServer = (): Promise<boolean> =>

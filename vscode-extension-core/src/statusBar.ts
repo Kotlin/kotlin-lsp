@@ -2,14 +2,31 @@ import * as vscode from 'vscode';
 import { State } from 'vscode-languageclient/node';
 import { getContext } from './extension';
 import { getLspClient, packageJson, subscribeToClientEvent } from './lspClient';
+import {
+  computeStatusTooltipContent,
+  computeStatusText,
+  pickStatusAction,
+  shouldShowStatusBar,
+  statusBarCommand,
+  statusActions as resolveStatusActions,
+  type LspStatus,
+  type StatusBarAction,
+  type StatusBarContribution,
+} from './statusBarModel';
+
+export type {
+  StatusBarAction,
+  StatusBarContribution,
+  StatusBarContributionPresentation,
+} from './statusBarModel';
 
 const STATUS_MENU_COMMAND = 'jetbrains.kotlin.showLspStatusMenu';
 
-interface LspAction extends vscode.QuickPickItem {
-  command: string;
+export interface StatusBarContributionRegistration extends vscode.Disposable {
+  update(contribution: StatusBarContribution): void;
 }
 
-function lspActions(): LspAction[] {
+function lspActions(): StatusBarAction[] {
   return [
     { label: '$(sync) Restart Language Server', command: 'jetbrains.kotlin.restartLsp' },
     {
@@ -19,20 +36,53 @@ function lspActions(): LspAction[] {
   ];
 }
 
-/** Product name for the status bar, derived from the active extension's display name. */
-function productTitle(options?: { shorten?: boolean }): string {
+function statusActions(): StatusBarAction[] {
+  return resolveStatusActions(contribution, lspActionsAvailable, lspActions());
+}
+
+function productTitle(): string {
+  if (contribution?.title !== undefined) return contribution.title;
   const name = packageJson()?.displayName;
-  return (options?.shorten ? name?.split(' ')[0] : name) ?? 'IntelliJ';
+  return name ?? 'IntelliJ';
 }
 
 let statusBarItem: vscode.StatusBarItem | undefined;
 let buildStatusBarItem: vscode.StatusBarItem | undefined;
+let contribution: StatusBarContribution | undefined;
+let lspActionsAvailable = false;
+
+export function setLspActionsAvailable(available: boolean): void {
+  lspActionsAvailable = available;
+  updateLspStatusBar();
+}
+
+export function registerStatusBarContribution(
+  initial: StatusBarContribution,
+): StatusBarContributionRegistration {
+  contribution = initial;
+  updateLspStatusBar();
+  return {
+    update(updated): void {
+      if (contribution !== initial) return;
+      initial.presentation = updated.presentation;
+      initial.actions = updated.actions;
+      initial.title = updated.title;
+      initial.runningText = updated.runningText;
+      initial.stoppedText = updated.stoppedText;
+      updateLspStatusBar();
+    },
+    dispose(): void {
+      if (contribution !== initial) return;
+      contribution = undefined;
+      updateLspStatusBar();
+    },
+  };
+}
 
 export function registerStatusBarItem() {
+  lspActionsAvailable = false;
   statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-  statusBarItem.text = productTitle({ shorten: true });
-  statusBarItem.command = STATUS_MENU_COMMAND;
-  statusBarItem.show();
+  statusBarItem.text = productTitle();
   updateLspStatusBar();
 
   // Keep build failures separate from the LSP-state item.
@@ -61,50 +111,55 @@ export function clearBuildError(): void {
 
 export function updateLspStatusBar() {
   if (!statusBarItem) return;
-  statusBarItem.tooltip = computeTooltip();
+  const actions = statusActions();
+  statusBarItem.tooltip = computeTooltip(actions);
   statusBarItem.text = computeText();
+  statusBarItem.command = statusBarCommand(actions, STATUS_MENU_COMMAND);
+  if (shouldShowStatusBar(contribution, actions)) {
+    statusBarItem.show();
+  } else {
+    statusBarItem.hide();
+  }
 }
 
-function computeTooltip(): vscode.MarkdownString {
+function computeTooltip(actions: readonly StatusBarAction[]): vscode.MarkdownString {
   // Shown on hover; clicking the item opens the same actions as a QuickPick (STATUS_MENU_COMMAND).
   const text = new vscode.MarkdownString();
-  text.isTrusted = true;
   text.supportThemeIcons = true;
 
-  const actions = lspActions().map((a) => `[${a.label}](command:${a.command})`);
-  text.appendMarkdown([`**${productTitle()}**&nbsp;&nbsp;${stateText()}`, ...actions].join('\n\n'));
+  const content = computeStatusTooltipContent(lspStatus(), productTitle(), contribution, actions);
+  text.isTrusted = { enabledCommands: content.enabledCommands };
+  text.appendMarkdown(content.heading);
+  if (content.detail !== undefined) {
+    text.appendMarkdown('\n\n');
+    text.appendText(content.detail);
+  }
+  for (const action of content.actions) {
+    text.appendMarkdown(`\n\n[${action.label}](command:${action.command})`);
+  }
   return text;
 }
 
 function computeText(): string {
-  const clientState = getLspClient()?.state ?? State.Stopped;
-  const title = productTitle({ shorten: true });
-  switch (clientState) {
-    case State.Running:
-      return `$(check) ${title}`;
-    case State.Starting:
-      return `$(loading~spin) ${title}`;
-    default:
-      return `$(stop) ${title}`;
-  }
+  return computeStatusText(lspStatus(), productTitle(), contribution);
 }
 
-function stateText(): string {
-  const clientState = getLspClient()?.state ?? State.Stopped;
-  switch (clientState) {
+function lspStatus(): LspStatus {
+  switch (getLspClient()?.state ?? State.Stopped) {
     case State.Running:
-      return '$(check) Running';
+      return 'running';
     case State.Starting:
-      return '$(loading~spin) Starting';
+      return 'starting';
     default:
-      return '$(stop) Stopped';
+      return 'stopped';
   }
 }
 
 async function showLspStatusMenu(): Promise<void> {
-  const picked = await vscode.window.showQuickPick(lspActions(), {
-    placeHolder: `${productTitle()} — language server actions`,
-  });
+  const actions = statusActions();
+  const picked = await pickStatusAction(actions, productTitle(), (items, options) =>
+    vscode.window.showQuickPick(items, options),
+  );
   if (picked) {
     await vscode.commands.executeCommand(picked.command);
   }

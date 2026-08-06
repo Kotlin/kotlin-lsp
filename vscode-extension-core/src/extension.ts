@@ -39,6 +39,12 @@ export { checkGeoRestricted } from './geoRestriction';
 export { registerKotlinExtensionConflictHandler } from './kotlinExtensionConflict';
 import { LSPErrorCodes, RequestType, ResponseError } from 'vscode-languageclient/node';
 import { registerStatusBarItem } from './statusBar';
+export {
+  registerStatusBarContribution,
+  type StatusBarContribution,
+  type StatusBarContributionPresentation,
+  type StatusBarContributionRegistration,
+} from './statusBar';
 import { registerDapServer } from './dap';
 import { registerFileTemplates } from './fileTemplates';
 import { promptReloadWindow } from './reloadWindow';
@@ -194,6 +200,7 @@ export async function registerDevCommands(context: ExtensionContext): Promise<vo
 export async function initializeExtension(context: ExtensionContext): Promise<void> {
   if (initializedExtensions.has(context)) return;
   await registerDevCommands(context);
+  registerStatusBarItem();
   initializedExtensions.add(context);
   prefetchBundledServerLauncher();
 }
@@ -233,7 +240,6 @@ export async function activateExtension(
     registerReloadWorkspaceCommand(context);
     registerAutoReloadWorkspace(context);
     registerShowBuildLogCommand(context);
-    registerStatusBarItem();
     registerFileTemplates(context);
 
     for (const module of options.modules) {

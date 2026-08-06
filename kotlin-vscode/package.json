@@ -59,17 +59,17 @@
   "contributes": {
     "icons": {
       "jetbrains-ij": {
-        "description": "JetBrains IntelliJ status bar icon",
+        "description": "JetBrains Kotlin status bar icon",
         "default": {
-          "fontPath": "./out/dist/icons/lsp-ij.woff",
-          "fontCharacter": "\\E900"
+          "fontPath": "./out/dist/icons/lsp.woff",
+          "fontCharacter": "\\E903"
         }
       },
       "jetbrains-ij-crossed": {
-        "description": "JetBrains IntelliJ status bar icon for invalid licenses",
+        "description": "JetBrains Kotlin status bar icon for problem states",
         "default": {
-          "fontPath": "./out/dist/icons/lsp-ij.woff",
-          "fontCharacter": "\\E901"
+          "fontPath": "./out/dist/icons/lsp.woff",
+          "fontCharacter": "\\E902"
         }
       }
     },
