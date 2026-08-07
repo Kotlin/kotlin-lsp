@@ -11,9 +11,13 @@
  * Mirrors the `intellij.projects` setting and the server-side `ConfiguredProject` model.
  */
 export interface ConfiguredProject {
-  /** Build tool / project type, e.g. "gradle", "maven", "bazel", "json". */
+  /**
+   * Build tool / project type, e.g. "gradle", "maven", "bazel", "json". The special value "subproject" makes
+   * this entry a pure pointer to a nested project directory whose own `.vscode/settings.json`
+   * `intellij.projects` are resolved recursively by the server.
+   */
   type: string;
-  /** URI pointing to the project's build file or workspace root. */
+  /** URI pointing to the project's build file or workspace root (or, for "subproject", its directory). */
   path: string;
   /** Maven only: extra environment variables for the import process. */
   env?: Record<string, string>;
