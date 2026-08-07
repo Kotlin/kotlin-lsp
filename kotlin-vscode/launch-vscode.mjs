@@ -5,7 +5,7 @@
 // package sources -- no bundled server), creates an isolated VS Code profile
 // preconfigured with `intellij.dev.serverPort`, and opens it.
 //
-// Usage: node launch-vscode.mjs --bundle-type=<kotlin-server|intellij-server|intellij-server-experimental> [--port=9999] [workspace-folder]
+// Usage: node launch-vscode.mjs --bundle-type=<kotlin-server|intellij-server|intellij-server-experimental|goland-server> [--port=9999] [workspace-folder]
 //
 // Cross-platform (macOS/Linux/Windows): no shell-specific behavior.
 
@@ -29,6 +29,7 @@ const BUNDLE_PACKAGE_DIRS = {
   'kotlin-server': 'community/kotlin-vscode',
   'intellij-server': 'intellij-vscode/intellij-server',
   'intellij-server-experimental': 'intellij-vscode/intellij-server-experimental',
+  'goland-server': 'intellij-vscode/goland-server',
 };
 
 const IS_WIN = process.platform === 'win32';
