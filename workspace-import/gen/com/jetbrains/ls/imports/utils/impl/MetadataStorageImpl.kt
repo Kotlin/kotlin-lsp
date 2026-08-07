@@ -11,9 +11,7 @@ import com.intellij.platform.workspace.storage.metadata.model.ValueTypeMetadata
 @OptIn(WorkspaceEntityInternalApi::class)
 internal object MetadataStorageImpl : MetadataStorageBase() {
     override fun initializeMetadata() {
-
         var typeMetadata: StorageTypeMetadata
-
         typeMetadata = FinalClassMetadata.ObjectMetadata(
             fqName = "com.jetbrains.ls.imports.utils.DefaultJdkEntitySource",
             properties = listOf(
@@ -31,7 +29,6 @@ internal object MetadataStorageImpl : MetadataStorageBase() {
             ),
             supertypes = listOf("com.intellij.platform.workspace.storage.EntitySource")
         )
-
         addMetadata(typeMetadata)
     }
 
