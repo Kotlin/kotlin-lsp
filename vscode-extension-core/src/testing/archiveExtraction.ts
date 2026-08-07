@@ -97,9 +97,9 @@ async function extractArchive(
   await mkdir(stagingDirectory, { recursive: true });
   try {
     // `tar` is GNU tar on Linux and bsdtar (libarchive) on macOS/Windows; both
-    // auto-detect the format with `-xf` (.tar.gz, .sit, and .win.zip are all read)
-    // and support `--strip-components` to drop the archive's top-level folder.
-    await runCommand('tar', ['-xf', archivePath, '--strip-components=1', '-C', stagingDirectory]);
+    // auto-detect the format with `-xf` (.tar.gz, .sit, and .win.zip are all read).
+    await runCommand('tar', ['-xf', archivePath, '-C', stagingDirectory]);
+    await flattenSingleTopLevelDirectory(stagingDirectory);
     await writeFile(
       join(stagingDirectory, EXTRACTION_READY_MARKER_FILE_NAME),
       `${archiveKey}\n`,
@@ -113,6 +113,27 @@ async function extractArchive(
     await rm(stagingDirectory, { recursive: true, force: true });
     throw error;
   }
+}
+
+// Archive layout differs per platform: the Linux `.tar.gz` and macOS `.sit` artifacts wrap
+// everything in a single `<product>-<version>/` directory, while the Windows `.win.zip` is flat
+// (`bin/`, `lib/`, `jbr/`, ... at the root). So extract as-is and drop the wrapper afterwards --
+// a blanket `--strip-components=1` would flatten the Windows layout one level too far, merging
+// `jbr/bin` into `bin` and losing `bin/intellij-server.exe`.
+async function flattenSingleTopLevelDirectory(directoryPath: string): Promise<void> {
+  const entries = await readdir(directoryPath, { withFileTypes: true });
+  if (entries.length !== 1 || !entries[0].isDirectory()) {
+    return;
+  }
+
+  const wrapperPath = join(directoryPath, entries[0].name.toString());
+  for (const entryName of await readdir(wrapperPath)) {
+    await rename(
+      join(wrapperPath, entryName.toString()),
+      join(directoryPath, entryName.toString()),
+    );
+  }
+  await rm(wrapperPath, { recursive: true, force: true });
 }
 
 async function pruneExtractionCacheDirectory(
