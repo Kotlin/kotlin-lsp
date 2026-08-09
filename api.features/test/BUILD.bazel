@@ -29,7 +29,7 @@ jvm_library(
         "@community//platform/util",
         "@community//libraries/kotlinx/serialization/json",
         "@community//libraries/kotlinx/serialization/core",
-        "@ultimate_lib//:java-diff-utils",
+        "@community//libraries/java-diff-utils",
     ],
 )
 
@@ -64,7 +64,8 @@ jvm_library(
         "@community//libraries/kotlinx/serialization/json:json_test_lib",
         "@community//libraries/kotlinx/serialization/core",
         "@community//libraries/kotlinx/serialization/core:core_test_lib",
-        "@ultimate_lib//:java-diff-utils",
+        "@community//libraries/java-diff-utils",
+        "@community//libraries/java-diff-utils:java-diff-utils_test_lib",
         "@community//libraries/junit5",
         "@community//libraries/junit5:junit5_test_lib",
         "@community//libraries/junit5-jupiter",
