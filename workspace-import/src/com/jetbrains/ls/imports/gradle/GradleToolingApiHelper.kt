@@ -22,8 +22,6 @@ import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.events.OperationType
 import org.gradle.tooling.events.ProgressEvent
 import org.gradle.util.GradleVersion
-import org.jetbrains.kotlin.gradle.idea.proto.generated.tcs.IdeaKotlinDependencyProtoKt
-import org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinDependency
 import org.jetbrains.kotlin.tooling.core.Extras
 import java.lang.System.getProperty
 import java.net.URI
@@ -216,8 +214,6 @@ object GradleToolingApiHelper {
          * This shall contain classes of jars necessary by the init script -(and its injected IdeaGradleLspPlugin)
          */
         val additionalPluginClasspathMarkers = setOf(
-            IdeaKotlinDependency::class.java,
-            IdeaKotlinDependencyProtoKt::class.java,
             Extras::class.java
         )
 

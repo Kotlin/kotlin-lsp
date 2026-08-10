@@ -4,6 +4,7 @@
 package com.jetbrains.ls.imports.gradle
 
 import com.jetbrains.ls.imports.gradle.action.ProjectMetadata
+import com.jetbrains.ls.imports.gradle.model.AndroidDependency
 import com.jetbrains.ls.imports.gradle.model.AndroidProject
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet
 import com.jetbrains.ls.imports.gradle.util.DependencyDataScopeCalculator
@@ -18,9 +19,6 @@ import org.gradle.tooling.model.idea.IdeaDependency
 import org.gradle.tooling.model.idea.IdeaModule
 import org.gradle.tooling.model.idea.IdeaModuleDependency
 import org.gradle.tooling.model.idea.IdeaSingleEntryLibraryDependency
-import org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinProjectArtifactDependency
-import org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinResolvedBinaryDependency
-import org.jetbrains.kotlin.gradle.idea.tcs.extras.artifactsClasspath
 import java.io.File
 
 internal class SourceSetDependencyResolver(
@@ -166,8 +164,8 @@ internal class SourceSetDependencyResolver(
         val artifacts = hashSetOf<File>()
 
         androidProject.dependencies.forEach { dependency ->
-            if (dependency is IdeaKotlinResolvedBinaryDependency) {
-                val libraryName = dependency.libraryName() ?: return@forEach
+            if (dependency is AndroidDependency.Library) {
+                val libraryName = dependency.libraryName()
                 artifacts += dependency.classpath
                 projectLibraryIndex.add(
                     LibraryData(
@@ -190,9 +188,9 @@ internal class SourceSetDependencyResolver(
                 }
             }
 
-            if (dependency is IdeaKotlinProjectArtifactDependency) {
-                dependency.artifactsClasspath.forEach { artifactFile ->
-                    val targetProject = androidProjectsByBuildTreePath[dependency.coordinates.projectPath] ?: return@forEach
+            if (dependency is AndroidDependency.ProjectArtifact) {
+                dependency.classpath.forEach { artifactFile ->
+                    val targetProject = androidProjectsByBuildTreePath[dependency.projectPath] ?: return@forEach
                     val targetProjectFqn = project.androidProjects.entries.firstOrNull { it.value == targetProject }?.key ?: return@forEach
                     dependencyFileIndex.add(
                         artifactFile,
@@ -238,12 +236,12 @@ internal class SourceSetDependencyResolver(
         }
     }
 
-    private fun IdeaKotlinResolvedBinaryDependency.getProperties(): XmlElement? {
+    private fun AndroidDependency.Library.getProperties(): XmlElement? {
         val metadata = mutableMapOf<String, String>()
-        metadata.putNotNullValue("groupId", coordinates?.group)
-        metadata.putNotNullValue("artifactId", coordinates?.module)
-        metadata.putNotNullValue("version", coordinates?.version)
-        metadata.putNotNullValue("baseVersion", coordinates?.version)
+        metadata.putNotNullValue("groupId", group)
+        metadata.putNotNullValue("artifactId", name)
+        metadata.putNotNullValue("version", version)
+        metadata.putNotNullValue("baseVersion", version)
         if (metadata.isEmpty()) {
             return null
         }
@@ -258,8 +256,4 @@ internal class SourceSetDependencyResolver(
     }
 }
 
-private fun IdeaKotlinResolvedBinaryDependency.libraryName(): String? {
-    return coordinates?.run {
-        "Gradle: $group:$module:$version"
-    }
-}
+private fun AndroidDependency.Library.libraryName(): String = "Gradle: $group:$name:$version"

@@ -3,8 +3,6 @@
   <dependencies>
     <module name="intellij.libraries.gradle.tooling"/>
     <module name="intellij.libraries.jetbrains.annotations"/>
-    <module name="intellij.libraries.kotlin.gradle.plugin.idea"/>
-    <module name="intellij.libraries.kotlin.gradle.plugin.idea.proto"/>
     <module name="intellij.libraries.kotlin.tooling.core"/>
   </dependencies>
   <!-- endregion -->

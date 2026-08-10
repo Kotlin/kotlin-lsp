@@ -3,6 +3,7 @@
 
 package com.jetbrains.ls.imports.gradle.model.builder.android
 
+import com.jetbrains.ls.imports.gradle.model.AndroidDependency
 import com.jetbrains.ls.imports.gradle.model.AndroidProject
 import com.jetbrains.ls.imports.gradle.model.impl.AndroidProjectImpl
 import com.jetbrains.ls.imports.gradle.utils.AndroidVariantReflection
@@ -15,15 +16,6 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition
 import org.gradle.api.attributes.Attribute
 import org.gradle.tooling.provider.model.ToolingModelBuilder
-import org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinBinaryCoordinates
-import org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinBinaryDependency.Companion.KOTLIN_COMPILE_BINARY_TYPE
-import org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinClasspath
-import org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinDependency
-import org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinProjectArtifactDependency
-import org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinProjectCoordinates
-import org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinResolvedBinaryDependency
-import org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinSourceDependency
-import org.jetbrains.kotlin.gradle.idea.tcs.extras.artifactsClasspath
 
 internal class AndroidProjectModelBuilder : ToolingModelBuilder {
     override fun canBuild(modelName: String): Boolean {
@@ -46,8 +38,8 @@ internal class AndroidProjectModelBuilder : ToolingModelBuilder {
     }
 }
 
-private fun Project.resolveAndroidDependencies(): Set<IdeaKotlinDependency> {
-    val result = mutableSetOf<IdeaKotlinDependency>()
+private fun Project.resolveAndroidDependencies(): Set<AndroidDependency> {
+    val result = mutableSetOf<AndroidDependency>()
     val activeVariant = androidVariants?.selectActiveVariant() ?: return emptySet()
 
     result.addAll(resolveAndroidBootClasspathDependencies())
@@ -64,15 +56,15 @@ private fun Project.resolveAndroidDependencies(): Set<IdeaKotlinDependency> {
     return result
 }
 
-private fun Project.resolveAndroidBootClasspathDependencies(): Set<IdeaKotlinDependency> {
-    val result = mutableSetOf<IdeaKotlinDependency>()
-    val bootClasspath = androidComponents?.sdkComponents?.bootClasspath?.get() ?: return result
+private fun Project.resolveAndroidBootClasspathDependencies(): Set<AndroidDependency> {
+    val bootClasspath = androidComponents?.sdkComponents?.bootClasspath?.get() ?: return emptySet()
 
     return setOf(
-        IdeaKotlinResolvedBinaryDependency(
-            binaryType = KOTLIN_COMPILE_BINARY_TYPE,
-            classpath = IdeaKotlinClasspath(bootClasspath.map { it.asFile }),
-            coordinates = IdeaKotlinBinaryCoordinates("android", "android-sdk", null)
+        AndroidDependency.Library(
+            group = "android",
+            name = "android-sdk",
+            version = null,
+            classpath = bootClasspath.map { it.asFile }
         )
     )
 }
@@ -80,49 +72,44 @@ private fun Project.resolveAndroidBootClasspathDependencies(): Set<IdeaKotlinDep
 /**
  * @see resolveRClassJar
  */
-private fun AndroidVariantReflection.resolveRJarIdeaKotlinDependency(): IdeaKotlinDependency? {
+private fun AndroidVariantReflection.resolveRJarIdeaKotlinDependency(): AndroidDependency? {
     val jar = resolveRClassJar() ?: return null
-    return IdeaKotlinResolvedBinaryDependency(
-        binaryType = KOTLIN_COMPILE_BINARY_TYPE,
-        classpath = IdeaKotlinClasspath(jar.asFile.orNull ?: return null),
-        coordinates = IdeaKotlinBinaryCoordinates("android", "r", null)
+    return AndroidDependency.Library(
+        group = "android",
+        name = "r",
+        version = null,
+        classpath = listOf(jar.asFile.orNull ?: return null)
     )
 }
 
 /**
- * Resolves all Android based dependencies into Kotlin's [IdeaKotlinDependency] model.
+ * Resolves all Android based dependencies into the [AndroidDependency] model.
  * 'jar' files are resolved from 'aar' files by using Android's artifact transforms (using "jar" as artifactType)
  */
-private fun resolveAndroidDependencies(configuration: Configuration): Set<IdeaKotlinDependency> {
+private fun resolveAndroidDependencies(configuration: Configuration): Set<AndroidDependency> {
     val artifactTypeAttribute = Attribute.of("artifactType", String::class.java)
     return configuration.incoming.artifactView { view ->
         view.isLenient = true
         view.attributes { attributes ->
             attributes.attribute(artifactTypeAttribute, ArtifactTypeDefinition.JAR_TYPE)
         }
-    }.resolveIdeaKotlinDependencies()
+    }.resolveDependencies()
 }
 
-private fun ArtifactView.resolveIdeaKotlinDependencies(): Set<IdeaKotlinDependency> {
+private fun ArtifactView.resolveDependencies(): Set<AndroidDependency> {
     return artifacts.mapNotNull { artifact ->
         when (val id = artifact.id.componentIdentifier) {
-            is ModuleComponentIdentifier -> IdeaKotlinResolvedBinaryDependency(
-                binaryType = KOTLIN_COMPILE_BINARY_TYPE,
-                classpath = IdeaKotlinClasspath(artifact.file),
-                coordinates = IdeaKotlinBinaryCoordinates(id.group, id.module, id.version)
+            is ModuleComponentIdentifier -> AndroidDependency.Library(
+                group = id.group,
+                name = id.module,
+                version = id.version,
+                classpath = listOf(artifact.file)
             )
 
-            is ProjectComponentIdentifier -> IdeaKotlinProjectArtifactDependency(
-                type = IdeaKotlinSourceDependency.Type.Regular,
-                coordinates = IdeaKotlinProjectCoordinates(
-                    buildPath = id.build.buildPath,
-                    buildName = if (id.build.buildPath == ":") ":" else id.build.buildPath.split(":").last(),
-                    projectPath = id.projectPath,
-                    projectName = id.projectName,
-                ),
-            ).apply {
-                artifactsClasspath.add(artifact.file)
-            }
+            is ProjectComponentIdentifier -> AndroidDependency.ProjectArtifact(
+                projectPath = id.projectPath,
+                classpath = listOf(artifact.file)
+            )
 
             else -> {
                 null

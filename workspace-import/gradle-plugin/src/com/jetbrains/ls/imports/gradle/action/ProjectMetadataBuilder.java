@@ -22,8 +22,6 @@ import org.gradle.tooling.model.idea.IdeaProject;
 import org.gradle.util.GradleVersion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.kotlin.gradle.idea.serialize.IdeaKotlinSerializationContext;
-import org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinDependency;
 import org.jetbrains.kotlin.tooling.core.Extras;
 
 import java.util.ArrayDeque;
@@ -219,35 +217,13 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
     }
 
     /**
-     * The Gradle Tooling will infer the classpath of this action by traversing this class's dependencies.
-     * Some dependencies can be lost, since this class will only use some classes (e.g. IdeaKotlinDependency)
-     * inside a box (Set, Map, ...), which erases the generic types. The types need to be mentioned directly
-     * in a class, within its constant pool.
-     * This method, therefore, is just a dummy, ensuring that some dependency classes are mentioned.
+     * Gradle infers the classpath of this build action from this class's constant pool. Types used only inside a
+     * box (Set, Map, ...) are erased and would be missed, so every such type is listed here as a class literal:
+     * that is what puts it into the constant pool.
+     * <ul>
+     *   <li>{@link Extras} - carries the Android variants on the Gradle 'Project'.</li>
+     * </ul>
      */
     @SuppressWarnings("unused")
-    private static void __use_dependency_classes(Object obj) {
-        /*
-          Used to declare custom dependencies in the Android model
-         */
-        if (obj instanceof IdeaKotlinDependency) {
-            return;
-        }
-
-        /*
-        Used for serializing Kotlin dependencies.
-         */
-        if (obj instanceof IdeaKotlinSerializationContext) {
-            return;
-        }
-
-        /*
-        Aux for 'IdeaKotlinDependency'
-         */
-        if (obj instanceof Extras) {
-            return;
-        }
-
-        throw new UnsupportedOperationException("This method shall never be executed");
-    }
+    private static final Class<?>[] __CLASSPATH_MARKERS = {Extras.class};
 }
