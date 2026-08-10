@@ -34,6 +34,7 @@ import {
   sanitizeBuildTools,
   sanitizeConfiguredProjects,
   sanitizeOptionalString,
+  type BuiltinInitializationOptions,
   type SettingProblem,
   type SettingsChangeAction,
   settingsChangeAction,
@@ -943,7 +944,7 @@ export async function reportActivationFailure(error: unknown): Promise<void> {
 
 /** The settings-derived options, with every value the server could not decode dropped. */
 function sanitizedInitializationSettings(): {
-  values: Record<string, unknown>;
+  values: BuiltinInitializationOptions;
   problems: SettingProblem[];
 } {
   const folders = workspace.workspaceFolders ?? [];
@@ -976,7 +977,7 @@ function initializationOptionsPayload(): {
   problems: SettingProblem[];
 } {
   const { values: builtinInitializationOptions, problems } = sanitizedInitializationSettings();
-  const contributedInitializationOptions = Object.assign(
+  const contributedInitializationOptions: Record<string, unknown> = Object.assign(
     {},
     ...initializationOptionsContributors.map((c) => c()),
   );

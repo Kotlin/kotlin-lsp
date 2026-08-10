@@ -29,6 +29,13 @@ export interface ConfiguredProject {
   'project-path'?: string;
 }
 
+export interface BuiltinInitializationOptions {
+  defaultSdk: string | undefined;
+  buildTools: Record<string, string>;
+  projects: ConfiguredProject[];
+  disableRocksDBWriteAheadLog: boolean;
+}
+
 export interface SettingProblem {
   setting: string;
   /** Self-contained sentence, naming the setting the ignored value came from. */
