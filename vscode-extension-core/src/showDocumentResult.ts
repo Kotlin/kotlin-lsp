@@ -1,0 +1,39 @@
+const JBA_ACCOUNT_HOST = 'account.jetbrains.com';
+// The core middleware writes this marker and extension-policy consumes it from the same rspack
+// compilation; rspack.consumer.ts aliases policy to source so both imports share this module.
+let jbaSignInPageCopied = false;
+
+export function recordJbaSignInPageCopied(): void {
+  jbaSignInPageCopied = true;
+}
+
+export function consumeJbaSignInPageCopied(): boolean {
+  const copied = jbaSignInPageCopied;
+  jbaSignInPageCopied = false;
+  return copied;
+}
+
+export function isJbaSignInUrl(uri: string): boolean {
+  try {
+    const parsed = new URL(uri);
+    return parsed.protocol === 'https:' && parsed.hostname === JBA_ACCOUNT_HOST;
+  } catch {
+    return false;
+  }
+}
+
+export function copiedJbaSignInUrl(
+  uri: string,
+  external: boolean | undefined,
+  opened: boolean,
+  clipboardText: string,
+): boolean {
+  if (external !== true || opened) return false;
+  try {
+    const requested = new URL(uri);
+    const copied = new URL(clipboardText);
+    return isJbaSignInUrl(uri) && copied.href === requested.href;
+  } catch {
+    return false;
+  }
+}

@@ -1,9 +1,33 @@
 import * as vscode from 'vscode';
 import { Middleware } from 'vscode-languageclient/node';
+import {
+  copiedJbaSignInUrl,
+  isJbaSignInUrl,
+  recordJbaSignInPageCopied,
+} from './showDocumentResult';
 
 const NAVIGATE_COMMAND = 'jetbrains.navigateToLocation';
 
 export const middleware: Middleware = {
+  window: {
+    showDocument: async (params, token, next) => {
+      const result = await next(params, token);
+      if (!('success' in result)) return result;
+      if (result.success || params.external !== true) return result;
+      if (!isJbaSignInUrl(params.uri)) return result;
+      try {
+        const clipboardText = await vscode.env.clipboard.readText();
+        if (!copiedJbaSignInUrl(params.uri, params.external, result.success, clipboardText)) {
+          return result;
+        }
+        recordJbaSignInPageCopied();
+        return { success: true };
+      } catch {
+        return result;
+      }
+    },
+  },
+
   resolveInlayHint: async (hint, token, next) => {
     /*
      * Replaces location with command for jar/jrt schemes when resolving an inlay hint.
