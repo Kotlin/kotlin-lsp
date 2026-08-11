@@ -14,6 +14,7 @@ import org.jetbrains.intellij.build.downloadFileToCacheLocation
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 import java.nio.file.attribute.FileTime
 import java.time.Instant
 import kotlin.io.path.exists
@@ -42,13 +43,30 @@ fun downloadMavenBinaries(): Path {
     }
 }
 
+private fun gradleDistributionUrl(version: String): String =
+    "https://cache-redirector.jetbrains.com/services.gradle.org/distributions/gradle-$version-bin.zip"
+
 fun downloadGradleBinaries(): Path {
-    val uri = "https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip"
-    val targetDir = downloadAndUnzip(uri, gradleUnzipMutex)
+    val targetDir = downloadAndUnzip(gradleDistributionUrl(GRADLE_VERSION), gradleUnzipMutex)
     return targetDir.resolve("gradle-$GRADLE_VERSION").also {
         require(it.isDirectory()) { "Expecting a directory: $it" }
     }
 }
+
+fun downloadGradleDistributionZip(version: String): Path =
+    runBlocking(Dispatchers.IO) {
+        val communityRoot = BuildDependenciesCommunityRoot(Path.of(PathManager.getCommunityHomePath()))
+        val cached = downloadFileToCacheLocation(gradleDistributionUrl(version), communityRoot)
+        // the cache file name carries a URL hash prefix, and the wrapper derives its `dists/<name>` directory from the file
+        // name, so keep a canonically named copy to preserve the usual `dists/gradle-<version>-bin` layout
+        val canonical = cached.resolveSibling("gradle-$version-bin.zip")
+        gradleUnzipMutex.withLock {
+            if (!canonical.exists() || Files.size(canonical) != Files.size(cached)) {
+                Files.copy(cached, canonical, StandardCopyOption.REPLACE_EXISTING)
+            }
+        }
+        canonical
+    }
 
 private fun downloadAndUnzip(uri: String, unzipMutex: Mutex): Path =
     runBlocking(Dispatchers.IO) {
