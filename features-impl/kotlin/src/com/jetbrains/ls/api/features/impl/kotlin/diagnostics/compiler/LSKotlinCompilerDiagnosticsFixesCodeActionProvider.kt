@@ -2,7 +2,6 @@
 package com.jetbrains.ls.api.features.impl.kotlin.diagnostics.compiler
 
 import com.intellij.modcommand.ActionContext
-import com.intellij.modcommand.ModCommandAction
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
@@ -16,22 +15,17 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.withWriteAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.diagnosticData
-import com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDescriptorProvider
-import com.jetbrains.ls.api.features.impl.common.modcommands.combinedPresentationNames
-import com.jetbrains.ls.api.features.impl.common.modcommands.flattenChoiceActions
+import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCodeAction
+import com.jetbrains.ls.api.features.impl.common.modcommands.toModCommandFixes
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
-import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.CodeAction
 import com.jetbrains.lsp.protocol.CodeActionKind
 import com.jetbrains.lsp.protocol.CodeActionParams
-import com.jetbrains.lsp.protocol.Command
 import com.jetbrains.lsp.protocol.Diagnostic
-import com.jetbrains.lsp.protocol.LSP
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.serialization.json.encodeToJsonElement
 import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.analysis.api.components.KaDiagnosticCheckerFilter
 import org.jetbrains.kotlin.analysis.api.components.collectDiagnostics
@@ -101,62 +95,8 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
             }
             .flatMap { modCommandAction ->
                 val context = ActionContext.from(editor, file)
-                if (server.config.clientSupportsIntellijExtensions) {
-                    // A ModChooseAction is represented natively (a menu shown at execution time), so a single
-                    // code action is emitted and the choice tree does not need to be flattened up front.
-                    nativeCodeActions(modCommandAction, context, lspDiagnostic)
-                } else {
-                    // Generic LSP clients cannot show a choice menu, so expand top-level ModChooseActions into
-                    // separate flat code actions.
-                    flattenedCodeActions(modCommandAction, context, lspDiagnostic)
-                }
+                modCommandAction.toModCommandFixes(context)
             }
+            .map { fix -> applyFixCodeAction(fix.name, CodeActionKind.QuickFix, fix.data, lspDiagnostic) }
             .toList()
-
-    context(server: LSServer)
-    private fun nativeCodeActions(
-        modCommandAction: ModCommandAction,
-        context: ActionContext,
-        lspDiagnostic: Diagnostic,
-    ): List<CodeAction> {
-        val presentation = runCatching {
-            modCommandAction.getPresentation(context)
-        }.getOrHandleException {
-            LOG.warn("Failed to get presentation from mod command action $modCommandAction", it)
-        } ?: return emptyList()
-
-        val modCommand = runCatching {
-            modCommandAction.perform(context)
-        }.getOrHandleException {
-            LOG.warn("Failed to perform mod command action $modCommandAction", it)
-        } ?: return emptyList()
-
-        val modCommandData = ModCommandData.from(modCommand, context, server) ?: return emptyList()
-        return listOf(codeAction(presentation.name, modCommandData, lspDiagnostic))
-    }
-
-    context(server: LSServer)
-    private fun flattenedCodeActions(
-        modCommandAction: ModCommandAction,
-        context: ActionContext,
-        lspDiagnostic: Diagnostic,
-    ): List<CodeAction> =
-        modCommandAction.flattenChoiceActions(context).mapNotNull { chain ->
-            val modCommandData = ModCommandData.from(chain.leaf.command, context, server) ?: return@mapNotNull null
-            codeAction(chain.combinedPresentationNames(), modCommandData, lspDiagnostic)
-        }
-
-    private fun codeAction(title: String, modCommandData: ModCommandData, lspDiagnostic: Diagnostic): CodeAction =
-        CodeAction(
-            title,
-            CodeActionKind.QuickFix,
-            diagnostics = listOf(lspDiagnostic),
-            command = Command(
-                LSApplyFixCommandDescriptorProvider.commandDescriptor.title,
-                LSApplyFixCommandDescriptorProvider.commandDescriptor.name,
-                arguments = listOf(
-                    LSP.json.encodeToJsonElement(modCommandData),
-                ),
-            ),
-        )
 }

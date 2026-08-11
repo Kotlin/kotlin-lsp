@@ -26,9 +26,19 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionDiagnosticProvider.Companion.diagnosticSource
-import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
+import com.jetbrains.ls.api.features.impl.common.modcommands.toModCommandFixes
 
 private val LOG = logger<LSInspectionManager>()
+
+/**
+ * The limit on flattened choices of an inspection fix, stricter than [DEFAULT_MAX_FLATTENED_FIXES][com.jetbrains.ls.api.features.impl.common.modcommands.DEFAULT_MAX_FLATTENED_FIXES].
+ *
+ * An inspection fix asks to choose a variant of the fix itself (extract the side effect or drop it, which
+ * annotation to use, ...), and a handful of options is all such a fix ever has. A wide choice tree would mean a
+ * data-driven candidate list, as in the import fixes of compiler diagnostics, and those the default limit is for:
+ * unlike an unresolved reference, a warning is not worth a dozen copies of the file text on the wire.
+ */
+private const val MAX_FLATTENED_INSPECTION_FIXES = 5
 
 internal class LSInspectionManager(
     private val inspectionBlacklist: Blacklist = Blacklist(),
@@ -95,10 +105,11 @@ internal class LSInspectionManager(
     internal fun createDiagnosticData(descriptor: ProblemDescriptor, project: Project): SimpleDiagnosticData {
         return SimpleDiagnosticData(
             diagnosticSource = diagnosticSource,
-            fixes = descriptor.fixes.orEmpty().mapNotNull { quickFix ->
-                val modCommand = getModCommand(quickFix, project, descriptor) ?: return@mapNotNull null
-                val modCommandData = ModCommandData.from(modCommand, ActionContext.from(descriptor), server) ?: return@mapNotNull null
-                SimpleDiagnosticQuickfixData(name = quickFix.name, modCommandData = modCommandData)
+            fixes = descriptor.fixes.orEmpty().flatMap { quickFix ->
+                val modCommand = getModCommand(quickFix, project, descriptor) ?: return@flatMap emptyList()
+                modCommand
+                    .toModCommandFixes(quickFix.name, ActionContext.from(descriptor), MAX_FLATTENED_INSPECTION_FIXES)
+                    .map { fix -> SimpleDiagnosticQuickfixData(name = fix.name, modCommandData = fix.data) }
             },
         )
     }

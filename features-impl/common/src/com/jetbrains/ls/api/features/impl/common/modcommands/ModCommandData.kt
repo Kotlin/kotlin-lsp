@@ -28,8 +28,8 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.intellijUriToLspUri
 import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.core.util.uri
-import com.jetbrains.ls.snapshot.api.impl.core.ChooseActionSessionComponent
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
+import com.jetbrains.ls.snapshot.api.impl.core.ChooseActionSessionComponent
 import com.jetbrains.lsp.implementation.LspClient
 import com.jetbrains.lsp.protocol.ApplyEditRequests.ApplyEdit
 import com.jetbrains.lsp.protocol.ApplyWorkspaceEditParams
@@ -57,7 +57,7 @@ private val snippetChoiceEscapeCharacters = Regex("""[\\}$,|]""")
 private const val SNIPPET_REPLACEMENT = $$"\\\\$0"
 
 /**
- * See [ModChooseActionChain][com.jetbrains.ls.api.features.impl.common.modcommands.ModChooseActionChain]
+ * See [toModCommandFixes][com.jetbrains.ls.api.features.impl.common.modcommands.toModCommandFixes]
  * for fallback implementation of ModChooseAction support if client doesn't provide intellijExtensions capabilities.
  */
 @Serializable
