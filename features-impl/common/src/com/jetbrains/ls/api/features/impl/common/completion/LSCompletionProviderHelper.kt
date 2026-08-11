@@ -1,6 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.completion
 
+import com.intellij.codeInsight.completion.PrefixMatcher
 import com.intellij.codeInsight.completion.impl.CamelHumpMatcher
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementPresentation
@@ -76,6 +77,35 @@ class LSCompletionProviderHelper(
         fun <T> withFileForModification(physicalPsiFile: PsiFile, action: (fileForModification: PsiFile) -> T): T
     }
 
+    /**
+     * Context of a globally arranged lookup element.
+     *
+     * [physicalPsiFile] and [caretOffset] refer to the source document.
+     * [prefix] is computed lazily so an override that falls back to standard conversion
+     * does not resolve the item matcher before legacy filtering and rendering.
+     */
+    class LookupElementContext internal constructor(
+        val lookupElement: LookupElement,
+        val physicalPsiFile: PsiFile,
+        val caretOffset: Int,
+        val sortText: String,
+        itemMatcherProvider: () -> PrefixMatcher,
+    ) {
+        private val itemMatcher: PrefixMatcher by lazy(LazyThreadSafetyMode.NONE, itemMatcherProvider)
+
+        val prefix: String
+            get() = itemMatcher.prefix
+    }
+
+    /** An optional replacement for the standard retained-object conversion of a lookup element. */
+    sealed interface LookupElementOverride {
+        /** Sends [item] without retaining the lookup element in the completion session. */
+        data class Item(val item: CompletionItem) : LookupElementOverride
+
+        /** Omits the lookup element from the response. */
+        data object Skip : LookupElementOverride
+    }
+
     fun createCommandDescriptors(fileForModificationProvider: FileForModificationProvider): List<LSCommandDescriptor> = listOf(
             LSCommandDescriptor(
                 title = LspServerBundle.message("command.apply.completion.item"),
@@ -122,76 +152,101 @@ class LSCompletionProviderHelper(
             )
         )
 
+    /**
+     * Runs standard completion and optionally overrides conversion of individual globally arranged lookup elements.
+     * Returning `null` applies that filter and the standard legacy conversion,
+     * while [LookupElementOverride.Item] and [LookupElementOverride.Skip] bypass it.
+     */
     context(server: LSServer)
-    suspend fun provideCompletion(params: CompletionParams): CompletionList {
-        return if (!params.textDocument.isSource()) {
-            CompletionList.EMPTY
-        } else {
-            val itemsWithObjects = server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
+    suspend fun provideCompletion(
+        params: CompletionParams,
+        lookupElementOverride: ((LookupElementContext) -> LookupElementOverride?)? = null,
+    ): CompletionList {
+        if (!params.textDocument.isSource()) return CompletionList.EMPTY
+
+        val entries = server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
+            readAction {
+                params.textDocument.findVirtualFile()?.let { file ->
+                    file.findPsiFile(project)?.let { psiFile ->
+                        file.findDocument()?.offsetByPosition(params.position)?.let { offset ->
+                            psiFile to offset
+                        }
+                    }
+                }
+            }?.let { (psiFile, offset) ->
+                val completionProcess = edtWriteAction {
+                    createCompletionProcess(
+                        project = project,
+                        file = psiFile,
+                        offset = offset,
+                        invocationCount = computeInvocationCount(params.context?.triggerKind)
+                    )
+                }
                 readAction {
-                    params.textDocument.findVirtualFile()?.let { file ->
-                        file.findPsiFile(project)?.let { psiFile ->
-                            file.findDocument()?.offsetByPosition(params.position)?.let { offset ->
-                                psiFile to offset
-                            }
-                        }
-                    }
-                }?.let { (psiFile, offset) ->
-                    val completionProcess = edtWriteAction {
-                        createCompletionProcess(
-                            project = project,
-                            file = psiFile,
-                            offset = offset,
-                            invocationCount = computeInvocationCount(params.context?.triggerKind)
-                        )
-                    }
-                    readAction {
-                        val lookupElements = performCompletion(completionProcess)
-                        lookupElements.mapIndexed { i, lookup ->
-                            val lookupPresentation = LookupElementPresentation().also {
-                                lookup.renderElement(it)
-                            }
-
-                            val itemMatcher = completionProcess.arranger.itemMatcher(lookup)
-                            val obj = LSCompletion(params, lookup, itemMatcher)
-
-                            val key = server[LatestCompletionSessionComponent].nextId()
-                            CompletionItemWithObject(
-                                item = CompletionItem(
-                                    label = lookupPresentation.itemText ?: lookup.lookupString,
-                                    sortText = getSortedFieldByIndex(i),
-                                    labelDetails = CompletionItemLabelDetails(
-                                        detail = lookupPresentation.tailText,
-                                        description = lookupPresentation.typeText,
-                                    ),
-                                    kind = LSCompletionItemKindProvider.getKind(CompletionCandidate(lookup, language)),
-                                    textEdit = CompletionItem.Edit.emptyAtPosition(params.position),
-                                    command = Command(
-                                        LspServerBundle.message("command.apply.completion"),
-                                        command = applyCompletionCommandKey,
-                                        arguments = listOf(key.toJson())
-                                    ),
-                                    data = JsonObject(
-                                        mapOf(
-                                            completionDataKey to key.toJson(),
-                                            ResolveDataWithConfigurationEntryId::configurationEntryId.name to LSP.json.encodeToJsonElement(
-                                                uniqueId
-                                            )
-                                        )
-                                    ),
-                                ),
-                                key = key,
-                                obj = obj
+                    val lookupElements = performCompletion(completionProcess)
+                    lookupElements.mapIndexedNotNull { index, lookup ->
+                        val sortText = getSortedFieldByIndex(index)
+                        val itemMatcherProvider = { completionProcess.arranger.itemMatcher(lookup) }
+                        val override = lookupElementOverride?.invoke(
+                            LookupElementContext(
+                                lookupElement = lookup,
+                                physicalPsiFile = psiFile,
+                                caretOffset = offset,
+                                sortText = sortText,
+                                itemMatcherProvider = itemMatcherProvider,
                             )
+                        )
+                        when (override) {
+                            is LookupElementOverride.Item -> CompletionEntry(override.item, null)
+                            LookupElementOverride.Skip -> null
+                            null -> createLegacyCompletionEntry(params, lookup, sortText, itemMatcherProvider)
                         }
                     }
-                } ?: emptyList()
-            }
-            server.update(LatestCompletionSessionComponent) { state ->
-                state.replace(itemsWithObjects)
-            }
-            CompletionList(isIncomplete = true, items = itemsWithObjects.map { it.item })
+                }
+            } ?: emptyList()
         }
+        server.update(LatestCompletionSessionComponent) { state ->
+            state.replace(entries.mapNotNull { it.itemWithObject })
+        }
+        return CompletionList(isIncomplete = true, items = entries.map { it.item })
+    }
+
+    context(server: LSServer)
+    private fun createLegacyCompletionEntry(
+        params: CompletionParams,
+        lookup: LookupElement,
+        sortText: String,
+        itemMatcherProvider: () -> PrefixMatcher,
+    ): CompletionEntry {
+        val lookupPresentation = LookupElementPresentation().also(lookup::renderElement)
+        val itemMatcher = itemMatcherProvider()
+        val key = server[LatestCompletionSessionComponent].nextId()
+        val itemWithObject = CompletionItemWithObject(
+            item = CompletionItem(
+                label = lookupPresentation.itemText ?: lookup.lookupString,
+                sortText = sortText,
+                labelDetails = CompletionItemLabelDetails(
+                    detail = lookupPresentation.tailText,
+                    description = lookupPresentation.typeText,
+                ),
+                kind = LSCompletionItemKindProvider.getKind(CompletionCandidate(lookup, language)),
+                textEdit = CompletionItem.Edit.emptyAtPosition(params.position),
+                command = Command(
+                    LspServerBundle.message("command.apply.completion"),
+                    command = applyCompletionCommandKey,
+                    arguments = listOf(key.toJson())
+                ),
+                data = JsonObject(
+                    mapOf(
+                        completionDataKey to key.toJson(),
+                        ResolveDataWithConfigurationEntryId::configurationEntryId.name to LSP.json.encodeToJsonElement(uniqueId)
+                    )
+                ),
+            ),
+            key = key,
+            obj = LSCompletion(params, lookup, itemMatcher)
+        )
+        return CompletionEntry(itemWithObject.item, itemWithObject)
     }
 
     context(server: LSServer)
@@ -271,6 +326,11 @@ class LSCompletionProviderHelper(
             else -> 1
         }
     }
+
+    private data class CompletionEntry(
+        val item: CompletionItem,
+        val itemWithObject: CompletionItemWithObject<LSCompletion>?,
+    )
 
     private data class CompletionCandidate(private val lookup: LookupElement, private val lsLanguage: LSLanguage) : LSCompletionCandidate {
         override val language: Language = lsLanguage.intellijLanguage
