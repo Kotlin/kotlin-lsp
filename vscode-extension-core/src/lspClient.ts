@@ -72,6 +72,7 @@ import {
   handleCancelledServerDownload,
   handleServerDownloadChecksumMismatch,
 } from './serverDownloadRecovery';
+import { proxyJvmOptions } from './proxySettings';
 
 interface ExtensionPackageJson {
   name?: string;
@@ -98,6 +99,8 @@ const OPT_DATA_SHARING = 'intellij.dataSharing';
 const OPT_REGION = 'intellij.region';
 const OPT_PROJECTS = 'intellij.projects';
 const OPT_DISABLE_ROCKS_DB_WAL = 'intellij.disableRocksDBWriteAheadLog';
+const OPT_HTTP_PROXY = 'http.proxy';
+const OPT_HTTP_PROXY_SUPPORT = 'http.proxySupport';
 
 const INDEX_DIR_STATE_KEY = 'jetbrains.intellij.indexDir';
 
@@ -691,16 +694,27 @@ async function startServer({
     args.push('--eula', eulaHash);
   }
   const userJvmOptions = getUserJvmOptions();
+  const configuredProxyOptions = proxyJvmOptions(
+    configOption<string>(OPT_HTTP_PROXY),
+    configOption<string>(OPT_HTTP_PROXY_SUPPORT),
+  );
   const rawDataSharing = configOption(OPT_DATA_SHARING);
   const dataSharing = isDataSharingChoice(rawDataSharing) ? rawDataSharing : 'none';
   const rawRegion = configOption(OPT_REGION);
   const region = isRegion(rawRegion) ? rawRegion : undefined;
-  const env = buildLaunchEnvironment(process.env, userJvmOptions, dataSharing, region);
+  const env = buildLaunchEnvironment(
+    process.env,
+    configuredProxyOptions,
+    userJvmOptions,
+    dataSharing,
+    region,
+  );
 
   logInfo('Starting language server');
   logInfo(`  command: ${launcherPath}`);
   logInfo(`  args   : ${JSON.stringify(args)}`);
   logInfo(`  VM opts: ${JSON.stringify(userJvmOptions)}`);
+  if (configuredProxyOptions.length > 0) logInfo('  proxy  : configured from VS Code settings');
   logInfo('');
 
   const serverProcess = spawn(launcherPath, args, {
@@ -800,6 +814,8 @@ const LAUNCH_SETTINGS = [
   OPT_SERVER_PATH,
   OPT_DEV_SERVER_PORT,
   OPT_DEV_SERVER_TIMEOUT,
+  OPT_HTTP_PROXY,
+  OPT_HTTP_PROXY_SUPPORT,
 ];
 
 /** Launch settings never reach `initializationOptions`, so their values are compared on their own. */
@@ -1086,15 +1102,18 @@ function getUserJvmOptions(): string[] {
 
 function buildLaunchEnvironment(
   baseEnv: NodeJS.ProcessEnv,
+  configuredProxyOptions: string[],
   extraOptions: string[],
   dataSharing: string,
   region: string | undefined,
 ): NodeJS.ProcessEnv {
   const env = { ...baseEnv };
-  if (extraOptions.length > 0) {
+  // VS Code launch settings override inherited launcher defaults; additionalJvmArgs stays strongest.
+  const jvmOptions = [...configuredProxyOptions, ...extraOptions];
+  if (jvmOptions.length > 0) {
     const option = 'IJ_JAVA_OPTIONS';
     const current = env[option] ?? '';
-    const extra = extraOptions.map(shellQuoteIfNeeded).join(' ');
+    const extra = jvmOptions.map(shellQuoteIfNeeded).join(' ');
     env[option] = current ? `${current} ${extra}` : extra;
   }
   // the launcher's debug log goes to stdout, which is the protocol channel in --stdio mode
