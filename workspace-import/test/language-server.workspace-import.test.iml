@@ -58,6 +58,7 @@
     <orderEntry type="module" module-name="language-server.workspace-import.gradle-plugin" scope="TEST" />
     <orderEntry type="module" module-name="intellij.platform.workspace.jps" scope="TEST" />
     <orderEntry type="module" module-name="language-server.api.impl.analyzer" scope="TEST" />
+    <orderEntry type="module" module-name="language-server.main" scope="TEST" />
     <orderEntry type="module" module-name="intellij.libraries.kotlinx.coroutines.core" scope="TEST" />
     <orderEntry type="module" module-name="intellij.kotlin.base.facet" scope="TEST" />
     <orderEntry type="module" module-name="intellij.libraries.kotlinx.serialization.json" scope="TEST" />

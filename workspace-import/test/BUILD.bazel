@@ -78,6 +78,8 @@ jvm_library(
         "@community//platform/workspace/jps:jps_test_lib",
         "//language-server/api.impl.analyzer",
         "//language-server/api.impl.analyzer:api.impl.analyzer_test_lib",
+        "//language-server/main",
+        "//language-server/main:main_test_lib",
         "@community//libraries/kotlinx/coroutines/core",
         "@community//libraries/kotlinx/coroutines/core:core_test_lib",
         "@community//plugins/kotlin/base/facet",

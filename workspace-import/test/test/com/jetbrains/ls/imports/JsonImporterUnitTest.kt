@@ -2,6 +2,7 @@
 package com.jetbrains.ls.imports
 
 import com.intellij.java.workspace.entities.JavaModuleCompilerOptionsEntity
+import com.intellij.ls.server.importing.substituteModuleDependencies
 import com.intellij.platform.workspace.jps.entities.ModuleEntity
 import com.intellij.platform.workspace.jps.entities.SdkEntity
 import com.intellij.platform.workspace.jps.entities.exModuleOptions
@@ -20,7 +21,6 @@ import com.jetbrains.ls.imports.json.SdkData
 import com.jetbrains.ls.imports.json.WorkspaceData
 import com.jetbrains.ls.imports.json.flattenExportedDependencies
 import com.jetbrains.ls.imports.json.importWorkspaceData
-import com.jetbrains.ls.imports.api.substituteModuleDependencies
 import com.jetbrains.ls.imports.json.XmlElement
 import com.jetbrains.ls.imports.json.workspaceData
 import org.junit.jupiter.api.Assertions.assertEquals

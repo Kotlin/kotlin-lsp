@@ -1,6 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports
 
+import com.intellij.ls.server.importing.applyImportResults
 import com.intellij.platform.workspace.jps.entities.ContentRootEntity
 import com.intellij.platform.workspace.jps.entities.DependencyScope
 import com.intellij.platform.workspace.jps.entities.LibraryDependency
@@ -24,7 +25,6 @@ import com.jetbrains.ls.imports.api.LSFolderImportStatus
 import com.jetbrains.ls.imports.api.LSImportedFoldersDataEntity
 import com.jetbrains.ls.imports.api.ModuleCoordinateEntity
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
-import com.jetbrains.ls.imports.api.applyImportResults
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
