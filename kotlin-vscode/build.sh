@@ -39,14 +39,6 @@ export PUBLISH_ARTIFACTS
 
 BUNDLE_TYPE="${BUNDLE_TYPE:-$DEFAULT_BUNDLE_TYPE}"
 
-if [[ -z "${INTELLIJ_EULA_GATE:-}" ]]; then
-  case "$BUNDLE_TYPE" in
-    kotlin-server|intellij-server-air) INTELLIJ_EULA_GATE="false" ;;
-    *) INTELLIJ_EULA_GATE="true" ;;
-  esac
-fi
-export INTELLIJ_EULA_GATE
-
 if ! command -v pnpm >/dev/null; then
   if ! command -v npm >/dev/null; then
     echo "Error: pnpm is not installed and npm is not available" >&2

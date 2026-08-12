@@ -31,7 +31,6 @@ configureExtensionPolicyConsumer({
   config,
   policyDir,
   buildCwd: intellijVscodeDir,
-  eulaGate: false,
   statusIconFont: path.join(intellijVscodeDir, 'icons/lsp.woff'),
 });
 
