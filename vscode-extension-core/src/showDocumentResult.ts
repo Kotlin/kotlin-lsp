@@ -22,17 +22,14 @@ export function isJbaSignInUrl(uri: string): boolean {
   }
 }
 
-export function copiedJbaSignInUrl(
-  uri: string,
-  external: boolean | undefined,
-  opened: boolean,
-  clipboardText: string,
-): boolean {
-  if (external !== true || opened) return false;
+export function copiedExternalHttpUrl(uri: string, clipboardText: string): boolean {
   try {
     const requested = new URL(uri);
     const copied = new URL(clipboardText);
-    return isJbaSignInUrl(uri) && copied.href === requested.href;
+    return (
+      (requested.protocol === 'https:' || requested.protocol === 'http:') &&
+      copied.href === requested.href
+    );
   } catch {
     return false;
   }

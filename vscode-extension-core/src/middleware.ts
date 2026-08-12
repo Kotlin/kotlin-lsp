@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { Middleware } from 'vscode-languageclient/node';
 import {
-  copiedJbaSignInUrl,
+  copiedExternalHttpUrl,
   isJbaSignInUrl,
   recordJbaSignInPageCopied,
 } from './showDocumentResult';
@@ -14,13 +14,14 @@ export const middleware: Middleware = {
       const result = await next(params, token);
       if (!('success' in result)) return result;
       if (result.success || params.external !== true) return result;
-      if (!isJbaSignInUrl(params.uri)) return result;
       try {
         const clipboardText = await vscode.env.clipboard.readText();
-        if (!copiedJbaSignInUrl(params.uri, params.external, result.success, clipboardText)) {
+        if (!copiedExternalHttpUrl(params.uri, clipboardText)) {
           return result;
         }
-        recordJbaSignInPageCopied();
+        if (isJbaSignInUrl(params.uri)) {
+          recordJbaSignInPageCopied();
+        }
         return { success: true };
       } catch {
         return result;
