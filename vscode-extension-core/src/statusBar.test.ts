@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 import {
   computeStatusTooltipContent,
   computeStatusText,
+  effectiveLspStatus,
   pickStatusAction,
   shouldShowStatusBar,
   statusBarCommand,
@@ -135,5 +136,17 @@ describe('status bar text', () => {
       computeStatusText('running', 'Java and Kotlin', contribution),
       '$(jetbrains-ij) Java and Kotlin',
     );
+  });
+});
+
+describe('effective LSP status', () => {
+  it('treats a pending start without a live client as starting', () => {
+    assert.equal(effectiveLspStatus('stopped', true), 'starting');
+  });
+
+  it('preserves settled client states', () => {
+    assert.equal(effectiveLspStatus('stopped', false), 'stopped');
+    assert.equal(effectiveLspStatus('starting', false), 'starting');
+    assert.equal(effectiveLspStatus('running', true), 'running');
   });
 });

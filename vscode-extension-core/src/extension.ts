@@ -21,6 +21,7 @@ import {
   removeDownloadedServerLauncher,
   startLspClient,
   stopLspClient,
+  withLspClientStartPending,
 } from './lspClient';
 export {
   getLspClient,
@@ -33,6 +34,7 @@ export {
   type ServerLauncherPreparation,
   stopLspClient,
   subscribeToClientEvent,
+  withLspClientStartPending,
 } from './lspClient';
 export { removeDownloadedServerBundle, serverBundleStoragePath } from './serverBundleDownload';
 export { checkGeoRestricted } from './geoRestriction';
@@ -223,6 +225,17 @@ export async function activateExtension(
     return;
   }
 
+  await withLspClientStartPending(() =>
+    activateAcceptedExtension(context, options, getAcceptedEulaHash, checkEulaAcceptedFn),
+  );
+}
+
+async function activateAcceptedExtension(
+  context: ExtensionContext,
+  options: ActivationOptions,
+  getAcceptedEulaHash: AcceptedEulaHashProvider,
+  checkEulaAcceptedFn: EulaAcceptanceCheck,
+): Promise<void> {
   // One-time contribution setup runs once per active extension context; the consent gate above
   // still runs on every activation attempt.
   if (!serverActivated) {

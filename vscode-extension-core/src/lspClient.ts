@@ -106,6 +106,7 @@ const INDEX_DIR_STATE_KEY = 'jetbrains.intellij.indexDir';
 
 let _client: LanguageClient | undefined;
 let startLspClientPromise: Promise<void> | undefined;
+let lspClientStartRequests = 0;
 let restartRequestedDuringStart = false;
 let bundledServerLauncherCache: { key: string; promise: Promise<string> } | undefined;
 let bundledServerSetupPhase: ServerBundlePhase = 'downloading';
@@ -322,6 +323,31 @@ export function getLspClient(): LanguageClient | undefined {
   return _client;
 }
 
+export function isLspClientStartPending(): boolean {
+  return lspClientStartRequests > 0 || startLspClientPromise !== undefined;
+}
+
+function beginLspClientStart(): Disposable {
+  lspClientStartRequests++;
+  updateLspStatusBar();
+  let disposed = false;
+  return Disposable.create(() => {
+    if (disposed) return;
+    disposed = true;
+    lspClientStartRequests--;
+    updateLspStatusBar();
+  });
+}
+
+export async function withLspClientStartPending<T>(action: () => Promise<T>): Promise<T> {
+  const pendingStart = beginLspClientStart();
+  try {
+    return await action();
+  } finally {
+    pendingStart.dispose();
+  }
+}
+
 /**
  * Starts the LSP client applying all user options. If the client is already running, restarts it.
  */
@@ -344,9 +370,13 @@ export function startLspClient({
       await doStartLspClient(getAcceptedEulaHash);
     } while (restartRequestedDuringStart);
   })().finally(() => {
-    if (startLspClientPromise === promise) startLspClientPromise = undefined;
+    if (startLspClientPromise === promise) {
+      startLspClientPromise = undefined;
+      updateLspStatusBar();
+    }
   });
   startLspClientPromise = promise;
+  updateLspStatusBar();
   return promise;
 }
 

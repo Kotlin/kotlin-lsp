@@ -1,10 +1,16 @@
 import * as vscode from 'vscode';
 import { State } from 'vscode-languageclient/node';
 import { getContext } from './extension';
-import { getLspClient, packageJson, subscribeToClientEvent } from './lspClient';
+import {
+  getLspClient,
+  isLspClientStartPending,
+  packageJson,
+  subscribeToClientEvent,
+} from './lspClient';
 import {
   computeStatusTooltipContent,
   computeStatusText,
+  effectiveLspStatus,
   pickStatusAction,
   shouldShowStatusBar,
   statusBarCommand,
@@ -145,14 +151,17 @@ function computeText(): string {
 }
 
 function lspStatus(): LspStatus {
-  switch (getLspClient()?.state ?? State.Stopped) {
-    case State.Running:
-      return 'running';
-    case State.Starting:
-      return 'starting';
-    default:
-      return 'stopped';
-  }
+  const clientStatus: LspStatus = (() => {
+    switch (getLspClient()?.state ?? State.Stopped) {
+      case State.Running:
+        return 'running';
+      case State.Starting:
+        return 'starting';
+      default:
+        return 'stopped';
+    }
+  })();
+  return effectiveLspStatus(clientStatus, isLspClientStartPending());
 }
 
 async function showLspStatusMenu(): Promise<void> {

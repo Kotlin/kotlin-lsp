@@ -19,6 +19,10 @@ export interface StatusBarContribution {
 
 export type LspStatus = 'running' | 'starting' | 'stopped';
 
+export function effectiveLspStatus(clientStatus: LspStatus, startPending: boolean): LspStatus {
+  return clientStatus === 'stopped' && startPending ? 'starting' : clientStatus;
+}
+
 export interface StatusTooltipContent {
   heading: string;
   detail?: string;

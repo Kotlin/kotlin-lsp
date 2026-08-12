@@ -9,6 +9,7 @@ import {
   registerKotlinExtensionConflictHandler,
   registerStatusBarContribution,
   stopLspClient,
+  withLspClientStartPending,
 } from '@jetbrains/vscode-extension-core';
 import kotlinModule from '@jetbrains/vscode-language-kotlin';
 import {
@@ -26,24 +27,26 @@ export async function activate(context: ExtensionContext): Promise<void> {
 
   await initializeExtension(context);
 
-  await runPolicyGatedActivation(context, {
-    registerStatusBarContribution,
-    statusBarTitle: getExtensionStatusBarTitle(context),
-    stopServer: stopLspClient,
-    usesExternalServer: isExternalServerConfigured(),
-    startServer: (options) =>
-      activateExtension(context, {
-        checkEulaAccepted: (ctx) =>
-          checkBundledServerEulaAccepted({
-            context: ctx,
-            prepareLauncher: prepareBundledServerLauncher,
-            options,
-          }),
-        enableDapServer: true,
-        enableDecompiler: true,
-        modules: [kotlinModule],
-      }),
-  });
+  await withLspClientStartPending(() =>
+    runPolicyGatedActivation(context, {
+      registerStatusBarContribution,
+      statusBarTitle: getExtensionStatusBarTitle(context),
+      stopServer: stopLspClient,
+      usesExternalServer: isExternalServerConfigured(),
+      startServer: (options) =>
+        activateExtension(context, {
+          checkEulaAccepted: (ctx) =>
+            checkBundledServerEulaAccepted({
+              context: ctx,
+              prepareLauncher: prepareBundledServerLauncher,
+              options,
+            }),
+          enableDapServer: true,
+          enableDecompiler: true,
+          modules: [kotlinModule],
+        }),
+    }),
+  );
 }
 
 export const deactivate = deactivateExtension;
