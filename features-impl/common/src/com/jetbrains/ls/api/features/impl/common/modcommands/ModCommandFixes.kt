@@ -137,6 +137,6 @@ private const val CHOICE_SEPARATOR = " → "
  * offering: import candidates are what makes flattening useful in the first place, while anything wider than that
  * comes from a candidate list with no limit of its own and is dropped.
  */
-const val DEFAULT_MAX_FLATTENED_FIXES: Int = 25
+const val DEFAULT_MAX_FLATTENED_FIXES: Int = 10
 
 private val LOG: Logger = logger<ModCommandFix>()
