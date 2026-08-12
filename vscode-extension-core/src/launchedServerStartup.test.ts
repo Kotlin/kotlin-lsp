@@ -274,6 +274,35 @@ test('waitForExit gives up at the bound', async () => {
   assert.equal(await startup.waitForExit(1), undefined);
 });
 
+test('killAndWaitForExit observes the process exit', async () => {
+  const startup = new LaunchedServerStartup();
+  const process = fakeProcess();
+  startup.setProcess(process);
+  setTimeout(() => process.emit('exit', 0, null), 5);
+
+  assert.equal(await startup.killAndWaitForExit(50), true);
+  assert.deepEqual(process.signals, [undefined]);
+});
+
+test('killAndWaitForExit accepts a process that failed to spawn', async () => {
+  const startup = new LaunchedServerStartup();
+  const process = fakeProcess();
+  startup.setProcess(process);
+  const spawned = startup.waitForSpawn();
+  process.emit('error', new Error('spawn ENOENT'));
+  await assert.rejects(spawned);
+
+  assert.equal(await startup.killAndWaitForExit(50), true);
+  assert.deepEqual(process.signals, []);
+});
+
+test('killAndWaitForExit reports a process that remains alive', async () => {
+  const startup = new LaunchedServerStartup();
+  startup.setProcess(fakeProcess());
+
+  assert.equal(await startup.killAndWaitForExit(1), false);
+});
+
 test('delegates a close to the client once the initial start has settled', async () => {
   const startup = new LaunchedServerStartup();
   startup.setProcess(fakeProcess());

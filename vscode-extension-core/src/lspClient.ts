@@ -83,6 +83,7 @@ interface ExtensionPackageJson {
 
 const LAUNCHED_SERVER_START_TIMEOUT_MS = 60_000;
 const LAUNCHED_SERVER_EXIT_WAIT_MS = 1_000;
+const LAUNCHED_SERVER_STOP_TIMEOUT_MS = 6_000;
 const LOCAL_SERVER_CONNECTION_TIMEOUT_MS = 10_000;
 const CONNECTION_RETRY_DELAY_MS = 100;
 
@@ -418,14 +419,17 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
 }
 
 export async function stopLspClient(): Promise<void> {
+  await stopLspClientAndReport();
+}
+
+async function stopLspClientAndReport(): Promise<boolean> {
   if (!_client) {
-    launchedServer?.kill();
-    launchedServer = undefined;
-    return;
+    return stopLaunchedServer();
   }
   const client = _client;
   _client = undefined;
   updateLspStatusBar();
+  let serverStopped: boolean;
   try {
     if (client.needsStop()) {
       await client.stop();
@@ -434,9 +438,18 @@ export async function stopLspClient(): Promise<void> {
     if (!isWriteAfterEndError(error)) throw error;
   } finally {
     // kill() is a no-op once the shutdown handshake above made the process exit on its own.
-    launchedServer?.kill();
-    launchedServer = undefined;
+    serverStopped = await stopLaunchedServer();
   }
+  return serverStopped;
+}
+
+async function stopLaunchedServer(): Promise<boolean> {
+  const server = launchedServer;
+  if (!server) return true;
+
+  const stopped = await server.killAndWaitForExit(LAUNCHED_SERVER_STOP_TIMEOUT_MS);
+  if (stopped && launchedServer === server) launchedServer = undefined;
+  return stopped;
 }
 
 function isWriteAfterEndError(error: unknown): boolean {
@@ -571,7 +584,8 @@ async function ensureBundledServerLauncher(): Promise<string> {
 }
 
 export async function removeDownloadedServerLauncher(): Promise<void> {
-  await stopLspClient();
+  const stopped = await stopLspClientAndReport();
+  if (!stopped) throw new Error('Timed out waiting for the language server process to stop');
   bundledServerLauncherCache = undefined;
   const context = getContext();
   const serverRoot = serverBundleStoragePath(packageJson()?.name ?? 'intellij-server');

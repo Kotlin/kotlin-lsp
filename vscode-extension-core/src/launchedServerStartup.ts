@@ -91,6 +91,12 @@ export class LaunchedServerStartup {
     });
   }
 
+  async killAndWaitForExit(timeoutMs: number): Promise<boolean> {
+    if (this.spawnFailed || !this.process || this.exit) return true;
+    this.kill();
+    return (await this.waitForExit(timeoutMs)) !== undefined;
+  }
+
   startTimeout(timeoutMs: number): void {
     // Not clearTimers(): a stop racing the spawn may have already armed an escalation to survive.
     this.clearStartupTimer();

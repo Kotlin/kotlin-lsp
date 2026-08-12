@@ -84,6 +84,8 @@ const INSTALL_LOCK_OWNER_FILE_PREFIX = 'owner.';
 const INSTALL_LOCK_OWNER_FILE_SUFFIX = '.json';
 const DOWNLOAD_IDLE_TIMEOUT_MS = 2 * 60 * 1000;
 const DOWNLOAD_PROGRESS_INCREMENT = 70;
+const SERVER_BUNDLE_REMOVE_MAX_RETRIES = 10;
+const SERVER_BUNDLE_REMOVE_RETRY_DELAY_MS = 100;
 
 export async function ensureServerLauncher({
   extensionPath,
@@ -254,9 +256,15 @@ async function removeServerBundleFiles(
     () => false,
     () => {},
     async () => {
-      await fsp.rm(downloadRoot, { recursive: true, force: true });
+      const removeOptions = {
+        recursive: true,
+        force: true,
+        maxRetries: SERVER_BUNDLE_REMOVE_MAX_RETRIES,
+        retryDelay: SERVER_BUNDLE_REMOVE_RETRY_DELAY_MS,
+      } as const;
+      await fsp.rm(downloadRoot, removeOptions);
       if (removeInstalledServer) {
-        await fsp.rm(serverDir, { recursive: true, force: true });
+        await fsp.rm(serverDir, removeOptions);
       }
     },
   );
