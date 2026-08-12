@@ -17,8 +17,8 @@ import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.entities
 import com.intellij.platform.workspace.storage.url.VirtualFileUrl
 import com.intellij.workspaceModel.ide.impl.createIdeVirtualFileUrlManager
-import com.jetbrains.ls.imports.api.DependencySubstitution
 import com.jetbrains.ls.imports.api.LSConfiguredProjectData
+import com.jetbrains.ls.imports.api.LSDependencySubstitutionEntity
 import com.jetbrains.ls.imports.api.LSFolderImportRecord
 import com.jetbrains.ls.imports.api.LSFolderImportStatus
 import com.jetbrains.ls.imports.api.LSImportedFoldersDataEntity
@@ -112,18 +112,42 @@ class ApplyImportResultsTest {
         assertEquals(setOf("gradle-consumer", "maven-other"), storage.moduleNames())
         val dependency = storage.module("gradle-consumer").dependencies.single()
         assertEquals(LibraryDependency(storage.libraryId("b"), false, DependencyScope.COMPILE), dependency)
+        assertEquals(0, storage.entities<LSDependencySubstitutionEntity>().count(), "the stale record is expected to be dropped")
     }
 
-    /** Runs one import over [storage], carrying the dependency substitutions across calls like the server does. */
+    /** The counterpart of the test above: a target that re-imports fine keeps its substitution, recomputed from scratch. */
+    @Test
+    fun `successful reimport recomputes the substitution instead of falling back to the library`() {
+        val gradle = url("/workspace/gradle")
+        val maven = url("/workspace/maven")
+        val storage = importInto(
+            MutableEntityStorage.create(),
+            gradle to gradleModelWithLibraryDependency(gradle, "com.example:b:1.0"),
+            maven to mavenModelProducing(maven, "com.example:b:1.0"),
+        )
+
+        // Both targets re-import fine and the coordinate is still produced: the substitution must stay.
+        importInto(
+            storage,
+            gradle to gradleModelWithLibraryDependency(gradle, "com.example:b:1.0"),
+            maven to mavenModelProducing(maven, "com.example:b:1.0"),
+        )
+
+        assertEquals(
+            ModuleDependency(ModuleId("maven-producer"), false, DependencyScope.COMPILE, false),
+            storage.module("gradle-consumer").dependencies.single(),
+        )
+        assertEquals(1, storage.entities<LSDependencySubstitutionEntity>().count(), "exactly one up-to-date record is expected")
+    }
+
+    /** Runs one import over [storage]; the dependency substitutions are carried across calls by the model itself. */
     private fun importInto(
         storage: MutableEntityStorage,
         vararg results: Pair<VirtualFileUrl, EntityStorage?>,
     ): MutableEntityStorage {
-        storage.applyImportResults(results.toList(), substitutions)
+        storage.applyImportResults(results.toList())
         return storage
     }
-
-    private val substitutions = mutableListOf<DependencySubstitution>()
 
     private fun url(path: String): VirtualFileUrl = urlManager.getOrCreateFromUrl("file://$path")
 
