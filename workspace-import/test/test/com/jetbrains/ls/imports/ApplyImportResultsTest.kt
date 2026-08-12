@@ -183,6 +183,7 @@ class ApplyImportResultsTest {
             LSImportedFoldersDataEntity(
                 folderImports = listOf(LSFolderImportRecord(folder.url, "test", LSFolderImportStatus.SUCCESS)),
                 configuredProjects = emptyList<LSConfiguredProjectData>(),
+                blockedFolders = emptyList(),
                 entitySource = WorkspaceEntitySource(folder),
             )
         )
