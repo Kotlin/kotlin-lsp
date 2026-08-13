@@ -204,6 +204,43 @@ describe('status bar text', () => {
     );
   });
 
+  it('hides a healthy contribution detail after LSP startup fails', () => {
+    const content = computeStatusTooltipContent(
+      'stopped',
+      'Java and Kotlin',
+      {
+        actions: [],
+        presentation: {
+          text: '$(loading~spin)',
+          tooltip: 'IntelliJ license service is starting.',
+          isProblem: false,
+        },
+      },
+      restartActions,
+    );
+
+    assert.equal(content.heading, '**Java and Kotlin**&nbsp;&nbsp;$(stop) Stopped');
+    assert.equal(content.detail, undefined);
+  });
+
+  it('keeps a contributed problem visible while LSP is stopped', () => {
+    const content = computeStatusTooltipContent(
+      'stopped',
+      'Java and Kotlin',
+      {
+        actions: [],
+        presentation: {
+          text: '$(jetbrains-ij-crossed)',
+          tooltip: 'Setup is incomplete',
+          isProblem: true,
+        },
+      },
+      restartActions,
+    );
+
+    assert.equal(content.detail, 'Setup is incomplete');
+  });
+
   it('uses the spinner while LSP is starting', () => {
     assert.equal(computeStatusText('starting', 'Kotlin', undefined), '$(loading~spin) Kotlin');
   });

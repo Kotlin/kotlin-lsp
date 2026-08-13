@@ -119,16 +119,19 @@ export function computeStatusTooltipContent(
   actions: readonly StatusBarAction[],
   state: StatusBarState = {},
 ): StatusTooltipContent {
-  const contributionProblem = contribution?.presentation?.isProblem === true;
+  const presentation = contribution?.presentation;
+  const contributionProblem = presentation?.isProblem === true;
   const workspaceImportBlocked =
     clientState === 'running' && state.workspaceImportBlocked === true && !contributionProblem;
+  const showContributionDetail =
+    presentation !== undefined && (clientState !== 'stopped' || contributionProblem);
   return {
     heading: `**${title}**&nbsp;&nbsp;${workspaceImportBlocked ? '$(circle-slash) Build tool selection required' : statusStateText(clientState)}`,
     ...(workspaceImportBlocked
       ? { detail: 'Project import will not start until you select a build tool.' }
-      : contribution?.presentation === undefined
-        ? {}
-        : { detail: contribution.presentation.tooltip }),
+      : showContributionDetail
+        ? { detail: presentation.tooltip }
+        : {}),
     actions,
     enabledCommands: actions.map((action) => action.command),
   };
