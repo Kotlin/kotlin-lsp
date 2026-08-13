@@ -133,7 +133,9 @@ const ReloadWorkspaceRequest = new RequestType<ReloadWorkspaceParams, null, void
   'intellij/reloadWorkspace',
 );
 
-export async function reloadWorkspace(): Promise<void> {
+export async function reloadWorkspace({
+  showConfirmation = true,
+}: { showConfirmation?: boolean } = {}): Promise<void> {
   const client = getLspClient();
   if (client === undefined || client.initializeResult === undefined) {
     await window.showErrorMessage('The language server is not running');
@@ -144,7 +146,7 @@ export async function reloadWorkspace(): Promise<void> {
     const initializationOptions = buildInitializationOptions();
     await client.sendRequest(ReloadWorkspaceRequest, { initializationOptions });
     markInitializationOptionsApplied(initializationOptions);
-    await window.showInformationMessage('Workspace reloaded');
+    if (showConfirmation) await window.showInformationMessage('Workspace reloaded');
   } catch (e) {
     // `ServerCancelled` is the licensing gate's quiet refusal; the licensing UI explains it.
     if (

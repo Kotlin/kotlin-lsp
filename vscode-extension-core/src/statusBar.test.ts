@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  buildToolConflictState,
   computeStatusTooltipContent,
   computeStatusText,
+  createLatestSnapshotTracker,
   effectiveLspStatus,
   pickStatusAction,
   shouldShowStatusBar,
@@ -17,6 +19,93 @@ const restartActions: StatusBarAction[] = [
   { label: 'Clear Caches and Restart Language Server', command: 'clearAndRestart' },
 ];
 
+describe('latest snapshot tracker', () => {
+  it('applies a loaded snapshot when no live snapshot supersedes it', async () => {
+    const applied: string[] = [];
+    const tracker = createLatestSnapshotTracker<string>((snapshot) => applied.push(snapshot));
+
+    await tracker.refresh(async () => 'persisted');
+
+    assert.deepEqual(applied, ['persisted']);
+  });
+
+  it('does not let a stale loaded snapshot overwrite a live snapshot published during refresh', async () => {
+    const applied: string[] = [];
+    let finishLoad: ((snapshot: string) => void) | undefined;
+    const load = new Promise<string>((resolve) => {
+      finishLoad = resolve;
+    });
+    const tracker = createLatestSnapshotTracker<string>((snapshot) => applied.push(snapshot));
+    const refresh = tracker.refresh(() => load);
+
+    tracker.publish('live');
+    finishLoad?.('persisted');
+    await refresh;
+
+    assert.deepEqual(applied, ['live']);
+  });
+
+  it('does not let a loaded seed overwrite a live snapshot published before refresh', async () => {
+    const applied: string[] = [];
+    const tracker = createLatestSnapshotTracker<string>((snapshot) => applied.push(snapshot));
+
+    tracker.publish('live');
+    await tracker.refresh(async () => 'persisted');
+
+    assert.deepEqual(applied, ['live']);
+  });
+});
+
+describe('workspace import status', () => {
+  it('marks import as blocked while the ambiguous-build-system chooser is open', () => {
+    assert.deepEqual(
+      buildToolConflictState({
+        blockedFolders: [
+          {
+            folderUri: 'file:///workspace',
+            reason: 'ambiguousBuildSystem',
+            candidates: ['gradle', 'maven'],
+            dismissed: false,
+          },
+        ],
+      }),
+      { blocked: true, promptDismissed: false },
+    );
+  });
+
+  it('offers recovery after the ambiguous-build-system chooser is dismissed', () => {
+    assert.deepEqual(
+      buildToolConflictState({
+        blockedFolders: [
+          {
+            folderUri: 'file:///workspace',
+            reason: 'ambiguousBuildSystem',
+            candidates: ['gradle', 'maven'],
+            dismissed: true,
+          },
+        ],
+      }),
+      { blocked: true, promptDismissed: true },
+    );
+  });
+
+  it('ignores other blocked import reasons', () => {
+    assert.deepEqual(
+      buildToolConflictState({
+        blockedFolders: [
+          {
+            folderUri: 'file:///workspace',
+            reason: 'noBuildSystemFound',
+            candidates: [],
+            dismissed: true,
+          },
+        ],
+      }),
+      { blocked: false, promptDismissed: false },
+    );
+  });
+});
+
 describe('status bar actions', () => {
   it('keeps restart actions available without a live client once LSP actions are enabled', () => {
     assert.deepEqual(statusActions(undefined, true, restartActions), restartActions);
@@ -30,6 +119,14 @@ describe('status bar actions', () => {
     const setupAction = { label: 'Complete Setup', command: 'setup' };
     assert.deepEqual(statusActions({ actions: [setupAction] }, true, restartActions), [
       setupAction,
+      ...restartActions,
+    ]);
+  });
+
+  it('places workspace actions before LSP actions', () => {
+    const resolveImport = { label: 'Choose Build Tool…', command: 'reloadWorkspace' };
+    assert.deepEqual(statusActions(undefined, true, restartActions, [resolveImport]), [
+      resolveImport,
       ...restartActions,
     ]);
   });
@@ -136,6 +233,43 @@ describe('status bar text', () => {
       computeStatusText('running', 'Java and Kotlin', contribution),
       '$(jetbrains-ij) Java and Kotlin',
     );
+  });
+
+  it('uses the crossed product icon while build tool selection is required', () => {
+    assert.equal(
+      computeStatusText('running', 'Java and Kotlin', contribution, {
+        workspaceImportBlocked: true,
+      }),
+      '$(jetbrains-ij-crossed) Java and Kotlin',
+    );
+  });
+
+  it('keeps a contributed problem ahead of a blocked project import', () => {
+    const problem = {
+      ...contribution,
+      presentation: {
+        text: '$(warning)',
+        tooltip: 'Setup is incomplete',
+        isProblem: true,
+      },
+    };
+    assert.equal(
+      computeStatusText('running', 'Java and Kotlin', problem, {
+        workspaceImportBlocked: true,
+      }),
+      '$(warning) Java and Kotlin',
+    );
+  });
+
+  it('warns that project import waits for build tool selection', () => {
+    const content = computeStatusTooltipContent('running', 'Java and Kotlin', contribution, [], {
+      workspaceImportBlocked: true,
+    });
+    assert.equal(
+      content.heading,
+      '**Java and Kotlin**&nbsp;&nbsp;$(circle-slash) Build tool selection required',
+    );
+    assert.equal(content.detail, 'Project import will not start until you select a build tool.');
   });
 });
 

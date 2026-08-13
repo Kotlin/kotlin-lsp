@@ -7,6 +7,7 @@ import {
   LanguageClient,
   LanguageClientOptions,
   NotificationType,
+  RequestType,
   ResponseError,
   ServerOptions,
   State,
@@ -42,6 +43,7 @@ import {
 import {
   clearBuildError,
   setBuildError,
+  setBuildToolConflict,
   setLspActionsAvailable,
   updateLspStatusBar,
 } from './statusBar';
@@ -73,6 +75,11 @@ import {
   handleServerDownloadChecksumMismatch,
 } from './serverDownloadRecovery';
 import { proxyJvmOptions } from './proxySettings';
+import {
+  buildToolConflictState,
+  createLatestSnapshotTracker,
+  type WorkspaceImportStatus,
+} from './statusBarModel';
 
 interface ExtensionPackageJson {
   name?: string;
@@ -133,6 +140,16 @@ interface ImportLogParams {
 }
 
 const importLogNotification = new NotificationType<ImportLogParams>('intellij/importLog');
+
+const workspaceImportStatusNotification = new NotificationType<WorkspaceImportStatus>(
+  'intellij/workspaceImportStatus',
+);
+const workspaceImportStatusRequest = new RequestType<
+  Record<string, never>,
+  WorkspaceImportStatus,
+  void
+>('intellij/workspaceImportStatus');
+const CHOOSE_BUILD_TOOL_ACTION = 'Choose Build Tool…';
 
 const clientSubscriptions: ((client: LanguageClient, stateChange: StateChangeEvent) => void)[] = [];
 
@@ -392,6 +409,9 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
       // Running means the server answered initialize, so its startup no longer needs a watchdog.
       // This also covers the client's own restarts, which do not go through doStartLspClient.
       if (e.newState === State.Running) launchedServerState.currentAttempt?.settle();
+      if (e.newState === State.Stopped) {
+        setBuildToolConflict({ blocked: false, promptDismissed: false });
+      }
       for (const subscription of clientSubscriptions.slice()) {
         try {
           subscription(runClient, e);
@@ -406,6 +426,7 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
 
   // The process is spawned as the client starts, so this is what it will be launched with.
   const launchSettings = launchSettingsSnapshot();
+  const workspaceImportStatus = registerWorkspaceImportStatusHandler(runClient);
   try {
     await startClientWithFeatures(runClient, configuredClientFeatureFactories);
     // A new process read the launch settings too, which a reload cannot. Edits made while it was
@@ -415,6 +436,11 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
     registerImportLogHandler(runClient);
     registerCopyToClipboardHandler(runClient);
     registerChooseActionMenuHandler(runClient);
+    void workspaceImportStatus.refresh().catch((error: unknown) => {
+      logInfo(
+        `Failed to read workspace import status: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`,
+      );
+    });
   } catch (e) {
     const launchedServerAttempt = launchedServerState.currentAttempt;
     await launchedServerAttempt?.waitForExit(LAUNCHED_SERVER_EXIT_WAIT_MS);
@@ -508,6 +534,43 @@ function registerImportLogHandler(client: LanguageClient): void {
     }
   });
   getContext().subscriptions.push(subscription);
+}
+
+/**
+ * Registers before the client starts so the initial blocked notification cannot be missed. The refresh request
+ * seeds persisted state only when no live notification has arrived, either before or during the request.
+ */
+function registerWorkspaceImportStatusHandler(client: LanguageClient): {
+  refresh(): Promise<void>;
+} {
+  setBuildToolConflict({ blocked: false, promptDismissed: false });
+  let promptDismissed = false;
+  const snapshots = createLatestSnapshotTracker<WorkspaceImportStatus>((status) => {
+    const conflict = buildToolConflictState(status);
+    setBuildToolConflict(conflict);
+    const newlyDismissed = conflict.promptDismissed && !promptDismissed;
+    promptDismissed = conflict.promptDismissed;
+    if (!newlyDismissed) return;
+    void vscode.window
+      .showWarningMessage(
+        'Project import will not start until you select a build tool.',
+        CHOOSE_BUILD_TOOL_ACTION,
+      )
+      .then((choice) => {
+        if (choice === CHOOSE_BUILD_TOOL_ACTION) {
+          void reloadWorkspace({ showConfirmation: false });
+        }
+      });
+  });
+  const subscription = client.onNotification(workspaceImportStatusNotification, (status) => {
+    snapshots.publish(status);
+  });
+  getContext().subscriptions.push(subscription);
+  return {
+    async refresh(): Promise<void> {
+      await snapshots.refresh(() => client.sendRequest(workspaceImportStatusRequest, {}));
+    },
+  };
 }
 
 export function packageJson(): ExtensionPackageJson | undefined {

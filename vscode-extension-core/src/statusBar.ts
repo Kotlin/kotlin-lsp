@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { State } from 'vscode-languageclient/node';
-import { getContext } from './extension';
+import { getContext, reloadWorkspace } from './extension';
 import {
   getLspClient,
   isLspClientStartPending,
@@ -15,6 +15,7 @@ import {
   shouldShowStatusBar,
   statusBarCommand,
   statusActions as resolveStatusActions,
+  type BuildToolConflictState,
   type LspStatus,
   type StatusBarAction,
   type StatusBarContribution,
@@ -27,6 +28,7 @@ export type {
 } from './statusBarModel';
 
 const STATUS_MENU_COMMAND = 'jetbrains.kotlin.showLspStatusMenu';
+const CHOOSE_BUILD_TOOL_COMMAND = 'jetbrains.kotlin.chooseBuildTool';
 
 export interface StatusBarContributionRegistration extends vscode.Disposable {
   update(contribution: StatusBarContribution): void;
@@ -43,7 +45,10 @@ function lspActions(): StatusBarAction[] {
 }
 
 function statusActions(): StatusBarAction[] {
-  return resolveStatusActions(contribution, lspActionsAvailable, lspActions());
+  const workspaceActions: StatusBarAction[] = buildToolConflict.blocked
+    ? [{ label: '$(tools) Choose Build Tool…', command: CHOOSE_BUILD_TOOL_COMMAND }]
+    : [];
+  return resolveStatusActions(contribution, lspActionsAvailable, lspActions(), workspaceActions);
 }
 
 function productTitle(): string {
@@ -56,6 +61,12 @@ let statusBarItem: vscode.StatusBarItem | undefined;
 let buildStatusBarItem: vscode.StatusBarItem | undefined;
 let contribution: StatusBarContribution | undefined;
 let lspActionsAvailable = false;
+let buildToolConflict: BuildToolConflictState = { blocked: false, promptDismissed: false };
+
+export function setBuildToolConflict(state: BuildToolConflictState): void {
+  buildToolConflict = state;
+  updateLspStatusBar();
+}
 
 export function setLspActionsAvailable(available: boolean): void {
   lspActionsAvailable = available;
@@ -87,6 +98,7 @@ export function registerStatusBarContribution(
 
 export function registerStatusBarItem() {
   lspActionsAvailable = false;
+  buildToolConflict = { blocked: false, promptDismissed: false };
   statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   statusBarItem.text = productTitle();
   updateLspStatusBar();
@@ -99,6 +111,10 @@ export function registerStatusBarItem() {
     statusBarItem,
     buildStatusBarItem,
     vscode.commands.registerCommand(STATUS_MENU_COMMAND, showLspStatusMenu),
+    vscode.commands.registerCommand(CHOOSE_BUILD_TOOL_COMMAND, async () => {
+      if (!buildToolConflict.promptDismissed) return;
+      await reloadWorkspace({ showConfirmation: false });
+    }),
   );
   subscribeToClientEvent(() => updateLspStatusBar());
 }
@@ -133,7 +149,9 @@ function computeTooltip(actions: readonly StatusBarAction[]): vscode.MarkdownStr
   const text = new vscode.MarkdownString();
   text.supportThemeIcons = true;
 
-  const content = computeStatusTooltipContent(lspStatus(), productTitle(), contribution, actions);
+  const content = computeStatusTooltipContent(lspStatus(), productTitle(), contribution, actions, {
+    workspaceImportBlocked: buildToolConflict.blocked,
+  });
   text.isTrusted = { enabledCommands: content.enabledCommands };
   text.appendMarkdown(content.heading);
   if (content.detail !== undefined) {
@@ -147,7 +165,9 @@ function computeTooltip(actions: readonly StatusBarAction[]): vscode.MarkdownStr
 }
 
 function computeText(): string {
-  return computeStatusText(lspStatus(), productTitle(), contribution);
+  return computeStatusText(lspStatus(), productTitle(), contribution, {
+    workspaceImportBlocked: buildToolConflict.blocked,
+  });
 }
 
 function lspStatus(): LspStatus {
