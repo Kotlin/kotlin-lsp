@@ -3,6 +3,7 @@ import {
   activateExtension,
   checkGeoRestricted,
   deactivateExtension,
+  getOutputChannel,
   initializeExtension,
   isExternalServerConfigured,
   prepareBundledServerLauncher,
@@ -31,19 +32,21 @@ export async function activate(context: ExtensionContext): Promise<void> {
     runPolicyGatedActivation(context, {
       registerStatusBarContribution,
       statusBarTitle: getExtensionStatusBarTitle(context),
+      showOutput: () => getOutputChannel().show(false),
       stopServer: stopLspClient,
       usesExternalServer: isExternalServerConfigured(),
-      startServer: (options) =>
+      startServer: (serverOptions) =>
         activateExtension(context, {
           checkEulaAccepted: (ctx) =>
             checkBundledServerEulaAccepted({
               context: ctx,
               prepareLauncher: prepareBundledServerLauncher,
-              options,
+              options: serverOptions,
             }),
           enableDapServer: true,
           enableDecompiler: true,
           modules: [kotlinModule],
+          onServerRestartStateChanged: serverOptions?.onServerRestartStateChanged,
         }),
     }),
   );

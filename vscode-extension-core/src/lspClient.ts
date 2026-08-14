@@ -61,6 +61,7 @@ import {
 } from './serverBundleDownload';
 import { type ClientFeatureFactory, startClientWithFeatures } from './clientFeatureFactories';
 import { isDataSharingChoice, isRegion } from './consentValues';
+import type { ServerRestartState } from './serverRestartState';
 import {
   type LaunchedServerState,
   LaunchedServerStartup,
@@ -176,12 +177,14 @@ interface LspClientPolicyOptions {
   getAcceptedEulaHash: AcceptedEulaHashProvider;
   checkEulaAccepted: () => Promise<boolean>;
   clientFeatureFactories?: ClientFeatureFactory[];
+  onServerRestartStateChanged?: (state: ServerRestartState) => void;
 }
 
 export function initLspClient({
   getAcceptedEulaHash,
   checkEulaAccepted,
   clientFeatureFactories = [],
+  onServerRestartStateChanged,
 }: LspClientPolicyOptions): void {
   setLspActionsAvailable(true);
   configuredClientFeatureFactories = [...clientFeatureFactories];
@@ -189,7 +192,16 @@ export function initLspClient({
   const restartServer = (): Promise<boolean> =>
     runWithEulaGate({
       checkEulaAccepted,
-      action: () => startLspClient({ getAcceptedEulaHash, restartIfStarting: true }),
+      action: async () => {
+        onServerRestartStateChanged?.('restarting');
+        try {
+          await startLspClient({ getAcceptedEulaHash, restartIfStarting: true });
+          onServerRestartStateChanged?.('finished');
+        } catch (error) {
+          onServerRestartStateChanged?.('failed');
+          throw error;
+        }
+      },
     });
   getContext().subscriptions.push(
     Disposable.create(async () => await stopLspClient()),
@@ -198,7 +210,11 @@ export function initLspClient({
       await vscode.window.showInformationMessage(extensionDisplayName() + ' restarted');
     }),
     vscode.commands.registerCommand('jetbrains.kotlin.clearCachesAndRestartLsp', async () => {
-      await clearCachesAndRestart({ getAcceptedEulaHash, checkEulaAccepted });
+      await clearCachesAndRestart({
+        getAcceptedEulaHash,
+        checkEulaAccepted,
+        onServerRestartStateChanged,
+      });
     }),
   );
   registerSettingsChangeWatcher(restartServer);
@@ -234,6 +250,7 @@ const INDEX_DELETE_RETRY_DELAY_MS = 200;
 async function clearCachesAndRestart({
   getAcceptedEulaHash,
   checkEulaAccepted,
+  onServerRestartStateChanged,
 }: LspClientPolicyOptions): Promise<void> {
   // Prefer the running server's reported location; fall back to the last one we persisted so the
   // action still works when the server fails to start (e.g. because of the very caches to clear).
@@ -275,11 +292,17 @@ async function clearCachesAndRestart({
   const eulaAccepted = await checkEulaAccepted();
   if (!eulaAccepted) return;
 
-  await stopLspClient();
-
-  const cleared = indexDir ? await deleteIndexDir(indexDir) : false;
-
-  await startLspClient({ getAcceptedEulaHash, restartIfStarting: true });
+  onServerRestartStateChanged?.('restarting');
+  let cleared = false;
+  try {
+    await stopLspClient();
+    cleared = indexDir ? await deleteIndexDir(indexDir) : false;
+    await startLspClient({ getAcceptedEulaHash, restartIfStarting: true });
+    onServerRestartStateChanged?.('finished');
+  } catch (error) {
+    onServerRestartStateChanged?.('failed');
+    throw error;
+  }
 
   await vscode.window.showInformationMessage(
     cleared
@@ -712,9 +735,7 @@ export async function prepareBundledServerLauncher(): Promise<ServerLauncherPrep
 export function prefetchBundledServerLauncher(): void {
   void prepareBundledServerLauncher().catch((error) => {
     logInfo(
-      `Failed to prepare language server in the background: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
+      `Failed to prepare language server in the background: ${error instanceof Error ? error.message : String(error)}`,
     );
   });
 }

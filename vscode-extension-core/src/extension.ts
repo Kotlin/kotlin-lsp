@@ -52,6 +52,10 @@ import { registerFileTemplates } from './fileTemplates';
 import { promptReloadWindow } from './reloadWindow';
 import { registerAutoReloadWorkspace } from './autoReloadWorkspace';
 import { SERVER_BUNDLE_METADATA_FILE } from './serverBundleDownload';
+import type { ServerRestartState } from './serverRestartState';
+
+export { disconnectedServerStartupPhase } from './serverRestartState';
+export type { ServerRestartState } from './serverRestartState';
 
 export type ExtensionModule = (context: ExtensionContext) => void | Promise<void>;
 export type EulaAcceptanceCheck = (context: ExtensionContext) => Promise<boolean>;
@@ -70,6 +74,7 @@ export interface ActivationOptions {
   enableDapServer?: boolean;
   checkEulaAccepted?: EulaAcceptanceCheck;
   getAcceptedEulaHash?: AcceptedEulaHashProvider;
+  onServerRestartStateChanged?: (state: ServerRestartState) => void;
 }
 
 interface ExtensionPackageJson {
@@ -265,6 +270,7 @@ async function activateAcceptedExtension(
       getAcceptedEulaHash,
       checkEulaAccepted: () => checkEulaAcceptedFn(context),
       clientFeatureFactories: options.clientFeatureFactories,
+      onServerRestartStateChanged: options.onServerRestartStateChanged,
     });
     serverActivated = true;
   }
