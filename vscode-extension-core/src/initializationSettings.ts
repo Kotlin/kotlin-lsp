@@ -38,6 +38,8 @@ export interface BuiltinInitializationOptions {
 
 export interface SettingProblem {
   setting: string;
+  /** An incomplete value may be a temporary draft created by the graphical settings editor. */
+  kind: 'incomplete' | 'invalid';
   /** Self-contained sentence, naming the setting the ignored value came from. */
   message: string;
 }
@@ -47,8 +49,19 @@ export interface Sanitized<T> {
   problems: SettingProblem[];
 }
 
-function problem(setting: string, reason: string): SettingProblem {
-  return { setting, message: `\`${setting}\` ${reason}` };
+export function shouldReportSettingsProblems(
+  problems: readonly SettingProblem[],
+  { settingsDocumentSaved }: { settingsDocumentSaved: boolean },
+): boolean {
+  return settingsDocumentSaved || problems.some((problem) => problem.kind !== 'incomplete');
+}
+
+function problem(
+  setting: string,
+  reason: string,
+  kind: SettingProblem['kind'] = 'invalid',
+): SettingProblem {
+  return { setting, kind, message: `\`${setting}\` ${reason}` };
 }
 
 /** A file whose save can change any of these settings: user, workspace, or folder settings. */
@@ -74,6 +87,18 @@ export function settingsChangeAction(change: {
 }
 
 const REQUIRED_STRING_FIELDS = ['type', 'path'] as const;
+// Keep in sync with the product package.json schemas and server WorkspaceImporterEntry IDs.
+// "subproject" is a server-owned pointer type rather than a WorkspaceImporterEntry.
+const PROJECT_TYPES = new Set([
+  'gradle',
+  'maven',
+  'bazel',
+  'jps',
+  'gomodules',
+  'gomodules-recursive-scan',
+  'json',
+  'subproject',
+]);
 const OPTIONAL_STRING_FIELDS = ['java-home', 'project-path'] as const;
 const OPTIONAL_STRING_MAP_FIELDS = ['env', 'system-properties'] as const;
 
@@ -85,22 +110,36 @@ function isStringMap(value: unknown): boolean {
   return isRecord(value) && Object.values(value).every((entry) => typeof entry === 'string');
 }
 
-function projectRejectionReason(entry: unknown): string | undefined {
-  if (!isRecord(entry)) return 'must be an object';
+function projectRejectionReason(
+  entry: unknown,
+): { reason: string; kind: SettingProblem['kind'] } | undefined {
+  if (!isRecord(entry)) return { reason: 'must be an object', kind: 'invalid' };
   for (const field of REQUIRED_STRING_FIELDS) {
     const value = entry[field];
-    if (typeof value !== 'string' || value.trim() === '') {
-      return `requires a non-empty "${field}"`;
+    const reason = `requires "${field}" to be specified as a non-empty string`;
+    if (value === undefined || (typeof value === 'string' && value.trim() === '')) {
+      return { reason, kind: 'incomplete' };
     }
+    if (typeof value !== 'string') {
+      return { reason, kind: 'invalid' };
+    }
+  }
+  const type = entry.type;
+  if (typeof type !== 'string') return { reason: '"type" must be a string', kind: 'invalid' };
+  if (!PROJECT_TYPES.has(type)) {
+    return { reason: `has an unsupported "type": "${type}"`, kind: 'invalid' };
   }
   for (const field of OPTIONAL_STRING_FIELDS) {
     if (entry[field] !== undefined && typeof entry[field] !== 'string') {
-      return `"${field}" must be a string`;
+      return { reason: `"${field}" must be a string`, kind: 'invalid' };
     }
   }
   for (const field of OPTIONAL_STRING_MAP_FIELDS) {
     if (entry[field] !== undefined && !isStringMap(entry[field])) {
-      return `"${field}" must be an object with string values`;
+      return {
+        reason: `"${field}" must be an object with string values`,
+        kind: 'invalid',
+      };
     }
   }
   return undefined;
@@ -116,9 +155,9 @@ export function sanitizeConfiguredProjects(
   const projects: ConfiguredProject[] = [];
   const problems: SettingProblem[] = [];
   value.forEach((entry, index) => {
-    const reason = projectRejectionReason(entry);
-    if (reason === undefined) projects.push(entry as ConfiguredProject);
-    else problems.push(problem(setting, `entry #${index} ${reason}`));
+    const rejection = projectRejectionReason(entry);
+    if (rejection === undefined) projects.push(entry as ConfiguredProject);
+    else problems.push(problem(setting, `entry #${index} ${rejection.reason}`, rejection.kind));
   });
   return { value: projects, problems };
 }

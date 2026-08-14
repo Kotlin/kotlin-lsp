@@ -7,6 +7,7 @@ import {
   sanitizeConfiguredProjects,
   sanitizeOptionalString,
   settingsChangeAction,
+  shouldReportSettingsProblems,
 } from './initializationSettings';
 
 const PROJECTS = 'intellij.projects';
@@ -16,7 +17,11 @@ const DISABLE_WAL = 'intellij.disableRocksDBWriteAheadLog';
 
 const validProject = { type: 'maven', path: 'file:///proj/pom.xml' };
 
-const problem = (setting: string, message: string) => ({ setting, message });
+const problem = (setting: string, message: string, kind: 'incomplete' | 'invalid' = 'invalid') => ({
+  setting,
+  kind,
+  message,
+});
 
 describe('sanitizeConfiguredProjects', () => {
   it('keeps valid entries untouched, including build-tool specific fields', () => {
@@ -32,7 +37,13 @@ describe('sanitizeConfiguredProjects', () => {
   it('drops the empty entry the settings editor inserts, keeping the rest', () => {
     assert.deepEqual(sanitizeConfiguredProjects(PROJECTS, [{}, validProject]), {
       value: [validProject],
-      problems: [problem(PROJECTS, '`intellij.projects` entry #0 requires a non-empty "type"')],
+      problems: [
+        problem(
+          PROJECTS,
+          '`intellij.projects` entry #0 requires "type" to be specified as a non-empty string',
+          'incomplete',
+        ),
+      ],
     });
   });
 
@@ -46,11 +57,33 @@ describe('sanitizeConfiguredProjects', () => {
 
     assert.deepEqual(value, []);
     assert.deepEqual(problems, [
-      problem(PROJECTS, '`intellij.projects` entry #0 requires a non-empty "path"'),
-      problem(PROJECTS, '`intellij.projects` entry #1 requires a non-empty "type"'),
+      problem(
+        PROJECTS,
+        '`intellij.projects` entry #0 requires "path" to be specified as a non-empty string',
+        'incomplete',
+      ),
+      problem(
+        PROJECTS,
+        '`intellij.projects` entry #1 requires "type" to be specified as a non-empty string',
+      ),
       problem(PROJECTS, '`intellij.projects` entry #2 must be an object'),
       problem(PROJECTS, '`intellij.projects` entry #3 must be an object'),
     ]);
+  });
+
+  it('drops entries with unsupported project types', () => {
+    assert.deepEqual(
+      sanitizeConfiguredProjects(PROJECTS, [
+        { type: 'unknown', path: 'file:///proj' },
+        { type: 'subproject', path: 'file:///proj/nested' },
+      ]),
+      {
+        value: [{ type: 'subproject', path: 'file:///proj/nested' }],
+        problems: [
+          problem(PROJECTS, '`intellij.projects` entry #0 has an unsupported "type": "unknown"'),
+        ],
+      },
+    );
   });
 
   it('drops entries whose optional fields have the wrong shape', () => {
@@ -81,6 +114,29 @@ describe('sanitizeConfiguredProjects', () => {
   it('treats an unset setting as no projects', () => {
     assert.deepEqual(sanitizeConfiguredProjects(PROJECTS, undefined), { value: [], problems: [] });
     assert.deepEqual(sanitizeConfiguredProjects(PROJECTS, null), { value: [], problems: [] });
+  });
+});
+
+describe('shouldReportSettingsProblems', () => {
+  const incomplete = problem(PROJECTS, 'incomplete project', 'incomplete');
+  const invalid = problem(PROJECTS, 'invalid project');
+
+  it('keeps incomplete graphical-settings drafts quiet', () => {
+    assert.equal(
+      shouldReportSettingsProblems([incomplete], { settingsDocumentSaved: false }),
+      false,
+    );
+  });
+
+  it('reports an incomplete draft after a settings document is saved', () => {
+    assert.equal(shouldReportSettingsProblems([incomplete], { settingsDocumentSaved: true }), true);
+  });
+
+  it('reports invalid values without waiting for a save', () => {
+    assert.equal(
+      shouldReportSettingsProblems([incomplete, invalid], { settingsDocumentSaved: false }),
+      true,
+    );
   });
 });
 

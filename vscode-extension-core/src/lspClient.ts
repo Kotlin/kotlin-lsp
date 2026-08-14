@@ -35,6 +35,7 @@ import {
   sanitizeBuildTools,
   sanitizeConfiguredProjects,
   sanitizeOptionalString,
+  shouldReportSettingsProblems,
   type BuiltinInitializationOptions,
   type SettingProblem,
   type SettingsChangeAction,
@@ -916,8 +917,6 @@ function launchSettingsSnapshot(): string {
   return JSON.stringify(LAUNCH_SETTINGS.map((setting) => configOption(setting)));
 }
 const SETTINGS_CHANGE_DEBOUNCE_MS = 500;
-/** An "Add Item" click writes an empty entry, so give the fields time to be filled in. */
-const INVALID_SETTINGS_SETTLE_MS = 10_000;
 const SETTINGS_CHANGE_ACTION_LABELS: Record<Exclude<SettingsChangeAction, 'none'>, string> = {
   start: 'Start Server',
   restart: 'Restart Server',
@@ -930,21 +929,20 @@ const SETTINGS_CHANGE_ACTION_LABELS: Record<Exclude<SettingsChangeAction, 'none'
  */
 function registerSettingsChangeWatcher(restartServer: () => Promise<boolean>): void {
   let debounce: NodeJS.Timeout | undefined;
-  /** A save is the edit finished, so it needs no settle window even if a change event follows. */
+  /** A save is an explicit boundary at which incomplete settings should be reported. */
   let savedSinceLastPrompt = false;
   let lastPromptedFor: string | undefined;
-  const schedule = (delayMs: number, settled: boolean): void => {
+  const schedule = (): void => {
     if (debounce) clearTimeout(debounce);
-    debounce = setTimeout(() => void prompt(settled), delayMs);
+    debounce = setTimeout(() => void prompt(), SETTINGS_CHANGE_DEBOUNCE_MS);
   };
   // An ignored notification never settles, so a pending prompt cannot gate the next one.
-  const prompt = async (timerSettled: boolean): Promise<void> => {
-    const settled = timerSettled || savedSinceLastPrompt;
+  const prompt = async (): Promise<void> => {
     // A client that is still starting is neither running nor absent, and labelling the action from
     // that state gets it wrong. Wait for it to settle either way.
     const client = getLspClient();
     if (client !== undefined && client.state !== State.Running) {
-      schedule(SETTINGS_CHANGE_DEBOUNCE_MS, settled);
+      schedule();
       return;
     }
     const affectsLaunch = pendingLaunchChange;
@@ -953,16 +951,17 @@ function registerSettingsChangeWatcher(restartServer: () => Promise<boolean>): v
       affectsInitializationOptions: pendingInitializationOptionsChange,
       serverRunning: client !== undefined,
     });
-    // An entry the settings editor just added is invalid until its fields are filled in, so wait
-    // for the edits to stop before calling it broken.
     const { options, problems } = initializationOptionsPayload();
-    if (problems.length > 0 && !settled) {
-      schedule(INVALID_SETTINGS_SETTLE_MS, true);
-      return;
-    }
+    const settingsDocumentSaved = savedSinceLastPrompt;
     // The pending flags stay set until the server accepts the settings, so a dismissed prompt or a
     // failed reload still counts as waiting to be applied.
     savedSinceLastPrompt = false;
+    // The graphical settings editor writes an empty entry as soon as "Add Item" is clicked. Its
+    // schema reports the missing fields inline; do not guess from elapsed time that editing ended.
+    // A settings-file save remains an explicit boundary at which the same draft is reported.
+    if (problems.length > 0 && !shouldReportSettingsProblems(problems, { settingsDocumentSaved })) {
+      return;
+    }
     // Applying a value the server cannot decode would only drop it, so say so instead.
     reportSettingsProblems({ problems });
     if (problems.length > 0) return;
@@ -998,7 +997,7 @@ function registerSettingsChangeWatcher(restartServer: () => Promise<boolean>): v
       if (!launch && !options) return;
       pendingLaunchChange ||= launch;
       pendingInitializationOptionsChange ||= options;
-      schedule(SETTINGS_CHANGE_DEBOUNCE_MS, false);
+      schedule();
     }),
     // The only signal left when the saved value equals the current one, which raises no
     // configuration event at all. Debounced like a change, because the configuration is applied
@@ -1006,7 +1005,7 @@ function registerSettingsChangeWatcher(restartServer: () => Promise<boolean>): v
     workspace.onDidSaveTextDocument((document) => {
       if (!isSettingsDocument(document.uri.path)) return;
       savedSinceLastPrompt = true;
-      schedule(SETTINGS_CHANGE_DEBOUNCE_MS, false);
+      schedule();
     }),
     Disposable.create(() => clearTimeout(debounce)),
   );
