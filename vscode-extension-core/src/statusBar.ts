@@ -111,10 +111,9 @@ export function registerStatusBarItem() {
     statusBarItem,
     buildStatusBarItem,
     vscode.commands.registerCommand(STATUS_MENU_COMMAND, showLspStatusMenu),
-    vscode.commands.registerCommand(CHOOSE_BUILD_TOOL_COMMAND, async () => {
-      if (!buildToolConflict.promptDismissed) return;
-      await reloadWorkspace({ showConfirmation: false });
-    }),
+    vscode.commands.registerCommand(CHOOSE_BUILD_TOOL_COMMAND, () =>
+      reloadWorkspace({ showConfirmation: false }),
+    ),
   );
   subscribeToClientEvent(() => updateLspStatusBar());
 }
