@@ -15,6 +15,7 @@ import com.intellij.modcommand.ModMoveFile
 import com.intellij.modcommand.ModNavigate
 import com.intellij.modcommand.ModNothing
 import com.intellij.modcommand.ModRegisterTabOut
+import com.intellij.modcommand.ModStartRename
 import com.intellij.modcommand.ModStartTemplate
 import com.intellij.modcommand.ModUpdateFileText
 import com.intellij.openapi.diagnostic.logger
@@ -50,6 +51,7 @@ import com.jetbrains.lsp.protocol.URI
 import com.jetbrains.lsp.protocol.Window
 import com.jetbrains.lsp.protocol.WorkspaceEdit
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 import java.util.Base64
 
 private val snippetEscapeCharacters = Regex("""[\\}$]""")
@@ -159,6 +161,17 @@ sealed class ModCommandData {
     data class CopyToClipboard(val content: String) : ModCommandData()
 
     /**
+     * A [ModStartRename] asks the editor to start an inline rename of the symbol between [selectionStart] and
+     * [selectionEnd]. LSP has no server -> client request for that — `textDocument/rename` goes the other way, and
+     * `workspace/executeCommand` cannot be sent to a client — so it is modeled as a navigation onto the symbol
+     * followed by the custom `intellij/runEditorCommand` notification. Only clients that declare
+     * `intellijExtensions` can handle it; for the others [from] degrades to a plain [Navigate], which at least
+     * puts the caret on the symbol so the user can start the rename themselves.
+     */
+    @Serializable
+    data class StartRename(val fileUrl: String, val selectionStart: Int, val selectionEnd: Int) : ModCommandData()
+
+    /**
      * A [ModChooseAction] asks the UI to present a chooser of further actions. LSP has no native primitive for
      * this (see https://github.com/microsoft/language-server-protocol/issues/994), so it is modeled via the
      * custom `intellij/chooseAction` notification: the client shows a menu of [entries] and, once the user picks
@@ -246,6 +259,16 @@ sealed class ModCommandData {
                     }
                 }
                 else -> null
+            }
+            is ModStartRename -> {
+                val symbolRange = command.symbolRange()
+                val range = symbolRange.nameIdentifierRange() ?: symbolRange.range()
+                when {
+                    server?.config?.clientSupportsIntellijExtensions == true ->
+                        StartRename(command.file.url, range.startOffset, range.endOffset)
+                    // The rename itself cannot be started, but the caret can still be put on the symbol.
+                    else -> Navigate(command.file.url, range.startOffset, range.endOffset, range.startOffset)
+                }
             }
             is ModRegisterTabOut -> Nothing // We can safely skip the tab-out command
             // Highlighting could be important, but usually it's an additional helpful thing, not an essential one, so let's skip it for now
@@ -370,7 +393,9 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient, changedFi
             val doc =
                 changedFiles[command.fileUrl]?.let { DocumentImpl(it) } ?: VirtualFileManager.getInstance().findFileByUrl(command.fileUrl)
                     ?.findDocument()
-            if (doc != null) {
+            // A template without tab stops has nothing to start, and its text is already in the document
+            // (`toTextEdit` derives its range from the tab stops, so it cannot even be built).
+            if (doc != null && command.vars.isNotEmpty()) {
                 client.request(
                     requestType = ApplyEdit,
                     params = ApplyWorkspaceEditParams(
@@ -379,9 +404,7 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient, changedFi
                             documentChanges = listOf(
                                 TextDocumentEdit(
                                     textDocument = TextDocumentIdentifier(DocumentUri(command.fileUrl.intellijUriToLspUri())),
-                                    edits = listOf(
-                                        command.toTextEdit(doc)
-                                    ),
+                                    edits = listOf(command.toTextEdit(doc)),
                                 ),
                             ),
                         ),
@@ -454,6 +477,24 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient, changedFi
             params = CopyToClipboardParams(command.content),
         )
 
+        is ModCommandData.StartRename -> {
+            // `editor.action.rename` always renames at the caret, so the caret has to be moved onto the symbol first.
+            executeCommand(
+                command = ModCommandData.Navigate(
+                    fileUrl = command.fileUrl,
+                    selectionStart = command.selectionStart,
+                    selectionEnd = command.selectionEnd,
+                    caret = command.selectionStart,
+                ),
+                client = client,
+                changedFiles = changedFiles,
+            )
+            client.notify(
+                notificationType = RunEditorCommandNotification,
+                params = RunEditorCommandParams(RENAME_EDITOR_COMMAND),
+            )
+        }
+
         is ModCommandData.ChooseAction -> client.notify(
             notificationType = ShowChooseActionMenuNotification,
             params = ShowChooseActionMenuParams(
@@ -475,6 +516,24 @@ data class CopyToClipboardParams(val content: String)
  */
 val CopyToClipboardNotification: NotificationType<CopyToClipboardParams> =
     NotificationType("intellij/copyToClipboard", CopyToClipboardParams.serializer())
+
+@Serializable
+data class RunEditorCommandParams(val command: String, val arguments: List<JsonElement> = emptyList())
+
+/**
+ * A custom server -> client notification asking the client to run one of its own editor commands, the way a user
+ * action would. Starting an inline rename ([ModCommandData.StartRename]) does not change the document but drives
+ * the editor UI, and LSP has no way to express that: a server can neither send `workspace/executeCommand` nor
+ * start such a session itself. Clients that do not support it simply ignore it.
+ *
+ * A live template needs no such command: [ModCommandData.Snippet] travels as a `SnippetTextEdit`, which is
+ * standard LSP.
+ */
+val RunEditorCommandNotification: NotificationType<RunEditorCommandParams> =
+    NotificationType("intellij/runEditorCommand", RunEditorCommandParams.serializer())
+
+/** The client-side editor command that starts an inline rename of the symbol at the caret. */
+const val RENAME_EDITOR_COMMAND: String = "editor.action.rename"
 
 /**
  * The live payload stored in

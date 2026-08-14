@@ -9,6 +9,12 @@ const copyToClipboardNotification = new NotificationType<CopyToClipboardParams>(
   'intellij/copyToClipboard',
 );
 
+type RunEditorCommandParams = { command: string; arguments?: unknown[] };
+
+const runEditorCommandNotification = new NotificationType<RunEditorCommandParams>(
+  'intellij/runEditorCommand',
+);
+
 type ChooseActionMenuEntry = { index: number; name: string };
 type ShowChooseActionMenuParams = {
   sessionId: number;
@@ -41,6 +47,23 @@ export function registerCopyToClipboardHandler(client: LanguageClient): void {
     copyToClipboardNotification,
     (p) => void vscode.env.clipboard.writeText(p.content),
   );
+  getContext().subscriptions.push(subscription);
+}
+
+/**
+ * Handles the `intellij/runEditorCommand` server notification, running the requested editor command as if the
+ * user had invoked it. Some ModCommands drive the editor UI instead of changing the document — starting an
+ * inline rename (`editor.action.rename`) — and LSP cannot express that: a server can neither send
+ * `workspace/executeCommand` to a client nor start such a session itself. Live templates need no such command:
+ * they travel as a `SnippetTextEdit`, which is standard LSP.
+ */
+export function registerRunEditorCommandHandler(client: LanguageClient): void {
+  const subscription = client.onNotification(runEditorCommandNotification, (p) => {
+    void Promise.resolve(vscode.commands.executeCommand(p.command, ...(p.arguments ?? []))).then(
+      undefined,
+      () => {},
+    );
+  });
   getContext().subscriptions.push(subscription);
 }
 

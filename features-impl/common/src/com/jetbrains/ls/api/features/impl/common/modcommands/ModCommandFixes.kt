@@ -17,26 +17,20 @@ import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
 data class ModCommandFix(val name: String, val data: ModCommandData)
 
 /**
+ * One terminal command of an expanded choice tree, together with the [choiceNames] of the choices taken to
+ * reach it, outermost first. Empty for a command that held no choice at all.
+ */
+data class FlattenedModCommand(val choiceNames: List<String>, val command: ModCommand)
+
+/**
  * The fixes to offer for [this] command, which was produced for a fix presented to the user as [name].
  *
  * A [ModChooseAction] asks the UI to present a chooser of further actions. Clients declaring
  * `intellijExtensions` get it as [ModCommandData.ChooseAction] and show the menu themselves, so a single fix
  * is returned. Generic LSP clients have no such primitive
  * (see https://github.com/microsoft/language-server-protocol/issues/994), so the choice tree is expanded
- * up front into one flat fix per terminal command, each named after the path taken to reach it:
- *
- * ```
- * Action1 (ModChooseAction)          ->   Action1 → Action2
- *   ├─ Action2 (terminal)                 Action1 → Action3 → Action4
- *   └─ Action3 (ModChooseAction)          Action1 → Action3 → Action5
- *        ├─ Action4 (terminal)
- *        └─ Action5 (terminal)
- * ```
- *
- * Note that expanding performs every [ModCommandAction] in the tree on [context], and that every produced fix
- * carries the whole text of the file it changes (see [ModCommandData.UpdateFileText]). A wide tree is therefore
- * expensive both to compute and to send, so a tree yielding more than [maxFlattenedFixes] fixes is not expanded
- * at all and the fix is dropped: offering an arbitrary subset of the alternatives would silently hide the rest.
+ * up front by [flattenChoices] into one flat fix per terminal command, each named after the path taken to
+ * reach it, and a tree wider than [maxFlattenedFixes] is dropped entirely.
  */
 context(server: LSServer)
 fun ModCommand.toModCommandFixes(
@@ -48,7 +42,11 @@ fun ModCommand.toModCommandFixes(
         val data = ModCommandData.from(this, context, server) ?: return emptyList()
         return listOf(ModCommandFix(name, data))
     }
-    return flattenChoices(context, listOf(name), maxFlattenedFixes).orEmpty()
+    val flattened = flattenChoices(context, maxFlattenedFixes) ?: return emptyList()
+    return flattened.mapNotNull { (choiceNames, command) ->
+        val data = ModCommandData.from(command, context, server) ?: return@mapNotNull null
+        ModCommandFix((listOf(name) + choiceNames).joinToString(CHOICE_SEPARATOR), data)
+    }
 }
 
 /**
@@ -79,30 +77,45 @@ fun ModCommandAction.toModCommandFixes(
 }
 
 /**
- * Expands the [ModChooseAction]s in [this] into one fix per terminal command, named after [names] joined by
- * [CHOICE_SEPARATOR]. At most [maxFixes] fixes are produced for the whole tree.
+ * Expands the [ModChooseAction]s in [this] into one [FlattenedModCommand] per terminal command:
  *
- * Returns `null` if any step throws or if the tree is wider than [maxFixes]: the whole fix is dropped then,
- * since a partially expanded choice tree would silently offer an incomplete set of alternatives.
+ * ```
+ * Action1 (ModChooseAction)          ->   [Action2]
+ *   ├─ Action2 (terminal)                 [Action3, Action4]
+ *   └─ Action3 (ModChooseAction)          [Action3, Action5]
+ *        ├─ Action4 (terminal)
+ *        └─ Action5 (terminal)
+ * ```
+ *
+ * Note that this performs every [ModCommandAction] in the tree on [context], which is why a tree wider than
+ * [maxCommands] is not expanded at all: there is no point in performing branches that will not be offered.
+ *
+ * Returns `null` if any step throws or if the tree is wider than [maxCommands]. Both cases are for the caller
+ * to drop the whole thing, since a partially expanded choice tree would silently hide some of the alternatives.
  */
-context(server: LSServer)
-private fun ModCommand.flattenChoices(context: ActionContext, names: List<String>, maxFixes: Int): List<ModCommandFix>? {
+fun ModCommand.flattenChoices(context: ActionContext, maxCommands: Int): List<FlattenedModCommand>? =
+    flattenChoices(context, emptyList(), maxCommands)
+
+private fun ModCommand.flattenChoices(
+    context: ActionContext,
+    choiceNames: List<String>,
+    maxCommands: Int,
+): List<FlattenedModCommand>? {
     // Nothing fits anymore, so the tree is already known to be wider than the limit.
-    if (maxFixes <= 0) return null
+    if (maxCommands <= 0) return null
 
     if (this !is ModChooseAction) {
-        val data = ModCommandData.from(this, context, server) ?: return emptyList()
-        return listOf(ModCommandFix(names.joinToString(CHOICE_SEPARATOR), data))
+        return listOf(FlattenedModCommand(choiceNames, this))
     }
 
     // Checked before performing anything: since a too wide tree is dropped rather than truncated, there is no
     // point in performing its branches at all.
-    if (actions.size > maxFixes) {
-        LOG.debug("Not expanding the choices of '$title': ${actions.size} of them exceed the limit of $maxFixes")
+    if (actions.size > maxCommands) {
+        LOG.debug("Not expanding the choices of '$title': ${actions.size} of them exceed the limit of $maxCommands")
         return null
     }
 
-    val fixes = mutableListOf<ModCommandFix>()
+    val commands = mutableListOf<FlattenedModCommand>()
     for (action in actions) {
         val presentation = runCatching {
             action.getPresentation(context)
@@ -123,14 +136,15 @@ private fun ModCommand.flattenChoices(context: ActionContext, names: List<String
         } ?: continue
 
         // something is wrong down the line, we bail
-        val additionalFixes = command.flattenChoices(context, names + presentation.name, maxFixes - fixes.size) ?: return null
-        fixes += additionalFixes
+        val additionalCommands =
+            command.flattenChoices(context, choiceNames + presentation.name, maxCommands - commands.size) ?: return null
+        commands += additionalCommands
     }
-    return fixes
+    return commands
 }
 
 /** Separates the choice names of a flattened [ModChooseAction], e.g. `Import class → java.util.List`. */
-private const val CHOICE_SEPARATOR = " → "
+const val CHOICE_SEPARATOR: String = " → "
 
 /**
  * Mirrors the limit `ImportClassFixBase` puts on its own choices, the widest choice tree that is still worth

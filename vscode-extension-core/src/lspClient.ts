@@ -70,6 +70,7 @@ import {
   registerChooseActionMenuHandler,
   registerCopyToClipboardHandler,
   registerIntellijExtensionsInitOption,
+  registerRunEditorCommandHandler,
 } from './intellijExtensions';
 import {
   handleCancelledServerDownload,
@@ -437,6 +438,7 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
     registerImportLogHandler(runClient);
     registerCopyToClipboardHandler(runClient);
     registerChooseActionMenuHandler(runClient);
+    registerRunEditorCommandHandler(runClient);
     void workspaceImportStatus.refresh().catch((error: unknown) => {
       logInfo(
         `Failed to read workspace import status: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`,
