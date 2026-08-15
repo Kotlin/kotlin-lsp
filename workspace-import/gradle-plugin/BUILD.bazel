@@ -14,6 +14,11 @@ jvm_provided_library(
 )
 
 jvm_provided_library(
+    name = "community_libraries_gradle_provided",
+    lib = "@community//libraries/gradle",
+)
+
+jvm_provided_library(
     name = "community_libraries_jspecify_provided",
     lib = "@community//libraries/jspecify",
 )
@@ -50,11 +55,11 @@ jvm_library(
         # do not sort,
         "@lib//:kotlin-stdlib",
         "@ultimate_lib//:javax-inject-provided",
-        "@ultimate_lib//:gradle-provided",
         "@community//libraries/kotlin/tooling-core:libraries-kotlin-tooling-core",
         "@community//libraries/jetbrains/annotations",
         "@ultimate_lib//:slf4j-api-provided",
         ":community_libraries_groovy_provided",
+        ":community_libraries_gradle_provided",
         ":community_libraries_jspecify_provided",
         ":community_libraries_kotlinx_serialization_core_provided",
         ":community_libraries_kotlinx_serialization_json_provided",
@@ -77,7 +82,8 @@ jvm_library(
         "@ultimate_lib//:javax-inject-provided",
         "@community//libraries/groovy",
         "@community//libraries/groovy:groovy_test_lib",
-        "@ultimate_lib//:gradle-provided",
+        "@community//libraries/gradle",
+        "@community//libraries/gradle:gradle_test_lib",
         "//libraries/gradle-tooling:gradle-tooling_test_lib",
         "@community//libraries/kotlin/tooling-core:libraries-kotlin-tooling-core_test_lib",
         "@community//libraries/jetbrains/annotations:annotations_test_lib",
