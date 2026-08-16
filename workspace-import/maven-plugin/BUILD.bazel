@@ -72,6 +72,8 @@ jvm_library(
 exports_files(
     [
         "language-server.workspace-import.maven-plugin.iml",
+        "resources/META-INF/maven/com.jetbrains.ls/imports.maven.plugin/pom.xml",
+        "resources/META-INF/maven/plugin.xml",
     ],
     visibility = ["//visibility:public"],
 )

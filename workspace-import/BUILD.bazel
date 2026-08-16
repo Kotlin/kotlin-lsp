@@ -124,6 +124,7 @@ jvm_library(
 exports_files(
     [
         "language-server.workspace-import.iml",
+        "resources/META-INF/language-server/features/kotlin/workspace-import.xml",
         "resources/language-server.workspace-import.xml",
     ],
     visibility = ["//visibility:public"],
