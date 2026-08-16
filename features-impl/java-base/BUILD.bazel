@@ -94,6 +94,7 @@ jvm_library(
 exports_files(
     [
         "language-server.api.features.impl.java-base.iml",
+        "resources/language-server.api.features.impl.java-base.xml",
     ],
     visibility = ["//visibility:public"],
 )

@@ -124,6 +124,7 @@ jvm_library(
 exports_files(
     [
         "language-server.workspace-import.iml",
+        "resources/language-server.workspace-import.xml",
     ],
     visibility = ["//visibility:public"],
 )

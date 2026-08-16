@@ -80,6 +80,7 @@ jvm_library(
 exports_files(
     [
         "language-server.api.features.iml",
+        "resources/language-server.api.features.xml",
     ],
     visibility = ["//visibility:public"],
 )

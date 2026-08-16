@@ -122,6 +122,7 @@ jvm_library(
 exports_files(
     [
         "language-server.api.features.impl.common.iml",
+        "resources/language-server.api.features.impl.common.xml",
     ],
     visibility = ["//visibility:public"],
 )

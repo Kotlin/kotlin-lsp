@@ -165,6 +165,7 @@ jvm_library(
 exports_files(
     [
         "language-server.api.features.impl.kotlin.iml",
+        "resources/language-server.api.features.impl.kotlin.xml",
     ],
     visibility = ["//visibility:public"],
 )
