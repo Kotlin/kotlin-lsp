@@ -153,6 +153,9 @@ abstract class AbstractProjectImportTest {
     fun systemPropertiesCheckerProject() = doGradleTest("SystemPropertiesCheckerProject", ::withIgnoredJdkRoots)
 
     @Test
+    fun brokenTaskGraphProject() = doGradleTest("BrokenTaskGraphProject", ::withIgnoredJdkRoots)
+
+    @Test
     fun systemPropertiesCheckerGradle6Project() = doGradleTest(
         "SystemPropertiesCheckerGradle6Project",
         JdkDownloaderFacade.jdk11,

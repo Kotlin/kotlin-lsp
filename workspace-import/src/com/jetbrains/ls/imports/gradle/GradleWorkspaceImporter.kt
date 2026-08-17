@@ -20,12 +20,16 @@ import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.prepareForExecutio
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.withCustomGradleHome
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.withDaemonInitScripts
 import com.jetbrains.ls.imports.gradle.action.GradleSyncSettings
+import com.jetbrains.ls.imports.gradle.action.ProjectMetadata
 import com.jetbrains.ls.imports.gradle.action.ProjectMetadataBuilder
 import com.jetbrains.ls.imports.gradle.model.builder.PREPARE_KOTLIN_IDEA_IMPORT_TASK_NAME
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter.postProcessWorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData
 import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
+import org.gradle.tooling.BuildActionExecuter
+import org.gradle.tooling.BuildActionFailureException
 import org.gradle.tooling.GradleConnector
+import org.gradle.tooling.ProjectConnection
 import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.div
@@ -60,21 +64,32 @@ object GradleWorkspaceImporter : WorkspaceImporter {
             .forProjectDirectory(projectDirectory.toFile())
             .withCustomGradleHome()
             .connect()
-        val syncSettings = GradleSyncSettings(downloadLibrarySources = true)
-        val gradleProjectData = connection.use {
+
+        // A `java-home` configured for this project wins over auto-detection.
+        val jdkToUse = parameters.options.javaHome?.toString()
+            ?: findTheMostCompatibleJdk(project, projectDirectory)
+
+        val gradleProjectData = connection.use { projectConnection ->
             withDaemonInitScripts { daemonInitScripts ->
-                val builder = it.action(ProjectMetadataBuilder(syncSettings))
-                    .configureLogging(progress)
-                    .prepareForExecution()
-                    .addInitScripts(daemonInitScripts)
-                    .forTasks(PREPARE_KOTLIN_IDEA_IMPORT_TASK_NAME)
-                // A `java-home` configured for this project wins over auto-detection.
-                val jdkToUse = parameters.options.javaHome?.toString()
-                    ?: findTheMostCompatibleJdk(project, projectDirectory)
-                if (jdkToUse != null) {
-                    builder.setJavaHome(File(jdkToUse))
+                try {
+                    createExecuter(
+                        projectConnection,
+                        progress,
+                        daemonInitScripts,
+                        jdkToUse,
+                        listOf(PREPARE_KOTLIN_IDEA_IMPORT_TASK_NAME)
+                    ).run()
+                } catch (e: BuildActionFailureException) {
+                    LOG.warn(
+                        "Gradle sync failed while running '$PREPARE_KOTLIN_IDEA_IMPORT_TASK_NAME'. " +
+                                "Falling back to importing $projectDirectory without sync tasks; generated sources may be missing.",
+                        e
+                    )
+                    progress.onErrorOutput(
+                        "Gradle sync tasks failed, retrying the import without them. Generated sources may be missing."
+                    )
+                    createExecuter(projectConnection, progress, daemonInitScripts, jdkToUse, null).run()
                 }
-                builder.run()
             }
         }
         val entitySource = WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager))
@@ -93,5 +108,31 @@ object GradleWorkspaceImporter : WorkspaceImporter {
             )
             fixMissingProjectSdk(parameters.options.javaHome ?: defaultSdkPath, virtualFileUrlManager)
         }
+    }
+
+    /**
+     * @param syncTasks The paths of the tasks to be executed.
+     * Relative paths are evaluated relative to the project for which this launcher was created.
+     * An empty list will run the project's default tasks.
+     * A null means no tasks will be executed
+     */
+    private fun createExecuter(
+        connection: ProjectConnection,
+        progress: WorkspaceImportProgressReporter,
+        initScripts: Iterable<Path>,
+        javaHome: String?,
+        syncTasks: List<String>? = null,
+    ): BuildActionExecuter<ProjectMetadata> {
+        val syncSettings = GradleSyncSettings(downloadLibrarySources = true)
+        val executer = connection.action(ProjectMetadataBuilder(syncSettings))
+            .configureLogging(progress)
+            .prepareForExecution()
+            .addInitScripts(initScripts)
+            .forTasks(syncTasks)
+
+        if (javaHome != null) {
+            executer.setJavaHome(File(javaHome))
+        }
+        return executer
     }
 }
