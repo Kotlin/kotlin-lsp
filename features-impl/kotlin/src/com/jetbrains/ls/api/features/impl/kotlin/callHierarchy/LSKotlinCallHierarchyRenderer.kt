@@ -6,7 +6,9 @@ import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.util.TypeConversionUtil
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.util.uri
+import com.jetbrains.ls.api.features.impl.common.callHierarchy.LSCallHierarchyProviderBase
 import com.jetbrains.ls.api.features.impl.common.callHierarchy.LSCallHierarchyProviderBase.CallHierarchyItemData
+import com.jetbrains.ls.api.features.impl.common.callHierarchy.LSCallHierarchyProviderBase.ClassResolver
 import com.jetbrains.ls.api.features.impl.common.callHierarchy.LSCallHierarchyProviderBase.NameData
 import com.jetbrains.ls.api.features.impl.common.callHierarchy.LSCallHierarchyRenderer
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
@@ -67,7 +69,6 @@ internal object LSKotlinCallHierarchyRenderer : LSCallHierarchyRenderer {
             selectionRange = selectionRange,
             data = LSP.json.encodeToJsonElement(
                 CallHierarchyItemData(
-                    qualifiedClassName = className,
                     nameData = nameData,
                     filePath = virtualFile.path,
                     configurationEntryId = LSKotlinCallHierarchyProvider.uniqueId,
@@ -94,23 +95,24 @@ internal object LSKotlinCallHierarchyRenderer : LSCallHierarchyRenderer {
     }
 
     private fun getNameData(element: KtNamedDeclaration, className: String): NameData? {
+        val classResolver = ClassResolver.FQNameResolver(className)
         return when (element) {
             is KtNamedFunction -> {
                 val name = element.name ?: return null
                 val parameterTypes = element.getParametersPresentation() ?: return null
-                NameData.MethodNameData(className, name, parameterTypes, isConstructor = false)
+                NameData.MethodNameData(classResolver, name, parameterTypes, isConstructor = false)
             }
             is KtConstructor<*> -> {
                 val containingClassName = element.containingClassOrObject?.name ?: return null
                 val parameterTypes = element.getParametersPresentation() ?: return null
-                NameData.MethodNameData(className, containingClassName, parameterTypes, isConstructor = true)
+                NameData.MethodNameData(classResolver, containingClassName, parameterTypes, isConstructor = true)
             }
             is KtProperty -> {
                 val name = element.name ?: return null
-                NameData.FieldNameData(className, name)
+                NameData.FieldNameData(classResolver, name)
             }
             is KtClassOrObject -> {
-                NameData.ClassNameData(className)
+                NameData.ClassNameData(classResolver)
             }
             else -> null
         }

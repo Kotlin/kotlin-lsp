@@ -1,4 +1,4 @@
-// Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.callHierarchy
 
 import com.intellij.ide.hierarchy.HierarchyBrowserScopes.SCOPE_PROJECT
@@ -20,6 +20,7 @@ import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.callHierarchy.LSCallHierarchyProvider
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
 import com.jetbrains.ls.api.features.resolve.ResolveDataWithConfigurationEntryId
+import com.jetbrains.ls.api.features.utils.PsiSerializablePointer
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.CallHierarchyIncomingCall
 import com.jetbrains.lsp.protocol.CallHierarchyIncomingCallsParams
@@ -121,7 +122,6 @@ abstract class LSCallHierarchyProviderBase<Element : PsiElement> : LSCallHierarc
 
     @Serializable
     data class CallHierarchyItemData(
-        val qualifiedClassName: String,
         val nameData: NameData,
         val filePath: String,
         override val configurationEntryId: LSUniqueConfigurationEntry.UniqueId,
@@ -145,12 +145,12 @@ abstract class LSCallHierarchyProviderBase<Element : PsiElement> : LSCallHierarc
     @Serializable
     sealed interface NameData {
         /**
-         * FQ name of the containing class or the name of class itself
+         * Object that resolves the class name to the class object.
          */
-        val className: String
+        val classResolver: ClassResolver
 
         @Serializable
-        data class ClassNameData(override val className: String) : NameData
+        data class ClassNameData(override val classResolver: ClassResolver) : NameData
 
         @Serializable
         sealed interface MemberNameData : NameData {
@@ -162,13 +162,22 @@ abstract class LSCallHierarchyProviderBase<Element : PsiElement> : LSCallHierarc
 
         @Serializable
         data class MethodNameData(
-            override val className: String,
+            override val classResolver: ClassResolver,
             override val memberName: String,
             val parametersName: List<String>,
             val isConstructor: Boolean
         ) : MemberNameData
 
         @Serializable
-        data class FieldNameData(override val className: String, override val memberName: String) : MemberNameData
+        data class FieldNameData(override val classResolver: ClassResolver, override val memberName: String) : MemberNameData
+    }
+
+    @Serializable
+    sealed interface ClassResolver {
+        @Serializable
+        data class FQNameResolver(val fqName: String) : ClassResolver
+
+        @Serializable
+        data class PointerResolver(val pointer: PsiSerializablePointer) : ClassResolver
     }
 }
