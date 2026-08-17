@@ -39,7 +39,6 @@ import com.jetbrains.ls.imports.utils.DETECT_PROJECT_SDK
 import com.jetbrains.ls.test.api.utils.compareWithTestdata
 import com.jetbrains.ls.test.api.utils.testApplicationInitsForImport
 import com.jetbrains.ls.test.api.utils.testPluginSet
-import com.jetbrains.ls.test.api.utils.testProjectInits
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -284,7 +283,6 @@ abstract class AbstractProjectImportTest {
                         urlManager = virtualFileUrlManager,
                         pluginSet = testPluginSet,
                         applicationInits = testApplicationInitsForImport,
-                        projectInits = testProjectInits,
                     )
                 ) {
                     val result = runCatching {
@@ -319,7 +317,6 @@ abstract class AbstractProjectImportTest {
                         urlManager = virtualFileUrlManager,
                         pluginSet = testPluginSet,
                         applicationInits = testApplicationInitsForImport,
-                        projectInits = testProjectInits,
                     )
                 ) {
                     try {
