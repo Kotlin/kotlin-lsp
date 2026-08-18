@@ -9,7 +9,7 @@ import com.jetbrains.analyzer.bootstrap.AnalyzerContainerBuilder
 import com.jetbrains.analyzer.bootstrap.AnalyzerContext
 import com.jetbrains.analyzer.kotlin.KotlinWorkspaceModelCaches
 import com.jetbrains.analyzer.kotlin.createKotlinWorkspaceModelCaches
-import com.jetbrains.analyzer.kotlin.initKotlinApplicationContainer
+import com.jetbrains.analyzer.kotlin.initKotlinIndexingContainer
 import com.jetbrains.analyzer.kotlin.initKotlinWorkspaceModelCaches
 import com.jetbrains.analyzer.kotlin.kotlinPlugin
 import com.jetbrains.ls.api.features.WorkspaceComponentEntry
@@ -133,11 +133,9 @@ private object KotlinWorkspaceComponent : WorkspaceComponent<KotlinWorkspaceStat
         state: KotlinWorkspaceState,
         contextKind: AnalyzerContextKind,
     ) {
-        val analyzerFileSystemsForIndexing = when (contextKind) {
-            is AnalyzerContextKind.INDEXING -> contextKind.fileSystems ?: AnalyzerFileSystems.new()
-            else -> null
+        if (contextKind is AnalyzerContextKind.INDEXING) {
+            builder.initKotlinIndexingContainer(contextKind.fileSystems ?: AnalyzerFileSystems.new())
         }
-        builder.initKotlinApplicationContainer(analyzerFileSystemsForIndexing)
     }
 
     override suspend fun registerInProjectContainer(
