@@ -280,11 +280,13 @@ export const ServiceMessage = {
   },
 };
 
+export type ParsedOutput = readonly (ServiceMessage | string)[];
+
 /** Buffers process output across chunks (which can split a `##teamcity[...]` line at any byte offset) and parses complete lines as they become available. */
 export class ServiceMessageStream {
   private pending = '';
 
-  feed(chunk: string) {
+  feed(chunk: string): ParsedOutput {
     this.pending += chunk;
     const rawLines = this.pending.split(/\r\n|\r|\n/);
     this.pending = rawLines.pop() ?? '';
@@ -292,25 +294,41 @@ export class ServiceMessageStream {
   }
 
   /** Parses whatever's left in the buffer as a final, newline-less line. Call once the process has exited so its last message (e.g. a closing `testFailed`) isn't silently dropped. */
-  flush() {
+  flush(): ParsedOutput {
     const remainder = this.pending;
     this.pending = '';
-    return remainder
-      ? parseLines([remainder])
-      : { messages: [] as ServiceMessage[], lines: [] as string[] };
+    return remainder ? parseLines([remainder]) : [];
   }
 }
 
-function parseLines(rawLines: string[]) {
-  const messages: ServiceMessage[] = [];
-  const lines: string[] = [];
-  for (const line of rawLines) {
-    const message = ServiceMessage.parse(line);
-    if (message) {
-      messages.push(message);
-    } else {
-      lines.push(line);
-    }
+function parseLines(rawLines: string[]): ParsedOutput {
+  return rawLines.flatMap(splitLine);
+}
+
+/**
+ * Splits one line into the messages it carries and the output around them. A runner prints a message with `println`
+ * and adds no leading newline, so a test that printed without one leaves its output in front of the marker.
+ */
+function splitLine(line: string): ParsedOutput {
+  const parts: (ServiceMessage | string)[] = [];
+  let rest = line;
+  for (let start = rest.indexOf(MESSAGE_START); start >= 0; start = rest.indexOf(MESSAGE_START)) {
+    const end = messageEnd(rest, start);
+    const message = end < 0 ? undefined : ServiceMessage.parse(rest.slice(start, end + 1));
+    if (!message) break;
+    if (start > 0) parts.push(rest.slice(0, start));
+    parts.push(message);
+    rest = rest.slice(end + 1);
   }
-  return { messages, lines };
+  if (rest || parts.length === 0) parts.push(rest);
+  return parts;
+}
+
+/** Index of the `]` that closes the message opened at [start], or `-1` when the line does not close it. */
+function messageEnd(line: string, start: number): number {
+  for (let i = start + MESSAGE_START.length; i < line.length; i++) {
+    if (line[i] === '|') i++;
+    else if (line[i] === MESSAGE_END) return i;
+  }
+  return -1;
 }

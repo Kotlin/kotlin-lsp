@@ -519,6 +519,7 @@ function withConsoleDefaults(config: CommonLaunchConfig): DebugConfiguration {
   config.console = config.console ?? DEFAULT_CONSOLE;
   // Keep VSCode from popping the Debug Console (its default `internalConsoleOptions`) on top of the
   // console the user actually launched into, so focus follows `console` instead.
-  config.internalConsoleOptions = internalConsoleOptionsFor(config.console);
+  config.internalConsoleOptions =
+    config.internalConsoleOptions ?? internalConsoleOptionsFor(config.console);
   return config;
 }

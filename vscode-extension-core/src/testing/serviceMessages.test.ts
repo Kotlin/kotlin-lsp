@@ -176,10 +176,10 @@ test('returns undefined for a line that is not a service message', () => {
 test('ServiceMessageStream buffers a message split across two feed() calls', () => {
   const stream = new ServiceMessageStream();
   const first = stream.feed("##teamcity[testStarted name='testFoo'");
-  assert.deepEqual(first, { messages: [], lines: [] });
+  assert.deepEqual(first, []);
 
   const second = stream.feed("]\n##teamcity[testFinished name='testFoo']\n");
-  assert.deepEqual(second.messages, [
+  assert.deepEqual(second, [
     { name: 'testStarted', attributes: { name: 'testFoo' }, testName: 'testFoo' },
     {
       name: 'testFinished',
@@ -188,58 +188,90 @@ test('ServiceMessageStream buffers a message split across two feed() calls', () 
       testDuration: undefined,
     },
   ]);
-  assert.deepEqual(second.lines, []);
 });
 
-test('ServiceMessageStream separates passthrough output from service messages', () => {
+test('ServiceMessageStream keeps passthrough output in place among the service messages', () => {
   const stream = new ServiceMessageStream();
   const result = stream.feed(
     "hello from the test\n##teamcity[testStarted name='testFoo']\nmore output\n",
   );
-  assert.deepEqual(result.messages, [
+  // The order is the point: 'more output' was printed while testFoo was running, 'hello' before it.
+  assert.deepEqual(result, [
+    'hello from the test',
     { name: 'testStarted', attributes: { name: 'testFoo' }, testName: 'testFoo' },
+    'more output',
   ]);
-  assert.deepEqual(result.lines, ['hello from the test', 'more output']);
+});
+
+test('ServiceMessageStream reads a message that a print left in the middle of a line', () => {
+  const stream = new ServiceMessageStream();
+  // A test that called System.out.print('x') shares its line with the message the runner println's next.
+  const result = stream.feed("x##teamcity[testFinished name='testFoo']tail\n");
+  assert.deepEqual(result, [
+    'x',
+    {
+      name: 'testFinished',
+      attributes: { name: 'testFoo' },
+      testName: 'testFoo',
+      testDuration: undefined,
+    },
+    'tail',
+  ]);
+});
+
+test('ServiceMessageStream reads two messages that share one line', () => {
+  const stream = new ServiceMessageStream();
+  const result = stream.feed("##teamcity[testStarted name='a']##teamcity[testStarted name='b']\n");
+  assert.deepEqual(result, [
+    { name: 'testStarted', attributes: { name: 'a' }, testName: 'a' },
+    { name: 'testStarted', attributes: { name: 'b' }, testName: 'b' },
+  ]);
+});
+
+test('ServiceMessageStream does not end a message on an escaped bracket', () => {
+  const stream = new ServiceMessageStream();
+  const result = stream.feed("##teamcity[testStarted name='a|]b']rest\n");
+  assert.deepEqual(result, [
+    { name: 'testStarted', attributes: { name: 'a]b' }, testName: 'a]b' },
+    'rest',
+  ]);
 });
 
 test('ServiceMessageStream keeps an incomplete trailing line pending until the next feed()', () => {
   const stream = new ServiceMessageStream();
   const first = stream.feed('partial line without a terminator');
-  assert.deepEqual(first, { messages: [], lines: [] });
+  assert.deepEqual(first, []);
 
   const second = stream.feed(' continues here\n');
-  assert.deepEqual(second.lines, ['partial line without a terminator continues here']);
+  assert.deepEqual(second, ['partial line without a terminator continues here']);
 });
 
 test('ServiceMessageStream.flush() surfaces a final message with no trailing newline', () => {
   const stream = new ServiceMessageStream();
   stream.feed("##teamcity[testStarted name='testFoo']\n##teamcity[testFailed name='testFoo']");
-  assert.deepEqual(stream.flush(), {
-    messages: [
-      {
-        name: 'testFailed',
-        attributes: { name: 'testFoo' },
-        testName: 'testFoo',
-        error: false,
-        failureMessage: undefined,
-        stacktrace: undefined,
-        actual: undefined,
-        expected: undefined,
-        testDuration: undefined,
-      },
-    ],
-    lines: [],
-  });
+  assert.deepEqual(stream.flush(), [
+    {
+      name: 'testFailed',
+      attributes: { name: 'testFoo' },
+      testName: 'testFoo',
+      error: false,
+      failureMessage: undefined,
+      stacktrace: undefined,
+      actual: undefined,
+      expected: undefined,
+      testDuration: undefined,
+    },
+  ]);
 });
 
 test('ServiceMessageStream.flush() surfaces a final passthrough line with no trailing newline', () => {
   const stream = new ServiceMessageStream();
   stream.feed('no terminator here');
-  assert.deepEqual(stream.flush(), { messages: [], lines: ['no terminator here'] });
+  assert.deepEqual(stream.flush(), ['no terminator here']);
 });
 
 test('ServiceMessageStream.flush() is a no-op when nothing is pending', () => {
   const stream = new ServiceMessageStream();
   stream.feed('complete line\n');
-  assert.deepEqual(stream.flush(), { messages: [], lines: [] });
+  assert.deepEqual(stream.flush(), []);
 });
