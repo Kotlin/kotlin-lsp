@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features.impl.common.location
 
 import com.intellij.openapi.application.readAction
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
@@ -24,6 +25,8 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import java.nio.file.Path
 
+private val LOG = logger<LSResolveLocationCommandDescriptorProvider>()
+
 object LSResolveLocationCommandDescriptorProvider : LSCommandDescriptorProvider {
     const val COMMAND_NAME: String = "resolveLocation"
 
@@ -32,14 +35,20 @@ object LSResolveLocationCommandDescriptorProvider : LSCommandDescriptorProvider 
             val symbolName = arguments.decodeOptionalArgument<String>(0)
             val filePath = arguments.decodeOptionalArgument<String>(1)
             val line = arguments.decodeOptionalArgument<Int>(2)
-            if (symbolName == null || filePath == null || line == null) return@LSCommandDescriptor JsonNull
+            if (symbolName == null || filePath == null || line == null) {
+                LOG.debug("resolveLocation failed to decode arguments: $arguments")
+                return@LSCommandDescriptor JsonNull
+            }
 
             val position = contextOf<LSServer>().withAnalysisContext {
                 readAction {
                     resolveLocation(symbolName, filePath, line)
                 }
             }
-            position?.let { LSP.json.encodeToJsonElement(it) } ?: JsonNull
+            position?.let {
+                LOG.debug("resolveLocation resolved to $it")
+                LSP.json.encodeToJsonElement(it)
+            } ?: JsonNull.also { LOG.debug("resolveLocation no element found") }
         },
     )
 }
