@@ -47,10 +47,10 @@ if ! command -v pnpm >/dev/null; then
 
   npm install -g pnpm@11.5.1
 
-if [[ -n "$TEAMCITY_VERSION" ]]; then
-  NPM_PREFIX=$(npm config get prefix)
-  export PATH="$NPM_PREFIX/bin:$PATH"
-fi
+  if [[ -n "${TEAMCITY_VERSION:-}" ]]; then
+    NPM_PREFIX=$(npm config get prefix)
+    export PATH="$NPM_PREFIX/bin:$PATH"
+  fi
 
   pnpm --version
 fi
@@ -63,7 +63,7 @@ if [[ -z "$PACKAGE_DIR" ]]; then
       echo "Error: bundle type '$BUNDLE_TYPE' requires a pnpm workspace checkout" >&2
       exit 1
     fi
-    PACKAGE_DIR="$(pnpm --reporter=silent --dir "$WORKSPACE_DIR" --filter "$BUNDLE_TYPE" exec pwd 2>/dev/null | tail -n1 || true)"
+    PACKAGE_DIR="$(pnpm --reporter=silent --dir "$WORKSPACE_DIR" --filter "$BUNDLE_TYPE" list --depth=-1 --parseable | tail -n1)" || PACKAGE_DIR=""
   fi
 
   if [[ ! -d "$PACKAGE_DIR" ]]; then
@@ -141,12 +141,17 @@ resolve_package_manifest() {
   mkdir -p "$pack_dir"
 
   # pnpm resolves workspace catalog versions before internal manifests go into the VSIX.
-  local pack_json
-  pack_json="$(pnpm --dir "$PACKAGE_DIR" pack --pack-destination "$pack_dir" --json)"
+  pnpm --dir "$PACKAGE_DIR" pack --pack-destination "$pack_dir" >/dev/null
 
-  local packed_archive
-  packed_archive="$(node -p 'JSON.parse(require("node:fs").readFileSync(0, "utf8")).filename || ""' <<< "$pack_json")"
-  if [[ -z "$packed_archive" || ! -f "$packed_archive" ]]; then
+  local packed_archive=""
+  local candidate
+  for candidate in "$pack_dir"/*.tgz; do
+    if [[ -f "$candidate" ]]; then
+      packed_archive="$candidate"
+      break
+    fi
+  done
+  if [[ -z "$packed_archive" ]]; then
     echo "Error: pnpm pack did not produce an archive in $pack_dir" >&2
     exit 1
   fi
@@ -267,7 +272,8 @@ build_extension() {
              --out "$BUILD_DIR/$vsix_target_filename"
              --baseContentUrl=https://github.com/Kotlin/kotlin-lsp/tree/main/kotlin-vscode
              --allow-missing-repository
-             --no-dependencies)
+             --no-dependencies
+             --no-git-tag-version)
   if [[ -n "$vsce_target" ]]; then
     vsce_args+=(--target "$vsce_target")
   fi
