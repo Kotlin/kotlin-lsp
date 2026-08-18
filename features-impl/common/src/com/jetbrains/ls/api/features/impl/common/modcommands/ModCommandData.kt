@@ -12,6 +12,7 @@ import com.intellij.modcommand.ModDeleteFile
 import com.intellij.modcommand.ModDisplayMessage
 import com.intellij.modcommand.ModEditOptions
 import com.intellij.modcommand.ModHighlight
+import com.intellij.modcommand.ModLaunchEditorAction
 import com.intellij.modcommand.ModMoveFile
 import com.intellij.modcommand.ModNavigate
 import com.intellij.modcommand.ModNothing
@@ -271,6 +272,8 @@ sealed class ModCommandData {
                     else -> Navigate(command.file.url, range.startOffset, range.endOffset, range.startOffset)
                 }
             }
+            // Direct completion should map this client action; the fallback may preserve surrounding updates only for optional actions.
+            is ModLaunchEditorAction -> if (command.optional) Nothing else null
             is ModRegisterTabOut -> Nothing // We can safely skip the tab-out command
             // Highlighting could be important, but usually it's an additional helpful thing, not an essential one, so let's skip it for now
             is ModHighlight -> Nothing
