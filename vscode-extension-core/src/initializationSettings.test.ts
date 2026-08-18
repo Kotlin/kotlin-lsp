@@ -7,6 +7,8 @@ import {
   sanitizeConfiguredProjects,
   sanitizeOptionalString,
   settingsChangeAction,
+  settingsCommand,
+  settingsScope,
   shouldReportSettingsProblems,
 } from './initializationSettings';
 
@@ -21,6 +23,32 @@ const problem = (setting: string, message: string, kind: 'incomplete' | 'invalid
   setting,
   kind,
   message,
+});
+
+describe('settingsScope', () => {
+  it('prefers folder and workspace values over user settings', () => {
+    assert.equal(settingsScope({ globalValue: [], workspaceValue: [] }), 'workspace');
+    assert.equal(
+      settingsScope({ globalValue: [], workspaceValue: [], workspaceFolderValue: [] }),
+      'workspaceFolder',
+    );
+  });
+
+  it('selects the user scope when only a user value exists', () => {
+    assert.equal(settingsScope({ globalValue: [] }), 'global');
+  });
+
+  it('falls back to unknown when the setting is not configured', () => {
+    assert.equal(settingsScope(undefined), 'unknown');
+    assert.equal(settingsScope({}), 'unknown');
+  });
+
+  it('maps each scope to its settings editor command', () => {
+    assert.equal(settingsCommand('workspaceFolder'), 'workbench.action.openFolderSettings');
+    assert.equal(settingsCommand('workspace'), 'workbench.action.openWorkspaceSettings');
+    assert.equal(settingsCommand('global'), 'workbench.action.openSettings');
+    assert.equal(settingsCommand('unknown'), 'workbench.action.openSettings');
+  });
 });
 
 describe('sanitizeConfiguredProjects', () => {

@@ -71,6 +71,36 @@ export function isSettingsDocument(path: string): boolean {
 
 export type SettingsChangeAction = 'none' | 'start' | 'restart' | 'reload';
 
+export type SettingsScope = 'workspaceFolder' | 'workspace' | 'global' | 'unknown';
+
+/** Selects the settings editor scope containing a configured value. */
+export function settingsScope(
+  inspect:
+    | {
+        workspaceFolderValue?: unknown;
+        workspaceValue?: unknown;
+        globalValue?: unknown;
+      }
+    | undefined,
+): SettingsScope {
+  if (inspect?.workspaceFolderValue !== undefined) return 'workspaceFolder';
+  if (inspect?.workspaceValue !== undefined) return 'workspace';
+  if (inspect?.globalValue !== undefined) return 'global';
+  return 'unknown';
+}
+
+export function settingsCommand(scope: SettingsScope): string {
+  switch (scope) {
+    case 'workspaceFolder':
+      return 'workbench.action.openFolderSettings';
+    case 'workspace':
+      return 'workbench.action.openWorkspaceSettings';
+    case 'global':
+    case 'unknown':
+      return 'workbench.action.openSettings';
+  }
+}
+
 /**
  * How a settings change reaches the server. Launch settings become process arguments and
  * environment, so only a new process picks them up; `initializationOptions` are resent by

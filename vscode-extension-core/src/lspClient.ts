@@ -35,10 +35,13 @@ import {
   sanitizeBuildTools,
   sanitizeConfiguredProjects,
   sanitizeOptionalString,
+  settingsCommand,
+  settingsScope,
   shouldReportSettingsProblems,
   type BuiltinInitializationOptions,
   type SettingProblem,
   type SettingsChangeAction,
+  type SettingsScope,
   settingsChangeAction,
 } from './initializationSettings';
 import {
@@ -1059,7 +1062,15 @@ function reportSettingsProblems({ problems }: { problems: SettingProblem[] }): v
     )
     .then((choice) => {
       if (choice === OPEN_SETTINGS_ACTION) {
-        void vscode.commands.executeCommand('workbench.action.openSettings', query);
+        const scopes = new Set<SettingsScope>(
+          Array.from(only, (setting) =>
+            settingsScope(vscode.workspace.getConfiguration().inspect(setting)),
+          ),
+        );
+        const scope: SettingsScope = scopes.size === 1 ? scopes.values().next().value! : 'unknown';
+        const command = settingsCommand(scope);
+        const args = scope === 'workspaceFolder' ? { query } : query;
+        void vscode.commands.executeCommand(command, args);
       }
     });
 }
