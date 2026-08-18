@@ -125,13 +125,15 @@ export function computeStatusTooltipContent(
     clientState === 'running' && state.workspaceImportBlocked === true && !contributionProblem;
   const showContributionDetail =
     presentation !== undefined && (clientState !== 'stopped' || contributionProblem);
+  let detail: string | undefined;
+  if (workspaceImportBlocked) {
+    detail = 'Project import will not start until you select a build tool.';
+  } else if (showContributionDetail) {
+    detail = presentation.tooltip;
+  }
   return {
     heading: `**${title}**&nbsp;&nbsp;${workspaceImportBlocked ? '$(circle-slash) Build tool selection required' : statusStateText(clientState)}`,
-    ...(workspaceImportBlocked
-      ? { detail: 'Project import will not start until you select a build tool.' }
-      : showContributionDetail
-        ? { detail: presentation.tooltip }
-        : {}),
+    detail,
     actions,
     enabledCommands: actions.map((action) => action.command),
   };

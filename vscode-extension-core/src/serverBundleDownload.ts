@@ -792,17 +792,21 @@ function run(command: string, args: string[], signal?: AbortSignal): Promise<voi
       stderr = appendProcessOutput(stderr, chunk.toString());
     });
     child.on('error', reject);
-    child.on('exit', (code) =>
-      code === 0 && !signal?.aborted
-        ? resolve()
-        : signal?.aborted
-          ? reject(createAbortError())
-          : reject(
-              new Error(
-                `${command} ${args.join(' ')} exited with code ${code}. stdout: ${stdout} stderr: ${stderr}`,
-              ),
-            ),
-    );
+    child.on('exit', (code) => {
+      if (signal?.aborted) {
+        reject(createAbortError());
+        return;
+      }
+      if (code === 0) {
+        resolve();
+        return;
+      }
+      reject(
+        new Error(
+          `${command} ${args.join(' ')} exited with code ${code}. stdout: ${stdout} stderr: ${stderr}`,
+        ),
+      );
+    });
     child.once('close', () => signal?.removeEventListener('abort', abort));
   });
 }
