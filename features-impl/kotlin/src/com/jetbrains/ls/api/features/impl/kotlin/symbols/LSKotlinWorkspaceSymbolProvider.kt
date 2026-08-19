@@ -8,7 +8,7 @@ import com.intellij.psi.util.parentsOfType
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.impl.common.symbols.LSWorkspaceSymbolProviderBase
-import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
+import com.jetbrains.ls.api.core.util.getLspLocationForDefinition
 import com.jetbrains.lsp.protocol.WorkspaceSymbol
 import org.jetbrains.kotlin.idea.goto.KotlinGotoClassSymbolContributor
 import org.jetbrains.kotlin.idea.goto.KotlinGotoFunctionSymbolContributor

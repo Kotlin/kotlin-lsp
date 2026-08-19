@@ -23,7 +23,7 @@ import com.jetbrains.ls.api.features.impl.common.formatting.LSCommonFormattingPr
 import com.jetbrains.ls.api.features.impl.common.implementation.LSCommonImplementationProvider
 import com.jetbrains.ls.api.features.impl.common.references.LSCommonReferencesProvider
 import com.jetbrains.ls.api.features.impl.common.typeDefinition.LSCommonTypeDefinitionProvider
-import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
+import com.jetbrains.ls.api.core.util.TargetKind
 import com.jetbrains.ls.api.features.impl.javaBase.LSJavaPackageDefinitionProvider
 import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.LLFirSessionCacheStorageComponent
 import com.jetbrains.ls.api.features.impl.kotlin.callHierarchy.LSKotlinCallHierarchyProvider

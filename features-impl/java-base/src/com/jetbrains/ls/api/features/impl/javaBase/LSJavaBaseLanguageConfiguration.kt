@@ -6,7 +6,7 @@ import com.jetbrains.analyzer.java.javaPlugin
 import com.jetbrains.ls.api.core.util.scheme
 import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.features.impl.common.definitions.LSCommonDefinitionProvider
-import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
+import com.jetbrains.ls.api.core.util.TargetKind
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.lsp.protocol.URI
 

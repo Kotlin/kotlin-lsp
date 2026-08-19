@@ -10,7 +10,7 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
-import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
+import com.jetbrains.ls.api.core.util.getLspLocationForDefinition
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.typeDefinition.LSTypeDefinitionProvider
 import com.jetbrains.lsp.implementation.LspHandlerContext

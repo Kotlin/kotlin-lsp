@@ -12,8 +12,8 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.isFromLibrary
 import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.features.definition.LSDefinitionProvider
-import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
-import com.jetbrains.ls.api.features.impl.common.utils.getTargetsAtPosition
+import com.jetbrains.ls.api.core.util.TargetKind
+import com.jetbrains.ls.api.core.util.getTargetsAtPosition
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.lsp.implementation.LspHandlerContext

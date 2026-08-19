@@ -5,7 +5,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.util.PsiMethodUtil
 import com.jetbrains.ls.api.features.impl.common.codeLens.LSJvmRunMainCodeLensProvider
-import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
+import com.jetbrains.ls.api.core.util.getLspLocationForDefinition
 import com.jetbrains.ls.api.features.language.LSLanguage
 
 object LSJavaRunMainCodeLensProvider : LSJvmRunMainCodeLensProvider() {

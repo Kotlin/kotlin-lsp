@@ -4,8 +4,8 @@ package com.jetbrains.ls.api.features.impl.common.symbols
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiNameIdentifierOwner
-import com.jetbrains.ls.api.features.impl.common.utils.getLspLocation
-import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
+import com.jetbrains.ls.api.core.util.getLspLocation
+import com.jetbrains.ls.api.core.util.getLspLocationForDefinition
 import com.jetbrains.ls.api.features.language.LSLanguage
 
 abstract class LSDocumentSymbolProviderPsiBase(supportedLanguage: LSLanguage) : LSDocumentSymbolProviderBase<PsiElement>() {

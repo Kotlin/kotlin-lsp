@@ -35,7 +35,7 @@ import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.core.util.toTextRange
 import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
-import com.jetbrains.ls.api.features.impl.common.utils.getLspLocationForDefinition
+import com.jetbrains.ls.api.core.util.getLspLocationForDefinition
 import com.jetbrains.ls.api.features.inlayHints.LSInlayHintsProvider
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.resolve.ResolveDataWithConfigurationEntryId

@@ -2,7 +2,6 @@
 package com.jetbrains.ls.api.features.impl.javaBase
 
 import com.intellij.openapi.application.readAction
-import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiPackage
 import com.intellij.psi.search.EverythingGlobalScope
@@ -14,8 +13,8 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.isFromLibrary
 import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.features.definition.LSDefinitionProvider
-import com.jetbrains.ls.api.features.impl.common.utils.TargetKind
-import com.jetbrains.ls.api.features.impl.common.utils.getTargetsAtPosition
+import com.jetbrains.ls.api.core.util.TargetKind
+import com.jetbrains.ls.api.core.util.getTargetsAtPosition
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.DefinitionParams

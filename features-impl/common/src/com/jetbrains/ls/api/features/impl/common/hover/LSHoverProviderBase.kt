@@ -16,7 +16,7 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.features.hover.LSHoverProvider
-import com.jetbrains.ls.api.features.impl.common.utils.getDocumentationTargetAtPosition
+import com.jetbrains.ls.api.core.util.getDocumentationTargetAtPosition
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.Hover
 import com.jetbrains.lsp.protocol.HoverParams
