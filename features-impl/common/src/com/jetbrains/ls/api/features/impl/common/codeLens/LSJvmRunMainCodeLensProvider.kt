@@ -74,6 +74,11 @@ abstract class LSJvmRunMainCodeLensProvider : LSCodeLensProvider {
     }
 
     private companion object {
-        const val RUN_COMMAND_NAME: String = "intellij_debugger.runMain"
+        /**
+         * The client-side command the lens invokes. Named for the JVM rather than for one launch configuration
+         * type: the client decides from the module whether the launch it starts runs through a build tool or as a
+         * plain JVM, and the same lens serves both (see `dap.ts`).
+         */
+        const val RUN_COMMAND_NAME: String = "intellij.jvm.runMain"
     }
 }

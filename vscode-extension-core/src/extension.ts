@@ -48,6 +48,7 @@ export {
   type StatusBarContributionRegistration,
 } from './statusBar';
 import { registerDapServer } from './dap';
+import { registerBuildTaskProvider } from './buildTask';
 import { registerFileTemplates } from './fileTemplates';
 import { promptReloadWindow } from './reloadWindow';
 import { registerAutoReloadWorkspace } from './autoReloadWorkspace';
@@ -255,6 +256,9 @@ async function activateAcceptedExtension(
     }
     if (enableDapServer) {
       registerDapServer(context);
+      // The build task is the compile step for launches that don't go through a build tool, so it is only
+      // useful alongside the DAP server that consumes it as a `preLaunchTask`.
+      registerBuildTaskProvider(context);
     }
     registerExportWorkspaceToJsonCommand(context);
     registerReloadWorkspaceCommand(context);

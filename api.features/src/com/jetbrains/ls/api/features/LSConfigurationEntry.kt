@@ -1,6 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features
 
+import com.jetbrains.ls.api.core.launch.BuildToolLaunchContributor
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.snapshot.api.impl.core.InitConfigurationKey
@@ -19,6 +20,11 @@ class WorkspaceImporterEntry(
     val id: String,
     val importer: WorkspaceImporter,
     val order: String = "",
+) : LSConfigurationEntry
+
+/** Registers a build tool's build and launch support (see [BuildToolLaunchContributor]). */
+class BuildToolLaunchEntry(
+    val contributor: BuildToolLaunchContributor,
 ) : LSConfigurationEntry
 
 fun interface WorkspaceComponentEntry : LSConfigurationEntry {

@@ -101,10 +101,22 @@
         "language": "kotlin"
       }
     ],
+    "taskDefinitions": [
+      {
+        "type": "intellij_build",
+        "required": [],
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Path to a file whose module to compile. Supports ${file}; a relative path is resolved against the workspace folder. Without it, the module of the active editor's file is compiled. A launch that references the \"intellij: build\" task compiles its own module, so it needs nothing here."
+          }
+        }
+      }
+    ],
     "debuggers": [
       {
-        "type": "intellij_debugger",
-        "label": "IntelliJ Debugger",
+        "type": "intellij_jvm",
+        "label": "IntelliJ JVM Debugger",
         "languages": [
           "kotlin"
         ],
@@ -141,14 +153,14 @@
                 "items": {
                   "type": "string"
                 },
-                "description": "Override classpath. If empty, the LSP server resolves it from the project model."
+                "description": "Class path to run with. If empty, the LSP server resolves it from the project model."
               },
               "modulePaths": {
                 "type": "array",
                 "items": {
                   "type": "string"
                 },
-                "description": "Override the JPMS module path. If empty, the LSP server resolves it from the project model when the main class belongs to a named Java module."
+                "description": "JPMS module path to run with. If empty, the LSP server resolves it from the project model when the main class belongs to a named Java module."
               },
               "moduleName": {
                 "type": "string",
@@ -213,13 +225,14 @@
         "initialConfigurations": [],
         "configurationSnippets": [
           {
-            "label": "IntelliJ: Launch main class",
-            "description": "Launch a JVM main class in the integrated terminal.",
+            "label": "IntelliJ: Launch main class (JVM)",
+            "description": "Compile a JVM main class's module with the project's build tool, then run it as a plain java process. Remove \"preLaunchTask\" to launch whatever is already compiled.",
             "body": {
-              "type": "intellij_debugger",
-              "request": "launch",
               "name": "${2:Run main}",
+              "type": "intellij_jvm",
+              "request": "launch",
               "mainClass": "${1:com.example.Main}",
+              "preLaunchTask": "intellij: build",
               "cwd": "^\"\\${workspaceFolder}\""
             }
           },
@@ -227,11 +240,211 @@
             "label": "IntelliJ: Attach to JVM",
             "description": "Attach to a running JVM over JDWP via the IntelliJ LSP.",
             "body": {
-              "type": "intellij_debugger",
-              "request": "attach",
               "name": "${1:Attach to JVM}",
+              "type": "intellij_jvm",
+              "request": "attach",
               "hostName": "${2:localhost}",
               "port": 5005
+            }
+          }
+        ]
+      },
+      {
+        "type": "intellij_debugger",
+        "label": "IntelliJ JVM Debugger (deprecated: use intellij_jvm)",
+        "configurationAttributes": {
+          "launch": {
+            "required": [
+              "mainClass"
+            ],
+            "properties": {
+              "mainClass": {
+                "type": "string",
+                "description": "Fully-qualified name of the main class to run."
+              },
+              "file": {
+                "type": "string",
+                "description": "Path to the source file declaring the main class. Used to launch directly from a file, and to disambiguate when the main class name is declared in more than one file. Supports ${file}."
+              },
+              "args": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Program arguments passed to the main class."
+              },
+              "vmArgs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "JVM arguments."
+              },
+              "classPaths": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Class path to run with. If empty, the LSP server resolves it from the project model."
+              },
+              "modulePaths": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "JPMS module path to run with. If empty, the LSP server resolves it from the project model when the main class belongs to a named Java module."
+              },
+              "moduleName": {
+                "type": "string",
+                "description": "Name of the JPMS module that owns the main class, launched as `-m moduleName/mainClass`. If empty, the LSP server resolves it from the project model."
+              },
+              "javaExec": {
+                "type": "string",
+                "description": "Path to the java executable. If empty, the project SDK is used."
+              },
+              "cwd": {
+                "type": "string",
+                "description": "Working directory for the launched process.",
+                "default": "${workspaceFolder}"
+              },
+              "env": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "Extra environment variables for the launched process."
+              },
+              "console": {
+                "type": "string",
+                "enum": [
+                  "internalConsole",
+                  "integratedTerminal",
+                  "externalTerminal"
+                ],
+                "enumDescriptions": [
+                  "Run in the Debug Console (the language server launches the process).",
+                  "Run in the integrated terminal (the editor launches the process and the debugger attaches).",
+                  "Run in an external terminal (the debugger attaches)."
+                ],
+                "default": "integratedTerminal",
+                "description": "Where to run the program."
+              }
+            }
+          },
+          "attach": {
+            "required": [
+              "port"
+            ],
+            "properties": {
+              "hostName": {
+                "type": "string",
+                "description": "Host the JVM is listening on.",
+                "default": "localhost"
+              },
+              "port": {
+                "type": "number",
+                "description": "JDWP port the JVM is listening on.",
+                "default": 5005
+              },
+              "timeout": {
+                "type": "number",
+                "description": "Connection timeout in milliseconds.",
+                "default": 30000
+              }
+            }
+          }
+        },
+        "initialConfigurations": [],
+        "configurationSnippets": []
+      },
+      {
+        "type": "intellij_gradle",
+        "label": "IntelliJ Gradle Debugger",
+        "languages": [
+          "kotlin"
+        ],
+        "configurationAttributes": {
+          "launch": {
+            "required": [
+              "mainClass"
+            ],
+            "properties": {
+              "mainClass": {
+                "type": "string",
+                "description": "Fully-qualified name of the main class to run."
+              },
+              "file": {
+                "type": "string",
+                "description": "Path to the source file declaring the main class. Used to launch directly from a file, and to disambiguate when the main class name is declared in more than one file. Supports ${file}."
+              },
+              "args": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Program arguments passed to the main class."
+              },
+              "vmArgs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "JVM arguments for the program Gradle forks. Not arguments for Gradle itself; use \"gradleArgs\" for those."
+              },
+              "projectPath": {
+                "type": "string",
+                "description": "Gradle project to run in, as Gradle names it (\":app\", \":modules:lib\"). If empty, the project the module was imported from is used."
+              },
+              "sourceSet": {
+                "type": "string",
+                "description": "Gradle source set whose runtime classpath the program runs on (\"main\", \"test\", \"integrationTest\"). If empty, the source set the module belongs to is used."
+              },
+              "gradleArgs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Arguments for the Gradle invocation itself (\"--offline\", \"-Pkey=value\"). Arguments for the program go in \"args\", and for its JVM in \"vmArgs\"."
+              },
+              "cwd": {
+                "type": "string",
+                "description": "Working directory for the launched program. If empty, Gradle’s own default for the project is used."
+              },
+              "env": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "Extra environment variables for the launched program. Applied to the process Gradle forks, not to the Gradle invocation."
+              },
+              "console": {
+                "type": "string",
+                "enum": [
+                  "internalConsole",
+                  "integratedTerminal",
+                  "externalTerminal"
+                ],
+                "enumDescriptions": [
+                  "Run in the Debug Console (the language server launches the process).",
+                  "Run in the integrated terminal (the editor launches the process and the debugger attaches).",
+                  "Run in an external terminal (the debugger attaches)."
+                ],
+                "default": "integratedTerminal",
+                "description": "Where to run the program."
+              }
+            }
+          }
+        },
+        "initialConfigurations": [],
+        "configurationSnippets": [
+          {
+            "label": "IntelliJ: Launch main class (Gradle)",
+            "description": "Compile and run a JVM main class through Gradle, in the integrated terminal.",
+            "body": {
+              "name": "${2:Run main}",
+              "type": "intellij_gradle",
+              "request": "launch",
+              "mainClass": "${1:com.example.Main}"
             }
           }
         ]
