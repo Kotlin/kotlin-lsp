@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features.impl.javaBase
 
 import com.intellij.java.syntax.parser.JavaKeywords
+import com.intellij.lang.java.JavaLanguage
 import com.intellij.openapi.util.NlsSafe
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiClass
@@ -29,13 +30,15 @@ open class LSJavaHoverProvider : LSHoverProviderBase() {
 
     context(server: LSServer, analysisContext: LSAnalysisContext)
     override fun generateMarkdownForPsiElementTarget(target: PsiElement, from: PsiFile, offset: Int): String? {
-        val renderedDeclaration = render(target) ?: return null
         val documentation = LSMarkdownDocProvider.getMarkdownDoc(target)
 
         return buildString {
             links(target, from, offset)?.let { appendLine(it) }
             documentation?.let { appendLine(it) }
-            append(markdownMultilineCode(renderedDeclaration, language = LSJavaLanguage.lspName))
+            if (target.language != JavaLanguage.INSTANCE) {
+                val renderedDeclaration = render(target) ?: return null
+                append(markdownMultilineCode(renderedDeclaration, language = LSJavaLanguage.lspName))
+            }
         }
     }
 
@@ -66,22 +69,6 @@ open class LSJavaHoverProvider : LSHoverProviderBase() {
         if (!method.textRange.containsOffset(offset)) return false
         val body = method.body
         return body == null || !body.textRange.containsOffset(offset)
-    }
-
-    private fun makeLinkTo(element: PsiMethod): String? {
-        val location = element.getLspLocationForDefinition() ?: return null
-        // We cannot use a plain location link here: VS Code's hover markdown renderer drops links
-        // whose scheme is not in its allowlist (notably jar:/jrt:), and even allowed file: links do
-        // not navigate to a position from a hover. Instead we emit a `command:` link that runs the
-        // client's navigation command (registered by the IntelliJ VS Code extension, which also marks
-        // the hover markdown trusted so the command link renders). LSP coordinates are 0-based, which
-        // is exactly what the command expects as its line/character arguments.
-        val args = listOf(
-            '"'+StringUtil.escapeStringCharacters(location.uri.uri.uri)+'"',
-            location.range.start.line.toString(),
-            location.range.start.character.toString(),
-        ).joinToString(separator = ",", prefix = "[", postfix = "]")
-        return "command:$NAVIGATE_TO_LOCATION_COMMAND?${URLEncoder.encode(args, StandardCharsets.UTF_8)}"
     }
 
     private fun render(element: PsiElement): String? {
@@ -122,6 +109,22 @@ open class LSJavaHoverProvider : LSHoverProviderBase() {
                     PsiFormatUtilBase.SHOW_PARAMETERS or
                     PsiFormatUtilBase.SHOW_THROWS or
                     PsiFormatUtilBase.SHOW_EXTENDS_IMPLEMENTS
+
+        fun makeLinkTo(element: PsiElement): String? {
+            val location = element.getLspLocationForDefinition() ?: return null
+            // We cannot use a plain location link here: VS Code's hover markdown renderer drops links
+            // whose scheme is not in its allowlist (notably jar:/jrt:), and even allowed file: links do
+            // not navigate to a position from a hover. Instead we emit a `command:` link that runs the
+            // client's navigation command (registered by the IntelliJ VS Code extension, which also marks
+            // the hover markdown trusted so the command link renders). LSP coordinates are 0-based, which
+            // is exactly what the command expects as its line/character arguments.
+            val args = listOf(
+                '"' + StringUtil.escapeStringCharacters(location.uri.uri.uri) + '"',
+                location.range.start.line.toString(),
+                location.range.start.character.toString(),
+            ).joinToString(separator = ",", prefix = "[", postfix = "]")
+            return "command:$NAVIGATE_TO_LOCATION_COMMAND?${URLEncoder.encode(args, StandardCharsets.UTF_8)}"
+        }
     }
 
 
