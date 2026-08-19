@@ -38,7 +38,6 @@ import kotlinx.coroutines.flow.flow
  * only interaction left is picking a choice. One needing its own client/server protocol uses
  * [LSExtractMemberProviderBase] instead.
  */
-//todo check without intellijExtensions
 abstract class LSExtractModCommandProviderBase : LSCodeActionProvider {
     /** The kind of the produced code actions, which is also what a client binds an "extract" hot key to. */
     protected abstract val extractActionKind: CodeActionKind
