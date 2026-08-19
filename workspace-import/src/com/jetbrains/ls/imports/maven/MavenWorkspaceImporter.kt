@@ -38,10 +38,13 @@ import kotlin.io.path.writeText
 
 private val LOG = logger<MavenWorkspaceImporter>()
 
-private const val JB_MAVEN_HOME: String = "JB_MAVEN_HOME"
-private const val JB_MAVEN_JAVA_HOME: String = "JB_MAVEN_JAVA_HOME"
-
 object MavenWorkspaceImporter : WorkspaceImporter {
+    /** The Maven distribution to import with, when the project has no wrapper. */
+    const val JB_MAVEN_HOME_PROPERTY: String = "JB_MAVEN_HOME"
+
+    /** The JDK to run Maven under. Named so that callers scoping these properties do not have to spell them. */
+    const val JB_MAVEN_JAVA_HOME_PROPERTY: String = "JB_MAVEN_JAVA_HOME"
+
     const val LSP_MAVEN_PROJECT_OFFLINE_PROPERTY: String = "com.jetbrains.ls.imports.maven.offline"
     const val LSP_MAVEN_PROJECT_MAVEN_USER_HOME_PROPERTY: String = "com.jetbrains.ls.imports.maven.mavenUserHome"
     const val LSP_MAVEN_PROJECT_MAVEN_OPTS_PROPERTY: String = "com.jetbrains.ls.imports.maven.opts"
@@ -60,8 +63,8 @@ object MavenWorkspaceImporter : WorkspaceImporter {
 
 
     fun useMavenAndJava(mavenHome: Path, javaHome: Path) {
-        System.setProperty(JB_MAVEN_HOME, mavenHome.toString())
-        System.setProperty(JB_MAVEN_JAVA_HOME, javaHome.toString())
+        System.setProperty(JB_MAVEN_HOME_PROPERTY, mavenHome.toString())
+        System.setProperty(JB_MAVEN_JAVA_HOME_PROPERTY, javaHome.toString())
     }
 
     override fun canImportWorkspace(projectDirectory: Path): Boolean {
@@ -81,10 +84,10 @@ object MavenWorkspaceImporter : WorkspaceImporter {
 
         LOG.info("Importing Maven project from: $projectDirectory")
         val wrapper = projectDirectory / (if (OS.CURRENT == OS.Windows) "mvnw.cmd" else "mvnw")
-        val mavenHome = System.getProperty(JB_MAVEN_HOME)?.let { Path.of(it) }
+        val mavenHome = System.getProperty(JB_MAVEN_HOME_PROPERTY)?.let { Path.of(it) }
         // A `java-home` configured for this project wins over the JVM property and the ambient environment.
         val javaHome = options.javaHome?.toString()
-            ?: System.getProperty(JB_MAVEN_JAVA_HOME)
+            ?: System.getProperty(JB_MAVEN_JAVA_HOME_PROPERTY)
             ?: if (System.getenv()["JAVA_HOME"] == null) System.getProperty("java.home") else null
         val execPath = when {
             wrapper.exists() -> wrapper

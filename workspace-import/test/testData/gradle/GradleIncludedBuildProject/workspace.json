@@ -17,7 +17,8 @@
                     "path": "<WORKSPACE>/"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/"
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
         },
         {
             "name": "untitled1",
@@ -36,7 +37,8 @@
                     "path": "<WORKSPACE>/untitled1"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/untitled1"
+            "externalProjectPath": "<WORKSPACE>/untitled1",
+            "externalProjectId": ":untitled1"
         },
         {
             "name": "untitled1.main",
@@ -290,7 +292,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/untitled1"
+            "externalProjectPath": "<WORKSPACE>/untitled1",
+            "externalProjectId": ":untitled1"
         },
         {
             "name": "untitled1.test",
@@ -559,7 +562,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/untitled1"
+            "externalProjectPath": "<WORKSPACE>/untitled1",
+            "externalProjectId": ":untitled1"
         },
         {
             "name": "untitled2",
@@ -578,7 +582,8 @@
                     "path": "<WORKSPACE>/untitled2"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/untitled2"
+            "externalProjectPath": "<WORKSPACE>/untitled2",
+            "externalProjectId": ":untitled2"
         },
         {
             "name": "untitled2.main",
@@ -618,7 +623,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/untitled2"
+            "externalProjectPath": "<WORKSPACE>/untitled2",
+            "externalProjectId": ":untitled2"
         },
         {
             "name": "untitled2.test",
@@ -713,7 +719,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/untitled2"
+            "externalProjectPath": "<WORKSPACE>/untitled2",
+            "externalProjectId": ":untitled2"
         }
     ],
     "libraries": [
@@ -1936,5 +1943,6 @@
             "languageLevelId": "JDK_17",
             "manifestAttributes": {}
         }
-    ]
+    ],
+    "externalSystem": "GRADLE"
 }

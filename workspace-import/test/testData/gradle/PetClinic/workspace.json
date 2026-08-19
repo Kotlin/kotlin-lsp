@@ -17,7 +17,8 @@
                     "path": "<WORKSPACE>/"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/"
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
         },
         {
             "name": "PetClinic.aot",
@@ -503,7 +504,8 @@
                     "path": "<WORKSPACE>/build/generated/aotResources"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/"
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
         },
         {
             "name": "PetClinic.aotTest",
@@ -1220,7 +1222,8 @@
                     "path": "<WORKSPACE>/build/generated/aotTestResources"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/"
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
         },
         {
             "name": "PetClinic.main",
@@ -1715,7 +1718,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/"
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
         },
         {
             "name": "PetClinic.test",
@@ -2441,7 +2445,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/"
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
         }
     ],
     "libraries": [
@@ -5318,5 +5323,6 @@
             "languageLevelId": "JDK_17",
             "manifestAttributes": {}
         }
-    ]
+    ],
+    "externalSystem": "GRADLE"
 }

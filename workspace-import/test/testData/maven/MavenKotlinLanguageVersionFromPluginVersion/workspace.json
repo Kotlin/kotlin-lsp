@@ -149,5 +149,6 @@
             "languageLevelId": "JDK_17",
             "manifestAttributes": {}
         }
-    ]
+    ],
+    "externalSystem": "MAVEN"
 }

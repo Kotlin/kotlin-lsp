@@ -23,6 +23,15 @@ import kotlin.io.path.exists
 import kotlin.io.path.inputStream
 import kotlin.io.path.notExists
 
+/**
+ * The external-system id [JsonWorkspaceImporter] marks the modules it imports with.
+ *
+ * It names the *file format* the model arrived in, not a build system — which is why the export deliberately does not
+ * record it as [WorkspaceData.externalSystem]: a `workspace.json` says which build system produced the model it holds,
+ * and re-reading that file must not overwrite the answer with the name of the file itself.
+ */
+const val JSON_EXTERNAL_SYSTEM_ID: String = "JSON"
+
 object JsonWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
 
     override fun canImportWorkspace(projectDirectory: Path): Boolean =
@@ -71,7 +80,7 @@ object JsonWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
                 ),
                 projectDirectory,
                 WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager)),
-                virtualFileUrlManager, false, "JSON"
+                virtualFileUrlManager, false, JSON_EXTERNAL_SYSTEM_ID
             )
             fixMissingProjectSdk(defaultSdkPath, virtualFileUrlManager)
         }

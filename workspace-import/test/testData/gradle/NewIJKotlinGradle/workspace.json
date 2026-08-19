@@ -17,7 +17,8 @@
                     "path": "<WORKSPACE>/"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/"
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
         },
         {
             "name": "NewIJKotlinGradle.app",
@@ -36,7 +37,8 @@
                     "path": "<WORKSPACE>/app"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/app"
+            "externalProjectPath": "<WORKSPACE>/app",
+            "externalProjectId": ":app"
         },
         {
             "name": "NewIJKotlinGradle.app.main",
@@ -101,7 +103,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/app"
+            "externalProjectPath": "<WORKSPACE>/app",
+            "externalProjectId": ":app"
         },
         {
             "name": "NewIJKotlinGradle.app.test",
@@ -175,7 +178,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/app"
+            "externalProjectPath": "<WORKSPACE>/app",
+            "externalProjectId": ":app"
         },
         {
             "name": "NewIJKotlinGradle.buildSrc",
@@ -194,7 +198,8 @@
                     "path": "<WORKSPACE>/buildSrc"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/buildSrc"
+            "externalProjectPath": "<WORKSPACE>/buildSrc",
+            "externalProjectId": ":buildSrc"
         },
         {
             "name": "NewIJKotlinGradle.buildSrc.main",
@@ -481,7 +486,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/buildSrc"
+            "externalProjectPath": "<WORKSPACE>/buildSrc",
+            "externalProjectId": ":buildSrc"
         },
         {
             "name": "NewIJKotlinGradle.buildSrc.test",
@@ -745,7 +751,8 @@
                     "path": "<WORKSPACE>/buildSrc/src/test"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/buildSrc"
+            "externalProjectPath": "<WORKSPACE>/buildSrc",
+            "externalProjectId": ":buildSrc"
         },
         {
             "name": "NewIJKotlinGradle.utils",
@@ -764,7 +771,8 @@
                     "path": "<WORKSPACE>/utils"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/utils"
+            "externalProjectPath": "<WORKSPACE>/utils",
+            "externalProjectId": ":utils"
         },
         {
             "name": "NewIJKotlinGradle.utils.main",
@@ -823,7 +831,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/utils"
+            "externalProjectPath": "<WORKSPACE>/utils",
+            "externalProjectId": ":utils"
         },
         {
             "name": "NewIJKotlinGradle.utils.test",
@@ -932,7 +941,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/utils"
+            "externalProjectPath": "<WORKSPACE>/utils",
+            "externalProjectId": ":utils"
         }
     ],
     "libraries": [
@@ -2346,5 +2356,6 @@
             "languageLevelId": "JDK_21",
             "manifestAttributes": {}
         }
-    ]
+    ],
+    "externalSystem": "GRADLE"
 }

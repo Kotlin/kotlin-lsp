@@ -17,7 +17,8 @@
                     "path": "<WORKSPACE>/"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/"
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
         },
         {
             "name": "My Application.app",
@@ -36,7 +37,8 @@
                     "path": "<WORKSPACE>/app"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/app"
+            "externalProjectPath": "<WORKSPACE>/app",
+            "externalProjectId": ":app"
         },
         {
             "name": "My Application.app.debug",
@@ -393,7 +395,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/app"
+            "externalProjectPath": "<WORKSPACE>/app",
+            "externalProjectId": ":app"
         },
         {
             "name": "My Application.app.debugAndroidTest",
@@ -824,7 +827,8 @@
                     "path": "<WORKSPACE>/app/build/generated/data_binding_base_class_source_out/debugAndroidTest/out"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/app"
+            "externalProjectPath": "<WORKSPACE>/app",
+            "externalProjectId": ":app"
         },
         {
             "name": "My Application.app.debugUnitTest",
@@ -1182,7 +1186,8 @@
                     "path": "<WORKSPACE>/app/src/testDebug"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/app"
+            "externalProjectPath": "<WORKSPACE>/app",
+            "externalProjectId": ":app"
         },
         {
             "name": "My Application.library",
@@ -1201,7 +1206,8 @@
                     "path": "<WORKSPACE>/library"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/library"
+            "externalProjectPath": "<WORKSPACE>/library",
+            "externalProjectId": ":library"
         },
         {
             "name": "My Application.library.debug",
@@ -1564,7 +1570,8 @@
                     "path": "<WORKSPACE>/library/src/debug"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/library"
+            "externalProjectPath": "<WORKSPACE>/library",
+            "externalProjectId": ":library"
         },
         {
             "name": "My Application.library.debugAndroidTest",
@@ -2012,7 +2019,8 @@
                     "path": "<WORKSPACE>/library/src/androidTestDebug"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/library"
+            "externalProjectPath": "<WORKSPACE>/library",
+            "externalProjectId": ":library"
         },
         {
             "name": "My Application.library.debugUnitTest",
@@ -2390,7 +2398,8 @@
                     "path": "<WORKSPACE>/library/src/testDebug"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/library"
+            "externalProjectPath": "<WORKSPACE>/library",
+            "externalProjectId": ":library"
         }
     ],
     "libraries": [
@@ -4636,5 +4645,6 @@
             "languageLevelId": "JDK_11",
             "manifestAttributes": {}
         }
-    ]
+    ],
+    "externalSystem": "GRADLE"
 }

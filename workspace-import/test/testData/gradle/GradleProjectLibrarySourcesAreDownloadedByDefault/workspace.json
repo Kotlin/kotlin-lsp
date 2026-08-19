@@ -17,7 +17,8 @@
                     "path": "<WORKSPACE>/"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/"
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
         },
         {
             "name": "untitled1.main",
@@ -36,7 +37,8 @@
                     "path": "<WORKSPACE>/src/main"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/"
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
         },
         {
             "name": "untitled1.test",
@@ -85,7 +87,8 @@
                     "path": "<WORKSPACE>/src/test"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/"
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
         }
     ],
     "libraries": [
@@ -235,5 +238,6 @@
             "languageLevelId": "JDK_17",
             "manifestAttributes": {}
         }
-    ]
+    ],
+    "externalSystem": "GRADLE"
 }

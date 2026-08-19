@@ -17,7 +17,8 @@
                     "path": "<WORKSPACE>/"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/"
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
         },
         {
             "name": "multi-project-source-sets.app",
@@ -36,7 +37,8 @@
                     "path": "<WORKSPACE>/app"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/app"
+            "externalProjectPath": "<WORKSPACE>/app",
+            "externalProjectId": ":app"
         },
         {
             "name": "multi-project-source-sets.app.main",
@@ -89,7 +91,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/app"
+            "externalProjectPath": "<WORKSPACE>/app",
+            "externalProjectId": ":app"
         },
         {
             "name": "multi-project-source-sets.app.test",
@@ -147,7 +150,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/app"
+            "externalProjectPath": "<WORKSPACE>/app",
+            "externalProjectId": ":app"
         },
         {
             "name": "multi-project-source-sets.lib",
@@ -166,7 +170,8 @@
                     "path": "<WORKSPACE>/lib"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/lib"
+            "externalProjectPath": "<WORKSPACE>/lib",
+            "externalProjectId": ":lib"
         },
         {
             "name": "multi-project-source-sets.lib.integrationTest",
@@ -210,7 +215,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/lib"
+            "externalProjectPath": "<WORKSPACE>/lib",
+            "externalProjectId": ":lib"
         },
         {
             "name": "multi-project-source-sets.lib.main",
@@ -253,7 +259,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/lib"
+            "externalProjectPath": "<WORKSPACE>/lib",
+            "externalProjectId": ":lib"
         },
         {
             "name": "multi-project-source-sets.lib.test",
@@ -301,7 +308,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/lib"
+            "externalProjectPath": "<WORKSPACE>/lib",
+            "externalProjectId": ":lib"
         },
         {
             "name": "multi-project-source-sets.main",
@@ -344,7 +352,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/"
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
         },
         {
             "name": "multi-project-source-sets.test",
@@ -392,7 +401,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/"
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
         }
     ],
     "libraries": [
@@ -800,5 +810,6 @@
             "languageLevelId": "JDK_17",
             "manifestAttributes": {}
         }
-    ]
+    ],
+    "externalSystem": "GRADLE"
 }

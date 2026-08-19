@@ -17,7 +17,8 @@
                     "path": "<WORKSPACE>/"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/"
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
         },
         {
             "name": "multi-project-example.api",
@@ -36,7 +37,8 @@
                     "path": "<WORKSPACE>/api"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/api"
+            "externalProjectPath": "<WORKSPACE>/api",
+            "externalProjectId": ":api"
         },
         {
             "name": "multi-project-example.api.main",
@@ -84,7 +86,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/api"
+            "externalProjectPath": "<WORKSPACE>/api",
+            "externalProjectId": ":api"
         },
         {
             "name": "multi-project-example.api.test",
@@ -137,7 +140,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/api"
+            "externalProjectPath": "<WORKSPACE>/api",
+            "externalProjectId": ":api"
         },
         {
             "name": "multi-project-example.core",
@@ -156,7 +160,8 @@
                     "path": "<WORKSPACE>/core"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/core"
+            "externalProjectPath": "<WORKSPACE>/core",
+            "externalProjectId": ":core"
         },
         {
             "name": "multi-project-example.core.main",
@@ -199,7 +204,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/core"
+            "externalProjectPath": "<WORKSPACE>/core",
+            "externalProjectId": ":core"
         },
         {
             "name": "multi-project-example.core.test",
@@ -247,7 +253,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/core"
+            "externalProjectPath": "<WORKSPACE>/core",
+            "externalProjectId": ":core"
         },
         {
             "name": "multi-project-example.service",
@@ -266,7 +273,8 @@
                     "path": "<WORKSPACE>/service"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/service"
+            "externalProjectPath": "<WORKSPACE>/service",
+            "externalProjectId": ":service"
         },
         {
             "name": "multi-project-example.service.main",
@@ -324,7 +332,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/service"
+            "externalProjectPath": "<WORKSPACE>/service",
+            "externalProjectId": ":service"
         },
         {
             "name": "multi-project-example.service.test",
@@ -387,7 +396,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/service"
+            "externalProjectPath": "<WORKSPACE>/service",
+            "externalProjectId": ":service"
         }
     ],
     "libraries": [
@@ -753,5 +763,6 @@
             "languageLevelId": "JDK_17",
             "manifestAttributes": {}
         }
-    ]
+    ],
+    "externalSystem": "GRADLE"
 }

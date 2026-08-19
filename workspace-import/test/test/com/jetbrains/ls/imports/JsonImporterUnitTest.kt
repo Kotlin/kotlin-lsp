@@ -14,6 +14,7 @@ import com.jetbrains.ls.imports.json.ContentRootData
 import com.jetbrains.ls.imports.json.DependencyData
 import com.jetbrains.ls.imports.json.DependencyDataScope
 import com.jetbrains.ls.imports.json.JavaSettingsData
+import com.jetbrains.ls.imports.json.JSON_EXTERNAL_SYSTEM_ID
 import com.jetbrains.ls.imports.json.LibraryData
 import com.jetbrains.ls.imports.json.LibraryRootData
 import com.jetbrains.ls.imports.json.ModuleData
@@ -171,6 +172,119 @@ class JsonImporterUnitTest {
             reimported.entities<ModuleEntity>().single { it.name == "app.main" }.exModuleOptions?.linkedProjectPath,
             "linked project path must still point at the external project directory after a round-trip",
         )
+    }
+
+    @Test
+    fun externalProjectIdSurvivesExportReimportRoundTrip(@TempDir workspacePath: Path) {
+        // The Gradle project path is what a build-tool launch invokes its task on, and it is *not* derivable from the
+        // module's directories: this project is called `:core` but lives in `modules/core`. It has to reach the
+        // workspace model as the importer recorded it, and survive the export/reimport that happens on the next open.
+        val data = WorkspaceData(
+            modules = listOf(
+                ModuleData(
+                    name = "core.main",
+                    contentRoots = listOf(ContentRootData(path = "<WORKSPACE>/modules/core/src/main")),
+                    externalProjectPath = "<WORKSPACE>/modules/core",
+                    externalProjectId = ":core",
+                ),
+                // A module the importer could not attribute keeps no id, so a launch declines it rather than guessing.
+                ModuleData(
+                    name = "unattributed",
+                    contentRoots = listOf(ContentRootData(path = "<WORKSPACE>/unattributed")),
+                ),
+            ),
+        )
+
+        val storage = MutableEntityStorage.create()
+        storage.importWorkspaceData(
+            data, workspacePath, object : EntitySource {}, createIdeVirtualFileUrlManager(true), externalSystemId = "GRADLE",
+        )
+        val imported = storage.entities<ModuleEntity>().associateBy { it.name }
+        assertEquals(":core", imported.getValue("core.main").exModuleOptions?.linkedProjectId)
+        assertNull(imported.getValue("unattributed").exModuleOptions?.linkedProjectId)
+
+        val exported = workspaceData(storage, workspacePath).modules.single { it.name == "core.main" }
+        assertEquals(":core", exported.externalProjectId, "export must preserve the external project id")
+
+        val reimported = MutableEntityStorage.create()
+        reimported.importWorkspaceData(
+            WorkspaceData(modules = listOf(exported)),
+            workspacePath, object : EntitySource {}, createIdeVirtualFileUrlManager(true), externalSystemId = "JSON",
+        )
+        assertEquals(
+            ":core",
+            reimported.entities<ModuleEntity>().single { it.name == "core.main" }.exModuleOptions?.linkedProjectId,
+            "the Gradle project path must still be the one Gradle reported after a round-trip",
+        )
+    }
+
+    /**
+     * Which build system imported the workspace is what every build-tool feature keys off — whether a launch goes
+     * through Gradle, and which compile invocation `resolveBuildCommand` answers with. `exportWorkspace` writes the
+     * model back to workspace.json, and on the next open [com.jetbrains.ls.imports.json.JsonWorkspaceImporter] reads
+     * that file: it must not relabel a Gradle workspace as its own file format.
+     *
+     * Regression: it did exactly that, so exporting a Gradle project (or opening one whose workspace.json was
+     * checked in) silently turned every Gradle launch into a direct `java` one and made the build step report
+     * "Build before launch is not supported for build tool 'JSON'".
+     */
+    @Test
+    fun externalSystemSurvivesExportReimportRoundTrip(@TempDir workspacePath: Path) {
+        val data = WorkspaceData(
+            modules = listOf(
+                ModuleData(
+                    name = "app.main",
+                    contentRoots = listOf(ContentRootData(path = "<WORKSPACE>/app/src/main")),
+                    externalProjectPath = "<WORKSPACE>/app",
+                    externalProjectId = ":app",
+                ),
+            ),
+        )
+
+        val storage = MutableEntityStorage.create()
+        storage.importWorkspaceData(
+            data, workspacePath, object : EntitySource {}, createIdeVirtualFileUrlManager(true), externalSystemId = "GRADLE",
+        )
+
+        val exported = workspaceData(storage, workspacePath)
+        assertEquals("GRADLE", exported.externalSystem, "export must record which build system produced the model")
+
+        // Re-import the way JsonWorkspaceImporter does: it passes its own id, which must not win over the recorded one.
+        val reimported = MutableEntityStorage.create()
+        reimported.importWorkspaceData(
+            exported, workspacePath, object : EntitySource {}, createIdeVirtualFileUrlManager(true),
+            externalSystemId = JSON_EXTERNAL_SYSTEM_ID,
+        )
+        assertEquals(
+            "GRADLE",
+            reimported.entities<ModuleEntity>().single().exModuleOptions?.externalSystem,
+            "the module must still belong to Gradle after a round-trip, or every Gradle launch turns into a plain java one",
+        )
+    }
+
+    /**
+     * A workspace.json that records no build system is just that — the importer's own id is then the best answer, and
+     * the marker it leaves is not itself a build system: exporting must not turn `"JSON"` into one, or a JPS project
+     * would come back from a round trip claiming to be built by its own file format (and the round trip would stop
+     * being one).
+     */
+    @Test
+    fun theJsonImportersOwnMarkerIsNotRecordedAsABuildSystem(@TempDir workspacePath: Path) {
+        val data = WorkspaceData(modules = listOf(ModuleData(name = "A")))
+
+        val storage = MutableEntityStorage.create()
+        storage.importWorkspaceData(
+            data, workspacePath, object : EntitySource {}, createIdeVirtualFileUrlManager(true),
+            externalSystemId = JSON_EXTERNAL_SYSTEM_ID,
+        )
+        assertEquals(JSON_EXTERNAL_SYSTEM_ID, storage.entities<ModuleEntity>().single().exModuleOptions?.externalSystem)
+        assertNull(workspaceData(storage, workspacePath).externalSystem, "the file format is not a build system")
+
+        // A pure-JPS workspace has no external system at all, and must not acquire one.
+        val jps = MutableEntityStorage.create()
+        jps.importWorkspaceData(data, workspacePath, object : EntitySource {}, createIdeVirtualFileUrlManager(true))
+        assertNull(jps.entities<ModuleEntity>().single().exModuleOptions)
+        assertNull(workspaceData(jps, workspacePath).externalSystem)
     }
 
     @Test

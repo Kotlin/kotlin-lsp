@@ -17,7 +17,8 @@
                     "path": "<WORKSPACE>/"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/"
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
         },
         {
             "name": "JavaLanguageLevels.main",
@@ -62,7 +63,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/"
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
         },
         {
             "name": "JavaLanguageLevels.test",
@@ -126,7 +128,8 @@
                     "path": "<WORKSPACE>/src/test"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/"
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
         },
         {
             "name": "JavaLanguageLevels.untitled11",
@@ -145,7 +148,8 @@
                     "path": "<WORKSPACE>/untitled11"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/untitled11"
+            "externalProjectPath": "<WORKSPACE>/untitled11",
+            "externalProjectId": ":untitled11"
         },
         {
             "name": "JavaLanguageLevels.untitled11.main",
@@ -170,7 +174,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/untitled11"
+            "externalProjectPath": "<WORKSPACE>/untitled11",
+            "externalProjectId": ":untitled11"
         },
         {
             "name": "JavaLanguageLevels.untitled11.test",
@@ -194,7 +199,8 @@
                     "path": "<WORKSPACE>/untitled11/src/test"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/untitled11"
+            "externalProjectPath": "<WORKSPACE>/untitled11",
+            "externalProjectId": ":untitled11"
         },
         {
             "name": "JavaLanguageLevels.untitled17",
@@ -213,7 +219,8 @@
                     "path": "<WORKSPACE>/untitled17"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/untitled17"
+            "externalProjectPath": "<WORKSPACE>/untitled17",
+            "externalProjectId": ":untitled17"
         },
         {
             "name": "JavaLanguageLevels.untitled17.main",
@@ -238,7 +245,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/untitled17"
+            "externalProjectPath": "<WORKSPACE>/untitled17",
+            "externalProjectId": ":untitled17"
         },
         {
             "name": "JavaLanguageLevels.untitled17.test",
@@ -262,7 +270,8 @@
                     "path": "<WORKSPACE>/untitled17/src/test"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/untitled17"
+            "externalProjectPath": "<WORKSPACE>/untitled17",
+            "externalProjectId": ":untitled17"
         },
         {
             "name": "JavaLanguageLevels.untitled21",
@@ -281,7 +290,8 @@
                     "path": "<WORKSPACE>/untitled21"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/untitled21"
+            "externalProjectPath": "<WORKSPACE>/untitled21",
+            "externalProjectId": ":untitled21"
         },
         {
             "name": "JavaLanguageLevels.untitled21.main",
@@ -306,7 +316,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/untitled21"
+            "externalProjectPath": "<WORKSPACE>/untitled21",
+            "externalProjectId": ":untitled21"
         },
         {
             "name": "JavaLanguageLevels.untitled21.test",
@@ -330,7 +341,8 @@
                     "path": "<WORKSPACE>/untitled21/src/test"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/untitled21"
+            "externalProjectPath": "<WORKSPACE>/untitled21",
+            "externalProjectId": ":untitled21"
         },
         {
             "name": "JavaLanguageLevels.untitled8",
@@ -349,7 +361,8 @@
                     "path": "<WORKSPACE>/untitled8"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/untitled8"
+            "externalProjectPath": "<WORKSPACE>/untitled8",
+            "externalProjectId": ":untitled8"
         },
         {
             "name": "JavaLanguageLevels.untitled8.main",
@@ -374,7 +387,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/untitled8"
+            "externalProjectPath": "<WORKSPACE>/untitled8",
+            "externalProjectId": ":untitled8"
         },
         {
             "name": "JavaLanguageLevels.untitled8.test",
@@ -449,7 +463,8 @@
                     ]
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/untitled8"
+            "externalProjectPath": "<WORKSPACE>/untitled8",
+            "externalProjectId": ":untitled8"
         }
     ],
     "libraries": [
@@ -807,5 +822,6 @@
             "languageLevelId": "JDK_21",
             "manifestAttributes": {}
         }
-    ]
+    ],
+    "externalSystem": "GRADLE"
 }

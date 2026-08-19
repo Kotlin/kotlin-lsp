@@ -94,7 +94,27 @@ fun workspaceData(storage: EntityStorage, workspacePath: Path): WorkspaceData =
             .map { toDataClass(it, workspacePath) }
             .sortedBy { it.module }
             .toList(),
+        externalSystem = externalSystemOf(storage),
     )
+
+/**
+ * The build system that imported [storage], or null if it has none (pure JPS) or the modules disagree about it.
+ *
+ * [JSON_EXTERNAL_SYSTEM_ID] is not one: it is the marker [JsonWorkspaceImporter] leaves on a model it read from a
+ * `workspace.json`, naming the *file format* the model arrived in. Recording it would make the next open believe the
+ * project is built by something called "JSON" — the very confusion this field exists to prevent — and would make a
+ * re-imported model differ from the one it was exported from.
+ *
+ * Disagreement between modules is not expected, since one importer produces one workspace, and recording nothing for
+ * it is deliberate: a single id would have to be picked for the modules it is wrong for, and the re-import then falls
+ * back to the importer's own id, which is exactly where an ambiguous workspace belongs.
+ */
+private fun externalSystemOf(storage: EntityStorage): String? =
+    storage.entities<ModuleEntity>()
+        .mapNotNull { it.exModuleOptions?.externalSystem }
+        .filter { it.isNotBlank() && it != JSON_EXTERNAL_SYSTEM_ID }
+        .distinct()
+        .singleOrNull()
 
 private val JSON = Json { prettyPrint = true }
 
@@ -119,6 +139,8 @@ private fun toDataClass(entity: ModuleEntity, workspacePath: Path): ModuleData =
         externalProjectPath = entity.exModuleOptions?.linkedProjectPath
             ?.takeUnless { it.isBlank() }
             ?.let { toRelativePath(Path.of(it), workspacePath) },
+        // Not a path, so it is stored as the build system spells it — no workspace-relative rewriting.
+        externalProjectId = entity.exModuleOptions?.linkedProjectId?.takeUnless { it.isBlank() },
     )
 
 private fun toDataClass(
@@ -268,6 +290,10 @@ fun MutableEntityStorage.importWorkspaceData(
     externalSystemId: String? = null
 ) {
     val storage = this
+    // What [data] itself records wins over the caller's id: a workspace.json written by `exportWorkspace` carries the
+    // build system that originally produced the model, and the importer reading it back is only the file's format.
+    // Relabelling a Gradle workspace as "JSON" here turned off every build-tool feature on the next open.
+    val effectiveExternalSystemId = data.externalSystem ?: externalSystemId
     for (sdkData in data.sdks) {
         if (ignoreDuplicateLibsAndSdks && SdkId(sdkData.name, sdkData.type) in storage) {
             continue
@@ -366,11 +392,12 @@ fun MutableEntityStorage.importWorkspaceData(
             }
         }
 
-        if(externalSystemId != null) {
+        if(effectiveExternalSystemId != null) {
             exModuleOptions =  ExternalSystemModuleOptionsEntity(entitySource) {
                 val projectPath = moduleData.externalProjectPath ?: moduleData.contentRoots.firstOrNull()?.path
                 linkedProjectPath = projectPath?.let { toAbsolutePath(it, workspacePath).toString() } ?: workspacePath.toString()
-                externalSystem = externalSystemId
+                linkedProjectId = moduleData.externalProjectId
+                externalSystem = effectiveExternalSystemId
             }
         }
 

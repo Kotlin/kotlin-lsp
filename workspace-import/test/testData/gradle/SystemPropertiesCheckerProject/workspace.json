@@ -17,7 +17,8 @@
                     "path": "<WORKSPACE>/"
                 }
             ],
-            "externalProjectPath": "<WORKSPACE>/"
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
         }
     ],
     "sdks": [
@@ -29,5 +30,6 @@
             "roots": [],
             "additionalData": ""
         }
-    ]
+    ],
+    "externalSystem": "GRADLE"
 }

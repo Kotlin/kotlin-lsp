@@ -23,6 +23,16 @@ data class WorkspaceData(
     val sdks: List<SdkData> = emptyList(),
     val kotlinSettings: List<KotlinSettingsData> = emptyList(),
     val javaSettings: List<JavaSettingsData> = emptyList(),
+    /**
+     * The build system that produced this workspace, as the workspace model spells it (`"GRADLE"`, `"MAVEN"`), or
+     * null for a workspace with no build system (pure JPS).
+     *
+     * Per workspace rather than per module because one importer produces one `workspace.json`. It is recorded here
+     * so that it survives the export/re-import round trip `exportWorkspace` sets up: the file is read back by
+     * [JsonWorkspaceImporter], and without this the re-imported model would claim the *file format* as its build
+     * system, which is what decides whether a module launches through Gradle and how it is compiled before launch.
+     */
+    val externalSystem: String? = null,
 )
 
 @Serializable
@@ -40,6 +50,17 @@ data class ModuleData(
      * external-system project (e.g. plain JPS modules), where the content root already is the project directory.
      */
     val externalProjectPath: String? = null,
+    /**
+     * The module's identifier within its build system, as that build system spells it — for Gradle the project's
+     * identity path (`":"` for the root project, `":app"` for a subproject). Null when the build system has no such
+     * identifier or the importer cannot determine it.
+     *
+     * Kept separate from [externalProjectPath] because a Gradle project path is not its directory: `settings.gradle`
+     * may point `:core` at `modules/core`, and `includeFlat` puts a project outside the build root entirely. Deriving
+     * one from the other produces a task path Gradle cannot resolve, so whoever launches through the build tool must
+     * read this instead.
+     */
+    val externalProjectId: String? = null,
 )
 
 @Serializable
