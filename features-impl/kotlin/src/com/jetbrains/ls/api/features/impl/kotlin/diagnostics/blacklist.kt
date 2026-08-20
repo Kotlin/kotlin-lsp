@@ -76,10 +76,6 @@ internal val kotlinQuickFixBlacklist = Blacklist(
         reason = "LSP-583",
     ),
     BlacklistEntry.Class(
-        fqcn = $$"org.jetbrains.kotlin.idea.codeInsight.inspections.EnumValuesSoftDeprecateInspection$K2ReplaceFix",
-        reason = "LSP-950",
-    ),
-    BlacklistEntry.Class(
         fqcn = "org.jetbrains.kotlin.idea.highlighting.SafeDeleteFix",
         reason = "LSP-970",
     ),
