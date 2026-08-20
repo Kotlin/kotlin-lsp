@@ -24,6 +24,7 @@ import {
   withLspClientStartPending,
 } from './lspClient';
 export {
+  createLspClientProvider,
   getLspClient,
   isExternalServerConfigured,
   prepareBundledServerLauncher,

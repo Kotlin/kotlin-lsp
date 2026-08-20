@@ -368,6 +368,17 @@ export function getLspClient(): LanguageClient | undefined {
   return _client;
 }
 
+/** The extension-policy `ClientProvider` seam (matched structurally), built over the shared client accessors. */
+export function createLspClientProvider(): {
+  getClient: () => LanguageClient | undefined;
+  onStateChange: (cb: (running: boolean) => void) => vscode.Disposable;
+} {
+  return {
+    getClient: () => getLspClient(),
+    onStateChange: (cb) => subscribeToClientEvent((_c, e) => cb(e.newState === State.Running)),
+  };
+}
+
 export function isLspClientStartPending(): boolean {
   return lspClientStartRequests > 0 || startLspClientPromise !== undefined;
 }
@@ -829,6 +840,10 @@ async function startServer({
     dataSharing,
     region,
   );
+  // E2E tests synthesize acceptance (see extension-policy `getAcceptedEulaHash`); keep it out of the machine record
+  if (context.extensionMode === vscode.ExtensionMode.Test) {
+    env.INTELLIJ_SERVER_EULA_PERSISTENCE = 'false';
+  }
 
   logInfo('Starting language server');
   logInfo(`  command: ${launcherPath}`);
