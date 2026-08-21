@@ -2,10 +2,17 @@
 
 export type ServerRestartState = 'restarting' | 'finished' | 'failed';
 
-export function disconnectedServerStartupPhase(
-  wasConnected: boolean,
-  restarting: boolean,
-): 'loading' | 'restarting' | 'lost' {
+export type DisconnectedServerStartupPhase = 'loading' | 'restarting' | 'lost';
+
+export interface DisconnectedServerStartupOptions {
+  wasConnected: boolean;
+  restarting: boolean;
+}
+
+export function disconnectedServerStartupPhase({
+  wasConnected,
+  restarting,
+}: DisconnectedServerStartupOptions): DisconnectedServerStartupPhase {
   if (restarting) return 'restarting';
   return wasConnected ? 'lost' : 'loading';
 }
