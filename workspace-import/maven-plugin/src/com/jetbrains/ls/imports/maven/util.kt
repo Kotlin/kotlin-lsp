@@ -287,26 +287,58 @@ tailrec fun MavenProject.deepestExecutionProject(): MavenProject {
     return executionProject.deepestExecutionProject()
 }
 
-fun MavenProject.getCompilerGeneratedSourcesDir(executionId: String): String? {
-    val compilerPlugin = getCompilerPlugin() ?: return null
+/**
+ * The plugin's layered configuration with execution configuration dominant over the plugin-level
+ * one — the order Maven's `DefaultPluginConfigurationExpander` makes effective for the executing
+ * goal. With [executionId] only that execution participates; without it, every execution does.
+ */
+internal fun Plugin.effectiveConfigs(executionId: String? = null): List<Xpp3Dom> {
+    val executionConfigs = executions.orEmpty()
+        .filter { executionId == null || it.id == executionId }
+        .mapNotNull { it.configuration as? Xpp3Dom }
+    return executionConfigs + listOfNotNull(configuration as? Xpp3Dom)
+}
 
-    if (compilerPlugin != null) {
-        val defaultCompileExec = compilerPlugin.executions?.find { it.id == executionId }
-        val execConfig = defaultCompileExec?.configuration as? Xpp3Dom
-        val execGeneratedNode = execConfig?.getChild("generatedSourcesDirectory")
+/**
+ * The first non-blank value of the named child across the layered configs. Null-safe against
+ * plexus's `Xpp3Dom.getValue()` returning null for self-closed or child-bearing nodes.
+ */
+internal fun List<Xpp3Dom>.firstChildValue(name: String): String? =
+    firstNotNullOfOrNull { config -> config.getChild(name)?.value?.trim()?.takeIf(String::isNotEmpty) }
 
-        if (execGeneratedNode != null && execGeneratedNode.value.isNotBlank()) {
-            return execGeneratedNode.value
-        }
+fun MavenProject.getCompilerGeneratedSourcesDir(executionId: String): String? =
+    getCompilerPlugin()?.effectiveConfigs(executionId)?.firstChildValue("generatedSourcesDirectory")
 
-        val globalConfig = compilerPlugin.configuration as? Xpp3Dom
-        val globalGeneratedNode = globalConfig?.getChild("generatedSourcesDirectory")
+fun MavenProject.getCompilerGeneratedTestSourcesDir(executionId: String): String? =
+    getCompilerPlugin()?.effectiveConfigs(executionId)?.firstChildValue("generatedTestSourcesDirectory")
 
-        if (globalGeneratedNode != null && globalGeneratedNode.value.isNotBlank()) {
-            return globalGeneratedNode.value
-        }
-    }
-    return null
+/**
+ * Default annotation-processor output directory (`target/generated-sources/annotations` or
+ * `target/generated-test-sources/test-annotations`), or null when annotation processing is not
+ * configured for that scope. Explicit `generatedSourcesDirectory`/`generatedTestSourcesDirectory`
+ * values are handled separately and win over this default.
+ */
+fun MavenProject.defaultAnnotationProcessorSourcesDir(testSources: Boolean): String? {
+    if (!hasAnnotationProcessing(testSources)) return null
+    val buildDirectory = build?.directory ?: return null
+    val relative = if (testSources) "generated-test-sources/test-annotations" else "generated-sources/annotations"
+    return "$buildDirectory/$relative"
+}
+
+/**
+ * Whether the compiler plugin runs annotation processors in the given scope: `annotationProcessorPaths`
+ * or `annotationProcessors` are configured, or `<proc>` is explicitly set to a value other than `none` —
+ * each resolved against the scope's default execution first, then the plugin-level configuration, the
+ * way Maven layers them. Processors picked up implicitly from the compile classpath are not detectable
+ * from the model and are not reported.
+ */
+fun MavenProject.hasAnnotationProcessing(testSources: Boolean): Boolean {
+    val compilerPlugin = getCompilerPlugin() ?: return false
+    val configs = compilerPlugin.effectiveConfigs(if (testSources) "default-testCompile" else "default-compile")
+    val proc = configs.firstChildValue("proc")
+    if (proc.equals("none", ignoreCase = true)) return false
+    if (proc != null) return true
+    return configs.any { it.getChild("annotationProcessorPaths") != null || it.getChild("annotationProcessors") != null }
 }
 
 private fun MavenProject.getCompilerPlugin(): Plugin? {

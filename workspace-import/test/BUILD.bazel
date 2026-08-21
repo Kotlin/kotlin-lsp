@@ -72,6 +72,8 @@ jvm_library(
         "//language-server/community/workspace-import:workspace-import_test_lib",
         "//language-server/community/workspace-import/maven-plugin",
         "//language-server/community/workspace-import/maven-plugin:maven-plugin_test_lib",
+        "@ultimate_lib//:apache-maven-plugin-api",
+        "@ultimate_lib//:apache-maven-core",
         "//language-server/community/workspace-import/gradle-plugin",
         "//language-server/community/workspace-import/gradle-plugin:gradle-plugin_test_lib",
         "@community//platform/workspace/jps",

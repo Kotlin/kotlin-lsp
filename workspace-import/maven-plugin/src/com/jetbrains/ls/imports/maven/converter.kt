@@ -211,7 +211,8 @@ private fun sourceRootData(
         project.compileSourceRoots
             ?.filter { belongsToProject(it) }
             ?.forEach { add(SourceRootData(it, "java-source")) }
-        project.getCompilerGeneratedSourcesDir("default-compile")?.let {
+        (project.getCompilerGeneratedSourcesDir("default-compile")
+         ?: project.defaultAnnotationProcessorSourcesDir(testSources = false))?.let {
             add(SourceRootData(it, "java-source"))
         }
         project.resources
@@ -226,6 +227,10 @@ private fun sourceRootData(
         project.testCompileSourceRoots
             ?.filter { belongsToProject(it) }
             ?.forEach { add(SourceRootData(it, "java-test")) }
+        (project.getCompilerGeneratedTestSourcesDir("default-testCompile")
+         ?: project.defaultAnnotationProcessorSourcesDir(testSources = true))?.let {
+            add(SourceRootData(it, "java-test"))
+        }
         project.testResources
             ?.map { it.directory }
             ?.filter { belongsToProject(it) }

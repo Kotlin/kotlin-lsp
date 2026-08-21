@@ -80,9 +80,12 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         val projectDirectory = parameters.projectDirectory
         val defaultSdkPath = parameters.defaultSdkPath
         val options = parameters.options
-        if (!canImportWorkspace(projectDirectory)) return null
+        // A configured project may point at a non-standard build file (`mvn -f dev_pom.xml`); auto-detected
+        // folders arrive with no projectPath and use the conventional pom.xml.
+        val pomFile = projectDirectory.resolve(options.projectPath ?: "pom.xml").normalize()
+        if (!pomFile.exists()) return null
 
-        LOG.info("Importing Maven project from: $projectDirectory")
+        LOG.info("Importing Maven project from: $projectDirectory (pom: $pomFile)")
         val wrapper = projectDirectory / (if (OS.CURRENT == OS.Windows) "mvnw.cmd" else "mvnw")
         val mavenHome = System.getProperty(JB_MAVEN_HOME_PROPERTY)?.let { Path.of(it) }
         // A `java-home` configured for this project wins over the JVM property and the ambient environment.
@@ -99,17 +102,17 @@ object MavenWorkspaceImporter : WorkspaceImporter {
 
         val offlineOpts = if (System.getProperty(LSP_MAVEN_PROJECT_OFFLINE_PROPERTY).toBoolean()) listOf("-o") else emptyList()
         progress.progressStatus("Installing Maven plugin...")
-        installMavenPlugin(execPath, javaHome, projectDirectory, progress, offlineOpts, options)
+        installMavenPlugin(execPath, javaHome, projectDirectory, pomFile, progress, offlineOpts, options)
 
 
         progress.progressStatus("Collecting Maven model...")
-        val modelWithDeps = runMavenPluginGoal(execPath, javaHome, projectDirectory, "model-with-deps", progress, offlineOpts, options)
+        val modelWithDeps = runMavenPluginGoal(execPath, javaHome, projectDirectory, pomFile, "model-with-deps", progress, offlineOpts, options)
         val modelWithGeneratedSources = if (skipGenerateSources()) {
             LOG.info("Skipping source generation: $LSP_MAVEN_PROJECT_SKIP_GENERATE_SOURCES_PROPERTY is set")
             null
         } else {
             progress.progressStatus("Generating sources...")
-            runMavenPluginGoal(execPath, javaHome, projectDirectory, "model-process-sources", progress, offlineOpts, options)
+            runMavenPluginGoal(execPath, javaHome, projectDirectory, pomFile, "model-process-sources", progress, offlineOpts, options)
         }
         progress.progressStatus("Maven model collected, commiting...")
         val mergedModels = mergeResults(modelWithDeps, modelWithGeneratedSources)
@@ -141,13 +144,14 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         execPath: Path?,
         javaHome: String?,
         projectDirectory: Path,
+        pomFile: Path,
         pluginGoal: String,
         progress: WorkspaceImportProgressReporter,
         additionalParams: List<String> = emptyList(),
         options: WorkspaceImportOptions = WorkspaceImportOptions.EMPTY,
     ): MavenRunResult {
         return runGoal(
-            execPath, javaHome, projectDirectory,
+            execPath, javaHome, projectDirectory, pomFile,
             "com.jetbrains.ls:imports-maven-plugin:$pluginGoal",
             progress, additionalParams, options
         )
@@ -157,6 +161,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         execPath: Path?,
         javaHome: String?,
         projectDirectory: Path,
+        pomFile: Path,
         goal: String,
         progress: WorkspaceImportProgressReporter,
         additionalParams: List<String> = emptyList(),
@@ -174,7 +179,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                 execPath.toString(),
                 goal,
                 "-f",
-                "pom.xml",
+                pomFile.toString(),
                 "-DoutputFile=${workspaceJsonFile.toAbsolutePath()}",
                 "-Denforcer.skip=true",
                 "-DskipTests=true",
@@ -239,6 +244,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         execPath: Path?,
         javaHome: String?,
         projectDirectory: Path,
+        pomFile: Path,
         progress: WorkspaceImportProgressReporter,
         additionalParams: List<String> = emptyList(),
         options: WorkspaceImportOptions = WorkspaceImportOptions.EMPTY,
@@ -259,6 +265,11 @@ object MavenWorkspaceImporter : WorkspaceImporter {
             val command = listOf(
                 execPath.toString(),
                 "install:install-file",
+                // Even a requiresProject=false goal parses a pom present in the working directory; a
+                // project configured with a non-standard build file often has a broken conventional
+                // pom.xml next to it, so point the install step at the working build file too.
+                "-f",
+                pomFile.toString(),
                 "-Dfile=$pluginJar",
                 "-DpomFile=$mavenPluginPomFile",
                 "-DgroupId=com.jetbrains.ls",

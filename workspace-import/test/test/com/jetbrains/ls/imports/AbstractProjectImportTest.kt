@@ -21,6 +21,7 @@ import com.jetbrains.analyzer.bootstrap.AnalyzerProjectId
 import com.jetbrains.analyzer.bootstrap.WorkspaceModelSnapshot
 import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
 import com.jetbrains.ls.imports.api.WorkspaceImportException
+import com.jetbrains.ls.imports.api.WorkspaceImportOptions
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper
@@ -184,6 +185,12 @@ abstract class AbstractProjectImportTest {
     fun simpleMaven() = doMavenTest("SimpleMaven")
 
     @Test
+    fun mavenCustomPomName() = doMavenTest("MavenCustomPomName", WorkspaceImportOptions(projectPath = "dev_pom.xml"))
+
+    @Test
+    fun mavenAnnotationProcessing() = doMavenTest("MavenAnnotationProcessing")
+
+    @Test
     fun mavenKotlinLanguageVersionFromConfiguration() = doMavenTest("MavenKotlinLanguageVersionFromConfiguration")
 
     @Test
@@ -268,11 +275,11 @@ abstract class AbstractProjectImportTest {
         }
     }
 
-    protected fun doMavenTest(project: String) {
+    protected fun doMavenTest(project: String, options: WorkspaceImportOptions = WorkspaceImportOptions.EMPTY) {
         downloadMavenBinaries().let { path ->
             MavenWorkspaceImporter.useMavenAndJava(path, Path.of(System.getProperty("java.home")))
         }
-        doTest(project, MavenWorkspaceImporter, testDataDir / "maven")
+        doTest(project, MavenWorkspaceImporter, testDataDir / "maven", options = options)
     }
 
     protected fun doTestBrokenProject(
@@ -312,7 +319,8 @@ abstract class AbstractProjectImportTest {
         importer: WorkspaceImporter,
         testDataDir: Path,
         resultMapper: (WorkspaceData) -> WorkspaceData = { it },
-        entityStorageVerifier: (EntityStorage) -> Unit = { }
+        entityStorageVerifier: (EntityStorage) -> Unit = { },
+        options: WorkspaceImportOptions = WorkspaceImportOptions.EMPTY,
     ) {
         val projectDir = testDataDir / project
         require(projectDir.exists()) { "Project $project not found at $projectDir" }
@@ -331,7 +339,7 @@ abstract class AbstractProjectImportTest {
                     )
                 ) {
                     try {
-                        importer.importWorkspace(it.project, WorkspaceImportParameters(projectDir, null), virtualFileUrlManager, reporter)
+                        importer.importWorkspace(it.project, WorkspaceImportParameters(projectDir, null, options), virtualFileUrlManager, reporter)
                     }
                     catch (e: WorkspaceImportException) {
                         throw AssertionError(
