@@ -44,6 +44,8 @@ public interface ModuleSourceSet extends Serializable {
      */
     @NotNull Set<@NotNull String> getFriendSourceSets();
 
+    @NotNull Set<@NotNull String> getCompileOptions();
+
     boolean hasUnresolvedDependencies();
 
     @Nullable Integer getToolchainVersion();

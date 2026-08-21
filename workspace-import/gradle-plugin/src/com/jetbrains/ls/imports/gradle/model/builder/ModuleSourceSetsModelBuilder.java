@@ -20,6 +20,7 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.compile.AbstractCompile;
+import org.gradle.api.tasks.compile.CompileOptions;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.tooling.provider.model.ToolingModelBuilder;
@@ -28,6 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -113,10 +115,13 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
             String sourceCompatibility = null;
             String targetCompatibility = null;
             FileCollection compileClasspath = sourceSet.getCompileClasspath();
+            Set<String> compileOptions = new HashSet<>();
             if (javaCompileTask instanceof JavaCompile) {
                 JavaCompile javaCompile = (JavaCompile) javaCompileTask;
                 sourceCompatibility = javaCompile.getSourceCompatibility();
                 targetCompatibility = javaCompile.getTargetCompatibility();
+                CompileOptions javaCompileOptions = javaCompile.getOptions();
+                compileOptions.addAll(javaCompileOptions.getAllCompilerArgs());
             }
             if (javaCompileTask instanceof AbstractCompile) {
                 try {
@@ -147,6 +152,7 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
                             sourceSetRoots.getOutputDirs(),
                             sourceSetRoots.getProducedArchives(),
                             friendModuleNames,
+                            compileOptions,
                             runtimeDependencies == null || compileDependencies == null,
                             targetBytecodeLevel,
                             sourceCompatibility,

@@ -69,6 +69,7 @@ private fun AndroidComponentReflection.resolveToModuleSourceSet(): ModuleSourceS
         /* producedArchives = */emptySet(),
         /* friendSourceSets =*/  kotlinCompilation?.allAssociatedCompilations?.mapNotNull { it.name }.orEmpty().toSet() +
                 listOfNotNull(mainComponent.name.takeIf { it != name }),
+        /* compileOptions = */ javaCompileTask?.options?.allCompilerArgs?.toSet() ?: emptySet(),
         /* hasUnresolvedDependencies = */false,
         /* toolchainVersion = */javaExtension?.toolchain?.languageVersion?.orNull?.asInt(),
         /* sourceCompatibility = */javaCompileTask?.sourceCompatibility,

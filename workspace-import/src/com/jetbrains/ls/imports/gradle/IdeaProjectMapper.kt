@@ -28,6 +28,8 @@ import java.nio.file.Path
 import kotlin.collections.containsKey
 import kotlin.io.path.exists
 
+private const val JAVA_ENABLE_PREVIEW_PROPERTY: String = "--enable-preview"
+
 internal class IdeaProjectMapper {
 
     private val LOG = logger<IdeaProjectMapper>()
@@ -246,7 +248,8 @@ internal class IdeaProjectMapper {
             val rootModuleJavaSettings = moduleJavaSettings
                 .mapNotNull { it.languageLevelId }
                 .minByOrNull { com.intellij.util.lang.JavaVersion.parse(it) }
-                ?.replace("JDK_", "") ?: projectJavaLevel
+                ?.replace("JDK_", "")
+                ?.replace("_PREVIEW", "") ?: projectJavaLevel
             val projectJavaSettings = getJavaSettingsData(
                 module = module,
                 moduleName = module.name,
@@ -399,8 +402,13 @@ internal class IdeaProjectMapper {
             javaLanguageSettings.isSpecified() -> javaLanguageSettings?.targetBytecodeVersion?.getJavaVersion()
             else -> null
         }
+        val moduleJavaLevelSuffix = if (sourceSet?.compileOptions?.contains(JAVA_ENABLE_PREVIEW_PROPERTY) == true) {
+            "_PREVIEW"
+        } else {
+            ""
+        }
         if (moduleJavaLevel != null) {
-            return moduleJavaLevel
+            return moduleJavaLevel + moduleJavaLevelSuffix
         }
         return projectJavaLevel
     }
