@@ -19,6 +19,7 @@ jvm_library(
         ],
         allow_empty = True,
     ),
+    content_module_jar = True,
     kotlinc_opts = ":custom_workspace-import",
     module_name = "language-server.workspace-import",
     resource_strip_prefix = "resources",

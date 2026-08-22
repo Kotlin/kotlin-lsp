@@ -30,6 +30,7 @@ jvm_library(
         ],
         allow_empty = True,
     ),
+    content_module_jar = True,
     kotlinc_opts = ":custom_kotlin",
     module_name = "language-server.api.features.impl.kotlin",
     resource_strip_prefix = "resources",
