@@ -1,4 +1,5 @@
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
+load("@community//platform/build-scripts/bazel-rules:content_module_jar.bzl", "content_module_jar")
 load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_provided_library")
 
 ### auto-generated section `build language-server.api.features.impl.kotlin` start
@@ -30,7 +31,6 @@ jvm_library(
         ],
         allow_empty = True,
     ),
-    content_module_jar = True,
     kotlinc_opts = ":custom_kotlin",
     module_name = "language-server.api.features.impl.kotlin",
     resource_strip_prefix = "resources",
@@ -96,6 +96,8 @@ jvm_library(
         ":community_plugins_kotlin_code-insight_kotlin-codeInsight-inspections_provided",
     ],
 )
+
+content_module_jar(module = ":kotlin")
 
 jvm_library(
     name = "kotlin_test_lib",

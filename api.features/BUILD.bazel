@@ -1,4 +1,5 @@
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
+load("@community//platform/build-scripts/bazel-rules:content_module_jar.bzl", "content_module_jar")
 load("@rules_jvm//:jvm.bzl", "jvm_library")
 
 ### auto-generated section `build language-server.api.features` start
@@ -18,7 +19,6 @@ jvm_library(
         ],
         allow_empty = True,
     ),
-    content_module_jar = True,
     kotlinc_opts = ":custom_api.features",
     module_name = "language-server.api.features",
     resource_strip_prefix = "resources",
@@ -45,6 +45,8 @@ jvm_library(
         "//language-server/api.core.util",
     ],
 )
+
+content_module_jar(module = ":api.features")
 
 jvm_library(
     name = "api.features_test_lib",

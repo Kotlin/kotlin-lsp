@@ -1,4 +1,5 @@
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
+load("@community//platform/build-scripts/bazel-rules:content_module_jar.bzl", "content_module_jar")
 load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_provided_library")
 
 ### auto-generated section `build language-server.workspace-import.gradle-plugin` start
@@ -43,7 +44,6 @@ jvm_library(
         ],
         allow_empty = True,
     ),
-    content_module_jar = True,
     kotlinc_opts = ":custom_gradle-plugin",
     module_name = "language-server.workspace-import.gradle-plugin",
     resource_strip_prefix = "resources",
@@ -66,6 +66,8 @@ jvm_library(
         ":community_libraries_kotlinx_serialization_json_provided",
     ],
 )
+
+content_module_jar(module = ":gradle-plugin")
 
 jvm_library(
     name = "gradle-plugin_test_lib",

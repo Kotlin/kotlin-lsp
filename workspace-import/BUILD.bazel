@@ -1,4 +1,5 @@
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
+load("@community//platform/build-scripts/bazel-rules:content_module_jar.bzl", "content_module_jar")
 load("@rules_jvm//:jvm.bzl", "jvm_library")
 
 ### auto-generated section `build language-server.workspace-import` start
@@ -19,7 +20,6 @@ jvm_library(
         ],
         allow_empty = True,
     ),
-    content_module_jar = True,
     kotlinc_opts = ":custom_workspace-import",
     module_name = "language-server.workspace-import",
     resource_strip_prefix = "resources",
@@ -68,6 +68,8 @@ jvm_library(
         "@community//libraries/maven-resolver-provider",
     ],
 )
+
+content_module_jar(module = ":workspace-import")
 
 jvm_library(
     name = "workspace-import_test_lib",
