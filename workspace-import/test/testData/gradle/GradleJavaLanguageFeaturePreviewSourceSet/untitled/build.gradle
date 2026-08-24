@@ -1,0 +1,15 @@
+plugins {
+    id 'java'
+}
+
+// only for the `main` source set
+// the test source set will be affected by changing the configuration of compileTestJava.options.compilerArgs
+compileJava {
+    options.compilerArgs += "--enable-preview"
+    sourceCompatibility = 25
+    targetCompatibility = 25
+}
+
+tasks.withType(JavaExec) {
+    jvmArgs += "--enable-preview"
+}

@@ -148,6 +148,20 @@ abstract class AbstractProjectImportTest {
     )
 
     @Test
+    fun gradleJavaLanguageFeaturePreviewModule() = doGradleTest(
+        "GradleJavaLanguageFeaturePreviewModule",
+        JdkDownloaderFacade.jdk25,
+        ::withIgnoredJdkRoots
+    )
+
+    @Test
+    fun gradleJavaLanguageFeaturePreviewSourceSet() = doGradleTest(
+        "GradleJavaLanguageFeaturePreviewSourceSet",
+        JdkDownloaderFacade.jdk25,
+        ::withIgnoredJdkRoots
+    )
+
+    @Test
     fun systemPropertiesCheckerProject() = doGradleTest("SystemPropertiesCheckerProject", ::withIgnoredJdkRoots)
 
     @Test

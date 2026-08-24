@@ -1,0 +1,17 @@
+plugins {
+    id 'java'
+}
+
+compileJava {
+    sourceCompatibility = 25
+    targetCompatibility = 25
+}
+
+// affects both source sets (main and test) as the main java compile task and the test java compile task are instances of JavaCompile
+tasks.withType(JavaCompile) {
+    options.compilerArgs += "--enable-preview"
+}
+
+tasks.withType(JavaExec) {
+    jvmArgs += "--enable-preview"
+}

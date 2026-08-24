@@ -1,0 +1,311 @@
+{
+    "modules": [
+        {
+            "name": "GradleJavaFeaturePreviewModuleSourceSet",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "25",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/"
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
+        },
+        {
+            "name": "GradleJavaFeaturePreviewModuleSourceSet.main",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "25",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/src/main"
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
+        },
+        {
+            "name": "GradleJavaFeaturePreviewModuleSourceSet.test",
+            "dependencies": [
+                {
+                    "type": "module",
+                    "name": "GradleJavaFeaturePreviewModuleSourceSet.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "25",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/src/test"
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
+        },
+        {
+            "name": "GradleJavaFeaturePreviewModuleSourceSet.untitled",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "25",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/untitled"
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled",
+            "externalProjectId": ":untitled"
+        },
+        {
+            "name": "GradleJavaFeaturePreviewModuleSourceSet.untitled.main",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "25",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/untitled/src/main",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/untitled/src/main/java",
+                            "type": "java-source"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled",
+            "externalProjectId": ":untitled"
+        },
+        {
+            "name": "GradleJavaFeaturePreviewModuleSourceSet.untitled.test",
+            "dependencies": [
+                {
+                    "type": "module",
+                    "name": "GradleJavaFeaturePreviewModuleSourceSet.untitled.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "25",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/untitled/src/test"
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled",
+            "externalProjectId": ":untitled"
+        },
+        {
+            "name": "GradleJavaFeaturePreviewModuleSourceSet.untitled1",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "25",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/untitled1"
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled1",
+            "externalProjectId": ":untitled1"
+        },
+        {
+            "name": "GradleJavaFeaturePreviewModuleSourceSet.untitled1.main",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "25",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/untitled1/src/main",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/untitled1/src/main/java",
+                            "type": "java-source"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled1",
+            "externalProjectId": ":untitled1"
+        },
+        {
+            "name": "GradleJavaFeaturePreviewModuleSourceSet.untitled1.test",
+            "dependencies": [
+                {
+                    "type": "module",
+                    "name": "GradleJavaFeaturePreviewModuleSourceSet.untitled1.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "25",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/untitled1/src/test"
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/untitled1",
+            "externalProjectId": ":untitled1"
+        }
+    ],
+    "sdks": [
+        {
+            "name": "25",
+            "type": "jdk",
+            "version": "JDK_25",
+            "homePath": null,
+            "roots": [],
+            "additionalData": ""
+        }
+    ],
+    "javaSettings": [
+        {
+            "module": "GradleJavaFeaturePreviewModuleSourceSet",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "languageLevelId": "JDK_25",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "GradleJavaFeaturePreviewModuleSourceSet.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/build/classes/java/main",
+                "<WORKSPACE>/build/resources/main"
+            ],
+            "languageLevelId": "JDK_25",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "GradleJavaFeaturePreviewModuleSourceSet.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/build/classes/java/test",
+                "<WORKSPACE>/build/resources/test"
+            ],
+            "languageLevelId": "JDK_25",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "GradleJavaFeaturePreviewModuleSourceSet.untitled",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "languageLevelId": "JDK_25",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "GradleJavaFeaturePreviewModuleSourceSet.untitled.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/untitled/build/classes/java/main",
+                "<WORKSPACE>/untitled/build/resources/main"
+            ],
+            "languageLevelId": "JDK_25_PREVIEW",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "GradleJavaFeaturePreviewModuleSourceSet.untitled.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/untitled/build/classes/java/test",
+                "<WORKSPACE>/untitled/build/resources/test"
+            ],
+            "languageLevelId": "JDK_25_PREVIEW",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "GradleJavaFeaturePreviewModuleSourceSet.untitled1",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "languageLevelId": "JDK_25",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "GradleJavaFeaturePreviewModuleSourceSet.untitled1.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/untitled1/build/classes/java/main",
+                "<WORKSPACE>/untitled1/build/resources/main"
+            ],
+            "languageLevelId": "JDK_25",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "GradleJavaFeaturePreviewModuleSourceSet.untitled1.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/untitled1/build/classes/java/test",
+                "<WORKSPACE>/untitled1/build/resources/test"
+            ],
+            "languageLevelId": "JDK_25",
+            "manifestAttributes": {}
+        }
+    ],
+    "externalSystem": "GRADLE"
+}
