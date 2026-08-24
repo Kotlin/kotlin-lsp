@@ -12,7 +12,7 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toPath
-import com.jetbrains.ls.api.features.impl.common.processors.RefactoringProcessor
+import com.jetbrains.ls.api.features.impl.common.processors.LSRefactoringProcessor
 import com.jetbrains.ls.api.features.impl.common.processors.doRefactoring
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.move.LSMoveFileProvider
@@ -50,5 +50,5 @@ abstract class LSMoveFileProviderBase(override val supportedLanguages: Set<LSLan
     }
 
     context(_: LSAnalysisContext)
-    protected abstract fun createProcessor(targetDirectory: PsiDirectory, file: PsiFile): RefactoringProcessor?
+    protected abstract fun createProcessor(targetDirectory: PsiDirectory, file: PsiFile): LSRefactoringProcessor?
 }

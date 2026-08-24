@@ -15,7 +15,7 @@ import com.intellij.refactoring.move.moveFilesOrDirectories.MoveFilesOrDirectori
 import com.intellij.refactoring.util.NonCodeUsageInfo
 import com.intellij.usageView.UsageInfo
 import com.intellij.util.containers.MultiMap
-import com.jetbrains.ls.api.features.impl.common.processors.RefactoringProcessor
+import com.jetbrains.ls.api.features.impl.common.processors.LSRefactoringProcessor
 import org.jetbrains.kotlin.analysis.api.permissions.KaAllowAnalysisFromWriteAction
 import org.jetbrains.kotlin.analysis.api.permissions.KaAllowAnalysisOnEdt
 import org.jetbrains.kotlin.analysis.api.permissions.allowAnalysisFromWriteAction
@@ -26,14 +26,14 @@ import org.jetbrains.kotlin.idea.k2.refactoring.move.ui.K2MoveModel
  * @see com.intellij.refactoring.move.moveFilesOrDirectories.MoveFilesOrDirectoriesProcessor
  * @see org.jetbrains.kotlin.idea.k2.refactoring.move.processor.K2MoveFilesOrDirectoriesRefactoringProcessor
  */
-internal class MoveKotlinFileProcessor(
+internal class LSMoveKotlinFileProcessor(
     private val project: Project,
     private val elementsToMove: Array<PsiElement>,
     private val targetDirectory: PsiDirectory,
     private val searchForReferences: Boolean,
     private val searchForComments: Boolean,
     private val searchForTextOccurrences: Boolean
-) : RefactoringProcessor {
+) : LSRefactoringProcessor {
     private val classifiedUsages : MutableMap<PsiFile, List<UsageInfo>> = mutableMapOf()
 
     override fun collectConflicts(
@@ -102,9 +102,9 @@ internal class MoveKotlinFileProcessor(
     }
 
     companion object {
-        fun create(model: K2MoveModel): RefactoringProcessor {
+        fun create(model: K2MoveModel): LSRefactoringProcessor {
             val descriptor = model.toDescriptor()
-            return MoveKotlinFileProcessor(
+            return LSMoveKotlinFileProcessor(
                 project = descriptor.project,
                 elementsToMove = descriptor.sourceElements.toTypedArray(),
                 targetDirectory = descriptor.moveDescriptors.first().target.getOrCreateTarget(descriptor.dirStructureMatchesPkg) as PsiDirectory,

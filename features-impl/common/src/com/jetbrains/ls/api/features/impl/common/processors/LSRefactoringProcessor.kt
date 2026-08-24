@@ -27,7 +27,7 @@ import com.jetbrains.analyzer.api.fileUrl
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.project
 
-private val LOG = logger<RefactoringProcessor>()
+private val LOG = logger<LSRefactoringProcessor>()
 
 /**
  * A re-implementation of some [com.intellij.refactoring.BaseRefactoringProcessor] methods without UI dependencies*.
@@ -38,7 +38,7 @@ private val LOG = logger<RefactoringProcessor>()
  * @see com.intellij.refactoring.BaseRefactoringProcessor
  * @see <a href="https://youtrack.jetbrains.com/issue/LSP-343/We-have-a-reimplementation-of-BaseRefactoringProcessor">LSP-343</a>
  */
-interface RefactoringProcessor {
+interface LSRefactoringProcessor {
     /**
      * Collects the conflicts for the given usages and adds them to the conflict map.
      */
@@ -81,7 +81,7 @@ interface RefactoringProcessor {
  * Executes logic of [BaseRefactoringProcessor] in simplified way without showing UI.
  */
 context(_: LSAnalysisContext)
-internal fun execute(processor: RefactoringProcessor) : Map<FileUrl, Pair<PsiFile, String>> {
+internal fun execute(processor: LSRefactoringProcessor) : Map<FileUrl, Pair<PsiFile, String>> {
     if (!PsiDocumentManager.getInstance(project).commitAllDocumentsUnderProgress()) return emptyMap()
     DumbService.getInstance(project).completeJustSubmittedTasks()
 
@@ -92,7 +92,7 @@ internal fun execute(processor: RefactoringProcessor) : Map<FileUrl, Pair<PsiFil
 }
 
 context(_: LSAnalysisContext)
-private fun findUsages(processor: RefactoringProcessor): Array<UsageInfo>? {
+private fun findUsages(processor: LSRefactoringProcessor): Array<UsageInfo>? {
     val initialUsages = runReadActionInBgt(project, processor::findUsages) ?: return null
 
     val conflicts = MultiMap<PsiElement, String>()
@@ -111,7 +111,7 @@ private fun findUsages(processor: RefactoringProcessor): Array<UsageInfo>? {
 
 context(_: LSAnalysisContext)
 private fun startRefactoring(
-    processor: RefactoringProcessor,
+    processor: LSRefactoringProcessor,
     usages: Array<UsageInfo>,
     project: Project
 ): Map<FileUrl, Pair<PsiFile, String>> {
@@ -122,7 +122,7 @@ private fun startRefactoring(
 }
 
 context(_: LSAnalysisContext)
-private fun doRefactoring(processor: RefactoringProcessor, usages: Array<UsageInfo>) {
+private fun doRefactoring(processor: LSRefactoringProcessor, usages: Array<UsageInfo>) {
     val writableUsageInfos = removeNonWritableUsages(usages)
     val data = processor.createEventData()
     data.addUsages(writableUsageInfos.toList())
@@ -166,7 +166,7 @@ private fun removeNonWritableUsages(usages: Array<UsageInfo>): Array<UsageInfo> 
     return usages.filter { it.element != null && it.isWritable }.toTypedArray()
 }
 
-private fun saveFileTexts(processor: RefactoringProcessor, usages: Array<UsageInfo>): Map<FileUrl, Pair<PsiFile, String>> {
+private fun saveFileTexts(processor: LSRefactoringProcessor, usages: Array<UsageInfo>): Map<FileUrl, Pair<PsiFile, String>> {
     val fileList = processor.getFilesToSave(usages)
     return fileList.mapNotNull {  file  ->
         val virtualFile = file.virtualFile ?: return@mapNotNull null

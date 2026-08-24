@@ -6,9 +6,9 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.features.impl.common.move.LSMoveFileProviderBase
-import com.jetbrains.ls.api.features.impl.common.processors.RefactoringProcessor
+import com.jetbrains.ls.api.features.impl.common.processors.LSRefactoringProcessor
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
-import com.jetbrains.ls.api.features.impl.kotlin.processors.MoveKotlinFileProcessor
+import com.jetbrains.ls.api.features.impl.kotlin.processors.LSMoveKotlinFileProcessor
 import org.jetbrains.kotlin.idea.base.util.KotlinSingleClassFileAnalyzer
 import org.jetbrains.kotlin.idea.k2.refactoring.move.processor.canMove
 import org.jetbrains.kotlin.idea.k2.refactoring.move.ui.K2MoveModel
@@ -23,7 +23,7 @@ internal object LSMoveKotlinFileProvider : LSMoveFileProviderBase(setOf(LSKotlin
     override fun createProcessor(
         targetDirectory: PsiDirectory,
         file: PsiFile
-    ): RefactoringProcessor? {
+    ): LSRefactoringProcessor? {
         if (file !is KtFile) return null
         val clazz = KotlinSingleClassFileAnalyzer.getSingleClass(file)
 
@@ -39,6 +39,6 @@ internal object LSMoveKotlinFileProvider : LSMoveFileProviderBase(setOf(LSKotlin
             canShowUI = false
         ) ?: return null
 
-        return MoveKotlinFileProcessor.create(model)
+        return LSMoveKotlinFileProcessor.create(model)
     }
 }

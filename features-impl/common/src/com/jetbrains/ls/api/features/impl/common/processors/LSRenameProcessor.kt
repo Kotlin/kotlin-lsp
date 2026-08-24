@@ -37,13 +37,13 @@ import com.jetbrains.lsp.protocol.RenameRequestType
 /**
  * @see com.intellij.refactoring.rename.RenameProcessor
  */
-class Renamer internal constructor(
+class LSRenameProcessor internal constructor(
     private val project: Project,
     target: PsiElement,
     private val newName: String,
     private val searchInComments: Boolean,
     private val searchTextOccurrences: Boolean,
-) : RefactoringProcessor {
+) : LSRefactoringProcessor {
     private val primaryElement: PsiElement = RenamePsiElementProcessor.forElement(target).substituteElementToRename(target, null) ?: target
     private val allRenames = linkedMapOf<PsiElement, String>()
     private val renamers = mutableListOf<AutomaticRenamer>()
@@ -254,22 +254,22 @@ class Renamer internal constructor(
     }
 
     companion object {
-        private val LOG = Logger.getInstance(Renamer::class.java)
+        private val LOG = Logger.getInstance(LSRenameProcessor::class.java)
 
         /**
-         * Validates [context] and constructs a [Renamer] under a read action.
+         * Validates [context] and constructs a [LSRenameProcessor] under a read action.
          *
          * Returns `null` if the target is no longer valid. Throws an LSP error if the target is a
          * [PsiCompiledElement] and therefore cannot be renamed.
          */
-        fun create(context: RenameContext): Renamer? {
+        fun create(context: RenameContext): LSRenameProcessor? {
             val target = context.target
             if (!target.isValid) return null
             val primaryElement = RenamePsiElementProcessor.forElement(target).substituteElementToRename(target, null) ?: target
             if (primaryElement is PsiCompiledElement) {
                 throwLspError(RenameRequestType, "This element cannot be renamed", Unit, ErrorCodes.InvalidParams)
             }
-            return Renamer(target.project, target, context.newName, false, false)
+            return LSRenameProcessor(target.project, target, context.newName, false, false)
         }
 
         private fun classifyUsages(

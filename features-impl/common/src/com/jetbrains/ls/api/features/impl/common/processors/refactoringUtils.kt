@@ -41,7 +41,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Executes [RefactoringProcessor], and returns diff after its changes
+ * Executes [LSRefactoringProcessor], and returns diff after its changes
  *
  * @param granularity granularity with which difference between files should be calculated,
  *  see [com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits].
@@ -53,7 +53,7 @@ import kotlinx.coroutines.withContext
  */
 context(server: LSServer, _: LSAnalysisContext, _: LspHandlerContext)
 suspend fun doRefactoring(
-    processor: RefactoringProcessor,
+    processor: LSRefactoringProcessor,
     granularity: DiffGranularity,
     uriToSkip: URI?,
     showNotificationWithError : Boolean
@@ -121,10 +121,10 @@ suspend fun doRefactoring(
     }
 }
 
-fun createProcessor(context: RefactoringContext): RefactoringProcessor? = when (context) {
-    is RenameContext -> Renamer.create(context)
-    is RenameSingleDirectoryContext -> MoveDirectoryProcessor.create(context)
-    is MoveSingleDirectoryContext -> MoveDirectoryProcessor.create(context)
+fun createProcessor(context: RefactoringContext): LSRefactoringProcessor? = when (context) {
+    is RenameContext -> LSRenameProcessor.create(context)
+    is RenameSingleDirectoryContext -> LSMoveDirectoryProcessor.create(context)
+    is MoveSingleDirectoryContext -> LSMoveDirectoryProcessor.create(context)
     else -> throw IllegalArgumentException("Unknown refactoring context: $context")
 }
 

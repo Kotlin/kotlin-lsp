@@ -19,7 +19,7 @@ import com.intellij.util.containers.MultiMap
 /**
  * @see MoveDirectoryWithClassesProcessor
  */
-class MoveDirectoryProcessor internal constructor(
+class LSMoveDirectoryProcessor internal constructor(
     private val project: Project,
     directories: Array<PsiDirectory>,
     private val targetDirectory: PsiDirectory?,
@@ -27,7 +27,7 @@ class MoveDirectoryProcessor internal constructor(
     private val searchInNonJavaFiles: Boolean,
     includeSelf: Boolean,
     private val targetDirectoryProvider: (PsiDirectory) -> TargetDirectoryWrapper,
-) : RefactoringProcessor {
+) : LSRefactoringProcessor {
     private val manager: PsiManager = PsiManager.getInstance(project)
     private val directories: Array<PsiDirectory> = MoveDirectoryWithClassesProcessorUtil.preprocessDirectories(directories, targetDirectory)
     private val filesToMove: MutableMap<VirtualFile, TargetDirectoryWrapper> = HashMap()
@@ -68,14 +68,14 @@ class MoveDirectoryProcessor internal constructor(
 
     companion object {
         /**
-         * Validates [context] and constructs a [MoveDirectoryProcessor] under a read action.
+         * Validates [context] and constructs a [LSMoveDirectoryProcessor] under a read action.
          *
          * Returns `null` if the source list is empty or any directory is no longer valid.
          */
-        fun create(context: RenameSingleDirectoryContext): MoveDirectoryProcessor? {
+        fun create(context: RenameSingleDirectoryContext): LSMoveDirectoryProcessor? {
             if (!context.directory.isValid) return null
 
-            return MoveDirectoryProcessor(
+            return LSMoveDirectoryProcessor(
                 project = context.directory.project,
                 directories = arrayOf(context.directory),
                 targetDirectory = null,
@@ -86,10 +86,10 @@ class MoveDirectoryProcessor internal constructor(
             )
         }
 
-        fun create(context: MoveSingleDirectoryContext): MoveDirectoryProcessor? {
+        fun create(context: MoveSingleDirectoryContext): LSMoveDirectoryProcessor? {
             if (!context.targetDirectory.isValid || !context.directoryToMove.isValid) return null
 
-            return MoveDirectoryProcessor(
+            return LSMoveDirectoryProcessor(
                 project = context.targetDirectory.project,
                 directories = arrayOf(context.directoryToMove),
                 targetDirectory = context.targetDirectory,

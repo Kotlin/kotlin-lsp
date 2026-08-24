@@ -3,6 +3,6 @@ package com.jetbrains.ls.api.features.impl.common.processors
 
 /**
  * Marker interface for refactoring context
- * @see [RefactoringProcessor]
+ * @see [LSRefactoringProcessor]
  */
 interface RefactoringContext
