@@ -56,6 +56,7 @@ import com.intellij.util.descriptors.ConfigFileItem
 import com.intellij.util.system.OS
 import com.intellij.util.text.nullize
 import com.jetbrains.analyzer.workspace.LSModuleOutputRoots
+import com.jetbrains.ls.api.core.util.withJrtModulesRoot
 import com.jetbrains.ls.imports.api.ModuleCoordinateEntity
 import com.jetbrains.ls.imports.api.coordinateEntity
 import com.jetbrains.ls.imports.utils.toIntellijUri
@@ -319,7 +320,7 @@ fun MutableEntityStorage.importWorkspaceData(
                         val path = toAbsolutePath(sdkHome, workspacePath)
                         JavaSdkImpl.findClasses(path, false).mapTo(this) {
                             SdkRoot(
-                                it.replace("!/", "!/modules/").toIntellijUri(virtualFileUrlManager),
+                                it.withJrtModulesRoot().toIntellijUri(virtualFileUrlManager),
                                 SdkRootTypeId.CLASSES
                             )
                         }
