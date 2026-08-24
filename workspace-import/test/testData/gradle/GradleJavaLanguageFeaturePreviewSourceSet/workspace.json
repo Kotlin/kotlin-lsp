@@ -264,7 +264,10 @@
                 "<WORKSPACE>/untitled/build/resources/main"
             ],
             "languageLevelId": "JDK_25_PREVIEW",
-            "manifestAttributes": {}
+            "manifestAttributes": {},
+            "compilerArguments": [
+                "--enable-preview"
+            ]
         },
         {
             "module": "GradleJavaFeaturePreviewModuleSourceSet.untitled.test",

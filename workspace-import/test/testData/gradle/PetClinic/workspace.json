@@ -5288,7 +5288,10 @@
                 "<WORKSPACE>/build/resources/aot"
             ],
             "languageLevelId": "JDK_17",
-            "manifestAttributes": {}
+            "manifestAttributes": {},
+            "compilerArguments": [
+                "-parameters"
+            ]
         },
         {
             "module": "PetClinic.aotTest",
@@ -5299,7 +5302,10 @@
                 "<WORKSPACE>/build/resources/aotTest"
             ],
             "languageLevelId": "JDK_17",
-            "manifestAttributes": {}
+            "manifestAttributes": {},
+            "compilerArguments": [
+                "-parameters"
+            ]
         },
         {
             "module": "PetClinic.main",
@@ -5310,7 +5316,10 @@
                 "<WORKSPACE>/build/resources/main"
             ],
             "languageLevelId": "JDK_17",
-            "manifestAttributes": {}
+            "manifestAttributes": {},
+            "compilerArguments": [
+                "-parameters"
+            ]
         },
         {
             "module": "PetClinic.test",
@@ -5321,7 +5330,10 @@
                 "<WORKSPACE>/build/resources/test"
             ],
             "languageLevelId": "JDK_17",
-            "manifestAttributes": {}
+            "manifestAttributes": {},
+            "compilerArguments": [
+                "-parameters"
+            ]
         }
     ],
     "externalSystem": "GRADLE"

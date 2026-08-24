@@ -240,8 +240,7 @@ internal class IdeaProjectMapper {
             val projectJavaSettings = getJavaSettingsData(
                 module = module,
                 moduleName = module.name,
-                targetJavaVersion = projectJavaLevel,
-                compilerOutputs = emptyList(),
+                targetJavaVersion = projectJavaLevel
             )
             moduleJavaSettings.add(projectJavaSettings)
         } else {
@@ -253,8 +252,7 @@ internal class IdeaProjectMapper {
             val projectJavaSettings = getJavaSettingsData(
                 module = module,
                 moduleName = module.name,
-                targetJavaVersion = rootModuleJavaSettings,
-                compilerOutputs = emptyList(),
+                targetJavaVersion = rootModuleJavaSettings
             )
             moduleJavaSettings.add(projectJavaSettings)
         }
@@ -378,9 +376,16 @@ internal class IdeaProjectMapper {
             .sorted()
             .ifEmpty { listOfNotNull(module.compilerOutput?.outputDir?.path) }
         val languageLevel = module.getLanguageLevel(projectJavaLevel, sourceSet)
+        val compilerOptions = sourceSet?.compileOptions?.toList() ?: emptyList()
 
         val moduleName = if (sourceSet == null) module.name else "${module.name}.${sourceSet.name}"
-        return getJavaSettingsData(moduleName, module, languageLevel, compilerOutputs)
+        return getJavaSettingsData(
+            moduleName,
+            module,
+            languageLevel,
+            compilerOutputs,
+            compilerOptions
+        )
     }
 
     private fun IdeaModule.getLanguageLevel(
@@ -430,7 +435,8 @@ internal class IdeaProjectMapper {
         moduleName: String,
         module: IdeaModule,
         targetJavaVersion: String?,
-        compilerOutputs: List<String>,
+        compilerOutputs: List<String> = emptyList(),
+        compilerArguments: List<String> = emptyList(),
     ): JavaSettingsData =
         JavaSettingsData(
             module = moduleName,
@@ -440,6 +446,7 @@ internal class IdeaProjectMapper {
             languageLevelId = targetJavaVersion?.let { "JDK_$it" },
             manifestAttributes = emptyMap(),
             excludeOutput = false,
+            compilerArguments = compilerArguments
         )
 
     private fun IdeaJavaLanguageSettings?.isSpecified(): Boolean {
