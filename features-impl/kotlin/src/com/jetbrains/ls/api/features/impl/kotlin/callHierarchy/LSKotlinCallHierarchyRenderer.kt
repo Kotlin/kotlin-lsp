@@ -6,7 +6,6 @@ import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.util.TypeConversionUtil
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.util.uri
-import com.jetbrains.ls.api.features.impl.common.callHierarchy.LSCallHierarchyProviderBase
 import com.jetbrains.ls.api.features.impl.common.callHierarchy.LSCallHierarchyProviderBase.CallHierarchyItemData
 import com.jetbrains.ls.api.features.impl.common.callHierarchy.LSCallHierarchyProviderBase.ClassResolver
 import com.jetbrains.ls.api.features.impl.common.callHierarchy.LSCallHierarchyProviderBase.NameData
@@ -14,6 +13,7 @@ import com.jetbrains.ls.api.features.impl.common.callHierarchy.LSCallHierarchyRe
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.impl.kotlin.symbols.getKind
 import com.jetbrains.ls.api.features.language.LSLanguage
+import com.jetbrains.ls.api.features.utils.PsiSerializablePointer
 import com.jetbrains.lsp.protocol.CallHierarchyItem
 import com.jetbrains.lsp.protocol.DocumentUri
 import com.jetbrains.lsp.protocol.LSP
@@ -30,6 +30,7 @@ import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
+import org.jetbrains.kotlin.psi.psiUtil.isObjectLiteral
 
 internal object LSKotlinCallHierarchyRenderer : LSCallHierarchyRenderer {
     override val supportedLanguages: Set<LSLanguage>
@@ -45,8 +46,8 @@ internal object LSKotlinCallHierarchyRenderer : LSCallHierarchyRenderer {
 
         val presentation = descriptor.getPresentation() ?: return null
 
-        val className = getContainingClassName(declaration) ?: return null
-        val nameData = getNameData(declaration, className) ?: return null
+        val resolver = getContainingClassResolver(declaration) ?: return null
+        val nameData = getNameData(declaration, resolver) ?: return null
 
         val containingFile = declaration.containingFile as? KtFile ?: return null
         val virtualFile = containingFile.virtualFile ?: return null
@@ -81,38 +82,48 @@ internal object LSKotlinCallHierarchyRenderer : LSCallHierarchyRenderer {
      * Retrieves the fully qualified class name containing the given Kotlin declaration.
      * If the declaration is a class itself, then its qualified name is returned.
      */
-    private fun getContainingClassName(element: KtNamedDeclaration): String? {
+    private fun getContainingClassResolver(element: KtNamedDeclaration): ClassResolver? {
         if (element is KtClassOrObject) {
-            return element.fqName?.asString()
+            val name = element.fqName?.asString() ?: return null
+            return ClassResolver.FQNameResolver(name)
         }
         val containingClass = element.containingClassOrObject
         if (containingClass != null) {
-            return containingClass.fqName?.asString()
+            if (containingClass.isObjectLiteral()) {
+                return ClassResolver.PointerResolver(
+                    PsiSerializablePointer.create(
+                        containingClass,
+                        containingClass.containingFile.virtualFile
+                    )
+                )
+            } else {
+                val name = containingClass.fqName?.asString() ?: return null
+                return ClassResolver.FQNameResolver(name)
+            }
         }
 
         val ktFile = element.containingFile as? KtFile ?: return null
-        return JvmFileClassUtil.getFileClassInfoNoResolve(ktFile).facadeClassFqName.asString()
+        return ClassResolver.FQNameResolver(JvmFileClassUtil.getFileClassInfoNoResolve(ktFile).facadeClassFqName.asString())
     }
 
-    private fun getNameData(element: KtNamedDeclaration, className: String): NameData? {
-        val classResolver = ClassResolver.FQNameResolver(className)
+    private fun getNameData(element: KtNamedDeclaration, resolver: ClassResolver): NameData? {
         return when (element) {
             is KtNamedFunction -> {
                 val name = element.name ?: return null
                 val parameterTypes = element.getParametersPresentation() ?: return null
-                NameData.MethodNameData(classResolver, name, parameterTypes, isConstructor = false)
+                NameData.MethodNameData(resolver, name, parameterTypes, isConstructor = false)
             }
             is KtConstructor<*> -> {
                 val containingClassName = element.containingClassOrObject?.name ?: return null
                 val parameterTypes = element.getParametersPresentation() ?: return null
-                NameData.MethodNameData(classResolver, containingClassName, parameterTypes, isConstructor = true)
+                NameData.MethodNameData(resolver, containingClassName, parameterTypes, isConstructor = true)
             }
             is KtProperty -> {
                 val name = element.name ?: return null
-                NameData.FieldNameData(classResolver, name)
+                NameData.FieldNameData(resolver, name)
             }
             is KtClassOrObject -> {
-                NameData.ClassNameData(classResolver)
+                NameData.ClassNameData(resolver)
             }
             else -> null
         }

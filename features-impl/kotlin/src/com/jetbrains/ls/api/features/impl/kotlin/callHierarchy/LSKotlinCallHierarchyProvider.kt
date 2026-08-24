@@ -8,6 +8,7 @@ import com.intellij.openapi.editor.impl.ImaginaryEditor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiElement
 import com.intellij.psi.search.GlobalSearchScope
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
 import com.jetbrains.ls.api.features.impl.common.callHierarchy.LSCallHierarchyProviderBase
@@ -92,10 +93,10 @@ internal object LSKotlinCallHierarchyProvider : LSCallHierarchyProviderBase<KtEl
         }
     }
 
-    private fun ClassResolver.resolveClass(project: Project): PsiClass? = when (this) {
+    private fun ClassResolver.resolveClass(project: Project): PsiElement? = when (this) {
         is ClassResolver.FQNameResolver -> JavaPsiFacade.getInstance(project)
             .findClass(fqName, GlobalSearchScope.projectScope(project))
-        is ClassResolver.PointerResolver -> pointer.restore(project) as? PsiClass
+        is ClassResolver.PointerResolver -> pointer.restore(project) as? KtClassOrObject
     }
 }
 
