@@ -89,7 +89,7 @@ internal object LSKotlinCallHierarchyRenderer : LSCallHierarchyRenderer {
         }
         val containingClass = element.containingClassOrObject
         if (containingClass != null) {
-            if (containingClass.isObjectLiteral()) {
+            if (containingClass.isObjectLiteral() || containingClass.isLocal) {
                 return ClassResolver.PointerResolver(
                     PsiSerializablePointer.create(
                         containingClass,
