@@ -14,6 +14,10 @@ import org.jetbrains.kotlin.idea.k2.refactoring.move.processor.canMove
 import org.jetbrains.kotlin.idea.k2.refactoring.move.ui.K2MoveModel
 import org.jetbrains.kotlin.psi.KtFile
 
+
+/**
+ * @see org.jetbrains.kotlin.idea.k2.refactoring.move.K2MoveHandler
+ */
 internal object LSMoveKotlinFileProvider : LSMoveFileProviderBase(setOf(LSKotlinLanguage)) {
     context(_: LSAnalysisContext)
     override fun createProcessor(
@@ -23,15 +27,16 @@ internal object LSMoveKotlinFileProvider : LSMoveFileProviderBase(setOf(LSKotlin
         if (file !is KtFile) return null
         val clazz = KotlinSingleClassFileAnalyzer.getSingleClass(file)
 
+        // Target elements to move are evaluated in `org.jetbrains.kotlin.idea.projectView.KotlinExpandNodeProjectViewProvider.modify`
         val targets: Array<PsiElement> = if (clazz != null && clazz.containingKtFile.declarations.size == 1) arrayOf(clazz) else arrayOf(file)
         if (!canMove(targets)) return null
 
         val model = K2MoveModel.create(
-            targets,
-            targetDirectory,
-            null,
-            null,
-            false
+            elements = targets,
+            targetContainer = targetDirectory,
+            editor = null,
+            moveCallBack = null,
+            canShowUI = false
         ) ?: return null
 
         return MoveKotlinFileProcessor.create(model)

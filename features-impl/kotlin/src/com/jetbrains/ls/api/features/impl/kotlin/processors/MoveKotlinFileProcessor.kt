@@ -43,7 +43,7 @@ internal class MoveKotlinFileProcessor(
         MoveFileHandler.detectConflicts(elementsToMove, refUsages.get(), targetDirectory, conflicts)
     }
 
-    override fun findUsages(): Array<UsageInfo>? {
+    override fun findUsages(): Array<UsageInfo> {
         val usagesContext = MoveFilesOrDirectoriesUtil.findUsages(
             project,
             elementsToMove,
@@ -102,7 +102,7 @@ internal class MoveKotlinFileProcessor(
     }
 
     companion object {
-        fun create(model : K2MoveModel): RefactoringProcessor {
+        fun create(model: K2MoveModel): RefactoringProcessor {
             val descriptor = model.toDescriptor()
             return MoveKotlinFileProcessor(
                 project = descriptor.project,

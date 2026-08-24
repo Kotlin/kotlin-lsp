@@ -21,6 +21,9 @@ import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.FileRename
 import com.jetbrains.lsp.protocol.WorkspaceEdit
 
+/**
+ * Follows the logic of [com.intellij.refactoring.move.MoveHandlerDelegate] but with the adaptation to the LSP.
+ */
 abstract class LSMoveFileProviderBase(override val supportedLanguages: Set<LSLanguage>) : LSMoveFileProvider {
     context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun moveFile(params: FileRename): WorkspaceEdit? {
