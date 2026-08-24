@@ -39,13 +39,13 @@ private val LOG = logger<GradleWorkspaceImporter>()
 
 object GradleWorkspaceImporter : WorkspaceImporter {
 
-    override fun canImportWorkspace(projectDirectory: Path): Boolean {
+    override fun canImportWorkspace(projectFileOrDirectory: Path): Boolean {
         return listOf(
             "build.gradle",
             "build.gradle.kts",
             "settings.gradle",
             "settings.gradle.kts"
-        ).any { (projectDirectory / it).exists() }
+        ).any { (projectFileOrDirectory / it).exists() }
     }
 
     override suspend fun importWorkspace(

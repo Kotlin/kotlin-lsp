@@ -9,6 +9,8 @@ import com.intellij.openapi.util.io.NioFiles
 import com.intellij.platform.workspace.jps.entities.LibraryEntity
 import com.intellij.platform.workspace.jps.entities.LibraryRoot
 import com.intellij.platform.workspace.jps.entities.LibraryRootTypeId
+import com.intellij.platform.workspace.jps.entities.ModuleEntity
+import com.intellij.platform.workspace.jps.entities.exModuleOptions
 import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
@@ -21,7 +23,6 @@ import com.jetbrains.analyzer.bootstrap.AnalyzerProjectId
 import com.jetbrains.analyzer.bootstrap.WorkspaceModelSnapshot
 import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
 import com.jetbrains.ls.imports.api.WorkspaceImportException
-import com.jetbrains.ls.imports.api.WorkspaceImportOptions
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper
@@ -185,7 +186,12 @@ abstract class AbstractProjectImportTest {
     fun simpleMaven() = doMavenTest("SimpleMaven")
 
     @Test
-    fun mavenCustomPomName() = doMavenTest("MavenCustomPomName", WorkspaceImportOptions(projectPath = "dev_pom.xml"))
+    fun mavenCustomPomName() = doMavenTest("MavenCustomPomName", projectFile = "dev_pom.xml") { storage ->
+        // The launch/build path re-runs Maven with the recorded build file (`-f`); losing the stamp would
+        // silently rebuild from a conventional pom that this project does not have.
+        val stamped = storage.entities(ModuleEntity::class.java).map { it.exModuleOptions?.rootProjectPath }.toList()
+        assertTrue(stamped.isNotEmpty() && stamped.all { it?.endsWith("dev_pom.xml") == true }, stamped.toString())
+    }
 
     @Test
     fun mavenAnnotationProcessing() = doMavenTest("MavenAnnotationProcessing")
@@ -275,11 +281,15 @@ abstract class AbstractProjectImportTest {
         }
     }
 
-    protected fun doMavenTest(project: String, options: WorkspaceImportOptions = WorkspaceImportOptions.EMPTY) {
+    protected fun doMavenTest(
+        project: String,
+        projectFile: String? = null,
+        entityStorageVerifier: (EntityStorage) -> Unit = { },
+    ) {
         downloadMavenBinaries().let { path ->
             MavenWorkspaceImporter.useMavenAndJava(path, Path.of(System.getProperty("java.home")))
         }
-        doTest(project, MavenWorkspaceImporter, testDataDir / "maven", options = options)
+        doTest(project, MavenWorkspaceImporter, testDataDir / "maven", projectFile = projectFile, entityStorageVerifier = entityStorageVerifier)
     }
 
     protected fun doTestBrokenProject(
@@ -320,7 +330,7 @@ abstract class AbstractProjectImportTest {
         testDataDir: Path,
         resultMapper: (WorkspaceData) -> WorkspaceData = { it },
         entityStorageVerifier: (EntityStorage) -> Unit = { },
-        options: WorkspaceImportOptions = WorkspaceImportOptions.EMPTY,
+        projectFile: String? = null,
     ) {
         val projectDir = testDataDir / project
         require(projectDir.exists()) { "Project $project not found at $projectDir" }
@@ -339,7 +349,8 @@ abstract class AbstractProjectImportTest {
                     )
                 ) {
                     try {
-                        importer.importWorkspace(it.project, WorkspaceImportParameters(projectDir, null, options), virtualFileUrlManager, reporter)
+                        val importPath = projectFile?.let { name -> projectDir / name } ?: projectDir
+                        importer.importWorkspace(it.project, WorkspaceImportParameters(importPath, null), virtualFileUrlManager, reporter)
                     }
                     catch (e: WorkspaceImportException) {
                         throw AssertionError(

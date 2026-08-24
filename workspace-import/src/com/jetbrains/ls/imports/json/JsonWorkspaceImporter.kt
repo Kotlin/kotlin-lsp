@@ -34,8 +34,8 @@ const val JSON_EXTERNAL_SYSTEM_ID: String = "JSON"
 
 object JsonWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
 
-    override fun canImportWorkspace(projectDirectory: Path): Boolean =
-        (projectDirectory / "workspace.json").exists()
+    override fun canImportWorkspace(projectFileOrDirectory: Path): Boolean =
+        (projectFileOrDirectory / "workspace.json").exists()
 
     override suspend fun importWorkspace(
         project: Project,

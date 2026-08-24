@@ -149,7 +149,7 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
                 val diff = importer.importWorkspace(
                     project = project,
                     parameters = WorkspaceImportParameters(
-                        projectDirectory = path,
+                        projectFileOrDirectory = path,
                         defaultSdkPath = defaultSdkPath,
                         options = options,
                     ),
@@ -387,8 +387,8 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
         }
     }
 
-    override fun canImportWorkspace(projectDirectory: Path): Boolean {
-        return (projectDirectory / ".idea" / "modules.xml").exists()
+    override fun canImportWorkspace(projectFileOrDirectory: Path): Boolean {
+        return (projectFileOrDirectory / ".idea" / "modules.xml").exists()
     }
 
     private fun detectJavaSdks(

@@ -6,6 +6,9 @@ package com.jetbrains.ls.imports.maven
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
+import com.intellij.platform.workspace.jps.entities.ModuleEntity
+import com.intellij.platform.workspace.jps.entities.exModuleOptions
+import com.intellij.platform.workspace.jps.entities.modifyExternalSystemModuleOptionsEntity
 import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
@@ -34,6 +37,8 @@ import kotlin.io.path.createTempFile
 import kotlin.io.path.div
 import kotlin.io.path.exists
 import kotlin.io.path.inputStream
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.name
 import kotlin.io.path.writeText
 
 private val LOG = logger<MavenWorkspaceImporter>()
@@ -67,9 +72,15 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         System.setProperty(JB_MAVEN_JAVA_HOME_PROPERTY, javaHome.toString())
     }
 
-    override fun canImportWorkspace(projectDirectory: Path): Boolean {
-        return (projectDirectory / "pom.xml").exists()
+    override fun canImportWorkspace(projectFileOrDirectory: Path): Boolean {
+        // A file is importable when its name is a recognizable pom spelling (`mvn -f dev_pom.xml`-style
+        // non-standard names included); a directory when it holds the conventional pom.
+        return if (projectFileOrDirectory.isRegularFile()) isPomFileName(projectFileOrDirectory.name)
+               else (projectFileOrDirectory / "pom.xml").exists()
     }
+
+    private fun isPomFileName(name: String): Boolean =
+        name.endsWith("pom.xml") || name.startsWith("pom.") || name.endsWith(".pom")
 
     override suspend fun importWorkspace(
         project: Project,
@@ -80,9 +91,9 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         val projectDirectory = parameters.projectDirectory
         val defaultSdkPath = parameters.defaultSdkPath
         val options = parameters.options
-        // A configured project may point at a non-standard build file (`mvn -f dev_pom.xml`); auto-detected
-        // folders arrive with no projectPath and use the conventional pom.xml.
-        val pomFile = projectDirectory.resolve(options.projectPath ?: "pom.xml").normalize()
+        // A configured project may point directly at a non-standard build file (`mvn -f dev_pom.xml`);
+        // auto-detected folders arrive as directories and use the conventional pom.xml.
+        val pomFile = parameters.projectFileOrDirectory.let { if (it.isRegularFile()) it else it / "pom.xml" }
         if (!pomFile.exists()) return null
 
         LOG.info("Importing Maven project from: $projectDirectory (pom: $pomFile)")
@@ -131,6 +142,12 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                     virtualFileUrlManager, false,
                     "MAVEN"
                 )
+                // The launch/build path re-runs Maven from the module's import root and lets Maven resolve
+                // the pom from the working directory; record the build file the import actually used so a
+                // non-standard pom name (`mvn -f dev_pom.xml`) reaches those invocations too.
+                entities(ModuleEntity::class.java).mapNotNull { it.exModuleOptions }.toList().forEach {
+                    modifyExternalSystemModuleOptionsEntity(it) { rootProjectPath = pomFile.toString() }
+                }
                 fixMissingProjectSdk(options.javaHome ?: defaultSdkPath, virtualFileUrlManager)
             }
         }

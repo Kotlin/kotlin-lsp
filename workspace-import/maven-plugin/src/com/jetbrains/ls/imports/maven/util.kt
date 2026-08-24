@@ -288,13 +288,13 @@ tailrec fun MavenProject.deepestExecutionProject(): MavenProject {
 }
 
 /**
- * The plugin's layered configuration with execution configuration dominant over the plugin-level
- * one — the order Maven's `DefaultPluginConfigurationExpander` makes effective for the executing
- * goal. With [executionId] only that execution participates; without it, every execution does.
+ * The plugin's layered configuration with the [executionId] execution's configuration dominant
+ * over the plugin-level one — the order Maven's `DefaultPluginConfigurationExpander` makes
+ * effective for the executing goal.
  */
-internal fun Plugin.effectiveConfigs(executionId: String? = null): List<Xpp3Dom> {
+internal fun Plugin.effectiveConfigs(executionId: String): List<Xpp3Dom> {
     val executionConfigs = executions.orEmpty()
-        .filter { executionId == null || it.id == executionId }
+        .filter { it.id == executionId }
         .mapNotNull { it.configuration as? Xpp3Dom }
     return executionConfigs + listOfNotNull(configuration as? Xpp3Dom)
 }
