@@ -70,14 +70,21 @@ private fun AndroidComponentReflection.resolveToModuleSourceSet(): ModuleSourceS
         sourceCompatibility = javaCompileTask?.sourceCompatibility,
         targetCompatibility = javaCompileTask?.targetCompatibility
     )
+
     return ModuleSourceSetImpl(
         /* name = */ name,
-        /* sources = */ sources?.kotlin?.get().orEmpty().map { it.asFile }.toSet() +
-                sources?.java?.get().orEmpty().map { it.asFile }.toSet(),
-        /* resources = */sources?.resources?.get().orEmpty().map { it.asFile }.toSet(),
+        /* sources = */ buildMutableSet {
+            addAll(sources?.kotlin?.get().orEmpty().map { it.asFile })
+            addAll(sources?.java?.get().orEmpty().map { it.asFile })
+        },
+        /* resources = */sources?.resources?.get().orEmpty().map { it.asFile }.toMutableSet(),
         /* excludes = */emptySet(),
         /* runtimeClasspath = */emptySet(),
-        /* compileClasspath = */bootClasspath + rClassJar + compileClasspath,
+        /* compileClasspath = */buildSet {
+            addAll(bootClasspath)
+            addAll(rClassJar)
+            addAll(compileClasspath)
+        },
         /* outputDirs = */emptySet(),
         /* producedArchives = */emptySet(),
         /* friendSourceSets =*/  kotlinCompilation?.allAssociatedCompilations?.mapNotNull { it.name }.orEmpty().toSet() +
@@ -86,6 +93,12 @@ private fun AndroidComponentReflection.resolveToModuleSourceSet(): ModuleSourceS
         /* javaSettings = */ javaSettings,
         /* kotlinModule =*/ kotlinCompileTask?.resolveKotlinModule()
     )
+}
+
+private fun <T> buildMutableSet(builderAction: MutableSet<T>.() -> Unit): MutableSet<T> {
+    val set = mutableSetOf<T>()
+    builderAction(set)
+    return set
 }
 
 private fun KotlinCompileTaskReflection.resolveKotlinModule(): KotlinModule? {

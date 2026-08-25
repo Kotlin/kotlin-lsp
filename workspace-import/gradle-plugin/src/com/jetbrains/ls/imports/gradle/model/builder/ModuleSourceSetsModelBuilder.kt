@@ -1,222 +1,182 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
-package com.jetbrains.ls.imports.gradle.model.builder;
+@file:Suppress("IO_FILE_USAGE")
 
-import com.jetbrains.ls.imports.gradle.model.ModuleJavaSettings;
-import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet;
-import com.jetbrains.ls.imports.gradle.model.ModuleSourceSets;
-import com.jetbrains.ls.imports.gradle.model.builder.android.AndroidSourceSets;
-import com.jetbrains.ls.imports.gradle.model.impl.ModuleJavaSettingsImpl;
-import com.jetbrains.ls.imports.gradle.model.impl.ModuleSourceSetImpl;
-import com.jetbrains.ls.imports.gradle.model.impl.ModuleSourceSetsImpl;
-import com.jetbrains.ls.imports.gradle.utils.KotlinCompilationReflection;
-import com.jetbrains.ls.imports.gradle.utils.KotlinExtensionReflection;
-import com.jetbrains.ls.imports.gradle.utils.KotlinReflectionKt;
-import com.jetbrains.ls.imports.gradle.utils.KotlinTargetExtensionReflection;
-import org.gradle.api.Project;
-import org.gradle.api.Task;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.plugins.ExtensionContainer;
-import org.gradle.api.plugins.JavaPluginExtension;
-import org.gradle.api.provider.Property;
-import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.SourceSetContainer;
-import org.gradle.api.tasks.TaskContainer;
-import org.gradle.api.tasks.compile.AbstractCompile;
-import org.gradle.api.tasks.compile.CompileOptions;
-import org.gradle.api.tasks.compile.JavaCompile;
-import org.gradle.jvm.toolchain.JavaLanguageVersion;
-import org.gradle.tooling.provider.model.ToolingModelBuilder;
-import org.gradle.util.GradleVersion;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+package com.jetbrains.ls.imports.gradle.model.builder
 
-import java.io.File;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import com.jetbrains.ls.imports.gradle.model.ModuleJavaSettings
+import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet
+import com.jetbrains.ls.imports.gradle.model.ModuleSourceSets
+import com.jetbrains.ls.imports.gradle.model.builder.android.resolveAndroidSourceSets
+import com.jetbrains.ls.imports.gradle.model.impl.ModuleJavaSettingsImpl
+import com.jetbrains.ls.imports.gradle.model.impl.ModuleSourceSetImpl
+import com.jetbrains.ls.imports.gradle.model.impl.ModuleSourceSetsImpl
+import com.jetbrains.ls.imports.gradle.utils.KotlinCompilationReflection
+import com.jetbrains.ls.imports.gradle.utils.KotlinExtensionReflection
+import com.jetbrains.ls.imports.gradle.utils.kotlin
+import org.gradle.api.Project
+import org.gradle.api.Task
+import org.gradle.api.file.FileCollection
+import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.api.tasks.compile.AbstractCompile
+import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.gradle.tooling.provider.model.ToolingModelBuilder
+import org.gradle.util.GradleVersion
+import java.io.File
 
-@SuppressWarnings("IO_FILE_USAGE")
-public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
+private val TARGET_MODEL_NAME: String = ModuleSourceSets::class.java.getName()
 
-    private static final String TARGET_MODEL_NAME = ModuleSourceSets.class.getName();
+class ModuleSourceSetsModelBuilder : ToolingModelBuilder {
 
-    @Override
-    public boolean canBuild(@NotNull String modelName) {
-        return TARGET_MODEL_NAME.equals(modelName);
-    }
+    override fun canBuild(modelName: String): Boolean = TARGET_MODEL_NAME == modelName
 
-    @Override
-    public @Nullable Object buildAll(@NotNull String modelName, @NotNull Project project) {
-        ExtensionContainer extensions = project.getExtensions();
-        Set<ModuleSourceSet> result = new HashSet<>();
-
+    override fun buildAll(modelName: String, project: Project): ModuleSourceSetsImpl? {
+        val extensions = project.extensions
+        val result = mutableSetOf<ModuleSourceSet>()
         /* Java-based import */
-        SourceSetContainer sourceSets = extensions.findByType(SourceSetContainer.class);
+        val sourceSets = extensions.findByType(SourceSetContainer::class.java)
         if (sourceSets != null) {
-            result.addAll(readSourceSets(sourceSets, project));
+            result.addAll(readSourceSets(sourceSets, project))
         }
-
         /* Support for Android-based source sets */
-        Set<ModuleSourceSet> androidSourceSets = AndroidSourceSets.resolveAndroidSourceSets(project);
+        val androidSourceSets = project.resolveAndroidSourceSets()
         if (androidSourceSets != null) {
-            result.addAll(androidSourceSets);
+            result.addAll(androidSourceSets)
         }
-
         if (!result.isEmpty()) {
-            return new ModuleSourceSetsImpl(result, moduleCoordinate(project));
+            return ModuleSourceSetsImpl(result, project.moduleCoordinate())
         }
-
-        return null;
+        return null
     }
 
     /**
-     * The project's {@code groupId:artifactId:version}, or {@code null} when group/version are not set
-     * (e.g. Gradle's default {@code "unspecified"} version), in which case the project publishes nothing
+     * The project's `groupId:artifactId:version`, or `null` when group/version are not set
+     * (e.g. Gradle's default `"unspecified"` version), in which case the project publishes nothing
      * matchable for dependency substitution.
      */
-    private static @Nullable String moduleCoordinate(@NotNull Project project) {
-        Object groupObject = project.getGroup();
-        Object versionObject = project.getVersion();
-        String group = groupObject.toString();
-        String version = versionObject.toString();
-        if (group.isEmpty() || version.isEmpty() || "unspecified".equals(version)) {
-            return null;
+    private fun Project.moduleCoordinate(): String? {
+        val group = group.toString()
+        val version = version.toString()
+        if (group.isEmpty() || version.isEmpty() || "unspecified" == version) {
+            return null
         }
-        return group + ":" + project.getName() + ":" + version;
+        return "$group:${name}:$version"
     }
 
-    private static @NotNull Set<@NotNull ModuleSourceSet> readSourceSets(
-            @NotNull SourceSetContainer sourceSets,
-            @NotNull Project project
-    ) {
-        Map<String, ModuleSourceSet> result = new HashMap<>();
-        TaskContainer taskContainer = project.getTasks();
-        GradleSourceSetRootResolver sourceSetRootResolver = new GradleSourceSetRootResolver(project);
+    private fun readSourceSets(
+        sourceSets: SourceSetContainer,
+        project: Project
+    ): Set<ModuleSourceSet> {
+        val result: MutableMap<String, ModuleSourceSet> = HashMap()
+        val taskContainer = project.tasks
+        val sourceSetRootResolver = GradleSourceSetRootResolver(project)
 
-        for (SourceSet sourceSet : sourceSets) {
-            String sourceSetName = sourceSet.getName();
-            Task javaCompileTask = taskContainer.findByName(sourceSet.getCompileJavaTaskName());
-            Set<File> runtimeDependencies = resolveFileCollectionFiles(sourceSetName, sourceSet.getRuntimeClasspath());
-            Set<File> compileDependencies = resolveFileCollectionFiles(sourceSetName, getCompileClasspath(sourceSet, javaCompileTask));
+        for (sourceSet in sourceSets) {
+            val sourceSetName = sourceSet.name
+            val javaCompileTask = taskContainer.findByName(sourceSet.compileJavaTaskName)
+            val runtimeDependencies: Set<File>? = sourceSet.runtimeClasspath.resolveFiles(sourceSetName)
+            val compileDependencies: Set<File>? = sourceSet.getCompileClasspath(javaCompileTask).resolveFiles(sourceSetName)
 
             /* Find kotlin compilation by name and resolve all friend dependencies */
-            KotlinExtensionReflection kotlin = KotlinReflectionKt.getKotlin(project);
-            Set<String> friendModuleNames = getFriendModuleNames(kotlin, sourceSetName);
-            ModuleJavaSettings javaSettings = getModuleJavaSettings(project, javaCompileTask);
+            val friendModuleNames: Set<String> = getFriendModuleNames(project.kotlin, sourceSetName)
+            val javaSettings: ModuleJavaSettings = getModuleJavaSettings(project, javaCompileTask)
+            val sourceSetRoots = sourceSetRootResolver.resolveSourceSetRoots(sourceSet)
 
-            GradleSourceSetRootResolver.SourceSetRoots sourceSetRoots = sourceSetRootResolver.resolveSourceSetRoots(sourceSet);
-            result.put(
-                    sourceSetName,
-                    new ModuleSourceSetImpl(
-                            sourceSetName,
-                            sourceSetRoots.getSourceDirs(),
-                            sourceSetRoots.getResourceDirs(),
-                            sourceSetRoots.getExcludedPatterns(),
-                            runtimeDependencies == null ? Collections.emptySet() : runtimeDependencies,
-                            compileDependencies == null ? Collections.emptySet() : compileDependencies,
-                            sourceSetRoots.getOutputDirs(),
-                            sourceSetRoots.getProducedArchives(),
-                            friendModuleNames,
-                            runtimeDependencies == null || compileDependencies == null,
-                            javaSettings,
-                            null
-                    ));
+            result[sourceSetName] = ModuleSourceSetImpl(
+                name = sourceSetName,
+                sources = sourceSetRoots.sourceDirs,
+                resources = sourceSetRoots.resourceDirs,
+                excludes = sourceSetRoots.excludedPatterns,
+                runtimeClasspath = runtimeDependencies ?: emptySet(),
+                compileClasspath = compileDependencies ?: emptySet(),
+                outputDirs = sourceSetRoots.outputDirs,
+                producedArchives = sourceSetRoots.producedArchives,
+                friendSourceSets = friendModuleNames,
+                hasUnresolvedDependencies = runtimeDependencies == null || compileDependencies == null,
+                javaSettings = javaSettings,
+                kotlinModule = null
+            )
         }
 
         sourceSetRootResolver.attachUnclaimedRoots(
-                result.get(SourceSet.MAIN_SOURCE_SET_NAME),
-                result.get(SourceSet.TEST_SOURCE_SET_NAME)
-        );
+            result[SourceSet.MAIN_SOURCE_SET_NAME],
+            result[SourceSet.TEST_SOURCE_SET_NAME]
+        )
 
-        return new HashSet<>(result.values());
+        return HashSet<ModuleSourceSet>(result.values)
     }
 
-    private static @NotNull ModuleJavaSettings getModuleJavaSettings(
-            @NotNull Project project,
-            @Nullable Task javaCompileTask
-    ) {
-        Set<String> compileOptions = new HashSet<>();
-        String sourceCompatibility = null;
-        String targetCompatibility = null;
-        Integer toolchainVersion = getToolchainVersion(project);
-        if (javaCompileTask instanceof JavaCompile) {
-            JavaCompile javaCompile = (JavaCompile) javaCompileTask;
-            sourceCompatibility = javaCompile.getSourceCompatibility();
-            targetCompatibility = javaCompile.getTargetCompatibility();
-            CompileOptions javaCompileOptions = javaCompile.getOptions();
-            compileOptions.addAll(javaCompileOptions.getAllCompilerArgs());
+    private fun getModuleJavaSettings(
+        project: Project,
+        javaCompileTask: Task?
+    ): ModuleJavaSettings {
+        val compileOptions: MutableSet<String> = HashSet()
+        var sourceCompatibility: String? = null
+        var targetCompatibility: String? = null
+        val toolchainVersion: Int? = project.getToolchainVersion()
+        if (javaCompileTask is JavaCompile) {
+            sourceCompatibility = javaCompileTask.sourceCompatibility
+            targetCompatibility = javaCompileTask.targetCompatibility
+            val javaCompileOptions = javaCompileTask.options
+            compileOptions.addAll(javaCompileOptions.getAllCompilerArgs())
         }
-        return new ModuleJavaSettingsImpl(
-                compileOptions,
-                toolchainVersion,
-                sourceCompatibility,
-                targetCompatibility
-        );
+        return ModuleJavaSettingsImpl(
+            compileOptions,
+            toolchainVersion,
+            sourceCompatibility,
+            targetCompatibility
+        )
     }
 
-    private static @Nullable Integer getToolchainVersion(@NotNull Project project) {
-        if (GradleVersion.current().compareTo(GradleVersion.version("6.7")) >= 0) {
-            JavaPluginExtension javaExtension = project.getExtensions()
-                    .findByType(JavaPluginExtension.class);
-            if (javaExtension != null) {
-                Property<JavaLanguageVersion> languageVersionProperty = javaExtension.getToolchain()
-                        .getLanguageVersion();
-                if (languageVersionProperty.isPresent()) {
-                    return languageVersionProperty.get().asInt();
-                }
+    private fun Project.getToolchainVersion(): Int? {
+        if (GradleVersion.current() >= GradleVersion.version("6.7")) {
+            val languageVersionProperty: Property<JavaLanguageVersion>? = extensions
+                .findByType(JavaPluginExtension::class.java)
+                ?.toolchain
+                ?.languageVersion
+            if (languageVersionProperty?.isPresent == true) {
+                return languageVersionProperty.get().asInt()
             }
         }
-        return null;
+        return null
     }
 
-    private static @NotNull FileCollection getCompileClasspath(
-            @NotNull SourceSet sourceSet,
-            @Nullable Task javaCompileTask
-    ) {
-        FileCollection compileClasspath = sourceSet.getCompileClasspath();
-        if (javaCompileTask instanceof AbstractCompile) {
+    private fun SourceSet.getCompileClasspath(
+        javaCompileTask: Task?
+    ): FileCollection {
+        var compileClasspath = compileClasspath
+        if (javaCompileTask is AbstractCompile) {
             try {
-                compileClasspath = ((AbstractCompile) javaCompileTask).getClasspath();
-            } catch (Exception e) {
+                compileClasspath = javaCompileTask.classpath
+            } catch (_: Exception) {
                 // ignore
             }
         }
-        return compileClasspath;
+        return compileClasspath
     }
 
-    private static @NotNull Set<String> getFriendModuleNames(@Nullable KotlinExtensionReflection kotlin, String sourceSetName) {
-        KotlinTargetExtensionReflection kotlinTarget = kotlin != null ? kotlin.getTarget() : null;
-        KotlinCompilationReflection kotlinCompilation = kotlinTarget != null ? kotlinTarget.getCompilation(sourceSetName) : null;
-        Collection<KotlinCompilationReflection> friendModules = kotlinCompilation != null
-                                                                ? kotlinCompilation.getAllAssociatedCompilations()
-                                                                : Collections.emptySet();
-        if (friendModules == null) {
-            friendModules = Collections.emptySet();
+    private fun getFriendModuleNames(kotlin: KotlinExtensionReflection?, sourceSetName: String): Set<String> {
+        val kotlinTarget = kotlin?.target
+        val kotlinCompilation = kotlinTarget?.getCompilation(sourceSetName)
+        val friendModules: Collection<KotlinCompilationReflection> = if (kotlinCompilation != null) {
+            kotlinCompilation.allAssociatedCompilations ?: setOf()
+        } else {
+            setOf()
         }
-
-        Set<String> friendModuleNames = new LinkedHashSet<>();
-        for (KotlinCompilationReflection friendModule : friendModules) {
-            String name = friendModule.getName();
-            if (name != null) {
-                friendModuleNames.add(name);
-            }
-        }
-        return friendModuleNames;
+        return friendModules
+            .mapNotNull { it.name }
+            .toSet()
     }
 
-    private static @Nullable Set<@NotNull File> resolveFileCollectionFiles(
-            @NotNull String sourceSetName,
-            @NotNull FileCollection collection
-    ) {
+    private fun FileCollection.resolveFiles(sourceSetName: String): Set<File>? {
         try {
-            return collection.getFiles();
-        } catch (Exception e) {
-            System.err.println("Unable to resolve a file collection for source set " + sourceSetName + " - " + e.getMessage());
-            return null;
+            return files
+        } catch (e: Exception) {
+            System.err.println("Unable to resolve a file collection for source set " + sourceSetName + " - " + e.message)
+            return null
         }
     }
 }

@@ -202,7 +202,7 @@ internal class IdeaProjectMapper {
         associatedSourceSets.forEach { sourceSet ->
             val sourceSetDependencies = mutableListOf<DependencyData>()
                 .apply {
-                    if (sourceSet.hasUnresolvedDependencies()) {
+                    if (sourceSet.hasUnresolvedDependencies) {
                         addAll(dependencyResolver.resolveDependenciesFromIdeaModule(module, sourceSet))
                     } else {
                         addAll(dependencyResolver.resolveDependencies(module.name, sourceSet))

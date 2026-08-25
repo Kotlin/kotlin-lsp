@@ -38,15 +38,15 @@ class GradleSourceSetRootResolver(private val project: Project) {
 
     fun attachUnclaimedRoots(main: ModuleSourceSet?, test: ModuleSourceSet?) {
         if (main != null) {
-            main.getSources().apply {
+            main.sources.apply {
                 addAll(ideaSourceDirs)
                 addAll(ideaGeneratedSourceDirs)
             }
-            main.getResources().addAll(ideaResourceDirs)
+            main.resources.addAll(ideaResourceDirs)
         }
         if (test != null) {
-            test.getSources().addAll(ideaTestSourceDirs)
-            test.getResources().addAll(ideaTestResourceDirs)
+            test.sources.addAll(ideaTestSourceDirs)
+            test.resources.addAll(ideaTestResourceDirs)
         }
     }
 
@@ -84,8 +84,8 @@ class GradleSourceSetRootResolver(private val project: Project) {
     }
 
     data class SourceSetRoots(
-        val sourceDirs: Set<File>,
-        val resourceDirs: Set<File>,
+        val sourceDirs: MutableSet<File>,
+        val resourceDirs: MutableSet<File>,
         val excludedPatterns: Set<String>,
         val outputDirs: Set<File>,
         val producedArchives: Set<File>
