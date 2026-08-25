@@ -1,9 +1,11 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.gradle.model.builder;
 
+import com.jetbrains.ls.imports.gradle.model.ModuleJavaSettings;
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet;
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSets;
 import com.jetbrains.ls.imports.gradle.model.builder.android.AndroidSourceSets;
+import com.jetbrains.ls.imports.gradle.model.impl.ModuleJavaSettingsImpl;
 import com.jetbrains.ls.imports.gradle.model.impl.ModuleSourceSetImpl;
 import com.jetbrains.ls.imports.gradle.model.impl.ModuleSourceSetsImpl;
 import com.jetbrains.ls.imports.gradle.utils.KotlinCompilationReflection;
@@ -29,7 +31,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -97,47 +98,15 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
         GradleSourceSetRootResolver sourceSetRootResolver = new GradleSourceSetRootResolver(project);
 
         for (SourceSet sourceSet : sourceSets) {
-            Integer targetBytecodeLevel = null;
-            if (GradleVersion.current().compareTo(GradleVersion.version("6.7")) >= 0) {
-                JavaPluginExtension javaExtension = project.getExtensions()
-                        .findByType(JavaPluginExtension.class);
-                if (javaExtension != null) {
-                    Property<JavaLanguageVersion> languageVersionProperty = javaExtension.getToolchain()
-                            .getLanguageVersion();
-                    if (languageVersionProperty.isPresent()) {
-                        targetBytecodeLevel = languageVersionProperty.get().asInt();
-                    }
-                }
-            }
-
-            String compileTaskName = sourceSet.getCompileJavaTaskName();
-            Task javaCompileTask = taskContainer.findByName(compileTaskName);
-            String sourceCompatibility = null;
-            String targetCompatibility = null;
-            FileCollection compileClasspath = sourceSet.getCompileClasspath();
-            Set<String> compileOptions = new HashSet<>();
-            if (javaCompileTask instanceof JavaCompile) {
-                JavaCompile javaCompile = (JavaCompile) javaCompileTask;
-                sourceCompatibility = javaCompile.getSourceCompatibility();
-                targetCompatibility = javaCompile.getTargetCompatibility();
-                CompileOptions javaCompileOptions = javaCompile.getOptions();
-                compileOptions.addAll(javaCompileOptions.getAllCompilerArgs());
-            }
-            if (javaCompileTask instanceof AbstractCompile) {
-                try {
-                    compileClasspath = ((AbstractCompile) javaCompileTask).getClasspath();
-                } catch (Exception e) {
-                    // ignore
-                }
-            }
-
             String sourceSetName = sourceSet.getName();
+            Task javaCompileTask = taskContainer.findByName(sourceSet.getCompileJavaTaskName());
             Set<File> runtimeDependencies = resolveFileCollectionFiles(sourceSetName, sourceSet.getRuntimeClasspath());
-            Set<File> compileDependencies = resolveFileCollectionFiles(sourceSetName, compileClasspath);
+            Set<File> compileDependencies = resolveFileCollectionFiles(sourceSetName, getCompileClasspath(sourceSet, javaCompileTask));
 
             /* Find kotlin compilation by name and resolve all friend dependencies */
             KotlinExtensionReflection kotlin = KotlinReflectionKt.getKotlin(project);
             Set<String> friendModuleNames = getFriendModuleNames(kotlin, sourceSetName);
+            ModuleJavaSettings javaSettings = getModuleJavaSettings(project, javaCompileTask);
 
             GradleSourceSetRootResolver.SourceSetRoots sourceSetRoots = sourceSetRootResolver.resolveSourceSetRoots(sourceSet);
             result.put(
@@ -152,11 +121,8 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
                             sourceSetRoots.getOutputDirs(),
                             sourceSetRoots.getProducedArchives(),
                             friendModuleNames,
-                            compileOptions,
                             runtimeDependencies == null || compileDependencies == null,
-                            targetBytecodeLevel,
-                            sourceCompatibility,
-                            targetCompatibility,
+                            javaSettings,
                             null
                     ));
         }
@@ -167,6 +133,59 @@ public final class ModuleSourceSetsModelBuilder implements ToolingModelBuilder {
         );
 
         return new HashSet<>(result.values());
+    }
+
+    private static @NotNull ModuleJavaSettings getModuleJavaSettings(
+            @NotNull Project project,
+            @Nullable Task javaCompileTask
+    ) {
+        Set<String> compileOptions = new HashSet<>();
+        String sourceCompatibility = null;
+        String targetCompatibility = null;
+        Integer toolchainVersion = getToolchainVersion(project);
+        if (javaCompileTask instanceof JavaCompile) {
+            JavaCompile javaCompile = (JavaCompile) javaCompileTask;
+            sourceCompatibility = javaCompile.getSourceCompatibility();
+            targetCompatibility = javaCompile.getTargetCompatibility();
+            CompileOptions javaCompileOptions = javaCompile.getOptions();
+            compileOptions.addAll(javaCompileOptions.getAllCompilerArgs());
+        }
+        return new ModuleJavaSettingsImpl(
+                compileOptions,
+                toolchainVersion,
+                sourceCompatibility,
+                targetCompatibility
+        );
+    }
+
+    private static @Nullable Integer getToolchainVersion(@NotNull Project project) {
+        if (GradleVersion.current().compareTo(GradleVersion.version("6.7")) >= 0) {
+            JavaPluginExtension javaExtension = project.getExtensions()
+                    .findByType(JavaPluginExtension.class);
+            if (javaExtension != null) {
+                Property<JavaLanguageVersion> languageVersionProperty = javaExtension.getToolchain()
+                        .getLanguageVersion();
+                if (languageVersionProperty.isPresent()) {
+                    return languageVersionProperty.get().asInt();
+                }
+            }
+        }
+        return null;
+    }
+
+    private static @NotNull FileCollection getCompileClasspath(
+            @NotNull SourceSet sourceSet,
+            @Nullable Task javaCompileTask
+    ) {
+        FileCollection compileClasspath = sourceSet.getCompileClasspath();
+        if (javaCompileTask instanceof AbstractCompile) {
+            try {
+                compileClasspath = ((AbstractCompile) javaCompileTask).getClasspath();
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+        return compileClasspath;
     }
 
     private static @NotNull Set<String> getFriendModuleNames(@Nullable KotlinExtensionReflection kotlin, String sourceSetName) {

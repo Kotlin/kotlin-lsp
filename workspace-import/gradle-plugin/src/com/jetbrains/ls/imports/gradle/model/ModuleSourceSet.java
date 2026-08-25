@@ -44,15 +44,9 @@ public interface ModuleSourceSet extends Serializable {
      */
     @NotNull Set<@NotNull String> getFriendSourceSets();
 
-    @NotNull Set<@NotNull String> getCompileOptions();
-
     boolean hasUnresolvedDependencies();
 
-    @Nullable Integer getToolchainVersion();
-
-    @Nullable String getSourceCompatibility();
-
-    @Nullable String getTargetCompatibility();
+    @NotNull ModuleJavaSettings getJavaSettings();
 
     /**
      * @return A dedicated module if directly associated with the source set.

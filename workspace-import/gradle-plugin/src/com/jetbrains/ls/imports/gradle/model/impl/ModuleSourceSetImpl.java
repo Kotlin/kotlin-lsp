@@ -2,6 +2,7 @@
 package com.jetbrains.ls.imports.gradle.model.impl;
 
 import com.jetbrains.ls.imports.gradle.model.KotlinModule;
+import com.jetbrains.ls.imports.gradle.model.ModuleJavaSettings;
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -21,11 +22,8 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
     private final @NotNull Set<@NotNull File> outputDirs;
     private final @NotNull Set<@NotNull File> producedArchives;
     private final @NotNull Set<@NotNull String> friendSourceSets;
-    private final @NotNull Set<@NotNull String> compileOptions;
     private final boolean hasUnresolvedDependencies;
-    private final @Nullable Integer toolchainVersion;
-    private final @Nullable String sourceCompatibility;
-    private final @Nullable String targetCompatibility;
+    private final @NotNull ModuleJavaSettings javaSettings;
     private final @Nullable KotlinModule kotlinModule;
 
     public ModuleSourceSetImpl(
@@ -38,11 +36,8 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
             @NotNull Set<@NotNull File> outputDirs,
             @NotNull Set<@NotNull File> producedArchives,
             @NotNull Set<@NotNull String> friendSourceSets,
-            @NotNull Set<@NotNull String> compileOptions,
             boolean hasUnresolvedDependencies,
-            @Nullable Integer toolchainVersion,
-            @Nullable String sourceCompatibility,
-            @Nullable String targetCompatibility,
+            @NotNull ModuleJavaSettings javaSettings,
             @Nullable KotlinModule kotlinModule
     ) {
         this.name = name;
@@ -54,11 +49,8 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
         this.outputDirs = outputDirs;
         this.producedArchives = producedArchives;
         this.friendSourceSets = friendSourceSets;
-        this.compileOptions = compileOptions;
         this.hasUnresolvedDependencies = hasUnresolvedDependencies;
-        this.toolchainVersion = toolchainVersion;
-        this.sourceCompatibility = sourceCompatibility;
-        this.targetCompatibility = targetCompatibility;
+        this.javaSettings = javaSettings;
         this.kotlinModule = kotlinModule;
     }
 
@@ -108,28 +100,13 @@ public final class ModuleSourceSetImpl implements ModuleSourceSet {
     }
 
     @Override
-    public @NotNull Set<@NotNull String> getCompileOptions() {
-        return compileOptions;
-    }
-
-    @Override
     public boolean hasUnresolvedDependencies() {
         return hasUnresolvedDependencies;
     }
 
     @Override
-    public @Nullable Integer getToolchainVersion() {
-        return toolchainVersion;
-    }
-
-    @Override
-    public @Nullable String getSourceCompatibility() {
-        return sourceCompatibility;
-    }
-
-    @Override
-    public @Nullable String getTargetCompatibility() {
-        return targetCompatibility;
+    public @NotNull ModuleJavaSettings getJavaSettings() {
+        return javaSettings;
     }
 
     @Override

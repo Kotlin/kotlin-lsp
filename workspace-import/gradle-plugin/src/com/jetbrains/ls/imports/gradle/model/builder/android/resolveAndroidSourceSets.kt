@@ -7,6 +7,7 @@ package com.jetbrains.ls.imports.gradle.model.builder.android
 import com.jetbrains.ls.imports.gradle.model.KotlinModule
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet
 import com.jetbrains.ls.imports.gradle.model.builder.KotlinMetadataModelBuilder
+import com.jetbrains.ls.imports.gradle.model.impl.ModuleJavaSettingsImpl
 import com.jetbrains.ls.imports.gradle.model.impl.ModuleSourceSetImpl
 import com.jetbrains.ls.imports.gradle.utils.AndroidComponentReflection
 import com.jetbrains.ls.imports.gradle.utils.AndroidVariantReflection
@@ -57,6 +58,18 @@ private fun AndroidComponentReflection.resolveToModuleSourceSet(): ModuleSourceS
         }.files.files
     }
 
+    val compileOptions = try {
+        javaCompileTask?.options?.allCompilerArgs?.toSet() ?: emptySet()
+    } catch (e: Exception) {
+        project.logger.error("Unable to resolve all compiler arguments for module $name", e)
+        emptySet()
+    }
+    val javaSettings = ModuleJavaSettingsImpl(
+        compileOptions = compileOptions,
+        toolchainVersion = javaExtension?.toolchain?.languageVersion?.orNull?.asInt(),
+        sourceCompatibility = javaCompileTask?.sourceCompatibility,
+        targetCompatibility = javaCompileTask?.targetCompatibility
+    )
     return ModuleSourceSetImpl(
         /* name = */ name,
         /* sources = */ sources?.kotlin?.get().orEmpty().map { it.asFile }.toSet() +
@@ -69,11 +82,8 @@ private fun AndroidComponentReflection.resolveToModuleSourceSet(): ModuleSourceS
         /* producedArchives = */emptySet(),
         /* friendSourceSets =*/  kotlinCompilation?.allAssociatedCompilations?.mapNotNull { it.name }.orEmpty().toSet() +
                 listOfNotNull(mainComponent.name.takeIf { it != name }),
-        /* compileOptions = */ javaCompileTask?.options?.allCompilerArgs?.toSet() ?: emptySet(),
         /* hasUnresolvedDependencies = */false,
-        /* toolchainVersion = */javaExtension?.toolchain?.languageVersion?.orNull?.asInt(),
-        /* sourceCompatibility = */javaCompileTask?.sourceCompatibility,
-        /* targetCompatibility = */javaCompileTask?.targetCompatibility,
+        /* javaSettings = */ javaSettings,
         /* kotlinModule =*/ kotlinCompileTask?.resolveKotlinModule()
     )
 }

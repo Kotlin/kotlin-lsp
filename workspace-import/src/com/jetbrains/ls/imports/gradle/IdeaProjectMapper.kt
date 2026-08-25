@@ -344,7 +344,7 @@ internal class IdeaProjectMapper {
             .associate { it.javaLanguageSettings to (projectMetadata.sourceSets[it.name] ?: emptySet()) }
             .flatMap { javaLanguageToSourceSets ->
                 val moduleSourceSets = javaLanguageToSourceSets.value
-                val sourceSetCompatibility = moduleSourceSets.mapNotNull { it.sourceCompatibility }
+                val sourceSetCompatibility = moduleSourceSets.mapNotNull { it.javaSettings.sourceCompatibility }
                     .map { com.intellij.util.lang.JavaVersion.parse(it) }
                 if (!sourceSetCompatibility.isEmpty()) {
                     return@flatMap sourceSetCompatibility
@@ -376,7 +376,7 @@ internal class IdeaProjectMapper {
             .sorted()
             .ifEmpty { listOfNotNull(module.compilerOutput?.outputDir?.path) }
         val languageLevel = module.getLanguageLevel(projectJavaLevel, sourceSet)
-        val compilerOptions = sourceSet?.compileOptions?.toList() ?: emptyList()
+        val compilerOptions = sourceSet?.javaSettings?.compileOptions?.toList() ?: emptyList()
 
         val moduleName = if (sourceSet == null) module.name else "${module.name}.${sourceSet.name}"
         return getJavaSettingsData(
@@ -402,12 +402,12 @@ internal class IdeaProjectMapper {
             return projectJavaLevel
         }
         val moduleJavaLevel = when {
-            sourceSet.isToolchainSpecified() -> sourceSet?.toolchainVersion.toString()
-            sourceSet.isCompileTaskSpecified() -> sourceSet?.targetCompatibility ?: sourceSet?.sourceCompatibility
+            sourceSet.isToolchainSpecified() -> sourceSet?.javaSettings?.toolchainVersion.toString()
+            sourceSet.isCompileTaskSpecified() -> sourceSet?.javaSettings?.targetCompatibility ?: sourceSet?.javaSettings?.sourceCompatibility
             javaLanguageSettings.isSpecified() -> javaLanguageSettings?.targetBytecodeVersion?.getJavaVersion()
             else -> null
         }
-        val moduleJavaLevelSuffix = if (sourceSet?.compileOptions?.contains(JAVA_ENABLE_PREVIEW_PROPERTY) == true) {
+        val moduleJavaLevelSuffix = if (sourceSet?.javaSettings?.compileOptions?.contains(JAVA_ENABLE_PREVIEW_PROPERTY) == true) {
             "_PREVIEW"
         } else {
             ""
@@ -419,11 +419,11 @@ internal class IdeaProjectMapper {
     }
 
     private fun ModuleSourceSet?.isToolchainSpecified(): Boolean {
-        return this != null && toolchainVersion != null
+        return this != null && javaSettings.toolchainVersion != null
     }
 
     private fun ModuleSourceSet?.isCompileTaskSpecified(): Boolean {
-        return this != null && (sourceCompatibility != null || targetCompatibility != null)
+        return this != null && (javaSettings.sourceCompatibility != null || javaSettings.targetCompatibility != null)
     }
 
     private fun JavaVersion.getJavaVersion(): String {
