@@ -124,6 +124,7 @@ let restartRequestedDuringStart = false;
 let bundledServerLauncherCache: { key: string; promise: Promise<string> } | undefined;
 let bundledServerSetupPhase: ServerBundlePhase = 'downloading';
 let configuredClientFeatureFactories: ClientFeatureFactory[] = [];
+let configuredStorageUri: vscode.Uri | undefined;
 /** The launched server outliving a single start, so a later stop can still terminate it. */
 let launchedServer: LaunchedServerStartup | undefined;
 /**
@@ -180,6 +181,7 @@ interface LspClientPolicyOptions {
   getAcceptedEulaHash: AcceptedEulaHashProvider;
   checkEulaAccepted: () => Promise<boolean>;
   clientFeatureFactories?: ClientFeatureFactory[];
+  storageUri?: vscode.Uri;
   onServerRestartStateChanged?: (state: ServerRestartState) => void;
 }
 
@@ -187,10 +189,12 @@ export function initLspClient({
   getAcceptedEulaHash,
   checkEulaAccepted,
   clientFeatureFactories = [],
+  storageUri,
   onServerRestartStateChanged,
 }: LspClientPolicyOptions): void {
   setLspActionsAvailable(true);
   configuredClientFeatureFactories = [...clientFeatureFactories];
+  configuredStorageUri = storageUri;
   registerIntellijExtensionsInitOption();
   const restartServer = (): Promise<boolean> =>
     runWithEulaGate({
@@ -815,8 +819,9 @@ async function startServer({
   const context = getContext();
   const args: string[] = [];
   args.push('--stdio');
-  if (context.storageUri) {
-    args.push('--system-path', context.storageUri.fsPath);
+  const storageUri = configuredStorageUri ?? context.storageUri;
+  if (storageUri) {
+    args.push('--system-path', storageUri.fsPath);
   }
   // The launcher owns the accepted-EULA hash: we start the process, so we pass it on the command line.
   // Clients that only connect to an already-running server cannot, which is why this is not in `initialize`.
