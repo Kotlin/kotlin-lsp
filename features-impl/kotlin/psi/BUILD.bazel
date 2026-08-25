@@ -1,0 +1,78 @@
+load("@community//platform/build-scripts/bazel-rules:content_module_jar.bzl", "content_module_jar")
+load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_provided_library")
+
+### auto-generated section `build language-server.api.features.impl.kotlin.psi` start
+jvm_library(
+    name = "psi",
+    srcs = glob(
+        [
+            "src/**/*.kt",
+            "src/**/*.java",
+            "src/**/*.form",
+        ],
+        allow_empty = True,
+    ),
+    module_name = "language-server.api.features.impl.kotlin.psi",
+    resource_strip_prefix = "resources",
+    resources = glob(
+        ["resources/**/*"],
+    ),
+    visibility = ["//visibility:public"],
+    deps = [
+        # do not sort,
+        "@community//libraries/kotlinx/coroutines/core",
+        "@community//platform/core-api:core",
+        "@community//platform/core-impl",
+        "@community//platform/analysis-api:analysis",
+        "@community//platform/workspace/storage",
+        "@community//platform/util",
+        "@community//libraries/kotlinc/kotlin-compiler-common:libraries-kotlinc-kotlin-compiler-common",
+        "@community//libraries/kotlinc/analysis-api:libraries-kotlinc-analysis-api",
+        "@community//libraries/kotlinc/analysis-api-k2:libraries-kotlinc-analysis-api-k2",
+        "@community//java/java-psi-api:psi",
+        "@community//fleet/lsp.protocol",
+        "@community//platform/lang-api:lang",
+        "//language-server/api.core.util",
+    ],
+)
+
+content_module_jar(module = ":psi")
+
+jvm_library(
+    name = "psi_test_lib",
+    testonly = True,
+    srcs = glob(
+        [],
+        allow_empty = True,
+    ),
+    module_name = "language-server.api.features.impl.kotlin.psi",
+    visibility = ["//visibility:public"],
+    runtime_deps = [
+        # do not sort,
+        ":psi",
+        "@community//libraries/kotlinx/coroutines/core:core_test_lib",
+        "@community//platform/core-api:core_test_lib",
+        "@community//platform/core-impl:core-impl_test_lib",
+        "@community//platform/analysis-api:analysis_test_lib",
+        "@community//platform/workspace/storage:storage_test_lib",
+        "@community//platform/util:util_test_lib",
+        "@community//libraries/kotlinc/kotlin-compiler-common:libraries-kotlinc-kotlin-compiler-common_test_lib",
+        "@community//libraries/kotlinc/analysis-api:libraries-kotlinc-analysis-api_test_lib",
+        "@community//libraries/kotlinc/analysis-api-k2:libraries-kotlinc-analysis-api-k2_test_lib",
+        "@community//java/java-psi-api:psi_test_lib",
+        "@community//fleet/lsp.protocol:lsp.protocol_test_lib",
+        "@community//platform/lang-api:lang_test_lib",
+        "//language-server/api.core.util:api.core.util_test_lib",
+    ],
+)
+### auto-generated section `build language-server.api.features.impl.kotlin.psi` end
+
+### auto-generated section `iml language-server.api.features.impl.kotlin.psi` start
+exports_files(
+    [
+        "language-server.api.features.impl.kotlin.psi.iml",
+        "resources/language-server.api.features.impl.kotlin.psi.xml",
+    ],
+    visibility = ["//visibility:public"],
+)
+### auto-generated section `iml language-server.api.features.impl.kotlin.psi` end

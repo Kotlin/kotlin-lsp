@@ -25,7 +25,6 @@ import kotlinx.coroutines.launch
 abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
     abstract fun getContributors(): List<ChooseByNameContributor>
 
-    context(server: LSServer, analysisContext: LSAnalysisContext)
     abstract fun createWorkspaceSymbol(item: NavigationItem, contributor: ChooseByNameContributor, qualifiedQuery: Boolean = false): WorkspaceSymbol?
 
     context(server: LSServer, handlerContext: LspHandlerContext)
@@ -39,7 +38,7 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
         }
     }
 
-    context(server: LSServer, analysisContext: LSAnalysisContext)
+    context(analysisContext: LSAnalysisContext)
     private suspend fun handleContributor(
         contributor: ChooseByNameContributor,
         query: String,

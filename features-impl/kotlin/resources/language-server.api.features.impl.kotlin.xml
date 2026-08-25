@@ -47,6 +47,7 @@
     <module name="language-server.api.features"/>
     <module name="language-server.api.features.impl.common"/>
     <module name="language-server.api.features.impl.java-base"/>
+    <module name="language-server.api.features.impl.kotlin.psi"/>
     <module name="language-server.api.impl.analyzer"/>
     <module name="language-server.workspace-import"/>
   </dependencies>

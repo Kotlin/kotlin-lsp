@@ -5,10 +5,8 @@ import com.intellij.navigation.ChooseByNameContributor
 import com.intellij.navigation.NavigationItem
 import com.intellij.navigation.PsiElementNavigationItem
 import com.intellij.psi.util.parentsOfType
-import com.jetbrains.ls.api.core.LSAnalysisContext
-import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.features.impl.common.symbols.LSWorkspaceSymbolProviderBase
 import com.jetbrains.ls.api.core.util.getLspLocationForDefinition
+import com.jetbrains.ls.api.features.impl.common.symbols.LSWorkspaceSymbolProviderBase
 import com.jetbrains.lsp.protocol.WorkspaceSymbol
 import org.jetbrains.kotlin.idea.goto.KotlinGotoClassSymbolContributor
 import org.jetbrains.kotlin.idea.goto.KotlinGotoFunctionSymbolContributor
@@ -24,7 +22,6 @@ internal object LSKotlinWorkspaceSymbolProvider : LSWorkspaceSymbolProviderBase(
         KotlinGotoPropertySymbolContributor(),
     )
 
-    context(server: LSServer, analysisContext: LSAnalysisContext)
     override fun createWorkspaceSymbol(
         item: NavigationItem,
         contributor: ChooseByNameContributor,

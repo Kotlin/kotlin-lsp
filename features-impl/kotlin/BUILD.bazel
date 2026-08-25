@@ -93,6 +93,7 @@ jvm_library(
         "@community//plugins/kotlin/references",
         "@community//plugins/kotlin/refactorings/kotlin.refactorings.k2:kotlin-refactorings",
         "@community//platform/refactoring",
+        "//language-server/community/features-impl/kotlin/psi",
         ":community_plugins_kotlin_code-insight_kotlin-codeInsight-inspections_provided",
     ],
 )
@@ -166,6 +167,7 @@ jvm_library(
         "@community//plugins/kotlin/references:references_test_lib",
         "@community//plugins/kotlin/refactorings/kotlin.refactorings.k2:kotlin-refactorings_test_lib",
         "@community//platform/refactoring:refactoring_test_lib",
+        "//language-server/community/features-impl/kotlin/psi:psi_test_lib",
     ],
 )
 ### auto-generated section `build language-server.api.features.impl.kotlin` end
