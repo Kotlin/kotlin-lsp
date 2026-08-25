@@ -85,6 +85,7 @@ exports_files(
         "language-server.api.features.iml",
         "resources/META-INF/language-server/features/api/lsApi.xml",
         "resources/language-server.api.features.xml",
+        "module-content.yaml",
     ],
     visibility = ["//visibility:public"],
 )

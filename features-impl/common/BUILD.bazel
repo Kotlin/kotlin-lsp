@@ -127,6 +127,7 @@ exports_files(
         "language-server.api.features.impl.common.iml",
         "resources/META-INF/language-server/features/common/commonLsApi.xml",
         "resources/language-server.api.features.impl.common.xml",
+        "module-content.yaml",
     ],
     visibility = ["//visibility:public"],
 )
