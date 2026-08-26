@@ -15,6 +15,7 @@ import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiFile
 import com.jetbrains.analyzer.codeServer.createCompletionProcess
 import com.jetbrains.analyzer.codeServer.insertCompletion
+import com.jetbrains.analyzer.codeServer.takeCaretInsideTabOutScope
 import com.jetbrains.analyzer.codeServer.performCompletion
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
@@ -70,6 +71,7 @@ class LSCompletionProviderHelper(
     private val uniqueId: LSUniqueConfigurationEntry.UniqueId,
     private val applyCompletionCommandKey: String,
     private val completionDataKey: String,
+    private val restoreTabOutScopeCaret: Boolean = false,
 ) {
 
     interface FileForModificationProvider {
@@ -312,7 +314,11 @@ class LSCompletionProviderHelper(
                     )
                     insertCompletion(project, fileForModification, completion.lookup, completionProcess.parameters!!)
                     val edits = TextEditsComputer.computeTextEdits(initialText, fileForModification.text)
-                    val caretAfter = completionProcess.caret.offset
+                    val caretAfter = if (restoreTabOutScopeCaret) {
+                        takeCaretInsideTabOutScope(completionProcess.parameters!!.editor) ?: completionProcess.caret.offset
+                    } else {
+                        completionProcess.caret.offset
+                    }
                     CompletionInsertionResult(edits, document.positionByOffset(caretAfter), caretAfter)
                 }
             }
