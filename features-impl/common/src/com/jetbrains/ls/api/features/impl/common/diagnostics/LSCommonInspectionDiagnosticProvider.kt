@@ -148,8 +148,8 @@ class LSCommonInspectionDiagnosticProvider(
         onTheFly: Boolean,
     ): List<Diagnostic> = tracer.spanBuilder(SPAN_LOCAL_INSPECTIONS).useWithScope {
         val optimizer = InspectionVisitorOptimizer(elements)
-        val document = psiFile.fileDocument
-        val fileRange = psiFile.textRange
+        val document = readAction { psiFile.fileDocument }
+        val fileRange = readAction { psiFile.textRange }
         val session = LocalInspectionToolSession(psiFile, fileRange, fileRange, null)
         coroutineScope {
             inspections.map { localInspection ->
