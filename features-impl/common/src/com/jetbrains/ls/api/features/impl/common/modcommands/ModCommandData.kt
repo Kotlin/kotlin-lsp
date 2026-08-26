@@ -10,6 +10,7 @@ import com.intellij.modcommand.ModCopyToClipboard
 import com.intellij.modcommand.ModCreateFile
 import com.intellij.modcommand.ModDeleteFile
 import com.intellij.modcommand.ModDisplayMessage
+import com.intellij.modcommand.ModEditOptions
 import com.intellij.modcommand.ModHighlight
 import com.intellij.modcommand.ModMoveFile
 import com.intellij.modcommand.ModNavigate
@@ -277,6 +278,11 @@ sealed class ModCommandData {
             is ModStartTemplate -> when {
                 server?.config?.clientSupportsSnippetWorkspaceEdit == true -> convertTemplate(command)
                 command.optional -> Nothing
+                else -> null
+            }
+            is ModEditOptions<*> -> when {
+                // TODO: support ModEditOptions UI
+                command.canUseDefaults -> from(command.nextCommand.apply(command.containerSupplier.get()), actionContext, server)
                 else -> null
             }
             else -> {
