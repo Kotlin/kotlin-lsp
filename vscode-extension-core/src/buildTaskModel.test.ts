@@ -508,6 +508,21 @@ describe('runProcess', () => {
     assert.notEqual(codes[0], 0, 'a killed build must not read as a successful one');
   });
 
+  test('a build stopped through its handle reports a failure, not a success', async () => {
+    const running: RunningBuild = {};
+    const result = run({ command: node('setTimeout(() => {}, 60_000)'), running });
+    // The child exists only once `runProcess` has spawned it, which the awaited turn below allows.
+    await new Promise((resolve) => setImmediate(resolve));
+    running.cancelled = true;
+    running.child?.kill();
+    const { lines, codes } = await result;
+    assert.notEqual(codes[0], 0);
+    assert.ok(
+      lines.some((line) => line.startsWith('Build stopped')),
+      lines.join('\n'),
+    );
+  });
+
   test('clears the child once it has ended, so nothing later kills a dead pid', async () => {
     const running: RunningBuild = {};
     await run({ command: node(''), running });

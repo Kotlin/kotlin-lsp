@@ -14,7 +14,8 @@
     "./testing/keyHandlerTestUtils": "./src/keyHandlerTestUtils.ts",
     "./testing/archiveExtraction": "./src/testing/archiveExtraction.ts",
     "./testing/serviceMessages": "./src/testing/serviceMessages.ts",
-    "./keyHandlerUtils": "./src/keyHandlerUtils.ts"
+    "./keyHandlerUtils": "./src/keyHandlerUtils.ts",
+    "./build": "./src/build.ts"
   },
   "scripts": {
     "test": "node --import tsx --test \"src/**/*.test.ts\"",
