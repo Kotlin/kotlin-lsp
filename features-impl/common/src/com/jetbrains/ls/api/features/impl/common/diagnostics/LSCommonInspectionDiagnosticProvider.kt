@@ -78,7 +78,7 @@ class LSCommonInspectionDiagnosticProvider(
     context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
         if (!params.textDocument.isSource()) return@flow
-        val onTheFly = false
+        val onTheFly = true
         val diagnostics = server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
             class DiagnosticsRequestData(
                 val virtualFile: VirtualFile,
