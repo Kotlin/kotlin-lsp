@@ -58,9 +58,6 @@ object LSChooseActionCommandDescriptorProvider : LSCommandDescriptorProvider {
                 }
 
                 else -> {
-                    // The choice was consumed; drop it so the cache does not grow. A follow-up choice (nested
-                    // ModChooseAction) will be stored under a fresh id while converting the performed command.
-                    server[ChooseActionSessionComponent].remove(sessionId)
                     server.withAnalysisContextAndFileSettings(session.fileUri) {
                         val data = readAction {
                             val virtualFile = session.fileUri.findVirtualFile() ?: return@readAction null
