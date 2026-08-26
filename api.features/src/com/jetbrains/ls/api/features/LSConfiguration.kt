@@ -17,6 +17,7 @@ class LSConfiguration(
     val plugins: List<PluginMainDescriptor>,
     val dapPlugins: List<PluginMainDescriptor>,
     val languages: List<LSLanguage>,
+    val intellijPlugins: List<PluginMainDescriptor> = emptyList(),
 ) {
     val allCommandDescriptors: List<LSCommandDescriptor> = entries<LSCommandDescriptorProvider>().flatMap { it.commandDescriptors }
 
@@ -88,6 +89,7 @@ class LSConfiguration(
 
 fun LSConfiguration(
     configurations: List<LSConfigurationPiece>,
+    intellijPlugins: List<PluginMainDescriptor> = emptyList(),
 ): LSConfiguration {
     return LSConfiguration(
         entries = configurations.flatMap { it.entries },
@@ -96,6 +98,7 @@ fun LSConfiguration(
             .filterIsInstance<DapPluginsProvider>().flatMap { it.plugins }
             .toList(),
         languages = configurations.flatMap { it.languages },
+        intellijPlugins = intellijPlugins,
     )
 }
 

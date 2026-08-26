@@ -1,6 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features
 
+import com.intellij.ide.plugins.PluginMainDescriptor
 import com.jetbrains.ls.api.core.launch.BuildToolLaunchContributor
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.imports.api.WorkspaceImporter
@@ -48,3 +49,12 @@ class InitConfigurationEntry<T : Any>(
 fun interface IndexingFileSystemProviderEntry : LSConfigurationEntry {
     fun provider(configData: LSConfigurationData): IndexingFileSystemProvider?
 }
+
+/**
+ * Plugins the piece loads in its own analyzer context.
+ * The analysis plugin set counts them as consumed and does not load their packaging.
+ */
+class ExtraPluginsProvider(
+    val plugins: List<PluginMainDescriptor> = emptyList(),
+) : LSConfigurationEntry
+
