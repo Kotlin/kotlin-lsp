@@ -43,6 +43,7 @@ object GradleToolingApiHelper {
     private val LOG = logger<GradleToolingApiHelper>()
 
     const val LSP_GRADLE_JAVA_HOME_PROPERTY: String = "com.jetbrains.ls.imports.gradle.java.home"
+    const val LSP_GRADLE_DAEMON_NO_IDLE_TIMEOUT: String = "com.jetbrains.ls.imports.gradle.daemon.no.idle.timeout"
 
     const val LSP_GRADLE_PROJECT_INIT_SCRIPTS: String = "com.jetbrains.ls.imports.gradle.init.scripts"
     const val LSP_GRADLE_PROJECT_OFFLINE_PROPERTY: String = "com.jetbrains.ls.imports.gradle.offline"
@@ -97,6 +98,10 @@ object GradleToolingApiHelper {
         addArguments("--stacktrace")
         IMPORTER_PROPERTIES.forEach { (key, value) ->
             addArguments("-D$key=$value")
+        }
+        if (getProperty(LSP_GRADLE_DAEMON_NO_IDLE_TIMEOUT)?.toBoolean() == true) {
+            // Gradle Daemon will terminate itself after 1ms of inactivity
+            addArguments("-Dorg.gradle.daemon.idletimeout=1")
         }
         if (getProperty(LSP_GRADLE_PROJECT_OFFLINE_PROPERTY)?.toBoolean() == true) {
             setEnvironmentVariables(

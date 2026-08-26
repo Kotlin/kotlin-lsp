@@ -28,6 +28,7 @@ import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.LSP_GRADLE_JAVA_HOME_PROPERTY
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.LSP_GRADLE_PROJECT_INIT_SCRIPTS
+import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.LSP_GRADLE_DAEMON_NO_IDLE_TIMEOUT
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
 import com.jetbrains.ls.imports.jps.JpsWorkspaceImporter
 import com.jetbrains.ls.imports.json.DependencyData
@@ -260,7 +261,10 @@ abstract class AbstractProjectImportTest {
                 key = LSP_GRADLE_PROJECT_INIT_SCRIPTS,
                 value = getCacheRedirectorInitScriptPath().toString()
             ) {
-                withScopedSystemProperty(key = LSP_GRADLE_JAVA_HOME_PROPERTY, value = jdkToUse.home.toString()) {
+                withScopedSystemProperties(
+                    LSP_GRADLE_JAVA_HOME_PROPERTY to jdkToUse.home.toString(),
+                    LSP_GRADLE_DAEMON_NO_IDLE_TIMEOUT to "true"
+                ) {
                     doTest(project, GradleWorkspaceImporter, testDataDir / "gradle", resultMapper, entityStorageVerifier)
                 }
             }
@@ -277,7 +281,10 @@ abstract class AbstractProjectImportTest {
             return
         }
         withCustomUserHome { gradleUserHomePath ->
-            withScopedSystemProperty(GradleToolingApiHelper.LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY, gradleUserHomePath, action)
+            withScopedSystemProperties(
+                GradleToolingApiHelper.LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY to gradleUserHomePath,
+                action = action
+            )
         }
     }
 
@@ -474,23 +481,27 @@ abstract class AbstractProjectImportTest {
 
     private fun withConditionalScopedSystemProperty(condition: () -> Boolean, key: String, value: String, action: () -> Unit) {
         if (condition()) {
-            withScopedSystemProperty(key, value, action)
+            withScopedSystemProperties(key to value, action = action)
         } else {
             action()
         }
     }
 
-    private fun withScopedSystemProperty(key: String, value: String, action: () -> Unit) {
-        val originalValue = System.getProperty(key)
+    private fun withScopedSystemProperties(vararg properties: Pair<String, String>, action: () -> Unit) {
+        val defaultValues = properties.map { setProperty(it) }
         try {
-            System.setProperty(key, value)
             action()
         } finally {
-            if (originalValue == null) {
-                System.clearProperty(key)
-            } else {
-                System.setProperty(key, value)
-            }
+            defaultValues.forEach { setProperty(it) }
+        }
+    }
+
+    private fun setProperty(property: Pair<String, String?>): Pair<String, String?> {
+        if (property.second == null) {
+            System.clearProperty(property.first)
+            return property.first to null
+        } else {
+            return property.first to System.setProperty(property.first, property.second!!)
         }
     }
 
