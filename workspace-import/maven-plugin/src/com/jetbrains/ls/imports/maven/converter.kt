@@ -448,7 +448,15 @@ private fun collectLibraries(
         true
     )
 
-    val libraries = allArtifacts.map { artifact ->
+    val libraries = allArtifacts.mapNotNull { artifact ->
+        // An artifact Maven could not resolve to a local file (e.g. a reactor
+        // module whose own build failed, so nothing was ever installed) has
+        // file == null; it can contribute no library root, and one broken
+        // artifact must not fail the whole import.
+        if (artifact.file == null) {
+            println("Skipping library for unresolved artifact ${artifact.groupId}:${artifact.artifactId}:${artifact.version} (no local file)")
+            return@mapNotNull null
+        }
         val libName = createLibName(artifact)
 
         LibraryData(
