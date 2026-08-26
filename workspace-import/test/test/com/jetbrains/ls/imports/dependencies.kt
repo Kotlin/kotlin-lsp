@@ -21,6 +21,8 @@ import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 import kotlin.io.path.name
 
+// keep in sync with MAVEN_VERSION in language-server/integration-tests/workspace-importer-tests/test/selfContainedMaven.kt
+// and with the download_file entry in language-server/test-api/language_server_test_api_dependencies.bzl
 private const val MAVEN_VERSION = "3.9.11" // 4.0.0-rc-5 (ok), 3.8.9 (ok), 3.6.3 (ok)
 private const val GRADLE_VERSION = "9.2.0" // 8.14.3 (ok), 7.6.6 (fails)
 
