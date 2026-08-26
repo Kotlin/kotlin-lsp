@@ -26,11 +26,12 @@ import java.util.jar.JarOutputStream
 import kotlin.time.Duration.Companion.minutes
 
 /**
- * SDK class roots and the jrt `!/modules/` mapping: the analyzer's jrt file system mounts a
- * jimage under `modules/<module>`, so `jrt://` roots from `JavaSdkImpl.findClasses` need the
- * extra segment — and `jar://` roots of a non-modular JDK must never get it. LSP-1693: the
- * rewrite used to be unconditional, so a JDK 8 classpath (`jar://…/jre/lib/rt.jar!/`) became a
- * set of dangling URLs and `java.lang` was unresolvable in every imported module.
+ * SDK class roots keep the shape that `JavaSdkImpl.findClasses` emits. The analyzer's jrt
+ * file system mounts at `/modules`, so a modular JDK gives `jrt://<home>!/<module>` roots
+ * with no `!/modules/` segment (the IntelliJ shape). The `jar://…/jre/lib/rt.jar!/` roots of
+ * a non-modular JDK must pass through unchanged. LSP-1693: a rewrite once inserted `modules/`
+ * into those jar roots. The JDK 8 classpath became a set of dangling URLs, and `java.lang`
+ * was unresolvable in every imported module.
  */
 class JdkSdkRootsTest {
     @Test
@@ -49,12 +50,12 @@ class JdkSdkRootsTest {
     }
 
     @Test
-    fun modularJdkClassRootsGetTheJrtModulesSegment(@TempDir workspacePath: Path) {
+    fun modularJdkClassRootsKeepThePlainJrtShape(@TempDir workspacePath: Path) {
         // The JDK running the test is modular.
         val classRoots = importJdkClassRoots(workspacePath, Path.of(System.getProperty("java.home")))
         assertTrue(
-            classRoots.isNotEmpty() && classRoots.all { it.startsWith("jrt://") && it.contains("!/modules/") },
-            "modular JDK class roots must be mapped under the jrt modules mount: $classRoots",
+            classRoots.isNotEmpty() && classRoots.all { it.startsWith("jrt://") && !it.contains("!/modules/") },
+            "modular JDK class roots must keep the plain jrt shape: $classRoots",
         )
     }
 

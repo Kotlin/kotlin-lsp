@@ -13,16 +13,17 @@ import com.intellij.workspaceModel.ide.impl.createIdeVirtualFileUrlManager
 import com.jetbrains.ls.imports.json.ContentRootData
 import com.jetbrains.ls.imports.json.DependencyData
 import com.jetbrains.ls.imports.json.DependencyDataScope
-import com.jetbrains.ls.imports.json.JavaSettingsData
 import com.jetbrains.ls.imports.json.JSON_EXTERNAL_SYSTEM_ID
+import com.jetbrains.ls.imports.json.JavaSettingsData
 import com.jetbrains.ls.imports.json.LibraryData
 import com.jetbrains.ls.imports.json.LibraryRootData
 import com.jetbrains.ls.imports.json.ModuleData
 import com.jetbrains.ls.imports.json.SdkData
+import com.jetbrains.ls.imports.json.SdkRootData
 import com.jetbrains.ls.imports.json.WorkspaceData
+import com.jetbrains.ls.imports.json.XmlElement
 import com.jetbrains.ls.imports.json.flattenExportedDependencies
 import com.jetbrains.ls.imports.json.importWorkspaceData
-import com.jetbrains.ls.imports.json.XmlElement
 import com.jetbrains.ls.imports.json.workspaceData
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -46,6 +47,32 @@ class JsonImporterUnitTest {
         val sdk = storage.entities<SdkEntity>().single()
         assertTrue(sdk.roots.isEmpty(), "Placeholder JDK home must not be resolved to SDK roots")
         assertNull(sdk.homePath, "Placeholder JDK home must not be stored as a path")
+    }
+
+    @Test
+    fun legacyJrtSdkRootsDropTheModulesSegment(@TempDir workspacePath: Path) {
+        val data = WorkspaceData(
+            sdks = listOf(
+                SdkData(
+                    name = "Java SDK", type = "JavaSDK", version = null, homePath = null, additionalData = "",
+                    roots = listOf(
+                        SdkRootData(url = "jrt:///jdk!/modules/java.base", type = "CLASSES"),
+                        SdkRootData(url = "jrt:///jdk!/java.desktop", type = "CLASSES"),
+                        SdkRootData(url = "jar:///jdk/lib/src.zip!/modules/java.base", type = "SOURCES"),
+                    ),
+                ),
+            ),
+        )
+
+        val storage = MutableEntityStorage.create()
+        storage.importWorkspaceData(data, workspacePath, object : EntitySource {}, createIdeVirtualFileUrlManager(true))
+
+        val roots = storage.entities<SdkEntity>().single().roots.map { it.url.url }
+        assertEquals(
+            listOf("jrt:///jdk!/java.base", "jrt:///jdk!/java.desktop", "jar:///jdk/lib/src.zip!/modules/java.base"),
+            roots,
+            "A legacy jrt root drops the modules segment; new-shape jrt and jar roots stay verbatim",
+        )
     }
 
     /**

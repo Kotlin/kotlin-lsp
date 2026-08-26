@@ -18,7 +18,6 @@ import com.intellij.platform.workspace.storage.entities
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.jetbrains.ls.api.core.util.createSdkEntity
 import com.jetbrains.ls.api.core.util.intellijUriToLspUri
-import com.jetbrains.ls.api.core.util.withJrtModulesRoot
 import com.jetbrains.ls.snapshot.api.impl.core.toFileUrl
 import org.jetbrains.annotations.TestOnly
 import java.nio.file.Path
@@ -44,7 +43,7 @@ fun MutableEntityStorage.fixMissingProjectSdk(
             homePath = virtualFileUrlManager.getOrCreateFromUrl(path.toFileUrl().url)
             roots = mutableListOf<SdkRoot>().apply {
                 JavaSdkImpl.findClasses(path, false).mapTo(this) {
-                    SdkRoot(it.withJrtModulesRoot().toIntellijUri(virtualFileUrlManager), SdkRootTypeId.CLASSES)
+                    SdkRoot(it.toIntellijUri(virtualFileUrlManager), SdkRootTypeId.CLASSES)
                 }
                 JavaSdkImpl.findSources(path).mapTo(this) {
                     SdkRoot(it.toIntellijUri(virtualFileUrlManager), SdkRootTypeId.SOURCES)
@@ -62,7 +61,7 @@ fun MutableEntityStorage.fixMissingProjectSdk(
                                 name = DEFAULT_JDK_NAME,
                                 type = JavaSdk.getInstance(),
                                 classRoots = JavaSdkImpl.findClasses(path, false)
-                                    .map { it.withJrtModulesRoot().intellijUriToLspUri() },
+                                    .map { it.intellijUriToLspUri() },
                                 sourceRoots = JavaSdkImpl.findSources(path)
                                     .map { it.intellijUriToLspUri() },
                                 urlManager = virtualFileUrlManager,

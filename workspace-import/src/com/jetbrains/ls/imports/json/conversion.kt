@@ -56,7 +56,6 @@ import com.intellij.util.descriptors.ConfigFileItem
 import com.intellij.util.system.OS
 import com.intellij.util.text.nullize
 import com.jetbrains.analyzer.workspace.LSModuleOutputRoots
-import com.jetbrains.ls.api.core.util.withJrtModulesRoot
 import com.jetbrains.ls.imports.api.ModuleCoordinateEntity
 import com.jetbrains.ls.imports.api.coordinateEntity
 import com.jetbrains.ls.imports.utils.toIntellijUri
@@ -282,6 +281,10 @@ fun toRelativePath(path: Path, workspacePath: Path): String {
 
 
 
+// An export from an old build records a jrt SDK root with the legacy "!/modules/" mount segment.
+private fun String.withoutLegacyJrtModulesRoot(): String =
+    if (startsWith("jrt://")) replaceFirst("!/modules/", "!/") else this
+
 fun MutableEntityStorage.importWorkspaceData(
     data: WorkspaceData,
     workspacePath: Path,
@@ -308,7 +311,7 @@ fun MutableEntityStorage.importWorkspaceData(
                     sdkData.roots != null -> {
                         sdkData.roots.mapTo(this) {
                             SdkRoot(
-                                virtualFileUrlManager.getOrCreateFromUrl(it.url),
+                                virtualFileUrlManager.getOrCreateFromUrl(it.url.withoutLegacyJrtModulesRoot()),
                                 when (it.type) {
                                     SdkRootTypeId.SOURCES.name -> SdkRootTypeId.SOURCES
                                     SdkRootTypeId.CLASSES.name -> SdkRootTypeId.CLASSES
@@ -320,7 +323,7 @@ fun MutableEntityStorage.importWorkspaceData(
                         val path = toAbsolutePath(sdkHome, workspacePath)
                         JavaSdkImpl.findClasses(path, false).mapTo(this) {
                             SdkRoot(
-                                it.withJrtModulesRoot().toIntellijUri(virtualFileUrlManager),
+                                it.toIntellijUri(virtualFileUrlManager),
                                 SdkRootTypeId.CLASSES
                             )
                         }

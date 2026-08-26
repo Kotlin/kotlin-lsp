@@ -45,7 +45,6 @@ import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.PathUtil
 import com.intellij.util.containers.nullize
 import com.intellij.util.lang.JavaVersion
-import com.jetbrains.ls.api.core.util.withJrtModulesRoot
 import com.jetbrains.ls.imports.api.ConflictAverseImporter
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
@@ -362,7 +361,6 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
                         type = library.type.toSdkType(),
                         roots = buildList {
                             library.getRootUrls(JpsOrderRootType.COMPILED).mapNotNullTo(this) { url ->
-                                val url = url.withJrtModulesRoot()
                                 SdkRoot(
                                     virtualFileUrlManager.getOrCreateFromUrl(url),
                                     SdkRootTypeId.CLASSES,
@@ -415,7 +413,7 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
                 roots = buildList {
                     JavaSdkImpl.findClasses(Path.of(sdk.path), false).mapTo(this) {
                         SdkRoot(
-                            virtualFileUrlManager.getOrCreateFromUrl(it.withJrtModulesRoot()),
+                            virtualFileUrlManager.getOrCreateFromUrl(it),
                             SdkRootTypeId.CLASSES,
                         )
                     }
