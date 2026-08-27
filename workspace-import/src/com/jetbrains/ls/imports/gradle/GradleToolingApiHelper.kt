@@ -103,15 +103,29 @@ object GradleToolingApiHelper {
             // Gradle Daemon will terminate itself after 1ms of inactivity
             addArguments("-Dorg.gradle.daemon.idletimeout=1")
         }
-        if (getProperty(LSP_GRADLE_PROJECT_OFFLINE_PROPERTY)?.toBoolean() == true) {
-            setEnvironmentVariables(
-                mapOf(
-                    "SELF_CONTAINED_PROXY_URL" to getProperty(LSP_GRADLE_PROJECT_SELF_CONTAINED_PROXY_URL_PROPERTY),
-                    "GRADLE_USER_HOME" to getProperty(LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY)
-                )
-            )
-        }
         withCancellationToken(GradleConnector.newCancellationTokenSource().token())
+        return this
+    }
+
+    fun <T> BuildActionExecuter<T>.configureEnvironment(externalEnvironment: Map<String, String>): BuildActionExecuter<T> {
+        val effectiveEnvironment: Map<String, String> = buildMap {
+            putAll(System.getenv())
+            putAll(externalEnvironment)
+            if (getProperty(LSP_GRADLE_PROJECT_OFFLINE_PROPERTY)?.toBoolean() == true) {
+                put("SELF_CONTAINED_PROXY_URL", getProperty(LSP_GRADLE_PROJECT_SELF_CONTAINED_PROXY_URL_PROPERTY))
+                put("GRADLE_USER_HOME", getProperty(LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY))
+            }
+        }
+        setEnvironmentVariables(effectiveEnvironment)
+        return this
+    }
+
+    // for Gradle 7.6+ this will cancel implicit transfer of current System.properties to Gradle Daemon.
+    fun <T> BuildActionExecuter<T>.configureSystemProperties(externalProperties: Map<String, String>): BuildActionExecuter<T> {
+        val effectiveProperties: Map<String, String?> = buildMap {
+            putAll(externalProperties)
+        }
+        withSystemProperties(effectiveProperties)
         return this
     }
 

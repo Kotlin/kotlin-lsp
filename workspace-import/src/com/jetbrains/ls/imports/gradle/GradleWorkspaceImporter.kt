@@ -15,7 +15,9 @@ import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.addInitScripts
+import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.configureEnvironment
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.configureLogging
+import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.configureSystemProperties
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.findTheMostCompatibleJdk
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.prepareForExecution
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.withCustomGradleHome
@@ -76,6 +78,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                 withDaemonInitScripts { daemonInitScripts ->
                     try {
                         createExecuter(
+                            parameters,
                             projectConnection,
                             progress,
                             daemonInitScripts,
@@ -92,7 +95,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                             "Gradle sync tasks failed, retrying the import without them. Generated sources may be missing."
                         )
                         // retry without kotlin task in case of a broken task graph
-                        createExecuter(projectConnection, progress, daemonInitScripts, jdkToUse, null).run()
+                        createExecuter(parameters, projectConnection, progress, daemonInitScripts, jdkToUse, null).run()
                     }
                 }
             }
@@ -125,6 +128,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
      * A null means no tasks will be executed
      */
     private fun createExecuter(
+        parameters: WorkspaceImportParameters,
         connection: ProjectConnection,
         progress: WorkspaceImportProgressReporter,
         initScripts: Iterable<Path>,
@@ -135,6 +139,8 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         val executer = connection.action(ProjectMetadataBuilder(syncSettings))
             .configureLogging(progress)
             .prepareForExecution()
+            .configureEnvironment(parameters.options.environment)
+            .configureSystemProperties(parameters.options.systemProperties)
             .addInitScripts(initScripts)
             .forTasks(syncTasks)
 

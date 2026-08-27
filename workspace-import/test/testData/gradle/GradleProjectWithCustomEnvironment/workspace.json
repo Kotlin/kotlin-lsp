@@ -1,0 +1,117 @@
+{
+    "modules": [
+        {
+            "name": "GradleProjectWithCustomEnvironment",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "25",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/"
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
+        },
+        {
+            "name": "GradleProjectWithCustomEnvironment.main",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "25",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/src/main",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/src/main/java",
+                            "type": "java-source"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
+        },
+        {
+            "name": "GradleProjectWithCustomEnvironment.test",
+            "dependencies": [
+                {
+                    "type": "module",
+                    "name": "GradleProjectWithCustomEnvironment.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "25",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/src/test"
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
+        }
+    ],
+    "sdks": [
+        {
+            "name": "25",
+            "type": "jdk",
+            "version": "JDK_25",
+            "homePath": null,
+            "roots": [],
+            "additionalData": ""
+        }
+    ],
+    "javaSettings": [
+        {
+            "module": "GradleProjectWithCustomEnvironment",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "languageLevelId": "JDK_25",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "GradleProjectWithCustomEnvironment.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/build/classes/java/main",
+                "<WORKSPACE>/build/resources/main"
+            ],
+            "languageLevelId": "JDK_25",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "GradleProjectWithCustomEnvironment.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/build/classes/java/test",
+                "<WORKSPACE>/build/resources/test"
+            ],
+            "languageLevelId": "JDK_25",
+            "manifestAttributes": {}
+        }
+    ],
+    "externalSystem": "GRADLE"
+}

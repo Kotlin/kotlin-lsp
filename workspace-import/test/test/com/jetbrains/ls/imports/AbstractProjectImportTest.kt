@@ -23,6 +23,7 @@ import com.jetbrains.analyzer.bootstrap.AnalyzerProjectId
 import com.jetbrains.analyzer.bootstrap.WorkspaceModelSnapshot
 import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
 import com.jetbrains.ls.imports.api.WorkspaceImportException
+import com.jetbrains.ls.imports.api.WorkspaceImportOptions
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper
@@ -139,6 +140,22 @@ abstract class AbstractProjectImportTest {
     fun empty() = doGradleTest("Empty")
 
     @Test
+    fun gradleProjectWithCustomEnvironment() = doGradleTest(
+        project = "GradleProjectWithCustomEnvironment",
+        jdkToUse = JdkDownloaderFacade.jdk25,
+        resultMapper = ::withIgnoredJdkRoots,
+        importParametersCustomizer = {
+            it.copy(
+                options = WorkspaceImportOptions(
+                    environment = mapOf("CUSTOM_ENVIRONMENT_VARIABLE" to "hello_world"),
+                    systemProperties = mapOf("intellij.lsp.custom.property" to "world_hello")
+                )
+            )
+        },
+        entityStorageVerifier = {}
+    )
+
+    @Test
     fun nonExistentDependency() {
         // TODO: Check that missing dependencies are reported
         doGradleTest("NonExistentDependency", ::withIgnoredJdkRoots)
@@ -224,20 +241,26 @@ abstract class AbstractProjectImportTest {
 
     @Test
     fun gradleProjectLibrarySourcesAreDownloadedByDefault() =
-        doGradleTest("GradleProjectLibrarySourcesAreDownloadedByDefault", JdkDownloaderFacade.jdk17, ::withIgnoredJdkRoots, { wsm ->
-            val libraries = wsm.entities(LibraryEntity::class.java).toList()
-            assertEquals(5, libraries.size)
-            val targetLibrary = libraries.find { it.name == "Gradle: org.junit.jupiter:junit-jupiter-api:6.1.0" }
-                ?: fail("Required library does not exists in the Workspace Model")
-            val libraryRoots = targetLibrary.roots
-            assertEquals(2, libraryRoots.size, "Unexpected library root count. Two roots expected: a classes root and a sources root.")
-            libraryRoots.find { it.type == LibraryRootTypeId("CLASSES") }.run {
-                assertExists()
+        doGradleTest(
+            project = "GradleProjectLibrarySourcesAreDownloadedByDefault",
+            jdkToUse = JdkDownloaderFacade.jdk17,
+            resultMapper = ::withIgnoredJdkRoots,
+            importParametersCustomizer = { it },
+            entityStorageVerifier = { wsm ->
+                val libraries = wsm.entities(LibraryEntity::class.java).toList()
+                assertEquals(5, libraries.size)
+                val targetLibrary = libraries.find { it.name == "Gradle: org.junit.jupiter:junit-jupiter-api:6.1.0" }
+                    ?: fail("Required library does not exists in the Workspace Model")
+                val libraryRoots = targetLibrary.roots
+                assertEquals(2, libraryRoots.size, "Unexpected library root count. Two roots expected: a classes root and a sources root.")
+                libraryRoots.find { it.type == LibraryRootTypeId("CLASSES") }.run {
+                    assertExists()
+                }
+                libraryRoots.find { it.type == LibraryRootTypeId("SOURCES") }.run {
+                    assertExists()
+                }
             }
-            libraryRoots.find { it.type == LibraryRootTypeId("SOURCES") }.run {
-                assertExists()
-            }
-        })
+        )
 
     protected fun doGradleTest(project: String, resultMapper: (WorkspaceData) -> WorkspaceData = { it }) =
         doGradleTest(project, JdkDownloaderFacade.jdk17, resultMapper) { }
@@ -252,7 +275,8 @@ abstract class AbstractProjectImportTest {
         project: String,
         jdkToUse: JdkDownloadItem,
         resultMapper: (WorkspaceData) -> WorkspaceData = { it },
-        entityStorageVerifier: (EntityStorage) -> Unit
+        importParametersCustomizer: (WorkspaceImportParameters) -> WorkspaceImportParameters = { it },
+        entityStorageVerifier: (EntityStorage) -> Unit,
     ) {
         downloadGradleBinaries()
         withGradleUserHomeIsolation {
@@ -265,7 +289,14 @@ abstract class AbstractProjectImportTest {
                     LSP_GRADLE_JAVA_HOME_PROPERTY to jdkToUse.home.toString(),
                     LSP_GRADLE_DAEMON_NO_IDLE_TIMEOUT to "true"
                 ) {
-                    doTest(project, GradleWorkspaceImporter, testDataDir / "gradle", resultMapper, entityStorageVerifier)
+                    doTest(
+                        project = project,
+                        importer = GradleWorkspaceImporter,
+                        testDataDir = testDataDir / "gradle",
+                        resultMapper = resultMapper,
+                        entityStorageVerifier = entityStorageVerifier,
+                        importParametersCustomizer = importParametersCustomizer
+                    )
                 }
             }
         }
@@ -341,6 +372,7 @@ abstract class AbstractProjectImportTest {
         resultMapper: (WorkspaceData) -> WorkspaceData = { it },
         entityStorageVerifier: (EntityStorage) -> Unit = { },
         projectFile: String? = null,
+        importParametersCustomizer: (WorkspaceImportParameters) -> WorkspaceImportParameters = { it }
     ) {
         val projectDir = testDataDir / project
         require(projectDir.exists()) { "Project $project not found at $projectDir" }
@@ -360,7 +392,8 @@ abstract class AbstractProjectImportTest {
                 ) {
                     try {
                         val importPath = projectFile?.let { name -> projectDir / name } ?: projectDir
-                        importer.importWorkspace(it.project, WorkspaceImportParameters(importPath, null), virtualFileUrlManager, reporter)
+                        val importParameters = importParametersCustomizer(WorkspaceImportParameters(importPath, null))
+                        importer.importWorkspace(it.project, importParameters, virtualFileUrlManager, reporter)
                     }
                     catch (e: WorkspaceImportException) {
                         throw AssertionError(
