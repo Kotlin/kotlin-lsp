@@ -62,7 +62,7 @@ export function quoteForCmd(arg: string): string {
 
 /**
  * Whether spawning [executable] on [platform] has to go through `cmd.exe` (`shell: true`, and therefore
- * [quoteForCmd] on every part).
+ * [quoteCommandForCmd] on the name and [quoteForCmd] on every argument).
  *
  * Two Windows-only reasons, and missing either one fails the build before it starts:
  *
@@ -79,8 +79,54 @@ export function quoteForCmd(arg: string): string {
 export function needsCmdShell(executable: string, platform: string): boolean {
   if (platform !== 'win32') return false;
   if (/\.(bat|cmd)$/i.test(executable)) return true;
-  // Bare name — no directory component, so it has to be looked up on PATH with PATHEXT applied.
-  return !/[/\\]/.test(executable) && !/^[a-zA-Z]:/.test(executable);
+  return !namesAPath(executable);
+}
+
+/**
+ * Whether [executable] names a *path* — it has a directory component or a drive — rather than a command name for
+ * cmd.exe to look up on `PATH`.
+ *
+ * The distinction both [needsCmdShell] and [quoteCommandForCmd] turn on, which is why it is one function: a path
+ * names the file outright and has to be quoted because it can contain spaces, while a name has to be looked up and
+ * must *not* be quoted for that lookup to happen. Reading it two ways is what left the two disagreeing.
+ */
+function namesAPath(executable: string): boolean {
+  return /[/\\]/.test(executable) || /^[a-zA-Z]:/.test(executable);
+}
+
+/**
+ * Quotes the *command name* — the first element of the command line — for `cmd.exe`, which is not the same job as
+ * quoting an argument with [quoteForCmd].
+ *
+ * A wrapper path is quoted, because that is where spaces turn up: `C:\Users\me\my project\mvnw.cmd`.
+ *
+ * A bare tool name is not, and that is the whole point of this function. It is what the server falls back to when the
+ * project ships no wrapper — `mvn.cmd`, `gradle.bat` — and cmd.exe does not resolve a *quoted* bare name the way it
+ * resolves a typed one: it reads the quoted text as a file specification instead of a command to look up, so it
+ * neither searches `PATH` for it nor, where it does find the file, hands the batch file its own `%~dp0`. Both Gradle's
+ * `gradle.bat` and Maven's `mvn.cmd` locate their installation through `%~dp0`, so quoting them ended the build at
+ * their own "cannot find my installation" exit — code 1, and nothing about the project in the terminal (LSP-1716).
+ *
+ * A name that is neither a path nor safe to leave bare is quoted anyway. None of the names the server produces are
+ * like that, but running the *leading word* of one as some other command would be a worse way to be wrong than
+ * failing to find this one.
+ *
+ * Quote-only-when-needed is also the rule VS Code's own task system arrived at, which is worth knowing because this
+ * task cannot borrow it: `ShellExecution`'s quoting lives in `TerminalTaskSystem._buildShellCommandLine`, which runs
+ * a `needsQuotes` check — true only for a value containing a space — over the command before quoting it, and is
+ * reachable only by handing VS Code a `ShellExecution`. A `CustomExecution` spawns the tool itself; see `buildTask.ts`
+ * for why this task has to be one.
+ */
+export function quoteCommandForCmd(executable: string): string {
+  if (namesAPath(executable)) return quoteForCmd(executable);
+  // Whitespace splits the name, and `& | < > ( ) ^` are metacharacters cmd.exe acts on outside quotes. A `%` is
+  // quoted for a different reason: quotes do not stop the expansion, but they do keep whatever it expands to as one
+  // name rather than a name and some arguments.
+  //
+  // `!` is not in the set, for the reason [quoteForCmd] gives: Node spawns `cmd.exe` without `/v:on`, so delayed
+  // expansion is off and `!` is already a literal character. Quoting it would only break the PATH lookup.
+  if (/[\s"&|<>()^%]/.test(executable)) return quoteForCmd(executable);
+  return executable;
 }
 
 export interface OutputLineSplitter {

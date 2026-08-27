@@ -29,6 +29,7 @@ import {
   buildToRun,
   createOutputLineSplitter,
   needsCmdShell,
+  quoteCommandForCmd,
   quoteForCmd,
   taskBuildTargetOf,
 } from './buildTaskModel';
@@ -305,10 +306,15 @@ function runProcess({
     line(`Building with ${tool ?? 'build tool'}: ${command.join(' ')}`);
     // On Windows the build tool is either a batch wrapper (`gradlew.bat` / `mvnw.cmd`) or a bare name to look up on
     // PATH, and neither can be spawned without a shell — see `needsCmdShell`. `shell: true` makes cmd.exe run it,
-    // and then cmd.exe, not Node, splits the command line, so every part has to be quoted for it.
+    // and then cmd.exe, not Node, splits the command line, so every part has to be quoted for it — every *argument*,
+    // that is. The name goes through `quoteCommandForCmd`, which quotes a path and leaves a name to look up alone,
+    // because quoting that one is what stops cmd.exe from looking it up.
+    //
+    // Node wraps the whole line in one more pair of quotes for `cmd /d /s /c`, and an unquoted name survives that:
+    // `/s` strips exactly the first and the last quote of the string, which are the pair Node just added.
     const useShell = needsCmdShell(executable, process.platform);
     const child = useShell
-      ? spawn(quoteForCmd(executable), args.map(quoteForCmd), { cwd, shell: true })
+      ? spawn(quoteCommandForCmd(executable), args.map(quoteForCmd), { cwd, shell: true })
       : spawn(executable, args, { cwd, shell: false });
     running.child = child;
     // Terminated while we were resolving the build command, so the kill in `close` found nothing to kill.

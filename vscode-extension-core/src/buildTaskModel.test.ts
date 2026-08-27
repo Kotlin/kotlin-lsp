@@ -5,6 +5,7 @@ import {
   createOutputLineSplitter,
   launchBuildTargetOf,
   needsCmdShell,
+  quoteCommandForCmd,
   quoteForCmd,
   taskBuildTargetOf,
 } from './buildTaskModel';
@@ -71,6 +72,55 @@ describe('quoteForCmd', () => {
 
   test('leaves a trailing backslash in place', () => {
     assert.equal(quoteForCmd('C:\\project\\'), '"C:\\project\\"');
+  });
+});
+
+describe('quoteCommandForCmd', () => {
+  // Regression (LSP-1716): the *command name* was quoted like an argument, which is a different job. The server's
+  // PATH fallback for a project with no wrapper is a bare `mvn.cmd` / `gradle.bat`, and cmd.exe does not resolve a
+  // quoted bare name the way it resolves a typed one — it takes the quoted text for a file specification, so it
+  // neither finds the tool on PATH nor, when it does, gives the batch file its own `%~dp0`. Both Gradle's and
+  // Maven's launchers locate their installation through `%~dp0`, so they exited 1 having printed nothing about it,
+  // and every build in a wrapper-less project on Windows failed.
+  test('leaves the bare PATH fallback unquoted, so cmd.exe looks it up as a typed name', () => {
+    assert.equal(quoteCommandForCmd('mvn.cmd'), 'mvn.cmd');
+    assert.equal(quoteCommandForCmd('gradle.bat'), 'gradle.bat');
+    assert.equal(quoteCommandForCmd('mvn'), 'mvn');
+  });
+
+  // The case quoting exists for, and the one that made wrapper-shipping projects work all along.
+  test('quotes a wrapper path, which is where the spaces are', () => {
+    assert.equal(
+      quoteCommandForCmd('C:\\Users\\me\\my project\\mvnw.cmd'),
+      '"C:\\Users\\me\\my project\\mvnw.cmd"',
+    );
+    assert.equal(quoteCommandForCmd('C:\\p\\gradlew.bat'), '"C:\\p\\gradlew.bat"');
+  });
+
+  test('quotes anything else that names a path rather than a command to look up', () => {
+    assert.equal(quoteCommandForCmd('.\\mvnw.cmd'), '".\\mvnw.cmd"');
+    assert.equal(
+      quoteCommandForCmd('\\\\server\\share\\gradlew.bat'),
+      '"\\\\server\\share\\gradlew.bat"',
+    );
+    // Drive-relative: still a path, and one whose leading `C:` cmd.exe would not look up on PATH either.
+    assert.equal(quoteCommandForCmd('C:mvnw.cmd'), '"C:mvnw.cmd"');
+    assert.equal(quoteCommandForCmd('/usr/local/bin/mvn'), '"/usr/local/bin/mvn"');
+  });
+
+  // Unreachable for the names the server produces, but leaving such a name unquoted would hand cmd.exe some *other*
+  // command — the leading word — to run, which is worse than failing to find this one.
+  test('quotes a name that is not a path but that cmd.exe would otherwise split', () => {
+    assert.equal(quoteCommandForCmd('my tool.cmd'), '"my tool.cmd"');
+    assert.equal(quoteCommandForCmd('tool&other.cmd'), '"tool&other.cmd"');
+    // Quotes do not stop the expansion, only the split of whatever it expands to.
+    assert.equal(quoteCommandForCmd('%TOOL%.cmd'), '"%TOOL%.cmd"');
+  });
+
+  // `!` is literal already, because Node spawns cmd.exe without `/v:on` — the reason `quoteForCmd` documents for
+  // not escaping it. Quoting the name here would only stop the PATH lookup that this function exists to allow.
+  test('leaves a name holding `!` bare, because delayed expansion is off', () => {
+    assert.equal(quoteCommandForCmd('hi!.cmd'), 'hi!.cmd');
   });
 });
 
