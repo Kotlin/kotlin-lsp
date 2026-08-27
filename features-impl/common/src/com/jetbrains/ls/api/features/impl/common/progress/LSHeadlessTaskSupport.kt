@@ -4,6 +4,7 @@ package com.jetbrains.ls.api.features.impl.common.progress
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.runReadActionBlocking
 import com.intellij.openapi.progress.CeProcessCanceledException
+import com.intellij.openapi.progress.LockParallelizationSharingPolicy
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.getLockPermitContext
 import com.intellij.openapi.progress.prepareThreadContext
@@ -45,9 +46,9 @@ internal class LSHeadlessTaskSupport : TaskSupport {
         // that doesn't take into account modality.
         return prepareThreadContext { ctx ->
             val (lock, cleanup) = if (ApplicationManager.getApplication().isWriteAccessAllowed) {
-                runReadActionBlocking { getLockPermitContext(true) }
+                runReadActionBlocking { getLockPermitContext(LockParallelizationSharingPolicy.SHARING_CHECK_TOPMOST_RA) }
             } else {
-                getLockPermitContext(true)
+                getLockPermitContext(LockParallelizationSharingPolicy.SHARING_NO_CHECK_TOPMOST_RA)
             }
             try {
                 IntelliJCoroutinesFacade.runBlockingWithParallelismCompensation(ctx + lock, action)
