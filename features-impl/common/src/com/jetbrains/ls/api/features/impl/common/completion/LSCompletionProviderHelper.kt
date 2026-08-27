@@ -3,6 +3,7 @@ package com.jetbrains.ls.api.features.impl.common.completion
 
 import com.intellij.codeInsight.completion.PrefixMatcher
 import com.intellij.codeInsight.completion.impl.CamelHumpMatcher
+import com.intellij.codeInsight.lookup.Lookup
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementPresentation
 import com.intellij.lang.Language
@@ -72,6 +73,7 @@ class LSCompletionProviderHelper(
     private val applyCompletionCommandKey: String,
     private val completionDataKey: String,
     private val restoreTabOutScopeCaret: Boolean = false,
+    private val completionChar: Char = Lookup.AUTO_INSERT_SELECT_CHAR,
 ) {
 
     interface FileForModificationProvider {
@@ -311,7 +313,7 @@ class LSCompletionProviderHelper(
                         completion.lookup,
                         CamelHumpMatcher(completion.itemMatcher.prefix)
                     )
-                    insertCompletion(project, fileForModification, completion.lookup, completionProcess.parameters!!)
+                    insertCompletion(project, fileForModification, completion.lookup, completionProcess.parameters!!, completionChar)
                     val edits = TextEditsComputer.computeTextEdits(initialText, fileForModification.text)
                     val caretAfter = if (restoreTabOutScopeCaret) {
                         takeCaretInsideTabOutScope(completionProcess.parameters!!.editor) ?: completionProcess.caret.offset
