@@ -1,9 +1,14 @@
 /**
- * The parts of the build task that are pure logic: deciding whether there is a build to run at all, quoting a
- * command line for `cmd.exe`, and turning the build tool's output stream into terminal lines. Kept out of
- * `buildTask.ts` so they are testable without `vscode` — and they are the parts worth testing, because they fail in
- * ways a running build only shows on Windows, at chunk boundaries, or as a stray terminal.
+ * The build task with the editor taken out: deciding whether there is a build to run at all, quoting a command line
+ * for `cmd.exe`, running the build tool, and turning its output stream into terminal lines. Kept out of
+ * `buildTask.ts` so it is testable without `vscode` — and it is the part worth testing, because it fails in ways a
+ * running build only shows on Windows, at chunk boundaries, or as a stray terminal.
+ *
+ * The line drawn here is `vscode`, not purity: [runProcess] spawns a child and belongs on this side because nothing
+ * about doing so wants the editor API — only the task that hosts it does. Its one concession to the other side is
+ * [RunProcessOptions.close], a plain callback the task satisfies with its `EventEmitter`'s `fire`.
  */
+import { type ChildProcess, type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 
 /**
  * Task type contributed via `contributes.taskDefinitions` in package.json, and the `"type"` a task written by hand in
@@ -262,4 +267,136 @@ function namedString(source: unknown, key: string): string | undefined {
   if (value.includes('${')) return undefined;
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
+}
+
+/**
+ * The child a build is running in, so the task hosting it can take it down: without that, a terminated task leaves
+ * the build tool running unsupervised — holding a daemon, file locks and CPU nobody is watching.
+ */
+export interface RunningBuild {
+  /** Set once the build tool is spawned, and cleared once it has ended. */
+  child?: ChildProcess;
+  /** Set when the task was terminated, which can happen before there is any child to kill. */
+  cancelled?: boolean;
+}
+
+/** What [runProcess] needs in order to run a build and say how it ended. */
+export interface RunProcessOptions {
+  tool: string | undefined;
+  command: string[];
+  cwd: string | undefined;
+  /** Writes one line wherever the build is being shown. */
+  line: (text: string) => void;
+  /**
+   * Called exactly once, with the code the build ended on. A callback rather than the task's `EventEmitter` so that
+   * running a build needs nothing from `vscode`; see this file's header.
+   */
+  close: (exitCode: number) => void;
+  running: RunningBuild;
+}
+
+/**
+ * Runs [RunProcessOptions.command], streaming its output through [RunProcessOptions.line] and reporting the code it
+ * ended on through [RunProcessOptions.close]. Resolves once it has reported, and never rejects: a build that could
+ * not even start is a failed build, not a thrown one, because the only caller is a task with a terminal to write it
+ * to.
+ */
+export function runProcess({
+  tool,
+  command,
+  cwd,
+  line,
+  close,
+  running,
+}: RunProcessOptions): Promise<void> {
+  return new Promise<void>((resolve) => {
+    const [executable, ...args] = command;
+    line(`Building with ${tool ?? 'build tool'}: ${command.join(' ')}`);
+    // Node emits *both* `error` and `close` when the executable cannot be spawned at all — no `mvn` on PATH and no
+    // wrapper, which is exactly what `wrapperOrTool` falls back to. (Through a shell there is no spawn failure to
+    // report: cmd.exe starts fine and exits non-zero instead, so that case arrives as a plain build failure.)
+    // Firing twice writes a second "Build failed" into a pseudoterminal VS Code has already closed, so the first
+    // one to arrive wins.
+    let settled = false;
+    const finish = (exitCode: number) => {
+      settled = true;
+      close(exitCode);
+      resolve();
+    };
+    // On Windows the build tool is either a batch wrapper (`gradlew.bat` / `mvnw.cmd`) or a bare name to look up on
+    // PATH, and neither can be spawned without a shell — see `needsCmdShell`. `shell: true` makes cmd.exe run it,
+    // and then cmd.exe, not Node, splits the command line, so every part has to be quoted for it — every *argument*,
+    // that is. The name goes through `quoteCommandForCmd`, which quotes a path and leaves a name to look up alone,
+    // because quoting that one is what stops cmd.exe from looking it up.
+    //
+    // Node wraps the whole line in one more pair of quotes for `cmd /d /s /c`, and an unquoted name survives that:
+    // `/s` strips exactly the first and the last quote of the string, which are the pair Node just added.
+    const useShell = needsCmdShell(executable, process.platform);
+    // Guarded because `spawn` reports some failures by *throwing* rather than by emitting `error`: an argument it
+    // rejects outright — an empty executable, a `cwd` that is not a string — never reaches a child process to have
+    // an event. This runs inside a promise executor, so such a throw would reject a promise nobody awaits for its
+    // rejection (`open: () => void runBuild(…)`), leaving the pseudoterminal open on a build that will never report:
+    // the task hangs, and the launch behind it waits on a task that cannot finish. Reported as a failed build
+    // instead, which is what the `error` event two handlers down does with the failures that do arrive as events.
+    //
+    // Unreachable through the arguments this task builds today — a `.bat`/`.cmd` always gets `shell: true`, and
+    // `buildToRun` drops an empty command — but the command is a server response, so the shape it arrives in is not
+    // this file's to guarantee.
+    // `ChildProcessWithoutNullStreams`, not `ChildProcess`: the streams are non-null only because neither call
+    // passes `stdio`, and that is the overload's promise rather than the class's. Annotating the wider type is what
+    // made `child.stdout` nullable below.
+    let child: ChildProcessWithoutNullStreams;
+    try {
+      child = useShell
+        ? spawn(quoteCommandForCmd(executable), args.map(quoteForCmd), { cwd, shell: true })
+        : spawn(executable, args, { cwd, shell: false });
+    } catch (e) {
+      line(`Failed to start the build: ${errorMessage(e)}`);
+      finish(1);
+      return;
+    }
+    running.child = child;
+    // Terminated while we were resolving the build command, so the kill in `close` found nothing to kill.
+    if (running.cancelled) child.kill();
+    // Normalize LF to CRLF (via `line`) so the pseudoterminal renders lines correctly, holding back the partial
+    // line at the end of each chunk rather than emitting it as a line of its own.
+    // One splitter per stream, not one shared: a splitter holds an unterminated tail, so feeding both streams into
+    // the same one splices a half-written stdout line onto the next stderr chunk. Gradle writes progress to one and
+    // warnings to the other, so that garbling is the normal case, not an edge one.
+    const stdout = createOutputLineSplitter(line);
+    const stderr = createOutputLineSplitter(line);
+    const flushOutput = () => {
+      stdout.flush();
+      stderr.flush();
+    };
+    child.stdout.on('data', (chunk: Buffer) => stdout.push(chunk.toString()));
+    child.stderr.on('data', (chunk: Buffer) => stderr.push(chunk.toString()));
+    child.on('error', (e) => {
+      if (settled) return;
+      flushOutput();
+      line(`Failed to start the build: ${errorMessage(e)}`);
+      finish(1);
+    });
+    child.on('close', (code, signal) => {
+      running.child = undefined;
+      if (settled) return;
+      flushOutput();
+      // A killed build exits with a signal and no code; report a failure so the launch does not proceed as if
+      // the build had succeeded.
+      const exitCode = code ?? 1;
+      if (signal != null) line(`Build stopped (${signal}).`);
+      else
+        line(
+          exitCode === 0 ? 'Build finished successfully.' : `Build failed (exit code ${exitCode}).`,
+        );
+      finish(exitCode);
+    });
+  });
+}
+
+/** The message of whatever [e] turned out to be, for a report that has to say something either way. */
+export function errorMessage(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  if (typeof e === 'string') return e;
+  return String(e);
 }

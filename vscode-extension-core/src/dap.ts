@@ -23,7 +23,7 @@ import {
   resolveBuildCommand,
   setPendingBuild,
 } from './buildTask';
-import { type BuildToRun, buildToRun, launchBuildTargetOf } from './buildTaskModel';
+import { type BuildToRun, buildToRun, errorMessage, launchBuildTargetOf } from './buildTaskModel';
 
 /**
  * The launch configuration types, one per way of running a program.
@@ -530,12 +530,6 @@ async function sendCommand<T>(
     LSP_REQUEST_TIMEOUT_MS,
     command,
   );
-}
-
-function errorMessage(e: unknown): string {
-  if (e instanceof Error) return e.message;
-  if (typeof e === 'string') return e;
-  return String(e);
 }
 
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {

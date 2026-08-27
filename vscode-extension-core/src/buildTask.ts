@@ -1,4 +1,3 @@
-import { type ChildProcess, type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import { isAbsolute } from 'node:path';
 import {
   type CancellationToken,
@@ -26,11 +25,10 @@ import {
   type BuildToRun,
   type FileBuildTarget,
   type ResolvedBuildCommand,
+  type RunningBuild,
   buildToRun,
-  createOutputLineSplitter,
-  needsCmdShell,
-  quoteCommandForCmd,
-  quoteForCmd,
+  errorMessage,
+  runProcess,
   taskBuildTargetOf,
 } from './buildTaskModel';
 import { getLspClient } from './lspClient';
@@ -168,8 +166,7 @@ function buildExecution(): CustomExecution {
 function createBuildTerminal(definition: TaskDefinition): Pseudoterminal {
   const writeEmitter = new EventEmitter<string>();
   const closeEmitter = new EventEmitter<number>();
-  // Set once the build tool is spawned, so terminating the task can take the build down with it.
-  const running: { child?: ChildProcess; cancelled?: boolean } = {};
+  const running: RunningBuild = {};
   return {
     onDidWrite: writeEmitter.event,
     onDidClose: closeEmitter.event,
@@ -201,7 +198,7 @@ async function runBuild(
   definition: TaskDefinition,
   writeEmitter: EventEmitter<string>,
   closeEmitter: EventEmitter<number>,
-  running: { child?: ChildProcess; cancelled?: boolean },
+  running: RunningBuild,
 ): Promise<void> {
   const line = (text: string) => writeEmitter.fire(`${text}\r\n`);
   // A launch resolves the build for its own target and leaves it here — the lens before it starts a session, and
@@ -226,7 +223,7 @@ async function runBuild(
     command: build.command,
     cwd: build.cwd,
     line,
-    closeEmitter,
+    close: (exitCode) => closeEmitter.fire(exitCode),
     running,
   });
 }
@@ -284,108 +281,6 @@ async function resolveTargetBuild(
   return build;
 }
 
-interface RunProcessOptions {
-  tool: string | undefined;
-  command: string[];
-  cwd: string | undefined;
-  line: (text: string) => void;
-  closeEmitter: EventEmitter<number>;
-  running: { child?: ChildProcess; cancelled?: boolean };
-}
-
-function runProcess({
-  tool,
-  command,
-  cwd,
-  line,
-  closeEmitter,
-  running,
-}: RunProcessOptions): Promise<void> {
-  return new Promise<void>((resolve) => {
-    const [executable, ...args] = command;
-    line(`Building with ${tool ?? 'build tool'}: ${command.join(' ')}`);
-    // Node emits *both* `error` and `close` when the executable cannot be spawned at all — no `mvn` on PATH and no
-    // wrapper, which is exactly what `wrapperOrTool` falls back to. (Through a shell there is no spawn failure to
-    // report: cmd.exe starts fine and exits non-zero instead, so that case arrives as a plain build failure.)
-    // Firing twice writes a second "Build failed" into a pseudoterminal VS Code has already closed, so the first
-    // one to arrive wins.
-    let settled = false;
-    const finish = (exitCode: number) => {
-      settled = true;
-      closeEmitter.fire(exitCode);
-      resolve();
-    };
-    // On Windows the build tool is either a batch wrapper (`gradlew.bat` / `mvnw.cmd`) or a bare name to look up on
-    // PATH, and neither can be spawned without a shell — see `needsCmdShell`. `shell: true` makes cmd.exe run it,
-    // and then cmd.exe, not Node, splits the command line, so every part has to be quoted for it — every *argument*,
-    // that is. The name goes through `quoteCommandForCmd`, which quotes a path and leaves a name to look up alone,
-    // because quoting that one is what stops cmd.exe from looking it up.
-    //
-    // Node wraps the whole line in one more pair of quotes for `cmd /d /s /c`, and an unquoted name survives that:
-    // `/s` strips exactly the first and the last quote of the string, which are the pair Node just added.
-    const useShell = needsCmdShell(executable, process.platform);
-    // Guarded because `spawn` reports some failures by *throwing* rather than by emitting `error`: an argument it
-    // rejects outright — an empty executable, a `cwd` that is not a string — never reaches a child process to have
-    // an event. This runs inside a promise executor, so such a throw would reject a promise nobody awaits for its
-    // rejection (`open: () => void runBuild(…)`), leaving the pseudoterminal open on a build that will never report:
-    // the task hangs, and the launch behind it waits on a task that cannot finish. Reported as a failed build
-    // instead, which is what the `error` event two handlers down does with the failures that do arrive as events.
-    //
-    // Unreachable through the arguments this task builds today — a `.bat`/`.cmd` always gets `shell: true`, and
-    // `buildToRun` drops an empty command — but the command is a server response, so the shape it arrives in is not
-    // this file's to guarantee.
-    // `ChildProcessWithoutNullStreams`, not `ChildProcess`: the streams are non-null only because neither call
-    // passes `stdio`, and that is the overload's promise rather than the class's. Annotating the wider type is what
-    // made `child.stdout` nullable below.
-    let child: ChildProcessWithoutNullStreams;
-    try {
-      child = useShell
-        ? spawn(quoteCommandForCmd(executable), args.map(quoteForCmd), { cwd, shell: true })
-        : spawn(executable, args, { cwd, shell: false });
-    } catch (e) {
-      line(`Failed to start the build: ${errorMessage(e)}`);
-      finish(1);
-      return;
-    }
-    running.child = child;
-    // Terminated while we were resolving the build command, so the kill in `close` found nothing to kill.
-    if (running.cancelled) child.kill();
-    // Normalize LF to CRLF (via `line`) so the pseudoterminal renders lines correctly, holding back the partial
-    // line at the end of each chunk rather than emitting it as a line of its own.
-    // One splitter per stream, not one shared: a splitter holds an unterminated tail, so feeding both streams into
-    // the same one splices a half-written stdout line onto the next stderr chunk. Gradle writes progress to one and
-    // warnings to the other, so that garbling is the normal case, not an edge one.
-    const stdout = createOutputLineSplitter(line);
-    const stderr = createOutputLineSplitter(line);
-    const flushOutput = () => {
-      stdout.flush();
-      stderr.flush();
-    };
-    child.stdout.on('data', (chunk: Buffer) => stdout.push(chunk.toString()));
-    child.stderr.on('data', (chunk: Buffer) => stderr.push(chunk.toString()));
-    child.on('error', (e) => {
-      if (settled) return;
-      flushOutput();
-      line(`Failed to start the build: ${errorMessage(e)}`);
-      finish(1);
-    });
-    child.on('close', (code, signal) => {
-      running.child = undefined;
-      if (settled) return;
-      flushOutput();
-      // A killed build exits with a signal and no code; report a failure so the launch does not proceed as if
-      // the build had succeeded.
-      const exitCode = code ?? 1;
-      if (signal != null) line(`Build stopped (${signal}).`);
-      else
-        line(
-          exitCode === 0 ? 'Build finished successfully.' : `Build failed (exit code ${exitCode}).`,
-        );
-      finish(exitCode);
-    });
-  });
-}
-
 /**
  * The document URI of what to compile: what [target] names, or the active editor when nothing does.
  *
@@ -441,12 +336,6 @@ function activeEditorProtocolUri(client: LanguageClient): string | undefined {
   const editor = window.activeTextEditor;
   if (!editor) return undefined;
   return client.code2ProtocolConverter.asUri(editor.document.uri);
-}
-
-function errorMessage(e: unknown): string {
-  if (e instanceof Error) return e.message;
-  if (typeof e === 'string') return e;
-  return String(e);
 }
 
 /**
