@@ -1,12 +1,13 @@
 /**
- * The build task with the editor taken out: deciding whether there is a build to run at all, quoting a command line
- * for `cmd.exe`, running the build tool, and turning its output stream into terminal lines. Kept out of
- * `buildTask.ts` so it is testable without `vscode` — and it is the part worth testing, because it fails in ways a
- * running build only shows on Windows, at chunk boundaries, or as a stray terminal.
+ * The build task with the editor taken out. This file decides whether there is a build to run. It also quotes a
+ * command line for `cmd.exe`, runs the build tool, and turns the output stream into terminal lines.
  *
- * The line drawn here is `vscode`, not purity: [runProcess] spawns a child and belongs on this side because nothing
- * about doing so wants the editor API — only the task that hosts it does. Its one concession to the other side is
- * [RunProcessOptions.close], a plain callback the task satisfies with its `EventEmitter`'s `fire`.
+ * It stays out of `buildTask.ts` so a test can use it without `vscode`. It is also the part worth a test. It fails
+ * in ways that only a running build shows: on Windows, at a chunk boundary, or as a stray terminal.
+ *
+ * The line here is `vscode`, not purity. [runProcess] spawns a child, and nothing about that wants the editor API.
+ * Only the task that hosts it does. Its one concession to the other side is [RunProcessOptions.close]. That is a
+ * plain callback, and the task satisfies it with the `fire` of its `EventEmitter`.
  */
 import { type ChildProcess, type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 
@@ -66,8 +67,8 @@ export function quoteForCmd(arg: string): string {
 }
 
 /**
- * Whether spawning [executable] on [platform] has to go through `cmd.exe` (`shell: true`, and therefore
- * [quoteCommandForCmd] on the name and [quoteForCmd] on every argument).
+ * Whether [platform] must run [executable] through `cmd.exe`. A `true` result means `shell: true`, then
+ * [quoteCommandForCmd] on the name and [quoteForCmd] on each argument.
  *
  * Two Windows-only reasons, and missing either one fails the build before it starts:
  *
@@ -88,39 +89,37 @@ export function needsCmdShell(executable: string, platform: string): boolean {
 }
 
 /**
- * Whether [executable] names a *path* — it has a directory component or a drive — rather than a command name for
- * cmd.exe to look up on `PATH`.
+ * Whether [executable] names a *path* rather than a command name for cmd.exe to look up on `PATH`. A path has a
+ * directory component or a drive.
  *
- * The distinction both [needsCmdShell] and [quoteCommandForCmd] turn on, which is why it is one function: a path
- * names the file outright and has to be quoted because it can contain spaces, while a name has to be looked up and
- * must *not* be quoted for that lookup to happen. Reading it two ways is what left the two disagreeing.
+ * Both [needsCmdShell] and [quoteCommandForCmd] turn on this distinction, so it is one function. A path names the
+ * file outright, and it needs quotes because it can contain a space. A name needs the lookup, and the lookup only
+ * happens while the name has no quotes.
  */
 function namesAPath(executable: string): boolean {
   return /[/\\]/.test(executable) || /^[a-zA-Z]:/.test(executable);
 }
 
 /**
- * Quotes the *command name* — the first element of the command line — for `cmd.exe`, which is not the same job as
- * quoting an argument with [quoteForCmd].
+ * Quotes the *command name* for `cmd.exe`. The command name is the first element of the command line. To quote it
+ * is not the same job as to quote an argument with [quoteForCmd].
  *
- * A wrapper path is quoted, because that is where spaces turn up: `C:\Users\me\my project\mvnw.cmd`.
+ * A wrapper path gets quotes, because a path is where a space turns up. An example is
+ * `C:\Users\me\my project\mvnw.cmd`.
  *
- * A bare tool name is not, and that is the whole point of this function. It is what the server falls back to when the
- * project ships no wrapper — `mvn.cmd`, `gradle.bat` — and cmd.exe does not resolve a *quoted* bare name the way it
- * resolves a typed one: it reads the quoted text as a file specification instead of a command to look up, so it
- * neither searches `PATH` for it nor, where it does find the file, hands the batch file its own `%~dp0`. Both Gradle's
- * `gradle.bat` and Maven's `mvn.cmd` locate their installation through `%~dp0`, so quoting them ended the build at
- * their own "cannot find my installation" exit — code 1, and nothing about the project in the terminal (LSP-1716).
+ * A bare tool name does not, and that is the point of this function. The server falls back to such a name when the
+ * project ships no wrapper. Examples are `mvn.cmd` and `gradle.bat`. For a *quoted* bare name, cmd.exe does not do
+ * the resolution that it does for a typed one. It reads the quoted text as a file specification. So it does not
+ * search `PATH`, and it does not give the batch file its own `%~dp0`. Both `gradle.bat` and `mvn.cmd` find their
+ * installation through `%~dp0`, so quotes broke every wrapper-less build on Windows (LSP-1716).
  *
- * A name that is neither a path nor safe to leave bare is quoted anyway. None of the names the server produces are
- * like that, but running the *leading word* of one as some other command would be a worse way to be wrong than
- * failing to find this one.
+ * A name that is neither a path nor safe to leave bare still gets quotes. The server produces no such name. But to
+ * run the *leading word* of a name as some other command is a worse fault than to not find the tool.
  *
- * Quote-only-when-needed is also the rule VS Code's own task system arrived at, which is worth knowing because this
- * task cannot borrow it: `ShellExecution`'s quoting lives in `TerminalTaskSystem._buildShellCommandLine`, which runs
- * a `needsQuotes` check — true only for a value containing a space — over the command before quoting it, and is
- * reachable only by handing VS Code a `ShellExecution`. A `CustomExecution` spawns the tool itself; see `buildTask.ts`
- * for why this task has to be one.
+ * VS Code's own task system also quotes only when it must. That is worth knowing, because this task cannot borrow
+ * the code. The quoting for a `ShellExecution` lives in `TerminalTaskSystem._buildShellCommandLine`, and its
+ * `needsQuotes` check is true only for a value with a space. A `CustomExecution` spawns the tool itself. See
+ * `buildTask.ts` for why this task must be one.
  */
 export function quoteCommandForCmd(executable: string): string {
   if (namesAPath(executable)) return quoteForCmd(executable);
@@ -132,6 +131,34 @@ export function quoteCommandForCmd(executable: string): string {
   // expansion is off and `!` is already a literal character. Quoting it would only break the PATH lookup.
   if (/[\s"&|<>()^%]/.test(executable)) return quoteForCmd(executable);
   return executable;
+}
+
+/** What [runProcess] gives to `spawn`: the command name, the arguments, and whether a shell must run it. */
+export interface SpawnArguments {
+  command: string;
+  args: string[];
+  shell: boolean;
+}
+
+/**
+ * Turns a build command line into the arguments that [runProcess] spawns it with, for [platform].
+ *
+ * The parts go to `spawn` unchanged off Windows, and for a path that names an executable image.
+ *
+ * Through cmd.exe the name and an argument need different quotes, and this function holds both rules. An
+ * *argument* goes through [quoteForCmd]. The *name* goes through [quoteCommandForCmd], which quotes a path and
+ * leaves a name for `PATH` alone (LSP-1716).
+ *
+ * Node adds one more pair of quotes around the whole line for `cmd /d /s /c`, and a bare name survives that. The
+ * `/s` flag strips exactly the first and the last quote of the string, which are the pair that Node added.
+ *
+ * It is separate from [runProcess] so a test can read both rules on either platform. A test that spawns a real
+ * child cannot do that, because cmd.exe runs only on Windows.
+ */
+export function spawnArgumentsFor(command: string[], platform: string): SpawnArguments {
+  const [executable, ...args] = command;
+  if (!needsCmdShell(executable, platform)) return { command: executable, args, shell: false };
+  return { command: quoteCommandForCmd(executable), args: args.map(quoteForCmd), shell: true };
 }
 
 export interface OutputLineSplitter {
@@ -270,14 +297,25 @@ function namedString(source: unknown, key: string): string | undefined {
 }
 
 /**
- * The child a build is running in, so the task hosting it can take it down: without that, a terminated task leaves
- * the build tool running unsupervised — holding a daemon, file locks and CPU nobody is watching.
+ * The child that a build runs in, so the task that hosts it can take it down. Without this, a terminated task
+ * leaves the build tool alive. The tool then holds a daemon, a file lock, and CPU that nobody watches.
  */
 export interface RunningBuild {
   /** Set once the build tool is spawned, and cleared once it has ended. */
   child?: ChildProcess;
   /** Set when the task was terminated, which can happen before there is any child to kill. */
   cancelled?: boolean;
+}
+
+/**
+ * Whether the task can still take [child] down.
+ *
+ * A child with no `pid` never started, because `spawn` leaves that field empty for a failure. A child with an exit
+ * code or with a signal has ended. Neither one is a build tool that a terminated task must kill.
+ */
+function canBeKilled(child: ChildProcess | undefined): boolean {
+  if (child === undefined || child.pid === undefined) return false;
+  return child.exitCode === null && child.signalCode === null;
 }
 
 /** What [runProcess] needs in order to run a build and say how it ended. */
@@ -288,18 +326,19 @@ export interface RunProcessOptions {
   /** Writes one line wherever the build is being shown. */
   line: (text: string) => void;
   /**
-   * Called exactly once, with the code the build ended on. A callback rather than the task's `EventEmitter` so that
-   * running a build needs nothing from `vscode`; see this file's header.
+   * Called exactly once, with the code that the build ended on. It is a callback and not the task's
+   * `EventEmitter`, so a build needs nothing from `vscode`. See the header of this file.
    */
   close: (exitCode: number) => void;
   running: RunningBuild;
 }
 
 /**
- * Runs [RunProcessOptions.command], streaming its output through [RunProcessOptions.line] and reporting the code it
- * ended on through [RunProcessOptions.close]. Resolves once it has reported, and never rejects: a build that could
- * not even start is a failed build, not a thrown one, because the only caller is a task with a terminal to write it
- * to.
+ * Runs [RunProcessOptions.command]. It streams the output through [RunProcessOptions.line], and it reports the
+ * final code through [RunProcessOptions.close].
+ *
+ * It resolves once it has reported, and it never rejects. A build that cannot start is a failed build and not a
+ * thrown one. The only caller is a task, and that task has a terminal to write the failure to.
  */
 export function runProcess({
   tool,
@@ -310,46 +349,36 @@ export function runProcess({
   running,
 }: RunProcessOptions): Promise<void> {
   return new Promise<void>((resolve) => {
-    const [executable, ...args] = command;
     line(`Building with ${tool ?? 'build tool'}: ${command.join(' ')}`);
-    // Node emits *both* `error` and `close` when the executable cannot be spawned at all — no `mvn` on PATH and no
-    // wrapper, which is exactly what `wrapperOrTool` falls back to. (Through a shell there is no spawn failure to
-    // report: cmd.exe starts fine and exits non-zero instead, so that case arrives as a plain build failure.)
-    // Firing twice writes a second "Build failed" into a pseudoterminal VS Code has already closed, so the first
-    // one to arrive wins.
+    // Node emits *both* `error` and `close` when it cannot spawn the executable at all. To report twice writes a
+    // second "Build failed" into a pseudoterminal that VS Code has already closed, so the first event wins.
+    // Through a shell there is no spawn failure to report. cmd.exe starts correctly and exits non-zero, so that
+    // case arrives as a plain build failure.
     let settled = false;
     const finish = (exitCode: number) => {
       settled = true;
+      // Cleared here and not in the `close` handler, so it holds however the build ends. A spawn failure arrives
+      // as `error`, and the `close` after it lands once the task is already done.
+      //
+      // A child that is still alive stays. Node also reports a kill that failed as `error`, and the task has to
+      // keep that child to try again.
+      if (!canBeKilled(running.child)) running.child = undefined;
       close(exitCode);
       resolve();
     };
-    // On Windows the build tool is either a batch wrapper (`gradlew.bat` / `mvnw.cmd`) or a bare name to look up on
-    // PATH, and neither can be spawned without a shell — see `needsCmdShell`. `shell: true` makes cmd.exe run it,
-    // and then cmd.exe, not Node, splits the command line, so every part has to be quoted for it — every *argument*,
-    // that is. The name goes through `quoteCommandForCmd`, which quotes a path and leaves a name to look up alone,
-    // because quoting that one is what stops cmd.exe from looking it up.
+    // On Windows the build tool is a batch wrapper or a bare name to look up on PATH, and neither one spawns
+    // without a shell. See `needsCmdShell`. The name and an argument then need different quotes, and
+    // `spawnArgumentsFor` holds both rules.
+    const spawnWith = spawnArgumentsFor(command, process.platform);
+    // `spawn` reports some failures with a throw and not with an `error` event. It rejects a bad argument before
+    // there is a child process to carry an event. This code runs in a promise executor, and nobody awaits the
+    // rejection. A throw would leave the pseudoterminal open on a build that never reports.
     //
-    // Node wraps the whole line in one more pair of quotes for `cmd /d /s /c`, and an unquoted name survives that:
-    // `/s` strips exactly the first and the last quote of the string, which are the pair Node just added.
-    const useShell = needsCmdShell(executable, process.platform);
-    // Guarded because `spawn` reports some failures by *throwing* rather than by emitting `error`: an argument it
-    // rejects outright — an empty executable, a `cwd` that is not a string — never reaches a child process to have
-    // an event. This runs inside a promise executor, so such a throw would reject a promise nobody awaits for its
-    // rejection (`open: () => void runBuild(…)`), leaving the pseudoterminal open on a build that will never report:
-    // the task hangs, and the launch behind it waits on a task that cannot finish. Reported as a failed build
-    // instead, which is what the `error` event two handlers down does with the failures that do arrive as events.
-    //
-    // Unreachable through the arguments this task builds today — a `.bat`/`.cmd` always gets `shell: true`, and
-    // `buildToRun` drops an empty command — but the command is a server response, so the shape it arrives in is not
-    // this file's to guarantee.
-    // `ChildProcessWithoutNullStreams`, not `ChildProcess`: the streams are non-null only because neither call
-    // passes `stdio`, and that is the overload's promise rather than the class's. Annotating the wider type is what
-    // made `child.stdout` nullable below.
+    // `ChildProcessWithoutNullStreams`, not `ChildProcess`: the streams are non-null through the promise of this
+    // `spawn` overload, not through the class. The wider type makes `child.stdout` nullable.
     let child: ChildProcessWithoutNullStreams;
     try {
-      child = useShell
-        ? spawn(quoteCommandForCmd(executable), args.map(quoteForCmd), { cwd, shell: true })
-        : spawn(executable, args, { cwd, shell: false });
+      child = spawn(spawnWith.command, spawnWith.args, { cwd, shell: spawnWith.shell });
     } catch (e) {
       line(`Failed to start the build: ${errorMessage(e)}`);
       finish(1);
@@ -378,7 +407,6 @@ export function runProcess({
       finish(1);
     });
     child.on('close', (code, signal) => {
-      running.child = undefined;
       if (settled) return;
       flushOutput();
       // A killed build exits with a signal and no code; report a failure so the launch does not proceed as if
@@ -394,7 +422,7 @@ export function runProcess({
   });
 }
 
-/** The message of whatever [e] turned out to be, for a report that has to say something either way. */
+/** The message of [e], whatever [e] is, so a report can always say something. */
 export function errorMessage(e: unknown): string {
   if (e instanceof Error) return e.message;
   if (typeof e === 'string') return e;
