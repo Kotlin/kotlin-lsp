@@ -1,4 +1,4 @@
-import { type ChildProcess, spawn } from 'node:child_process';
+import { type ChildProcess, type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import { isAbsolute } from 'node:path';
 import {
   type CancellationToken,
@@ -304,6 +304,17 @@ function runProcess({
   return new Promise<void>((resolve) => {
     const [executable, ...args] = command;
     line(`Building with ${tool ?? 'build tool'}: ${command.join(' ')}`);
+    // Node emits *both* `error` and `close` when the executable cannot be spawned at all — no `mvn` on PATH and no
+    // wrapper, which is exactly what `wrapperOrTool` falls back to. (Through a shell there is no spawn failure to
+    // report: cmd.exe starts fine and exits non-zero instead, so that case arrives as a plain build failure.)
+    // Firing twice writes a second "Build failed" into a pseudoterminal VS Code has already closed, so the first
+    // one to arrive wins.
+    let settled = false;
+    const finish = (exitCode: number) => {
+      settled = true;
+      closeEmitter.fire(exitCode);
+      resolve();
+    };
     // On Windows the build tool is either a batch wrapper (`gradlew.bat` / `mvnw.cmd`) or a bare name to look up on
     // PATH, and neither can be spawned without a shell — see `needsCmdShell`. `shell: true` makes cmd.exe run it,
     // and then cmd.exe, not Node, splits the command line, so every part has to be quoted for it — every *argument*,
@@ -313,9 +324,29 @@ function runProcess({
     // Node wraps the whole line in one more pair of quotes for `cmd /d /s /c`, and an unquoted name survives that:
     // `/s` strips exactly the first and the last quote of the string, which are the pair Node just added.
     const useShell = needsCmdShell(executable, process.platform);
-    const child = useShell
-      ? spawn(quoteCommandForCmd(executable), args.map(quoteForCmd), { cwd, shell: true })
-      : spawn(executable, args, { cwd, shell: false });
+    // Guarded because `spawn` reports some failures by *throwing* rather than by emitting `error`: an argument it
+    // rejects outright — an empty executable, a `cwd` that is not a string — never reaches a child process to have
+    // an event. This runs inside a promise executor, so such a throw would reject a promise nobody awaits for its
+    // rejection (`open: () => void runBuild(…)`), leaving the pseudoterminal open on a build that will never report:
+    // the task hangs, and the launch behind it waits on a task that cannot finish. Reported as a failed build
+    // instead, which is what the `error` event two handlers down does with the failures that do arrive as events.
+    //
+    // Unreachable through the arguments this task builds today — a `.bat`/`.cmd` always gets `shell: true`, and
+    // `buildToRun` drops an empty command — but the command is a server response, so the shape it arrives in is not
+    // this file's to guarantee.
+    // `ChildProcessWithoutNullStreams`, not `ChildProcess`: the streams are non-null only because neither call
+    // passes `stdio`, and that is the overload's promise rather than the class's. Annotating the wider type is what
+    // made `child.stdout` nullable below.
+    let child: ChildProcessWithoutNullStreams;
+    try {
+      child = useShell
+        ? spawn(quoteCommandForCmd(executable), args.map(quoteForCmd), { cwd, shell: true })
+        : spawn(executable, args, { cwd, shell: false });
+    } catch (e) {
+      line(`Failed to start the build: ${errorMessage(e)}`);
+      finish(1);
+      return;
+    }
     running.child = child;
     // Terminated while we were resolving the build command, so the kill in `close` found nothing to kill.
     if (running.cancelled) child.kill();
@@ -332,17 +363,6 @@ function runProcess({
     };
     child.stdout.on('data', (chunk: Buffer) => stdout.push(chunk.toString()));
     child.stderr.on('data', (chunk: Buffer) => stderr.push(chunk.toString()));
-    // Node emits *both* `error` and `close` when the executable cannot be spawned at all — no `mvn` on PATH and no
-    // wrapper, which is exactly what `wrapperOrTool` falls back to. (Through a shell there is no spawn failure to
-    // report: cmd.exe starts fine and exits non-zero instead, so that case arrives as a plain build failure.)
-    // Firing twice writes a second "Build failed" into a pseudoterminal VS Code has already closed, so the first
-    // one to arrive wins.
-    let settled = false;
-    const finish = (exitCode: number) => {
-      settled = true;
-      closeEmitter.fire(exitCode);
-      resolve();
-    };
     child.on('error', (e) => {
       if (settled) return;
       flushOutput();
