@@ -201,6 +201,9 @@ abstract class AbstractProjectImportTest {
     fun jpsJavaModule() = doJpsTest("JpsJavaModule")
 
     @Test
+    fun jpsExportedModuleLibrary() = doJpsTest("JpsExportedModuleLibrary")
+
+    @Test
     fun simpleMaven() = doMavenTest("SimpleMaven")
 
     @Test

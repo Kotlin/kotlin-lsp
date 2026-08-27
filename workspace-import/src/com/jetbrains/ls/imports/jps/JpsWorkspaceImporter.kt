@@ -344,9 +344,9 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
             }
         }
 
-        // JPS uses a non-flat dependency model; flatten transitively-exported module deps into direct deps
-        // so the analyzer's non-recursive OrderEnumerator resolves them. See AnalyzerOrderEnumerationHandler.
-        flattenExportedDependencies(storage, includeLibraries = false)
+        // JPS uses a non-flat dependency model; flatten transitively-exported module and library deps into
+        // direct deps so the analyzer's non-recursive OrderEnumerator resolves them. See AnalyzerOrderEnumerationHandler.
+        flattenExportedDependencies(storage)
         if (model.global.libraryCollection.libraries.isEmpty()) {
             detectJavaSdks(projectDirectory, sdks, virtualFileUrlManager, entitySource).forEach { builder ->
                 storage addEntity builder

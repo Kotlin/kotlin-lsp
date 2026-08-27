@@ -1,0 +1,81 @@
+{
+    "modules": [
+        {
+            "name": "app",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "module",
+                    "name": "wrapper",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "anno",
+                    "scope": "compile"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/app",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/src",
+                            "type": "java-source"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/app"
+        },
+        {
+            "name": "wrapper",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "library",
+                    "name": "anno",
+                    "scope": "compile",
+                    "isExported": true
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/wrapper"
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/wrapper"
+        }
+    ],
+    "libraries": [
+        {
+            "name": "anno",
+            "type": "JpsJavaLibraryType",
+            "roots": [
+                {
+                    "path": "<WORKSPACE>/wrapper/lib/anno.jar"
+                }
+            ]
+        }
+    ],
+    "javaSettings": [
+        {
+            "module": "app",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": true,
+            "languageLevelId": "JDK_17",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "wrapper",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": true,
+            "languageLevelId": "JDK_17",
+            "manifestAttributes": {}
+        }
+    ]
+}

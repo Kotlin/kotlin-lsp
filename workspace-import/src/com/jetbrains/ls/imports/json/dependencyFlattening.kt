@@ -13,10 +13,10 @@ import com.intellij.platform.workspace.storage.entities
 /**
  * See [com.jetbrains.analyzer.bootstrap.AnalyzerOrderEnumerationHandler.shouldProcessDependenciesRecursively]
  *
- * [includeLibraries] also flattens transitively-exported library deps. Bazel routes exported libraries
- * through wrapper modules so it needs this; JPS keeps it off (its libraries are already direct per-module).
+ * Library deps are flattened too. Both Bazel and JPS route exported libraries through wrapper modules.
+ * In a JPS project these are the `intellij.libraries.*` modules with an exported module library.
  */
-fun flattenExportedDependencies(storage: MutableEntityStorage, includeLibraries: Boolean = true) {
+fun flattenExportedDependencies(storage: MutableEntityStorage) {
     val modules = storage.entities<ModuleEntity>().toList()
     val byName = modules.associateBy { it.name }
 
@@ -29,7 +29,7 @@ fun flattenExportedDependencies(storage: MutableEntityStorage, includeLibraries:
         val reachedLibraries = LinkedHashSet<LibraryId>()
         for (dep in module.dependencies) {
             when (dep) {
-                is LibraryDependency -> if (includeLibraries && dep.exported) reachedLibraries.add(dep.library)
+                is LibraryDependency -> if (dep.exported) reachedLibraries.add(dep.library)
                 is ModuleDependency -> if (dep.exported) {
                     reachedModules.add(dep.module.name)
                     val sub = reach(dep.module.name)
