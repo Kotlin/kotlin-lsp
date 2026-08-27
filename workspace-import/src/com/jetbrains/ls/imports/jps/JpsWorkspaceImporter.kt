@@ -1,4 +1,4 @@
-// Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.jps
 
 import com.intellij.java.workspace.entities.JavaModuleSettingsEntity
@@ -587,7 +587,7 @@ private fun downloadFromMavenRepository(
  */
 // ArtifactRepositoryManager only accepts a java.io.File for the local repository path.
 @Suppress("IO_FILE_USAGE")
-private fun createArtifactRepositoryManager(projectDirectory: Path): ArtifactRepositoryManager {
+fun createArtifactRepositoryManager(projectDirectory: Path): ArtifactRepositoryManager {
     val remoteRepositories = readRemoteRepositories(projectDirectory)
         ?: ArtifactRepositoryManager.createDefaultRemoteRepositories()
     return ArtifactRepositoryManager(
