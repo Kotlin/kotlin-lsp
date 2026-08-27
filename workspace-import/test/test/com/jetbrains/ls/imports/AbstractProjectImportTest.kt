@@ -26,9 +26,9 @@ import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper
+import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.LSP_GRADLE_DAEMON_NO_IDLE_TIMEOUT
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.LSP_GRADLE_JAVA_HOME_PROPERTY
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.LSP_GRADLE_PROJECT_INIT_SCRIPTS
-import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.LSP_GRADLE_DAEMON_NO_IDLE_TIMEOUT
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
 import com.jetbrains.ls.imports.jps.JpsWorkspaceImporter
 import com.jetbrains.ls.imports.json.DependencyData
@@ -98,9 +98,9 @@ abstract class AbstractProjectImportTest {
     @Test
     fun brokenPetClinic() = doTestBrokenProject(
         "BrokenPetClinic",
-        "The supplied build action failed with an exception.",
+        "Gradle sync failed",
         GradleWorkspaceImporter,
-        testDataDir / "gradle"
+        testDataDir / "gradle",
     )
 
     @Test
@@ -304,6 +304,7 @@ abstract class AbstractProjectImportTest {
         failureMessage: String,
         importer: WorkspaceImporter,
         testDataDir: Path,
+        failureCause: Class<*> = WorkspaceImportException::class.java
     ) {
         val projectDir = testDataDir / project
         require(projectDir.exists()) { "Project $project not found at $projectDir" }
@@ -325,7 +326,9 @@ abstract class AbstractProjectImportTest {
                         importer.importWorkspace(it.project, WorkspaceImportParameters(projectDir, null), virtualFileUrlManager, reporter)
                     }
                     assertTrue(result.isFailure)
-                    assertEquals(failureMessage, result.exceptionOrNull()!!.message)
+                    val actualFailure = result.exceptionOrNull()!!
+                    assertEquals(failureMessage, actualFailure.message)
+                    assertTrue(failureCause.isAssignableFrom(actualFailure.javaClass))
                 }
             }
         }

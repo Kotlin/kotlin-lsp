@@ -10,6 +10,7 @@ import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
+import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
@@ -28,6 +29,7 @@ import com.jetbrains.ls.imports.json.importWorkspaceData
 import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
 import org.gradle.tooling.BuildActionExecuter
 import org.gradle.tooling.BuildActionFailureException
+import org.gradle.tooling.GradleConnectionException
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.ProjectConnection
 import java.io.File
@@ -69,28 +71,34 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         val jdkToUse = parameters.options.javaHome?.toString()
             ?: findTheMostCompatibleJdk(project, projectDirectory)
 
-        val gradleProjectData = connection.use { projectConnection ->
-            withDaemonInitScripts { daemonInitScripts ->
-                try {
-                    createExecuter(
-                        projectConnection,
-                        progress,
-                        daemonInitScripts,
-                        jdkToUse,
-                        listOf(PREPARE_KOTLIN_IDEA_IMPORT_TASK_NAME)
-                    ).run()
-                } catch (e: BuildActionFailureException) {
-                    LOG.warn(
-                        "Gradle sync failed while running '$PREPARE_KOTLIN_IDEA_IMPORT_TASK_NAME'. " +
-                                "Falling back to importing $projectDirectory without sync tasks; generated sources may be missing.",
-                        e
-                    )
-                    progress.onErrorOutput(
-                        "Gradle sync tasks failed, retrying the import without them. Generated sources may be missing."
-                    )
-                    createExecuter(projectConnection, progress, daemonInitScripts, jdkToUse, null).run()
+        val gradleProjectData = try {
+            connection.use { projectConnection ->
+                withDaemonInitScripts { daemonInitScripts ->
+                    try {
+                        createExecuter(
+                            projectConnection,
+                            progress,
+                            daemonInitScripts,
+                            jdkToUse,
+                            listOf(PREPARE_KOTLIN_IDEA_IMPORT_TASK_NAME)
+                        ).run()
+                    } catch (e: BuildActionFailureException) {
+                        LOG.warn(
+                            "Gradle sync failed while running '$PREPARE_KOTLIN_IDEA_IMPORT_TASK_NAME'. " +
+                                    "Falling back to importing $projectDirectory without sync tasks; generated sources may be missing.",
+                            e
+                        )
+                        progress.onErrorOutput(
+                            "Gradle sync tasks failed, retrying the import without them. Generated sources may be missing."
+                        )
+                        // retry without kotlin task in case of a broken task graph
+                        createExecuter(projectConnection, progress, daemonInitScripts, jdkToUse, null).run()
+                    }
                 }
             }
+        } catch (e: GradleConnectionException) {
+            @Suppress("HardCodedStringLiteral")
+            throw WorkspaceImportException("Gradle sync failed", "Unable to import a Gradle project: ${e.message}", e)
         }
         val entitySource = WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager))
         return MutableEntityStorage.create().apply {
