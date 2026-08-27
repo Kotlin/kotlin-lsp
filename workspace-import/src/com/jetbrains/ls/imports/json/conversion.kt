@@ -58,6 +58,7 @@ import com.intellij.util.text.nullize
 import com.jetbrains.analyzer.workspace.LSModuleOutputRoots
 import com.jetbrains.ls.imports.api.ModuleCoordinateEntity
 import com.jetbrains.ls.imports.api.coordinateEntity
+import com.jetbrains.ls.imports.utils.jdkAnnotationsSdkRoots
 import com.jetbrains.ls.imports.utils.toIntellijUri
 import kotlinx.serialization.json.Json
 import org.jetbrains.jps.model.serialization.JpsMavenSettings
@@ -333,6 +334,7 @@ fun MutableEntityStorage.importWorkspaceData(
                                 SdkRootTypeId.SOURCES
                             )
                         }
+                        addAll(jdkAnnotationsSdkRoots(virtualFileUrlManager))
                     }
                     sdkData.homePath != null -> {
                         // unresolvable placeholder, a path variable

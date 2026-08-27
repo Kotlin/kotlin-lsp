@@ -48,6 +48,7 @@ fun MutableEntityStorage.fixMissingProjectSdk(
                 JavaSdkImpl.findSources(path).mapTo(this) {
                     SdkRoot(it.toIntellijUri(virtualFileUrlManager), SdkRootTypeId.SOURCES)
                 }
+                addAll(jdkAnnotationsSdkRoots(virtualFileUrlManager))
             }
         }
     }
@@ -67,6 +68,7 @@ fun MutableEntityStorage.fixMissingProjectSdk(
                                 urlManager = virtualFileUrlManager,
                                 source = DefaultJdkEntitySource,
                                 storage = this@fixMissingProjectSdk,
+                                extraRoots = jdkAnnotationsSdkRoots(virtualFileUrlManager),
                             ) {
                                 homePath = virtualFileUrlManager.getOrCreateFromUrl(path.toFileUrl().url)
                             }
