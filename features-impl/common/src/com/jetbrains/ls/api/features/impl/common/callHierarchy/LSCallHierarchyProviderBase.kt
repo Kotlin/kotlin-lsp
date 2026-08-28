@@ -147,10 +147,10 @@ abstract class LSCallHierarchyProviderBase<Element : PsiElement> : LSCallHierarc
         /**
          * Object that resolves the class name to the class object.
          */
-        val classResolver: ClassResolver
+        val classPointer: PsiSerializablePointer
 
         @Serializable
-        data class ClassNameData(override val classResolver: ClassResolver) : NameData
+        data class ClassNameData(override val classPointer: PsiSerializablePointer) : NameData
 
         @Serializable
         sealed interface MemberNameData : NameData {
@@ -162,22 +162,13 @@ abstract class LSCallHierarchyProviderBase<Element : PsiElement> : LSCallHierarc
 
         @Serializable
         data class MethodNameData(
-            override val classResolver: ClassResolver,
+            override val classPointer: PsiSerializablePointer,
             override val memberName: String,
             val parametersName: List<String>,
             val isConstructor: Boolean
         ) : MemberNameData
 
         @Serializable
-        data class FieldNameData(override val classResolver: ClassResolver, override val memberName: String) : MemberNameData
-    }
-
-    @Serializable
-    sealed interface ClassResolver {
-        @Serializable
-        data class FQNameResolver(val fqName: String) : ClassResolver
-
-        @Serializable
-        data class PointerResolver(val pointer: PsiSerializablePointer) : ClassResolver
+        data class FieldNameData(override val classPointer: PsiSerializablePointer, override val memberName: String) : MemberNameData
     }
 }
