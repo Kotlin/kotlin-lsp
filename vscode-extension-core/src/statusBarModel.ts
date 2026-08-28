@@ -85,8 +85,8 @@ export function statusActions(
   workspaceActions: readonly StatusBarAction[] = [],
 ): StatusBarAction[] {
   return [
-    ...(contribution?.actions ?? []),
     ...workspaceActions,
+    ...(contribution?.actions ?? []),
     ...(lspActionsAvailable ? lspActions : []),
   ];
 }
@@ -127,12 +127,12 @@ export function computeStatusTooltipContent(
     presentation !== undefined && (clientState !== 'stopped' || contributionProblem);
   let detail: string | undefined;
   if (workspaceImportBlocked) {
-    detail = 'Project import will not start until you select a build tool.';
+    detail = 'Choose a build tool to start project import.';
   } else if (showContributionDetail) {
     detail = presentation.tooltip;
   }
   return {
-    heading: `**${title}**&nbsp;&nbsp;${workspaceImportBlocked ? '$(circle-slash) Build tool selection required' : statusStateText(clientState)}`,
+    heading: `**${title}**&nbsp;&nbsp;${workspaceImportBlocked ? '$(circle-slash) Build tool required' : statusStateText(clientState)}`,
     detail,
     actions,
     enabledCommands: actions.map((action) => action.command),

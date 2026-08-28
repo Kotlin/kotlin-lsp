@@ -596,10 +596,7 @@ function registerWorkspaceImportStatusHandler(client: LanguageClient): {
     promptDismissed = conflict.promptDismissed;
     if (!newlyDismissed) return;
     void vscode.window
-      .showWarningMessage(
-        'Project import will not start until you select a build tool.',
-        CHOOSE_BUILD_TOOL_ACTION,
-      )
+      .showWarningMessage('Choose a build tool to start project import.', CHOOSE_BUILD_TOOL_ACTION)
       .then((choice) => {
         if (choice === CHOOSE_BUILD_TOOL_ACTION) {
           void reloadWorkspace({ showConfirmation: false });

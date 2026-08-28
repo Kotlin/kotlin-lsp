@@ -123,12 +123,13 @@ describe('status bar actions', () => {
     ]);
   });
 
-  it('places workspace actions before LSP actions', () => {
+  it('places workspace actions before contribution and LSP actions', () => {
     const resolveImport = { label: 'Choose Build Tool…', command: 'reloadWorkspace' };
-    assert.deepEqual(statusActions(undefined, true, restartActions, [resolveImport]), [
-      resolveImport,
-      ...restartActions,
-    ]);
+    const setupAction = { label: 'Complete Setup', command: 'setup' };
+    assert.deepEqual(
+      statusActions({ actions: [setupAction] }, true, restartActions, [resolveImport]),
+      [resolveImport, setupAction, ...restartActions],
+    );
   });
 
   it('does not open an empty quick pick before actions are registered', async () => {
@@ -298,15 +299,15 @@ describe('status bar text', () => {
     );
   });
 
-  it('warns that project import waits for build tool selection', () => {
+  it('asks the user to choose a build tool for project import', () => {
     const content = computeStatusTooltipContent('running', 'Java and Kotlin', contribution, [], {
       workspaceImportBlocked: true,
     });
     assert.equal(
       content.heading,
-      '**Java and Kotlin**&nbsp;&nbsp;$(circle-slash) Build tool selection required',
+      '**Java and Kotlin**&nbsp;&nbsp;$(circle-slash) Build tool required',
     );
-    assert.equal(content.detail, 'Project import will not start until you select a build tool.');
+    assert.equal(content.detail, 'Choose a build tool to start project import.');
   });
 });
 
