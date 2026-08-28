@@ -76,7 +76,7 @@ object JsonWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
                 postProcessWorkspaceData(
                     workspaceJson,
                     projectDirectory,
-                    progress
+                    progress::onUnresolvedDependency
                 ),
                 projectDirectory,
                 WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager)),
@@ -89,10 +89,10 @@ object JsonWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
     fun postProcessWorkspaceData(
         workspaceData: WorkspaceData,
         projectDirectory: Path,
-        progress: WorkspaceImportProgressReporter,
+        onUnresolvedDependency: (String) -> Unit,
     ): WorkspaceData {
         val reportUnresolvedName: (String) -> Unit = { name ->
-            progress.onUnresolvedDependency(name.removeSuffix("Gradle: ").removeSuffix("Maven: "))
+            onUnresolvedDependency(name.removeSuffix("Gradle: ").removeSuffix("Maven: "))
         }
         workspaceData.modules.forEach { module ->
             module.dependencies

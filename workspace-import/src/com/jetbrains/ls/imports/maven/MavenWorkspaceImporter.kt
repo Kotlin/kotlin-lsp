@@ -19,13 +19,18 @@ import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportOptions
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
-import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
+import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
 import com.jetbrains.ls.imports.json.WorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData
 import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
 import com.jetbrains.ls.imports.utils.runWithErrorReporting
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.SendChannel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -82,19 +87,22 @@ object MavenWorkspaceImporter : WorkspaceImporter {
     private fun isPomFileName(name: String): Boolean =
         name.endsWith("pom.xml") || name.startsWith("pom.") || name.endsWith(".pom")
 
-    override suspend fun importWorkspace(
+    /**
+     * Publishes the dependency model (`model-with-deps`) as soon as it is built, then republishes it with the source
+     * roots that only exist once the code generators have run (`model-process-sources`), so the analyzer does not wait
+     * for the generating plugins before it can resolve the project's dependencies.
+     */
+    override fun importWorkspace(
         project: Project,
         parameters: WorkspaceImportParameters,
         virtualFileUrlManager: VirtualFileUrlManager,
-        progress: WorkspaceImportProgressReporter,
-    ): EntityStorage? {
+    ): Flow<ImportEvent> = channelFlow {
         val projectDirectory = parameters.projectDirectory
-        val defaultSdkPath = parameters.defaultSdkPath
         val options = parameters.options
         // A configured project may point directly at a non-standard build file (`mvn -f dev_pom.xml`);
         // auto-detected folders arrive as directories and use the conventional pom.xml.
         val pomFile = parameters.projectFileOrDirectory.let { if (it.isRegularFile()) it else it / "pom.xml" }
-        if (!pomFile.exists()) return null
+        if (!pomFile.exists()) return@channelFlow
 
         LOG.info("Importing Maven project from: $projectDirectory (pom: $pomFile)")
         val wrapper = projectDirectory / (if (OS.CURRENT == OS.Windows) "mvnw.cmd" else "mvnw")
@@ -112,44 +120,74 @@ object MavenWorkspaceImporter : WorkspaceImporter {
 
 
         val offlineOpts = if (System.getProperty(LSP_MAVEN_PROJECT_OFFLINE_PROPERTY).toBoolean()) listOf("-o") else emptyList()
-        progress.progressStatus("Installing Maven plugin...")
-        installMavenPlugin(execPath, javaHome, projectDirectory, pomFile, progress, offlineOpts, options)
+        send(ImportEvent.ProgressStatus("Installing Maven plugin..."))
+        installMavenPlugin(execPath, javaHome, projectDirectory, pomFile, channel, offlineOpts, options)
 
 
-        progress.progressStatus("Collecting Maven model...")
-        val modelWithDeps = runMavenPluginGoal(execPath, javaHome, projectDirectory, pomFile, "model-with-deps", progress, offlineOpts, options)
-        val modelWithGeneratedSources = if (skipGenerateSources()) {
-            LOG.info("Skipping source generation: $LSP_MAVEN_PROJECT_SKIP_GENERATE_SOURCES_PROPERTY is set")
-            null
-        } else {
-            progress.progressStatus("Generating sources...")
-            runMavenPluginGoal(execPath, javaHome, projectDirectory, pomFile, "model-process-sources", progress, offlineOpts, options)
+        send(ImportEvent.ProgressStatus("Collecting Maven model..."))
+        val modelWithDeps = when (val result =
+            runMavenPluginGoal(execPath, javaHome, projectDirectory, pomFile, "model-with-deps", channel, offlineOpts, options)) {
+            is ErrorResult -> throw result.e
+            is SuccessResult -> result
         }
-        progress.progressStatus("Maven model collected, commiting...")
-        val mergedModels = mergeResults(modelWithDeps, modelWithGeneratedSources)
+        send(ImportEvent.ProgressStatus("Maven model collected, commiting..."))
+        send(ImportEvent.UpdateWorkspaceModel(toStorage(modelWithDeps, null, parameters, pomFile, virtualFileUrlManager, channel)))
 
-        when (mergedModels) {
-            is ErrorResult -> throw mergedModels.e
-            is SuccessResult -> return MutableEntityStorage.create().apply {
-                importWorkspaceData(
-                    JsonWorkspaceImporter.postProcessWorkspaceData(
-                        mergedModels.workspaceData,
-                        projectDirectory,
-                        progress
-                    ),
-                    projectDirectory,
-                    WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager)),
-                    virtualFileUrlManager, false,
-                    "MAVEN"
-                )
-                // The launch/build path re-runs Maven from the module's import root and lets Maven resolve
-                // the pom from the working directory; record the build file the import actually used so a
-                // non-standard pom name (`mvn -f dev_pom.xml`) reaches those invocations too.
-                entities(ModuleEntity::class.java).mapNotNull { it.exModuleOptions }.toList().forEach {
-                    modifyExternalSystemModuleOptionsEntity(it) { rootProjectPath = pomFile.toString() }
-                }
-                fixMissingProjectSdk(options.javaHome ?: defaultSdkPath, virtualFileUrlManager)
+        if (skipGenerateSources()) {
+            LOG.info("Skipping source generation: $LSP_MAVEN_PROJECT_SKIP_GENERATE_SOURCES_PROPERTY is set")
+            return@channelFlow
+        }
+        send(ImportEvent.ProgressStatus("Generating sources..."))
+        val modelWithGeneratedSources = when (val result =
+            runMavenPluginGoal(execPath, javaHome, projectDirectory, pomFile, "model-process-sources", channel, offlineOpts, options)) {
+            // As before: source generation is best-effort, the dependency model already published stands on its own.
+            // Reported as output rather than as `Failed`, which would show the client an error for an import that
+            // succeeded, only without generated sources.
+            is ErrorResult -> {
+                LOG.warn("Source generation failed, keeping the model without generated sources", result.e)
+                send(ImportEvent.ErrorOutput("Source generation failed, generated sources may be missing: ${result.e.message}"))
+                return@channelFlow
             }
+            is SuccessResult -> result
+        }
+        send(ImportEvent.ProgressStatus("Maven model collected, commiting..."))
+        send(
+            ImportEvent.UpdateWorkspaceModel(
+                toStorage(modelWithDeps, modelWithGeneratedSources, parameters, pomFile, virtualFileUrlManager, channel)
+            )
+        )
+    }.buffer(Channel.UNLIMITED)
+
+    /** Merges the two goal results into one workspace model; [resultGenSources] is `null` before it has been built. */
+    private fun toStorage(
+        resultDeps: SuccessResult,
+        resultGenSources: SuccessResult?,
+        parameters: WorkspaceImportParameters,
+        pomFile: Path,
+        virtualFileUrlManager: VirtualFileUrlManager,
+        events: SendChannel<ImportEvent>,
+    ): EntityStorage {
+        val projectDirectory = parameters.projectDirectory
+        val merged = mergeResults(resultDeps, resultGenSources) as SuccessResult
+        return MutableEntityStorage.create().apply {
+            importWorkspaceData(
+                JsonWorkspaceImporter.postProcessWorkspaceData(
+                    merged.workspaceData,
+                    projectDirectory,
+                    onUnresolvedDependency = { events.trySend(ImportEvent.UnresolvedDependency(it)) },
+                ),
+                projectDirectory,
+                WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager)),
+                virtualFileUrlManager, false,
+                "MAVEN"
+            )
+            // The launch/build path re-runs Maven from the module's import root and lets Maven resolve
+            // the pom from the working directory; record the build file the import actually used so a
+            // non-standard pom name (`mvn -f dev_pom.xml`) reaches those invocations too.
+            entities(ModuleEntity::class.java).mapNotNull { it.exModuleOptions }.toList().forEach {
+                modifyExternalSystemModuleOptionsEntity(it) { rootProjectPath = pomFile.toString() }
+            }
+            fixMissingProjectSdk(parameters.options.javaHome ?: parameters.defaultSdkPath, virtualFileUrlManager)
         }
     }
 
@@ -163,14 +201,14 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         projectDirectory: Path,
         pomFile: Path,
         pluginGoal: String,
-        progress: WorkspaceImportProgressReporter,
+        events: SendChannel<ImportEvent>,
         additionalParams: List<String> = emptyList(),
         options: WorkspaceImportOptions = WorkspaceImportOptions.EMPTY,
     ): MavenRunResult {
         return runGoal(
             execPath, javaHome, projectDirectory, pomFile,
             "com.jetbrains.ls:imports-maven-plugin:$pluginGoal",
-            progress, additionalParams, options
+            events, additionalParams, options
         )
     }
 
@@ -180,7 +218,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         projectDirectory: Path,
         pomFile: Path,
         goal: String,
-        progress: WorkspaceImportProgressReporter,
+        events: SendChannel<ImportEvent>,
         additionalParams: List<String> = emptyList(),
         options: WorkspaceImportOptions = WorkspaceImportOptions.EMPTY,
     ): MavenRunResult {
@@ -234,7 +272,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                     environment().putAll(options.environment)
                 }
                 .directory(projectDirectory.toFile())
-                .runWithErrorReporting("Maven", progress)
+                .runWithErrorReporting("Maven", events)
 
             return SuccessResult(workspaceJsonFile.inputStream().use<InputStream, WorkspaceData> { stream ->
                 @OptIn(ExperimentalSerializationApi::class)
@@ -275,7 +313,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         javaHome: String?,
         projectDirectory: Path,
         pomFile: Path,
-        progress: WorkspaceImportProgressReporter,
+        events: SendChannel<ImportEvent>,
         additionalParams: List<String> = emptyList(),
         options: WorkspaceImportOptions = WorkspaceImportOptions.EMPTY,
     ) {
@@ -325,7 +363,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                     environment().putAll(options.environment)
                 }
                 .directory(projectDirectory.toFile())
-                .runWithErrorReporting("Maven", progress)
+                .runWithErrorReporting("Maven", events)
 
             try {
                 install(pomFile)

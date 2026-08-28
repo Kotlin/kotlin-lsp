@@ -5,15 +5,16 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.util.io.awaitExit
 import com.jetbrains.ls.imports.api.WorkspaceImportException
-import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
+import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-internal suspend fun ProcessBuilder.runWithErrorReporting(toolName: String, progress: WorkspaceImportProgressReporter) {
+internal suspend fun ProcessBuilder.runWithErrorReporting(toolName: String, events: SendChannel<WorkspaceImporter.ImportEvent>) {
     val exitValue = withContext(Dispatchers.IO) {
         val process = try {
             start()
@@ -24,7 +25,7 @@ internal suspend fun ProcessBuilder.runWithErrorReporting(toolName: String, prog
                 e
             )
         }
-        val outputJob = logOutput(process, logger<MavenWorkspaceImporter>(), progress)
+        val outputJob = logOutput(process, logger<MavenWorkspaceImporter>(), events)
         process.awaitExit()
         outputJob.join()
         process.exitValue()
@@ -37,19 +38,19 @@ internal suspend fun ProcessBuilder.runWithErrorReporting(toolName: String, prog
     }
 }
 
-internal fun CoroutineScope.logOutput(process: Process, logger: Logger,  progress: WorkspaceImportProgressReporter): Job {
+internal fun CoroutineScope.logOutput(process: Process, logger: Logger, events: SendChannel<WorkspaceImporter.ImportEvent>): Job {
 
     return launch {
         launch(Dispatchers.IO) {
             process.inputStream.bufferedReader().use { reader ->
                 reader.forEachLine {
-                    progress.onStdOutput(it)
+                    events.trySend(WorkspaceImporter.ImportEvent.StdOutput(it))
                 }
             }
         }
         launch(Dispatchers.IO) {
             process.errorStream.bufferedReader().forEachLine { it ->
-                progress.onErrorOutput(it)
+                events.trySend(WorkspaceImporter.ImportEvent.ErrorOutput(it))
             }
         }
     }

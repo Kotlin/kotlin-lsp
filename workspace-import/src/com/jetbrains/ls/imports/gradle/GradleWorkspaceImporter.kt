@@ -109,7 +109,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                 postProcessWorkspaceData(
                     IdeaProjectMapper().toWorkspaceData(gradleProjectData, projectDirectory),
                     projectDirectory,
-                    progress
+                    progress::onUnresolvedDependency
                 ),
                 projectDirectory,
                 entitySource,
