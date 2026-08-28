@@ -18,6 +18,7 @@ import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
+import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.platform.diagnostic.telemetry.TelemetryManager
@@ -61,10 +62,10 @@ private enum class InspectionKind(val attributeValue: String, val spanName: Stri
 // TODO: LSP-278 Optimize performance of inspections
 class LSCommonInspectionDiagnosticProvider(
     override val supportedLanguages: Set<LSLanguage>,
-    inspectionBlacklist: Blacklist = Blacklist(),
+    inspectionProfilePatcher: InspectionProfilePatcher = InspectionProfilePatcher(),
     quickFixBlacklist: Blacklist = Blacklist(),
 ) : LSDiagnosticProvider {
-    private val lsInspectionManager = LSInspectionManager(inspectionBlacklist, quickFixBlacklist)
+    private val lsInspectionManager = LSInspectionManager(inspectionProfilePatcher, quickFixBlacklist)
     
     companion object {
         val diagnosticSource: DiagnosticSource = DiagnosticSource("inspection")
@@ -255,7 +256,7 @@ class LSCommonInspectionDiagnosticProvider(
                 Diagnostic(
                     range = problemDescriptor.range()?.toLspRange(document) ?: return@mapNotNull null,
                     severity = problemDescriptor.highlightType.toLspSeverity(),
-                    message = message.description,
+                    message = message.description.maybeStripHtml(),
                     code = StringOrInt.string(localInspectionTool.id),
                     tags = problemDescriptor.highlightType.toLspTags(),
                     data = LSP.json.encodeToJsonElement(data),
@@ -263,6 +264,9 @@ class LSCommonInspectionDiagnosticProvider(
             }
     }
 }
+
+private fun String.maybeStripHtml(): String =
+    if (this.startsWith("<html>")) StringUtil.stripHtml(this, true) else this
 
 private fun ProblemDescriptor.range(): TextRange? {
     val element = psiElement ?: return null

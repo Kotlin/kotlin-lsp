@@ -44,10 +44,10 @@ class LSCommonIntentionFixesCodeActionProvider(
     override val supportedLanguages: Set<LSLanguage>,
     private val intentionBlacklist: Blacklist = Blacklist(),
     private val quickFixBlacklist: Blacklist = Blacklist(),
-    inspectionBlacklist: Blacklist = Blacklist(),
+    inspectionProfilePatcher: InspectionProfilePatcher = InspectionProfilePatcher(),
     private val converter: (ModCommandAction) -> ModCommandAction = {it}
 ) : LSCodeActionProvider {
-    private val lsInspectionManager = LSInspectionManager(inspectionBlacklist, quickFixBlacklist)
+    private val lsInspectionManager = LSInspectionManager(inspectionProfilePatcher, quickFixBlacklist)
 
     override val providesOnlyKinds: Set<CodeActionKind> get() = setOf(codeActionKind)
 

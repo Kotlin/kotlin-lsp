@@ -34,7 +34,7 @@ import com.jetbrains.ls.api.features.impl.kotlin.definitions.LSKotlinPackageDefi
 import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.compiler.LSKotlinCompilerDiagnosticsFixesCodeActionProvider
 import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.compiler.LSKotlinCompilerDiagnosticsProvider
 import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.intentions.kotlinIntentionConverter
-import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.kotlinInspectionBlacklist
+import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.kotlinInspectionPatcher
 import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.kotlinIntentionBlacklist
 import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.kotlinQuickFixBlacklist
 import com.jetbrains.ls.api.features.impl.kotlin.hover.LSKotlinHoverProvider
@@ -70,13 +70,13 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSCommonReferencesProvider(setOf(LSKotlinLanguage), TargetKind.ALL),
         LSCommonInspectionDiagnosticProvider(
             supportedLanguages = setOf(LSKotlinLanguage),
-            inspectionBlacklist = kotlinInspectionBlacklist,
+            inspectionProfilePatcher = kotlinInspectionPatcher,
             quickFixBlacklist = kotlinQuickFixBlacklist,
         ),
         LSCommonInspectionFixesCodeActionProvider(setOf(LSKotlinLanguage)),
         LSCommonIntentionFixesCodeActionProvider(
             supportedLanguages = setOf(LSKotlinLanguage),
-            inspectionBlacklist = kotlinInspectionBlacklist,
+            inspectionProfilePatcher = kotlinInspectionPatcher,
             intentionBlacklist = kotlinIntentionBlacklist,
             quickFixBlacklist = kotlinQuickFixBlacklist,
             converter = kotlinIntentionConverter()

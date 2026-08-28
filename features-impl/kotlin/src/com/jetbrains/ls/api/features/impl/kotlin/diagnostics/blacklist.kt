@@ -3,58 +3,59 @@ package com.jetbrains.ls.api.features.impl.kotlin.diagnostics
 
 import com.jetbrains.ls.api.features.impl.common.diagnostics.Blacklist
 import com.jetbrains.ls.api.features.impl.common.diagnostics.BlacklistEntry
+import com.jetbrains.ls.api.features.impl.common.diagnostics.InspectionProfilePatcher
 
-internal val kotlinInspectionBlacklist = Blacklist(
+internal val kotlinInspectionPatcher = InspectionProfilePatcher(
     // Local inspections
-    BlacklistEntry.Class(
+    InspectionProfilePatcher.Patch.DisableClass(
         fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.RemoveRedundantQualifierNameInspection",
         reason = "LSP-703",
     ),
-    BlacklistEntry.Class(
+    InspectionProfilePatcher.Patch.DisableClass(
         fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.KotlinUnusedImportInspection",
         reason = "LSP-704",
     ),
-    BlacklistEntry.Class(
+    InspectionProfilePatcher.Patch.DisableClass(
         fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.diagnosticBased.UnusedVariableInspection",
         reason = "LSP-705",
     ),
-    BlacklistEntry.Class(
+    InspectionProfilePatcher.Patch.DisableClass(
         fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.diagnosticBased.KotlinUnreachableCodeInspection",
         reason = "LSP-706",
     ),
-    BlacklistEntry.Class(
+    InspectionProfilePatcher.Patch.DisableClass(
         fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.RemoveExplicitTypeArgumentsInspection",
         reason = "LSP-707",
     ),
-    BlacklistEntry.Class(
+    InspectionProfilePatcher.Patch.DisableClass(
         fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.K2MemberVisibilityCanBePrivateInspection",
         reason = "LSP-708",
     ),
-    BlacklistEntry.Class(
+    InspectionProfilePatcher.Patch.DisableClass(
         fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.diagnosticBased.VariableNeverReadInspection",
         reason = "LSP-709",
     ),
-    BlacklistEntry.Class(
+    InspectionProfilePatcher.Patch.DisableClass(
         fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.diagnosticBased.AssignedValueIsNeverReadInspection",
         reason = "LSP-710",
     ),
-    BlacklistEntry.Class(
+    InspectionProfilePatcher.Patch.DisableClass(
         fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.PublicApiImplicitTypeInspection",
         reason = "LSP-711",
     ),
-    BlacklistEntry.Class(
+    InspectionProfilePatcher.Patch.DisableClass(
         fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.UnusedSymbolInspection",
         reason = "LSP-1005",
     ),
-    BlacklistEntry.SuperClass(
+    InspectionProfilePatcher.Patch.DisableSuperClass(
         fqcn = "org.jetbrains.kotlin.idea.codeinsight.api.applicable.inspections.KotlinKtDiagnosticBasedInspectionBase",
         reason = "LSP-712",
     ),
-    BlacklistEntry.SuperClass(
+    InspectionProfilePatcher.Patch.DisableSuperClass(
         fqcn = "org.jetbrains.kotlin.idea.codeinsight.api.applicable.inspections.KotlinPsiDiagnosticBasedInspectionBase",
         reason = "LSP-713",
     ),
-    BlacklistEntry.Class(
+    InspectionProfilePatcher.Patch.DisableClass(
         fqcn = "com.intellij.codeInspection.test.TestFailedLineInspection",
         // Needs TestStateStorage (persistent test-run history), which is meaningless in a headless
         // language server and collides ("storage already registered") across analysis contexts.

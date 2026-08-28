@@ -41,7 +41,7 @@ private val LOG = logger<LSInspectionManager>()
 private const val MAX_FLATTENED_INSPECTION_FIXES = 5
 
 internal class LSInspectionManager(
-    private val inspectionBlacklist: Blacklist = Blacklist(),
+    private val inspectionProfilePatcher: InspectionProfilePatcher = InspectionProfilePatcher(),
     private val quickFixBlacklist: Blacklist = Blacklist()) {
     
     internal fun getLocalInspections(psiFile: PsiFile, infoInspections: Boolean = false): List<LocalInspectionTool> {
@@ -62,7 +62,8 @@ internal class LSInspectionManager(
         return getEnabledInspectionTools(InspectionEP.GLOBAL_INSPECTION.extensionList, language, infoInspections)
             .filterIsInstance<GlobalInspectionTool>()
             .mapNotNull { globalInspectionTool -> globalInspectionTool.sharedLocalInspectionTool }
-            .filterNot { inspectionBlacklist.containsSuperClass(it) }
+            .filterNot { inspectionProfilePatcher.disables(it) }
+            .onEach { inspectionProfilePatcher.patchOptions(it) }
             .toList()
     }
 
@@ -76,7 +77,7 @@ internal class LSInspectionManager(
             }
             .filter { inspectionEP -> inspectionEP.enabledByDefault }
             .filter { inspectionEP -> (HighlightDisplayLevel.find(inspectionEP.level) == HighlightDisplayLevel.DO_NOT_SHOW) == infoInspections }
-            .filterNot { inspectionBlacklist.containsImplementation(it.implementationClass) }
+            .filterNot { inspectionEP -> inspectionProfilePatcher.disables(inspectionEP.implementationClass) }
             .mapNotNull { inspectionEP ->
                 runCatching {
                     inspectionEP.instantiateTool()
@@ -84,7 +85,8 @@ internal class LSInspectionManager(
                     LOG.warn(it)
                 }
             }
-            .filterNot { inspectionBlacklist.containsSuperClass(it) }
+            .filterNot { inspectionProfilePatcher.disables(it) }
+            .onEach { inspectionProfilePatcher.patchOptions(it) }
     }
 
     /** [com.intellij.lang.LanguageExtensionPoint.language] **/
