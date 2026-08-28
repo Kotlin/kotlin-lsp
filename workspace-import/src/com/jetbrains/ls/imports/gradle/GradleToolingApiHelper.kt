@@ -14,9 +14,10 @@ import com.intellij.util.containers.addIfNotNull
 import com.intellij.util.io.delete
 import com.intellij.util.lang.JavaVersion
 import com.jetbrains.ls.imports.api.WorkspaceImportException
-import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
+import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
 import com.jetbrains.ls.imports.gradle.compatibility.GradleJvmCompatibilityChecker
 import com.jetbrains.ls.imports.gradle.util.GradleOutputStream
+import kotlinx.coroutines.channels.SendChannel
 import org.gradle.tooling.BuildActionExecuter
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.events.OperationType
@@ -129,11 +130,11 @@ object GradleToolingApiHelper {
         return this
     }
 
-    fun <T> BuildActionExecuter<T>.configureLogging(progress: WorkspaceImportProgressReporter): BuildActionExecuter<T> {
-        setStandardOutput(GradleOutputStream { line -> progress.onStdOutput(line) })
-        setStandardError(GradleOutputStream { line -> progress.onErrorOutput(line) })
+    fun <T> BuildActionExecuter<T>.configureLogging(events: SendChannel<ImportEvent>): BuildActionExecuter<T> {
+        setStandardOutput(GradleOutputStream { line -> events.trySend(ImportEvent.StdOutput(line)) })
+        setStandardError(GradleOutputStream { line -> events.trySend(ImportEvent.ErrorOutput(line)) })
         addProgressListener(
-            GradleProgressListener { line -> progress.progressStatus(line) },
+            GradleProgressListener { line -> events.trySend(ImportEvent.ProgressStatus(line)) },
             setOf(OperationType.GENERIC, OperationType.FILE_DOWNLOAD, OperationType.PROJECT_CONFIGURATION)
         )
         return this

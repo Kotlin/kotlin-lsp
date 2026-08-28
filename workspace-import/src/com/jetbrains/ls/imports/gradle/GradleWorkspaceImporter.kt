@@ -12,8 +12,8 @@ import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
-import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
+import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.addInitScripts
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.configureEnvironment
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.configureLogging
@@ -29,6 +29,11 @@ import com.jetbrains.ls.imports.gradle.model.builder.PREPARE_KOTLIN_IDEA_IMPORT_
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter.postProcessWorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData
 import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.SendChannel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.channelFlow
 import org.gradle.tooling.BuildActionExecuter
 import org.gradle.tooling.BuildActionFailureException
 import org.gradle.tooling.GradleConnectionException
@@ -52,17 +57,20 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         ).any { (projectFileOrDirectory / it).exists() }
     }
 
-    override suspend fun importWorkspace(
+    /**
+     * Publishes the model as Gradle declares it first, then republishes it after the sync tasks have generated their
+     * sources, so the analyzer does not wait for code generation before it can resolve the project's dependencies.
+     *
+     * The price is one extra model build in the success case; the failure case costs what it did before, because the
+     * fallback this replaces was the very same build without the sync tasks.
+     */
+    override fun importWorkspace(
         project: Project,
         parameters: WorkspaceImportParameters,
         virtualFileUrlManager: VirtualFileUrlManager,
-        progress: WorkspaceImportProgressReporter,
-    ): EntityStorage? {
+    ): Flow<ImportEvent> = channelFlow {
         val projectDirectory = parameters.projectDirectory
-        val defaultSdkPath = parameters.defaultSdkPath
-        if (!canImportWorkspace(projectDirectory)) {
-            return null
-        }
+        if (!canImportWorkspace(projectDirectory)) return@channelFlow
         LOG.info("Importing Gradle project from: $projectDirectory")
         val connection = GradleConnector.newConnector()
             .forProjectDirectory(projectDirectory.toFile())
@@ -73,43 +81,59 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         val jdkToUse = parameters.options.javaHome?.toString()
             ?: findTheMostCompatibleJdk(project, projectDirectory)
 
-        val gradleProjectData = try {
+        // The models are handed over with `trySend` (the channel is unbounded): the Tooling API calls below are
+        // blocking and run inside non-suspending lambdas.
+        try {
             connection.use { projectConnection ->
                 withDaemonInitScripts { daemonInitScripts ->
-                    try {
+                    // Phase 1: the model as declared, with the sync tasks not run yet, so nothing waits on code generation.
+                    val withoutSyncTasks = createExecuter(parameters, projectConnection, channel, daemonInitScripts, jdkToUse, null).run()
+                    channel.trySend(ImportEvent.UpdateWorkspaceModel(toStorage(withoutSyncTasks, parameters, virtualFileUrlManager, channel)))
+
+                    // Phase 2: the same model once the sync tasks have generated their sources.
+                    val withSyncTasks = try {
                         createExecuter(
                             parameters,
                             projectConnection,
-                            progress,
+                            channel,
                             daemonInitScripts,
                             jdkToUse,
                             listOf(PREPARE_KOTLIN_IDEA_IMPORT_TASK_NAME)
                         ).run()
                     } catch (e: BuildActionFailureException) {
                         LOG.warn(
-                            "Gradle sync failed while running '$PREPARE_KOTLIN_IDEA_IMPORT_TASK_NAME'. " +
-                                    "Falling back to importing $projectDirectory without sync tasks; generated sources may be missing.",
+                            "Gradle sync failed while running '$PREPARE_KOTLIN_IDEA_IMPORT_TASK_NAME' in $projectDirectory. " +
+                                    "Keeping the model imported without sync tasks; generated sources may be missing.",
                             e
                         )
-                        progress.onErrorOutput(
-                            "Gradle sync tasks failed, retrying the import without them. Generated sources may be missing."
-                        )
-                        // retry without kotlin task in case of a broken task graph
-                        createExecuter(parameters, projectConnection, progress, daemonInitScripts, jdkToUse, null).run()
+                        // Reported as output rather than as `Failed`, which would show the client an error for an import
+                        // that succeeded, only without generated sources.
+                        channel.trySend(ImportEvent.ErrorOutput("Gradle sync tasks failed. Generated sources may be missing."))
+                        return@withDaemonInitScripts
                     }
+                    channel.trySend(ImportEvent.UpdateWorkspaceModel(toStorage(withSyncTasks, parameters, virtualFileUrlManager, channel)))
                 }
             }
         } catch (e: GradleConnectionException) {
             @Suppress("HardCodedStringLiteral")
             throw WorkspaceImportException("Gradle sync failed", "Unable to import a Gradle project: ${e.message}", e)
         }
+    }.buffer(Channel.UNLIMITED)
+
+    private fun toStorage(
+        gradleProjectData: ProjectMetadata,
+        parameters: WorkspaceImportParameters,
+        virtualFileUrlManager: VirtualFileUrlManager,
+        events: SendChannel<ImportEvent>,
+    ): EntityStorage {
+        val projectDirectory = parameters.projectDirectory
         val entitySource = WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager))
         return MutableEntityStorage.create().apply {
             importWorkspaceData(
                 postProcessWorkspaceData(
                     IdeaProjectMapper().toWorkspaceData(gradleProjectData, projectDirectory),
                     projectDirectory,
-                    progress::onUnresolvedDependency
+                    onUnresolvedDependency = { events.trySend(ImportEvent.UnresolvedDependency(it)) },
                 ),
                 projectDirectory,
                 entitySource,
@@ -117,7 +141,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                 ignoreDuplicateLibsAndSdks = true,
                 "GRADLE"
             )
-            fixMissingProjectSdk(parameters.options.javaHome ?: defaultSdkPath, virtualFileUrlManager)
+            fixMissingProjectSdk(parameters.options.javaHome ?: parameters.defaultSdkPath, virtualFileUrlManager)
         }
     }
 
@@ -130,14 +154,14 @@ object GradleWorkspaceImporter : WorkspaceImporter {
     private fun createExecuter(
         parameters: WorkspaceImportParameters,
         connection: ProjectConnection,
-        progress: WorkspaceImportProgressReporter,
+        events: SendChannel<ImportEvent>,
         initScripts: Iterable<Path>,
         javaHome: String?,
         syncTasks: List<String>? = null,
     ): BuildActionExecuter<ProjectMetadata> {
         val syncSettings = GradleSyncSettings(downloadLibrarySources = true)
         val executer = connection.action(ProjectMetadataBuilder(syncSettings))
-            .configureLogging(progress)
+            .configureLogging(events)
             .prepareForExecution()
             .configureEnvironment(parameters.options.environment)
             .configureSystemProperties(parameters.options.systemProperties)
