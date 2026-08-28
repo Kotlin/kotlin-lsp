@@ -39,7 +39,6 @@ import com.intellij.platform.workspace.jps.entities.SdkRootTypeId
 import com.intellij.platform.workspace.jps.entities.SourceRootEntity
 import com.intellij.platform.workspace.jps.entities.SourceRootTypeId
 import com.intellij.platform.workspace.jps.entities.exModuleOptions
-import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.PathUtil
@@ -49,7 +48,6 @@ import com.jetbrains.ls.imports.api.ConflictAverseImporter
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
-import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.api.applyChangesWithDeduplication
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
@@ -57,6 +55,10 @@ import com.jetbrains.ls.imports.json.flattenExportedDependencies
 import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
 import com.jetbrains.ls.imports.utils.toIntellijUri
 import com.jetbrains.ls.snapshot.api.impl.core.toFileUrl
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.buildJsonObject
@@ -109,17 +111,18 @@ import kotlin.io.path.isRegularFile
 private val LOG = fileLogger()
 
 object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
-    override suspend fun importWorkspace(
+    /**
+     * Publishes the `.idea` model as soon as it is read, then republishes it after each linked Maven/Gradle project
+     * is imported into it, so the analyzer can start indexing the JPS modules without waiting for the builds.
+     */
+    override fun importWorkspace(
         project: Project,
         parameters: WorkspaceImportParameters,
         virtualFileUrlManager: VirtualFileUrlManager,
-        progress: WorkspaceImportProgressReporter,
-    ): EntityStorage? {
+    ): Flow<WorkspaceImporter.ImportEvent> = channelFlow {
         val projectDirectory = parameters.projectDirectory
-        val defaultSdkPath = parameters.defaultSdkPath
-        val options = parameters.options
-        if (!canImportWorkspace(projectDirectory)) return null
-        return try {
+        if (!canImportWorkspace(projectDirectory)) return@channelFlow
+        try {
             val model = JpsElementFactory.getInstance().createModel()
             val macroExpandMap = ExpandMacroToPathMap()
 
@@ -141,25 +144,29 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
             }
 
             val storage = MutableEntityStorage.create()
-            importJpsModel(storage, projectDirectory, virtualFileUrlManager, model, macroExpandMap, progress)
+            importJpsModel(storage, projectDirectory, virtualFileUrlManager, model, macroExpandMap) { depName ->
+                trySend(WorkspaceImporter.ImportEvent.UnresolvedDependency(depName))
+            }
+            send(WorkspaceImporter.ImportEvent.UpdateWorkspaceModel(storage.toSnapshot()))
 
             findLinkedProjects(projectDirectory, macroExpandMap).forEach { (path, importer) ->
                 LOG.info("Importing linked project: $path")
-                val diff = importer.importWorkspace(
+                importer.importWorkspace(
                     project = project,
-                    parameters = WorkspaceImportParameters(
-                        projectFileOrDirectory = path,
-                        defaultSdkPath = defaultSdkPath,
-                        options = options,
-                    ),
+                    parameters = parameters.copy(projectFileOrDirectory = path),
                     virtualFileUrlManager = virtualFileUrlManager,
-                    progress = progress,
-                ) ?: return@forEach
-                storage.applyChangesWithDeduplication(diff)
+                ).collect { event ->
+                    when (event) {
+                        is WorkspaceImporter.ImportEvent.UpdateWorkspaceModel -> {
+                            storage.applyChangesWithDeduplication(event.storage)
+                            send(WorkspaceImporter.ImportEvent.UpdateWorkspaceModel(storage.toSnapshot()))
+                        }
+                        // Includes Failed: a linked project that cannot be built is reported, but does not take back
+                        // the `.idea` model already published (and neither the other linked projects).
+                        else -> send(event)
+                    }
+                }
             }
-
-            storage
-
         } catch (e: IOException) {
             throw WorkspaceImportException(
                 "Error parsing workspace.json",
@@ -167,7 +174,7 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
                 e
             )
         }
-    }
+    }.buffer(Channel.UNLIMITED)
 
     private fun importJpsModel(
         storage: MutableEntityStorage,
@@ -175,7 +182,7 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
         virtualFileUrlManager: VirtualFileUrlManager,
         model: JpsModel,
         macroExpandMap: ExpandMacroToPathMap,
-        progress: WorkspaceImportProgressReporter
+        onUnresolvedDependency: (String) -> Unit,
     ) {
         val entitySource = WorkspaceEntitySource(projectDirectory.toIntellijUri(virtualFileUrlManager))
         val libs = mutableSetOf<String>()
@@ -193,7 +200,7 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
                     is JpsLibraryDependency -> {
                         val library = dependency.library ?: return@mapNotNull null
                         if (libs.add(library.name)) {
-                            val roots = resolveLibraryRoots(library, virtualFileUrlManager, progress, repositoryManager)
+                            val roots = resolveLibraryRoots(library, virtualFileUrlManager, onUnresolvedDependency, repositoryManager)
                                 ?: return@mapNotNull null
                             val libEntity = LibraryEntity(
                                 name = library.name,
@@ -466,7 +473,7 @@ private fun JpsLibraryType<*>.toSdkType(): String = when (this) {
 private fun resolveLibraryRoots(
     library: JpsLibrary,
     virtualFileUrlManager: VirtualFileUrlManager,
-    progress: WorkspaceImportProgressReporter,
+    onUnresolvedDependency: (String) -> Unit,
     repositoryManager: Lazy<ArtifactRepositoryManager>,
 ): List<LibraryRoot>? {
     val compiledUrls = library.getRootUrls(JpsOrderRootType.COMPILED)
@@ -479,7 +486,7 @@ private fun resolveLibraryRoots(
 
     val missingCompiled = compiledUrls.filter { !Path.of(JpsPathUtil.urlToPath(it)).exists() }
     if (missingCompiled.isNotEmpty()) {
-        missingCompiled.forEach(progress::onUnresolvedDependency)
+        missingCompiled.forEach(onUnresolvedDependency)
         return null
     }
 
