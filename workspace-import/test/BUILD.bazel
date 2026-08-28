@@ -100,6 +100,8 @@ jvm_library(
         "@community//platform/build-scripts/downloader:downloader_test_lib",
         "@community//tools/intellij.tools.ide.starter:ide-starter",
         "@community//tools/intellij.tools.ide.starter:ide-starter_test_lib",
+        "@community//libraries/junit5-params",
+        "@community//libraries/junit5-params:junit5-params_test_lib",
     ],
 )
 ### auto-generated section `build language-server.workspace-import.test` end
