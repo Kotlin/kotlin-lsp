@@ -115,6 +115,36 @@ class ApplyImportResultsTest {
         assertEquals(0, storage.entities<LSDependencySubstitutionEntity>().count(), "the stale record is expected to be dropped")
     }
 
+    /**
+     * A phased import cycle commits every result as it arrives, so the consumer of a coordinate can reach the model
+     * before its producer does. The commit that has only the consumer cannot substitute anything, and the commit that
+     * adds the producer re-applies the consumer's model in full, so the substitution must appear then.
+     */
+    @Test
+    fun `substitution appears once a later commit adds the producing target`() {
+        val gradle = url("/workspace/gradle")
+        val maven = url("/workspace/maven")
+        val consumer = gradleModelWithLibraryDependency(gradle, "com.example:b:1.0")
+
+        // First commit of the cycle: the Gradle target is done, the Maven one is still importing (no model yet).
+        val storage = importInto(MutableEntityStorage.create(), gradle to consumer, maven to null)
+        assertEquals(
+            LibraryDependency(storage.libraryId("b"), false, DependencyScope.COMPILE),
+            storage.module("gradle-consumer").dependencies.single(),
+            "nothing produces the coordinate yet, so the library dependency is expected to stay",
+        )
+
+        // Second commit: the Maven result arrives, both models are re-applied.
+        importInto(storage, gradle to consumer, maven to mavenModelProducing(maven, "com.example:b:1.0"))
+
+        assertEquals(
+            ModuleDependency(ModuleId("maven-producer"), false, DependencyScope.COMPILE, false),
+            storage.module("gradle-consumer").dependencies.single(),
+            "the substitution is expected to be recomputed over the completed model",
+        )
+        assertEquals(1, storage.entities<LSDependencySubstitutionEntity>().count())
+    }
+
     /** The counterpart of the test above: a target that re-imports fine keeps its substitution, recomputed from scratch. */
     @Test
     fun `successful reimport recomputes the substitution instead of falling back to the library`() {
