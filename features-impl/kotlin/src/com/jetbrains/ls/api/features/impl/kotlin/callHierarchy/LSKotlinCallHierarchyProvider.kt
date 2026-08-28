@@ -6,10 +6,7 @@ import com.intellij.ide.hierarchy.ReferenceAwareNodeDescriptor
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.impl.ImaginaryEditor
 import com.intellij.openapi.project.Project
-import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiElement
-import com.intellij.psi.search.GlobalSearchScope
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
 import com.jetbrains.ls.api.features.impl.common.callHierarchy.LSCallHierarchyProviderBase
 import com.jetbrains.ls.api.features.impl.common.utils.findElementUnderCaret
@@ -63,7 +60,7 @@ internal object LSKotlinCallHierarchyProvider : LSCallHierarchyProviderBase<KtEl
         project: Project
     ): KtElement? {
         val nameData = data.nameData
-        val psiClass = data.nameData.classResolver.resolveClass(project) ?: return null
+        val psiClass = data.nameData.classPointer.restore(project)?.takeIf { it is PsiClass || it is KtClassOrObject || it is KtFile } ?: return null
 
         val ktSource = psiClass.navigationElement
         val declarations = when (ktSource) {
@@ -91,12 +88,6 @@ internal object LSKotlinCallHierarchyProvider : LSCallHierarchyProviderBase<KtEl
                 }
             }
         }
-    }
-
-    private fun ClassResolver.resolveClass(project: Project): PsiElement? = when (this) {
-        is ClassResolver.FQNameResolver -> JavaPsiFacade.getInstance(project)
-            .findClass(fqName, GlobalSearchScope.projectScope(project))
-        is ClassResolver.PointerResolver -> pointer.restore(project) as? KtClassOrObject
     }
 }
 
