@@ -8,8 +8,11 @@ import com.intellij.navigation.GotoClassContributor
 import com.intellij.navigation.NavigationItem
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.logger
+import com.intellij.psi.codeStyle.MinusculeMatcher
+import com.intellij.psi.codeStyle.NameUtil
 import com.intellij.util.Processor
 import com.intellij.util.indexing.FindSymbolParameters
+import com.intellij.util.text.matching.MatchingMode
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
@@ -73,17 +76,18 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
         }
         val searchScope = FindSymbolParameters.searchScopeFor(project, /* searchInLibraries = */ !excludeLibraries)
         val parameters = FindSymbolParameters(query, shortName, searchScope)
+        val matcher = buildNameMatcher(shortName)
         // Mirrors ContributorsBasedGotoByModel.doProcessContributorNames: dispatch on Ex2/Ex/base,
         // collecting into a set to deduplicate names that appear in multiple indices
         // (e.g. a field name present in both FIELDS and RECORD_COMPONENTS for Java records).
         val names: Set<String> = readAction {
             when (contributor) {
-                is ChooseByNameContributorEx2 -> NameCollector(shortName).let { contributor.processNames(it, parameters); it.result }
+                is ChooseByNameContributorEx2 -> NameCollector(matcher).let { contributor.processNames(it, parameters); it.result }
 
-                is ChooseByNameContributorEx -> NameCollector(shortName).let { contributor.processNames(it, searchScope, /* filter = */ null); it.result }
+                is ChooseByNameContributorEx -> NameCollector(matcher).let { contributor.processNames(it, searchScope, /* filter = */ null); it.result }
 
                 else -> contributor.getNames(project, /* includeNonProjectItems = */ !excludeLibraries)
-                    .filter { name -> isApplicableName(name, shortName) }
+                    .filter { name -> matcher.matches(name) }
                     .toSet()
             }
         }
@@ -113,13 +117,13 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
         }
     }
 
-    private class NameCollector(private val shortName: String) : Processor<String> {
+    private class NameCollector(private val matcher: MinusculeMatcher) : Processor<String> {
         val result: Set<String>
             field = mutableSetOf()
 
         override fun process(name: String?): Boolean {
             if (name == null) return true
-            if (isApplicableName(name, shortName)) {
+            if (matcher.matches(name)) {
                 result.add(name)
             }
             return result.size < NAVIGATION_ITEM_LIMIT
@@ -134,6 +138,13 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
          */
         private const val NAVIGATION_ITEM_LIMIT = 1000
 
-        private fun isApplicableName(name: String, shortName: String) = shortName.isEmpty() || name.contains(shortName, ignoreCase = true)
+        /**
+         * Builds the same matcher as the IDE goto popups, see `DefaultChooseByNameItemProvider.buildPatternMatcher`.
+         * The `*` prefix allows a match to start anywhere in the name.
+         */
+        private fun buildNameMatcher(shortName: String): MinusculeMatcher {
+            val pattern = if (shortName.trim().length > 1) "*$shortName" else shortName
+            return NameUtil.buildMatcher(pattern).withMatchingMode(MatchingMode.IGNORE_CASE).build()
+        }
     }
 }
