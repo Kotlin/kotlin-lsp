@@ -7,6 +7,7 @@ import com.intellij.navigation.ChooseByNameContributorEx2
 import com.intellij.navigation.GotoClassContributor
 import com.intellij.navigation.NavigationItem
 import com.intellij.openapi.application.readAction
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.util.Processor
 import com.intellij.util.indexing.FindSymbolParameters
 import com.jetbrains.ls.api.core.LSAnalysisContext
@@ -21,6 +22,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.launch
+import kotlin.coroutines.cancellation.CancellationException
+
+private val LOG = logger<LSWorkspaceSymbolProviderBase>()
 
 abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
     abstract fun getContributors(): List<ChooseByNameContributor>
@@ -32,7 +36,15 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
         server.withAnalysisContext {
             coroutineScope {
                 for (contributor in getContributors()) {
-                    launch { handleContributor(contributor, params.query, params.excludeLibraries == true, channel) }
+                    launch {
+                        try {
+                            handleContributor(contributor, params.query, params.excludeLibraries == true, channel)
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            LOG.warn("workspace/symbol contributor ${contributor.javaClass.name} failed", e)
+                        }
+                    }
                 }
             }
         }
