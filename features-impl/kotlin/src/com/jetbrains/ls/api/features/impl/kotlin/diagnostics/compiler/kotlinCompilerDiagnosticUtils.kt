@@ -8,4 +8,5 @@ internal fun KaSeverity.toLsp(): DiagnosticSeverity = when (this) {
     KaSeverity.ERROR -> DiagnosticSeverity.Error
     KaSeverity.WARNING -> DiagnosticSeverity.Warning
     KaSeverity.INFO -> DiagnosticSeverity.Information
+    else -> DiagnosticSeverity.Information
 }
