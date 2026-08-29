@@ -64,6 +64,7 @@ jvm_library(
         "//language-server/dap/platform",
         "@community//platform/ide-core-impl",
         "@community//platform/progress/shared:ide-progress",
+        "@community//platform/util/text-matching",
     ],
 )
 
@@ -117,6 +118,7 @@ jvm_library(
         "//language-server/dap/platform:platform_test_lib",
         "@community//platform/ide-core-impl:ide-core-impl_test_lib",
         "@community//platform/progress/shared:ide-progress_test_lib",
+        "@community//platform/util/text-matching:text-matching_test_lib",
     ],
 )
 ### auto-generated section `build language-server.api.features.impl.common` end
