@@ -208,6 +208,7 @@ class LSCommonInspectionDiagnosticProvider(
                         LOG.warn(it)
                     }
                     val diagnostics = problemsHolder.results.mapNotNull { problemDescriptor ->
+                        if (problemDescriptor.highlightType == ProblemHighlightType.POSSIBLE_PROBLEM) return@mapNotNull null
                         val data = lsInspectionManager.createDiagnosticData(problemDescriptor, project)
                         val range = problemDescriptor.range()?.toLspRange(document) ?: return@mapNotNull null
                         val message = ProblemDescriptorUtil.renderDescriptor(
@@ -247,6 +248,7 @@ class LSCommonInspectionDiagnosticProvider(
     ): List<Diagnostic> {
         return results
             .filter { problemDescriptor -> problemDescriptor.highlightType != ProblemHighlightType.INFORMATION }
+            .filter { problemDescriptor -> problemDescriptor.highlightType != ProblemHighlightType.POSSIBLE_PROBLEM }
             .filter { !isSuppressed(localInspectionTool, it) }
             .mapNotNull { problemDescriptor ->
                 val data = lsInspectionManager.createDiagnosticData(problemDescriptor, project)
