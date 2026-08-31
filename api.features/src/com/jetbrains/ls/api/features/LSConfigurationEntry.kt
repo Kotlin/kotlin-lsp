@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features
 
 import com.intellij.ide.plugins.PluginMainDescriptor
+import com.jetbrains.analyzer.api.FileUrl
 import com.jetbrains.ls.api.core.launch.BuildToolLaunchContributor
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.imports.api.WorkspaceImporter
@@ -21,7 +22,42 @@ class WorkspaceImporterEntry(
     val id: String,
     val importer: WorkspaceImporter,
     val order: String = "",
-) : LSConfigurationEntry
+) : LSConfigurationEntry {
+    init {
+        // Checked once, here, because a name that cannot match any file would otherwise silently never re-import.
+        importer.settingsFileNames.forEach { name ->
+            require(name.isNotEmpty()) { "Importer '$id' declares an empty settings file name" }
+            val unmatchable = name.filter { it in UNMATCHABLE_FILE_NAME_CHARACTERS }
+            require(unmatchable.isEmpty()) {
+                "Importer '$id' declares the settings file name '$name', which is compared to a file's own name " +
+                "and so can never match. Remove the '$unmatchable' from it, or declare each name it stands for."
+            }
+        }
+    }
+}
+
+/** Glob syntax and path separators: a settings file's own name contains neither. */
+private const val UNMATCHABLE_FILE_NAME_CHARACTERS = "*?[]{}/\\"
+
+/**
+ * Whether [file] is one of the settings files this importer declared through
+ * [WorkspaceImporter.settingsFileNames], i.e. whether a change to it must re-run the import.
+ *
+ * Compared by the file's own name at any depth, and rejected inside any of
+ * [WorkspaceImporter.excludedDirectoryNames], which hold copies of other people's modules.
+ */
+fun WorkspaceImporter.isSettingsFile(file: FileUrl): Boolean =
+    file.name in settingsFileNames && !file.hasAncestorNamed(excludedDirectoryNames)
+
+private fun FileUrl.hasAncestorNamed(names: Set<String>): Boolean {
+    if (names.isEmpty()) return false
+    var directory = parent
+    while (directory != null) {
+        if (directory.name in names) return true
+        directory = directory.parent
+    }
+    return false
+}
 
 /** Registers a build tool's build and launch support (see [BuildToolLaunchContributor]). */
 class BuildToolLaunchEntry(
