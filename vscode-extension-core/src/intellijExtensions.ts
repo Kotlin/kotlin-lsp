@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { LanguageClient, NotificationType } from 'vscode-languageclient/node';
+import { Command, LanguageClient, NotificationType } from 'vscode-languageclient/node';
 import { getContext } from './extension';
 import { registerInitializationOptionsContributor } from './lspClient';
 
@@ -15,9 +15,8 @@ const runEditorCommandNotification = new NotificationType<RunEditorCommandParams
   'intellij/runEditorCommand',
 );
 
-type ChooseActionMenuEntry = { index: number; name: string };
+type ChooseActionMenuEntry = { name: string; command: Command };
 type ShowChooseActionMenuParams = {
-  sessionId: number;
   title: string;
   entries: ChooseActionMenuEntry[];
 };
@@ -27,7 +26,7 @@ const chooseActionMenuNotification = new NotificationType<ShowChooseActionMenuPa
 );
 
 interface ChooseActionMenuItem extends vscode.QuickPickItem {
-  index: number;
+  command: Command;
 }
 
 /**
@@ -69,9 +68,9 @@ export function registerRunEditorCommandHandler(client: LanguageClient): void {
 
 /**
  * Handles the `intellij/chooseAction` server notification (used by the ModCommand `ModChooseAction`),
- * showing a QuickPick menu of the offered actions. When the user picks one, the chosen action is executed
- * back on the server via the `chooseModCommandAction` command; that action may itself yield another
- * `ModChooseAction`, in which case the server sends a follow-up notification and another menu is shown.
+ * showing a QuickPick menu of the offered actions. When the user picks one, the server runs the chosen action
+ * through the command the entry carries; that action may itself yield another `ModChooseAction`, in which case
+ * the server sends a follow-up notification and another menu is shown.
  */
 export function registerChooseActionMenuHandler(client: LanguageClient): void {
   const subscription = client.onNotification(chooseActionMenuNotification, (params) => {
@@ -86,13 +85,13 @@ async function showChooseActionMenu(
 ): Promise<void> {
   const items: ChooseActionMenuItem[] = params.entries.map((entry) => ({
     label: entry.name,
-    index: entry.index,
+    command: entry.command,
   }));
   const picked = await vscode.window.showQuickPick(items, { placeHolder: params.title });
   if (picked) {
     await client.sendRequest('workspace/executeCommand', {
-      command: 'chooseModCommandAction',
-      arguments: [params.sessionId, picked.index],
+      command: picked.command.command,
+      arguments: picked.command.arguments,
     });
   }
 }

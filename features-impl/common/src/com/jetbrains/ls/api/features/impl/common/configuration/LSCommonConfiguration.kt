@@ -8,19 +8,17 @@ import com.jetbrains.ls.api.features.impl.common.fileTemplates.LSInterpolateFile
 import com.jetbrains.ls.api.features.impl.common.highwatermark.LSHighWatermarkCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.location.LSResolveLocationCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDescriptorProvider
-import com.jetbrains.ls.api.features.impl.common.modcommands.LSChooseActionCommandDescriptorProvider
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.api.features.lsApiPlugin
-import com.jetbrains.ls.snapshot.api.impl.core.ChooseActionSessionComponent
+import com.jetbrains.ls.snapshot.api.impl.core.LazyActionSessionComponent
 import com.jetbrains.ls.snapshot.api.impl.core.LatestCompletionSessionComponent
 
 val LSCommonConfiguration: LSConfigurationPiece = LSConfigurationPiece(
     entries = listOf(
         WorkspaceComponentEntry { LatestCompletionSessionComponent },
-        WorkspaceComponentEntry { ChooseActionSessionComponent },
+        WorkspaceComponentEntry { LazyActionSessionComponent },
         LSDecompileCommandDescriptorProvider,
         LSApplyFixCommandDescriptorProvider,
-        LSChooseActionCommandDescriptorProvider,
         LSInterpolateFileTemplateCommandDescriptorProvider,
         LSHighWatermarkCommandDescriptorProvider,
         LSResolveLocationCommandDescriptorProvider,

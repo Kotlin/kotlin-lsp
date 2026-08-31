@@ -16,7 +16,6 @@ import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Document
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.VirtualFile
@@ -167,7 +166,7 @@ class LSCommonInspectionDiagnosticProvider(
                             }.getOrHandleException {
                                 LOG.warn(it)
                             }
-                            problemsHolder.collectDiagnostics(project, document, localInspection)
+                            problemsHolder.collectDiagnostics(document, localInspection)
                         }
                     }
                 }
@@ -209,7 +208,7 @@ class LSCommonInspectionDiagnosticProvider(
                     }
                     val diagnostics = problemsHolder.results.mapNotNull { problemDescriptor ->
                         if (problemDescriptor.highlightType == ProblemHighlightType.POSSIBLE_PROBLEM) return@mapNotNull null
-                        val data = lsInspectionManager.createDiagnosticData(problemDescriptor, project)
+                        val data = lsInspectionManager.createDiagnosticData(problemDescriptor)
                         val range = problemDescriptor.range()?.toLspRange(document) ?: return@mapNotNull null
                         val message = ProblemDescriptorUtil.renderDescriptor(
                             problemDescriptor, problemDescriptor.psiElement, ProblemDescriptorUtil.NONE
@@ -242,7 +241,6 @@ class LSCommonInspectionDiagnosticProvider(
 
     context(server: LSServer)
     private fun ProblemsHolder.collectDiagnostics(
-        project: Project,
         document: Document,
         localInspectionTool: LocalInspectionTool,
     ): List<Diagnostic> {
@@ -251,7 +249,7 @@ class LSCommonInspectionDiagnosticProvider(
             .filter { problemDescriptor -> problemDescriptor.highlightType != ProblemHighlightType.POSSIBLE_PROBLEM }
             .filter { !isSuppressed(localInspectionTool, it) }
             .mapNotNull { problemDescriptor ->
-                val data = lsInspectionManager.createDiagnosticData(problemDescriptor, project)
+                val data = lsInspectionManager.createDiagnosticData(problemDescriptor)
                 val message = ProblemDescriptorUtil.renderDescriptor(
                     problemDescriptor, problemDescriptor.psiElement, ProblemDescriptorUtil.NONE
                 )

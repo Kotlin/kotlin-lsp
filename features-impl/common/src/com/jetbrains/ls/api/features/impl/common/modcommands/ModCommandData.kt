@@ -30,12 +30,14 @@ import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.intellijUriToLspUri
 import com.jetbrains.ls.api.core.util.positionByOffset
-import com.jetbrains.ls.api.core.util.uri
+import com.jetbrains.ls.api.features.impl.common.modcommands.LazyFix
+import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCommand
+import com.jetbrains.ls.api.features.impl.common.modcommands.registerLazyFixes
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
-import com.jetbrains.ls.snapshot.api.impl.core.ChooseActionSessionComponent
 import com.jetbrains.lsp.implementation.LspClient
 import com.jetbrains.lsp.protocol.ApplyEditRequests.ApplyEdit
 import com.jetbrains.lsp.protocol.ApplyWorkspaceEditParams
+import com.jetbrains.lsp.protocol.Command
 import com.jetbrains.lsp.protocol.CreateFile
 import com.jetbrains.lsp.protocol.DeleteFile
 import com.jetbrains.lsp.protocol.DocumentUri
@@ -49,12 +51,13 @@ import com.jetbrains.lsp.protocol.ShowMessageRequestParams
 import com.jetbrains.lsp.protocol.TextDocumentEdit
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 import com.jetbrains.lsp.protocol.TextEdit
-import com.jetbrains.lsp.protocol.URI
 import com.jetbrains.lsp.protocol.Window
 import com.jetbrains.lsp.protocol.WorkspaceEdit
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import java.util.Base64
+
+private val LOG = logger<ModCommandData>()
 
 private val snippetEscapeCharacters = Regex("""[\\}$]""")
 private val snippetChoiceEscapeCharacters = Regex("""[\\}$,|]""")
@@ -177,23 +180,33 @@ sealed class ModCommandData {
      * A [ModChooseAction] asks the UI to present a chooser of further actions. LSP has no native primitive for
      * this (see https://github.com/microsoft/language-server-protocol/issues/994), so it is modeled via the
      * custom `intellij/chooseAction` notification: the client shows a menu of [entries] and, once the user picks
-     * one, invokes the `chooseModCommandAction` command with [sessionId] and the chosen [Entry.index]. The live
-     * choice actions themselves cannot be serialized, so they are kept server-side in
-     * [ChooseActionSessionComponent][com.jetbrains.ls.snapshot.api.impl.core.ChooseActionSessionComponent],
-     * keyed by [sessionId]. Only clients that declare `intellijExtensions` can handle it; [from] aborts for the others.
+     * one, invokes the [Entry.action] of that entry. Only clients that declare `intellijExtensions` can handle
+     * it; [from] aborts for the others.
      */
     @Serializable
-    data class ChooseAction(val sessionId: Long, val title: String, val entries: List<Entry>) : ModCommandData() {
+    data class ChooseAction(val title: String, val entries: List<Entry>) : ModCommandData() {
         @Serializable
-        data class Entry(val index: Int, val name: String)
+        data class Entry(val name: String, val action: LazyAction)
     }
+
+    /**
+     * A fix that the server offered without performing it, kept in
+     * [LazyActionSessionComponent][com.jetbrains.ls.snapshot.api.impl.core.LazyActionSessionComponent] under
+     * [sessionId], where [index] selects it among the fixes the same analysis found.
+     *
+     * Performing a fix is the expensive part of offering it, and the user never asks for it on most of the fixes
+     * a file produces, so the client gets this reference instead of the command itself. Executing it routes back
+     * to the server, which performs the fix and executes the command it produced. See
+     * [LazyFix][com.jetbrains.ls.api.features.impl.common.modcommands.LazyFix] and
+     * [executeLazyAction][com.jetbrains.ls.api.features.impl.common.modcommands.executeLazyAction].
+     */
+    @Serializable
+    data class LazyAction(val sessionId: Long, val index: Int) : ModCommandData()
 
 
     companion object {
-        private val LOG = logger<ModCommandData>()
-
-        /** A selectable [ModChooseAction] option: its original [index], the [action], and its presentation [name]. */
-        private data class Choice(val index: Int, val action: ModCommandAction, val name: String)
+        /** A selectable [ModChooseAction] option: the [action] and its presentation [name]. */
+        private data class Choice(val action: ModCommandAction, val name: String)
 
         fun from(
             command: ModCommand,
@@ -226,11 +239,10 @@ sealed class ModCommandData {
             // only clients that declare `intellijExtensions` can handle it; abort for the others.
             is ModChooseAction -> when {
                 server?.config?.clientSupportsIntellijExtensions == true && !command.isEmpty -> {
-                    // Selectable choices (those with an available presentation), keeping the original index so it
-                    // stays aligned with the stored action list used to look the choice up later.
-                    val choices = command.actions.mapIndexedNotNull { index, action ->
+                    // Selectable choices, which are those with an available presentation.
+                    val choices = command.actions.mapNotNull { action ->
                         val name = runCatching { action.getPresentation(actionContext)?.name }.getOrNull()
-                        name?.let { Choice(index, action, it) }
+                        name?.let { Choice(action, it) }
                     }
                     when (choices.size) {
                         0 -> null
@@ -247,16 +259,14 @@ sealed class ModCommandData {
                         }
                         else -> {
                             val virtualFile = actionContext.file.virtualFile ?: return null
-                            val session = ChooseActionSession(
-                                fileUri = virtualFile.uri,
-                                offset = actionContext.offset,
-                                selection = actionContext.selection,
-                                title = command.title,
-                                actions = command.actions.toList(),
-                            )
-                            val id = server[ChooseActionSessionComponent].register(session)
-                            val entries = choices.map { ChooseAction.Entry(it.index, it.name) }
-                            ChooseAction(id.id, command.title, entries)
+                            // The choices are kept server-side and performed only once the user picks one, the
+                            // same way a top-level fix is.
+                            val fixes = choices.map { LazyFix.OfAction(it.name, it.action, actionContext) }
+                            val actions = registerLazyFixes(server, virtualFile, fixes)
+                            val entries = choices.mapIndexed { index, choice ->
+                                ChooseAction.Entry(choice.name, actions[index])
+                            }
+                            ChooseAction(command.title, entries)
                         }
                     }
                 }
@@ -507,11 +517,16 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient, changedFi
         is ModCommandData.ChooseAction -> client.notify(
             notificationType = ShowChooseActionMenuNotification,
             params = ShowChooseActionMenuParams(
-                sessionId = command.sessionId,
                 title = command.title,
-                entries = command.entries.map { ChooseActionMenuEntry(it.index, it.name) },
+                entries = command.entries.map { entry ->
+                    ChooseActionMenuEntry(entry.name, applyFixCommand(entry.action))
+                },
             ),
         )
+
+        // A lazy action is resolved by LSApplyFixCommandDescriptorProvider, before the analysis context this
+        // function runs in is opened, so it never reaches here.
+        is ModCommandData.LazyAction -> LOG.error("The lazy action $command was not resolved before execution")
     }
 }
 
@@ -545,29 +560,19 @@ val RunEditorCommandNotification: NotificationType<RunEditorCommandParams> =
 const val RENAME_EDITOR_COMMAND: String = "editor.action.rename"
 
 /**
- * The live payload stored in
- * [ChooseActionSessionComponent][com.jetbrains.ls.snapshot.api.impl.core.ChooseActionSessionComponent]
- * for a shown [ModChooseAction] menu, recovered when the client reports the user's selection.
+ * One option of a [ModChooseAction] menu. [command] is what the client sends back to run the option, so the
+ * client needs to know nothing about how the server keeps the option.
  */
-class ChooseActionSession(
-    val fileUri: URI,
-    val offset: Int,
-    val selection: TextRange,
-    val title: String,
-    val actions: List<ModCommandAction>,
-)
+@Serializable
+data class ChooseActionMenuEntry(val name: String, val command: Command)
 
 @Serializable
-data class ChooseActionMenuEntry(val index: Int, val name: String)
-
-@Serializable
-data class ShowChooseActionMenuParams(val sessionId: Long, val title: String, val entries: List<ChooseActionMenuEntry>)
+data class ShowChooseActionMenuParams(val title: String, val entries: List<ChooseActionMenuEntry>)
 
 /**
  * A custom server -> client notification (used by the ModCommand [ModChooseAction]) asking the client to show a
  * chooser menu of [ShowChooseActionMenuParams.entries]. Once the user picks an entry, the client is expected to
- * invoke the `chooseModCommandAction` command with the [ShowChooseActionMenuParams.sessionId] and the chosen
- * [ChooseActionMenuEntry.index]. Clients that do not support it simply ignore it.
+ * invoke the [ChooseActionMenuEntry.command] of that entry. Clients that do not support it simply ignore it.
  */
 val ShowChooseActionMenuNotification: NotificationType<ShowChooseActionMenuParams> =
     NotificationType("intellij/chooseAction", ShowChooseActionMenuParams.serializer())

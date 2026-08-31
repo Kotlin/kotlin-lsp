@@ -105,7 +105,7 @@ class LSCommonIntentionFixesCodeActionProvider(
                             val range = descriptor.textRangeInElement?.shiftRight(elementRange.startOffset) 
                                 ?: elementRange
                             if (!range.containsOffset(offset)) continue
-                            for ((name, modCommandData) in lsInspectionManager.createDiagnosticData(descriptor, project).fixes) {
+                            for ((name, modCommandData) in lsInspectionManager.createDiagnosticData(descriptor).fixes) {
                                 result.add(applyFixCodeAction(name, codeActionKind, modCommandData))
                             }
                         }

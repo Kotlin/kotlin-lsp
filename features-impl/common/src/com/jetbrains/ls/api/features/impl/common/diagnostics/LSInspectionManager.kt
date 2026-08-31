@@ -17,15 +17,15 @@ import com.intellij.lang.LanguageMatcher
 import com.intellij.lang.MetaLanguage
 import com.intellij.modcommand.ActionContext
 import com.intellij.modcommand.LocalQuickFixWithModCommandFallback
-import com.intellij.modcommand.ModCommand
 import com.intellij.modcommand.ModCommandQuickFix
 import com.intellij.openapi.diagnostic.ReportingClassSubstitutor
 import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
-import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionDiagnosticProvider.Companion.diagnosticSource
+import com.jetbrains.ls.api.features.impl.common.modcommands.LazyFix
+import com.jetbrains.ls.api.features.impl.common.modcommands.toLazyFix
 import com.jetbrains.ls.api.features.impl.common.modcommands.toModCommandFixes
 
 private val LOG = logger<LSInspectionManager>()
@@ -104,42 +104,44 @@ internal class LSInspectionManager(
     }
 
     context(server: LSServer)
-    internal fun createDiagnosticData(descriptor: ProblemDescriptor, project: Project): SimpleDiagnosticData {
+    internal fun createDiagnosticData(descriptor: ProblemDescriptor): SimpleDiagnosticData {
         return SimpleDiagnosticData(
             diagnosticSource = diagnosticSource,
             fixes = descriptor.fixes.orEmpty().flatMap { quickFix ->
-                val modCommand = getModCommand(quickFix, project, descriptor) ?: return@flatMap emptyList()
-                modCommand
-                    .toModCommandFixes(quickFix.name, ActionContext.from(descriptor), MAX_FLATTENED_INSPECTION_FIXES)
+                val lazyFix = getLazyFix(quickFix, descriptor) ?: return@flatMap emptyList()
+                lazyFix
+                    .toModCommandFixes(MAX_FLATTENED_INSPECTION_FIXES)
                     .map { fix -> SimpleDiagnosticQuickfixData(name = fix.name, modCommandData = fix.data) }
             },
         )
     }
 
-    private fun getModCommand(fix: QuickFix<*>, project: Project, problemDescriptor: ProblemDescriptor): ModCommand? {
+    /**
+     * [fix] as a fix that is not performed yet, or `null` if it is blacklisted, does not apply, or is of a type
+     * this server cannot run. The name to show comes from the quick fix itself, not from the presentation of the
+     * action it adapts to.
+     */
+    private fun getLazyFix(fix: QuickFix<*>, problemDescriptor: ProblemDescriptor): LazyFix? {
         val fixClass = ReportingClassSubstitutor.getClassToReport(fix).name
         val blacklistEntry = quickFixBlacklist.getImplementationBlacklistEntry(fixClass)
 
+        val context = ActionContext.from(problemDescriptor)
         if (fix is ModCommandQuickFix) {
             if (blacklistEntry != null) {
                 LOG.trace("Quick fix $fixClass is a ModCommandQuickFix, but it is blacklisted because of ${blacklistEntry.reason}")
                 return null
             }
 
-            return fix.perform(project, problemDescriptor)
+            return LazyFix.OfQuickFix(fix.name, fix, problemDescriptor, context)
         }
 
-        val context = ActionContext.from(problemDescriptor)
         if (fix is IntentionAction) {
             if (blacklistEntry != null) {
                 LOG.trace("Quick fix $fixClass is an IntentionAction, but it is blacklisted because of ${blacklistEntry.reason}")
                 return null
             }
 
-            val modCommandAction = fix.asModCommandAction()
-            if (modCommandAction != null && modCommandAction.getPresentation(context) != null) {
-                return modCommandAction.perform(context)
-            }
+            fix.asModCommandAction()?.toLazyFix(context, fix.name)?.let { return it }
         }
 
         if (fix is LocalQuickFix) {
@@ -149,10 +151,9 @@ internal class LSInspectionManager(
             }
 
 
-            val fallbackModCommandAction = LocalQuickFixWithModCommandFallback.getFallbackModCommandActionFor(fix)
-            if (fallbackModCommandAction != null && fallbackModCommandAction.getPresentation(context) != null) {
-                return fallbackModCommandAction.perform(context)
-            }
+            LocalQuickFixWithModCommandFallback.getFallbackModCommandActionFor(fix)
+                ?.toLazyFix(context, fix.name)
+                ?.let { return it }
         }
 
         if (blacklistEntry == null) {

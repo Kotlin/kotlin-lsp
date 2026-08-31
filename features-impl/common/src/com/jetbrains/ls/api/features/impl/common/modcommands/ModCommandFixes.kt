@@ -23,17 +23,44 @@ data class ModCommandFix(val name: String, val data: ModCommandData)
 data class FlattenedModCommand(val choiceNames: List<String>, val command: ModCommand)
 
 /**
- * The fixes to offer for [this] command, which was produced for a fix presented to the user as [name].
+ * The fixes to offer for [this] fix, which is not performed yet.
  *
- * A [ModChooseAction] asks the UI to present a chooser of further actions. Clients declaring
- * `intellijExtensions` get it as [ModCommandData.ChooseAction] and show the menu themselves, so a single fix
- * is returned. Generic LSP clients have no such primitive
- * (see https://github.com/microsoft/language-server-protocol/issues/994), so the choice tree is expanded
- * up front by [flattenChoices] into one flat fix per terminal command, each named after the path taken to
- * reach it, and a tree wider than [maxFlattenedFixes] is dropped entirely.
+ * A client declaring `intellijExtensions` gets one fix that carries a [ModCommandData.LazyAction] reference, so
+ * the fix is performed only if the user asks for it. Because nothing is performed here, two things are only
+ * known once the client runs the fix: whether the fix still applies, and whether its command has an LSP
+ * representation. [executeLazyAction] reports both to the user as a message.
+ *
+ * A generic LSP client cannot handle a [ModChooseAction] (see
+ * https://github.com/microsoft/language-server-protocol/issues/994), and the choice tree can only be expanded
+ * by performing it, so for such a client the fix is performed here and [ModCommand.toModCommandFixes] flattens
+ * what it produced.
  */
 context(server: LSServer)
-fun ModCommand.toModCommandFixes(
+fun LazyFix.toModCommandFixes(maxFlattenedFixes: Int = DEFAULT_MAX_FLATTENED_FIXES): List<ModCommandFix> {
+    if (server.config.clientSupportsIntellijExtensions) {
+        // A fix is stored per file, so one of a file that has no virtual file cannot be offered lazily.
+        val virtualFile = context.file.virtualFile
+        if (virtualFile == null) {
+            LOG.debug("Not offering the fix '$name': ${context.file} has no virtual file")
+            return emptyList()
+        }
+        val action = registerLazyFixes(server, virtualFile, listOf(this)).single()
+        return listOf(ModCommandFix(name, action))
+    }
+    val performed = perform() ?: return emptyList()
+    return performed.command.toModCommandFixes(name, performed.context, maxFlattenedFixes)
+}
+
+/**
+ * The fixes to offer for [this] command, which was produced for a fix presented to the user as [name].
+ *
+ * This is the eager path, used for a client that does not declare `intellijExtensions` and for a command that
+ * was performed for another reason. The choice tree of a [ModChooseAction] is expanded up front by
+ * [flattenChoices] into one flat fix per terminal command, each named after the path taken to reach it, and a
+ * tree wider than [maxFlattenedFixes] is dropped entirely.
+ */
+context(server: LSServer)
+private fun ModCommand.toModCommandFixes(
     name: String,
     context: ActionContext,
     maxFlattenedFixes: Int = DEFAULT_MAX_FLATTENED_FIXES,
@@ -51,13 +78,24 @@ fun ModCommand.toModCommandFixes(
 
 /**
  * The fixes to offer for [this] action: its presentation and the command it produces, converted by
- * [toModCommandFixes]. Empty if the action is not available or fails.
+ * [toModCommandFixes]. Empty if the action is not available.
+ *
+ * @param name the name to show, or `null` to take it from the presentation of the action
  */
 context(server: LSServer)
 fun ModCommandAction.toModCommandFixes(
     context: ActionContext,
     maxFlattenedFixes: Int = DEFAULT_MAX_FLATTENED_FIXES,
+    name: String? = null,
 ): List<ModCommandFix> {
+    val lazyFix = toLazyFix(context, name) ?: return emptyList()
+    return lazyFix.toModCommandFixes(maxFlattenedFixes)
+}
+
+/**
+ * @param name the name to show, or `null` to take it from the presentation of the action
+ */
+fun ModCommandAction.toLazyFix(context: ActionContext, name: String? = null): LazyFix? {
     // A null presentation is equivalent to getting false from IntentionAction#isAvailable, so the action is skipped.
     val presentation = runCatching {
         // If some ModCommand is not available, calling getPresentation() in such case should return null, not throw.
@@ -65,15 +103,9 @@ fun ModCommandAction.toModCommandFixes(
         getPresentation(context)
     }.getOrHandleException {
         LOG.warn("Failed to get presentation from mod command action $this", it)
-    } ?: return emptyList()
+    } ?: return null
 
-    val command = runCatching {
-        perform(context)
-    }.getOrHandleException {
-        LOG.warn("Failed to perform mod command action $this", it)
-    } ?: return emptyList()
-
-    return command.toModCommandFixes(presentation.name, context, maxFlattenedFixes)
+    return LazyFix.OfAction(name ?: presentation.name, this, context)
 }
 
 /**

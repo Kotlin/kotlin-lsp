@@ -26,17 +26,17 @@ import kotlinx.coroutines.flow.flow
 /**
  * Base class for extract refactorings (variable, field, constant, ...) implemented as a [ModCommandAction].
  *
- * The action of [createAction] is performed while the code actions are computed, and [toModCommandFixes] converts the
- * [ModCommand] it produces, so everything the refactoring needs is handled by the shared ModCommand plumbing: the edits
- * travel as [ModCommandData][com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData] applied by
+ * [toModCommandFixes] offers the action of [createAction] to the client, so everything the refactoring needs is handled
+ * by the shared ModCommand plumbing: the action is performed only once the user picks the code action, the edits of the
+ * [ModCommand] it produces travel as [ModCommandData][com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData] applied by
  * [LSApplyFixCommandDescriptorProvider][com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDescriptorProvider],
  * an inline rename becomes [ModStartRename][com.intellij.modcommand.ModStartRename], and a [ModChooseAction] of variants
  * is either shown by the client as a menu or expanded into one code action per variant, depending on whether the client
  * declares `intellijExtensions`.
  *
- * This suits refactorings local to a single file: the whole command is computed up front on a copy of the file, so the
- * only interaction left is picking a choice. One needing its own client/server protocol uses
- * [LSExtractMemberProviderBase] instead.
+ * This suits refactorings local to a single file: the whole command is computed on a copy of the file, so the only
+ * interaction left is picking a choice. One needing its own client/server protocol uses [LSExtractMemberProviderBase]
+ * instead.
  */
 abstract class LSExtractModCommandProviderBase : LSCodeActionProvider {
     /** The kind of the produced code actions, which is also what a client binds an "extract" hot key to. */
