@@ -18,6 +18,7 @@ import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionD
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionFixesCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonIntentionFixesCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonSyntaxErrorDiagnosticProvider
+import com.jetbrains.ls.api.features.impl.common.documentHighlight.LSCommonDocumentHighlightProvider
 import com.jetbrains.ls.api.features.impl.common.foldingRange.LSCommonFoldingRangeProvider
 import com.jetbrains.ls.api.features.impl.common.formatting.LSCommonFormattingProvider
 import com.jetbrains.ls.api.features.impl.common.implementation.LSCommonImplementationProvider
@@ -68,6 +69,7 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSKotlinPackageDefinitionProvider,
         LSKotlinSemanticTokensProvider,
         LSCommonReferencesProvider(setOf(LSKotlinLanguage), TargetKind.ALL),
+        LSCommonDocumentHighlightProvider(setOf(LSKotlinLanguage), TargetKind.ALL),
         LSCommonInspectionDiagnosticProvider(
             supportedLanguages = setOf(LSKotlinLanguage),
             inspectionProfilePatcher = kotlinInspectionPatcher,
