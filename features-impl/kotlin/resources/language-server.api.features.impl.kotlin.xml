@@ -21,8 +21,10 @@
     <module name="intellij.kotlin.formatter.minimal"/>
     <module name="intellij.kotlin.navigation"/>
     <module name="intellij.kotlin.refactorings"/>
+    <module name="intellij.kotlin.refactorings.base"/>
     <module name="intellij.kotlin.references"/>
     <module name="intellij.kotlin.searching"/>
+    <module name="intellij.kotlin.searching.base"/>
     <module name="intellij.libraries.kotlinc.analysis.api"/>
     <module name="intellij.libraries.kotlinc.analysis.api.impl.base"/>
     <module name="intellij.libraries.kotlinc.analysis.api.k2"/>
