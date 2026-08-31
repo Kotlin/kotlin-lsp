@@ -21,6 +21,8 @@ jvm_library(
     deps = [
         # do not sort,
         "@community//libraries/kotlinx/coroutines/core",
+        "@community//libraries/kotlinx/serialization/core",
+        "@community//libraries/kotlinx/serialization/json",
         "@community//platform/core-api:core",
         "@community//platform/core-impl",
         "@community//platform/analysis-api:analysis",
@@ -32,7 +34,9 @@ jvm_library(
         "@community//java/java-psi-api:psi",
         "@community//fleet/lsp.protocol",
         "@community//platform/lang-api:lang",
+        "@community//platform/lang-impl",
         "//language-server/api.core.util",
+        "@community//plugins/kotlin/base/analysis",
     ],
 )
 
@@ -51,6 +55,8 @@ jvm_library(
         # do not sort,
         ":psi",
         "@community//libraries/kotlinx/coroutines/core:core_test_lib",
+        "@community//libraries/kotlinx/serialization/core:core_test_lib",
+        "@community//libraries/kotlinx/serialization/json:json_test_lib",
         "@community//platform/core-api:core_test_lib",
         "@community//platform/core-impl:core-impl_test_lib",
         "@community//platform/analysis-api:analysis_test_lib",
@@ -62,7 +68,9 @@ jvm_library(
         "@community//java/java-psi-api:psi_test_lib",
         "@community//fleet/lsp.protocol:lsp.protocol_test_lib",
         "@community//platform/lang-api:lang_test_lib",
+        "@community//platform/lang-impl:lang-impl_test_lib",
         "//language-server/api.core.util:api.core.util_test_lib",
+        "@community//plugins/kotlin/base/analysis:analysis_test_lib",
     ],
 )
 ### auto-generated section `build language-server.api.features.impl.kotlin.psi` end
