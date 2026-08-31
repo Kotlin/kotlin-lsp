@@ -15,6 +15,7 @@ import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImporter
+import com.jetbrains.ls.imports.api.importWorkspaceFully
 import com.jetbrains.ls.imports.core.provider.TestDataDirProvider
 import com.jetbrains.ls.imports.core.provider.TestDataDirs
 import com.jetbrains.ls.imports.json.DependencyData
@@ -89,7 +90,7 @@ abstract class AbstractProjectImportTestCase {
                     )
                 ) {
                     val result = runCatching {
-                        importer.importWorkspace(it.project, WorkspaceImportParameters(projectDir, null), virtualFileUrlManager, reporter)
+                        importer.importWorkspaceFully(it.project, WorkspaceImportParameters(projectDir, null), virtualFileUrlManager, reporter)
                     }
                     assertTrue(result.isFailure)
                     val actualFailure = result.exceptionOrNull()!!
@@ -128,7 +129,7 @@ abstract class AbstractProjectImportTestCase {
                     try {
                         val importPath = projectFile?.let { name -> projectDir / name } ?: projectDir
                         val importParameters = importParametersCustomizer(WorkspaceImportParameters(importPath, null))
-                        importer.importWorkspace(it.project, importParameters, virtualFileUrlManager, reporter)
+                        importer.importWorkspaceFully(it.project, importParameters, virtualFileUrlManager, reporter)
                     } catch (e: WorkspaceImportException) {
                         throw AssertionError(
                             "Import of '$project' failed: ${e.message}\n" +
