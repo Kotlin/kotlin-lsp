@@ -265,11 +265,16 @@ class LSRenameProcessor internal constructor(
         fun create(context: RenameContext): LSRenameProcessor? {
             val target = context.target
             if (!target.isValid) return null
-            val primaryElement = RenamePsiElementProcessor.forElement(target).substituteElementToRename(target, null) ?: target
-            if (primaryElement is PsiCompiledElement) {
+            if (!canRename(target)) {
                 throwLspError(RenameRequestType, "This element cannot be renamed", Unit, ErrorCodes.InvalidParams)
             }
             return LSRenameProcessor(target.project, target, context.newName, false, false)
+        }
+
+        /** Returns false when [target] resolves to a [PsiCompiledElement], which [create] rejects. */
+        fun canRename(target: PsiElement): Boolean {
+            val primaryElement = RenamePsiElementProcessor.forElement(target).substituteElementToRename(target, null) ?: target
+            return primaryElement !is PsiCompiledElement
         }
 
         private fun classifyUsages(

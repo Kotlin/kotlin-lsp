@@ -5,12 +5,17 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LSLanguageSpecificConfigurationEntry
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.FileRename
+import com.jetbrains.lsp.protocol.PrepareRenameParams
+import com.jetbrains.lsp.protocol.PrepareRenameResult
 import com.jetbrains.lsp.protocol.RenameParams
 import com.jetbrains.lsp.protocol.WorkspaceEdit
 
 interface LSRenameProvider : LSLanguageSpecificConfigurationEntry {
     context(server: LSServer, handlerContext: LspHandlerContext)
     suspend fun rename(params: RenameParams): WorkspaceEdit?
+
+    context(server: LSServer, handlerContext: LspHandlerContext)
+    suspend fun prepareRename(params: PrepareRenameParams): PrepareRenameResult? = PrepareRenameResult.Default(true)
 
     context(server: LSServer, handlerContext: LspHandlerContext)
     suspend fun renameFile(params: FileRename): WorkspaceEdit?

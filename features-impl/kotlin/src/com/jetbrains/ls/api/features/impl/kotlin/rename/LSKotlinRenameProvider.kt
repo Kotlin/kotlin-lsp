@@ -12,6 +12,8 @@ import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
 import org.jetbrains.kotlin.psi.KtFile
 
 internal object LSKotlinRenameProvider : LSRenameProviderBase(setOf(LSKotlinLanguage)) {
+    override fun placeholderFor(identifierText: String): String = identifierText.removeSurrounding("`")
+
     override fun getTargetClass(psiFile: PsiFile, name: String): PsiElement? {
         if (psiFile !is KtFile) return null
         return psiFile.classes.firstOrNull { it.name == name }

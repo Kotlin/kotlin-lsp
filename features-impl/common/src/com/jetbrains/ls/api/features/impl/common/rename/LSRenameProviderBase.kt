@@ -9,10 +9,13 @@ import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.util.PsiUtilCore
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
+import com.jetbrains.ls.api.core.util.toLspRange
+import com.jetbrains.ls.api.features.impl.common.processors.LSRenameProcessor
 import com.jetbrains.ls.api.features.impl.common.processors.RefactoringContext
 import com.jetbrains.ls.api.features.impl.common.processors.RenameContext
 import com.jetbrains.ls.api.features.impl.common.processors.createProcessor
@@ -24,6 +27,9 @@ import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.throwLspError
 import com.jetbrains.lsp.protocol.ErrorCodes
 import com.jetbrains.lsp.protocol.FileRename
+import com.jetbrains.lsp.protocol.PrepareRenameParams
+import com.jetbrains.lsp.protocol.PrepareRenameRequestType
+import com.jetbrains.lsp.protocol.PrepareRenameResult
 import com.jetbrains.lsp.protocol.RenameParams
 import com.jetbrains.lsp.protocol.RenameRequestType
 import com.jetbrains.lsp.protocol.WorkspaceEdit
@@ -51,6 +57,35 @@ abstract class LSRenameProviderBase(
 
         return WorkspaceEdit(documentChanges = changes)
     }
+
+    context(server: LSServer, handlerContext: LspHandlerContext)
+    override suspend fun prepareRename(params: PrepareRenameParams): PrepareRenameResult? {
+        return server.withAnalysisContext {
+            readAction {
+                val virtualFile = params.findVirtualFile() ?: return@readAction null
+                val document = virtualFile.findDocument() ?: return@readAction null
+                val offset = document.offsetByPosition(params.position)
+                val psiFile = virtualFile.findPsiFile(project) ?: return@readAction null
+                val target = extractTargets(psiFile, offset).firstOrNull()
+                if (target == null || !LSRenameProcessor.canRename(target)) {
+                    throwLspError(PrepareRenameRequestType, "This element cannot be renamed", Unit, ErrorCodes.InvalidParams, null)
+                }
+                val adjustedOffset = TargetElementUtil.adjustOffset(psiFile, document, offset)
+                // the client types the new name over the returned range, so only an identifier position can host it
+                val text = document.charsSequence
+                if (adjustedOffset >= text.length || !Character.isJavaIdentifierPart(text[adjustedOffset])) {
+                    throwLspError(PrepareRenameRequestType, "Rename is not available at this position", Unit, ErrorCodes.InvalidParams, null)
+                }
+                val leaf = PsiUtilCore.getElementAtOffset(psiFile, adjustedOffset)
+                if (leaf is PsiFile) return@readAction PrepareRenameResult.Default(true)
+                val leafRange = leaf.textRange
+                if (leafRange == null || leafRange.isEmpty) return@readAction PrepareRenameResult.Default(true)
+                PrepareRenameResult.Labeled(leafRange.toLspRange(document), placeholderFor(leaf.text))
+            }
+        }
+    }
+
+    protected open fun placeholderFor(identifierText: String): String = identifierText
 
     protected open fun createContext(target: PsiElement, newName: String, contextFile: PsiFile): RefactoringContext {
         return RenameContext(target, newName)

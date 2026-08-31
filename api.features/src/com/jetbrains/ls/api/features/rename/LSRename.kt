@@ -10,6 +10,8 @@ import com.jetbrains.ls.api.features.move.LSMoveDirectoryProvider
 import com.jetbrains.ls.api.features.move.LSMoveFileProvider
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.FileRename
+import com.jetbrains.lsp.protocol.PrepareRenameParams
+import com.jetbrains.lsp.protocol.PrepareRenameResult
 import com.jetbrains.lsp.protocol.RenameFilesParams
 import com.jetbrains.lsp.protocol.RenameParams
 import com.jetbrains.lsp.protocol.WorkspaceEdit
@@ -18,6 +20,11 @@ object LSRename {
     context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
     suspend fun rename(params: RenameParams): WorkspaceEdit? {
         return configuration.entriesFor<LSRenameProvider>(params.textDocument).firstNotNullOfOrNull { it.rename(params) }
+    }
+
+    context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
+    suspend fun prepareRename(params: PrepareRenameParams): PrepareRenameResult? {
+        return configuration.entriesFor<LSRenameProvider>(params.textDocument).firstNotNullOfOrNull { it.prepareRename(params) }
     }
 
     context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
