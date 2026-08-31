@@ -106,6 +106,24 @@ class GradleProjectImportTest : GradleProjectImportTestCase() {
     )
 
     @Test
+    // Java 17 should be used to run Gradle
+    // Java 21 is expected as the project language level as well as language level for modules
+    fun gradleToolchainAndJavaTargetVersion() = doGradleTest(
+        "GradleToolchainAndJavaTargetVersion",
+        JdkDownloaderFacade.jdk17,
+        ::withIgnoredJdkRoots
+    )
+
+    @Test
+    // Java 17 should be used to run Gradle
+    // Java 8 is expected as the project language level as well as language level for modules
+    fun gradleToolchainAndJavaSourceVersion() = doGradleTest(
+        "GradleToolchainAndJavaSourceVersion",
+        JdkDownloaderFacade.jdk17,
+        ::withIgnoredJdkRoots
+    )
+
+    @Test
     fun gradleJavaLanguageFeaturePreviewSourceSet() = doGradleTest(
         "GradleJavaLanguageFeaturePreviewSourceSet",
         JdkDownloaderFacade.jdk25,

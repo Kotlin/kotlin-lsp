@@ -1,0 +1,117 @@
+{
+    "modules": [
+        {
+            "name": "GradleToolchainAndJavaSourceVersion",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "17",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/"
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
+        },
+        {
+            "name": "GradleToolchainAndJavaSourceVersion.main",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "17",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/src/main",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/src/main/java",
+                            "type": "java-source"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
+        },
+        {
+            "name": "GradleToolchainAndJavaSourceVersion.test",
+            "dependencies": [
+                {
+                    "type": "module",
+                    "name": "GradleToolchainAndJavaSourceVersion.main",
+                    "scope": "compile"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "17",
+                    "kind": "jdk"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/src/test"
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/",
+            "externalProjectId": ":"
+        }
+    ],
+    "sdks": [
+        {
+            "name": "17",
+            "type": "jdk",
+            "version": "JDK_17",
+            "homePath": null,
+            "roots": [],
+            "additionalData": ""
+        }
+    ],
+    "javaSettings": [
+        {
+            "module": "GradleToolchainAndJavaSourceVersion",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "languageLevelId": "JDK_1_8",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "GradleToolchainAndJavaSourceVersion.main",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/build/classes/java/main",
+                "<WORKSPACE>/build/resources/main"
+            ],
+            "languageLevelId": "JDK_1.8",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "GradleToolchainAndJavaSourceVersion.test",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/build/classes/java/test",
+                "<WORKSPACE>/build/resources/test"
+            ],
+            "languageLevelId": "JDK_1.8",
+            "manifestAttributes": {}
+        }
+    ],
+    "externalSystem": "GRADLE"
+}

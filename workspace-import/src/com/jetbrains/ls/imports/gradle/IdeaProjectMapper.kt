@@ -402,8 +402,8 @@ internal class IdeaProjectMapper {
             return projectJavaLevel
         }
         val moduleJavaLevel = when {
+            sourceSet.isCompileTaskSpecified() -> sourceSet?.javaSettings?.sourceCompatibility
             sourceSet.isToolchainSpecified() -> sourceSet?.javaSettings?.toolchainVersion.toString()
-            sourceSet.isCompileTaskSpecified() -> sourceSet?.javaSettings?.targetCompatibility ?: sourceSet?.javaSettings?.sourceCompatibility
             javaLanguageSettings.isSpecified() -> javaLanguageSettings?.targetBytecodeVersion?.getJavaVersion()
             else -> null
         }
@@ -423,7 +423,7 @@ internal class IdeaProjectMapper {
     }
 
     private fun ModuleSourceSet?.isCompileTaskSpecified(): Boolean {
-        return this != null && (javaSettings.sourceCompatibility != null || javaSettings.targetCompatibility != null)
+        return this != null && javaSettings.sourceCompatibility != null
     }
 
     private fun JavaVersion.getJavaVersion(): String {
