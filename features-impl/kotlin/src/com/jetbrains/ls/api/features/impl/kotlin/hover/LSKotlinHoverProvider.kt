@@ -23,6 +23,7 @@ import org.jetbrains.kotlin.analysis.api.kdoc.findKDoc
 import org.jetbrains.kotlin.analysis.api.renderer.base.annotations.KaRendererAnnotationsFilter
 import org.jetbrains.kotlin.analysis.api.renderer.base.annotations.renderers.KaAnnotationArgumentsRenderer
 import org.jetbrains.kotlin.analysis.api.renderer.declarations.impl.KaDeclarationRendererForSource
+import org.jetbrains.kotlin.analysis.api.renderer.declarations.renderers.classifiers.KaSingleTypeParameterSymbolRenderer
 import org.jetbrains.kotlin.analysis.api.renderer.types.renderers.KaErrorTypeRenderer
 import org.jetbrains.kotlin.analysis.api.resolution.resolveSuccessfulSymbol
 import org.jetbrains.kotlin.analysis.api.session.analyze
@@ -152,6 +153,9 @@ internal object LSKotlinHoverProvider : LSHoverProviderBase() {
     }
 
     private val renderer = KaDeclarationRendererForSource.WITH_SHORT_NAMES.with {
+        singleTypeParameterRenderer =
+            KaSingleTypeParameterSymbolRenderer.WITH_COMMA_SEPARATED_BOUNDS
+
         typeRenderer = typeRenderer.with {
             errorTypeRenderer = KaErrorTypeRenderer.AS_CODE_IF_POSSIBLE
         }
