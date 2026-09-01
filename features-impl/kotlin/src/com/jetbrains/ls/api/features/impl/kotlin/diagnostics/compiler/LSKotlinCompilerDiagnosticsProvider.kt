@@ -15,7 +15,7 @@ import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.features.diagnostics.LSCompilationDiagnosticProvider
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
-import com.jetbrains.ls.api.features.utils.isSource
+import com.jetbrains.ls.api.core.util.isSource
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.Diagnostic
 import com.jetbrains.lsp.protocol.DocumentDiagnosticParams

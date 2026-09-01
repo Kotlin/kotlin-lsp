@@ -1,33 +1,21 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.diagnostics
 
-import com.intellij.codeHighlighting.HighlightDisplayLevel
 import com.intellij.codeInsight.intention.IntentionAction
-import com.intellij.codeInspection.GlobalInspectionTool
-import com.intellij.codeInspection.GlobalSimpleInspectionTool
-import com.intellij.codeInspection.InspectionEP
-import com.intellij.codeInspection.InspectionProfileEntry
-import com.intellij.codeInspection.LocalInspectionEP
-import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.LocalQuickFix
 import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.QuickFix
-import com.intellij.lang.Language
-import com.intellij.lang.LanguageMatcher
-import com.intellij.lang.MetaLanguage
 import com.intellij.modcommand.ActionContext
 import com.intellij.modcommand.LocalQuickFixWithModCommandFallback
 import com.intellij.modcommand.ModCommandQuickFix
 import com.intellij.openapi.diagnostic.ReportingClassSubstitutor
-import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
-import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.util.maybeStripHtml
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionDiagnosticProvider.Companion.diagnosticSource
 import com.jetbrains.ls.api.features.impl.common.modcommands.LazyFix
 import com.jetbrains.ls.api.features.impl.common.modcommands.toLazyFix
 import com.jetbrains.ls.api.features.impl.common.modcommands.toModCommandFixes
-import com.jetbrains.ls.api.features.impl.common.utils.maybeStripHtml
 
 private val LOG = logger<LSInspectionManager>()
 
@@ -42,67 +30,7 @@ private val LOG = logger<LSInspectionManager>()
 private const val MAX_FLATTENED_INSPECTION_FIXES = 5
 
 internal class LSInspectionManager(
-    private val inspectionProfilePatcher: InspectionProfilePatcher = InspectionProfilePatcher(),
     private val quickFixBlacklist: Blacklist = Blacklist()) {
-    
-    internal fun getLocalInspections(psiFile: PsiFile, infoInspections: Boolean = false): List<LocalInspectionTool> {
-        return getEnabledInspectionTools(LocalInspectionEP.LOCAL_INSPECTION.extensionList, psiFile.language, infoInspections)
-            .filterIsInstance<LocalInspectionTool>()
-            .filter { localInspectionTool -> localInspectionTool.isAvailableForFile(psiFile) }
-            .filterNot { localInspectionTool -> (localInspectionTool.nameProvider as? LocalInspectionEP)?.editorAttributes == "REASSIGNED_LOCAL_VARIABLE_ATTRIBUTES" }
-            .toList()
-    }
-
-    internal fun getSimpleGlobalInspections(language: Language): List<GlobalSimpleInspectionTool> {
-        return getEnabledInspectionTools(InspectionEP.GLOBAL_INSPECTION.extensionList, language)
-            .filterIsInstance<GlobalSimpleInspectionTool>()
-            .toList()
-    }
-
-    internal fun getSharedLocalInspectionsFromGlobalTools(language: Language, infoInspections: Boolean = false): List<LocalInspectionTool> {
-        return getEnabledInspectionTools(InspectionEP.GLOBAL_INSPECTION.extensionList, language, infoInspections)
-            .filterIsInstance<GlobalInspectionTool>()
-            .mapNotNull { globalInspectionTool -> globalInspectionTool.sharedLocalInspectionTool }
-            .filterNot { inspectionProfilePatcher.disables(it) }
-            .onEach { inspectionProfilePatcher.patchOptions(it) }
-            .toList()
-    }
-
-    private fun getEnabledInspectionTools(extensionList: List<InspectionEP>, language: Language, infoInspections: Boolean = false):
-            Sequence<InspectionProfileEntry> {
-        return extensionList
-            .asSequence()
-            .filter { inspectionEP ->
-                val inspectionLanguageId = inspectionEP.language ?: return@filter false
-                isSupportAnyLanguage(inspectionLanguageId) || isLanguageSupportedByInspection(inspectionLanguageId, language)
-            }
-            .filter { inspectionEP -> inspectionEP.enabledByDefault }
-            .filter { inspectionEP -> (HighlightDisplayLevel.find(inspectionEP.level) == HighlightDisplayLevel.DO_NOT_SHOW) == infoInspections }
-            .filterNot { inspectionEP -> inspectionProfilePatcher.disables(inspectionEP.implementationClass) }
-            .mapNotNull { inspectionEP ->
-                runCatching {
-                    inspectionEP.instantiateTool()
-                }.getOrHandleException {
-                    LOG.warn(it)
-                }
-            }
-            .filterNot { inspectionProfilePatcher.disables(it) }
-            .onEach { inspectionProfilePatcher.patchOptions(it) }
-    }
-
-    /** [com.intellij.lang.LanguageExtensionPoint.language] **/
-    private fun isSupportAnyLanguage(inspectionLanguageId: String): Boolean = inspectionLanguageId.isEmpty()
-
-    private fun isLanguageSupportedByInspection(inspectionLanguageId: String, fileLanguage: Language): Boolean {
-        val inspectionLanguage = findLanguageOrMetaLanguageByID(inspectionLanguageId) ?: return false
-
-        return LanguageMatcher.matchWithDialects(inspectionLanguage).matchesLanguage(fileLanguage)
-    }
-
-    private fun findLanguageOrMetaLanguageByID(languageId: String): Language? {
-        return Language.findLanguageByID(languageId)
-            ?: MetaLanguage.all().firstOrNull { it.id == languageId }
-    }
 
     context(server: LSServer)
     internal fun createDiagnosticData(descriptor: ProblemDescriptor): SimpleDiagnosticData {
@@ -164,13 +92,3 @@ internal class LSInspectionManager(
         return null
     }
 }
-
-internal fun isSuppressed(
-    localInspection: LocalInspectionTool,
-    descriptor: ProblemDescriptor
-): Boolean = runCatching {
-    val element = descriptor.psiElement ?: descriptor.startElement
-    element != null && localInspection.isSuppressedFor(element)
-}.getOrHandleException {
-    LOG.warn(it)
-} ?: false

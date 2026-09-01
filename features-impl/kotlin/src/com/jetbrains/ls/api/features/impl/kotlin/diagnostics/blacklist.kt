@@ -3,7 +3,7 @@ package com.jetbrains.ls.api.features.impl.kotlin.diagnostics
 
 import com.jetbrains.ls.api.features.impl.common.diagnostics.Blacklist
 import com.jetbrains.ls.api.features.impl.common.diagnostics.BlacklistEntry
-import com.jetbrains.ls.api.features.impl.common.diagnostics.InspectionProfilePatcher
+import com.jetbrains.ls.api.core.features.InspectionProfilePatcher
 
 internal val kotlinInspectionPatcher = InspectionProfilePatcher(
     // Local inspections

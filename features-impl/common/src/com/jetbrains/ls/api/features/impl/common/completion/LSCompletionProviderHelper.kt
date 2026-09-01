@@ -33,7 +33,7 @@ import com.jetbrains.ls.api.features.impl.common.hover.LSHoverProviderBase.LSMar
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.resolve.ResolveDataWithConfigurationEntryId
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer
-import com.jetbrains.ls.api.features.utils.isSource
+import com.jetbrains.ls.api.core.util.isSource
 import com.jetbrains.ls.snapshot.api.impl.core.CompletionItemId
 import com.jetbrains.ls.snapshot.api.impl.core.CompletionItemWithObject
 import com.jetbrains.ls.snapshot.api.impl.core.LatestCompletionSessionComponent

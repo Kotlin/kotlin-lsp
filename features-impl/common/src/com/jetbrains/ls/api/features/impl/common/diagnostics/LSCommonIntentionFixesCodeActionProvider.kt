@@ -18,6 +18,10 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.parents
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.features.InspectionProfilePatcher
+import com.jetbrains.ls.api.core.features.lsGetLocalInspections
+import com.jetbrains.ls.api.core.features.lsGetSharedLocalInspectionsFromGlobalTools
+import com.jetbrains.ls.api.core.features.lsIsSuppressed
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toTextRange
@@ -26,7 +30,7 @@ import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCodeAction
 import com.jetbrains.ls.api.features.impl.common.modcommands.toModCommandFixes
 import com.jetbrains.ls.api.features.language.LSLanguage
-import com.jetbrains.ls.api.features.utils.isSource
+import com.jetbrains.ls.api.core.util.isSource
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.CodeAction
 import com.jetbrains.lsp.protocol.CodeActionKind
@@ -44,10 +48,10 @@ class LSCommonIntentionFixesCodeActionProvider(
     override val supportedLanguages: Set<LSLanguage>,
     private val intentionBlacklist: Blacklist = Blacklist(),
     private val quickFixBlacklist: Blacklist = Blacklist(),
-    inspectionProfilePatcher: InspectionProfilePatcher = InspectionProfilePatcher(),
+    private val inspectionProfilePatcher: InspectionProfilePatcher = InspectionProfilePatcher(),
     private val converter: (ModCommandAction) -> ModCommandAction = {it}
 ) : LSCodeActionProvider {
-    private val lsInspectionManager = LSInspectionManager(inspectionProfilePatcher, quickFixBlacklist)
+    private val lsInspectionManager = LSInspectionManager(quickFixBlacklist)
 
     override val providesOnlyKinds: Set<CodeActionKind> get() = setOf(codeActionKind)
 
@@ -81,10 +85,10 @@ class LSCommonIntentionFixesCodeActionProvider(
         val project = psiFile.project
         val inspectionManager = InspectionManagerEx(project)
         val problemsHolder = ProblemsHolder(inspectionManager, psiFile, true)
-        val infoInspections = lsInspectionManager.getLocalInspections(psiFile, true) +
-                lsInspectionManager.getSharedLocalInspectionsFromGlobalTools(psiFile.language, true)
-        val normalInspections = lsInspectionManager.getLocalInspections(psiFile, false) +
-                lsInspectionManager.getSharedLocalInspectionsFromGlobalTools(psiFile.language, false)
+        val infoInspections = lsGetLocalInspections(psiFile, inspectionProfilePatcher, true) +
+                lsGetSharedLocalInspectionsFromGlobalTools(psiFile.language, inspectionProfilePatcher, true)
+        val normalInspections = lsGetLocalInspections(psiFile, inspectionProfilePatcher, false) +
+                lsGetSharedLocalInspectionsFromGlobalTools(psiFile.language, inspectionProfilePatcher,false)
         val fileRange = psiFile.textRange
         val session = LocalInspectionToolSession(psiFile, fileRange, fileRange, null)
         val result = mutableListOf<CodeAction>()
@@ -99,7 +103,7 @@ class LSCommonIntentionFixesCodeActionProvider(
                     }
                     for (descriptor in problemsHolder.results) {
                         if ((isInfo || descriptor.highlightType == ProblemHighlightType.INFORMATION) &&
-                            !isSuppressed(localInspection, descriptor)
+                            !lsIsSuppressed(localInspection, descriptor)
                         ) {
                             val elementRange = (descriptor.psiElement ?: descriptor.startElement)?.textRange ?: continue
                             val range = descriptor.textRangeInElement?.shiftRight(elementRange.startOffset) 
