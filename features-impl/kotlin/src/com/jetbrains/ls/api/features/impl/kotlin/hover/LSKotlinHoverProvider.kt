@@ -24,7 +24,7 @@ import org.jetbrains.kotlin.analysis.api.renderer.base.annotations.KaRendererAnn
 import org.jetbrains.kotlin.analysis.api.renderer.base.annotations.renderers.KaAnnotationArgumentsRenderer
 import org.jetbrains.kotlin.analysis.api.renderer.declarations.impl.KaDeclarationRendererForSource
 import org.jetbrains.kotlin.analysis.api.renderer.types.renderers.KaErrorTypeRenderer
-import org.jetbrains.kotlin.analysis.api.resolution.resolveSymbol
+import org.jetbrains.kotlin.analysis.api.resolution.resolveSuccessfulSymbol
 import org.jetbrains.kotlin.analysis.api.session.analyze
 import org.jetbrains.kotlin.analysis.api.symbols.KaConstructorSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaDeclarationSymbol
@@ -39,12 +39,12 @@ import org.jetbrains.kotlin.kdoc.psi.impl.KDocLink
 import org.jetbrains.kotlin.kdoc.psi.impl.KDocName
 import org.jetbrains.kotlin.kdoc.psi.impl.KDocTag
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.render
 import org.jetbrains.kotlin.psi.KtCallElement
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNonPublicApi
 import org.jetbrains.kotlin.psi.psiUtil.forEachDescendantOfType
-import org.jetbrains.kotlin.name.render
 
 internal object LSKotlinHoverProvider : LSHoverProviderBase() {
     override val supportedLanguages: Set<LSLanguage> get() = setOf(LSKotlinLanguage)
@@ -59,7 +59,7 @@ internal object LSKotlinHoverProvider : LSHoverProviderBase() {
                 is PsiClass -> target.namedClassSymbol
                 is PsiMember -> target.callableSymbol
                 is PsiPackage -> findPackage(FqName(target.qualifiedName))
-                is KtCallElement -> target.resolveSymbol()
+                is KtCallElement -> target.resolveSuccessfulSymbol()
                 else -> null
             } ?: return null
             getMarkdownContent(symbol)
