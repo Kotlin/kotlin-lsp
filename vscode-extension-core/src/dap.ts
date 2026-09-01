@@ -1,3 +1,4 @@
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 import {
   commands,
   debug,
@@ -65,7 +66,7 @@ const DEBUG_TYPE_BY_TOOL: Record<string, string> = { gradle: GRADLE_DEBUG_TYPE }
 const RUN_MAIN_COMMAND = 'intellij.jvm.runMain';
 const DEFAULT_CONSOLE = 'integratedTerminal';
 
-export type ConsoleKind = 'internalConsole' | 'integratedTerminal' | 'externalTerminal';
+export type ConsoleKind = 'internalConsole' | 'integratedTerminal' | 'externalTerminal' | 'none';
 
 interface RunMainArgs {
   mainClass: string;
