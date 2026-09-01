@@ -3,17 +3,16 @@
 
 package com.jetbrains.ls.api.features.impl.kotlin.apiImpl
 
-import com.intellij.openapi.application.Application
 import com.intellij.openapi.project.Project
 import com.jetbrains.analyzer.bootstrap.AnalyzerContainerBuilder
 import com.jetbrains.analyzer.bootstrap.AnalyzerContext
 import com.jetbrains.analyzer.kotlin.invalidate
 import com.jetbrains.analyzer.kotlin.registerLLFirSessionServices
-import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceComponent
 import com.jetbrains.analyzer.api.AnalyzerContextKind
-import com.jetbrains.ls.snapshot.api.impl.core.LSConfigurationData
-import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceEvent
 import com.jetbrains.analyzer.filesystem.toList
+import com.jetbrains.ls.snapshot.api.impl.core.LSConfigurationData
+import com.jetbrains.ls.snapshot.api.impl.core.SessionComponent
+import com.jetbrains.ls.snapshot.api.impl.core.SessionEvent
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.KaPlatformInterface
 import org.jetbrains.kotlin.analysis.low.level.api.fir.LLFirInternals
@@ -31,24 +30,15 @@ import org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.cache.LLFirSessi
  * Some of those storages may share LL FIR sessions. Sessions are not invalidated by cleaner
  * ([NoOpValueReferenceCleaner]), so they live while at least one request uses them.
  */
-internal object LLFirSessionCacheStorageComponent : WorkspaceComponent<LLFirSessionCacheStorage> {
+internal object LLFirSessionCacheStorageComponent : SessionComponent<LLFirSessionCacheStorage> {
     override fun init(configData: LSConfigurationData): LLFirSessionCacheStorage =
         newStorage()
 
-    override fun handleEvent(event: WorkspaceEvent, state: LLFirSessionCacheStorage): LLFirSessionCacheStorage =
+    override fun handleEvent(event: SessionEvent, state: LLFirSessionCacheStorage): LLFirSessionCacheStorage =
         when (event) {
-            is WorkspaceEvent.InvalidateFiles -> state.invalidate(event.files.toList(), AnalyzerContext.current.project)
-            is WorkspaceEvent.WorkspaceModelChanged -> state
-            WorkspaceEvent.LowMemory -> newStorage()
+            is SessionEvent.InvalidateFiles -> state.invalidate(event.files.toList(), AnalyzerContext.current.project)
+            SessionEvent.LowMemory -> newStorage()
         }
-
-    override suspend fun registerInApplicationContainer(
-        builder: AnalyzerContainerBuilder,
-        application: Application,
-        state: LLFirSessionCacheStorage,
-        contextKind: AnalyzerContextKind,
-    ) {
-    }
 
     override suspend fun registerInProjectContainer(
         builder: AnalyzerContainerBuilder,

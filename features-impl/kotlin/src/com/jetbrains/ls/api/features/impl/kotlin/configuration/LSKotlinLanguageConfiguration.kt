@@ -7,11 +7,13 @@ import com.intellij.psi.PsiComment
 import com.jetbrains.analyzer.api.AnalyzerFileSystems
 import com.jetbrains.analyzer.bootstrap.AnalyzerContainerBuilder
 import com.jetbrains.analyzer.bootstrap.AnalyzerContext
+import com.jetbrains.analyzer.bootstrap.WorkspaceModelSnapshot
 import com.jetbrains.analyzer.kotlin.KotlinWorkspaceModelCaches
 import com.jetbrains.analyzer.kotlin.createKotlinWorkspaceModelCaches
 import com.jetbrains.analyzer.kotlin.initKotlinIndexingContainer
 import com.jetbrains.analyzer.kotlin.initKotlinWorkspaceModelCaches
 import com.jetbrains.analyzer.kotlin.kotlinPlugin
+import com.jetbrains.ls.api.features.SessionComponentEntry
 import com.jetbrains.ls.api.features.WorkspaceComponentEntry
 import com.jetbrains.ls.api.features.impl.common.definitions.LSCommonDefinitionProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionDiagnosticProvider
@@ -55,14 +57,13 @@ import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.analyzer.api.AnalyzerContextKind
 import com.jetbrains.ls.snapshot.api.impl.core.LSConfigurationData
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceComponent
-import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceEvent
 import com.jetbrains.lsp.protocol.FoldingRangeKind
 import org.jetbrains.kotlin.psi.KtImportList
 
 val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
     entries = listOf(
         WorkspaceComponentEntry { KotlinWorkspaceComponent },
-        WorkspaceComponentEntry { LLFirSessionCacheStorageComponent },
+        SessionComponentEntry { LLFirSessionCacheStorageComponent },
         LSKotlinOrganizeImportsCodeActionProvider,
         LSKotlinCompletionProvider,
         LSCommonDefinitionProvider(setOf(LSKotlinLanguage), TargetKind.ALL),
@@ -128,12 +129,8 @@ private object KotlinWorkspaceComponent : WorkspaceComponent<KotlinWorkspaceStat
     override fun init(configData: LSConfigurationData): KotlinWorkspaceState =
         KotlinWorkspaceState()
 
-    override fun handleEvent(event: WorkspaceEvent, state: KotlinWorkspaceState): KotlinWorkspaceState =
-        when (event) {
-            is WorkspaceEvent.WorkspaceModelChanged ->
-                KotlinWorkspaceState(createKotlinWorkspaceModelCaches(AnalyzerContext.current.project))
-            is WorkspaceEvent.InvalidateFiles, WorkspaceEvent.LowMemory -> state
-        }
+    override fun workspaceModelChanged(workspaceModel: WorkspaceModelSnapshot, state: KotlinWorkspaceState): KotlinWorkspaceState =
+        KotlinWorkspaceState(createKotlinWorkspaceModelCaches(AnalyzerContext.current.project))
 
     override suspend fun registerInApplicationContainer(
         builder: AnalyzerContainerBuilder,

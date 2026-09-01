@@ -8,6 +8,7 @@ import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.snapshot.api.impl.core.InitConfigurationKey
 import com.jetbrains.ls.snapshot.api.impl.core.LSConfigurationData
+import com.jetbrains.ls.snapshot.api.impl.core.SessionComponent
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceComponent
 import com.jetbrains.ls.snapshot.api.impl.core.rocks.IndexingFileSystemProvider
 import kotlinx.serialization.KSerializer
@@ -64,8 +65,14 @@ class BuildToolLaunchEntry(
     val contributor: BuildToolLaunchContributor,
 ) : LSConfigurationEntry
 
+/** Registers a [WorkspaceComponent]: state shared by every session of the workspace. */
 fun interface WorkspaceComponentEntry : LSConfigurationEntry {
     fun component(): WorkspaceComponent<*>
+}
+
+/** Registers a [SessionComponent]: state local to one client session. */
+fun interface SessionComponentEntry : LSConfigurationEntry {
+    fun component(): SessionComponent<*>
 }
 
 class InitConfigurationEntry<T : Any>(
