@@ -12,17 +12,17 @@ import com.jetbrains.lsp.protocol.DiagnosticTag
  */
 fun ProblemHighlightType.toLspSeverity(): DiagnosticSeverity = when (this) {
     ProblemHighlightType.GENERIC_ERROR_OR_WARNING -> DiagnosticSeverity.Warning
-    ProblemHighlightType.LIKE_UNKNOWN_SYMBOL -> DiagnosticSeverity.Error
+    ProblemHighlightType.LIKE_UNKNOWN_SYMBOL -> DiagnosticSeverity.Warning
     ProblemHighlightType.LIKE_DEPRECATED -> DiagnosticSeverity.Warning
     ProblemHighlightType.LIKE_UNUSED_SYMBOL -> DiagnosticSeverity.Warning
-    ProblemHighlightType.ERROR -> DiagnosticSeverity.Error
+    ProblemHighlightType.ERROR -> DiagnosticSeverity.Warning
     ProblemHighlightType.WARNING -> DiagnosticSeverity.Warning
-    ProblemHighlightType.GENERIC_ERROR -> DiagnosticSeverity.Error
+    ProblemHighlightType.GENERIC_ERROR -> DiagnosticSeverity.Warning
     ProblemHighlightType.INFO -> DiagnosticSeverity.Information
-    ProblemHighlightType.WEAK_WARNING -> DiagnosticSeverity.Warning
+    ProblemHighlightType.WEAK_WARNING -> DiagnosticSeverity.Information
     ProblemHighlightType.INFORMATION -> DiagnosticSeverity.Hint
     ProblemHighlightType.LIKE_MARKED_FOR_REMOVAL -> DiagnosticSeverity.Information
-    ProblemHighlightType.POSSIBLE_PROBLEM -> DiagnosticSeverity.Warning
+    ProblemHighlightType.POSSIBLE_PROBLEM -> DiagnosticSeverity.Hint
 }
 
 /**

@@ -206,22 +206,8 @@ class LSCommonInspectionDiagnosticProvider(
                     }.getOrHandleException {
                         LOG.warn(it)
                     }
-                    val diagnostics = problemsHolder.results.mapNotNull { problemDescriptor ->
-                        if (problemDescriptor.highlightType == ProblemHighlightType.POSSIBLE_PROBLEM) return@mapNotNull null
-                        val data = lsInspectionManager.createDiagnosticData(problemDescriptor)
-                        val range = problemDescriptor.range()?.toLspRange(document) ?: return@mapNotNull null
-                        val message = ProblemDescriptorUtil.renderDescriptor(
-                            problemDescriptor, problemDescriptor.psiElement, ProblemDescriptorUtil.NONE
-                        )
-                        Diagnostic(
-                            range = range,
-                            severity = problemDescriptor.highlightType.toLspSeverity(),
-                            message = message.description,
-                            code = StringOrInt.string(simpleGlobalInspection.shortName),
-                            tags = problemDescriptor.highlightType.toLspTags(),
-                            data = LSP.json.encodeToJsonElement<SimpleDiagnosticData>(data),
-                        )
-                    }
+                    val diagnostics = problemsHolder.results
+                        .mapNotNull { problemDescriptor -> problemDescriptor.createDiagnostic(simpleGlobalInspection.shortName, document) }
                     diagnostics
                 }
             }
@@ -248,20 +234,22 @@ class LSCommonInspectionDiagnosticProvider(
             .filter { problemDescriptor -> problemDescriptor.highlightType != ProblemHighlightType.INFORMATION }
             .filter { problemDescriptor -> problemDescriptor.highlightType != ProblemHighlightType.POSSIBLE_PROBLEM }
             .filter { !isSuppressed(localInspectionTool, it) }
-            .mapNotNull { problemDescriptor ->
-                val data = lsInspectionManager.createDiagnosticData(problemDescriptor)
-                val message = ProblemDescriptorUtil.renderDescriptor(
-                    problemDescriptor, problemDescriptor.psiElement, ProblemDescriptorUtil.NONE
-                )
-                Diagnostic(
-                    range = problemDescriptor.range()?.toLspRange(document) ?: return@mapNotNull null,
-                    severity = problemDescriptor.highlightType.toLspSeverity(),
-                    message = message.description.maybeStripHtml(),
-                    code = StringOrInt.string(localInspectionTool.id),
-                    tags = problemDescriptor.highlightType.toLspTags(),
-                    data = LSP.json.encodeToJsonElement(data),
-                )
-            }
+            .mapNotNull { problemDescriptor -> problemDescriptor.createDiagnostic(localInspectionTool.id, document) }
+    }
+
+    context(server: LSServer)
+    private fun ProblemDescriptor.createDiagnostic(shortName: String, document: Document): Diagnostic? {
+        if (highlightType == ProblemHighlightType.POSSIBLE_PROBLEM) return null
+        val data = lsInspectionManager.createDiagnosticData(this)
+        val message = ProblemDescriptorUtil.renderDescriptor(this, psiElement, ProblemDescriptorUtil.NONE)
+        return Diagnostic(
+            range = range()?.toLspRange(document) ?: return null,
+            severity = highlightType.toLspSeverity(),
+            message = message.description.maybeStripHtml(),
+            code = StringOrInt.string(shortName),
+            tags = highlightType.toLspTags(),
+            data = LSP.json.encodeToJsonElement(data),
+        )
     }
 }
 
