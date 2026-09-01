@@ -32,9 +32,13 @@ interface ChooseActionMenuItem extends vscode.QuickPickItem {
 /**
  * Declares this as a JetBrains client so the server may use custom `intellij/*` protocol
  * extensions (e.g. the `intellij/copyToClipboard` notification handled in this file).
+ *
+ * It also declares `lazyIntentions`, so the server offers a fix without performing it and performs it only
+ * when this client runs the command of the fix. That needs no protocol extension, and the server has a separate
+ * option for it, but this client supports both.
  */
 export function registerIntellijExtensionsInitOption(): void {
-  registerInitializationOptionsContributor(() => ({ intellijExtensions: true }));
+  registerInitializationOptionsContributor(() => ({ intellijExtensions: true, lazyIntentions: true }));
 }
 
 /**

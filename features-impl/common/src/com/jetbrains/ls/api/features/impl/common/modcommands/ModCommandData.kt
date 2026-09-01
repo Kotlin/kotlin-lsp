@@ -66,6 +66,8 @@ private const val SNIPPET_REPLACEMENT = $$"\\\\$0"
 /**
  * See [toModCommandFixes][com.jetbrains.ls.api.features.impl.common.modcommands.toModCommandFixes]
  * for fallback implementation of ModChooseAction support if client doesn't provide intellijExtensions capabilities.
+ * A client which declares `lazyIntentions` alone gets no fallback, because the fallback has to perform the fix,
+ * which is exactly what `lazyIntentions` defers.
  */
 @Serializable
 sealed class ModCommandData {

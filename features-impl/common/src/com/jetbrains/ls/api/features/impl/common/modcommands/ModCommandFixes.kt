@@ -25,19 +25,21 @@ data class FlattenedModCommand(val choiceNames: List<String>, val command: ModCo
 /**
  * The fixes to offer for [this] fix, which is not performed yet.
  *
- * A client declaring `intellijExtensions` gets one fix that carries a [ModCommandData.LazyAction] reference, so
+ * A client declaring `lazyIntentions` gets one fix that carries a [ModCommandData.LazyAction] reference, so
  * the fix is performed only if the user asks for it. Because nothing is performed here, two things are only
  * known once the client runs the fix: whether the fix still applies, and whether its command has an LSP
- * representation. [executeLazyAction] reports both to the user as a message.
+ * representation. [executeLazyAction] reports both to the user as a message. A [ModChooseAction] has no LSP
+ * representation for a client that does not also declare `intellijExtensions`, so such a fix is reported as
+ * not supported.
  *
- * A generic LSP client cannot handle a [ModChooseAction] (see
- * https://github.com/microsoft/language-server-protocol/issues/994), and the choice tree can only be expanded
- * by performing it, so for such a client the fix is performed here and [ModCommand.toModCommandFixes] flattens
- * what it produced.
+ * A client without `lazyIntentions` gets the fix performed here, and [ModCommand.toModCommandFixes] converts
+ * what it produced. That is also the only way to offer a [ModChooseAction] to a client which cannot show one
+ * (see https://github.com/microsoft/language-server-protocol/issues/994): the choice tree can only be expanded
+ * by performing it, so it is flattened into one fix per choice.
  */
 context(server: LSServer)
 fun LazyFix.toModCommandFixes(maxFlattenedFixes: Int = DEFAULT_MAX_FLATTENED_FIXES): List<ModCommandFix> {
-    if (server.config.clientSupportsIntellijExtensions) {
+    if (server.config.clientSupportsLazyIntentions) {
         // A fix is stored per file, so one of a file that has no virtual file cannot be offered lazily.
         val virtualFile = context.file.virtualFile
         if (virtualFile == null) {
@@ -54,8 +56,9 @@ fun LazyFix.toModCommandFixes(maxFlattenedFixes: Int = DEFAULT_MAX_FLATTENED_FIX
 /**
  * The fixes to offer for [this] command, which was produced for a fix presented to the user as [name].
  *
- * This is the eager path, used for a client that does not declare `intellijExtensions` and for a command that
- * was performed for another reason. The choice tree of a [ModChooseAction] is expanded up front by
+ * This is the eager path, used for a client that does not declare `lazyIntentions` and for a command that was
+ * performed for another reason. A client declaring `intellijExtensions` shows a [ModChooseAction] itself, so
+ * the command goes to the client as it is. For the others the choice tree is expanded up front by
  * [flattenChoices] into one flat fix per terminal command, each named after the path taken to reach it, and a
  * tree wider than [maxFlattenedFixes] is dropped entirely.
  */
