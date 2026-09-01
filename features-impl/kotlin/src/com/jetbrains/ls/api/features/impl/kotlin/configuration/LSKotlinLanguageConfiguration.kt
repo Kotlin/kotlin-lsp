@@ -34,7 +34,6 @@ import com.jetbrains.ls.api.features.impl.kotlin.definitions.LSKotlinPackageDefi
 import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.compiler.LSKotlinCompilerDiagnosticsFixesCodeActionProvider
 import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.compiler.LSKotlinCompilerDiagnosticsProvider
 import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.intentions.kotlinIntentionConverter
-import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.kotlinInspectionPatcher
 import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.kotlinIntentionBlacklist
 import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.kotlinQuickFixBlacklist
 import com.jetbrains.ls.api.features.impl.kotlin.hover.LSKotlinHoverProvider
@@ -42,6 +41,7 @@ import com.jetbrains.ls.api.features.impl.kotlin.inlayHints.LSKotlinInlayHintsPr
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.impl.kotlin.move.LSJvmMoveDirectoryProvider
 import com.jetbrains.ls.api.features.impl.kotlin.move.LSMoveKotlinFileProvider
+import com.jetbrains.ls.api.features.impl.kotlin.psi.kotlinInspectionPatcher
 import com.jetbrains.ls.api.features.impl.kotlin.rename.LSJvmRenameDirectoryProvider
 import com.jetbrains.ls.api.features.impl.kotlin.rename.LSKotlinRenameProvider
 import com.jetbrains.ls.api.features.impl.kotlin.semanticTokens.LSKotlinSemanticTokensProvider
