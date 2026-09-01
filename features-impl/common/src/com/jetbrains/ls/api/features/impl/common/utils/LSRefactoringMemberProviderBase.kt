@@ -1,13 +1,10 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
-package com.jetbrains.ls.api.features.impl.common.extract
+package com.jetbrains.ls.api.features.impl.common.utils
 
 import com.intellij.openapi.application.readAction
-import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
-import com.intellij.psi.PsiElement
-import com.intellij.psi.util.startOffset
 import com.intellij.util.concurrency.annotations.RequiresReadLock
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
@@ -20,7 +17,6 @@ import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.commands.LSCommandExecutor
 import com.jetbrains.ls.api.features.commands.LspCommand
-import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.protocol.ApplyEditRequests
@@ -30,6 +26,7 @@ import com.jetbrains.lsp.protocol.CodeActionKind
 import com.jetbrains.lsp.protocol.CodeActionParams
 import com.jetbrains.lsp.protocol.Command
 import com.jetbrains.lsp.protocol.DocumentUri
+import com.jetbrains.lsp.protocol.FileChange
 import com.jetbrains.lsp.protocol.LSP
 import com.jetbrains.lsp.protocol.MessageType
 import com.jetbrains.lsp.protocol.Range
@@ -37,7 +34,6 @@ import com.jetbrains.lsp.protocol.ShowDocument
 import com.jetbrains.lsp.protocol.ShowDocumentParams
 import com.jetbrains.lsp.protocol.ShowMessageNotificationType
 import com.jetbrains.lsp.protocol.ShowMessageParams
-import com.jetbrains.lsp.protocol.TextEdit
 import com.jetbrains.lsp.protocol.WorkspaceEdit
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -49,16 +45,18 @@ import kotlinx.serialization.json.encodeToJsonElement
 import org.jetbrains.annotations.Nls
 
 /**
- * Base class for extract refactorings (variable, method, etc.) in LSP.
+ * Base class for refactorings that are using write context in LSP.
  * Expected workflow:
- * 1. Fetch available options to extract in the given range with [getChoices].
+ * 1. Fetch available options to execute in the given range with [getChoices].
  * 2. Based on the user selection in step 1, create a context with [getWriteContext].
- * 3. Execute the extraction with [doExtract].
+ * 3. Execute the action with [executeRefactoring].
+ *
+ * @see LSServer.withWriteAnalysisContext
  */
-abstract class LSExtractMemberProviderBase<Context> : LSCodeActionProvider, LSCommandDescriptorProvider {
+abstract class LSRefactoringMemberProviderBase<Context> : LSCodeActionProvider, LSCommandDescriptorProvider {
     protected abstract val commandName: String
     protected abstract val descriptorTitle: @LspCommand String
-    protected abstract val extractActionKind: CodeActionKind
+    protected abstract val actionKind: CodeActionKind
 
     override val commandDescriptors: List<LSCommandDescriptor>
         get() = listOf(
@@ -89,17 +87,17 @@ abstract class LSExtractMemberProviderBase<Context> : LSCodeActionProvider, LSCo
                                         val virtualFile = documentUri.findVirtualFile() ?: return@readAction null
                                         virtualFile to payload
                                     } ?: return@withWriteAnalysisContextAndFileSettings null
-                                    computeExtractResult(file, data)
+                                    computeRefactoringResult(file, data)
                                 }
 
-                                if (result == null || result.edits.isEmpty()) return JsonPrimitive(true)
+                                if (result == null || result.changes.isEmpty()) return JsonPrimitive(true)
 
                                 lspClient.request(
                                     ApplyEditRequests.ApplyEdit,
                                     ApplyWorkspaceEditParams(
                                         label = null,
                                         edit = WorkspaceEdit(
-                                            changes = mapOf(documentUri to result.edits)
+                                            documentChanges = result.changes
                                         ),
                                     ),
                                 )
@@ -125,7 +123,7 @@ abstract class LSExtractMemberProviderBase<Context> : LSCodeActionProvider, LSCo
         )
 
     override val providesOnlyKinds: Set<CodeActionKind>
-        get() = setOf(extractActionKind)
+        get() = setOf(actionKind)
 
     context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
@@ -151,7 +149,7 @@ abstract class LSExtractMemberProviderBase<Context> : LSCodeActionProvider, LSCo
                     emit(
                         CodeAction(
                             title = choice,
-                            kind = extractActionKind,
+                            kind = actionKind,
                             command = Command(
                                 title = choice,
                                 command = commandName,
@@ -169,7 +167,7 @@ abstract class LSExtractMemberProviderBase<Context> : LSCodeActionProvider, LSCo
                 emit(
                     CodeAction(
                         title = choicesResult.defaultTitle,
-                        kind = extractActionKind,
+                        kind = actionKind,
                         command = Command(
                             title = choicesResult.defaultTitle,
                             command = commandName,
@@ -184,31 +182,22 @@ abstract class LSExtractMemberProviderBase<Context> : LSCodeActionProvider, LSCo
         }
     }
 
-    context(server: LSServer, analysisContext: LSAnalysisContext)
-    private suspend fun computeExtractResult(file: VirtualFile, data: Payload.Data): ExtractResult {
-        val (writeContext, oldDocumentText) = readAction {
+    context(server: LSServer, analysisContext: LSAnalysisContext, handlerContext: LspHandlerContext)
+    private suspend fun computeRefactoringResult(file: VirtualFile, data: Payload.Data): RefactoringResult {
+        val writeContext = readAction {
             val document = file.findDocument() ?: return@readAction null
             val selection = data.selection.toTextRange(document)
-            getWriteContext(file, selection, data.choice) to document.text
-        } ?: return ExtractResult(emptyList(), null)
+            getWriteContext(file, selection, data.choice)
+        } ?: return RefactoringResult(emptyList(), null)
 
-        val reference = doExtract(writeContext)
-        val navigationRange = if (reference != null) readAction { TextRange(reference.startOffset, reference.startOffset) } else null
-
-        return readAction {
-            val document = file.findDocument() ?: return@readAction ExtractResult.EMPTY
-            ExtractResult(
-                computeTextEdits(oldDocumentText, document.text),
-                navigationRange?.toLspRange(document)
-            )
-        }
+        return executeRefactoring(writeContext) ?: RefactoringResult.EMPTY
     }
 
     /**
-     * Calculates the available extraction types in the given [selectedRange] and the adjusted selection.
-     * @return null if it is impossible to extract in the given position,
-     * [com.jetbrains.ls.api.features.impl.common.extract.LSExtractMemberProviderBase.ChoicesResult.Choices] when extraction is possible,
-     * or [com.jetbrains.ls.api.features.impl.common.extract.LSExtractMemberProviderBase.ChoicesResult.Error] if the extraction is impossible and
+     * Calculates the available refactoring options in the given [selectedRange] and the adjusted selection.
+     * @return null if it is impossible to do the refactoring in the given position,
+     * [LSRefactoringMemberProviderBase.ChoicesResult.Choices] when refactoring is possible,
+     * or [LSRefactoringMemberProviderBase.ChoicesResult.Error] if the refactoring is impossible and
      * the error should be displayed to the user.
      */
     @RequiresReadLock
@@ -216,8 +205,8 @@ abstract class LSExtractMemberProviderBase<Context> : LSCodeActionProvider, LSCo
     protected abstract fun getChoices(file: VirtualFile, selectedRange: TextRange): ChoicesResult?
 
     /**
-     * Creates a context for the extraction based on the given [choice] and pre-computed [selection].
-     * @return context for the extraction. It is expected that context can always be retrieved since the [choice] was shown to the user.
+     * Creates a context for the refactoring based on the given [choice] and pre-computed [selection].
+     * @return context for the refactoring. It is expected that context can always be retrieved since the [choice] was shown to the user.
      * @param selection the adjusted selection as computed by [getChoices], not the raw client range
      */
     @RequiresReadLock
@@ -225,17 +214,17 @@ abstract class LSExtractMemberProviderBase<Context> : LSCodeActionProvider, LSCo
     protected abstract fun getWriteContext(file: VirtualFile, selection: TextRange, choice: String): Context
 
     /**
-     * Executes the extraction on the given [context].
-     * After this method is called, the member is extracted and computation of the edits is performed.
+     * Executes the refactoring on the given [context].
+     * After this method is called, the member is refactored and computation of the edits is performed.
      *
      * @return the element to which the caret position should be navigated
      */
-    context(server: LSServer, analysisContext: LSAnalysisContext)
-    protected abstract suspend fun doExtract(context: Context): PsiElement?
+    context(server: LSServer, analysisContext: LSAnalysisContext, handlerContext: LspHandlerContext)
+    protected abstract suspend fun executeRefactoring(context: Context): RefactoringResult?
 
-    private data class ExtractResult(val edits: List<TextEdit>, val navigationRange: Range?) {
+    data class RefactoringResult(val changes: List<FileChange>, val navigationRange: Range?) {
         companion object {
-            val EMPTY = ExtractResult(emptyList(), null)
+            val EMPTY = RefactoringResult(emptyList(), null)
         }
     }
 
@@ -251,9 +240,5 @@ abstract class LSExtractMemberProviderBase<Context> : LSCodeActionProvider, LSCo
 
         @Serializable
         data class Error(val message: @Nls String) : Payload
-    }
-
-    companion object {
-        private val LOG = Logger.getInstance(LSExtractMemberProviderBase::class.java)
     }
 }

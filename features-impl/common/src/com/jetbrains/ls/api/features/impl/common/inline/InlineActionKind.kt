@@ -8,4 +8,9 @@ object InlineActionKind {
      * Action kind to inline variable via a hot key
      */
     val RefactorInlineVariable: CodeActionKind = CodeActionKind("refactor.inline.variable")
+
+    /**
+     * Action kind to inline method via a hot key
+     */
+    val RefactorInlineMethod: CodeActionKind = CodeActionKind("refactor.inline.method")
 }
