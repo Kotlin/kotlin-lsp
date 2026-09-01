@@ -29,7 +29,7 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
                 for (contributor in customizer.getContributors()) {
                     launch {
                         try {
-                            lsContributeWorkspaceSymbols(project, customizer, contributor, params, channel::send)
+                            lsContributeWorkspaceSymbols(project, customizer, contributor, params).collect(::send)
                         } catch (e: CancellationException) {
                             throw e
                         } catch (e: Exception) {

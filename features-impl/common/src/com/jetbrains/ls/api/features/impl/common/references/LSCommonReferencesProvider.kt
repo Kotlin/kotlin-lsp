@@ -20,7 +20,7 @@ class LSCommonReferencesProvider(
     context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getReferences(params: ReferenceParams): Flow<Location> = channelFlow {
         server.withAnalysisContext {
-            lsReferences(project, params, targetKinds, channel::send)
+            lsReferences(project, params, targetKinds).collect(::send)
         }
     }
 }
