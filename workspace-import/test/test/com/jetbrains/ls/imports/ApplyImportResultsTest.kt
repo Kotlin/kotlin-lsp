@@ -56,6 +56,24 @@ class ApplyImportResultsTest {
         assertEquals(0, storage.entities<LSImportedFoldersDataEntity>().count())
     }
 
+    /**
+     * A phased importer publishes a snapshot (the JPS one does, because it keeps its builder for the next phase),
+     * and the same snapshot is re-applied at every later commit of the cycle. Both must land in the model: a merge
+     * that replays a change log would add nothing from a snapshot, and one that consumes the model would add it
+     * only once.
+     */
+    @Test
+    fun `a snapshot model is imported, and re-importing it changes nothing`() {
+        val model = (importedModel(folderA, "a") as MutableEntityStorage).toSnapshot()
+
+        val storage = importInto(MutableEntityStorage.create(), folderA to model)
+        assertEquals(setOf("a"), storage.moduleNames())
+
+        importInto(storage, folderA to model)
+        assertEquals(setOf("a"), storage.moduleNames())
+        assertEquals(setOf(folderA.url), storage.entities<ContentRootEntity>().map { it.url.url }.toSet())
+    }
+
     @Test
     fun `all targets failing keeps the whole previously imported model`() {
         val storage = importInto(
