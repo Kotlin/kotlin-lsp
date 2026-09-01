@@ -49,7 +49,7 @@ import com.jetbrains.ls.api.features.impl.kotlin.signatureHelp.LSKotlinSignature
 import com.jetbrains.ls.api.features.impl.kotlin.symbols.LSKotlinDocumentSymbolProvider
 import com.jetbrains.ls.api.features.impl.kotlin.symbols.LSKotlinWorkspaceSymbolProvider
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
-import com.jetbrains.ls.snapshot.api.impl.core.AnalyzerContextKind
+import com.jetbrains.analyzer.api.AnalyzerContextKind
 import com.jetbrains.ls.snapshot.api.impl.core.LSConfigurationData
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceComponent
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceEvent
@@ -135,7 +135,7 @@ private object KotlinWorkspaceComponent : WorkspaceComponent<KotlinWorkspaceStat
         state: KotlinWorkspaceState,
         contextKind: AnalyzerContextKind,
     ) {
-        if (contextKind is AnalyzerContextKind.INDEXING) {
+        if (contextKind is AnalyzerContextKind.Indexing) {
             builder.initKotlinIndexingContainer(contextKind.fileSystems ?: AnalyzerFileSystems.new())
         }
     }

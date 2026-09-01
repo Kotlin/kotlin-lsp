@@ -10,10 +10,10 @@ import com.jetbrains.analyzer.bootstrap.AnalyzerContext
 import com.jetbrains.analyzer.kotlin.invalidate
 import com.jetbrains.analyzer.kotlin.registerLLFirSessionServices
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceComponent
-import com.jetbrains.ls.snapshot.api.impl.core.AnalyzerContextKind
+import com.jetbrains.analyzer.api.AnalyzerContextKind
 import com.jetbrains.ls.snapshot.api.impl.core.LSConfigurationData
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceEvent
-import com.jetbrains.ls.snapshot.api.impl.core.rocks.toList
+import com.jetbrains.analyzer.filesystem.toList
 import org.jetbrains.kotlin.analysis.api.KaImplementationDetail
 import org.jetbrains.kotlin.analysis.api.KaPlatformInterface
 import org.jetbrains.kotlin.analysis.low.level.api.fir.LLFirInternals
@@ -57,13 +57,13 @@ internal object LLFirSessionCacheStorageComponent : WorkspaceComponent<LLFirSess
         contextKind: AnalyzerContextKind,
     ) {
         val storage = when (contextKind) {
-            AnalyzerContextKind.WRITE -> LLFirSessionCacheStorage.createEmpty {
+            is AnalyzerContextKind.Isolated -> LLFirSessionCacheStorage.createEmpty {
                 @Suppress("INVISIBLE_REFERENCE")
                 org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.cache.LLFirSessionCleaner(it.requestedDisposableOrNull)
             }
             else -> state
         }
-        builder.registerLLFirSessionServices(project, storage, contextKind == AnalyzerContextKind.WRITE)
+        builder.registerLLFirSessionServices(project, storage, contextKind is AnalyzerContextKind.Isolated)
     }
 
     private fun newStorage(): LLFirSessionCacheStorage =
