@@ -1,0 +1,56 @@
+{
+    "modules": [
+        {
+            "name": "install-plugin-configured",
+            "coordinate": "com.example:install-plugin-configured:1.0",
+            "dependencies": [
+                {
+                    "type": "inheritedSdk"
+                },
+                {
+                    "type": "moduleSource"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/src/main/java",
+                            "type": "java-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/main/resources",
+                            "type": "java-resource"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/test/java",
+                            "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/src/test/resources",
+                            "type": "java-test-resource"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
+        }
+    ],
+    "javaSettings": [
+        {
+            "module": "install-plugin-configured",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/target/classes"
+            ],
+            "compilerOutputsForTests": [
+                "<WORKSPACE>/target/test-classes"
+            ],
+            "languageLevelId": "JDK_17",
+            "manifestAttributes": {}
+        }
+    ],
+    "externalSystem": "MAVEN"
+}

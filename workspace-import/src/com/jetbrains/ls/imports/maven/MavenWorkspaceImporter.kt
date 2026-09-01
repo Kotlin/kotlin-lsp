@@ -257,6 +257,19 @@ object MavenWorkspaceImporter : WorkspaceImporter {
 
     }
 
+    /**
+     * Installs the import plugin into the local repository, so the model goals can run it.
+     *
+     * The goal runs inside the project, because Maven reads `.mvn/maven.config` and `.mvn/settings.xml`
+     * from the base directory of the `-f` pom, and those carry the mirror and the local repository. The
+     * project's own pom is used first, so the step resolves the same maven-install-plugin version the
+     * project resolves anyway, and an air-gapped build needs nothing beyond the artifacts the project needs.
+     *
+     * A project may also configure maven-install-plugin itself, and that configuration then applies to this
+     * goal: ThingsBoard sets `<file>` to a `.deb` path that no build produces, which fails the step (CLI-128).
+     * The retry runs in an empty stub project in the same directory: no project configuration applies, the
+     * base directory is still the project's, and it costs a second Maven start only where the first fails.
+     */
     private suspend fun installMavenPlugin(
         execPath: Path?,
         javaHome: String?,
@@ -279,22 +292,20 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         val pathPrepend = System.getProperty(LSP_MAVEN_PROJECT_PATH_PREPEND_PROPERTY)
         try {
             mavenPluginPomFile.writeText(pluginPom)
-            val command = listOf(
-                execPath.toString(),
-                "install:install-file",
-                // Even a requiresProject=false goal parses a pom present in the working directory; a
-                // project configured with a non-standard build file often has a broken conventional
-                // pom.xml next to it, so point the install step at the working build file too.
-                "-f",
-                pomFile.toString(),
-                "-Dfile=$pluginJar",
-                "-DpomFile=$mavenPluginPomFile",
-                "-DgroupId=com.jetbrains.ls",
-                "-DartifactId=imports-maven-plugin",
-                "-Dversion=0.99",
-                "-Dpackaging=maven-plugin"
+            suspend fun install(projectPom: Path) = ProcessBuilder(
+                listOf(
+                    execPath.toString(),
+                    "install:install-file",
+                    "-f",
+                    projectPom.toString(),
+                    "-Dfile=$pluginJar",
+                    "-DpomFile=$mavenPluginPomFile",
+                    "-DgroupId=com.jetbrains.ls",
+                    "-DartifactId=imports-maven-plugin",
+                    "-Dversion=0.99",
+                    "-Dpackaging=maven-plugin"
+                ) + additionalParams
             )
-            ProcessBuilder(command + additionalParams)
                 .apply {
                     // ponytail: start from a clean env so the analyzer's own vars (e.g. JDK9+ JAVA_TOOL_OPTIONS=-Xlog) don't leak into a possibly-JDK8 Maven JVM.
                     environment().clear()
@@ -315,10 +326,36 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                 }
                 .directory(projectDirectory.toFile())
                 .runWithErrorReporting("Maven", progress)
+
+            try {
+                install(pomFile)
+            }
+            catch (e: WorkspaceImportException) {
+                LOG.info("Installing the Maven plugin failed with the project's pom, retrying in a stub project", e)
+                val stubProjectPomFile = createTempFile(projectDirectory, "mavenPluginInstall-pom", ".xml")
+                try {
+                    stubProjectPomFile.writeText(STUB_PROJECT_POM)
+                    install(stubProjectPomFile)
+                } finally {
+                    stubProjectPomFile.delete()
+                }
+            }
         } finally {
             mavenPluginPomFile.delete()
         }
     }
+
+    /** The empty project the install step retries in. `pom` packaging binds the fewest default plugins. */
+    private val STUB_PROJECT_POM: String = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <project xmlns="http://maven.apache.org/POM/4.0.0">
+          <modelVersion>4.0.0</modelVersion>
+          <groupId>com.jetbrains.ls</groupId>
+          <artifactId>imports-maven-plugin-install</artifactId>
+          <version>0.99</version>
+          <packaging>pom</packaging>
+        </project>
+    """.trimIndent()
 
     private fun prependToPath(environment: MutableMap<String, String>, path: String) {
         val pathKey = environment.keys.firstOrNull { it.equals("PATH", ignoreCase = true) } ?: "PATH"

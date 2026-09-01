@@ -25,6 +25,10 @@ class MavenProjectImportTest : AbstractProjectImportTestCase() {
         assertTrue(stamped.isNotEmpty() && stamped.all { it?.endsWith("dev_pom.xml") == true }, stamped.toString())
     }
 
+    /** The project's own `maven-install-plugin` configuration must not break the plugin install step. */
+    @Test
+    fun mavenInstallPluginConfigured() = doMavenTest("MavenInstallPluginConfigured")
+
     @Test
     fun mavenAnnotationProcessing() = doMavenTest("MavenAnnotationProcessing")
 
