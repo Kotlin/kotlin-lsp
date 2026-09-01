@@ -31,7 +31,9 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaDeclarationSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaPackageSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaSymbolOrigin
+import org.jetbrains.kotlin.analysis.api.symbols.containingModule
 import org.jetbrains.kotlin.analysis.api.symbols.findPackage
+import org.jetbrains.kotlin.analysis.api.symbols.pointers.restoreSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.sourcePsiSafe
 import org.jetbrains.kotlin.analysis.api.symbols.symbol
 import org.jetbrains.kotlin.idea.references.mainReference
@@ -62,7 +64,18 @@ internal object LSKotlinHoverProvider : LSHoverProviderBase() {
                 is KtCallElement -> target.resolveSuccessfulSymbol()
                 else -> null
             } ?: return null
-            getMarkdownContent(symbol)
+
+            val symbolPointer = symbol.createPointer()
+
+            /**
+             * We have to analyze `symbol` in its own `containingModule`'s session
+             * due to a bug in `getExpectsForActual` (see KT-89021)
+             */
+            analyze(symbol.containingModule) {
+                val restoredSymbol = symbolPointer.restoreSymbol() ?: return null
+
+                getMarkdownContent(restoredSymbol)
+            }
         }
     }
 
