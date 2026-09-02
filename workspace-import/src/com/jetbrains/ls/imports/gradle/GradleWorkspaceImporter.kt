@@ -168,6 +168,9 @@ object GradleWorkspaceImporter : WorkspaceImporter {
             .addInitScripts(initScripts)
             .forTasks(syncTasks)
 
+        if (parameters.options.offline) {
+            executer.addArguments("--offline")
+        }
         if (javaHome != null) {
             executer.setJavaHome(File(javaHome))
         }

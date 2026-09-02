@@ -144,7 +144,9 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
             }
 
             val storage = MutableEntityStorage.create()
-            importJpsModel(storage, projectDirectory, virtualFileUrlManager, model, macroExpandMap) { depName ->
+            importJpsModel(
+                storage, projectDirectory, virtualFileUrlManager, model, macroExpandMap, parameters.options.offline,
+            ) { depName ->
                 trySend(WorkspaceImporter.ImportEvent.UnresolvedDependency(depName))
             }
             send(WorkspaceImporter.ImportEvent.UpdateWorkspaceModel(storage.toSnapshot()))
@@ -182,6 +184,7 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
         virtualFileUrlManager: VirtualFileUrlManager,
         model: JpsModel,
         macroExpandMap: ExpandMacroToPathMap,
+        offline: Boolean,
         onUnresolvedDependency: (String) -> Unit,
     ) {
         val entitySource = WorkspaceEntitySource(projectDirectory.toIntellijUri(virtualFileUrlManager))
@@ -200,7 +203,8 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
                     is JpsLibraryDependency -> {
                         val library = dependency.library ?: return@mapNotNull null
                         if (libs.add(library.name)) {
-                            val roots = resolveLibraryRoots(library, virtualFileUrlManager, onUnresolvedDependency, repositoryManager)
+                            val roots =
+                                resolveLibraryRoots(library, virtualFileUrlManager, onUnresolvedDependency, repositoryManager, offline)
                                 ?: return@mapNotNull null
                             val libEntity = LibraryEntity(
                                 name = library.name,
@@ -469,16 +473,19 @@ private fun JpsLibraryType<*>.toSdkType(): String = when (this) {
  *
  * Returns `null` when some compiled root still cannot be resolved, in which case the caller skips the dependency and the
  * missing roots are reported as unresolved.
+ *
+ * With [offline] the download is skipped, so a missing artifact stays unresolved.
  */
 private fun resolveLibraryRoots(
     library: JpsLibrary,
     virtualFileUrlManager: VirtualFileUrlManager,
     onUnresolvedDependency: (String) -> Unit,
     repositoryManager: Lazy<ArtifactRepositoryManager>,
+    offline: Boolean,
 ): List<LibraryRoot>? {
     val compiledUrls = library.getRootUrls(JpsOrderRootType.COMPILED)
 
-    if (compiledUrls.any { !Path.of(JpsPathUtil.urlToPath(it)).exists() }) {
+    if (!offline && compiledUrls.any { !Path.of(JpsPathUtil.urlToPath(it)).exists() }) {
         library.mavenRepositoryDescriptor()?.let { descriptor ->
             downloadFromMavenRepository(repositoryManager.value, descriptor)
         }

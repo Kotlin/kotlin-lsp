@@ -228,6 +228,8 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         val pathPrepend = System.getProperty(LSP_MAVEN_PROJECT_PATH_PREPEND_PROPERTY)
         // Per-project `system-properties` are forwarded to the build as `-Dkey=value`.
         val extraSystemProps = options.systemProperties.map { (key, value) -> "-D$key=$value" }
+        // `-o` keeps the build in the local repository, so the import never reaches the network.
+        val offlineParams = if (options.offline) listOf("-o") else emptyList()
         val workspaceJsonFile = createTempFile("workspace", ".json")
         try {
             val command = listOf(
@@ -243,7 +245,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                 "-Dair.check.skip-enforcer=true"
 
             )
-            ProcessBuilder(command + extraSystemProps + additionalParams)
+            ProcessBuilder(command + extraSystemProps + offlineParams + additionalParams)
                 .apply {
                     // ponytail: start from a clean env so the analyzer's own vars (e.g. JDK9+ JAVA_TOOL_OPTIONS=-Xlog) don't leak into a possibly-JDK8 Maven JVM.
                     environment().clear()
