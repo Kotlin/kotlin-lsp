@@ -37,6 +37,7 @@ import com.jetbrains.ls.api.features.utils.isSource
 import com.jetbrains.ls.snapshot.api.impl.core.CompletionItemId
 import com.jetbrains.ls.snapshot.api.impl.core.CompletionItemWithObject
 import com.jetbrains.ls.snapshot.api.impl.core.LatestCompletionSessionComponent
+import com.jetbrains.ls.api.features.impl.common.window.showDocumentIfSupported
 import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.protocol.ApplyEditRequests
 import com.jetbrains.lsp.protocol.ApplyWorkspaceEditParams
@@ -52,7 +53,6 @@ import com.jetbrains.lsp.protocol.MarkupKindType
 import com.jetbrains.lsp.protocol.MessageType
 import com.jetbrains.lsp.protocol.Position
 import com.jetbrains.lsp.protocol.Range
-import com.jetbrains.lsp.protocol.ShowDocument
 import com.jetbrains.lsp.protocol.ShowDocumentParams
 import com.jetbrains.lsp.protocol.ShowMessageNotificationType
 import com.jetbrains.lsp.protocol.ShowMessageParams
@@ -136,8 +136,7 @@ class LSCompletionProviderHelper(
                                         )
                                     )
                                 )
-                                lspClient.request(
-                                    ShowDocument,
+                                lspClient.showDocumentIfSupported(
                                     ShowDocumentParams(
                                         uri = completion.params.textDocument.uri.uri,
                                         external = false,

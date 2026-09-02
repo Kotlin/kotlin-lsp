@@ -33,6 +33,7 @@ import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.features.impl.common.modcommands.LazyFix
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCommand
 import com.jetbrains.ls.api.features.impl.common.modcommands.registerLazyFixes
+import com.jetbrains.ls.api.features.impl.common.window.showDocumentIfSupported
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
 import com.jetbrains.lsp.implementation.LspClient
 import com.jetbrains.lsp.protocol.ApplyEditRequests.ApplyEdit
@@ -45,7 +46,6 @@ import com.jetbrains.lsp.protocol.MessageType
 import com.jetbrains.lsp.protocol.NotificationType
 import com.jetbrains.lsp.protocol.Range
 import com.jetbrains.lsp.protocol.RenameFile
-import com.jetbrains.lsp.protocol.ShowDocument
 import com.jetbrains.lsp.protocol.ShowDocumentParams
 import com.jetbrains.lsp.protocol.ShowMessageRequestParams
 import com.jetbrains.lsp.protocol.TextDocumentEdit
@@ -350,7 +350,7 @@ sealed class ModCommandData {
     }
 }
 
-context(_: LSAnalysisContext)
+context(_: LSServer, _: LSAnalysisContext)
 suspend fun executeCommand(command: ModCommandData, client: LspClient, changedFiles: MutableMap<String, String> = mutableMapOf()) {
     when (command) {
         is ModCommandData.Nothing -> {}
@@ -468,9 +468,8 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient, changedFi
                 }
             }
 
-            client.request(
-                requestType = ShowDocument,
-                params = ShowDocumentParams(
+            client.showDocumentIfSupported(
+                ShowDocumentParams(
                     uri = command.fileUrl.intellijUriToLspUri(),
                     external = false,
                     takeFocus = selection != null,

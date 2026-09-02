@@ -17,6 +17,7 @@ import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.commands.LSCommandExecutor
 import com.jetbrains.ls.api.features.commands.LspCommand
+import com.jetbrains.ls.api.features.impl.common.window.showDocumentIfSupported
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.protocol.ApplyEditRequests
@@ -30,7 +31,6 @@ import com.jetbrains.lsp.protocol.FileChange
 import com.jetbrains.lsp.protocol.LSP
 import com.jetbrains.lsp.protocol.MessageType
 import com.jetbrains.lsp.protocol.Range
-import com.jetbrains.lsp.protocol.ShowDocument
 import com.jetbrains.lsp.protocol.ShowDocumentParams
 import com.jetbrains.lsp.protocol.ShowMessageNotificationType
 import com.jetbrains.lsp.protocol.ShowMessageParams
@@ -103,9 +103,8 @@ abstract class LSRefactoringMemberProviderBase<Context> : LSCodeActionProvider, 
                                 )
 
                                 if (result.navigationRange != null) {
-                                    lspClient.request(
-                                        requestType = ShowDocument,
-                                        params = ShowDocumentParams(
+                                    lspClient.showDocumentIfSupported(
+                                        ShowDocumentParams(
                                             uri = documentUri.uri,
                                             external = false,
                                             takeFocus = true,
