@@ -47,6 +47,7 @@ import com.intellij.util.lang.JavaVersion
 import com.jetbrains.ls.imports.api.ConflictAverseImporter
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
+import com.jetbrains.ls.imports.api.WorkspaceImportOptions
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.api.applyChangesWithDeduplication
@@ -65,6 +66,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import org.eclipse.aether.repository.RemoteRepository
 import org.jdom.Element
+import org.jetbrains.idea.maven.aether.ArtifactKind
 import org.jetbrains.idea.maven.aether.ArtifactRepositoryManager
 import org.jetbrains.idea.maven.aether.ProgressConsumer
 import org.jetbrains.jps.model.JpsElementFactory
@@ -145,7 +147,7 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
 
             val storage = MutableEntityStorage.create()
             importJpsModel(
-                storage, projectDirectory, virtualFileUrlManager, model, macroExpandMap, parameters.options.offline,
+                storage, projectDirectory, virtualFileUrlManager, model, macroExpandMap, parameters.options,
             ) { depName ->
                 trySend(WorkspaceImporter.ImportEvent.UnresolvedDependency(depName))
             }
@@ -184,7 +186,7 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
         virtualFileUrlManager: VirtualFileUrlManager,
         model: JpsModel,
         macroExpandMap: ExpandMacroToPathMap,
-        offline: Boolean,
+        options: WorkspaceImportOptions,
         onUnresolvedDependency: (String) -> Unit,
     ) {
         val entitySource = WorkspaceEntitySource(projectDirectory.toIntellijUri(virtualFileUrlManager))
@@ -204,7 +206,7 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
                         val library = dependency.library ?: return@mapNotNull null
                         if (libs.add(library.name)) {
                             val roots =
-                                resolveLibraryRoots(library, virtualFileUrlManager, onUnresolvedDependency, repositoryManager, offline)
+                                resolveLibraryRoots(library, virtualFileUrlManager, onUnresolvedDependency, repositoryManager, options)
                                 ?: return@mapNotNull null
                             val libEntity = LibraryEntity(
                                 name = library.name,
@@ -474,20 +476,29 @@ private fun JpsLibraryType<*>.toSdkType(): String = when (this) {
  * Returns `null` when some compiled root still cannot be resolved, in which case the caller skips the dependency and the
  * missing roots are reported as unresolved.
  *
- * With [offline] the download is skipped, so a missing artifact stays unresolved.
+ * With [WorkspaceImportOptions.offline] the download is skipped, so a missing artifact stays unresolved. With
+ * [WorkspaceImportOptions.downloadAdditionalArtifacts] the `sources` classifier is downloaded too. The JPS model has
+ * no javadoc root here, so no javadoc is downloaded.
  */
 private fun resolveLibraryRoots(
     library: JpsLibrary,
     virtualFileUrlManager: VirtualFileUrlManager,
     onUnresolvedDependency: (String) -> Unit,
     repositoryManager: Lazy<ArtifactRepositoryManager>,
-    offline: Boolean,
+    options: WorkspaceImportOptions,
 ): List<LibraryRoot>? {
     val compiledUrls = library.getRootUrls(JpsOrderRootType.COMPILED)
+    val sourceUrls = library.getRootUrls(JpsOrderRootType.SOURCES)
 
-    if (!offline && compiledUrls.any { !Path.of(JpsPathUtil.urlToPath(it)).exists() }) {
+    fun missing(urls: List<String>) = urls.any { !Path.of(JpsPathUtil.urlToPath(it)).exists() }
+
+    val withSources = options.downloadAdditionalArtifacts
+    if (!options.offline && (missing(compiledUrls) || withSources && missing(sourceUrls))) {
         library.mavenRepositoryDescriptor()?.let { descriptor ->
-            downloadFromMavenRepository(repositoryManager.value, descriptor)
+            val kinds =
+                if (withSources) setOf(ArtifactKind.ARTIFACT, ArtifactKind.SOURCES)
+                else setOf(ArtifactKind.ARTIFACT)
+            downloadFromMavenRepository(repositoryManager.value, descriptor, kinds)
         }
     }
 
@@ -501,7 +512,7 @@ private fun resolveLibraryRoots(
         compiledUrls.mapTo(this) { url ->
             LibraryRoot(virtualFileUrlManager.getOrCreateFromUrl(url), LibraryRootTypeId.COMPILED)
         }
-        library.getRootUrls(JpsOrderRootType.SOURCES).mapTo(this) { url ->
+        sourceUrls.mapTo(this) { url ->
             LibraryRoot(virtualFileUrlManager.getOrCreateFromUrl(url), LibraryRootTypeId.SOURCES)
         }
     }
@@ -519,13 +530,15 @@ private fun JpsLibrary.mavenRepositoryDescriptor(): JpsMavenRepositoryLibraryDes
 private fun downloadFromMavenRepository(
     repositoryManager: ArtifactRepositoryManager,
     descriptor: JpsMavenRepositoryLibraryDescriptor,
+    kinds: Set<ArtifactKind>,
 ) {
     try {
-        LOG.info("Library is missing locally, downloading from Maven repositories: ${descriptor.mavenId}")
-        repositoryManager.resolveDependency(
+        LOG.info("Library is missing locally, downloading $kinds from Maven repositories: ${descriptor.mavenId}")
+        repositoryManager.resolveDependencyAsArtifact(
             descriptor.groupId,
             descriptor.artifactId,
             descriptor.version,
+            kinds,
             descriptor.isIncludeTransitiveDependencies,
             descriptor.excludedDependencies,
         )

@@ -119,7 +119,10 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         LOG.info("Using Maven: $execPath (JAVA_HOME=${javaHome ?: "unspecified"})")
 
 
-        val offlineOpts = if (System.getProperty(LSP_MAVEN_PROJECT_OFFLINE_PROPERTY).toBoolean()) listOf("-o") else emptyList()
+        // `-o` keeps the build in the local repository, so the import never reaches the network.
+        val offlineOpts =
+            if (options.offline || System.getProperty(LSP_MAVEN_PROJECT_OFFLINE_PROPERTY).toBoolean()) listOf("-o")
+            else emptyList()
         send(ImportEvent.ProgressStatus("Installing Maven plugin..."))
         installMavenPlugin(execPath, javaHome, projectDirectory, pomFile, channel, offlineOpts, options)
 
@@ -228,8 +231,6 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         val pathPrepend = System.getProperty(LSP_MAVEN_PROJECT_PATH_PREPEND_PROPERTY)
         // Per-project `system-properties` are forwarded to the build as `-Dkey=value`.
         val extraSystemProps = options.systemProperties.map { (key, value) -> "-D$key=$value" }
-        // `-o` keeps the build in the local repository, so the import never reaches the network.
-        val offlineParams = if (options.offline) listOf("-o") else emptyList()
         val workspaceJsonFile = createTempFile("workspace", ".json")
         try {
             val command = listOf(
@@ -238,6 +239,8 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                 "-f",
                 pomFile.toString(),
                 "-DoutputFile=${workspaceJsonFile.toAbsolutePath()}",
+                // Read by the `model-with-deps` goal: false skips the `sources` and `javadoc` classifiers.
+                "-DdownloadAdditionalArtifacts=${options.downloadAdditionalArtifacts}",
                 "-Denforcer.skip=true",
                 "-DskipTests=true",
                 "-Dmaven.enforcer.skip=true",
@@ -245,7 +248,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                 "-Dair.check.skip-enforcer=true"
 
             )
-            ProcessBuilder(command + extraSystemProps + offlineParams + additionalParams)
+            ProcessBuilder(command + extraSystemProps + additionalParams)
                 .apply {
                     // ponytail: start from a clean env so the analyzer's own vars (e.g. JDK9+ JAVA_TOOL_OPTIONS=-Xlog) don't leak into a possibly-JDK8 Maven JVM.
                     environment().clear()

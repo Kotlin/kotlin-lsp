@@ -159,7 +159,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         javaHome: String?,
         syncTasks: List<String>? = null,
     ): BuildActionExecuter<ProjectMetadata> {
-        val syncSettings = GradleSyncSettings(downloadLibrarySources = true)
+        val syncSettings = GradleSyncSettings(downloadLibrarySources = parameters.options.downloadAdditionalArtifacts)
         val executer = connection.action(ProjectMetadataBuilder(syncSettings))
             .configureLogging(events)
             .prepareForExecution()

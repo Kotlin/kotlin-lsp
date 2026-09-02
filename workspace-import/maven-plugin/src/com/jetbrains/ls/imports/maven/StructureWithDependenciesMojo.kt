@@ -29,10 +29,17 @@ class StructureWithDependenciesMojo : AbstractMojo() {
 
     private var outputFile: String? = null
 
+    /** `ConfiguredProject.downloadAdditionalArtifacts`; unset means true, as in the model. */
+    private var downloadAdditionalArtifacts: String? = null
+
     @Suppress("IO_FILE_USAGE")
     override fun execute() {
         val outputFile = this.outputFile ?: throw MojoFailureException("Output file should be defined")
-        val data = project.toWorkspaceData(repositorySystem, repositorySystemSession)
+        val data = project.toWorkspaceData(
+            repositorySystem,
+            repositorySystemSession,
+            downloadAdditionalArtifacts?.toBoolean() ?: true,
+        )
         printJsonDataIntoFile(data, File(outputFile))
 
     }

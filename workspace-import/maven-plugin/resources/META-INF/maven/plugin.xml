@@ -26,6 +26,12 @@
           <editable>true</editable>
         </parameter>
         <parameter>
+          <name>downloadAdditionalArtifacts</name>
+          <type>java.lang.String</type>
+          <required>false</required>
+          <editable>true</editable>
+        </parameter>
+        <parameter>
           <name>repositorySystemSession</name>
           <type>org.eclipse.aether.RepositorySystemSession</type>
           <required>true</required>
@@ -40,6 +46,7 @@
       </parameters>
       <configuration>
         <outputFile implementation="java.lang.String">${outputFile}</outputFile>
+        <downloadAdditionalArtifacts implementation="java.lang.String">${downloadAdditionalArtifacts}</downloadAdditionalArtifacts>
         <repositorySystemSession implementation="org.eclipse.aether.RepositorySystemSession" default-value="${repositorySystemSession}"/>
         <project implementation="org.apache.maven.project.MavenProject" default-value="${project}"/>
       </configuration>

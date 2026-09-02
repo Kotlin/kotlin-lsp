@@ -37,7 +37,9 @@ private val IMPORTED_CLASSIFIERS = setOf("client")
 
 fun MavenProject.toWorkspaceData(
     repositorySystem: RepositorySystem,
-    repositorySystemSession: RepositorySystemSession
+    repositorySystemSession: RepositorySystemSession,
+    /** When false, only the binary artifacts are resolved: no `sources` and no `javadoc` classifier. */
+    downloadAdditionalArtifacts: Boolean = true,
 ): WorkspaceData {
     val modules = getAllModules(this)
 
@@ -46,7 +48,9 @@ fun MavenProject.toWorkspaceData(
     }
     val modulesData = modules.map { it.toModuleData(kotlinSettings) }
 
-    val libraries = collectLibraries(modules, repositorySystem, repositorySystemSession, remoteProjectRepositories)
+    val libraries = collectLibraries(
+        modules, repositorySystem, repositorySystemSession, remoteProjectRepositories, downloadAdditionalArtifacts,
+    )
 
     return WorkspaceData(
         modules = modulesData,
@@ -421,6 +425,7 @@ private fun collectLibraries(
     repositorySystem: RepositorySystem,
     repositorySystemSession: RepositorySystemSession,
     remoteRepositories: List<RemoteRepository>,
+    downloadAdditionalArtifacts: Boolean,
 ): List<LibraryData> {
 
     val allArtifacts = modulesData
@@ -444,8 +449,8 @@ private fun collectLibraries(
         remoteRepositories,
         repositorySystem,
         repositorySystemSession,
-        true,
-        true
+        downloadAdditionalArtifacts,
+        downloadAdditionalArtifacts
     )
 
     val libraries = allArtifacts.mapNotNull { artifact ->
