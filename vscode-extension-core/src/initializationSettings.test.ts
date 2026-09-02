@@ -132,6 +132,29 @@ describe('sanitizeConfiguredProjects', () => {
     ]);
   });
 
+  it('drops entries whose profiles or flags have the wrong shape', () => {
+    const { value, problems } = sanitizeConfiguredProjects(PROJECTS, [
+      { ...validProject, profiles: 'dev' },
+      { ...validProject, profiles: ['dev', 1] },
+      { ...validProject, offline: 'yes' },
+      { ...validProject, downloadAdditionalArtifacts: 1 },
+      { ...validProject, profiles: ['dev'], offline: true, downloadAdditionalArtifacts: false },
+    ]);
+
+    assert.deepEqual(value, [
+      { ...validProject, profiles: ['dev'], offline: true, downloadAdditionalArtifacts: false },
+    ]);
+    assert.deepEqual(problems, [
+      problem(PROJECTS, '`intellij.projects` entry #0 "profiles" must be an array of strings'),
+      problem(PROJECTS, '`intellij.projects` entry #1 "profiles" must be an array of strings'),
+      problem(PROJECTS, '`intellij.projects` entry #2 "offline" must be a boolean'),
+      problem(
+        PROJECTS,
+        '`intellij.projects` entry #3 "downloadAdditionalArtifacts" must be a boolean',
+      ),
+    ]);
+  });
+
   it('reports a non-array setting instead of forwarding it', () => {
     assert.deepEqual(sanitizeConfiguredProjects(PROJECTS, validProject), {
       value: [],

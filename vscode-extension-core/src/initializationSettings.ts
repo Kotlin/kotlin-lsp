@@ -27,6 +27,12 @@ export interface ConfiguredProject {
   'java-home'?: string;
   /** Bazel only: path to the Bazel project file, relative to the workspace root. */
   'project-path'?: string;
+  /** Maven only: build profiles to activate during the import. */
+  profiles?: string[];
+  /** Whether the import may download the sources and the documentation of the dependencies. Default: true. */
+  downloadAdditionalArtifacts?: boolean;
+  /** Whether the import uses only the already downloaded artifacts. Default: false. */
+  offline?: boolean;
 }
 
 export interface BuiltinInitializationOptions {
@@ -131,6 +137,7 @@ const PROJECT_TYPES = new Set([
 ]);
 const OPTIONAL_STRING_FIELDS = ['java-home', 'project-path'] as const;
 const OPTIONAL_STRING_MAP_FIELDS = ['env', 'system-properties'] as const;
+const OPTIONAL_BOOLEAN_FIELDS = ['downloadAdditionalArtifacts', 'offline'] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -171,6 +178,17 @@ function projectRejectionReason(
         kind: 'invalid',
       };
     }
+  }
+  for (const field of OPTIONAL_BOOLEAN_FIELDS) {
+    if (entry[field] !== undefined && typeof entry[field] !== 'boolean') {
+      return { reason: `"${field}" must be a boolean`, kind: 'invalid' };
+    }
+  }
+  if (
+    entry.profiles !== undefined &&
+    (!Array.isArray(entry.profiles) || entry.profiles.some((it) => typeof it !== 'string'))
+  ) {
+    return { reason: '"profiles" must be an array of strings', kind: 'invalid' };
   }
   return undefined;
 }

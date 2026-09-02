@@ -537,6 +537,16 @@
                 "path": {
                   "type": "string",
                   "markdownDescription": "URI of the project workspace root or build file. For example: `file:///proj-dir/pom.xml`."
+                },
+                "downloadAdditionalArtifacts": {
+                  "type": "boolean",
+                  "default": true,
+                  "description": "Whether project import may download sources and documentation of dependencies"
+                },
+                "offline": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "Whether project import uses only already downloaded artifacts"
                 }
               },
               "allOf": [
@@ -570,6 +580,13 @@
                       "java-home": {
                         "type": "string",
                         "description": "Path to the JDK used to run Maven project import"
+                      },
+                      "profiles": {
+                        "type": "array",
+                        "description": "Maven only: build profiles to activate during project import",
+                        "items": {
+                          "type": "string"
+                        }
                       }
                     }
                   },
@@ -577,7 +594,8 @@
                     "properties": {
                       "env": false,
                       "system-properties": false,
-                      "java-home": false
+                      "java-home": false,
+                      "profiles": false
                     }
                   }
                 },
