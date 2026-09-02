@@ -27,6 +27,7 @@ import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionD
 import com.jetbrains.ls.api.features.impl.common.modcommands.LazyFix
 import com.jetbrains.ls.api.features.impl.common.modcommands.toLazyFix
 import com.jetbrains.ls.api.features.impl.common.modcommands.toModCommandFixes
+import com.jetbrains.ls.api.features.impl.common.utils.maybeStripHtml
 
 private val LOG = logger<LSInspectionManager>()
 
@@ -132,7 +133,7 @@ internal class LSInspectionManager(
                 return null
             }
 
-            return LazyFix.OfQuickFix(fix.name, fix, problemDescriptor, context)
+            return LazyFix.OfQuickFix(fix.name.maybeStripHtml(), fix, problemDescriptor, context)
         }
 
         if (fix is IntentionAction) {

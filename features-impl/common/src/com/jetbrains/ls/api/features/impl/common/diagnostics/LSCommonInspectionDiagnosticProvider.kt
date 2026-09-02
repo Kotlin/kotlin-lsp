@@ -35,6 +35,7 @@ import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnostic
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnosticProvider
+import com.jetbrains.ls.api.features.impl.common.utils.maybeStripHtml
 import com.jetbrains.ls.api.features.impl.common.utils.toLspSeverity
 import com.jetbrains.ls.api.features.impl.common.utils.toLspTags
 import com.jetbrains.ls.api.features.language.LSLanguage
@@ -254,9 +255,6 @@ class LSCommonInspectionDiagnosticProvider(
         )
     }
 }
-
-private fun String.maybeStripHtml(): String =
-    if (this.startsWith("<html>")) StringUtil.stripHtml(this, true) else this
 
 private fun ProblemDescriptor.range(): TextRange? {
     val element = psiElement ?: return null
