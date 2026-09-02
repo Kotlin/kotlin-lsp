@@ -48,7 +48,8 @@ jvm_library(
         "@lib//:kotlin-stdlib",
         "@community//libraries/junit5",
         "@community//libraries/junit5:junit5_test_lib",
-        "@lib//:kotlin-test",
+        "@community//libraries/kotlin/test:libraries-kotlinTest",
+        "@community//libraries/kotlin/test:libraries-kotlinTest_test_lib",
         "@lib//:kotlin-test-junit5",
     ],
 )
