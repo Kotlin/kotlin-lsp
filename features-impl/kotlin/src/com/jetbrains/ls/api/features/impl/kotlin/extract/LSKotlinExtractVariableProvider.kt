@@ -130,6 +130,7 @@ internal object LSKotlinExtractVariableProvider :
                     )
                 ),
                 navigationRange,
+                startRename = true,
             )
         }
     }

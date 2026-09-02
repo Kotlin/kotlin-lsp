@@ -39,6 +39,9 @@ import com.jetbrains.lsp.protocol.ShowDocumentParams
 import com.jetbrains.lsp.protocol.ShowMessageNotificationType
 import com.jetbrains.lsp.protocol.ShowMessageParams
 import com.jetbrains.lsp.protocol.WorkspaceEdit
+import com.jetbrains.ls.kotlinLsp.requests.core.RENAME_EDITOR_COMMAND
+import com.jetbrains.ls.kotlinLsp.requests.core.RunEditorCommandNotification
+import com.jetbrains.ls.kotlinLsp.requests.core.RunEditorCommandParams
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
@@ -118,7 +121,7 @@ abstract class LSRefactoringMemberProviderBase<Context> : LSCodeActionProvider, 
 
                                 if (result == null || result.changes.isEmpty()) return JsonPrimitive(true)
 
-                                lspClient.request(
+                                val applyResult = lspClient.request(
                                     ApplyEditRequests.ApplyEdit,
                                     ApplyWorkspaceEditParams(
                                         label = null,
@@ -128,8 +131,8 @@ abstract class LSRefactoringMemberProviderBase<Context> : LSCodeActionProvider, 
                                     ),
                                 )
 
-                                if (result.navigationRange != null) {
-                                    lspClient.showDocumentIfSupported(
+                                if (applyResult.applied && result.navigationRange != null) {
+                                    val shown = lspClient.showDocumentIfSupported(
                                         ShowDocumentParams(
                                             uri = documentUri.uri,
                                             external = false,
@@ -137,6 +140,13 @@ abstract class LSRefactoringMemberProviderBase<Context> : LSCodeActionProvider, 
                                             selection = result.navigationRange,
                                         ),
                                     )
+                                    // `editor.action.rename` renames at the caret, which the request above has just placed.
+                                    if (shown?.success == true && result.startRename && server.config.clientSupportsIntellijExtensions) {
+                                        lspClient.notify(
+                                            RunEditorCommandNotification,
+                                            RunEditorCommandParams(RENAME_EDITOR_COMMAND),
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -255,7 +265,15 @@ abstract class LSRefactoringMemberProviderBase<Context> : LSCodeActionProvider, 
     context(server: LSServer, analysisContext: LSAnalysisContext, handlerContext: LspHandlerContext)
     protected abstract suspend fun executeRefactoring(context: Context): RefactoringResult?
 
-    data class RefactoringResult(val changes: List<FileChange>, val navigationRange: Range?) {
+    /**
+     * @property startRename when true, and the client declares `intellijExtensions`, the client is asked to
+     *   start an inline rename at [navigationRange] after the edit is applied
+     */
+    data class RefactoringResult(
+        val changes: List<FileChange>,
+        val navigationRange: Range?,
+        val startRename: Boolean = false,
+    ) {
         companion object {
             val EMPTY: RefactoringResult = RefactoringResult(emptyList(), null)
         }
