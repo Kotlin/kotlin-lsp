@@ -41,6 +41,7 @@ import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.utils.isSource
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.Diagnostic
+import com.jetbrains.lsp.protocol.DiagnosticSeverity
 import com.jetbrains.lsp.protocol.DocumentDiagnosticParams
 import com.jetbrains.lsp.protocol.LSP
 import com.jetbrains.lsp.protocol.StringOrInt
@@ -244,7 +245,8 @@ class LSCommonInspectionDiagnosticProvider(
         val message = ProblemDescriptorUtil.renderDescriptor(this, psiElement, ProblemDescriptorUtil.NONE)
         return Diagnostic(
             range = range()?.toLspRange(document) ?: return null,
-            severity = highlightType.toLspSeverity(),
+            severity = if (shortName == "JavadocReference") DiagnosticSeverity.Warning
+            else highlightType.toLspSeverity(),
             message = message.description.maybeStripHtml(),
             code = StringOrInt.string(shortName),
             tags = highlightType.toLspTags(),
