@@ -231,6 +231,8 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         val pathPrepend = System.getProperty(LSP_MAVEN_PROJECT_PATH_PREPEND_PROPERTY)
         // Per-project `system-properties` are forwarded to the build as `-Dkey=value`.
         val extraSystemProps = options.systemProperties.map { (key, value) -> "-D$key=$value" }
+        // `-P` activates the configured profiles, so the goal sees the same effective model as a manual build.
+        val profileParams = if (options.profiles.isEmpty()) emptyList() else listOf("-P", options.profiles.joinToString(","))
         val workspaceJsonFile = createTempFile("workspace", ".json")
         try {
             val command = listOf(
@@ -248,7 +250,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                 "-Dair.check.skip-enforcer=true"
 
             )
-            ProcessBuilder(command + extraSystemProps + additionalParams)
+            ProcessBuilder(command + extraSystemProps + profileParams + additionalParams)
                 .apply {
                     // ponytail: start from a clean env so the analyzer's own vars (e.g. JDK9+ JAVA_TOOL_OPTIONS=-Xlog) don't leak into a possibly-JDK8 Maven JVM.
                     environment().clear()
