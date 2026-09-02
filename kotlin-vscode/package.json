@@ -479,6 +479,27 @@
             "default": null,
             "markdownDescription": "Build tool to use when importing projects. Select `null` to detect the build tool automatically or `\"\"` to disable project import."
           },
+          "intellij.workspace.reloadOnBuildFileSave": {
+            "type": "string",
+            "scope": "window",
+            "enum": [
+              "always",
+              "prompt",
+              "never"
+            ],
+            "enumItemLabels": [
+              "Always",
+              "Prompt",
+              "Never"
+            ],
+            "enumDescriptions": [
+              "Reload the workspace automatically after a build file is saved.",
+              "Ask before the extension reloads the workspace.",
+              "Do not reload the workspace after a build file is saved."
+            ],
+            "default": "always",
+            "description": "Controls workspace reloads after a build file is saved."
+          },
           "intellij.projects": {
             "type": "array",
             "default": [],

@@ -1,6 +1,7 @@
 import * as path from 'node:path';
 import {
   commands,
+  EventEmitter,
   type ExtensionContext,
   ExtensionMode,
   extensions,
@@ -90,6 +91,7 @@ let _buildOutputChannel: OutputChannel | undefined;
 let serverActivated = false;
 const devCommandsRegistered = new WeakSet<ExtensionContext>();
 const initializedExtensions = new WeakSet<ExtensionContext>();
+const workspaceReloadedEmitter = new EventEmitter<void>();
 
 export function getContext(): ExtensionContext {
   return _context!;
@@ -154,6 +156,7 @@ export async function reloadWorkspace({
     const initializationOptions = buildInitializationOptions();
     await client.sendRequest(ReloadWorkspaceRequest, { initializationOptions });
     markInitializationOptionsApplied(initializationOptions);
+    workspaceReloadedEmitter.fire();
     if (showConfirmation) await window.showInformationMessage('Workspace reloaded');
   } catch (e) {
     // `ServerCancelled` is the licensing gate's quiet refusal; the licensing UI explains it.
@@ -264,7 +267,10 @@ async function activateAcceptedExtension(
     }
     registerExportWorkspaceToJsonCommand(context);
     registerReloadWorkspaceCommand(context);
-    registerAutoReloadWorkspace(context);
+    registerAutoReloadWorkspace(context, {
+      reloadWorkspace,
+      onDidReloadWorkspace: workspaceReloadedEmitter.event,
+    });
     registerShowBuildLogCommand(context);
     registerFileTemplates(context);
 
