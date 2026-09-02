@@ -9,7 +9,8 @@ const copyToClipboardNotification = new NotificationType<CopyToClipboardParams>(
   'intellij/copyToClipboard',
 );
 
-type RunEditorCommandParams = { command: string; arguments?: unknown[] };
+// `uri` names the document the command targets; a client that verifies its selection can drop a mismatched command.
+type RunEditorCommandParams = { command: string; arguments?: unknown[]; uri?: string };
 
 const runEditorCommandNotification = new NotificationType<RunEditorCommandParams>(
   'intellij/runEditorCommand',
@@ -38,7 +39,10 @@ interface ChooseActionMenuItem extends vscode.QuickPickItem {
  * option for it, but this client supports both.
  */
 export function registerIntellijExtensionsInitOption(): void {
-  registerInitializationOptionsContributor(() => ({ intellijExtensions: true, lazyIntentions: true }));
+  registerInitializationOptionsContributor(() => ({
+    intellijExtensions: true,
+    lazyIntentions: true,
+  }));
 }
 
 /**

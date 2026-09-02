@@ -144,7 +144,7 @@ abstract class LSRefactoringMemberProviderBase<Context> : LSCodeActionProvider, 
                                     if (shown?.success == true && result.startRename && server.config.clientSupportsIntellijExtensions) {
                                         lspClient.notify(
                                             RunEditorCommandNotification,
-                                            RunEditorCommandParams(RENAME_EDITOR_COMMAND),
+                                            RunEditorCommandParams(RENAME_EDITOR_COMMAND, uri = documentUri),
                                         )
                                     }
                                 }

@@ -528,7 +528,7 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient, changedFi
             )
             client.notify(
                 notificationType = RunEditorCommandNotification,
-                params = RunEditorCommandParams(RENAME_EDITOR_COMMAND),
+                params = RunEditorCommandParams(RENAME_EDITOR_COMMAND, uri = DocumentUri(command.fileUrl.intellijUriToLspUri())),
             )
         }
 
@@ -570,13 +570,21 @@ val CopyToClipboardNotification: NotificationType<CopyToClipboardParams> =
     NotificationType("intellij/copyToClipboard", CopyToClipboardParams.serializer())
 
 @Serializable
-data class RunEditorCommandParams(val command: String, val arguments: List<JsonElement> = emptyList())
+data class RunEditorCommandParams(
+    val command: String,
+    val arguments: List<JsonElement> = emptyList(),
+    val uri: DocumentUri? = null,
+)
 
 /**
  * A custom server -> client notification asking the client to run one of its own editor commands, the way a user
  * action would. Starting an inline rename ([ModCommandData.StartRename]) does not change the document but drives
  * the editor UI, and LSP has no way to express that: a server can neither send `workspace/executeCommand` nor
  * start such a session itself. Clients that do not support it simply ignore it.
+ *
+ * [RunEditorCommandParams.uri] names the document the command targets. The user can change the editor selection
+ * before an asynchronous client handles the notification, so the client must drop the command when the selected
+ * document differs.
  *
  * A live template needs no such command: [ModCommandData.Snippet] travels as a `SnippetTextEdit`, which is
  * standard LSP.
