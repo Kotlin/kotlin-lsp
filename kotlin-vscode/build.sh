@@ -40,19 +40,8 @@ export PUBLISH_ARTIFACTS
 BUNDLE_TYPE="${BUNDLE_TYPE:-$DEFAULT_BUNDLE_TYPE}"
 
 if ! command -v pnpm >/dev/null; then
-  if ! command -v npm >/dev/null; then
-    echo "Error: pnpm is not installed and npm is not available" >&2
-    exit 1
-  fi
-
-  npm install -g pnpm@11.5.1
-
-  if [[ -n "${TEAMCITY_VERSION:-}" ]]; then
-    NPM_PREFIX=$(npm config get prefix)
-    export PATH="$NPM_PREFIX/bin:$PATH"
-  fi
-
-  pnpm --version
+  echo "Error: pnpm is not installed" >&2
+  exit 1
 fi
 
 if [[ -z "$PACKAGE_DIR" ]]; then
@@ -105,7 +94,14 @@ if [[ -z "$FIRST_BUNDLE" ]]; then
 fi
 
 echo "Installing VSCode extension dependencies..."
-pnpm --dir "${WORKSPACE_DIR:-$PACKAGE_DIR}" install ${WORKSPACE_DIR:+--frozen-lockfile}
+install_args=()
+if [[ -n "$WORKSPACE_DIR" ]]; then
+  install_args+=(--frozen-lockfile)
+fi
+if [[ -n "${TEAMCITY_VERSION:-}" ]]; then
+  install_args+=(--offline)
+fi
+pnpm --dir "${WORKSPACE_DIR:-$PACKAGE_DIR}" install "${install_args[@]}"
 
 echo "Building VSCode extension package: $PACKAGE_DIR"
 pnpm --dir "$PACKAGE_DIR" run package
