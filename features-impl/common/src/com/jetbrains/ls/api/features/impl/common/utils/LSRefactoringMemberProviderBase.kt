@@ -17,7 +17,11 @@ import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.commands.LSCommandExecutor
 import com.jetbrains.ls.api.features.commands.LspCommand
+import com.jetbrains.ls.api.features.impl.common.modcommands.CHOICE_SEPARATOR
 import com.jetbrains.ls.api.features.impl.common.window.showDocumentIfSupported
+import com.jetbrains.ls.kotlinLsp.requests.core.ChooseActionMenuEntry
+import com.jetbrains.ls.kotlinLsp.requests.core.ShowChooseActionMenuNotification
+import com.jetbrains.ls.kotlinLsp.requests.core.ShowChooseActionMenuParams
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.protocol.ApplyEditRequests
@@ -47,9 +51,12 @@ import org.jetbrains.annotations.Nls
 /**
  * Base class for refactorings that are using write context in LSP.
  * Expected workflow:
- * 1. Fetch available options to execute in the given range with [getChoices].
+ * 1. Fetch the available choices to execute in the given range with [getChoices].
  * 2. Based on the user selection in step 1, create a context with [getWriteContext].
  * 3. Execute the action with [executeRefactoring].
+ *
+ * A client which declares `intellijExtensions` picks a choice from the `intellij/chooseAction` menu. The refactoring runs after the
+ * pick. A client without that capability gets one code action for each choice instead.
  *
  * @see LSServer.withWriteAnalysisContext
  */
@@ -78,6 +85,25 @@ abstract class LSRefactoringMemberProviderBase<Context> : LSCodeActionProvider, 
                                         MessageType.Error,
                                         payload.message,
                                     )
+                                )
+                            }
+
+                            is Payload.Choose -> {
+                                lspClient.notify(
+                                    ShowChooseActionMenuNotification,
+                                    ShowChooseActionMenuParams(
+                                        title = descriptorTitle,
+                                        entries = payload.choices.map { choice ->
+                                            ChooseActionMenuEntry(
+                                                name = choice,
+                                                command = refactoringCommand(
+                                                    documentUri = documentUri,
+                                                    title = choice,
+                                                    payload = Payload.Data(payload.selection, choice),
+                                                ),
+                                            )
+                                        },
+                                    ),
                                 )
                             }
 
@@ -144,42 +170,50 @@ abstract class LSRefactoringMemberProviderBase<Context> : LSCodeActionProvider, 
                         choicesResult.selection.toLspRange(document)
                     }
                 } ?: return@flow
-                for (choice in choicesResult.choices) {
-                    emit(
-                        CodeAction(
-                            title = choice,
-                            kind = actionKind,
-                            command = Command(
-                                title = choice,
-                                command = commandName,
-                                arguments = listOf(
-                                    LSP.json.encodeToJsonElement<DocumentUri>(documentUri),
-                                    LSP.json.encodeToJsonElement<Payload>(Payload.Data(selectionRange, choice)),
-                                ),
+                val choices = choicesResult.choices
+                when {
+                    choices.isEmpty() -> {}
+
+                    choices.size == 1 -> emit(
+                        refactoringCodeAction(documentUri, descriptorTitle, Payload.Data(selectionRange, choices.single()))
+                    )
+
+                    server.config.clientSupportsIntellijExtensions -> emit(
+                        refactoringCodeAction(documentUri, descriptorTitle, Payload.Choose(selectionRange, choices))
+                    )
+
+                    else -> for (choice in choices) {
+                        emit(
+                            refactoringCodeAction(
+                                documentUri = documentUri,
+                                title = descriptorTitle + CHOICE_SEPARATOR + choice,
+                                payload = Payload.Data(selectionRange, choice),
                             )
                         )
-                    )
+                    }
                 }
             }
 
-            is ChoicesResult.Error -> {
-                emit(
-                    CodeAction(
-                        title = choicesResult.defaultTitle,
-                        kind = actionKind,
-                        command = Command(
-                            title = choicesResult.defaultTitle,
-                            command = commandName,
-                            arguments = listOf(
-                                LSP.json.encodeToJsonElement<DocumentUri>(documentUri),
-                                LSP.json.encodeToJsonElement<Payload>(Payload.Error(choicesResult.errorMessage)),
-                            ),
-                        )
-                    )
-                )
-            }
+            is ChoicesResult.Error -> emit(
+                refactoringCodeAction(documentUri, descriptorTitle, Payload.Error(choicesResult.errorMessage))
+            )
         }
     }
+
+    private fun refactoringCommand(documentUri: DocumentUri, title: @Nls String, payload: Payload): Command = Command(
+        title = title,
+        command = commandName,
+        arguments = listOf(
+            LSP.json.encodeToJsonElement<DocumentUri>(documentUri),
+            LSP.json.encodeToJsonElement<Payload>(payload),
+        ),
+    )
+
+    private fun refactoringCodeAction(documentUri: DocumentUri, title: @Nls String, payload: Payload): CodeAction = CodeAction(
+        title = title,
+        kind = actionKind,
+        command = refactoringCommand(documentUri, title, payload),
+    )
 
     context(server: LSServer, analysisContext: LSAnalysisContext, handlerContext: LspHandlerContext)
     private suspend fun computeRefactoringResult(file: VirtualFile, data: Payload.Data): RefactoringResult {
@@ -187,13 +221,13 @@ abstract class LSRefactoringMemberProviderBase<Context> : LSCodeActionProvider, 
             val document = file.findDocument() ?: return@readAction null
             val selection = data.selection.toTextRange(document)
             getWriteContext(file, selection, data.choice)
-        } ?: return RefactoringResult(emptyList(), null)
+        } ?: return RefactoringResult.EMPTY
 
         return executeRefactoring(writeContext) ?: RefactoringResult.EMPTY
     }
 
     /**
-     * Calculates the available refactoring options in the given [selectedRange] and the adjusted selection.
+     * Calculates the available refactoring choices in the given [selectedRange] and the adjusted selection.
      * @return null if it is impossible to do the refactoring in the given position,
      * [LSRefactoringMemberProviderBase.ChoicesResult.Choices] when refactoring is possible,
      * or [LSRefactoringMemberProviderBase.ChoicesResult.Error] if the refactoring is impossible and
@@ -223,21 +257,24 @@ abstract class LSRefactoringMemberProviderBase<Context> : LSCodeActionProvider, 
 
     data class RefactoringResult(val changes: List<FileChange>, val navigationRange: Range?) {
         companion object {
-            val EMPTY = RefactoringResult(emptyList(), null)
+            val EMPTY: RefactoringResult = RefactoringResult(emptyList(), null)
         }
     }
 
     protected sealed interface ChoicesResult {
         data class Choices(val choices: List<@Nls String>, val selection: TextRange) : ChoicesResult
-        data class Error(val defaultTitle: @Nls String, val errorMessage: @Nls String) : ChoicesResult
+        data class Error(val errorMessage: @Nls String) : ChoicesResult
     }
 
     @Serializable
     private sealed interface Payload {
         @Serializable
-        data class Data(val selection: Range, val choice: String) : Payload
+        data class Data(val selection: Range, val choice: @Nls String) : Payload
 
         @Serializable
         data class Error(val message: @Nls String) : Payload
+
+        @Serializable
+        data class Choose(val selection: Range, val choices: List<@Nls String>) : Payload
     }
 }
