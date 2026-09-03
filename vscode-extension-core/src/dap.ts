@@ -100,6 +100,15 @@ interface JvmLaunchPaths {
   moduleContentPaths?: string[];
   moduleName?: string;
   workingDirectory?: string;
+  /**
+   * The whole VM argument list to run with: this config's own arguments plus what the project requires on top —
+   * `--enable-preview` for a module that compiles at a preview language level, without which the JVM refuses to load
+   * its classes.
+   *
+   * The one merged field, so it is copied like the rest rather than combined with `config.vmArgs` here. Resolving the
+   * same config twice yields the same list, because the server never adds an argument that is already there.
+   */
+  vmArgs?: string[];
 }
 
 /**
@@ -125,6 +134,8 @@ interface JvmLaunchOverrides {
   modulePaths?: string[];
   moduleName?: string;
   javaExec?: string;
+  /** Not an override but one half of the answer; see [JvmLaunchPaths.vmArgs]. */
+  vmArgs?: string[];
 }
 
 /**
@@ -436,6 +447,7 @@ async function resolveJvmLaunchConfig(
           modulePaths: config.modulePaths,
           moduleName: config.moduleName,
           javaExec: config.javaExec,
+          vmArgs: config.vmArgs,
         } satisfies JvmLaunchOverrides,
       },
     ]);
@@ -454,6 +466,10 @@ async function resolveJvmLaunchConfig(
     // Never absent: a launch with neither a configured nor a project JDK is refused by the server, which is the only
     // side that can tell the two apart.
     config.javaExec = paths.javaExec;
+    // This config's own arguments came back inside the answer, together with what the project requires: a module at a
+    // preview language level needs `--enable-preview` or the JVM refuses to load its classes (LSP-1745). Absent only
+    // for a server that predates the field, and then the config keeps its own arguments rather than losing them.
+    config.vmArgs = paths.vmArgs ?? config.vmArgs;
   } catch (e) {
     return failedToResolve(e);
   }

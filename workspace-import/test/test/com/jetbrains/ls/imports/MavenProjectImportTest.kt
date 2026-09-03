@@ -32,6 +32,15 @@ class MavenProjectImportTest : AbstractProjectImportTestCase() {
     @Test
     fun mavenAnnotationProcessing() = doMavenTest("MavenAnnotationProcessing")
 
+    /**
+     * `--enable-preview` in the compiler arguments makes the language level a preview one, which is what tells a launch
+     * to pass the flag to the JVM as well (LSP-1745). The Gradle counterparts are
+     * [GradleProjectImportTest.gradleJavaLanguageFeaturePreviewModule] and
+     * [GradleProjectImportTest.gradleJavaLanguageFeaturePreviewSourceSet].
+     */
+    @Test
+    fun mavenJavaLanguageFeaturePreview() = doMavenTest("MavenJavaLanguageFeaturePreview")
+
     @Test
     fun mavenKotlinLanguageVersionFromConfiguration() = doMavenTest("MavenKotlinLanguageVersionFromConfiguration")
 
