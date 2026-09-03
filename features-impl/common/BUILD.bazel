@@ -5,7 +5,10 @@ load("@rules_jvm//:jvm.bzl", "jvm_library")
 ### auto-generated section `build language-server.api.features.impl.common` start
 create_kotlinc_options(
     name = "custom_common",
-    opt_in = ["org.jetbrains.kotlin.analysis.api.KaExperimentalApi"],
+    opt_in = [
+        "org.jetbrains.kotlin.analysis.api.KaExperimentalApi",
+        "org.jetbrains.kotlin.analysis.api.KaIdeApi",
+    ],
     x_context_parameters = True,
 )
 
