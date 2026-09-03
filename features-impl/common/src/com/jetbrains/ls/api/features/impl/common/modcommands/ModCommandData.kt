@@ -30,6 +30,7 @@ import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.intellijUriToLspUri
 import com.jetbrains.ls.api.core.util.positionByOffset
+import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.impl.common.modcommands.LazyFix
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCommand
 import com.jetbrains.ls.api.features.impl.common.modcommands.registerLazyFixes
@@ -179,6 +180,17 @@ sealed class ModCommandData {
     data class StartRename(val fileUrl: String, val selectionStart: Int, val selectionEnd: Int) : ModCommandData()
 
     /**
+     * A [ModLaunchEditorAction] asks the editor to run one of its own actions, such as the code completion or the
+     * parameter info popup. The action drives the editor UI and changes no document, and LSP has no server -> client
+     * request for it, so it is modeled as the custom `intellij/runEditorCommand` notification, the same way
+     * [StartRename] is. [actionId] is the IntelliJ action id; [editorCommandForAction] maps it to the command of
+     * the client. Only clients that declare `intellijExtensions` can handle it; for the others [from] drops an
+     * optional action and aborts on a mandatory one.
+     */
+    @Serializable
+    data class LaunchEditorAction(val actionId: String) : ModCommandData()
+
+    /**
      * A [ModChooseAction] asks the UI to present a chooser of further actions. LSP has no native primitive for
      * this (see https://github.com/microsoft/language-server-protocol/issues/994), so it is modeled via the
      * custom `intellij/chooseAction` notification: the client shows a menu of [entries] and, once the user picks
@@ -284,8 +296,13 @@ sealed class ModCommandData {
                     else -> Navigate(command.file.url, range.startOffset, range.endOffset, range.startOffset)
                 }
             }
-            // Direct completion should map this client action; the fallback may preserve surrounding updates only for optional actions.
-            is ModLaunchEditorAction -> if (command.optional) Nothing else null
+            is ModLaunchEditorAction -> when {
+                server?.config?.clientSupportsIntellijExtensions == true && editorCommandForAction(command.actionId) != null ->
+                    LaunchEditorAction(command.actionId)
+                // The action only drives the editor UI, so an optional one can be dropped.
+                command.optional -> Nothing
+                else -> null
+            }
             is ModRegisterTabOut -> Nothing // We can safely skip the tab-out command
             // Highlighting could be important, but usually it's an additional helpful thing, not an essential one, so let's skip it for now
             is ModHighlight -> Nothing
@@ -515,6 +532,16 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient, changedFi
             )
         }
 
+        // The surrounding edits already left the caret where the action has to run, so no navigation is needed.
+        is ModCommandData.LaunchEditorAction -> when (val editorCommand = editorCommandForAction(command.actionId)) {
+            // `from` only produces this for an action it can map, so a missing command means the two went out of sync.
+            null -> LOG.error("No client editor command for the action ${command.actionId}")
+            else -> client.notify(
+                notificationType = RunEditorCommandNotification,
+                params = RunEditorCommandParams(editorCommand.command),
+            )
+        }
+
         is ModCommandData.ChooseAction -> client.notify(
             notificationType = ShowChooseActionMenuNotification,
             params = ShowChooseActionMenuParams(
@@ -559,6 +586,21 @@ val RunEditorCommandNotification: NotificationType<RunEditorCommandParams> =
 
 /** The client-side editor command that starts an inline rename of the symbol at the caret. */
 const val RENAME_EDITOR_COMMAND: String = "editor.action.rename"
+
+/**
+ * The client-side editor command which matches the [ModLaunchEditorAction] [actionId], or `null` when the client
+ * has no such command.
+ *
+ * `editor.action.triggerSuggest` and `editor.action.triggerParameterHints` are VSCode built-ins, not LSP, so only
+ * a client which declares `intellijExtensions` is known to have them. The caller has to check that capability.
+ */
+fun editorCommandForAction(actionId: String): Command? = when (actionId) {
+    ModLaunchEditorAction.ACTION_CODE_COMPLETION ->
+        Command(LspServerBundle.message("command.completion"), "editor.action.triggerSuggest")
+    ModLaunchEditorAction.ACTION_PARAMETER_INFO ->
+        Command(LspServerBundle.message("command.parameter.info"), "editor.action.triggerParameterHints")
+    else -> null
+}
 
 /**
  * One option of a [ModChooseAction] menu. [command] is what the client sends back to run the option, so the

@@ -25,6 +25,7 @@ import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
 import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData.Snippet
 import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData.SnippetVar
 import com.jetbrains.ls.kotlinLsp.requests.core.RENAME_EDITOR_COMMAND
+import com.jetbrains.ls.kotlinLsp.requests.core.editorCommandForAction
 import com.jetbrains.lsp.protocol.Command
 import com.jetbrains.lsp.protocol.InsertTextFormat
 import com.jetbrains.lsp.protocol.LSP
@@ -343,16 +344,11 @@ object ModCompletionCommandConverter {
       }
     }
     if (rest is ModLaunchEditorAction) {
-      // `editor.action.triggerSuggest` and `editor.action.triggerParameterHints` are VSCode built-ins, not LSP: a
-      // client that does not have them would bounce them back as a `workspace/executeCommand` the server cannot
-      // handle. Only a client declaring `intellijExtensions` is known to be VSCode-based, so gate on that.
+      // The command of the client is a VSCode built-in, not LSP: a client that does not have it would bounce it
+      // back as a `workspace/executeCommand` the server cannot handle. Only a client declaring
+      // `intellijExtensions` is known to be VSCode-based, so gate on that.
       if (server?.config?.clientSupportsIntellijExtensions == true) {
-        when (rest.actionId) {
-          ModLaunchEditorAction.ACTION_CODE_COMPLETION ->
-            return Command(LspServerBundle.message("command.completion"), "editor.action.triggerSuggest")
-          ModLaunchEditorAction.ACTION_PARAMETER_INFO ->
-            return Command(LspServerBundle.message("command.parameter.info"), "editor.action.triggerParameterHints")
-        }
+        editorCommandForAction(rest.actionId)?.let { return it }
       }
       if (rest.optional) return null
     }
