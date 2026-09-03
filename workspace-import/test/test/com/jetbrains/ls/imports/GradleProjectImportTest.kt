@@ -137,6 +137,14 @@ class GradleProjectImportTest : GradleProjectImportTestCase() {
     fun brokenTaskGraphProject() = doGradleTest("BrokenTaskGraphProject", ::withIgnoredJdkRoots)
 
     @Test
+    fun buildExceptionProject() = doTestBrokenProject(
+        "GradleBuildExceptionProject",
+        "Gradle sync failed",
+        GradleWorkspaceImporter,
+        testDataDir / "gradle",
+    )
+
+    @Test
     fun systemPropertiesCheckerGradle6Project() = doGradleTest(
         "SystemPropertiesCheckerGradle6Project",
         JdkDownloaderFacade.jdk11,
