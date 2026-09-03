@@ -21,4 +21,8 @@ internal val kotlinQuickFixBlacklist = Blacklist(
         fqcn = "org.jetbrains.kotlin.idea.highlighting.SafeDeleteFix",
         reason = "LSP-970",
     ),
+    BlacklistEntry.Class(
+        fqcn = "org.jetbrains.kotlin.idea.quickfix.RenameIdentifierFix",
+        reason = "LSP-1767",
+    ),
 )
