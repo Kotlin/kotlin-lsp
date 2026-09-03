@@ -477,8 +477,11 @@ private fun JpsLibraryType<*>.toSdkType(): String = when (this) {
  * missing roots are reported as unresolved.
  *
  * With [WorkspaceImportOptions.offline] the download is skipped, so a missing artifact stays unresolved. With
- * [WorkspaceImportOptions.downloadAdditionalArtifacts] the `sources` classifier is downloaded too. The JPS model has
- * no javadoc root here, so no javadoc is downloaded.
+ * [WorkspaceImportOptions.downloadAdditionalArtifacts] the same download also asks for the `sources` classifier.
+ * The JPS model has no javadoc root here, so no javadoc is downloaded.
+ *
+ * A missing sources root alone never starts a download: only a missing compiled root does, and the sources travel
+ * with it.
  */
 private fun resolveLibraryRoots(
     library: JpsLibrary,
@@ -488,15 +491,11 @@ private fun resolveLibraryRoots(
     options: WorkspaceImportOptions,
 ): List<LibraryRoot>? {
     val compiledUrls = library.getRootUrls(JpsOrderRootType.COMPILED)
-    val sourceUrls = library.getRootUrls(JpsOrderRootType.SOURCES)
 
-    fun missing(urls: List<String>) = urls.any { !Path.of(JpsPathUtil.urlToPath(it)).exists() }
-
-    val withSources = options.downloadAdditionalArtifacts
-    if (!options.offline && (missing(compiledUrls) || withSources && missing(sourceUrls))) {
+    if (!options.offline && compiledUrls.any { !Path.of(JpsPathUtil.urlToPath(it)).exists() }) {
         library.mavenRepositoryDescriptor()?.let { descriptor ->
             val kinds =
-                if (withSources) setOf(ArtifactKind.ARTIFACT, ArtifactKind.SOURCES)
+                if (options.downloadAdditionalArtifacts) setOf(ArtifactKind.ARTIFACT, ArtifactKind.SOURCES)
                 else setOf(ArtifactKind.ARTIFACT)
             downloadFromMavenRepository(repositoryManager.value, descriptor, kinds)
         }
@@ -512,7 +511,7 @@ private fun resolveLibraryRoots(
         compiledUrls.mapTo(this) { url ->
             LibraryRoot(virtualFileUrlManager.getOrCreateFromUrl(url), LibraryRootTypeId.COMPILED)
         }
-        sourceUrls.mapTo(this) { url ->
+        library.getRootUrls(JpsOrderRootType.SOURCES).mapTo(this) { url ->
             LibraryRoot(virtualFileUrlManager.getOrCreateFromUrl(url), LibraryRootTypeId.SOURCES)
         }
     }
