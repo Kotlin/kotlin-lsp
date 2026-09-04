@@ -2,6 +2,10 @@ load("@community//build:compiler-options.bzl", "create_kotlinc_options")
 load("@community//platform/build-scripts/bazel-rules:content_module_jar.bzl", "content_module_jar")
 load("@rules_jvm//:jvm.bzl", "jvm_library")
 
+### auto-generated section `dev language-server.api.features.impl.java-base` start
+content_module_jar(module = ":java-base")
+### auto-generated section `dev language-server.api.features.impl.java-base` end
+
 ### auto-generated section `build language-server.api.features.impl.java-base` start
 create_kotlinc_options(
     name = "custom_java-base",
@@ -55,8 +59,6 @@ jvm_library(
         "@community//java/java-syntax:syntax",
     ],
 )
-
-content_module_jar(module = ":java-base")
 
 jvm_library(
     name = "java-base_test_lib",

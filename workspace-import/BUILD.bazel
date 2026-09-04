@@ -2,6 +2,10 @@ load("@community//build:compiler-options.bzl", "create_kotlinc_options")
 load("@community//platform/build-scripts/bazel-rules:content_module_jar.bzl", "content_module_jar")
 load("@rules_jvm//:jvm.bzl", "jvm_library")
 
+### auto-generated section `dev language-server.workspace-import` start
+content_module_jar(module = ":workspace-import")
+### auto-generated section `dev language-server.workspace-import` end
+
 ### auto-generated section `build language-server.workspace-import` start
 create_kotlinc_options(
     name = "custom_workspace-import",
@@ -68,8 +72,6 @@ jvm_library(
         "@community//libraries/maven-resolver-provider",
     ],
 )
-
-content_module_jar(module = ":workspace-import")
 
 jvm_library(
     name = "workspace-import_test_lib",

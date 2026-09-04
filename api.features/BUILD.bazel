@@ -2,6 +2,10 @@ load("@community//build:compiler-options.bzl", "create_kotlinc_options")
 load("@community//platform/build-scripts/bazel-rules:content_module_jar.bzl", "content_module_jar")
 load("@rules_jvm//:jvm.bzl", "jvm_library")
 
+### auto-generated section `dev language-server.api.features` start
+content_module_jar(module = ":api.features")
+### auto-generated section `dev language-server.api.features` end
+
 ### auto-generated section `build language-server.api.features` start
 create_kotlinc_options(
     name = "custom_api.features",
@@ -49,8 +53,6 @@ jvm_library(
     ],
 )
 
-content_module_jar(module = ":api.features")
-
 jvm_library(
     name = "api.features_test_lib",
     testonly = True,
@@ -88,7 +90,6 @@ exports_files(
         "language-server.api.features.iml",
         "resources/META-INF/language-server/features/api/lsApi.xml",
         "resources/language-server.api.features.xml",
-        "module-content.yaml",
     ],
     visibility = ["//visibility:public"],
 )
