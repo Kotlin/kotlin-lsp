@@ -13,7 +13,7 @@ import com.jetbrains.analyzer.kotlin.createKotlinWorkspaceModelCaches
 import com.jetbrains.analyzer.kotlin.initKotlinIndexingContainer
 import com.jetbrains.analyzer.kotlin.initKotlinWorkspaceModelCaches
 import com.jetbrains.analyzer.kotlin.kotlinPlugin
-import com.jetbrains.ls.api.features.SessionComponentEntry
+import com.jetbrains.ls.api.features.KotlinFirCacheEntry
 import com.jetbrains.ls.api.features.WorkspaceComponentEntry
 import com.jetbrains.ls.api.features.impl.common.definitions.LSCommonDefinitionProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionDiagnosticProvider
@@ -28,7 +28,7 @@ import com.jetbrains.ls.api.features.impl.common.references.LSCommonReferencesPr
 import com.jetbrains.ls.api.features.impl.common.typeDefinition.LSCommonTypeDefinitionProvider
 import com.jetbrains.ls.api.core.util.TargetKind
 import com.jetbrains.ls.api.features.impl.javaBase.LSJavaPackageDefinitionProvider
-import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.LLFirSessionCacheStorageComponent
+import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.KotlinFirCacheImpl
 import com.jetbrains.ls.api.features.impl.kotlin.callHierarchy.LSKotlinCallHierarchyProvider
 import com.jetbrains.ls.api.features.impl.kotlin.callHierarchy.LSKotlinCallHierarchyRenderer
 import com.jetbrains.ls.api.features.impl.kotlin.codeActions.LSKotlinOrganizeImportsCodeActionProvider
@@ -63,7 +63,7 @@ import org.jetbrains.kotlin.psi.KtImportList
 val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
     entries = listOf(
         WorkspaceComponentEntry { KotlinWorkspaceComponent },
-        SessionComponentEntry { LLFirSessionCacheStorageComponent },
+        KotlinFirCacheEntry { KotlinFirCacheImpl.new() },
         LSKotlinOrganizeImportsCodeActionProvider,
         LSKotlinCompletionProvider,
         LSCommonDefinitionProvider(setOf(LSKotlinLanguage), TargetKind.ALL),

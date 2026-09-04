@@ -7,6 +7,7 @@ import com.jetbrains.ls.api.core.launch.BuildToolLaunchContributor
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.snapshot.api.impl.core.InitConfigurationKey
+import com.jetbrains.ls.snapshot.api.impl.core.KotlinFirCache
 import com.jetbrains.ls.snapshot.api.impl.core.LSConfigurationData
 import com.jetbrains.ls.snapshot.api.impl.core.SessionComponent
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceComponent
@@ -73,6 +74,14 @@ fun interface WorkspaceComponentEntry : LSConfigurationEntry {
 /** Registers a [SessionComponent]: state local to one client session. */
 fun interface SessionComponentEntry : LSConfigurationEntry {
     fun component(): SessionComponent<*>
+}
+
+/**
+ * Provides the Kotlin FIR cache of a session (see [KotlinFirCache]); [create] is called once per
+ * session. At most one configuration entry may exist.
+ */
+fun interface KotlinFirCacheEntry : LSConfigurationEntry {
+    fun create(): KotlinFirCache
 }
 
 class InitConfigurationEntry<T : Any>(
