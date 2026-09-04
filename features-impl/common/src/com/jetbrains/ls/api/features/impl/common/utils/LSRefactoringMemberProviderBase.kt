@@ -18,7 +18,6 @@ import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.commands.LSCommandExecutor
 import com.jetbrains.ls.api.features.commands.LspCommand
 import com.jetbrains.ls.api.features.impl.common.modcommands.CHOICE_SEPARATOR
-import com.jetbrains.ls.api.features.impl.common.window.showDocumentIfSupported
 import com.jetbrains.ls.kotlinLsp.requests.core.ChooseActionMenuEntry
 import com.jetbrains.ls.kotlinLsp.requests.core.ShowChooseActionMenuNotification
 import com.jetbrains.ls.kotlinLsp.requests.core.ShowChooseActionMenuParams

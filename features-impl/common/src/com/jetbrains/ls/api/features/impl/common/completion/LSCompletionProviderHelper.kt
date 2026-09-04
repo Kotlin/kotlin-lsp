@@ -38,7 +38,7 @@ import com.jetbrains.ls.api.core.util.isSource
 import com.jetbrains.ls.snapshot.api.impl.core.CompletionItemId
 import com.jetbrains.ls.snapshot.api.impl.core.CompletionItemWithObject
 import com.jetbrains.ls.snapshot.api.impl.core.LatestCompletionSessionComponent
-import com.jetbrains.ls.api.features.impl.common.window.showDocumentIfSupported
+import com.jetbrains.ls.api.features.impl.common.utils.showDocumentIfSupported
 import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.protocol.ApplyEditRequests
 import com.jetbrains.lsp.protocol.ApplyWorkspaceEditParams
