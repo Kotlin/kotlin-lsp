@@ -222,6 +222,26 @@ sealed class ModCommandData {
         /** A selectable [ModChooseAction] option: the [action] and its presentation [name]. */
         private data class Choice(val action: ModCommandAction, val name: String)
 
+        /**
+         * The [ModCommandData] which is equivalent to [command], or `null` when the client cannot apply it.
+         *
+         * [actionContext] describes the document the command was built against. [server] supplies the client
+         * capabilities. A command which has no LSP equivalent needs a custom `intellij` notification. A client
+         * which declares no `intellijExtensions` therefore gets a degraded form, or `null`. Each branch documents
+         * the form it falls back to.
+         *
+         * A `null` result aborts the whole conversion, including the enclosing [ModCompositeCommand]. The caller
+         * must then offer no fix, because a half-applied command can leave the file broken.
+         *
+         * This method can perform an action. A [ModChooseAction] with one selectable choice has no menu to show,
+         * so the choice runs at once and its result is converted.
+         *
+         * The completion path does not start here.
+         * [split][com.jetbrains.ls.api.features.impl.common.completion.ModCompletionCommandConverter.split] turns
+         * the leading edits into the text of the completion item. Only the rest reaches this method, through
+         * [toCommand][com.jetbrains.ls.api.features.impl.common.completion.ModCompletionCommandConverter.toCommand],
+         * which converts [ModStartRename] and [ModLaunchEditorAction] itself.
+         */
         fun from(
             command: ModCommand,
             actionContext: ActionContext,
