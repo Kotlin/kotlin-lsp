@@ -961,8 +961,8 @@ function launchSettingsSnapshot(): string {
 }
 const SETTINGS_CHANGE_DEBOUNCE_MS = 500;
 const SETTINGS_CHANGE_ACTION_LABELS: Record<Exclude<SettingsChangeAction, 'none'>, string> = {
-  start: 'Start Server',
-  restart: 'Restart Server',
+  start: 'Start Language Server',
+  restart: 'Restart Language Server',
   reload: 'Reload Workspace',
 };
 
@@ -1020,7 +1020,7 @@ function registerSettingsChangeWatcher(restartServer: () => Promise<boolean>): v
     lastPromptedFor = promptFor;
     const label = SETTINGS_CHANGE_ACTION_LABELS[action];
     const choice = await vscode.window.showWarningMessage(
-      `${extensionDisplayName()}: settings changed. ${label} to apply them.`,
+      `${extensionDisplayName()}: settings changed. ${label} to apply the changes.`,
       label,
     );
     if (choice !== label) return;
@@ -1074,7 +1074,7 @@ function reportSettingsProblems({ problems }: { problems: SettingProblem[] }): v
     only.size === 1 ? `@id:${problems[0]?.setting}` : `@ext:${getContext().extension.id}`;
   void vscode.window
     .showWarningMessage(
-      `${extensionDisplayName()} ignored invalid settings, so they will not apply: ${detail}.`,
+      `${extensionDisplayName()} ignored invalid settings: ${detail}.`,
       OPEN_SETTINGS_ACTION,
     )
     .then((choice) => {

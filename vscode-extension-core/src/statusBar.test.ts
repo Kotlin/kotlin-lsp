@@ -213,7 +213,7 @@ describe('status bar text', () => {
         actions: [],
         presentation: {
           text: '$(loading~spin)',
-          tooltip: 'IntelliJ license service is starting.',
+          tooltip: 'License service is starting…',
           isProblem: false,
         },
       },

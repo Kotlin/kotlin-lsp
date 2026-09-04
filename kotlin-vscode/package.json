@@ -503,7 +503,7 @@
           "intellij.projects": {
             "type": "array",
             "default": [],
-            "description": "Externally configured projects to import automatically. Each entry specifies a workspace root or build file together with the build tool to use.",
+            "description": "Externally configured projects to import automatically. Each entry specifies a workspace root or build file and the build tool to use.",
             "items": {
               "type": "object",
               "required": [
@@ -513,7 +513,7 @@
               "defaultSnippets": [
                 {
                   "label": "Configured project",
-                  "description": "Project workspace root or build file together with the build tool to import it with.",
+                  "description": "Project workspace root or build file and the build tool to use to import the project.",
                   "body": {
                     "type": "${1|gradle,maven,bazel,jps,gomodules,gomodules-recursive-scan,json|}",
                     "path": "file:///${2:path/to/project}"
