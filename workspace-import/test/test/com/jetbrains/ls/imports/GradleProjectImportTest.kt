@@ -9,6 +9,7 @@ import com.jetbrains.ls.imports.core.provider.TestDataDirSource
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
 import com.jetbrains.ls.imports.json.WorkspaceData
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
 import kotlin.io.path.div
@@ -37,6 +38,26 @@ class GradleProjectImportTest : GradleProjectImportTestCase() {
 
     @Test
     fun multiProjectKotlinDSL() = doGradleTest("MultiProjectKotlinDSL", ::withIgnoredJdkRoots)
+
+    @Test
+    fun kotlinKmpProject() {
+        val reporter = LoggingWorkspaceProgressReporter()
+        doGradleTest(
+            project = "GradleKotlinKmpProject",
+            jdkToUse = JdkDownloaderFacade.jdk17,
+            reporter = reporter,
+            resultMapper = ::withIgnoredJdkRoots,
+            importParametersCustomizer = { it },
+            entityStorageVerifier = {}
+        )
+        reporter.capturedOutput
+            .apply {
+                assertContainsOnce("Gradle execution complete")
+                assertContainsOnce("Task :prepareKotlinIdeaImport")
+                assertContainsOnce("Task :desktopApp:prepareKotlinIdeaImport")
+                assertContainsOnce("Task :shared:prepareKotlinIdeaImport")
+            }
+    }
 
     @Test
     fun multiProjectGroovyDSL() = doGradleTest("MultiProjectGroovyDSL", ::withIgnoredJdkRoots)
@@ -173,4 +194,14 @@ class GradleProjectImportTest : GradleProjectImportTestCase() {
                 }
             }
         )
+
+    private fun String.assertContainsOnce(value: String) {
+        val firstIndex = indexOf(value)
+        assertTrue(firstIndex > 0, "The line '$value' is not found in string [$this]")
+        val secondIndex = indexOf(value, firstIndex + value.length, false)
+        assertTrue(
+            secondIndex == -1,
+            "The line '$value' expected to be found in a string only once, but the value was found at $firstIndex and $secondIndex"
+        )
+    }
 }

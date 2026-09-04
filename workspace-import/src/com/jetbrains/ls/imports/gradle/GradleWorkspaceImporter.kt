@@ -87,7 +87,8 @@ object GradleWorkspaceImporter : WorkspaceImporter {
             connection.use { projectConnection ->
                 withDaemonInitScripts { daemonInitScripts ->
                     // Phase 1: the model as declared, with the sync tasks not run yet, so nothing waits on code generation.
-                    val withoutSyncTasks = createExecuter(parameters, projectConnection, channel, daemonInitScripts, jdkToUse, null).run()
+                    val withoutSyncTasks = createExecuter(parameters, projectConnection, channel, daemonInitScripts, jdkToUse, null)
+                        .execute { channel.trySend(ImportEvent.StdOutput("Gradle execution complete")) }
                     channel.trySend(ImportEvent.UpdateWorkspaceModel(toStorage(withoutSyncTasks, parameters, virtualFileUrlManager, channel)))
 
                     // Phase 2: the same model once the sync tasks have generated their sources.
@@ -99,7 +100,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                             daemonInitScripts,
                             jdkToUse,
                             listOf(PREPARE_KOTLIN_IDEA_IMPORT_TASK_NAME)
-                        ).run()
+                        ).execute { channel.trySend(ImportEvent.StdOutput("Gradle execution complete")) }
                     } catch (e: BuildActionFailureException) {
                         LOG.warn(
                             "Gradle sync failed while running '$PREPARE_KOTLIN_IDEA_IMPORT_TASK_NAME' in $projectDirectory. " +
@@ -143,6 +144,12 @@ object GradleWorkspaceImporter : WorkspaceImporter {
             )
             fixMissingProjectSdk(parameters.options.javaHome ?: parameters.defaultSdkPath, virtualFileUrlManager)
         }
+    }
+
+    private fun BuildActionExecuter<ProjectMetadata>.execute(onSuccess: () -> Unit): ProjectMetadata {
+        val result = run()
+        onSuccess()
+        return result
     }
 
     /**

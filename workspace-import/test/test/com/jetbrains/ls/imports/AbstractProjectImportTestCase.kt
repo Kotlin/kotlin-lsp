@@ -105,6 +105,7 @@ abstract class AbstractProjectImportTestCase {
         project: String,
         importer: WorkspaceImporter,
         testDataDir: Path,
+        reporter: LoggingWorkspaceProgressReporter = LoggingWorkspaceProgressReporter(),
         resultMapper: (WorkspaceData) -> WorkspaceData = { it },
         entityStorageVerifier: (EntityStorage) -> Unit = { },
         projectFile: String? = null,
@@ -113,7 +114,6 @@ abstract class AbstractProjectImportTestCase {
         val projectDir = testDataDir / project
         require(projectDir.exists()) { "Project $project not found at $projectDir" }
 
-        val reporter = LoggingWorkspaceProgressReporter()
         val storage = timeoutRunBlocking(timeout = 10.minutes) {
             withAnalyzer(isUnitTestMode = true) { analyzer ->
                 val currentSnapshot = WorkspaceModelSnapshot.empty()

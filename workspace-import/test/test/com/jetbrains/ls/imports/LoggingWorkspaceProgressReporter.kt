@@ -7,7 +7,7 @@ import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
  * Echoes import-tool (Maven/Gradle) output to the test's stdout/stderr as it arrives and accumulates it,
  * so a failed import shows the real tool error instead of an opaque "Failed to import ... project".
  */
-internal class LoggingWorkspaceProgressReporter : WorkspaceImportProgressReporter {
+class LoggingWorkspaceProgressReporter : WorkspaceImportProgressReporter {
     private val output = StringBuilder()
 
     val capturedOutput: String

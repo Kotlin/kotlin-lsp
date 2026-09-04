@@ -75,17 +75,18 @@ abstract class GradleProjectImportTestCase : AbstractProjectImportTestCase() {
     )
 
     protected fun doGradleTest(project: String, resultMapper: (WorkspaceData) -> WorkspaceData = { it }) =
-        doGradleTest(project, JdkDownloaderFacade.jdk17, resultMapper) { }
+        doGradleTest(project = project, jdkToUse = JdkDownloaderFacade.jdk17, resultMapper = resultMapper) { }
 
     protected fun doGradleTest(
         project: String,
         jdkToUse: JdkDownloadItem,
         resultMapper: (WorkspaceData) -> WorkspaceData = { it }
-    ) = doGradleTest(project, jdkToUse, resultMapper) { }
+    ) = doGradleTest(project = project, jdkToUse = jdkToUse, resultMapper = resultMapper) { }
 
     protected fun doGradleTest(
         project: String,
         jdkToUse: JdkDownloadItem,
+        reporter: LoggingWorkspaceProgressReporter = LoggingWorkspaceProgressReporter(),
         resultMapper: (WorkspaceData) -> WorkspaceData = { it },
         importParametersCustomizer: (WorkspaceImportParameters) -> WorkspaceImportParameters = { it },
         entityStorageVerifier: (EntityStorage) -> Unit,
@@ -105,6 +106,7 @@ abstract class GradleProjectImportTestCase : AbstractProjectImportTestCase() {
                         project = project,
                         importer = GradleWorkspaceImporter,
                         testDataDir = testDataDir / "gradle",
+                        reporter = reporter,
                         resultMapper = resultMapper,
                         entityStorageVerifier = entityStorageVerifier,
                         importParametersCustomizer = importParametersCustomizer
