@@ -12,6 +12,7 @@ import com.intellij.psi.PsiDirectoryContainer
 import com.intellij.psi.PsiFile
 import com.intellij.util.IncorrectOperationException
 import com.intellij.util.concurrency.annotations.RequiresEdt
+import com.jetbrains.analyzer.api.FileUrl
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LspServerBundle
@@ -37,6 +38,7 @@ import com.jetbrains.lsp.protocol.ShowMessageParams
 import com.jetbrains.lsp.protocol.TextDocumentEdit
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 import com.jetbrains.lsp.protocol.URI
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -64,35 +66,57 @@ suspend fun doRefactoring(
                 execute(processor)
             }
         }
+    } catch (ex: CancellationException) {
+        throw ex
     } catch (ex: Throwable) {
-        when (ex) {
-            is LspException -> throw ex
-            else -> {
-                val cause = generateSequence(ex) { it.cause?.takeIf { c -> c != it } }
-                    .filterIsInstance<IncorrectOperationException>()
-                    .firstOrNull() ?: ex
-
-                if (showNotificationWithError) {
-                    lspClient.notify(
-                        ShowMessageNotificationType,
-                        ShowMessageParams(
-                            MessageType.Error,
-                            cause.message ?: LspServerBundle.message("error.performing.refactoring")
-                        )
-                    )
-                }
-
-                throwLspError(
-                    RenameRequestType,
-                    cause.message ?: LspServerBundle.message("error.performing.refactoring"),
-                    Unit,
-                    ErrorCodes.InvalidParams,
-                    cause
-                )
-            }
-        }
+        failRefactoring(ex, showNotificationWithError)
     }
 
+    return computeRefactoringChanges(originals, granularity, uriToSkip)
+}
+
+/** Converts a refactoring failure into an LSP error. Both rename paths report through it. */
+context(_: LspHandlerContext)
+internal suspend fun failRefactoring(ex: Throwable, showNotificationWithError: Boolean): Nothing {
+    when (ex) {
+        is LspException -> throw ex
+        else -> {
+            val cause = refactoringErrorCause(ex)
+
+            if (showNotificationWithError) {
+                lspClient.notify(
+                    ShowMessageNotificationType,
+                    ShowMessageParams(
+                        MessageType.Error,
+                        cause.message ?: LspServerBundle.message("error.performing.refactoring")
+                    )
+                )
+            }
+
+            throwLspError(
+                RenameRequestType,
+                cause.message ?: LspServerBundle.message("error.performing.refactoring"),
+                Unit,
+                ErrorCodes.InvalidParams,
+                cause
+            )
+        }
+    }
+}
+
+/** Prefers the first [IncorrectOperationException] in the cause chain. It carries the readable message. */
+internal fun refactoringErrorCause(ex: Throwable): Throwable =
+    generateSequence(ex) { it.cause?.takeIf { c -> c != it } }
+        .filterIsInstance<IncorrectOperationException>()
+        .firstOrNull() ?: ex
+
+/** Computes the response changes after a refactoring: text edits against [originals] plus the tracked file operations. */
+context(server: LSServer, _: LSAnalysisContext)
+internal suspend fun computeRefactoringChanges(
+    originals: Map<FileUrl, Pair<PsiFile, String>>,
+    granularity: DiffGranularity,
+    uriToSkip: URI?,
+): List<FileChange> {
     return readAction {
         val edits = originals.mapNotNull { (oldUrl, fileToOriginalText) ->
             val (file, original) = fileToOriginalText
