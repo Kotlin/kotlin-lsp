@@ -39,12 +39,11 @@ import com.jetbrains.lsp.protocol.RenameRequestType
  */
 class LSRenameProcessor internal constructor(
     private val project: Project,
-    target: PsiElement,
+    private val primaryElement: PsiElement,
     private val newName: String,
     private val searchInComments: Boolean,
     private val searchTextOccurrences: Boolean,
 ) : LSRefactoringProcessor {
-    private val primaryElement: PsiElement = RenamePsiElementProcessor.forElement(target).substituteElementToRename(target, null) ?: target
     private val allRenames = linkedMapOf<PsiElement, String>()
     private val renamers = mutableListOf<AutomaticRenamer>()
     private val skippedUsages = mutableListOf<UnresolvableCollisionUsageInfo>()
@@ -265,10 +264,11 @@ class LSRenameProcessor internal constructor(
         fun create(context: RenameContext): LSRenameProcessor? {
             val target = context.target
             if (!target.isValid) return null
-            if (!canRename(target)) {
+            val primaryElement = RenamePsiElementProcessor.forElement(target).substituteElementToRename(target, null) ?: target
+            if (primaryElement is PsiCompiledElement) {
                 throwLspError(RenameRequestType, "This element cannot be renamed", Unit, ErrorCodes.InvalidParams)
             }
-            return LSRenameProcessor(target.project, target, context.newName, false, false)
+            return LSRenameProcessor(target.project, primaryElement, context.newName, false, false)
         }
 
         /** Returns false when [target] resolves to a [PsiCompiledElement], which [create] rejects. */

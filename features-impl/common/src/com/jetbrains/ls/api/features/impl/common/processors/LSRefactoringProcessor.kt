@@ -82,7 +82,7 @@ interface LSRefactoringProcessor {
  */
 context(_: LSAnalysisContext)
 internal fun execute(processor: LSRefactoringProcessor) : Map<FileUrl, Pair<PsiFile, String>> {
-    if (!PsiDocumentManager.getInstance(project).commitAllDocumentsUnderProgress()) return emptyMap()
+    PsiDocumentManager.getInstance(project).commitAllDocuments()
     DumbService.getInstance(project).completeJustSubmittedTasks()
 
     val usages = findUsages(processor) ?: return emptyMap()
