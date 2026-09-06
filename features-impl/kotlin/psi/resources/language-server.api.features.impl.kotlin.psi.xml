@@ -1,6 +1,7 @@
 <idea-plugin>
   <!-- region Generated dependencies - run `Generate Product Layouts` to regenerate -->
   <dependencies>
+    <module name="fleet.lsp.protocol"/>
     <module name="intellij.java.psi"/>
     <module name="intellij.kotlin.base.analysis"/>
     <module name="intellij.libraries.kotlinc.analysis.api"/>
