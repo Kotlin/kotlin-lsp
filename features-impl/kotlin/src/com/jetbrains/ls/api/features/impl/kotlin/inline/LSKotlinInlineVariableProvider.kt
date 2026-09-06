@@ -25,6 +25,9 @@ import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.core.withWriteAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
+import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
+import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
+import com.jetbrains.ls.api.features.commands.LSCommandExecutor
 import com.jetbrains.ls.api.features.impl.common.inline.InlineActionKind
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCodeAction
 import com.jetbrains.ls.api.features.impl.common.processors.LSRefactoringProcessor
@@ -34,17 +37,28 @@ import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.DiffGranularity
 import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
-import com.jetbrains.lsp.implementation.LspException
 import com.jetbrains.lsp.implementation.LspHandlerContext
+import com.jetbrains.lsp.implementation.lspClient
+import com.jetbrains.lsp.implementation.throwLspError
+import com.jetbrains.lsp.protocol.ApplyEditRequests
+import com.jetbrains.lsp.protocol.ApplyWorkspaceEditParams
 import com.jetbrains.lsp.protocol.CodeAction
 import com.jetbrains.lsp.protocol.CodeActionKind
 import com.jetbrains.lsp.protocol.CodeActionParams
+import com.jetbrains.lsp.protocol.Command
+import com.jetbrains.lsp.protocol.Commands.ExecuteCommand
 import com.jetbrains.lsp.protocol.DocumentUri
+import com.jetbrains.lsp.protocol.ErrorCodes
+import com.jetbrains.lsp.protocol.LSP
 import com.jetbrains.lsp.protocol.Range
 import com.jetbrains.lsp.protocol.TextDocumentEdit
 import com.jetbrains.lsp.protocol.WorkspaceEdit
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.encodeToJsonElement
 import org.jetbrains.annotations.ApiStatus
 import org.jetbrains.annotations.Nls
 import org.jetbrains.annotations.TestOnly
@@ -66,7 +80,9 @@ import org.jetbrains.kotlin.psi.KtWhenExpression
 import org.jetbrains.kotlin.psi.psiUtil.getQualifiedExpressionForSelectorOrThis
 import org.jetbrains.kotlin.resolve.references.ReferenceAccess
 
-internal object LSKotlinInlineVariableProvider : LSCodeActionProvider {
+internal object LSKotlinInlineVariableProvider : LSCodeActionProvider, LSCommandDescriptorProvider {
+    private const val COMMAND_NAME = "kotlin.inline.variable"
+
     override val providesOnlyKinds: Set<CodeActionKind> = setOf(InlineActionKind.RefactorInlineVariable)
 
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
@@ -74,35 +90,82 @@ internal object LSKotlinInlineVariableProvider : LSCodeActionProvider {
     context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val documentUri = params.textDocument.uri
-        val propertyFound = server.withAnalysisContextAndFileSettings(documentUri.uri) {
-            readAction { findProperty(documentUri, params.range) != null }
-        }
-        if (!propertyFound) return@flow
-        val action = server.withWriteAnalysisContextAndFileSettings(documentUri.uri) {
-            when (val prepared = readAction { prepare(documentUri, params.range) }) {
-                null -> null
-                is Prepared.CannotInline -> errorAction(prepared.message)
-                is Prepared.Ready -> inlineAction(prepared.processor)
+        val action = server.withAnalysisContextAndFileSettings(documentUri.uri) {
+            readAction {
+                val property = findProperty(documentUri, params.range) ?: return@readAction null
+                when (AbstractKotlinInlinePropertyProcessor.extractInitialization(property).initializerOrNull) {
+                    null -> errorAction(cannotInlineMessage(property))
+                    else -> inlineAction(documentUri, params.range, server.documents.getVersion(documentUri.uri) ?: 0)
+                }
             }
         } ?: return@flow
         emit(action)
     }
 
-    context(server: LSServer, _: LSAnalysisContext, _: LspHandlerContext)
-    private suspend fun inlineAction(processor: LSKotlinInlineVariableProcessor): CodeAction? {
-        val changes = try {
-            doRefactoring(processor, DiffGranularity.WORD, uriToSkip = null, showNotificationWithError = false)
-        } catch (e: LspException) {
-            return errorAction(e.message ?: LspServerBundle.message("error.performing.refactoring"))
-        }
-        val edits = changes.filterIsInstance<TextDocumentEdit>().filter { it.edits.isNotEmpty() }
-        if (edits.isEmpty()) return null
+    override val commandDescriptors: List<LSCommandDescriptor>
+        get() = listOf(
+            LSCommandDescriptor(
+                title = title(),
+                name = COMMAND_NAME,
+                executor = object : LSCommandExecutor {
+                    context(server: LSServer, handlerContext: LspHandlerContext)
+                    override suspend fun execute(arguments: List<JsonElement>): JsonElement {
+                        require(arguments.size == 3) { "Expected 3 arguments, got: ${arguments.size}" }
+                        val documentUri = LSP.json.decodeFromJsonElement<DocumentUri>(arguments[0])
+                        val range = LSP.json.decodeFromJsonElement<Range>(arguments[1])
+                        val listedVersion = LSP.json.decodeFromJsonElement<Int>(arguments[2])
+                        val changes = server.withWriteAnalysisContextAndFileSettings(documentUri.uri) {
+                            if ((server.documents.getVersion(documentUri.uri) ?: 0) != listedVersion) failStaleDocument()
+                            when (val prepared = readAction { prepare(documentUri, range) }) {
+                                null -> failInline(LspServerBundle.message("error.performing.refactoring"))
+                                is Prepared.CannotInline -> failInline(prepared.message)
+                                is Prepared.Ready -> doRefactoring(
+                                    processor = prepared.processor,
+                                    granularity = DiffGranularity.WORD,
+                                    uriToSkip = null,
+                                    showNotificationWithError = true,
+                                )
+                            }
+                        }
+                        val edits = changes.filterIsInstance<TextDocumentEdit>().filter { it.edits.isNotEmpty() }
+                        if (edits.isEmpty()) return JsonPrimitive(true)
+                        lspClient.request(
+                            ApplyEditRequests.ApplyEdit,
+                            ApplyWorkspaceEditParams(
+                                label = title(),
+                                edit = WorkspaceEdit(documentChanges = edits),
+                            ),
+                        )
+                        return JsonPrimitive(true)
+                    }
+                },
+            ),
+        )
+
+    private fun inlineAction(documentUri: DocumentUri, range: Range, version: Int): CodeAction {
+        val title = title()
         return CodeAction(
-            title = title(),
+            title = title,
             kind = InlineActionKind.RefactorInlineVariable,
-            edit = WorkspaceEdit(documentChanges = edits),
+            command = Command(
+                title = title,
+                command = COMMAND_NAME,
+                arguments = listOf(
+                    LSP.json.encodeToJsonElement<DocumentUri>(documentUri),
+                    LSP.json.encodeToJsonElement<Range>(range),
+                    JsonPrimitive(version),
+                ),
+            ),
         )
     }
+
+    /** Reports command arguments that name a property that is gone or is not inlinable anymore. */
+    private fun failInline(message: @Nls String): Nothing =
+        throwLspError(ExecuteCommand, message, Unit, ErrorCodes.InvalidParams, null)
+
+    /** Reports a document that changed after the action was listed: the range may point at another declaration now. */
+    private fun failStaleDocument(): Nothing =
+        throwLspError(ExecuteCommand, LspServerBundle.message("error.action.not.available"), Unit, ErrorCodes.ContentModified, null)
 
     context(analysisContext: LSAnalysisContext)
     private fun prepare(documentUri: DocumentUri, range: Range): Prepared? {
