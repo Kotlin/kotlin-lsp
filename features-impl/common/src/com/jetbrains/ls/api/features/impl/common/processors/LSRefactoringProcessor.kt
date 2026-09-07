@@ -74,7 +74,7 @@ interface LSRefactoringProcessor {
      * @see com.intellij.refactoring.BaseRefactoringProcessor.getBeforeData
      * @see com.intellij.refactoring.BaseRefactoringProcessor.doRefactoring
      */
-    fun createEventData(): RefactoringEventData
+    fun createEventData(): RefactoringEventData?
 }
 
 /**
@@ -125,7 +125,7 @@ context(_: LSAnalysisContext)
 private fun doRefactoring(processor: LSRefactoringProcessor, usages: Array<UsageInfo>) {
     val writableUsageInfos = removeNonWritableUsages(usages)
     val data = processor.createEventData()
-    data.addUsages(writableUsageInfos.toList())
+    data?.addUsages(writableUsageInfos.toList())
 
     PsiDocumentManager.getInstance(project).commitAllDocuments()
     val listenerManager =
@@ -133,8 +133,8 @@ private fun doRefactoring(processor: LSRefactoringProcessor, usages: Array<Usage
     val transaction = listenerManager.startTransaction()
     val preparedData = linkedMapOf<RefactoringHelper<*>?, Any?>()
 
-    val elements = data.getUserData(RefactoringEventData.PSI_ELEMENT_ARRAY_KEY)
-    val primaryElement = data.getUserData(RefactoringEventData.PSI_ELEMENT_KEY)
+    val elements = data?.getUserData(RefactoringEventData.PSI_ELEMENT_ARRAY_KEY)
+    val primaryElement = data?.getUserData(RefactoringEventData.PSI_ELEMENT_KEY)
     val allElements = when (elements) {
         null -> arrayOf(primaryElement)
         else -> elements + primaryElement

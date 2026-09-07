@@ -11,8 +11,6 @@ import com.intellij.psi.PsiElement
  */
 fun findElementUnderCaret(editor: Editor, offset: Int): PsiElement? {
     val elementSearcher = TargetElementUtil.getInstance()
-    return elementSearcher.findTargetElement(
-        editor,
-        TargetElementUtil.REFERENCED_ELEMENT_ACCEPTED or TargetElementUtil.ELEMENT_NAME_ACCEPTED, offset
-    )
+    val flags = elementSearcher.referenceSearchFlags and TargetElementUtil.LOOKUP_ITEM_ACCEPTED.inv()
+    return elementSearcher.findTargetElement(editor, flags, offset)
 }
