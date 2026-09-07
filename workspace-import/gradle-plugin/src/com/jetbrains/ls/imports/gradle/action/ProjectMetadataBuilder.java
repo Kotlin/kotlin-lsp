@@ -13,13 +13,11 @@ import com.jetbrains.ls.imports.gradle.model.ModuleSourceSets;
 import com.jetbrains.ls.imports.gradle.utils.ProxyUtil;
 import org.gradle.tooling.BuildAction;
 import org.gradle.tooling.BuildController;
-import org.gradle.tooling.model.DomainObjectSet;
 import org.gradle.tooling.model.HierarchicalElement;
 import org.gradle.tooling.model.gradle.BasicGradleProject;
 import org.gradle.tooling.model.gradle.GradleBuild;
 import org.gradle.tooling.model.idea.IdeaModule;
 import org.gradle.tooling.model.idea.IdeaProject;
-import org.gradle.util.GradleVersion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.tooling.core.Extras;
@@ -36,10 +34,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.jetbrains.ls.imports.gradle.utils.GradleUtilKt.getIncludedBuilds;
+
 public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
 
     private static final @NotNull String BUILD_SRC_MODULE_NAME = "buildSrc";
-    private static final @NotNull GradleVersion INCLUDED_BUILD_API_GRADLE_VERSION = GradleVersion.version("8.0");
 
     private final @NotNull GradleSyncSettings syncSettings;
 
@@ -128,18 +127,6 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
             currentParent = currentParent.getParent();
         }
         return String.join(".", fqn);
-    }
-
-    private static @NotNull DomainObjectSet<? extends GradleBuild> getIncludedBuilds(@NotNull BuildController controller) {
-        GradleBuild buildModel = controller.getBuildModel();
-        if (GradleVersion.current().compareTo(INCLUDED_BUILD_API_GRADLE_VERSION) <= 0) {
-            return buildModel.getIncludedBuilds();
-        }
-        DomainObjectSet<? extends GradleBuild> editableBuilds = buildModel.getEditableBuilds();
-        if (editableBuilds.isEmpty()) {
-            return buildModel.getIncludedBuilds();
-        }
-        return editableBuilds;
     }
 
     private static @NotNull List<@NotNull InternalIdeaProject> findProjects(@NotNull BuildController controller) {

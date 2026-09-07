@@ -23,9 +23,10 @@ import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.prepareForExecutio
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.withCustomGradleHome
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.withDaemonInitScripts
 import com.jetbrains.ls.imports.gradle.action.GradleSyncSettings
+import com.jetbrains.ls.imports.gradle.action.PrepareKotlinIdeaImportAction
 import com.jetbrains.ls.imports.gradle.action.ProjectMetadata
 import com.jetbrains.ls.imports.gradle.action.ProjectMetadataBuilder
-import com.jetbrains.ls.imports.gradle.model.builder.PREPARE_KOTLIN_IDEA_IMPORT_TASK_NAME
+import com.jetbrains.ls.imports.gradle.util.GradleSyncResultHandler
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter.postProcessWorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData
 import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
@@ -34,10 +35,8 @@ import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
-import org.gradle.tooling.BuildActionExecuter
-import org.gradle.tooling.BuildActionFailureException
-import org.gradle.tooling.GradleConnectionException
 import org.gradle.tooling.GradleConnector
+import org.gradle.tooling.IntermediateResultHandler
 import org.gradle.tooling.ProjectConnection
 import java.io.File
 import java.nio.file.Path
@@ -60,9 +59,6 @@ object GradleWorkspaceImporter : WorkspaceImporter {
     /**
      * Publishes the model as Gradle declares it first, then republishes it after the sync tasks have generated their
      * sources, so the analyzer does not wait for code generation before it can resolve the project's dependencies.
-     *
-     * The price is one extra model build in the success case; the failure case costs what it did before, because the
-     * fallback this replaces was the very same build without the sync tasks.
      */
     override fun importWorkspace(
         project: Project,
@@ -86,36 +82,21 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         try {
             connection.use { projectConnection ->
                 withDaemonInitScripts { daemonInitScripts ->
-                    // Phase 1: the model as declared, with the sync tasks not run yet, so nothing waits on code generation.
-                    val withoutSyncTasks = createExecuter(parameters, projectConnection, channel, daemonInitScripts, jdkToUse, null)
-                        .execute { channel.trySend(ImportEvent.StdOutput("Gradle execution complete")) }
-                    channel.trySend(ImportEvent.UpdateWorkspaceModel(toStorage(withoutSyncTasks, parameters, virtualFileUrlManager, channel)))
-
-                    // Phase 2: the same model once the sync tasks have generated their sources.
-                    val withSyncTasks = try {
-                        createExecuter(
-                            parameters,
-                            projectConnection,
-                            channel,
-                            daemonInitScripts,
-                            jdkToUse,
-                            listOf(PREPARE_KOTLIN_IDEA_IMPORT_TASK_NAME)
-                        ).execute { channel.trySend(ImportEvent.StdOutput("Gradle execution complete")) }
-                    } catch (e: BuildActionFailureException) {
-                        LOG.warn(
-                            "Gradle sync failed while running '$PREPARE_KOTLIN_IDEA_IMPORT_TASK_NAME' in $projectDirectory. " +
-                                    "Keeping the model imported without sync tasks; generated sources may be missing.",
-                            e
+                    val metadata = executeGradleSync(parameters, projectConnection, channel, daemonInitScripts, jdkToUse)
+                    channel.trySend(
+                        ImportEvent.UpdateWorkspaceModel(
+                            toStorage(
+                                metadata,
+                                parameters,
+                                virtualFileUrlManager,
+                                channel
+                            )
                         )
-                        // Reported as output rather than as `Failed`, which would show the client an error for an import
-                        // that succeeded, only without generated sources.
-                        channel.trySend(ImportEvent.ErrorOutput("Gradle sync tasks failed. Generated sources may be missing."))
-                        return@withDaemonInitScripts
-                    }
-                    channel.trySend(ImportEvent.UpdateWorkspaceModel(toStorage(withSyncTasks, parameters, virtualFileUrlManager, channel)))
+                    )
+                    channel.trySend(ImportEvent.StdOutput("Gradle execution complete"))
                 }
             }
-        } catch (e: GradleConnectionException) {
+        } catch (e: Exception) {
             @Suppress("HardCodedStringLiteral")
             throw WorkspaceImportException("Gradle sync failed", "Unable to import a Gradle project: ${e.message}", e)
         }
@@ -146,34 +127,31 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         }
     }
 
-    private fun BuildActionExecuter<ProjectMetadata>.execute(onSuccess: () -> Unit): ProjectMetadata {
-        val result = run()
-        onSuccess()
-        return result
-    }
-
-    /**
-     * @param syncTasks The paths of the tasks to be executed.
-     * Relative paths are evaluated relative to the project for which this launcher was created.
-     * An empty list will run the project's default tasks.
-     * A null means no tasks will be executed
-     */
-    private fun createExecuter(
+    private fun executeGradleSync(
         parameters: WorkspaceImportParameters,
         connection: ProjectConnection,
         events: SendChannel<ImportEvent>,
         initScripts: Iterable<Path>,
-        javaHome: String?,
-        syncTasks: List<String>? = null,
-    ): BuildActionExecuter<ProjectMetadata> {
+        javaHome: String?
+    ): ProjectMetadata {
         val syncSettings = GradleSyncSettings(downloadLibrarySources = parameters.options.downloadAdditionalArtifacts)
-        val executer = connection.action(ProjectMetadataBuilder(syncSettings))
+        val syncResultHandler = GradleSyncResultHandler<ProjectMetadata>()
+        val executer = connection.action()
+            .projectsLoaded(
+                PrepareKotlinIdeaImportAction(),
+                IntermediateResultHandler { }
+            )
+            .buildFinished(
+                ProjectMetadataBuilder(syncSettings),
+                syncResultHandler.asIntermediateHandler()
+            )
+            .build()
             .configureLogging(events)
             .prepareForExecution()
             .configureEnvironment(parameters.options.environment)
             .configureSystemProperties(parameters.options.systemProperties)
             .addInitScripts(initScripts)
-            .forTasks(syncTasks)
+            .forTasks(emptyList())
 
         if (parameters.options.offline) {
             executer.addArguments("--offline")
@@ -181,6 +159,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         if (javaHome != null) {
             executer.setJavaHome(File(javaHome))
         }
-        return executer
+        executer.run(syncResultHandler.asResultHandler())
+        return syncResultHandler.getSyncResult()
     }
 }
