@@ -1,5 +1,11 @@
 import * as vscode from 'vscode';
-import { Command, LanguageClient, NotificationType } from 'vscode-languageclient/node';
+import {
+  Command,
+  LanguageClient,
+  type Location,
+  NotificationType,
+  RequestType,
+} from 'vscode-languageclient/node';
 import { getContext } from './extension';
 import { registerInitializationOptionsContributor } from './lspClient';
 
@@ -28,6 +34,32 @@ const chooseActionMenuNotification = new NotificationType<ShowChooseActionMenuPa
 
 interface ChooseActionMenuItem extends vscode.QuickPickItem {
   command: Command;
+}
+
+// `location` is absent when the conflicting code has no document of its own, such as a library element.
+type Conflict = { messages: string[]; location?: Location | null };
+type ShowConflictsParams = {
+  title: string;
+  conflicts: Conflict[];
+  continueLabel: string;
+  cancelLabel: string;
+  revealLabel: string;
+};
+type ShowConflictsDecision = 'continue' | 'cancel';
+type ShowConflictsResult = { decision: ShowConflictsDecision };
+
+const showConflictsRequest = new RequestType<ShowConflictsParams, ShowConflictsResult, void>(
+  'intellij/showConflicts',
+);
+
+interface ConflictItem extends vscode.QuickPickItem {
+  // Set on the two decision items, and absent on a conflict item.
+  decision?: ShowConflictsDecision;
+  location?: Location | null;
+}
+
+function revealConflictButton(tooltip: string): vscode.QuickInputButton {
+  return { iconPath: new vscode.ThemeIcon('go-to-file'), tooltip };
 }
 
 /**
@@ -85,6 +117,140 @@ export function registerChooseActionMenuHandler(client: LanguageClient): void {
     void showChooseActionMenu(client, params);
   });
   getContext().subscriptions.push(subscription);
+}
+
+/**
+ * Handles the `intellij/showConflicts` server request (used by the ModCommand `ModShowConflicts`), which asks
+ * the user to confirm a fix that reports problems. The server holds the edits of the fix and applies them only
+ * after a `continue` answer, so a rejected fix changes nothing.
+ *
+ * The answer must always be a decision. A thrown error would reach the server as a request failure, which it
+ * treats as a cancel, but that would also log noise, so a closed picker answers `cancel` instead.
+ */
+export function registerShowConflictsHandler(client: LanguageClient): void {
+  const subscription = client.onRequest(showConflictsRequest, (params) => showConflicts(params));
+  getContext().subscriptions.push(subscription);
+}
+
+/**
+ * One row per conflict. `label` names the place, and `detail` holds the whole message under it.
+ *
+ * A `QuickPickItem` renders one line of `label` and one line of `detail`, and cuts what does not fit. Only
+ * `detail` carries a tooltip which shows its whole text, so the message goes there and needs no breaking. The
+ * label answers what the message cannot: which file and line the conflict belongs to.
+ */
+function conflictRows(params: ShowConflictsParams): ConflictItem[] {
+  return params.conflicts.flatMap((conflict) => {
+    const message = conflictMessage(conflict);
+    if (message === '') return [];
+
+    const location = conflict.location;
+    return [
+      {
+        // Without a location there is nothing to name, so the label falls back to a placeholder. The message
+        // stays in `detail` either way, which is the only field with a tooltip, so all of it stays readable.
+        label: location ? conflictLocationLabel(location) : '-',
+        detail: '- ' + message,
+        location,
+        buttons: location ? [revealConflictButton(params.revealLabel)] : undefined,
+      },
+    ];
+  });
+}
+
+/**
+ * The name of the file of [location] and the line in it, as the label of its row.
+ *
+ * The name alone, not the path: a path can take the whole width and push out the part which identifies the
+ * place. Two files of the same name therefore read alike, and the reveal button still opens the right one.
+ */
+function conflictLocationLabel(location: Location): string {
+  // A URI path always separates with a slash, and `Uri.path` is already decoded.
+  const uriPath = vscode.Uri.parse(location.uri).path;
+  const fileName = uriPath.slice(uriPath.lastIndexOf('/') + 1);
+  return `${fileName}:${location.range.start.line + 1}`;
+}
+
+/**
+ * The whole message of one conflict on one line. The platform can report several messages for one element, and
+ * a message comes from HTML, so it can hold a line break of its own. A row renders no line break, so each of
+ * them becomes a space.
+ */
+function conflictMessage(conflict: Conflict): string {
+  return conflict.messages
+    .flatMap((message) => message.split('\n'))
+    .map((line) => line.trim())
+    .filter((line) => line !== '')
+    .join(' ');
+}
+
+/**
+ * Shows one row per conflict, so the user can read each of them and open its code, and answers the decision the
+ * user picks.
+ */
+function showConflicts(params: ShowConflictsParams): Promise<ShowConflictsResult> {
+  const conflictItems = conflictRows(params);
+  const decisionItems: ConflictItem[] = [
+    { label: '', kind: vscode.QuickPickItemKind.Separator },
+    { label: params.continueLabel, decision: 'continue' },
+    { label: params.cancelLabel, decision: 'cancel' },
+  ];
+
+  return new Promise((resolve) => {
+    const picker = vscode.window.createQuickPick<ConflictItem>();
+    let answered = false;
+
+    const finish = (decision: ShowConflictsDecision) => {
+      if (answered) return;
+
+      answered = true;
+      resolve({ decision });
+      picker.hide();
+    };
+
+    picker.title = params.title;
+    picker.items = [...conflictItems, ...decisionItems];
+    // Half of the text of a conflict sits in `detail`, so a filter which ignored it would miss a match.
+    picker.matchOnDetail = true;
+    // Revealing a conflict moves the focus to the editor, and the picker has to survive that.
+    picker.ignoreFocusOut = true;
+
+    picker.onDidAccept(() => {
+      const item = picker.selectedItems[0];
+      if (item?.decision) {
+        finish(item.decision);
+        return;
+      }
+      // A conflict row is not an answer, so accepting it opens its code and keeps the picker open.
+      void revealConflict(item?.location);
+    });
+    picker.onDidTriggerItemButton((event) => {
+      void revealConflict(event.item.location);
+    });
+    picker.onDidHide(() => {
+      // The user dismissed the picker, which is a refusal to continue.
+      finish('cancel');
+      picker.dispose();
+    });
+
+    picker.show();
+  });
+}
+
+/** Opens [location] and selects its range, so the user can see the code the conflict belongs to. */
+async function revealConflict(location: Location | null | undefined): Promise<void> {
+  if (!location) return;
+
+  try {
+    const document = await vscode.workspace.openTextDocument(vscode.Uri.parse(location.uri));
+    const selection = new vscode.Range(
+      new vscode.Position(location.range.start.line, location.range.start.character),
+      new vscode.Position(location.range.end.line, location.range.end.character),
+    );
+    await vscode.window.showTextDocument(document, { selection, preserveFocus: false });
+  } catch {
+    // The file may be gone by now. The picker stays open, so the user can still decide.
+  }
 }
 
 async function showChooseActionMenu(

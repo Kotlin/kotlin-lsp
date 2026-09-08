@@ -17,6 +17,7 @@ import com.intellij.modcommand.ModMoveFile
 import com.intellij.modcommand.ModNavigate
 import com.intellij.modcommand.ModNothing
 import com.intellij.modcommand.ModRegisterTabOut
+import com.intellij.modcommand.ModShowConflicts
 import com.intellij.modcommand.ModStartRename
 import com.intellij.modcommand.ModStartTemplate
 import com.intellij.modcommand.ModUpdateFileText
@@ -24,10 +25,12 @@ import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.impl.DocumentImpl
 import com.intellij.openapi.util.TextRange
+import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.findDocument
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.util.getLspLocationForDefinition
 import com.jetbrains.ls.api.core.util.intellijUriToLspUri
 import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.features.LspServerBundle
@@ -43,18 +46,25 @@ import com.jetbrains.lsp.protocol.Command
 import com.jetbrains.lsp.protocol.CreateFile
 import com.jetbrains.lsp.protocol.DeleteFile
 import com.jetbrains.lsp.protocol.DocumentUri
+import com.jetbrains.lsp.protocol.Location
 import com.jetbrains.lsp.protocol.MessageType
 import com.jetbrains.lsp.protocol.NotificationType
 import com.jetbrains.lsp.protocol.Range
 import com.jetbrains.lsp.protocol.RenameFile
+import com.jetbrains.lsp.protocol.RequestType
 import com.jetbrains.lsp.protocol.ShowDocumentParams
+import com.jetbrains.lsp.protocol.ShowMessageNotificationType
+import com.jetbrains.lsp.protocol.ShowMessageParams
 import com.jetbrains.lsp.protocol.ShowMessageRequestParams
 import com.jetbrains.lsp.protocol.TextDocumentEdit
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 import com.jetbrains.lsp.protocol.TextEdit
+import com.jetbrains.lsp.protocol.URI
 import com.jetbrains.lsp.protocol.Window
 import com.jetbrains.lsp.protocol.WorkspaceEdit
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.JsonElement
 import java.util.Base64
 
@@ -205,6 +215,26 @@ sealed class ModCommandData {
     }
 
     /**
+     * A [ModShowConflicts] asks the user to confirm a fix which has known problems. The command carries no edit.
+     * The edits are the commands after it in the enclosing [Composite], so a `Cancel` answer stops that
+     * [Composite]. Nothing has to be undone, because no edit ran yet.
+     *
+     * It relies on the custom [ShowConflictsRequest], so only a client which declares `intellijExtensions` can
+     * handle it, and [from] aborts for the others. A `window/showMessageRequest` could ask the same question,
+     * but a client which shows no dialog answers `null` to it, and the fix would then do nothing without
+     * saying why.
+     */
+    @Serializable
+    data class ShowConflicts(val conflicts: List<Conflict>) : ModCommandData() {
+        /**
+         * One problem of the fix. [messages] describes it as plain text. [location] points at the code which
+         * has the problem, and is `null` when that code has no document of its own.
+         */
+        @Serializable
+        data class Conflict(val messages: List<String>, val location: Location? = null)
+    }
+
+    /**
      * A fix that the server offered without performing it, kept in
      * [LazyActionSessionComponent][com.jetbrains.ls.snapshot.api.impl.core.LazyActionSessionComponent] under
      * [sessionId], where [index] selects it among the fixes the same analysis found.
@@ -332,6 +362,18 @@ sealed class ModCommandData {
                 command.optional -> Nothing
                 else -> null
             }
+            is ModShowConflicts -> when {
+                command.isEmpty -> Nothing
+                server?.config?.clientSupportsIntellijExtensions != true -> null
+                else -> ShowConflicts(
+                    command.conflicts.map { (element, conflict) ->
+                        ShowConflicts.Conflict(
+                            messages = conflict.messages.map { StringUtil.removeHtmlTags(it, true) },
+                            location = element.getLspLocationForDefinition(),
+                        )
+                    },
+                )
+            }
             is ModRegisterTabOut -> Nothing // We can safely skip the tab-out command
             // Highlighting could be important, but usually it's an additional helpful thing, not an essential one, so let's skip it for now
             is ModHighlight -> Nothing
@@ -396,8 +438,21 @@ sealed class ModCommandData {
     }
 }
 
+/**
+ * Executes [command] against [client], and returns `false` when the user stopped it. Only a
+ * [ModCommandData.ShowConflicts] can answer `false`, and only a [ModCommandData.Composite] reads the answer: it
+ * runs no further command, because the commands after the conflicts are the edits of the fix. This mirrors
+ * [executeComposite][com.intellij.lang.impl.modcommand.ModCommandExecutorImpl] in the IDE.
+ *
+ * [changedFiles] holds the new text of each file this call already changed, because the document on disk is
+ * behind until the client applies the edit.
+ */
 context(_: LSServer, _: LSAnalysisContext)
-suspend fun executeCommand(command: ModCommandData, client: LspClient, changedFiles: MutableMap<String, String> = mutableMapOf()) {
+suspend fun executeCommand(
+    command: ModCommandData,
+    client: LspClient,
+    changedFiles: MutableMap<String, String> = mutableMapOf(),
+): Boolean {
     when (command) {
         is ModCommandData.Nothing -> {}
 
@@ -524,7 +579,21 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient, changedFi
             )
         }
 
-        is ModCommandData.Composite -> command.commands.forEach { executeCommand(it, client, changedFiles) }
+        is ModCommandData.Composite -> {
+            val commands = command.commands
+            for ((index, nested) in commands.withIndex()) {
+                val proceed = when (nested) {
+                    // The commands after the conflicts are the edits of the fix. `executeComposite` in the IDE
+                    // passes the same sublist as the tail, and it is what the change guard has to watch.
+                    is ModCommandData.ShowConflicts ->
+                        confirmConflicts(nested, commands.subList(index + 1, commands.size), client)
+                    else -> executeCommand(nested, client, changedFiles)
+                }
+                if (!proceed) return false
+            }
+        }
+
+        is ModCommandData.ShowConflicts -> return confirmConflicts(command, emptyList(), client)
 
         is ModCommandData.DisplayMessage -> client.request(
             requestType = Window.ShowMessageRequest,
@@ -585,6 +654,122 @@ suspend fun executeCommand(command: ModCommandData, client: LspClient, changedFi
         // function runs in is opened, so it never reaches here.
         is ModCommandData.LazyAction -> LOG.error("The lazy action $command was not resolved before execution")
     }
+    return true
+}
+
+/**
+ * Asks the user whether the fix may run although it reports the conflicts of [command], and returns `true` only
+ * when the user answered `Continue` and [tail] can still apply.
+ *
+ * [tail] holds the commands after the conflicts, which are the edits of the fix. They were computed against the
+ * text of that moment, and a [ModCommandData.UpdateFileText] travels as a diff of its `oldText` which the client
+ * applies without a version. An edit the user makes while the question is open therefore makes the whole tail
+ * stale, and applying it would put text at the wrong offset. So the version of every document the tail writes is
+ * read before and after the question, and any difference stops the fix. A tail which holds a
+ * [ModCommandData.ChooseAction] names no file, and every open document is watched for it. The IDE guards the
+ * same thing with `ActionContextPointer.restoreAndCheck`, and shows the same kind of message.
+ *
+ * Navigation stays free: `window/showDocument` and the reveal of a conflict change no text, so they bump no
+ * version.
+ */
+context(server: LSServer)
+private suspend fun confirmConflicts(
+    command: ModCommandData.ShowConflicts,
+    tail: List<ModCommandData>,
+    client: LspClient,
+): Boolean {
+    // `from` maps an empty command to `Nothing`, so this only guards a hand-built one.
+    if (command.conflicts.isEmpty()) return true
+    val versionsBefore = tail.watchedDocumentVersions()
+    if (!client.askToContinue(command)) return false
+
+    val versionsAfter = tail.watchedDocumentVersions()
+    if (versionsBefore != versionsAfter) {
+        LOG.info("The user confirmed the fix, but the documents changed: $versionsBefore -> $versionsAfter")
+        client.notify(
+            notificationType = ShowMessageNotificationType,
+            params = ShowMessageParams(
+                MessageType.Error,
+                LspServerBundle.message("conflicts.error.document.changed"),
+            ),
+        )
+        return false
+    }
+    return true
+}
+
+/**
+ * Shows the conflicts of [command] with [ShowConflictsRequest] and returns `true` for a `Continue` answer.
+ *
+ * [ModCommandData.from] converts a [ModShowConflicts] only for a client which declares `intellijExtensions`,
+ * so this needs no fallback. LSP has no standard request for a list of locations with a decision.
+ */
+private suspend fun LspClient.askToContinue(command: ModCommandData.ShowConflicts): Boolean {
+    val result = request(
+        requestType = ShowConflictsRequest,
+        params = ShowConflictsParams(
+            title = LspServerBundle.message("conflicts.title"),
+            conflicts = command.conflicts,
+            continueLabel = LspServerBundle.message("conflicts.action.continue"),
+            cancelLabel = LspServerBundle.message("conflicts.action.cancel"),
+            revealLabel = LspServerBundle.message("conflicts.action.reveal"),
+        ),
+    )
+    // An exhaustive `when` keeps both answers named, so a third one cannot pass unnoticed.
+    return when (result.decision) {
+        ShowConflictsDecision.CONTINUE -> true
+        ShowConflictsDecision.CANCEL -> false
+    }
+}
+
+/**
+ * The document version of each file this guard watches for these commands. A file the client never opened has
+ * no version, and `null` stands for that.
+ *
+ * The server learns of an edit only from a `textDocument/didChange`, so an edit in a file the client keeps
+ * closed stays invisible here. A `textDocument/didClose` drops the version, which counts as a change.
+ */
+context(server: LSServer)
+private fun List<ModCommandData>.watchedDocumentVersions(): Map<URI, Int?> {
+    val written = asSequence()
+        .flatMap { it.writtenFileUrls() }
+        .map { it.intellijUriToLspUri() }
+    // A ModCommandData.ChooseAction names no file, because it builds its edits only after the user picks one.
+    // Every open document is watched instead. That is the only safe superset, and it does make an edit in an
+    // unrelated open file stop the fix.
+    val watched = when {
+        any { it.choosesLater() } -> written + server.documents.openDocuments()
+        else -> written
+    }
+    return watched.distinct().associateWith { server.documents.getVersion(it) }
+}
+
+/** Whether [this] holds a [ModCommandData.ChooseAction], whose files no caller can know yet. */
+private fun ModCommandData.choosesLater(): Boolean = when (this) {
+    is ModCommandData.ChooseAction -> true
+    is ModCommandData.Composite -> commands.any { it.choosesLater() }
+    else -> false
+}
+
+/** The urls of the files [this] writes to, including the ones of a nested [ModCommandData.Composite]. */
+private fun ModCommandData.writtenFileUrls(): Sequence<String> = when (this) {
+    is ModCommandData.Composite -> commands.asSequence().flatMap { it.writtenFileUrls() }
+    is ModCommandData.CreateFile -> sequenceOf(fileUrl)
+    is ModCommandData.DeleteFile -> sequenceOf(fileUrl)
+    is ModCommandData.MoveFile -> sequenceOf(fileUrl, targetUrl)
+    is ModCommandData.Snippet -> sequenceOf(fileUrl)
+    is ModCommandData.UpdateFileText -> sequenceOf(fileUrl)
+    // These write no text of their own. A ChooseAction names no file either, and [choosesLater] answers for it.
+    // A LazyAction builds its edits in a later round trip, which this guard cannot see.
+    is ModCommandData.ChooseAction,
+    is ModCommandData.CopyToClipboard,
+    is ModCommandData.DisplayMessage,
+    is ModCommandData.LaunchEditorAction,
+    is ModCommandData.LazyAction,
+    is ModCommandData.Navigate,
+    is ModCommandData.Nothing,
+    is ModCommandData.ShowConflicts,
+    is ModCommandData.StartRename -> emptySequence()
 }
 
 @Serializable
@@ -656,3 +841,43 @@ data class ShowChooseActionMenuParams(val title: String, val entries: List<Choos
  */
 val ShowChooseActionMenuNotification: NotificationType<ShowChooseActionMenuParams> =
     NotificationType("intellij/chooseAction", ShowChooseActionMenuParams.serializer())
+
+/**
+ * The conflicts to show, and the text to show them with. The server sends every user-visible string, because a
+ * localized string of this server belongs in its `LspServerBundle`, not in the client.
+ */
+@Serializable
+data class ShowConflictsParams(
+    val title: String,
+    val conflicts: List<ModCommandData.ShowConflicts.Conflict>,
+    val continueLabel: String,
+    val cancelLabel: String,
+    val revealLabel: String,
+)
+
+/** The answer of the user to a [ShowConflictsRequest]. */
+@Serializable
+enum class ShowConflictsDecision {
+    @SerialName("continue") CONTINUE,
+    @SerialName("cancel") CANCEL,
+}
+
+@Serializable
+data class ShowConflictsResult(val decision: ShowConflictsDecision)
+
+/**
+ * A custom server -> client request (used by the ModCommand [ModShowConflicts]) which asks the user to confirm a
+ * fix that reports conflicts. The client shows each [ModCommandData.ShowConflicts.Conflict] and can open its
+ * location, then answers [ShowConflictsDecision].
+ *
+ * This is a request, not a notification, because the server holds the edits of the fix and applies them only
+ * after the answer. `confirmConflicts` sends it only to a client which declares `intellijExtensions`. Such a
+ * client which still does not handle it answers an error, the request fails, and the fix stops. No edit applies.
+ */
+val ShowConflictsRequest: RequestType<ShowConflictsParams, ShowConflictsResult, Unit> =
+    RequestType(
+        "intellij/showConflicts",
+        ShowConflictsParams.serializer(),
+        ShowConflictsResult.serializer(),
+        Unit.serializer(),
+    )
