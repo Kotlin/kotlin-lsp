@@ -9,5 +9,5 @@ import com.jetbrains.lsp.protocol.WorkspaceEdit
 
 interface LSMoveFileProvider: LSLanguageSpecificConfigurationEntry {
     context(server: LSServer, handlerContext: LspHandlerContext)
-    suspend fun moveFile(params: FileRename): WorkspaceEdit?
+    suspend fun moveFile(params: List<FileRename>): WorkspaceEdit?
 }

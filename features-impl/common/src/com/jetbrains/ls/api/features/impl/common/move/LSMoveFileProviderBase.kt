@@ -26,20 +26,18 @@ import com.jetbrains.lsp.protocol.WorkspaceEdit
  */
 abstract class LSMoveFileProviderBase(override val supportedLanguages: Set<LSLanguage>) : LSMoveFileProvider {
     context(server: LSServer, handlerContext: LspHandlerContext)
-    override suspend fun moveFile(params: FileRename): WorkspaceEdit? {
+    override suspend fun moveFile(params: List<FileRename>): WorkspaceEdit? {
         val changes = server.withWriteAnalysisContext {
             val processor = readAction {
-                val newDestination = params.newUri.findVirtualFile()
-                if (newDestination != null) return@readAction null
+                val targetDirectory = findDestination(params) ?: return@readAction null
 
-                val newPath = params.newUri.toPath() ?: return@readAction null
-                val targetPath = newPath.parent
-                val targetVFile = VirtualFileManager.getInstance().findFileByNioPath(targetPath) ?: return@readAction null
-                val targetDirectory = targetVFile.findPsiDirectory(project)  ?: return@readAction null
-                val virtualFile = params.oldUri.findVirtualFile() ?: return@readAction null
-                val file = virtualFile.findPsiFile(project) ?: return@readAction null
 
-                createProcessor(targetDirectory, file)
+                val psiFiles = params.map {
+                    val vFile = it.oldUri.findVirtualFile() ?: return@readAction null
+                    vFile.findPsiFile(project) ?: return@readAction null
+                }
+
+                createProcessor(targetDirectory, psiFiles)
             } ?: return@withWriteAnalysisContext emptyList()
 
 
@@ -50,5 +48,19 @@ abstract class LSMoveFileProviderBase(override val supportedLanguages: Set<LSLan
     }
 
     context(_: LSAnalysisContext)
-    protected abstract fun createProcessor(targetDirectory: PsiDirectory, file: PsiFile): LSRefactoringProcessor?
+    private fun findDestination(params: List<FileRename>): PsiDirectory? {
+        if (params.any { it.newUri.findVirtualFile() != null }) return null
+
+        val files = params.map {
+            val parent = it.newUri.toPath()?.parent ?: return null
+            VirtualFileManager.getInstance().findFileByNioPath(parent) ?: return null
+        }.distinct()
+
+        val destination = files.singleOrNull() ?: return null
+
+        return destination.findPsiDirectory(project)
+    }
+
+    context(_: LSAnalysisContext)
+    protected abstract fun createProcessor(targetDirectory: PsiDirectory, file: List<PsiFile>): LSRefactoringProcessor?
 }

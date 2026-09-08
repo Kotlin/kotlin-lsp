@@ -22,7 +22,7 @@ internal object LSMoveKotlinFileProvider : LSMoveFileProviderBase(setOf(LSKotlin
     context(_: LSAnalysisContext)
     override fun createProcessor(
         targetDirectory: PsiDirectory,
-        file: PsiFile
+        file: List<PsiFile>
     ): LSRefactoringProcessor? {
         if (file !is KtFile) return null
         val clazz = KotlinSingleClassFileAnalyzer.getSingleClass(file)

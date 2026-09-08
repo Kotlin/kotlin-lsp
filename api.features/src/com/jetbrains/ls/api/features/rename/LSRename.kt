@@ -29,42 +29,51 @@ object LSRename {
 
     context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
     suspend fun renameFile(params: RenameFilesParams): WorkspaceEdit? {
-        val fileRename = params.files.singleOrNull() ?: return null
+        if (params.files.isEmpty()) return null
 
-        return when (fileRename.toOperationKind()) {
-            OperationKind.MOVE_DIRECTORY -> configuration.entries<LSMoveDirectoryProvider>().firstNotNullOfOrNull { it.moveDirectory(fileRename) }
-            OperationKind.MOVE_FILE -> configuration.entriesFor<LSMoveFileProvider>(fileRename.oldUri).firstNotNullOfOrNull { it.moveFile(fileRename) }
+        val files = params.files
+
+        return when (files.toOperationKind()) {
+            OperationKind.MOVE_DIRECTORY -> {
+                val directory = files.single()
+                configuration.entries<LSMoveDirectoryProvider>().firstNotNullOfOrNull { it.moveDirectory(directory) }
+            }
+            OperationKind.MOVE_FILES -> configuration.entriesFor<LSMoveFileProvider>(files.first().oldUri).firstNotNullOfOrNull { it.moveFile(files) }
             OperationKind.RENAME_DIRECTORY -> {
                 // Since it is unclear what language directory is renamed, it is up to callee to decide whether he should rename the directory or not.
-                configuration.entries<LSRenameDirectoryProvider>().firstNotNullOfOrNull { it.renameDirectory(fileRename) }
+                val directory = files.single()
+                configuration.entries<LSRenameDirectoryProvider>().firstNotNullOfOrNull { it.renameDirectory(directory) }
             }
             OperationKind.RENAME_FILE -> {
-                configuration.entriesFor<LSRenameProvider>(fileRename.oldUri).firstNotNullOfOrNull { it.renameFile(fileRename) }
+                val file = files.single()
+                configuration.entriesFor<LSRenameProvider>(file.oldUri).firstNotNullOfOrNull { it.renameFile(file) }
             }
             OperationKind.UNKNOWN -> null
         }
     }
 
-    private fun isDirectoryOperation(rename: FileRename): Boolean {
-        val oldUri = rename.oldUri
-        val newUri = rename.newUri
+    private fun isDirectoryOperation(operations: List<FileRename>): Boolean {
+        val directory = operations.singleOrNull() ?: return false
+        val oldUri = directory.oldUri
+        val newUri = directory.newUri
         return oldUri.fileExtension == null && newUri.fileExtension == null
     }
 
     /**
      * Calculates the [OperationKind] based on the difference in [FileRename]
      */
-    private fun FileRename.toOperationKind(): OperationKind {
+    private fun List<FileRename>.toOperationKind(): OperationKind {
         return if (isRename(this)) {
             if (isDirectoryOperation(this)) OperationKind.RENAME_DIRECTORY else OperationKind.RENAME_FILE
         } else if (isMove(this)) {
-            if (isDirectoryOperation(this)) OperationKind.MOVE_DIRECTORY else OperationKind.MOVE_FILE
+            if (isDirectoryOperation(this)) OperationKind.MOVE_DIRECTORY else OperationKind.MOVE_FILES
         } else {
             OperationKind.UNKNOWN
         }
     }
 
-    private fun isRename(operation: FileRename): Boolean {
+    private fun isRename(operations: List<FileRename>): Boolean {
+        val operation = operations.singleOrNull() ?: return false
         val oldUri = operation.oldUri
         val newUri = operation.newUri
 
@@ -73,21 +82,41 @@ object LSRename {
         return oldUri.fileName != newUri.fileName && oldParent == newParent
     }
 
-    private fun isMove(operation: FileRename): Boolean {
-        val oldUri = operation.oldUri
-        val newUri = operation.newUri
+    private fun isMove(operations: List<FileRename>): Boolean {
+        return operations.all { operation ->
+            val oldUri = operation.oldUri
+            val newUri = operation.newUri
 
-        val oldParent = oldUri.toPath()?.parent ?: return false
-        val newParent = newUri.toPath()?.parent ?: return false
+            val oldParent = oldUri.toPath()?.parent ?: return@all false
+            val newParent = newUri.toPath()?.parent ?: return@all false
 
-        return oldUri.fileName == newUri.fileName && oldParent != newParent
+            oldUri.fileName == newUri.fileName && oldParent != newParent
+        }
     }
 
     private enum class OperationKind {
+        /**
+         * Represents a request in which asked to move a single directory.
+         */
         MOVE_DIRECTORY,
-        MOVE_FILE,
+        /**
+         * Represents a request in which asked to move at least one file (of the same language).
+         */
+        MOVE_FILES,
+
+        /**
+         * Represents a request in which asked to rename a single directory.
+         */
         RENAME_DIRECTORY,
+
+        /**
+         * Represents a request in which asked to rename a single file.
+         */
         RENAME_FILE,
+
+        /**
+         * Represents an operation not supported yet
+         */
         UNKNOWN,
     }
 }
