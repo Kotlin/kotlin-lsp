@@ -22,13 +22,20 @@ internal object LSMoveKotlinFileProvider : LSMoveFileProviderBase(setOf(LSKotlin
     context(_: LSAnalysisContext)
     override fun createProcessor(
         targetDirectory: PsiDirectory,
-        file: List<PsiFile>
+        files: List<PsiFile>
     ): LSRefactoringProcessor? {
-        if (file !is KtFile) return null
-        val clazz = KotlinSingleClassFileAnalyzer.getSingleClass(file)
+        if (files.any { it !is KtFile }) return null
 
-        // Target elements to move are evaluated in `org.jetbrains.kotlin.idea.projectView.KotlinExpandNodeProjectViewProvider.modify`
-        val targets: Array<PsiElement> = if (clazz != null && clazz.containingKtFile.declarations.size == 1) arrayOf(clazz) else arrayOf(file)
+        if (files.distinctBy { it.name }.size != files.size) return null
+
+        val targets = files.map { file ->
+            val ktFile = file as KtFile
+            val clazz = KotlinSingleClassFileAnalyzer.getSingleClass(ktFile)
+
+            // Target elements to move are evaluated in `org.jetbrains.kotlin.idea.projectView.KotlinExpandNodeProjectViewProvider.modify`
+            if (clazz != null && clazz.containingKtFile.declarations.size == 1) clazz else ktFile
+        }.toTypedArray<PsiElement>()
+
         if (!canMove(targets)) return null
 
         val model = K2MoveModel.create(
