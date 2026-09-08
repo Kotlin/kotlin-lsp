@@ -41,7 +41,7 @@ abstract class LSMoveFileProviderBase(override val supportedLanguages: Set<LSLan
             } ?: return@withWriteAnalysisContext emptyList()
 
 
-            doRefactoring(processor = processor, granularity = TextEditsComputer.DiffGranularity.WORD, uriToSkip = params.oldUri, true)
+            doRefactoring(processor = processor, granularity = TextEditsComputer.DiffGranularity.WORD, uriToSkip = params.map { it.oldUri }, true)
         }
 
         return WorkspaceEdit(documentChanges = changes)
@@ -62,5 +62,5 @@ abstract class LSMoveFileProviderBase(override val supportedLanguages: Set<LSLan
     }
 
     context(_: LSAnalysisContext)
-    protected abstract fun createProcessor(targetDirectory: PsiDirectory, file: List<PsiFile>): LSRefactoringProcessor?
+    protected abstract fun createProcessor(targetDirectory: PsiDirectory, files: List<PsiFile>): LSRefactoringProcessor?
 }

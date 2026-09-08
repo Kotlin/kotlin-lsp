@@ -42,14 +42,26 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+
+/**
+ * See JavaDoc of [doRefactoring] overload.
+ */
+context(server: LSServer, _: LSAnalysisContext, _: LspHandlerContext)
+suspend fun doRefactoring(
+    processor: LSRefactoringProcessor,
+    granularity: DiffGranularity,
+    uriToSkip: URI?,
+    showNotificationWithError : Boolean
+): List<FileChange> = doRefactoring(processor, granularity, listOfNotNull(uriToSkip), showNotificationWithError)
+
 /**
  * Executes [LSRefactoringProcessor], and returns diff after its changes
  *
  * @param granularity granularity with which difference between files should be calculated,
  *  see [com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits].
- * @param uriToSkip path under which file operations should be ignored. This usually happens when
- *  `workspace/willRenameFiles` request is called. IntelliJ engine will simulate the whole rename
- *  operation and possibly return the result including move of the files in the params.
+ * @param uriToSkip paths under which file operations should be ignored. This usually happens when
+ *  `workspace/willRenameFiles` request is called. IntelliJ engine will simulate the whole refactoring
+ *  operation and possibly return the result, including move of the files in the params.
  *  Such changes should be ignored as they are handled by the client.
  *  @param showNotificationWithError whether to send a notification to the client in case of error occurred.
  */
@@ -57,7 +69,7 @@ context(server: LSServer, _: LSAnalysisContext, _: LspHandlerContext)
 suspend fun doRefactoring(
     processor: LSRefactoringProcessor,
     granularity: DiffGranularity,
-    uriToSkip: URI?,
+    uriToSkip: List<URI>,
     showNotificationWithError : Boolean
 ): List<FileChange> {
     val originals = try {
@@ -115,7 +127,7 @@ context(server: LSServer, _: LSAnalysisContext)
 internal suspend fun computeRefactoringChanges(
     originals: Map<FileUrl, Pair<PsiFile, String>>,
     granularity: DiffGranularity,
-    uriToSkip: URI?,
+    urisToSkip: List<URI>,
 ): List<FileChange> {
     return readAction {
         val edits = originals.mapNotNull { (oldUrl, fileToOriginalText) ->
@@ -135,10 +147,10 @@ internal suspend fun computeRefactoringChanges(
         val filteredChanges = server.fileChanges()
             .filterNot {
                 when (it) {
-                    is CreateFile -> isParentUri(uriToSkip, it.uri.uri)
-                    is DeleteFile -> isParentUri(uriToSkip, it.uri.uri)
-                    is RenameFile -> isParentUri(uriToSkip, it.oldUri.uri)
-                    is TextDocumentEdit -> isParentUri(uriToSkip, it.textDocument.uri.uri)
+                    is CreateFile -> urisToSkip.any { uriToSkip -> isParentUri(uriToSkip, it.uri.uri) }
+                    is DeleteFile -> urisToSkip.any { uriToSkip -> isParentUri(uriToSkip, it.uri.uri) }
+                    is RenameFile -> urisToSkip.any { uriToSkip -> isParentUri(uriToSkip, it.oldUri.uri) }
+                    is TextDocumentEdit -> urisToSkip.any { uriToSkip -> isParentUri(uriToSkip, it.textDocument.uri.uri) }
                 }
             }
         edits + filteredChanges
@@ -163,8 +175,8 @@ internal fun <T> runReadActionInBgt(project: Project, action: () -> T): T {
     }.getOrThrow()
 }
 
-private fun isParentUri(parent: URI?, candidate: URI): Boolean {
-    val url = parent?.toFileUrl() ?: return false
+private fun isParentUri(parent: URI, candidate: URI): Boolean {
+    val url = parent.toFileUrl() ?: return false
     var candidateUrl = candidate.toFileUrl()
     while (candidateUrl != null) {
         if (url == candidateUrl) return true
