@@ -63,6 +63,7 @@ private val LOG = logger<ModCommandData>()
 private val snippetEscapeCharacters = Regex("""[\\}$]""")
 private val snippetChoiceEscapeCharacters = Regex("""[\\}$,|]""")
 private const val SNIPPET_REPLACEMENT = $$"\\\\$0"
+private const val MOCK_PROTOCOL_PREFIX = "mock://"
 
 /**
  * See [toModCommandFixes][com.jetbrains.ls.api.features.impl.common.modcommands.toModCommandFixes]
@@ -223,6 +224,14 @@ sealed class ModCommandData {
         private data class Choice(val action: ModCommandAction, val name: String)
 
         /**
+         * A [ModCommandAction] builds a new file in a copy of the directory, so the file gets the `mock`
+         * protocol. The path is correct, and the client knows the `file` protocol only. A URL with another
+         * protocol stays unchanged.
+         */
+        private fun String.toFileUrl(): String =
+            if (startsWith(MOCK_PROTOCOL_PREFIX)) "file://" + removePrefix(MOCK_PROTOCOL_PREFIX) else this
+
+        /**
          * The [ModCommandData] which is equivalent to [command], or `null` when the client cannot apply it.
          *
          * [actionContext] describes the document the command was built against. [server] supplies the client
@@ -249,9 +258,9 @@ sealed class ModCommandData {
         ): ModCommandData? = when (command) {
             is ModNothing -> Nothing
             is ModCompositeCommand -> Composite(command.commands.map { from(it, actionContext, server) ?: return null })
-            is ModNavigate -> Navigate(command.file.url, command.selectionStart, command.selectionEnd, command.caret)
+            is ModNavigate -> Navigate(command.file.url.toFileUrl(), command.selectionStart, command.selectionEnd, command.caret)
             is ModCreateFile -> CreateFile(
-                command.file.url, when (val c = command.content) {
+                command.file.url.toFileUrl(), when (val c = command.content) {
                     is ModCreateFile.Directory -> CreateFile.Content.Directory
                     is ModCreateFile.Text -> CreateFile.Content.Text(c.text)
                     is ModCreateFile.Binary -> CreateFile.Content.Binary(Base64.getEncoder().encodeToString(c.bytes))
@@ -259,7 +268,7 @@ sealed class ModCommandData {
             )
 
             is ModDeleteFile -> DeleteFile(command.file.url)
-            is ModMoveFile -> MoveFile(command.file.url, command.targetFile.url.replace("mock://", "file://"))
+            is ModMoveFile -> MoveFile(command.file.url, command.targetFile.url.toFileUrl())
             is ModUpdateFileText -> UpdateFileText(command.file.url, command.oldText, command.newText)
             is ModDisplayMessage -> DisplayMessage(command.messageText, command.kind)
             // Relies on the custom `intellij/copyToClipboard` notification, so only clients,
