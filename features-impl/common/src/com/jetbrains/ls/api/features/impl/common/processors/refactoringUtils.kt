@@ -164,7 +164,7 @@ fun createProcessor(context: RefactoringContext): LSRefactoringProcessor? = when
     else -> throw IllegalArgumentException("Unknown refactoring context: $context")
 }
 
-@RequiresEdt
+@RequiresEdt(generateAssertion = false /* IJPL-115548 */)
 internal fun <T> runReadActionInBgt(project: Project, action: () -> T): T {
     return runWithModalProgressBlocking(project, "") {
         try {

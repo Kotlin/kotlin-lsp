@@ -249,7 +249,7 @@ abstract class LSRefactoringMemberProviderBase<Context> : LSCodeActionProvider, 
      * or [LSRefactoringMemberProviderBase.ChoicesResult.Error] if the refactoring is impossible and
      * the error should be displayed to the user.
      */
-    @RequiresReadLock
+    @RequiresReadLock(generateAssertion = false /* IJPL-115548 */)
     context(analysisContext: LSAnalysisContext)
     protected abstract fun getChoices(file: VirtualFile, selectedRange: TextRange): ChoicesResult?
 
@@ -258,7 +258,7 @@ abstract class LSRefactoringMemberProviderBase<Context> : LSCodeActionProvider, 
      * @return context for the refactoring. It is expected that context can always be retrieved since the [choice] was shown to the user.
      * @param selection the adjusted selection as computed by [getChoices], not the raw client range
      */
-    @RequiresReadLock
+    @RequiresReadLock(generateAssertion = false /* IJPL-115548 */)
     context(analysisContext: LSAnalysisContext)
     protected abstract fun getWriteContext(file: VirtualFile, selection: TextRange, choice: String): Context
 
