@@ -9,5 +9,5 @@ import com.jetbrains.lsp.protocol.WorkspaceEdit
 
 interface LSMoveDirectoryProvider : LSConfigurationEntry {
     context(server: LSServer, handlerContext: LspHandlerContext)
-    suspend fun moveDirectory(params: FileRename): WorkspaceEdit?
+    suspend fun moveDirectory(params: List<FileRename>): WorkspaceEdit?
 }

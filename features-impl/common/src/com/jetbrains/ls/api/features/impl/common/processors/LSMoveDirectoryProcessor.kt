@@ -86,12 +86,12 @@ class LSMoveDirectoryProcessor internal constructor(
             )
         }
 
-        fun create(context: MoveSingleDirectoryContext): LSMoveDirectoryProcessor? {
-            if (!context.targetDirectory.isValid || !context.directoryToMove.isValid) return null
+        fun create(context: MoveDirectoryContext): LSMoveDirectoryProcessor? {
+            if (!context.targetDirectory.isValid || !context.directoriesToMove.all { it.isValid }) return null
 
             return LSMoveDirectoryProcessor(
                 project = context.targetDirectory.project,
-                directories = arrayOf(context.directoryToMove),
+                directories = context.directoriesToMove,
                 targetDirectory = context.targetDirectory,
                 searchInComments = false,
                 searchInNonJavaFiles = false,
@@ -113,7 +113,7 @@ class RenameSingleDirectoryContext(
 ): RefactoringContext
 
 
-class MoveSingleDirectoryContext(
+class MoveDirectoryContext(
     val targetDirectory: PsiDirectory,
-    val directoryToMove: PsiDirectory,
+    val directoriesToMove: Array<PsiDirectory>,
 ) : RefactoringContext

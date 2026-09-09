@@ -14,6 +14,7 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toPath
 import com.jetbrains.ls.api.features.impl.common.processors.LSRefactoringProcessor
 import com.jetbrains.ls.api.features.impl.common.processors.doRefactoring
+import com.jetbrains.ls.api.features.impl.common.utils.findDestination
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.move.LSMoveFileProvider
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer
@@ -29,7 +30,7 @@ abstract class LSMoveFileProviderBase(override val supportedLanguages: Set<LSLan
     override suspend fun moveFile(params: List<FileRename>): WorkspaceEdit? {
         val changes = server.withWriteAnalysisContext {
             val processor = readAction {
-                val targetDirectory = findDestination(params) ?: return@readAction null
+                val targetDirectory = findDestination(project, params) ?: return@readAction null
 
 
                 val psiFiles = params.map {
@@ -45,20 +46,6 @@ abstract class LSMoveFileProviderBase(override val supportedLanguages: Set<LSLan
         }
 
         return WorkspaceEdit(documentChanges = changes)
-    }
-
-    context(_: LSAnalysisContext)
-    private fun findDestination(params: List<FileRename>): PsiDirectory? {
-        if (params.any { it.newUri.findVirtualFile() != null }) return null
-
-        val files = params.map {
-            val parent = it.newUri.toPath()?.parent ?: return null
-            VirtualFileManager.getInstance().findFileByNioPath(parent) ?: return null
-        }.distinct()
-
-        val destination = files.singleOrNull() ?: return null
-
-        return destination.findPsiDirectory(project)
     }
 
     context(_: LSAnalysisContext)

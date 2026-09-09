@@ -160,7 +160,7 @@ internal suspend fun computeRefactoringChanges(
 fun createProcessor(context: RefactoringContext): LSRefactoringProcessor? = when (context) {
     is RenameContext -> LSRenameProcessor.create(context)
     is RenameSingleDirectoryContext -> LSMoveDirectoryProcessor.create(context)
-    is MoveSingleDirectoryContext -> LSMoveDirectoryProcessor.create(context)
+    is MoveDirectoryContext -> LSMoveDirectoryProcessor.create(context)
     else -> throw IllegalArgumentException("Unknown refactoring context: $context")
 }
 

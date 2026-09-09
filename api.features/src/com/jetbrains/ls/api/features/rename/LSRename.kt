@@ -34,9 +34,8 @@ object LSRename {
         val files = params.files
 
         return when (files.toOperationKind()) {
-            OperationKind.MOVE_DIRECTORY -> {
-                val directory = files.single()
-                configuration.entries<LSMoveDirectoryProvider>().firstNotNullOfOrNull { it.moveDirectory(directory) }
+            OperationKind.MOVE_DIRECTORIES -> {
+                configuration.entries<LSMoveDirectoryProvider>().firstNotNullOfOrNull { it.moveDirectory(files) }
             }
             OperationKind.MOVE_FILES -> configuration.entriesFor<LSMoveFileProvider>(files.first().oldUri).firstNotNullOfOrNull { it.moveFile(files) }
             OperationKind.RENAME_DIRECTORY -> {
@@ -52,8 +51,8 @@ object LSRename {
         }
     }
 
-    private fun isDirectoryOperation(operations: List<FileRename>): Boolean {
-        val directory = operations.singleOrNull() ?: return false
+    private fun isDirectoryOperation(directory: FileRename): Boolean {
+
         val oldUri = directory.oldUri
         val newUri = directory.newUri
         return oldUri.fileExtension == null && newUri.fileExtension == null
@@ -64,9 +63,9 @@ object LSRename {
      */
     private fun List<FileRename>.toOperationKind(): OperationKind {
         return if (isRename(this)) {
-            if (isDirectoryOperation(this)) OperationKind.RENAME_DIRECTORY else OperationKind.RENAME_FILE
+            if (isDirectoryOperation(this.single())) OperationKind.RENAME_DIRECTORY else OperationKind.RENAME_FILE
         } else if (isMove(this)) {
-            if (isDirectoryOperation(this)) OperationKind.MOVE_DIRECTORY else OperationKind.MOVE_FILES
+            if (all { isDirectoryOperation(it) }) OperationKind.MOVE_DIRECTORIES else OperationKind.MOVE_FILES
         } else {
             OperationKind.UNKNOWN
         }
@@ -96,9 +95,9 @@ object LSRename {
 
     private enum class OperationKind {
         /**
-         * Represents a request in which asked to move a single directory.
+         * Represents a request in which asked to move at least one directory and all elements are directories.
          */
-        MOVE_DIRECTORY,
+        MOVE_DIRECTORIES,
         /**
          * Represents a request in which asked to move at least one file (of the same language).
          */
