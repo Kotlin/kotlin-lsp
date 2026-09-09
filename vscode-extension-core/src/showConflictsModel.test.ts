@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type * as vscode from 'vscode';
-import { changeInvalidatesConflicts } from './showConflictsModel';
+import { changeInvalidatesConflicts, conflictMessage } from './showConflictsModel';
 
 interface ChangeEventOptions {
   scheme?: string;
@@ -41,5 +41,33 @@ describe('a change which invalidates the conflicts view', () => {
 
   it('is not a write into an output channel, which the log of the server does', () => {
     assert.equal(changeInvalidatesConflicts(changeEvent({ scheme: 'output' })), false);
+  });
+});
+
+describe('the message of one conflict', () => {
+  it('ends each of several messages with a period, so they do not read as one line', () => {
+    assert.equal(
+      conflictMessage(['Method foo is used in a library', 'Class Bar becomes abstract']),
+      'Method foo is used in a library. Class Bar becomes abstract.',
+    );
+  });
+
+  it('keeps an end mark which the message carries already', () => {
+    assert.equal(
+      conflictMessage(['The class is final.', 'Which member do you mean?', 'Read this:']),
+      'The class is final. Which member do you mean? Read this:',
+    );
+  });
+
+  it('joins the lines of one message with a space and ends it once', () => {
+    assert.equal(
+      conflictMessage(['Class Car already extends class Vehicle\nand will not compile']),
+      'Class Car already extends class Vehicle and will not compile.',
+    );
+  });
+
+  it('is empty when no message holds text', () => {
+    assert.equal(conflictMessage([]), '');
+    assert.equal(conflictMessage(['', '  \n  ']), '');
   });
 });

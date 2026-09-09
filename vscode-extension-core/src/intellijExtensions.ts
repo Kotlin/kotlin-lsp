@@ -1,14 +1,16 @@
 import * as vscode from 'vscode';
 import {
+  type CancellationToken,
   Command,
   LanguageClient,
   type Location,
   NotificationType,
   RequestType,
+  State,
 } from 'vscode-languageclient/node';
 import { getContext } from './extension';
-import { registerInitializationOptionsContributor } from './lspClient';
-import { changeInvalidatesConflicts } from './showConflictsModel';
+import { registerInitializationOptionsContributor, subscribeToClientEvent } from './lspClient';
+import { changeInvalidatesConflicts, conflictMessage } from './showConflictsModel';
 
 type CopyToClipboardParams = { content: string };
 
@@ -133,7 +135,9 @@ export function registerChooseActionMenuHandler(client: LanguageClient): void {
  * holds stale. See [changeInvalidatesConflicts].
  */
 export function registerShowConflictsHandler(client: LanguageClient): void {
-  const subscription = client.onRequest(showConflictsRequest, (params) => showConflicts(params));
+  const subscription = client.onRequest(showConflictsRequest, (params, token) =>
+    showConflicts(params, token),
+  );
   getContext().subscriptions.push(subscription);
 }
 
@@ -146,8 +150,10 @@ export function registerShowConflictsHandler(client: LanguageClient): void {
  */
 function conflictRows(params: ShowConflictsParams): ConflictItem[] {
   return params.conflicts.flatMap((conflict) => {
-    const message = conflictMessage(conflict);
-    if (message === '') return [];
+    let message = conflictMessage(conflict.messages);
+    if (message === '') {
+      message = '-';
+    }
 
     const location = conflict.location;
     return [
@@ -177,19 +183,6 @@ function conflictLocationLabel(location: Location): string {
 }
 
 /**
- * The whole message of one conflict on one line. The platform can report several messages for one element, and
- * a message comes from HTML, so it can hold a line break of its own. A row renders no line break, so each of
- * them becomes a space.
- */
-function conflictMessage(conflict: Conflict): string {
-  return conflict.messages
-    .flatMap((message) => message.split('\n'))
-    .map((line) => line.trim())
-    .filter((line) => line !== '')
-    .join(' ');
-}
-
-/**
  * Shows one row per conflict, so the user can read each of them and open its code, and answers the decision the
  * user picks.
  *
@@ -197,7 +190,10 @@ function conflictMessage(conflict: Conflict): string {
  * the picker open when the focus goes back to the editor, so an edit can arrive at any time: the user reveals a
  * conflict and types, a formatter runs on a save, or another tool writes the file.
  */
-function showConflicts(params: ShowConflictsParams): Promise<ShowConflictsResult> {
+function showConflicts(
+  params: ShowConflictsParams,
+  token: CancellationToken,
+): Promise<ShowConflictsResult> {
   const conflictItems = conflictRows(params);
   const decisionItems: ConflictItem[] = [
     { label: '', kind: vscode.QuickPickItemKind.Separator },
@@ -208,26 +204,30 @@ function showConflicts(params: ShowConflictsParams): Promise<ShowConflictsResult
   return new Promise((resolve) => {
     const picker = vscode.window.createQuickPick<ConflictItem>();
     let answered = false;
-
-    // The editor delivers a change event only after this setup, so `finish` is already defined by then.
-    const changeSubscription = vscode.workspace.onDidChangeTextDocument((event) => {
-      if (!changeInvalidatesConflicts(event)) return;
-
-      // The picker only closes, so the message is what tells the user why the fix stopped.
-      void vscode.window.showWarningMessage(params.documentChangedLabel);
-      finish('cancel');
-    });
+    const disposables: vscode.Disposable[] = [];
 
     const finish = (decision: ShowConflictsDecision) => {
       if (answered) return;
 
       answered = true;
       // The edits of a confirmed fix arrive as a change event of their own, and they must not reach the
-      // listener. `onDidHide` runs later than this, so it is too late to drop the listener there.
-      changeSubscription.dispose();
+      // listener. `onDidHide` runs later than this, so it is too late to drop the listeners there.
+      for (const disposable of disposables) disposable.dispose();
       resolve({ decision });
       picker.hide();
     };
+
+    disposables.push(
+      vscode.workspace.onDidChangeTextDocument((event) => {
+        if (!changeInvalidatesConflicts(event)) return;
+        void vscode.window.showWarningMessage(params.documentChangedLabel);
+        finish('cancel');
+      }),
+      token.onCancellationRequested(() => finish('cancel')),
+      subscribeToClientEvent((_, stateChange) => {
+        if (stateChange.newState !== State.Running) finish('cancel');
+      }),
+    );
 
     picker.title = params.title;
     picker.items = [...conflictItems, ...decisionItems];

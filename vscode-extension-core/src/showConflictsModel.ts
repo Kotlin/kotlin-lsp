@@ -1,5 +1,37 @@
 import type * as vscode from 'vscode';
 
+/** A message which ends with one of these carries an end mark already, so it needs no period. */
+const TERMINAL_PUNCTUATION_PATTERN = /[.!?;:]$/;
+
+/**
+ * The whole message of one conflict on one line.
+ *
+ * The platform can report several messages for one element, and a row shows them together. Each message is a
+ * statement of its own, so it takes a period when it carries no end mark. Without that, two messages read as
+ * one run-on line.
+ *
+ * A message comes from HTML, so it can hold a line break of its own. A row renders no line break, and such a
+ * break wraps one statement instead of ending it, so each of them becomes a space and takes no period.
+ *
+ * The result is empty when no message holds text. The caller decides what to show then.
+ */
+export function conflictMessage(messages: string[]): string {
+  return messages
+    .map((message) => oneLine(message))
+    .filter((message) => message !== '')
+    .map((message) => (TERMINAL_PUNCTUATION_PATTERN.test(message) ? message : `${message}.`))
+    .join(' ');
+}
+
+/** The lines of [message] as one line, because a row renders no line break. */
+function oneLine(message: string): string {
+  return message
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line !== '')
+    .join(' ');
+}
+
 /**
  * Whether [event] makes the pending edits of a fix stale, so the conflicts view has to close and cancel the
  * fix.
