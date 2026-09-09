@@ -8,6 +8,7 @@ import {
 } from 'vscode-languageclient/node';
 import { getContext } from './extension';
 import { registerInitializationOptionsContributor } from './lspClient';
+import { changeInvalidatesConflicts } from './showConflictsModel';
 
 type CopyToClipboardParams = { content: string };
 
@@ -44,6 +45,7 @@ type ShowConflictsParams = {
   continueLabel: string;
   cancelLabel: string;
   revealLabel: string;
+  documentChangedLabel: string;
 };
 type ShowConflictsDecision = 'continue' | 'cancel';
 type ShowConflictsResult = { decision: ShowConflictsDecision };
@@ -126,6 +128,9 @@ export function registerChooseActionMenuHandler(client: LanguageClient): void {
  *
  * The answer must always be a decision. A thrown error would reach the server as a request failure, which it
  * treats as a cancel, but that would also log noise, so a closed picker answers `cancel` instead.
+ *
+ * An edit which lands while the question is open answers `cancel` too, because it makes the edits the server
+ * holds stale. See [changeInvalidatesConflicts].
  */
 export function registerShowConflictsHandler(client: LanguageClient): void {
   const subscription = client.onRequest(showConflictsRequest, (params) => showConflicts(params));
@@ -187,6 +192,10 @@ function conflictMessage(conflict: Conflict): string {
 /**
  * Shows one row per conflict, so the user can read each of them and open its code, and answers the decision the
  * user picks.
+ *
+ * An edit of a file cancels instead, because it makes the edits the server holds stale. `ignoreFocusOut` keeps
+ * the picker open when the focus goes back to the editor, so an edit can arrive at any time: the user reveals a
+ * conflict and types, a formatter runs on a save, or another tool writes the file.
  */
 function showConflicts(params: ShowConflictsParams): Promise<ShowConflictsResult> {
   const conflictItems = conflictRows(params);
@@ -200,10 +209,22 @@ function showConflicts(params: ShowConflictsParams): Promise<ShowConflictsResult
     const picker = vscode.window.createQuickPick<ConflictItem>();
     let answered = false;
 
+    // The editor delivers a change event only after this setup, so `finish` is already defined by then.
+    const changeSubscription = vscode.workspace.onDidChangeTextDocument((event) => {
+      if (!changeInvalidatesConflicts(event)) return;
+
+      // The picker only closes, so the message is what tells the user why the fix stopped.
+      void vscode.window.showWarningMessage(params.documentChangedLabel);
+      finish('cancel');
+    });
+
     const finish = (decision: ShowConflictsDecision) => {
       if (answered) return;
 
       answered = true;
+      // The edits of a confirmed fix arrive as a change event of their own, and they must not reach the
+      // listener. `onDidHide` runs later than this, so it is too late to drop the listener there.
+      changeSubscription.dispose();
       resolve({ decision });
       picker.hide();
     };

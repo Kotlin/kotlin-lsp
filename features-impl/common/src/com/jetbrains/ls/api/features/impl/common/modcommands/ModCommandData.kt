@@ -713,6 +713,7 @@ private suspend fun LspClient.askToContinue(command: ModCommandData.ShowConflict
             continueLabel = LspServerBundle.message("conflicts.action.continue"),
             cancelLabel = LspServerBundle.message("conflicts.action.cancel"),
             revealLabel = LspServerBundle.message("conflicts.action.reveal"),
+            documentChangedLabel = LspServerBundle.message("conflicts.error.document.changed"),
         ),
     )
     // An exhaustive `when` keeps both answers named, so a third one cannot pass unnoticed.
@@ -853,6 +854,7 @@ data class ShowConflictsParams(
     val continueLabel: String,
     val cancelLabel: String,
     val revealLabel: String,
+    val documentChangedLabel: String,
 )
 
 /** The answer of the user to a [ShowConflictsRequest]. */
