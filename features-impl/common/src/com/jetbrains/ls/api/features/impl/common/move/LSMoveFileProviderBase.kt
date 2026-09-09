@@ -2,16 +2,14 @@
 package com.jetbrains.ls.api.features.impl.common.move
 
 import com.intellij.openapi.application.readAction
-import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.findPsiDirectory
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiDirectory
-import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiFileSystemItem
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
-import com.jetbrains.ls.api.core.util.toPath
 import com.jetbrains.ls.api.features.impl.common.processors.LSRefactoringProcessor
 import com.jetbrains.ls.api.features.impl.common.processors.doRefactoring
 import com.jetbrains.ls.api.features.impl.common.utils.findDestination
@@ -33,21 +31,26 @@ abstract class LSMoveFileProviderBase(override val supportedLanguages: Set<LSLan
                 val targetDirectory = findDestination(project, params) ?: return@readAction null
 
 
-                val psiFiles = params.map {
+                val sources = params.map {
                     val vFile = it.oldUri.findVirtualFile() ?: return@readAction null
-                    vFile.findPsiFile(project) ?: return@readAction null
+
+                    if (vFile.isDirectory) {
+                        vFile.findPsiDirectory(project)
+                    } else {
+                        vFile.findPsiFile(project)
+                    } ?: return@readAction null
                 }
 
-                createProcessor(targetDirectory, psiFiles)
-            } ?: return@withWriteAnalysisContext emptyList()
+                createProcessor(targetDirectory, sources)
+            } ?: return@withWriteAnalysisContext null
 
 
             doRefactoring(processor = processor, granularity = TextEditsComputer.DiffGranularity.WORD, uriToSkip = params.map { it.oldUri }, true)
-        }
+        } ?: return null
 
         return WorkspaceEdit(documentChanges = changes)
     }
 
     context(_: LSAnalysisContext)
-    protected abstract fun createProcessor(targetDirectory: PsiDirectory, files: List<PsiFile>): LSRefactoringProcessor?
+    protected abstract fun createProcessor(targetDirectory: PsiDirectory, sources: List<PsiFileSystemItem>): LSRefactoringProcessor?
 }

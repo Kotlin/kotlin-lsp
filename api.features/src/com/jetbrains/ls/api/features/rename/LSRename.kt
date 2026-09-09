@@ -37,7 +37,9 @@ object LSRename {
             OperationKind.MOVE_DIRECTORIES -> {
                 configuration.entries<LSMoveDirectoryProvider>().firstNotNullOfOrNull { it.moveDirectory(files) }
             }
-            OperationKind.MOVE_FILES -> configuration.entriesFor<LSMoveFileProvider>(files.first().oldUri).firstNotNullOfOrNull { it.moveFile(files) }
+            OperationKind.MOVE_FILES_AND_DIRECTORIES -> {
+                configuration.entries<LSMoveFileProvider>().firstNotNullOfOrNull { it.moveFile(files) }
+            }
             OperationKind.RENAME_DIRECTORY -> {
                 // Since it is unclear what language directory is renamed, it is up to callee to decide whether he should rename the directory or not.
                 val directory = files.single()
@@ -65,7 +67,7 @@ object LSRename {
         return if (isRename(this)) {
             if (isDirectoryOperation(this.single())) OperationKind.RENAME_DIRECTORY else OperationKind.RENAME_FILE
         } else if (isMove(this)) {
-            if (all { isDirectoryOperation(it) }) OperationKind.MOVE_DIRECTORIES else OperationKind.MOVE_FILES
+            if (all { isDirectoryOperation(it) }) OperationKind.MOVE_DIRECTORIES else OperationKind.MOVE_FILES_AND_DIRECTORIES
         } else {
             OperationKind.UNKNOWN
         }
@@ -99,9 +101,9 @@ object LSRename {
          */
         MOVE_DIRECTORIES,
         /**
-         * Represents a request in which asked to move at least one file (of the same language).
+         * Represents a request to move at least one file. The request can also contain directories.
          */
-        MOVE_FILES,
+        MOVE_FILES_AND_DIRECTORIES,
 
         /**
          * Represents a request in which asked to rename a single directory.
