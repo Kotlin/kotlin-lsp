@@ -845,7 +845,7 @@ export function shouldSkipClosingDelimiter(
   }
 
   const stack: string[] = [key];
-  for (let currentNode: Node | null = getPreviousLeaf(node); currentNode !== null; ) {
+  for (let currentNode: Node | null = getPreviousLeaf(node); currentNode !== null;) {
     const ignoredAncestor = findAncestorInSet(currentNode, ignoredAncestorTypes);
     if (ignoredAncestor !== null) {
       currentNode = getPreviousLeaf(ignoredAncestor);

@@ -41,10 +41,12 @@ export function createExtensionConfig(
 
   return {
     target: 'node',
-    entry: resolvePackagePath(packageDir, entry),
+    entry: {
+      extension: resolvePackagePath(packageDir, entry),
+    },
     output: {
       path: outputPath,
-      filename: 'extension.js',
+      filename: '[name].js',
       library: {
         type: 'modern-module',
       },

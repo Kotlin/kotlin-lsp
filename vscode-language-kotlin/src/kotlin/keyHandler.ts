@@ -1660,7 +1660,7 @@ function findUnterminatedBlockCommentInRange(
 ): BlockCommentContext | null {
   const stack: Array<{ start: number; isDoc: boolean }> = [];
   let ignoredRangeIndex = 0;
-  for (let current = startIndex; current < endIndex; ) {
+  for (let current = startIndex; current < endIndex;) {
     const ignoredRange = ignoredRanges[ignoredRangeIndex];
     if (ignoredRange !== undefined && current >= ignoredRange.start) {
       current = ignoredRange.end;
