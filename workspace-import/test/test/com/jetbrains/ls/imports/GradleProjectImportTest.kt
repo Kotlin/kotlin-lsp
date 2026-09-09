@@ -4,10 +4,10 @@ package com.jetbrains.ls.imports
 import com.intellij.ide.starter.sdk.JdkDownloaderFacade
 import com.intellij.platform.workspace.jps.entities.LibraryEntity
 import com.intellij.platform.workspace.jps.entities.LibraryRootTypeId
+import com.intellij.platform.workspace.jps.entities.ModuleEntity
 import com.jetbrains.ls.imports.api.WorkspaceImportOptions
 import com.jetbrains.ls.imports.core.provider.TestDataDirSource
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
-import com.jetbrains.ls.imports.json.WorkspaceData
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -18,15 +18,17 @@ import kotlin.io.path.div
 class GradleProjectImportTest : GradleProjectImportTestCase() {
 
     @Test
-    fun newIJKotlinGradle() = doGradleTest("NewIJKotlinGradle", JdkDownloaderFacade.jdk21) { workspace: WorkspaceData ->
-        withIgnoredJdkRoots(workspace).withRelaxedDependencyOrder()
-    }
+    fun newIJKotlinGradle() = doGradleTest(
+        "NewIJKotlinGradle",
+        JdkDownloaderFacade.jdk21,
+        WorkspaceComparator().withIgnoredJdkRoots().withRelaxedDependencyOrder()
+    )
 
     @Test
-    fun javaLanguageLevels() = doGradleTest("JavaLanguageLevels", JdkDownloaderFacade.jdk21, ::withIgnoredJdkRoots)
+    fun javaLanguageLevels() = doGradleTest("JavaLanguageLevels", JdkDownloaderFacade.jdk21, WorkspaceComparator().withIgnoredJdkRoots())
 
     @Test
-    fun petClinic() = doGradleTest("PetClinic", ::withIgnoredJdkRoots)
+    fun petClinic() = doGradleTest("PetClinic", WorkspaceComparator().withIgnoredJdkRoots())
 
     @Test
     fun brokenPetClinic() = doTestBrokenProject(
@@ -37,7 +39,7 @@ class GradleProjectImportTest : GradleProjectImportTestCase() {
     )
 
     @Test
-    fun multiProjectKotlinDSL() = doGradleTest("MultiProjectKotlinDSL", ::withIgnoredJdkRoots)
+    fun multiProjectKotlinDSL() = doGradleTest("MultiProjectKotlinDSL", WorkspaceComparator().withIgnoredJdkRoots())
 
     @Test
     fun kotlinKmpProject() {
@@ -46,9 +48,24 @@ class GradleProjectImportTest : GradleProjectImportTestCase() {
             project = "GradleKotlinKmpProject",
             jdkToUse = JdkDownloaderFacade.jdk17,
             reporter = reporter,
-            resultMapper = ::withIgnoredJdkRoots,
+            // No golden comparison: the KMP model varies by operating system and by network. The test asserts only
+            // that the fix ran each sync task once and that the import returned the project's module graph.
+            comparator = WorkspaceComparator.NONE,
             importParametersCustomizer = { it },
-            entityStorageVerifier = {}
+            entityStorageVerifier = { storage ->
+                val moduleNames = storage.entities(ModuleEntity::class.java).map { it.name }.toSet()
+                val expected = setOf(
+                    "KotlinProject",
+                    "KotlinProject.shared",
+                    "KotlinProject.shared.jvmMain",
+                    "KotlinProject.desktopApp",
+                    "KotlinProject.desktopApp.main",
+                )
+                assertTrue(
+                    moduleNames.containsAll(expected),
+                    "Imported model is missing KMP modules. Expected at least $expected but got $moduleNames"
+                )
+            }
         )
         reporter.capturedOutput
             .apply {
@@ -60,33 +77,35 @@ class GradleProjectImportTest : GradleProjectImportTestCase() {
     }
 
     @Test
-    fun multiProjectGroovyDSL() = doGradleTest("MultiProjectGroovyDSL", ::withIgnoredJdkRoots)
+    fun multiProjectGroovyDSL() = doGradleTest("MultiProjectGroovyDSL", WorkspaceComparator().withIgnoredJdkRoots())
 
     @Test
-    fun customSourceSets() = doGradleTest("CustomSourceSets", ::withIgnoredJdkRoots)
+    fun customSourceSets() = doGradleTest("CustomSourceSets", WorkspaceComparator().withIgnoredJdkRoots())
 
     @Test
-    fun gradleKotlinLanguageVersionCustom() = doGradleTest("GradleKotlinLanguageVersionCustom", ::withIgnoredJdkRoots)
+    fun gradleKotlinLanguageVersionCustom() = doGradleTest("GradleKotlinLanguageVersionCustom", WorkspaceComparator().withIgnoredJdkRoots())
 
     @Test
-    fun gradleKotlinLanguageVersionDefaultFromPlugin() = doGradleTest("GradleKotlinLanguageVersionDefaultFromPlugin", ::withIgnoredJdkRoots)
+    fun gradleKotlinLanguageVersionDefaultFromPlugin() = doGradleTest("GradleKotlinLanguageVersionDefaultFromPlugin", WorkspaceComparator().withIgnoredJdkRoots())
 
     @Test
-    fun ideaPluginCustomSourceSets() = doGradleTest("IdeaPluginCustomSourceSets", ::withIgnoredJdkRoots)
+    fun ideaPluginCustomSourceSets() = doGradleTest("IdeaPluginCustomSourceSets", WorkspaceComparator().withIgnoredJdkRoots())
 
     @Test
-    fun dependencies() = doGradleTest("Dependencies", ::withIgnoredJdkRoots)
+    fun dependencies() = doGradleTest("Dependencies", WorkspaceComparator().withIgnoredJdkRoots())
 
     @Test
-    fun gradle6Project() = doGradleTest("Gradle6Project", JdkDownloaderFacade.jdk11, ::withIgnoredJdkRoots)
+    fun gradle6Project() = doGradleTest("Gradle6Project", JdkDownloaderFacade.jdk11, WorkspaceComparator().withIgnoredJdkRoots())
 
     @Test
-    fun gradle7Project() = doGradleTest("Gradle7Project", JdkDownloaderFacade.jdk11, ::withIgnoredJdkRoots)
+    fun gradle7Project() = doGradleTest("Gradle7Project", JdkDownloaderFacade.jdk11, WorkspaceComparator().withIgnoredJdkRoots())
 
     @Test
-    fun gradleIncludedBuildProject() = doGradleTest("GradleIncludedBuildProject", JdkDownloaderFacade.jdk17) { workspace: WorkspaceData ->
-        withIgnoredJdkRoots(workspace).withRelaxedDependencyOrder()
-    }
+    fun gradleIncludedBuildProject() = doGradleTest(
+        "GradleIncludedBuildProject",
+        JdkDownloaderFacade.jdk17,
+        WorkspaceComparator().withIgnoredJdkRoots().withRelaxedDependencyOrder()
+    )
 
     @Test
     fun empty() = doGradleTest("Empty")
@@ -95,7 +114,7 @@ class GradleProjectImportTest : GradleProjectImportTestCase() {
     fun gradleProjectWithCustomEnvironment() = doGradleTest(
         project = "GradleProjectWithCustomEnvironment",
         jdkToUse = JdkDownloaderFacade.jdk25,
-        resultMapper = ::withIgnoredJdkRoots,
+        comparator = WorkspaceComparator().withIgnoredJdkRoots(),
         importParametersCustomizer = {
             it.copy(
                 options = WorkspaceImportOptions(
@@ -110,20 +129,20 @@ class GradleProjectImportTest : GradleProjectImportTestCase() {
     @Test
     fun nonExistentDependency() {
         // TODO: Check that missing dependencies are reported
-        doGradleTest("NonExistentDependency", ::withIgnoredJdkRoots)
+        doGradleTest("NonExistentDependency", WorkspaceComparator().withIgnoredJdkRoots())
     }
 
     @Test
     fun gradleProjectWithSourcesAndResourcesInSingleRoot() = doGradleTest(
         "GradleProjectWithSourcesAndResourcesInSingleRoot",
-        ::withIgnoredJdkRoots
+        WorkspaceComparator().withIgnoredJdkRoots()
     )
 
     @Test
     fun gradleJavaLanguageFeaturePreviewModule() = doGradleTest(
         "GradleJavaLanguageFeaturePreviewModule",
         JdkDownloaderFacade.jdk25,
-        ::withIgnoredJdkRoots
+        WorkspaceComparator().withIgnoredJdkRoots()
     )
 
     @Test
@@ -132,7 +151,7 @@ class GradleProjectImportTest : GradleProjectImportTestCase() {
     fun gradleToolchainAndJavaTargetVersion() = doGradleTest(
         "GradleToolchainAndJavaTargetVersion",
         JdkDownloaderFacade.jdk17,
-        ::withIgnoredJdkRoots
+        WorkspaceComparator().withIgnoredJdkRoots()
     )
 
     @Test
@@ -141,21 +160,21 @@ class GradleProjectImportTest : GradleProjectImportTestCase() {
     fun gradleToolchainAndJavaSourceVersion() = doGradleTest(
         "GradleToolchainAndJavaSourceVersion",
         JdkDownloaderFacade.jdk17,
-        ::withIgnoredJdkRoots
+        WorkspaceComparator().withIgnoredJdkRoots()
     )
 
     @Test
     fun gradleJavaLanguageFeaturePreviewSourceSet() = doGradleTest(
         "GradleJavaLanguageFeaturePreviewSourceSet",
         JdkDownloaderFacade.jdk25,
-        ::withIgnoredJdkRoots
+        WorkspaceComparator().withIgnoredJdkRoots()
     )
 
     @Test
-    fun systemPropertiesCheckerProject() = doGradleTest("SystemPropertiesCheckerProject", ::withIgnoredJdkRoots)
+    fun systemPropertiesCheckerProject() = doGradleTest("SystemPropertiesCheckerProject", WorkspaceComparator().withIgnoredJdkRoots())
 
     @Test
-    fun brokenTaskGraphProject() = doGradleTest("BrokenTaskGraphProject", ::withIgnoredJdkRoots)
+    fun brokenTaskGraphProject() = doGradleTest("BrokenTaskGraphProject", WorkspaceComparator().withIgnoredJdkRoots())
 
     @Test
     fun buildExceptionProject() = doTestBrokenProject(
@@ -169,7 +188,7 @@ class GradleProjectImportTest : GradleProjectImportTestCase() {
     fun systemPropertiesCheckerGradle6Project() = doGradleTest(
         "SystemPropertiesCheckerGradle6Project",
         JdkDownloaderFacade.jdk11,
-        ::withIgnoredJdkRoots
+        WorkspaceComparator().withIgnoredJdkRoots()
     )
 
     @Test
@@ -177,7 +196,7 @@ class GradleProjectImportTest : GradleProjectImportTestCase() {
         doGradleTest(
             project = "GradleProjectLibrarySourcesAreDownloadedByDefault",
             jdkToUse = JdkDownloaderFacade.jdk17,
-            resultMapper = ::withIgnoredJdkRoots,
+            comparator = WorkspaceComparator().withIgnoredJdkRoots(),
             importParametersCustomizer = { it },
             entityStorageVerifier = { wsm ->
                 val libraries = wsm.entities(LibraryEntity::class.java).toList()

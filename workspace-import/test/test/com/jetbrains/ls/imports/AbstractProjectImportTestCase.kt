@@ -2,11 +2,8 @@
 package com.jetbrains.ls.imports
 
 import com.intellij.platform.workspace.jps.entities.LibraryRoot
-import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.EntityStorage
-import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.testFramework.common.timeoutRunBlocking
-import com.intellij.workspaceModel.ide.impl.createIdeVirtualFileUrlManager
 import com.jetbrains.analyzer.api.withAnalyzer
 import com.jetbrains.analyzer.api.withProject
 import com.jetbrains.analyzer.bootstrap.AnalyzerProjectId
@@ -20,12 +17,8 @@ import com.jetbrains.ls.imports.core.provider.TestDataDirProvider
 import com.jetbrains.ls.imports.core.provider.TestDataDirs
 import com.jetbrains.ls.imports.json.DependencyData
 import com.jetbrains.ls.imports.json.LibraryRootData
-import com.jetbrains.ls.imports.json.WorkspaceData
-import com.jetbrains.ls.imports.json.importWorkspaceData
-import com.jetbrains.ls.imports.json.toJson
 import com.jetbrains.ls.imports.json.workspaceData
 import com.jetbrains.ls.imports.utils.DETECT_PROJECT_SDK
-import com.jetbrains.ls.test.api.utils.compareWithTestdata
 import com.jetbrains.ls.test.api.utils.testPluginSet
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -106,7 +99,7 @@ abstract class AbstractProjectImportTestCase {
         importer: WorkspaceImporter,
         testDataDir: Path,
         reporter: LoggingWorkspaceProgressReporter = LoggingWorkspaceProgressReporter(),
-        resultMapper: (WorkspaceData) -> WorkspaceData = { it },
+        comparator: WorkspaceComparator = WorkspaceComparator(),
         entityStorageVerifier: (EntityStorage) -> Unit = { },
         projectFile: String? = null,
         importParametersCustomizer: (WorkspaceImportParameters) -> WorkspaceImportParameters = { it }
@@ -149,13 +142,7 @@ abstract class AbstractProjectImportTestCase {
 
         entityStorageVerifier(storage)
 
-        val data = resultMapper(workspaceData(storage, projectDir))
-        compareWithTestdata(projectDir / "workspace.json", cropJarPaths(toJson(data)))
-
-        val storageFromData = MutableEntityStorage.create().apply {
-            importWorkspaceData(data, projectDir, object : EntitySource {}, createIdeVirtualFileUrlManager(true), false, "JSON")
-        }
-        assertEquals(data, workspaceData(storageFromData, projectDir))
+        comparator.compare(projectDir / "workspace.json", workspaceData(storage, projectDir), ::cropJarPaths)
     }
 
     // 1. ~/.gradle/ paths contain random hashes

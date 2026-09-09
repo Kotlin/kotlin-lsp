@@ -16,7 +16,6 @@ import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.LSP_GRADLE_JAVA_HO
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.LSP_GRADLE_PROJECT_INIT_SCRIPTS
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
 import com.jetbrains.ls.imports.json.DependencyData
-import com.jetbrains.ls.imports.json.WorkspaceData
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import java.io.IOException
@@ -42,19 +41,21 @@ abstract class GradleProjectImportTestCase : AbstractProjectImportTestCase() {
         System.clearProperty(LSP_GRADLE_PROJECT_INIT_SCRIPTS)
     }
 
-    protected fun withIgnoredJdkRoots(data: WorkspaceData): WorkspaceData = data.copy(
-        sdks = data.sdks.map {
-            it.copy(
-                roots = emptyList(),
-                homePath = null
-            )
-        }
-    )
+    protected fun WorkspaceComparator.withIgnoredJdkRoots(): WorkspaceComparator = with { data ->
+        data.copy(
+            sdks = data.sdks.map {
+                it.copy(
+                    roots = emptyList(),
+                    homePath = null
+                )
+            }
+        )
+    }
 
-    protected fun WorkspaceData.withoutSyntheticLibraries(): WorkspaceData {
+    protected fun WorkspaceComparator.withoutSyntheticLibraries(): WorkspaceComparator = with { data ->
         val testDataPath = realTestDataDir.toString()
-        return copy(
-            modules = modules.map { moduleData ->
+        data.copy(
+            modules = data.modules.map { moduleData ->
                 moduleData.copy(
                     dependencies = moduleData.dependencies.filter { dependencyData ->
                         !(dependencyData is DependencyData.Library && dependencyData.name.contains(testDataPath))
@@ -64,30 +65,33 @@ abstract class GradleProjectImportTestCase : AbstractProjectImportTestCase() {
         )
     }
 
-    protected fun WorkspaceData.withRelaxedDependencyOrder(): WorkspaceData = copy(
-        modules = modules.map { moduleData ->
-            moduleData.copy(
-                dependencies = moduleData.dependencies.sortedWith { first, second -> first.compare(second) }
-            )
-        },
-        libraries = libraries.sortedBy { it.name }
-            .map { library -> library.copy(roots = library.roots.sortedBy { it.rootSortKey() }) }
-    )
+    protected fun WorkspaceComparator.withRelaxedDependencyOrder(): WorkspaceComparator = with { data ->
+        data.copy(
+            modules = data.modules.map { moduleData ->
+                moduleData.copy(
+                    dependencies = moduleData.dependencies.sortedWith { first, second -> first.compare(second) }
+                )
+            },
+            libraries = data.libraries.sortedBy { it.name }
+                .map { library -> library.copy(roots = library.roots.sortedBy { it.rootSortKey() }) }
+        )
+    }
 
-    protected fun doGradleTest(project: String, resultMapper: (WorkspaceData) -> WorkspaceData = { it }) =
-        doGradleTest(project = project, jdkToUse = JdkDownloaderFacade.jdk17, resultMapper = resultMapper) { }
+
+    protected fun doGradleTest(project: String, comparator: WorkspaceComparator = WorkspaceComparator()) =
+        doGradleTest(project = project, jdkToUse = JdkDownloaderFacade.jdk17, comparator = comparator) { }
 
     protected fun doGradleTest(
         project: String,
         jdkToUse: JdkDownloadItem,
-        resultMapper: (WorkspaceData) -> WorkspaceData = { it }
-    ) = doGradleTest(project = project, jdkToUse = jdkToUse, resultMapper = resultMapper) { }
+        comparator: WorkspaceComparator = WorkspaceComparator()
+    ) = doGradleTest(project = project, jdkToUse = jdkToUse, comparator = comparator) { }
 
     protected fun doGradleTest(
         project: String,
         jdkToUse: JdkDownloadItem,
         reporter: LoggingWorkspaceProgressReporter = LoggingWorkspaceProgressReporter(),
-        resultMapper: (WorkspaceData) -> WorkspaceData = { it },
+        comparator: WorkspaceComparator = WorkspaceComparator(),
         importParametersCustomizer: (WorkspaceImportParameters) -> WorkspaceImportParameters = { it },
         entityStorageVerifier: (EntityStorage) -> Unit,
     ) {
@@ -107,7 +111,7 @@ abstract class GradleProjectImportTestCase : AbstractProjectImportTestCase() {
                         importer = GradleWorkspaceImporter,
                         testDataDir = testDataDir / "gradle",
                         reporter = reporter,
-                        resultMapper = resultMapper,
+                        comparator = comparator,
                         entityStorageVerifier = entityStorageVerifier,
                         importParametersCustomizer = importParametersCustomizer
                     )
@@ -121,11 +125,11 @@ abstract class GradleProjectImportTestCase : AbstractProjectImportTestCase() {
      * Some 'adhoc' libraries were not resolved by coordinates, but as 'jars' directly.
      * The jar path is used as part of the library name, which shall be sanitized for tests
      */
-    protected fun WorkspaceData.withSanitizedJarLibraryNames(): WorkspaceData {
+    protected fun WorkspaceComparator.withSanitizedJarLibraryNames(): WorkspaceComparator = with { data ->
         val jarLibraryRegex = Regex("""Gradle: (?<path>.*\.jar)""")
 
-        return copy(
-            libraries = libraries.map { library ->
+        data.copy(
+            libraries = data.libraries.map { library ->
                 val match = jarLibraryRegex.matchEntire(library.name) ?: return@map library
                 val path = Path(match.groups["path"]!!.value)
                 library.copy(name = "Gradle: #####/${path.fileName}")

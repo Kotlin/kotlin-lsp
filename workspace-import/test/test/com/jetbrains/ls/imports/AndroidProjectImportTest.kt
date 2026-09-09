@@ -10,12 +10,14 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 class AndroidProjectImportTest : GradleProjectImportTestCase() {
 
     @Test
-    fun androidMultiModule() = doGradleTest("AndroidMultiModule") { workspaceData ->
-        withIgnoredJdkRoots(workspaceData).withSanitizedJarLibraryNames().withoutSyntheticLibraries()
-    }
+    fun androidMultiModule() = doGradleTest(
+        "AndroidMultiModule",
+        WorkspaceComparator().withIgnoredJdkRoots().withSanitizedJarLibraryNames().withoutSyntheticLibraries()
+    )
 
     @Test
-    fun androidDependingOnKotlinJvm() = doGradleTest("AndroidDependingOnKotlinJvm") { workspaceData ->
-        withIgnoredJdkRoots(workspaceData).withSanitizedJarLibraryNames().withoutSyntheticLibraries()
-    }
+    fun androidDependingOnKotlinJvm() = doGradleTest(
+        "AndroidDependingOnKotlinJvm",
+        WorkspaceComparator().withIgnoredJdkRoots().withSanitizedJarLibraryNames().withoutSyntheticLibraries()
+    )
 }
