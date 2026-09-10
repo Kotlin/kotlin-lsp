@@ -45,6 +45,7 @@ import com.intellij.util.containers.nullize
 import com.intellij.util.lang.JavaVersion
 import com.jetbrains.ls.imports.api.ConflictAverseImporter
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
+import com.jetbrains.ls.imports.api.WorkspaceException
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportOptions
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
@@ -179,7 +180,7 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
                 }
             }
         } catch (e: IOException) {
-            throw WorkspaceImportException(
+            throw WorkspaceException(
                 "Error parsing workspace.json",
                 "Error parsing workspace.json:\n ${e.message ?: e.stackTraceToString()}",
                 e

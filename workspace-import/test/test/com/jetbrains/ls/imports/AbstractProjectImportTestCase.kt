@@ -9,6 +9,7 @@ import com.jetbrains.analyzer.api.withProject
 import com.jetbrains.analyzer.bootstrap.AnalyzerProjectId
 import com.jetbrains.analyzer.bootstrap.WorkspaceModelSnapshot
 import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
+import com.jetbrains.ls.imports.api.WorkspaceException
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImporter
@@ -124,6 +125,13 @@ abstract class AbstractProjectImportTestCase {
                         val importParameters = importParametersCustomizer(WorkspaceImportParameters(importPath, null))
                         importer.importWorkspaceFully(it.project, importParameters, virtualFileUrlManager, reporter)
                     } catch (e: WorkspaceImportException) {
+                        throw AssertionError(
+                            "Import of '$project' failed: ${e.message}\n" +
+                                    "logMessage: ${e.logMessage}\n" +
+                                    "---- tool output ----\n${reporter.capturedOutput}",
+                            e
+                        )
+                    } catch (e: WorkspaceException) {
                         throw AssertionError(
                             "Import of '$project' failed: ${e.message}\n" +
                                     "logMessage: ${e.logMessage}\n" +

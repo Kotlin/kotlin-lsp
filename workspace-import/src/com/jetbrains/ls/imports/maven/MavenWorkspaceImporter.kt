@@ -16,6 +16,7 @@ import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.io.delete
 import com.intellij.util.system.OS
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
+import com.jetbrains.ls.imports.api.WorkspaceException
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportOptions
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
@@ -288,7 +289,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
             })
         } catch (e: SerializationException) {
             return ErrorResult(
-                WorkspaceImportException(
+                WorkspaceException(
                     "Error parsing workspace.json",
                     "Error parsing workspace.json:\n ${e.message ?: e.stackTraceToString()}",
                     e
@@ -381,7 +382,17 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                 try {
                     stubProjectPomFile.writeText(STUB_PROJECT_POM)
                     install(stubProjectPomFile)
-                } finally {
+                }
+                catch (stubFailure: WorkspaceImportException) {
+                    // The stub project is ours and holds no user configuration. A failure to install the plugin
+                    // into it is our problem, not the user's.
+                    throw WorkspaceException(
+                        "Failed to install the Maven import plugin",
+                        "Failed to install the Maven import plugin: ${stubFailure.logMessage ?: stubFailure.message}",
+                        stubFailure,
+                    )
+                }
+                finally {
                     stubProjectPomFile.delete()
                 }
             }
