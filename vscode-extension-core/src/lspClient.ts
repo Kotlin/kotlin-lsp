@@ -27,7 +27,6 @@ import {
   getOutputChannel,
   logInfo,
   reloadWorkspace,
-  revealBuildLog,
 } from './extension';
 import { runWithEulaGate } from './eulaGate';
 import {
@@ -594,11 +593,6 @@ function registerImportLogHandler(client: LanguageClient): void {
   clearBuildError();
   const subscription = client.onNotification(importLogNotification, (p) => {
     const channel = getBuildOutputChannel();
-    if (p.started) {
-      // Reveal the Build output while the import runs
-      revealBuildLog();
-      return;
-    }
     channel.appendLine(p.message);
     if (p.failed) {
       // Terminal failure events reveal the Build output and leave a status item as an entry point.
