@@ -154,7 +154,7 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
 
             val storage = MutableEntityStorage.create()
             importJpsModel(
-                storage, projectDirectory, virtualFileUrlManager, model, macroExpandMap, parameters.options,
+                storage, projectDirectory, virtualFileUrlManager, model, macroExpandMap, parameters,
             ) { depName ->
                 trySend(WorkspaceImporter.ImportEvent.UnresolvedDependency(depName))
             }
@@ -193,13 +193,13 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
         virtualFileUrlManager: VirtualFileUrlManager,
         model: JpsModel,
         macroExpandMap: ExpandMacroToPathMap,
-        options: WorkspaceImportOptions,
+        parameters: WorkspaceImportParameters,
         onUnresolvedDependency: (String) -> Unit,
     ) {
         val entitySource = WorkspaceEntitySource(projectDirectory.toIntellijUri(virtualFileUrlManager))
         val libs = mutableSetOf<String>()
         val sdks = mutableSetOf<String>()
-        downloadMissingLibraries(model, projectDirectory, options)
+        downloadMissingLibraries(model, projectDirectory, parameters.options)
 
         model.project.modules.forEach { module ->
             val kotlinFacetModuleExtension = module.container.getChild(JpsKotlinFacetModuleExtension.KIND)
@@ -366,7 +366,7 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
         // direct deps so the analyzer's non-recursive OrderEnumerator resolves them. See AnalyzerOrderEnumerationHandler.
         flattenExportedDependencies(storage)
         if (model.global.libraryCollection.libraries.isEmpty()) {
-            detectJavaSdks(projectDirectory, sdks, virtualFileUrlManager, entitySource).forEach { builder ->
+            detectJavaSdks(projectDirectory, sdks, parameters, virtualFileUrlManager, entitySource).forEach { builder ->
                 storage addEntity builder
             }
         }
@@ -410,10 +410,11 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
     private fun detectJavaSdks(
         projectDirectory: Path,
         sdks: Collection<String>,
+        parameters: WorkspaceImportParameters,
         virtualFileUrlManager: VirtualFileUrlManager,
         entitySource: WorkspaceEntitySource,
     ): List<SdkEntityBuilder> {
-        val detectedSdks = findJdks(projectDirectory)
+        val detectedSdks = findJdks(projectDirectory, parameters.options.javaHome ?: parameters.defaultSdkPath)
         if (detectedSdks.isEmpty()) return emptyList()
         return sdks.map { sdkName ->
             val zeroVersion = JavaVersion.compose(0, 0, 0)
@@ -765,16 +766,18 @@ private fun serializeNonDefaultCompilerArguments(arguments: CommonCompilerArgume
     return serialized.take(1) + nonDefaultFields
 }
 
-private fun findJdks(projectPath: Path): Set<JavaHomeFinder.JdkEntry> {
+private fun findJdks(projectPath: Path, defaultSdkHome: Path?): Collection<JavaHomeFinder.JdkEntry> {
     val knownJdks = getFinder(projectPath.getEelDescriptor())
         .checkConfiguredJdks(false)
         .checkEmbeddedJava(false)
         .findExistingJdkEntries()
-    if (knownJdks.isEmpty()) {
-        throw WorkspaceImportException(
-            "Unable to find a JDK on the machine. JPS workspace import requires at least one configured JDK.",
-            "No JDKs found while importing the JPS (.iml) workspace."
-        )
+    if (knownJdks.isNotEmpty()) return knownJdks
+    if (defaultSdkHome != null) {
+        LOG.info("Found no JDK on the machine. The JPS import binds every project SDK to $defaultSdkHome")
+        return listOf(JavaHomeFinder.JdkEntry(defaultSdkHome.absolutePathString(), null))
     }
-    return knownJdks
+    throw WorkspaceImportException(
+        "Unable to find a JDK on the machine. JPS workspace import requires at least one configured JDK.",
+        "No JDKs found while importing the JPS (.iml) workspace."
+    )
 }
