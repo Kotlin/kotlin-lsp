@@ -3,7 +3,7 @@ package com.jetbrains.ls.api.features.impl.kotlin.move
 
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiFileSystemItem
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.features.impl.common.move.LSMoveFileProviderBase
 import com.jetbrains.ls.api.features.impl.common.processors.LSRefactoringProcessor
@@ -18,23 +18,15 @@ import org.jetbrains.kotlin.psi.KtFile
 /**
  * @see org.jetbrains.kotlin.idea.k2.refactoring.move.K2MoveHandler
  */
-internal object LSMoveKotlinFileProvider : LSMoveFileProviderBase(setOf(LSKotlinLanguage)) {
+internal object LSKotlinMoveFileProvider : LSMoveFileProviderBase(setOf(LSKotlinLanguage)) {
     context(_: LSAnalysisContext)
     override fun createProcessor(
         targetDirectory: PsiDirectory,
-        files: List<PsiFile>
+        sources: List<PsiFileSystemItem>
     ): LSRefactoringProcessor? {
-        if (files.any { it !is KtFile }) return null
+        if (sources.distinctBy { it.name }.size != sources.size) return null
 
-        if (files.distinctBy { it.name }.size != files.size) return null
-
-        val targets = files.map { file ->
-            val ktFile = file as KtFile
-            val clazz = KotlinSingleClassFileAnalyzer.getSingleClass(ktFile)
-
-            // Target elements to move are evaluated in `org.jetbrains.kotlin.idea.projectView.KotlinExpandNodeProjectViewProvider.modify`
-            if (clazz != null && clazz.containingKtFile.declarations.size == 1) clazz else ktFile
-        }.toTypedArray<PsiElement>()
+        val targets = getCandidates(sources) ?: return null
 
         if (!canMove(targets)) return null
 
@@ -47,5 +39,21 @@ internal object LSMoveKotlinFileProvider : LSMoveFileProviderBase(setOf(LSKotlin
         ) ?: return null
 
         return LSMoveKotlinFileProcessor.create(model)
+    }
+
+    private fun getCandidates(sources: List<PsiFileSystemItem>): Array<PsiElement>? {
+        return sources.map { element ->
+            when (element) {
+                is KtFile -> {
+                    val clazz = KotlinSingleClassFileAnalyzer.getSingleClass(element)
+
+                    // Target elements to move are evaluated in `org.jetbrains.kotlin.idea.projectView.KotlinExpandNodeProjectViewProvider.modify`
+                    if (clazz != null && clazz.containingKtFile.declarations.size == 1) clazz else element
+                }
+
+                is PsiDirectory -> element
+                else -> return null
+            }
+        }.toTypedArray<PsiElement>()
     }
 }

@@ -59,7 +59,12 @@ internal class LSMoveKotlinFileProcessor(
     override fun processUsages(initialUsages: Array<UsageInfo>): Array<UsageInfo> = initialUsages
 
     override fun getFilesToSave(usages: Array<UsageInfo>): List<PsiFile> {
-        return usages.mapNotNull { it.file } + elementsToMove.mapNotNull { it.containingFile }
+        return usages.mapNotNull { it.file } + elementsToMove.flatMap { it.filesToSave() }
+    }
+
+    private fun PsiElement.filesToSave(): List<PsiFile> = when (this) {
+        is PsiDirectory -> files.asList() + subdirectories.flatMap { it.filesToSave() }
+        else -> listOfNotNull(containingFile)
     }
 
     @OptIn(KaAllowAnalysisOnEdt::class, KaAllowAnalysisFromWriteAction::class)
