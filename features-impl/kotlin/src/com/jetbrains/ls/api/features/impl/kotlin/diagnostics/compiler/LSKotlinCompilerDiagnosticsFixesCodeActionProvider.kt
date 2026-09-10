@@ -1,6 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.kotlin.diagnostics.compiler
 
+import com.intellij.codeInsight.intention.IntentionActionWithModCommandFallback
 import com.intellij.modcommand.ActionContext
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.getOrHandleException
@@ -183,7 +184,8 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
                 fix.getOrHandleException { LOG.warn(it) }
             }
             .mapNotNull { intentionAction ->
-                val modCommandAction = intentionAction.asModCommandAction()
+                val modCommandAction =
+                    IntentionActionWithModCommandFallback.getFallbackModCommandActionFor(intentionAction) ?: intentionAction.asModCommandAction()
                 if (modCommandAction == null) {
                     LOG.warn("Cannot convert $intentionAction to ModCommandAction")
                 }

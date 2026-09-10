@@ -12,10 +12,6 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <applicationService
-            serviceInterface="org.jetbrains.kotlin.idea.k2.codeinsight.fixes.imprt.KotlinAddImportActionFactory"
-            serviceImplementation="org.jetbrains.kotlin.idea.k2.codeinsight.fixes.imprt.KotlinAddImportActionFactory$ModCommandBased"/>
-
-    <applicationService
               serviceInterface="org.jetbrains.kotlin.idea.base.codeInsight.KotlinOptimizeImportsFacility"
               serviceImplementation="org.jetbrains.kotlin.idea.k2.codeinsight.K2OptimizeImportsFacility"/>
 
