@@ -4,6 +4,7 @@ package com.jetbrains.ls.imports
 import com.jetbrains.ls.imports.core.provider.TestDataDirSource
 import com.jetbrains.ls.imports.jps.JpsWorkspaceImporter
 import org.junit.jupiter.api.Test
+import kotlin.io.path.Path
 import kotlin.io.path.div
 
 @TestDataDirSource
@@ -19,6 +20,10 @@ class JpsProjectImportTest : AbstractProjectImportTestCase() {
     fun jpsExportedModuleLibrary() = doJpsTest("JpsExportedModuleLibrary")
 
     private fun doJpsTest(project: String) {
-        doTest(project, JpsWorkspaceImporter, testDataDir / "jps")
+        doTest(
+            project, JpsWorkspaceImporter, testDataDir / "jps",
+            // A TC Windows agent can have no discoverable JDK inside the Bazel sandbox.
+            importParametersCustomizer = { it.copy(defaultSdkPath = Path(System.getProperty("java.home"))) },
+        )
     }
 }
