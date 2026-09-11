@@ -3,7 +3,6 @@ package com.jetbrains.ls.imports.utils
 
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.fileLogger
-import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
 import com.intellij.openapi.projectRoots.testFramework.TestJdkAnnotationsFilesProvider
 import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.platform.workspace.jps.entities.SdkRoot
@@ -17,11 +16,14 @@ import kotlin.io.path.isRegularFile
 
 private val LOG = fileLogger()
 
-/** The path of the annotations archive, relative to the directory that holds the Java classes. */
-private const val ANNOTATIONS_JAR = "resources/jdkAnnotations.jar"
+/** The descriptor at the resource root of [the module that holds the annotations][ANNOTATIONS_DIRECTORY]. */
+private const val ANNOTATIONS_MODULE_DESCRIPTOR = "intellij.java.jdkAnnotations.xml"
 
-/** The annotations directory of a source checkout, relative to the community home directory. */
-private const val ANNOTATIONS_DIRECTORY = "java/jdkAnnotations"
+/** The resources of the `intellij.java.jdkAnnotations` module, relative to the community home directory. */
+private const val ANNOTATIONS_DIRECTORY = "java/jdkAnnotations/resources"
+
+/** An anchor to reach the classloader of this module, which sees the annotations module. */
+private object ModuleAnchor
 
 /**
  * The external annotations of the JDK, as SDK roots.
@@ -48,19 +50,14 @@ fun jdkAnnotationsSdkRoots(virtualFileUrlManager: VirtualFileUrlManager): List<S
 }
 
 /**
- * The locations that `JavaSdkImpl.internalJdkAnnotationsPath` searches, in the same order.
- * That method is unusable here, because it calls `LocalFileSystem.getInstance()`, and the local file system
- * of the analyzer is an `AnalyzerFileVirtualFileSystem`. Keep the two lists equal.
+ * The `intellij.java.jdkAnnotations` content module holds the annotations as resources.
+ * The classloader finds the module jar in a distribution and the module output directory in a run from sources.
+ * `JavaSdkImpl.internalJdkAnnotationsPath` is unusable here, because it calls `LocalFileSystem.getInstance()`,
+ * and the local file system of the analyzer is an `AnalyzerFileVirtualFileSystem`.
  */
 private fun jdkAnnotationsCandidates(): List<Path> = buildList {
-    // A distribution keeps the archive beside the jar that holds the Java classes. A modularized layout
-    // puts that jar into `lib/modules`, so the parent directory is a candidate too.
-    val jar = PathManager.getJarForClass(JavaSdkImpl::class.java)?.toAbsolutePath()
-    if (jar != null && jar.isRegularFile()) {
-        add(jar.resolveSibling(ANNOTATIONS_JAR))
-        jar.parent?.let { add(it.resolveSibling(ANNOTATIONS_JAR)) }
-    }
-    add(Path.of(PathManager.getHomePath(), "lib", ANNOTATIONS_JAR))
+    PathManager.getResourceRoot(ModuleAnchor::class.java.classLoader, ANNOTATIONS_MODULE_DESCRIPTOR)
+        ?.let { add(Path.of(it)) }
     // A source checkout.
     add(Path.of(PathManager.getCommunityHomePath(), ANNOTATIONS_DIRECTORY))
     // A test under Bazel, where the home directory above is a temporary one and holds no annotations.

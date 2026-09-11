@@ -70,6 +70,7 @@ jvm_library(
         "//language-server/api.core.util",
         "@community//aether-dependency-resolver",
         "@community//libraries/maven-resolver-provider",
+        "@community//java/jdkAnnotations",
     ],
 )
 
@@ -122,6 +123,7 @@ jvm_library(
         "//language-server/api.core.util:api.core.util_test_lib",
         "@community//aether-dependency-resolver:aether-dependency-resolver_test_lib",
         "@community//libraries/maven-resolver-provider:maven-resolver-provider_test_lib",
+        "@community//java/jdkAnnotations:jdkAnnotations_test_lib",
     ],
 )
 ### auto-generated section `build language-server.workspace-import` end
