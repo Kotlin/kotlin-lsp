@@ -1,6 +1,7 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.utils
 
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
@@ -16,6 +17,8 @@ import com.jetbrains.ls.api.core.util.lspUriToIntellijUri
 import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.lsp.protocol.URI
 import kotlinx.serialization.Serializable
+
+private val LOG = logger<PsiSerializablePointer>()
 
 @Serializable
 sealed class PsiSerializablePointer {
@@ -74,10 +77,30 @@ sealed class PsiSerializablePointer {
     }
 
     companion object {
-        fun fromPsiPointer(pointer: SmartPsiElementPointer<*>): PsiSerializablePointer {
-            val psiFile = pointer.containingFile ?: error("File for pointer is null")
-            val element = pointer.element ?: error("Element for pointer is null")
-            return create(element, psiFile.virtualFile)
+        fun fromPsiPointer(pointer: SmartPsiElementPointer<*>): PsiSerializablePointer? {
+            val element = pointer.element
+            if (element == null) {
+                LOG.warn("Cannot serialize PSI pointer because its element is unavailable: $pointer")
+                return null
+            }
+
+            val psiFile = pointer.containingFile
+            if (psiFile == null) {
+                LOG.warn("Cannot serialize PSI pointer to ${element::class.java.name} because its containing file is unavailable")
+                return null
+            }
+
+            val virtualFile = psiFile.virtualFile
+            if (virtualFile == null) {
+                LOG.warn("Cannot serialize PSI pointer because its containing file has no virtual file")
+                return null
+            }
+
+            if (element !is PsiFile && element.textRange == null) {
+                LOG.warn("Cannot serialize PSI pointer to ${element::class.java.name} because it has no text range")
+                return null
+            }
+            return create(element, virtualFile)
         }
 
         fun create(psi: PsiElement, file: VirtualFile): PsiSerializablePointer {

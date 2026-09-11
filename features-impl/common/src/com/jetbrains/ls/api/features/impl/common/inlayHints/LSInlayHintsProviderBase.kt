@@ -448,13 +448,13 @@ abstract class LSInlayHintsProviderBase(
     @Serializable
     protected data class InlayActionDataSerializable(val payload: InlayActionPayloadDataSerializable, val handlerId: String) {
         companion object {
-            fun fromInlayActionData(data: InlayActionData): InlayActionDataSerializable {
+            fun fromInlayActionData(data: InlayActionData): InlayActionDataSerializable? {
                 return InlayActionDataSerializable(
                     payload = when (val payload = data.payload) {
                         is StringInlayActionPayload -> InlayActionPayloadDataSerializable.StringInlayActionPayloadSerializable(payload.text)
                         is PsiPointerInlayActionPayload ->
                             InlayActionPayloadDataSerializable.PsiPointerInlayActionPayloadSerializable(
-                                PsiSerializablePointer.fromPsiPointer(payload.pointer)
+                                PsiSerializablePointer.fromPsiPointer(payload.pointer) ?: return null
                             )
 
                         else -> error("Unsupported payload type: ${payload::class.simpleName}")
