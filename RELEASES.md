@@ -3,6 +3,109 @@
 This file contains TeamCity auto-generated download links that are updated on a weekly basis.
 These are pre-alpha builds that are built directly from `master` branch after the initial acceptance.
 
+### v263.4702.0
+- :test_tube: "Kotlin by JetBrains" extension v0.0.12 for VS Code
+
+  Includes Kotlin Language Server bundled for use with Visual Studio Code.
+
+  The extension is also available on the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=JetBrains.kotlin-server) and [OpenVSX Registry](https://open-vsx.org/extension/JetBrains/kotlin-server).
+    * [Download for macOS-x64](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-0.0.12-mac-amd64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-0.0.12-mac-amd64.vsix.sha256)
+    * [Download for macOS-arm64](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-0.0.12-mac-aarch64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-0.0.12-mac-aarch64.vsix.sha256)
+    * [Download for Linux-x64](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-0.0.12-linux-amd64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-0.0.12-linux-amd64.vsix.sha256)
+    * [Download for Linux-arm64](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-0.0.12-linux-aarch64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-0.0.12-linux-aarch64.vsix.sha256)
+    * [Download for Windows-x64](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-0.0.12-win-amd64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-0.0.12-win-amd64.vsix.sha256)
+    * [Download for Windows-arm64](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-0.0.12-win-aarch64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-0.0.12-win-aarch64.vsix.sha256)
+
+
+- :card_index_dividers: **Standalone Kotlin LSP Archive**
+
+  Standalone Kotlin Language Server version for editors other than VS Code.
+
+    * [Download for macOS-x64](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-263.4702.0.sit)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-263.4702.0.sit.sha256)
+    * [Download for macOS-arm64](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-263.4702.0-aarch64.sit)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-263.4702.0-aarch64.sit.sha256)
+    * [Download for Linux-x64](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-263.4702.0.tar.gz)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-263.4702.0.tar.gz.sha256)
+    * [Download for Linux-arm64](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-263.4702.0-aarch64.tar.gz)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-263.4702.0-aarch64.tar.gz.sha256)
+    * [Download for Windows-x64](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-263.4702.0.win.zip)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-263.4702.0.win.zip.sha256)
+    * [Download for Windows-arm64](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-263.4702.0-aarch64.win.zip)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.4702.0/kotlin-server-263.4702.0-aarch64.win.zip.sha256)
+
+##### Changelog
+
+> [!NOTE]
+> "Kotlin by JetBrains" is now on the [Open VSX Registry](https://open-vsx.org/extension/JetBrains/kotlin-server).
+> You can install it in Cursor, VSCodium, and other VS Code forks. <!-- LSP-1425, LSP-1227 -->
+>
+> JetBrains also released "Java and Kotlin by IntelliJ IDEA", which supports both languages.
+> If you install it while "Kotlin by JetBrains" is present, it offers to remove this extension.
+> This is expected. Two language servers must not run at the same time. <!-- LSP-1422 -->
+>
+> Find out more at <https://www.jetbrains.com/help/intellij-vscode/About-instance.html>.
+
+> [!IMPORTANT]
+> When the extension first starts, it now asks you to choose a Region and a Data Sharing option.
+> The language server does not start until you choose both.
+> You can change them later in the VS Code settings. <!-- LSP-1344, LSP-550, LSP-1424 -->
+
+#### 🛠 LSP capabilities
+
+* Most of the Kotlin intentions from the IntelliJ Kotlin plugin are now available in Kotlin LSP. <!-- LSP-569 -->
+  <!-- LSP-157, LSP-1216, LSP-1255, LSP-1403, LSP-1753, LSP-1624 -->
+* Code lenses above a Kotlin `main` function now let you run or debug it. <!-- LSP-1321, LSP-1323 -->
+* "Organize Imports" is now available as a Source Action. <!-- LSP-1212 -->
+* Live template completion now works in Kotlin (e.g. `main`, `sout`, or `if`). <!-- LSP-1622 -->
+* You can now move Kotlin files while preserving correct imports and references in other files. <!-- LSP-1319 -->
+  * Moving entire folders is not supported yet.
+* Workspace symbol search now finds symbols in libraries. <!-- LSP-1179 -->
+* A new status bar widget shows the server state and lets you restart the server. <!-- LSP-1170 -->
+
+#### 🐞 Run & Debug
+
+* The extension reads `launch.json`, and it can launch a JVM application. <!-- LSP-1207, LSP-1051 -->
+* Completion works in the debug console. Evaluation no longer stops at "Collecting Data".
+  <!-- LSP-1304, LSP-451 -->
+
+#### 📦 Import & build systems
+
+* You can now import more than one project from a single workspace. The `intellij.projects` setting
+  lists each project with its build system and its path. This covers a monorepo, and a directory
+  that holds several independent projects. Find out more at
+  <https://www.jetbrains.com/help/intellij-vscode/Project-import.html>. <!-- LSP-960, LSP-1302 -->
+* The workspace now reloads automatically when you edit and save a build script. A new setting controls the reload.
+  It can reload always, ask first, or never reload. New commands are also added: "Reimport
+  Project" and "Clear Caches and Restart".
+* Gradle sync now downloads the library sources by default. This makes source lookup work in a
+  library. The first sync takes more time. <!-- LSP-1192 -->
+* The server uses the Gradle Tooling API 9.5.0. <!-- LSP-1095 -->
+* Gradle import uses the JRE of the language server when `JAVA_HOME` is not set. Maven import now
+  honors the `java-home` entry of the `intellij.projects` setting.
+  <!-- LSP-1148, LSP-1497 -->
+* Maven: the importer honors the compiler arguments, and the spurious jar warnings are gone.
+  Maven import works on Windows. <!-- LSP-940, LSP-489, LSP-1560 -->
+* Better import of a multi-root workspace. The extension also tells you when the project root
+  holds more than one build system. <!-- LSP-1409, LSP-1407, LSP-1615 -->
+* Indexing now reports the progress as a percentage. <!-- LSP-1256, LSP-883 -->
+* Build tool output goes to a separate VS Code output channel. <!-- LSP-679 -->
+* The extension now activates automatically when there is a build file somewhere in the project. <!-- LSP-1000 -->
+
+#### ⌨️ Editor / typing
+
+* More Enter-key fixes in a string template. Pressing Enter no longer inserts an incorrect string
+  concatenation. <!-- LSP-1141, LSP-1367, LSP-1391, LSP-1392 -->
+* "Toggle line comment" action works again. <!-- LSP-1176 -->
+
+#### 🚀 Performance
+
+* Faster indexing, and fewer stalls during and after the project import.
+  The local inspections also run faster. <!-- LSP-115, LSP-1235, LSP-1248, LSP-278 -->
+
+#### 🐛 Bug fixes
+
+* Import of an Android Gradle project no longer fails with a `ClassCastException`. Fixes
+  <https://github.com/Kotlin/kotlin-lsp/issues/243>. <!-- LSP-1561 -->
+* Windows: the analyzer database moved from the roaming profile to `%LOCALAPPDATA%`. Fixes <https://github.com/Kotlin/kotlin-lsp/issues/215>. <!-- LSP-1004 -->
+* The server now closes the OS file handles for the JAR files it opens. <!-- LSP-244 -->
+* The server uses the proxy settings of VS Code. <!-- LSP-1532 -->
+* Many other small improvements and bug fixes.
+
 ### v262.9593.0
 - :test_tube: "Kotlin by JetBrains" extension v0.0.6 for VS Code
 
