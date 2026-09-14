@@ -35,10 +35,10 @@ object LSRename {
 
         return when (files.toOperationKind()) {
             OperationKind.MOVE_DIRECTORIES -> {
-                configuration.entries<LSMoveDirectoryProvider>().firstNotNullOfOrNull { it.moveDirectory(files) }
+                configuration.entries<LSMoveDirectoryProvider>().firstNotNullOfOrNull { it.moveDirectory(files) }?.let { return it }
             }
             OperationKind.MOVE_FILES_AND_DIRECTORIES -> {
-                configuration.entries<LSMoveFileProvider>().firstNotNullOfOrNull { it.moveFile(files) }
+                configuration.entries<LSMoveFileProvider>().singleOrNull()?.moveFile(files)
             }
             OperationKind.RENAME_DIRECTORY -> {
                 // Since it is unclear what language directory is renamed, it is up to callee to decide whether he should rename the directory or not.

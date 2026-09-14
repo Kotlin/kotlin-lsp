@@ -2,12 +2,12 @@
 package com.jetbrains.ls.api.features.move
 
 import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.features.LSLanguageSpecificConfigurationEntry
+import com.jetbrains.ls.api.features.LSConfigurationEntry
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.FileRename
 import com.jetbrains.lsp.protocol.WorkspaceEdit
 
-interface LSMoveFileProvider: LSLanguageSpecificConfigurationEntry {
+interface LSMoveFileProvider: LSConfigurationEntry {
     context(server: LSServer, handlerContext: LspHandlerContext)
     suspend fun moveFile(params: List<FileRename>): WorkspaceEdit?
 }
