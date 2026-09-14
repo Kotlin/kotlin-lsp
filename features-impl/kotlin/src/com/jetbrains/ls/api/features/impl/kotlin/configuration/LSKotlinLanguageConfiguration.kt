@@ -44,7 +44,6 @@ import com.jetbrains.ls.api.features.impl.kotlin.hover.LSKotlinHoverProvider
 import com.jetbrains.ls.api.features.impl.kotlin.inlayHints.LSKotlinInlayHintsProvider
 import com.jetbrains.ls.api.features.impl.kotlin.inline.LSKotlinInlineVariableProvider
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
-import com.jetbrains.ls.api.features.impl.kotlin.move.LSJvmMoveDirectoryProvider
 import com.jetbrains.ls.api.features.impl.kotlin.psi.kotlinInspectionPatcher
 import com.jetbrains.ls.api.features.impl.kotlin.rename.LSJvmRenameDirectoryProvider
 import com.jetbrains.ls.api.features.impl.kotlin.rename.LSKotlinRenameProvider
@@ -95,7 +94,6 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSKotlinInlineVariableProvider,
         LSKotlinExtractVariableProvider,
         LSJvmRenameDirectoryProvider,
-        LSJvmMoveDirectoryProvider,
         LSCommonFormattingProvider(setOf(LSKotlinLanguage)),
         LSCommonImplementationProvider(setOf(LSKotlinLanguage)),
         LSCommonTypeDefinitionProvider(setOf(LSKotlinLanguage)),

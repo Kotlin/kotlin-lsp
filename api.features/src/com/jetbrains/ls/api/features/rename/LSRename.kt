@@ -6,8 +6,7 @@ import com.jetbrains.ls.api.core.util.fileExtension
 import com.jetbrains.ls.api.core.util.fileName
 import com.jetbrains.ls.api.core.util.toPath
 import com.jetbrains.ls.api.features.LSConfiguration
-import com.jetbrains.ls.api.features.move.LSMoveDirectoryProvider
-import com.jetbrains.ls.api.features.move.LSMoveFileProvider
+import com.jetbrains.ls.api.features.move.LSMoveProvider
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.FileRename
 import com.jetbrains.lsp.protocol.PrepareRenameParams
@@ -35,10 +34,10 @@ object LSRename {
 
         return when (files.toOperationKind()) {
             OperationKind.MOVE_DIRECTORIES -> {
-                configuration.entries<LSMoveDirectoryProvider>().firstNotNullOfOrNull { it.moveDirectory(files) }?.let { return it }
+                configuration.entries<LSMoveProvider>().firstNotNullOfOrNull { it.moveDirectory(files) }
             }
             OperationKind.MOVE_FILES_AND_DIRECTORIES -> {
-                configuration.entries<LSMoveFileProvider>().singleOrNull()?.moveFile(files)
+                configuration.entries<LSMoveProvider>().firstNotNullOfOrNull { it.moveFile(files) }
             }
             OperationKind.RENAME_DIRECTORY -> {
                 // Since it is unclear what language directory is renamed, it is up to callee to decide whether he should rename the directory or not.

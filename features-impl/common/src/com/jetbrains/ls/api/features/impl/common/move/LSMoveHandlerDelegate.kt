@@ -11,6 +11,12 @@ import com.jetbrains.ls.api.features.impl.common.processors.LSRefactoringProcess
  */
 interface LSMoveHandlerDelegate {
     /**
+     * `true` means that it is only able to process directories
+     */
+    val isOnlyDirectories: Boolean
+        get() = false
+
+    /**
      * Extracts more precise target to move from [element]. For example. if [element] is a file that contains a single class.
      * @see com.intellij.ide.projectView.TreeStructureProvider.modify
      */
@@ -28,6 +34,10 @@ interface LSMoveHandlerDelegate {
     fun createProcessor(sources: Array<PsiElement>, targetDirectory: PsiDirectory): LSRefactoringProcessor?
 
     companion object {
-        val EP_NAME: ExtensionPointName<LSMoveHandlerDelegate> = ExtensionPointName.create("ls.moveHandlerDelegate")
+        private val EP_NAME: ExtensionPointName<LSMoveHandlerDelegate> = ExtensionPointName.create("ls.moveHandlerDelegate")
+
+        fun forFiles(): List<LSMoveHandlerDelegate> = EP_NAME.extensionList.filterNot(LSMoveHandlerDelegate::isOnlyDirectories)
+
+        fun forDirectories(): List<LSMoveHandlerDelegate> = EP_NAME.extensionList.filter(LSMoveHandlerDelegate::isOnlyDirectories)
     }
 }

@@ -15,5 +15,6 @@
 
   <extensions defaultExtensionNs="ls">
     <moveHandlerDelegate implementation="com.jetbrains.ls.api.features.impl.kotlin.move.LSKotlinMoveHandlerDelegate"/>
+    <moveHandlerDelegate implementation="com.jetbrains.ls.api.features.impl.kotlin.move.LSJvmDirectoryMoveHandlerDelegate"/>
   </extensions>
 </idea-plugin>

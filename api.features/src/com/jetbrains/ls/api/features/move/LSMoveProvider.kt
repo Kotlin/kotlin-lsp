@@ -7,7 +7,10 @@ import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.FileRename
 import com.jetbrains.lsp.protocol.WorkspaceEdit
 
-interface LSMoveDirectoryProvider : LSConfigurationEntry {
+interface LSMoveProvider: LSConfigurationEntry {
+    context(server: LSServer, handlerContext: LspHandlerContext)
+    suspend fun moveFile(params: List<FileRename>): WorkspaceEdit?
+
     context(server: LSServer, handlerContext: LspHandlerContext)
     suspend fun moveDirectory(params: List<FileRename>): WorkspaceEdit?
 }

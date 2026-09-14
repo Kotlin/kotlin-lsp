@@ -8,7 +8,7 @@ import com.jetbrains.ls.api.features.impl.common.fileTemplates.LSInterpolateFile
 import com.jetbrains.ls.api.features.impl.common.highwatermark.LSHighWatermarkCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.location.LSResolveLocationCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDescriptorProvider
-import com.jetbrains.ls.api.features.impl.common.move.LSCommonMoveFileProvider
+import com.jetbrains.ls.api.features.impl.common.move.LSCommonMoveProvider
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.api.features.lsApiPlugin
 import com.jetbrains.ls.snapshot.api.impl.core.LazyActionSessionComponent
@@ -23,7 +23,7 @@ val LSCommonConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSInterpolateFileTemplateCommandDescriptorProvider,
         LSHighWatermarkCommandDescriptorProvider,
         LSResolveLocationCommandDescriptorProvider,
-        LSCommonMoveFileProvider,
+        LSCommonMoveProvider,
     ),
     plugins = listOf(
         lsApiPlugin,
