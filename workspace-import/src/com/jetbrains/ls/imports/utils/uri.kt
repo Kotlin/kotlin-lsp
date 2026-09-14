@@ -8,7 +8,7 @@ import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 
 internal fun String.toIntellijUri(virtualFileUrlManager: VirtualFileUrlManager): VirtualFileUrl =
-    virtualFileUrlManager.getOrCreateFromUrl(asIntelliJUriString())
+    virtualFileUrlManager.storeAndGet(asIntelliJUriString())
 
 internal fun Path.toIntellijUri(virtualFileUrlManager: VirtualFileUrlManager): VirtualFileUrl =
     absolutePathString().toIntellijUri(virtualFileUrlManager)

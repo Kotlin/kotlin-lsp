@@ -312,7 +312,7 @@ fun MutableEntityStorage.importWorkspaceData(
                     sdkData.roots != null -> {
                         sdkData.roots.mapTo(this) {
                             SdkRoot(
-                                virtualFileUrlManager.getOrCreateFromUrl(it.url.withoutLegacyJrtModulesRoot()),
+                                virtualFileUrlManager.storeAndGet(it.url.withoutLegacyJrtModulesRoot()),
                                 when (it.type) {
                                     SdkRootTypeId.SOURCES.name -> SdkRootTypeId.SOURCES
                                     SdkRootTypeId.CLASSES.name -> SdkRootTypeId.CLASSES

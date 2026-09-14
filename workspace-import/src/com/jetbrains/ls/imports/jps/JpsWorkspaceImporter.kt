@@ -358,8 +358,8 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
             ) {
                 this.module = entity
                 this.languageLevelId = javaService.getLanguageLevel(module)?.name
-                this.compilerOutput = javaService.getOutputUrl(module, false)?.let { virtualFileUrlManager.getOrCreateFromUrl(it) }
-                this.compilerOutputForTests = javaService.getOutputUrl(module, true)?.let { virtualFileUrlManager.getOrCreateFromUrl(it) }
+                this.compilerOutput = javaService.getOutputUrl(module, false)?.let { virtualFileUrlManager.storeAndGet(it) }
+                this.compilerOutputForTests = javaService.getOutputUrl(module, true)?.let { virtualFileUrlManager.storeAndGet(it) }
             }
         }
 
@@ -381,13 +381,13 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
                         roots = buildList {
                             library.getRootUrls(JpsOrderRootType.COMPILED).mapNotNullTo(this) { url ->
                                 SdkRoot(
-                                    virtualFileUrlManager.getOrCreateFromUrl(url),
+                                    virtualFileUrlManager.storeAndGet(url),
                                     SdkRootTypeId.CLASSES,
                                 )
                             }
                             library.getRootUrls(JpsOrderRootType.SOURCES).mapNotNullTo(this) { url ->
                                 SdkRoot(
-                                    virtualFileUrlManager.getOrCreateFromUrl(url),
+                                    virtualFileUrlManager.storeAndGet(url),
                                     SdkRootTypeId.SOURCES,
                                 )
                             }
@@ -433,13 +433,13 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
                 roots = buildList {
                     JavaSdkImpl.findClasses(Path.of(sdk.path), false).mapTo(this) {
                         SdkRoot(
-                            virtualFileUrlManager.getOrCreateFromUrl(it),
+                            virtualFileUrlManager.storeAndGet(it),
                             SdkRootTypeId.CLASSES,
                         )
                     }
                     JavaSdkImpl.findSources(Path.of(sdk.path)).mapTo(this) {
                         SdkRoot(
-                            virtualFileUrlManager.getOrCreateFromUrl(it),
+                            virtualFileUrlManager.storeAndGet(it),
                             SdkRootTypeId.SOURCES,
                         )
                     }
@@ -447,7 +447,7 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
                 additionalData = "",
                 entitySource = entitySource
             ) {
-                homePath = virtualFileUrlManager.getOrCreateFromUrl(Path.of(sdk.path).toFileUrl().url)
+                homePath = virtualFileUrlManager.storeAndGet(Path.of(sdk.path).toFileUrl().url)
             }
         }
     }
@@ -539,10 +539,10 @@ private fun resolveLibraryRoots(
 
     return buildList {
         compiledUrls.mapTo(this) { url ->
-            LibraryRoot(virtualFileUrlManager.getOrCreateFromUrl(url), LibraryRootTypeId.COMPILED)
+            LibraryRoot(virtualFileUrlManager.storeAndGet(url), LibraryRootTypeId.COMPILED)
         }
         library.getRootUrls(JpsOrderRootType.SOURCES).mapTo(this) { url ->
-            LibraryRoot(virtualFileUrlManager.getOrCreateFromUrl(url), LibraryRootTypeId.SOURCES)
+            LibraryRoot(virtualFileUrlManager.storeAndGet(url), LibraryRootTypeId.SOURCES)
         }
     }
 }

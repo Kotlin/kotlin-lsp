@@ -43,7 +43,7 @@ fun jdkAnnotationsSdkRoots(virtualFileUrlManager: VirtualFileUrlManager): List<S
             continue
         }
         LOG.info("The JDK external annotations root is $url")
-        return listOf(SdkRoot(virtualFileUrlManager.getOrCreateFromUrl(url), ANNOTATIONS_SDK_ROOT_TYPE))
+        return listOf(SdkRoot(virtualFileUrlManager.storeAndGet(url), ANNOTATIONS_SDK_ROOT_TYPE))
     }
     LOG.warn("The JDK has no external annotations. Paths checked: $checked")
     return emptyList()

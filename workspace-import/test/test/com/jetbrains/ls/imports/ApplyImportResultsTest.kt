@@ -197,7 +197,7 @@ class ApplyImportResultsTest {
         return storage
     }
 
-    private fun url(path: String): VirtualFileUrl = urlManager.getOrCreateFromUrl("file://$path")
+    private fun url(path: String): VirtualFileUrl = urlManager.storeAndGet("file://$path")
 
     private fun EntityStorage.moduleNames(): Set<String> = entities<ModuleEntity>().map { it.name }.toSet()
 
