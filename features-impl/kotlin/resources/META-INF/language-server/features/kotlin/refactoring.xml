@@ -12,4 +12,8 @@
 
     <refactoring.overrideMethodProcessor implementation="org.jetbrains.kotlin.idea.refactoring.inline.KotlinOverrideMethodsProcessor"/>
   </extensions>
+
+  <extensions defaultExtensionNs="ls">
+    <moveHandlerDelegate implementation="com.jetbrains.ls.api.features.impl.kotlin.move.LSKotlinMoveHandlerDelegate"/>
+  </extensions>
 </idea-plugin>
