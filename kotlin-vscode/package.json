@@ -197,6 +197,52 @@
                 ],
                 "default": "integratedTerminal",
                 "description": "Where to run the program."
+              },
+              "stepFilters": {
+                "type": "object",
+                "description": "Which code a step does not enter. Without it the IDE defaults apply: JDK classes, synthetic methods and class loaders are skipped.",
+                "properties": {
+                  "skipClasses": {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "$JDK",
+                            "java.lang.ClassLoader",
+                            ""
+                          ],
+                          "enumDescriptions": [
+                            "The IDE default filter list: the JDK and common frameworks.",
+                            "The class loader classes.",
+                            "A class name pattern, such as com.acme.*."
+                          ]
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "description": "Classes a step does not enter. An empty list turns the class filters off, so a step enters the JDK. The $Libraries entry of vscode-java-debug has no equivalent and is ignored."
+                  },
+                  "skipSynthetics": {
+                    "type": "boolean",
+                    "description": "Skip synthetic methods. The default is true."
+                  },
+                  "skipConstructors": {
+                    "type": "boolean",
+                    "description": "Skip constructors. The default is false."
+                  },
+                  "skipGetters": {
+                    "type": "boolean",
+                    "description": "Skip simple getters. The default is false."
+                  },
+                  "skipClassLoaders": {
+                    "type": "boolean",
+                    "description": "Skip class loaders. The default is true."
+                  }
+                }
               }
             }
           },
@@ -219,6 +265,52 @@
                 "type": "number",
                 "description": "Connection timeout in milliseconds.",
                 "default": 30000
+              },
+              "stepFilters": {
+                "type": "object",
+                "description": "Which code a step does not enter. Without it the IDE defaults apply: JDK classes, synthetic methods and class loaders are skipped.",
+                "properties": {
+                  "skipClasses": {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "$JDK",
+                            "java.lang.ClassLoader",
+                            ""
+                          ],
+                          "enumDescriptions": [
+                            "The IDE default filter list: the JDK and common frameworks.",
+                            "The class loader classes.",
+                            "A class name pattern, such as com.acme.*."
+                          ]
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "description": "Classes a step does not enter. An empty list turns the class filters off, so a step enters the JDK. The $Libraries entry of vscode-java-debug has no equivalent and is ignored."
+                  },
+                  "skipSynthetics": {
+                    "type": "boolean",
+                    "description": "Skip synthetic methods. The default is true."
+                  },
+                  "skipConstructors": {
+                    "type": "boolean",
+                    "description": "Skip constructors. The default is false."
+                  },
+                  "skipGetters": {
+                    "type": "boolean",
+                    "description": "Skip simple getters. The default is false."
+                  },
+                  "skipClassLoaders": {
+                    "type": "boolean",
+                    "description": "Skip class loaders. The default is true."
+                  }
+                }
               }
             }
           }
@@ -329,6 +421,52 @@
                 ],
                 "default": "integratedTerminal",
                 "description": "Where to run the program."
+              },
+              "stepFilters": {
+                "type": "object",
+                "description": "Which code a step does not enter. Without it the IDE defaults apply: JDK classes, synthetic methods and class loaders are skipped.",
+                "properties": {
+                  "skipClasses": {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "$JDK",
+                            "java.lang.ClassLoader",
+                            ""
+                          ],
+                          "enumDescriptions": [
+                            "The IDE default filter list: the JDK and common frameworks.",
+                            "The class loader classes.",
+                            "A class name pattern, such as com.acme.*."
+                          ]
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "description": "Classes a step does not enter. An empty list turns the class filters off, so a step enters the JDK. The $Libraries entry of vscode-java-debug has no equivalent and is ignored."
+                  },
+                  "skipSynthetics": {
+                    "type": "boolean",
+                    "description": "Skip synthetic methods. The default is true."
+                  },
+                  "skipConstructors": {
+                    "type": "boolean",
+                    "description": "Skip constructors. The default is false."
+                  },
+                  "skipGetters": {
+                    "type": "boolean",
+                    "description": "Skip simple getters. The default is false."
+                  },
+                  "skipClassLoaders": {
+                    "type": "boolean",
+                    "description": "Skip class loaders. The default is true."
+                  }
+                }
               }
             }
           },
@@ -351,6 +489,52 @@
                 "type": "number",
                 "description": "Connection timeout in milliseconds.",
                 "default": 30000
+              },
+              "stepFilters": {
+                "type": "object",
+                "description": "Which code a step does not enter. Without it the IDE defaults apply: JDK classes, synthetic methods and class loaders are skipped.",
+                "properties": {
+                  "skipClasses": {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "$JDK",
+                            "java.lang.ClassLoader",
+                            ""
+                          ],
+                          "enumDescriptions": [
+                            "The IDE default filter list: the JDK and common frameworks.",
+                            "The class loader classes.",
+                            "A class name pattern, such as com.acme.*."
+                          ]
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "description": "Classes a step does not enter. An empty list turns the class filters off, so a step enters the JDK. The $Libraries entry of vscode-java-debug has no equivalent and is ignored."
+                  },
+                  "skipSynthetics": {
+                    "type": "boolean",
+                    "description": "Skip synthetic methods. The default is true."
+                  },
+                  "skipConstructors": {
+                    "type": "boolean",
+                    "description": "Skip constructors. The default is false."
+                  },
+                  "skipGetters": {
+                    "type": "boolean",
+                    "description": "Skip simple getters. The default is false."
+                  },
+                  "skipClassLoaders": {
+                    "type": "boolean",
+                    "description": "Skip class loaders. The default is true."
+                  }
+                }
               }
             }
           }
@@ -432,6 +616,52 @@
                 ],
                 "default": "integratedTerminal",
                 "description": "Where to run the program."
+              },
+              "stepFilters": {
+                "type": "object",
+                "description": "Which code a step does not enter. Without it the IDE defaults apply: JDK classes, synthetic methods and class loaders are skipped.",
+                "properties": {
+                  "skipClasses": {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "$JDK",
+                            "java.lang.ClassLoader",
+                            ""
+                          ],
+                          "enumDescriptions": [
+                            "The IDE default filter list: the JDK and common frameworks.",
+                            "The class loader classes.",
+                            "A class name pattern, such as com.acme.*."
+                          ]
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "description": "Classes a step does not enter. An empty list turns the class filters off, so a step enters the JDK. The $Libraries entry of vscode-java-debug has no equivalent and is ignored."
+                  },
+                  "skipSynthetics": {
+                    "type": "boolean",
+                    "description": "Skip synthetic methods. The default is true."
+                  },
+                  "skipConstructors": {
+                    "type": "boolean",
+                    "description": "Skip constructors. The default is false."
+                  },
+                  "skipGetters": {
+                    "type": "boolean",
+                    "description": "Skip simple getters. The default is false."
+                  },
+                  "skipClassLoaders": {
+                    "type": "boolean",
+                    "description": "Skip class loaders. The default is true."
+                  }
+                }
               }
             }
           }

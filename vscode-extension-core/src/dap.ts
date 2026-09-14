@@ -175,6 +175,20 @@ interface BuildToolTarget {
   toolArgs?: string[];
 }
 
+/**
+ * The code a step does not enter, in the shape of vscode-java-debug's `stepFilters`. Every field is optional, and an
+ * absent field keeps the IDE default. The server's `StepFilters` (`language-server/dap/jvm`, `JvmLaunchArguments.kt`)
+ * states the mapping onto the IDE's stepping settings.
+ */
+export interface StepFilters {
+  /** `$JDK` is the IDE default list, anything else is a class pattern; an empty list turns the class filters off. */
+  skipClasses?: string[];
+  skipSynthetics?: boolean;
+  skipConstructors?: boolean;
+  skipGetters?: boolean;
+  skipClassLoaders?: boolean;
+}
+
 /** What both launch configurations have in common: what to run, and where its output goes. */
 interface CommonLaunchConfig extends DebugConfiguration {
   request: 'launch';
@@ -188,6 +202,10 @@ interface CommonLaunchConfig extends DebugConfiguration {
   internalConsoleOptions?: 'neverOpen' | 'openOnSessionStart' | 'openOnFirstSessionStart';
   /** Label of a task VS Code runs before the session; ours is [BUILD_TASK_LABEL]. */
   preLaunchTask?: string;
+  /**
+   * A passthrough: the whole configuration is sent as the launch arguments. An attach configuration has the same field.
+   */
+  stepFilters?: StepFilters;
 }
 
 /** A launch that runs the program as a plain `java` process; no build tool is involved at any point. */
