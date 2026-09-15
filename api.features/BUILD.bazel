@@ -33,6 +33,7 @@ jvm_library(
         ["resources/**/*"],
     ),
     visibility = ["//visibility:public"],
+    runtime_deps = ["@community//platform/platform-util-io-native:ide-util-io-native"],
     deps = [
         # do not sort,
         "@lib//:kotlin-stdlib",
@@ -80,6 +81,7 @@ jvm_library(
         "//language-server/analyzer:analyzer_test_lib",
         "//language-server/api.impl.analyzer:api.impl.analyzer_test_lib",
         "//language-server/api.core.util:api.core.util_test_lib",
+        "@community//platform/platform-util-io-native:ide-util-io-native_test_lib",
     ],
 )
 ### auto-generated section `build language-server.api.features` end

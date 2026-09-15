@@ -1,6 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.configuration
 
+import com.jetbrains.ls.api.features.ExtraPluginsProvider
 import com.jetbrains.ls.api.features.SessionComponentEntry
 import com.jetbrains.ls.api.features.impl.common.api.commonLsApiPlugin
 import com.jetbrains.ls.api.features.impl.common.decompiler.LSDecompileCommandDescriptorProvider
@@ -11,8 +12,9 @@ import com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDe
 import com.jetbrains.ls.api.features.impl.common.move.LSCommonMoveProvider
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.api.features.lsApiPlugin
-import com.jetbrains.ls.snapshot.api.impl.core.LazyActionSessionComponent
+import com.jetbrains.ls.api.features.nativeIoPlugin
 import com.jetbrains.ls.snapshot.api.impl.core.LatestCompletionSessionComponent
+import com.jetbrains.ls.snapshot.api.impl.core.LazyActionSessionComponent
 
 val LSCommonConfiguration: LSConfigurationPiece = LSConfigurationPiece(
     entries = listOf(
@@ -24,6 +26,9 @@ val LSCommonConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSHighWatermarkCommandDescriptorProvider,
         LSResolveLocationCommandDescriptorProvider,
         LSCommonMoveProvider,
+        ExtraPluginsProvider(
+            plugins = listOf(nativeIoPlugin)
+        ),
     ),
     plugins = listOf(
         lsApiPlugin,

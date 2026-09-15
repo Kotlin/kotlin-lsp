@@ -44,5 +44,6 @@
     <orderEntry type="module" module-name="language-server.analyzer" />
     <orderEntry type="module" module-name="language-server.api.impl.analyzer" />
     <orderEntry type="module" module-name="language-server.api.core.util" />
+    <orderEntry type="module" module-name="intellij.platform.ide.util.io.native" scope="RUNTIME" />
   </component>
 </module>
