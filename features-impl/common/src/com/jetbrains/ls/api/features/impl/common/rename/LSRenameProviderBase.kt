@@ -2,17 +2,15 @@
 package com.jetbrains.ls.api.features.impl.common.rename
 
 import com.intellij.codeInsight.TargetElementUtil
-import com.intellij.model.psi.PsiSymbolService
-import com.intellij.model.psi.impl.targetSymbols
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiUtilCore
+import com.intellij.refactoring.rename.HeadlessRenameProcessor
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.processors.LSRenameCustomizer
-import com.jetbrains.ls.api.core.processors.LSRenameProcessor
 import com.jetbrains.ls.api.core.processors.RenameContext
 import com.jetbrains.ls.api.core.processors.createProcessor
 import com.jetbrains.ls.api.core.processors.prepareRenameProcessor
@@ -37,14 +35,15 @@ import com.jetbrains.lsp.protocol.WorkspaceEdit
 abstract class LSRenameProviderBase(
     override val supportedLanguages: Set<LSLanguage>,
 ) : LSRenameProvider {
-    abstract fun createCustomizer(): LSRenameCustomizer
+    /** What this language changes in the rename. */
+    protected open val renameCustomizer: LSRenameCustomizer get() = LSRenameCustomizer.DEFAULT
 
     context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun rename(params: RenameParams): WorkspaceEdit {
         val changes = server.withWriteAnalysisContext {
-            val customizer = createCustomizer()
-            val processor = context(project) { prepareRenameProcessor( params, customizer) } ?: return@withWriteAnalysisContext emptyList()
-            doRefactoring(processor, DiffGranularity.CHARACTER, null, false)
+            val processor = context(project) { prepareRenameProcessor(params, renameCustomizer) }
+                ?: return@withWriteAnalysisContext emptyList()
+            doRefactoring(processor, DiffGranularity.CHARACTER, null, showNotificationWithError = false)
         }
 
         return WorkspaceEdit(documentChanges = changes)
@@ -58,8 +57,8 @@ abstract class LSRenameProviderBase(
                 val document = virtualFile.findDocument() ?: return@readAction null
                 val offset = document.offsetByPosition(params.position)
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction null
-                val target = extractTargets(psiFile, offset).firstOrNull()
-                if (target == null || !LSRenameProcessor.canRename(target)) {
+                val target = renameCustomizer.extractTargets(psiFile, offset).firstOrNull()
+                if (target == null || !HeadlessRenameProcessor.canRename(target)) {
                     throwLspError(PrepareRenameRequestType, "This element cannot be renamed", Unit, ErrorCodes.InvalidParams, null)
                 }
                 val adjustedOffset = TargetElementUtil.adjustOffset(psiFile, document, offset)
@@ -79,16 +78,10 @@ abstract class LSRenameProviderBase(
 
     protected open fun placeholderFor(identifierText: String): String = identifierText
 
-    open fun extractTargets(psiFile: PsiFile, offset: Int): List<PsiElement> {
-        val psiSymbolService = PsiSymbolService.getInstance()
-        val adjustedOffset = TargetElementUtil.adjustOffset(psiFile, psiFile.fileDocument, offset)
-        return targetSymbols(psiFile, adjustedOffset).mapNotNull { psiSymbolService.extractElementFromSymbol(it) }
-    }
-
     context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun renameFile(params: FileRename): WorkspaceEdit? {
         val edits = server.withWriteAnalysisContext {
-            val renamer = readAction {
+            val processor = readAction {
                 // check that a file was already renamed on the previous step
                 if (params.newUri.findVirtualFile() != null) return@readAction null
 
@@ -97,11 +90,10 @@ abstract class LSRenameProviderBase(
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction null
                 val target = getTargetClass(psiFile, nameChange.oldName.fileName) ?: psiFile
                 val newName = if (target is PsiFile) nameChange.newName.fullName() else nameChange.newName.fileName
-                val context = RenameContext(target, newName)
-                createProcessor(context)
+                createProcessor(RenameContext(target, newName))
             } ?: return@withWriteAnalysisContext null
 
-            doRefactoring(renamer, DiffGranularity.WORD, params.oldUri, true)
+            doRefactoring(processor, DiffGranularity.WORD, params.oldUri, true)
         }
 
         return WorkspaceEdit(documentChanges = edits)

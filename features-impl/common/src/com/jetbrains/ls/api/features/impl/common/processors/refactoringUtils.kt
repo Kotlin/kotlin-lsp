@@ -1,23 +1,21 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.processors
 
+import com.intellij.diagnostic.rethrowControlFlowException
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.application.writeIntentReadAction
-import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
-import com.intellij.refactoring.suggested.SuggestedRefactoringProvider
 import com.intellij.usageView.UsageInfo
 import com.intellij.util.IncorrectOperationException
 import com.jetbrains.analyzer.api.FileUrl
 import com.jetbrains.analyzer.api.fileUrl
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.core.processors.LSRefactoringProcessor
-import com.jetbrains.ls.api.core.processors.doRefactoring
-import com.jetbrains.ls.api.core.processors.findUsages
+import com.jetbrains.ls.api.core.processors.LSRefactoringProcessorBase
+import com.jetbrains.ls.api.core.processors.planRefactoring
+import com.jetbrains.ls.api.core.processors.writeRefactoring
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.DiffGranularity
@@ -52,7 +50,7 @@ import kotlinx.coroutines.withContext
  */
 context(server: LSServer, _: LSAnalysisContext, _: LspHandlerContext)
 suspend fun doRefactoring(
-    processor: LSRefactoringProcessor,
+    processor: LSRefactoringProcessorBase,
     granularity: DiffGranularity,
     uriToSkip: URI?,
     showNotificationWithError : Boolean
@@ -71,7 +69,7 @@ suspend fun doRefactoring(
  */
 context(server: LSServer, _: LSAnalysisContext, _: LspHandlerContext)
 suspend fun doRefactoring(
-    processor: LSRefactoringProcessor,
+    processor: LSRefactoringProcessorBase,
     granularity: DiffGranularity,
     uriToSkip: List<URI>,
     showNotificationWithError : Boolean
@@ -93,9 +91,10 @@ suspend fun doRefactoring(
     return computeRefactoringChanges(originals, granularity, uriToSkip)
 }
 
-/** Converts a refactoring failure into an LSP error. Both rename paths report through it. */
+/** Converts a refactoring failure into an LSP error. */
 context(_: LspHandlerContext)
 internal suspend fun failRefactoring(ex: Throwable, showNotificationWithError: Boolean): Nothing {
+    rethrowControlFlowException(ex)
     when (ex) {
         is LspException -> throw ex
         else -> {
@@ -175,36 +174,32 @@ private fun isParentUri(parent: URI?, candidate: URI): Boolean {
 
 /**
  * Executes logic of [com.intellij.refactoring.BaseRefactoringProcessor] in simplified way without showing UI.
+ *
+ * It returns the URL and the text of each file of [LSRefactoringProcessorBase.getFilesToSave], before
+ * the refactoring writes. The map is empty when the refactoring changes nothing.
  */
 context(project: Project)
-fun executeRefactoringProcessor(processor: LSRefactoringProcessor) : Map<FileUrl, Pair<PsiFile, String>> {
-    if (!PsiDocumentManager.getInstance(project).commitAllDocumentsUnderProgress()) return emptyMap()
-    DumbService.getInstance(project).completeJustSubmittedTasks()
-
-    val usages = findUsages(processor) ?: return emptyMap()
-
-    val originals = startRefactoring(processor, usages) {
-        doRefactoring(processor, usages)
+fun executeRefactoringProcessor(processor: LSRefactoringProcessorBase): Map<FileUrl, Pair<PsiFile, String>> {
+    val usages = planRefactoring(processor) ?: return emptyMap()
+    return startRefactoring(processor, usages) {
+        writeRefactoring(processor, usages)
     }
-    return originals
 }
 
-context(project: Project)
 private fun startRefactoring(
-    processor: LSRefactoringProcessor,
+    processor: LSRefactoringProcessorBase,
     usages: Array<UsageInfo>,
-    callback: () -> Unit
+    callback: () -> Unit,
 ): Map<FileUrl, Pair<PsiFile, String>> {
     val originals = saveFileTexts(processor, usages)
     callback()
-    SuggestedRefactoringProvider.getInstance(project).reset()
     return originals
 }
 
-private fun saveFileTexts(processor: LSRefactoringProcessor, usages: Array<UsageInfo>): Map<FileUrl, Pair<PsiFile, String>> {
-    val fileList = processor.getFilesToSave(usages)
-    return fileList.mapNotNull {  file  ->
-        val virtualFile = file.virtualFile ?: return@mapNotNull null
-        file to virtualFile.fileUrl
-    }.distinctBy { it.second }.associate { it.second to (it.first to it.first.text) }
+/** The URL and the text of each file to save, before the refactoring writes. */
+private fun saveFileTexts(processor: LSRefactoringProcessorBase, usages: Array<UsageInfo>): Map<FileUrl, Pair<PsiFile, String>> {
+    return processor.getFilesToSave(usages)
+        .mapNotNull { file -> file.virtualFile?.let { file to it.fileUrl } }
+        .distinctBy { it.second }
+        .associate { (file, fileUrl) -> fileUrl to (file to file.text) }
 }
