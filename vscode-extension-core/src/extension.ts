@@ -40,6 +40,7 @@ export {
   createLspClientProvider,
   getLspClient,
   isExternalServerConfigured,
+  onDidFinishWorkspaceImport,
   prepareBundledServerLauncher,
   reportActivationFailure,
   registerInitializationOptionsContributor,
@@ -52,6 +53,12 @@ export {
   withLspClientStartPending,
 } from './lspClient';
 export { removeDownloadedServerBundle, serverBundleStoragePath } from './serverBundleDownload';
+export {
+  type WorkspaceImportPhase,
+  type WorkspaceImportState,
+  WorkspaceImportStateNotification,
+  WorkspaceImportStateRequest,
+} from './workspaceImport';
 export { checkGeoRestricted } from './geoRestriction';
 export { registerKotlinExtensionConflictHandler } from './kotlinExtensionConflict';
 export {
