@@ -3,27 +3,19 @@ package com.jetbrains.ls.api.features.impl.kotlin.rename
 
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiPackage
-import com.jetbrains.ls.api.features.impl.common.processors.RefactoringContext
-import com.jetbrains.ls.api.features.impl.common.processors.RenameSingleDirectoryContext
-import com.jetbrains.ls.api.features.impl.common.processors.findDirectoryInSameSourceRoot
 import com.jetbrains.ls.api.features.impl.common.rename.LSRenameProviderBase
+import com.jetbrains.ls.api.core.processors.LSRenameCustomizer
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
+import com.jetbrains.ls.api.features.impl.kotlin.psi.LSKotlinRenameCustomizer
 import org.jetbrains.kotlin.psi.KtFile
 
 internal object LSKotlinRenameProvider : LSRenameProviderBase(setOf(LSKotlinLanguage)) {
+    override fun createCustomizer(): LSRenameCustomizer = LSKotlinRenameCustomizer()
+
     override fun placeholderFor(identifierText: String): String = identifierText.removeSurrounding("`")
 
     override fun getTargetClass(psiFile: PsiFile, name: String): PsiElement? {
         if (psiFile !is KtFile) return null
         return psiFile.classes.firstOrNull { it.name == name }
-    }
-
-    override fun createContext(target: PsiElement, newName: String, contextFile: PsiFile): RefactoringContext {
-        if (target !is PsiPackage) return super.createContext(target, newName, contextFile)
-
-        val directory = target.findDirectoryInSameSourceRoot(contextFile)
-            ?: return super.createContext(target, newName, contextFile)
-        return RenameSingleDirectoryContext(directory, newName)
     }
 }

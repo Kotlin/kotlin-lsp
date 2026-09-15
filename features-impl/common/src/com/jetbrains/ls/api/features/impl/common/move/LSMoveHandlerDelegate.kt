@@ -4,7 +4,7 @@ package com.jetbrains.ls.api.features.impl.common.move
 import com.intellij.openapi.extensions.ExtensionPointName
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiElement
-import com.jetbrains.ls.api.features.impl.common.processors.LSRefactoringProcessor
+import com.jetbrains.ls.api.core.processors.LSRefactoringProcessor
 
 /**
  * @see com.intellij.refactoring.move.MoveHandlerDelegate

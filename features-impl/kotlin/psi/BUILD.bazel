@@ -48,6 +48,7 @@ jvm_library(
         "@community//platform/lang-impl",
         "//language-server/api.core.util",
         "@community//plugins/kotlin/base/analysis",
+        "@community//platform/projectModel-api:projectModel",
     ],
 )
 
@@ -81,6 +82,7 @@ jvm_library(
         "@community//platform/lang-impl:lang-impl_test_lib",
         "//language-server/api.core.util:api.core.util_test_lib",
         "@community//plugins/kotlin/base/analysis:analysis_test_lib",
+        "@community//platform/projectModel-api:projectModel_test_lib",
     ],
 )
 ### auto-generated section `build language-server.api.features.impl.kotlin.psi` end

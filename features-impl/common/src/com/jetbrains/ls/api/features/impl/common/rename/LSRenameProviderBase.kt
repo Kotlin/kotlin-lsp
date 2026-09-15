@@ -11,14 +11,15 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiUtilCore
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.processors.LSRenameCustomizer
+import com.jetbrains.ls.api.core.processors.LSRenameProcessor
+import com.jetbrains.ls.api.core.processors.RenameContext
+import com.jetbrains.ls.api.core.processors.createProcessor
+import com.jetbrains.ls.api.core.processors.prepareRenameProcessor
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.util.toLspRange
-import com.jetbrains.ls.api.features.impl.common.processors.LSRenameProcessor
-import com.jetbrains.ls.api.features.impl.common.processors.RefactoringContext
-import com.jetbrains.ls.api.features.impl.common.processors.RenameContext
-import com.jetbrains.ls.api.features.impl.common.processors.createProcessor
 import com.jetbrains.ls.api.features.impl.common.processors.doRefactoring
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.rename.LSRenameProvider
@@ -31,27 +32,18 @@ import com.jetbrains.lsp.protocol.PrepareRenameParams
 import com.jetbrains.lsp.protocol.PrepareRenameRequestType
 import com.jetbrains.lsp.protocol.PrepareRenameResult
 import com.jetbrains.lsp.protocol.RenameParams
-import com.jetbrains.lsp.protocol.RenameRequestType
 import com.jetbrains.lsp.protocol.WorkspaceEdit
 
 abstract class LSRenameProviderBase(
     override val supportedLanguages: Set<LSLanguage>,
 ) : LSRenameProvider {
+    abstract fun createCustomizer(): LSRenameCustomizer
+
     context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun rename(params: RenameParams): WorkspaceEdit {
         val changes = server.withWriteAnalysisContext {
-            val processor = readAction {
-                val virtualFile = params.findVirtualFile() ?: return@readAction null
-                val document = virtualFile.findDocument() ?: return@readAction null
-                val offset = document.offsetByPosition(params.position)
-                val psiFile = virtualFile.findPsiFile(project) ?: return@readAction null
-                val targets = extractTargets(psiFile, offset)
-                val target = targets.firstOrNull()
-                    ?: throwLspError(RenameRequestType, "This element cannot be renamed", Unit, ErrorCodes.InvalidParams, null)
-
-                val context = createContext(target, params.newName, psiFile)
-                createProcessor(context)
-            } ?: return@withWriteAnalysisContext emptyList()
+            val customizer = createCustomizer()
+            val processor = context(project) { prepareRenameProcessor( params, customizer) } ?: return@withWriteAnalysisContext emptyList()
             doRefactoring(processor, DiffGranularity.CHARACTER, null, false)
         }
 
@@ -86,10 +78,6 @@ abstract class LSRenameProviderBase(
     }
 
     protected open fun placeholderFor(identifierText: String): String = identifierText
-
-    protected open fun createContext(target: PsiElement, newName: String, contextFile: PsiFile): RefactoringContext {
-        return RenameContext(target, newName)
-    }
 
     open fun extractTargets(psiFile: PsiFile, offset: Int): List<PsiElement> {
         val psiSymbolService = PsiSymbolService.getInstance()

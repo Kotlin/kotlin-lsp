@@ -4,17 +4,21 @@ package com.jetbrains.ls.api.features.impl.common.processors
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.application.writeIntentReadAction
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.roots.ProjectFileIndex
-import com.intellij.platform.ide.progress.runWithModalProgressBlocking
-import com.intellij.psi.PsiDirectory
-import com.intellij.psi.PsiDirectoryContainer
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
+import com.intellij.refactoring.suggested.SuggestedRefactoringProvider
+import com.intellij.usageView.UsageInfo
 import com.intellij.util.IncorrectOperationException
-import com.intellij.util.concurrency.annotations.RequiresEdt
 import com.jetbrains.analyzer.api.FileUrl
+import com.jetbrains.analyzer.api.fileUrl
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.processors.LSRefactoringProcessor
+import com.jetbrains.ls.api.core.processors.doRefactoring
+import com.jetbrains.ls.api.core.processors.findUsages
+import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.DiffGranularity
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
@@ -55,7 +59,7 @@ suspend fun doRefactoring(
 ): List<FileChange> = doRefactoring(processor, granularity, listOfNotNull(uriToSkip), showNotificationWithError)
 
 /**
- * Executes [LSRefactoringProcessor], and returns diff after its changes
+ * Executes [com.jetbrains.ls.api.core.processors.LSRefactoringProcessor], and returns diff after its changes
  *
  * @param granularity granularity with which difference between files should be calculated,
  *  see [com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits].
@@ -75,7 +79,9 @@ suspend fun doRefactoring(
     val originals = try {
         withContext(Dispatchers.EDT) {
             writeIntentReadAction {
-                execute(processor)
+                context(project) {
+                    executeRefactoringProcessor(processor)
+                }
             }
         }
     } catch (ex: CancellationException) {
@@ -157,26 +163,8 @@ internal suspend fun computeRefactoringChanges(
     }
 }
 
-fun createProcessor(context: RefactoringContext): LSRefactoringProcessor? = when (context) {
-    is RenameContext -> LSRenameProcessor.create(context)
-    is RenameSingleDirectoryContext -> LSMoveDirectoryProcessor.create(context)
-    is MoveDirectoryContext -> LSMoveDirectoryProcessor.create(context)
-    else -> throw IllegalArgumentException("Unknown refactoring context: $context")
-}
-
-@RequiresEdt(generateAssertion = false /* IJPL-115548 */)
-internal fun <T> runReadActionInBgt(project: Project, action: () -> T): T {
-    return runWithModalProgressBlocking(project, "") {
-        try {
-            Result.success(readAction(action))
-        } catch (e: Throwable) {
-            Result.failure(e)
-        }
-    }.getOrThrow()
-}
-
-private fun isParentUri(parent: URI, candidate: URI): Boolean {
-    val url = parent.toFileUrl() ?: return false
+private fun isParentUri(parent: URI?, candidate: URI): Boolean {
+    val url = parent?.toFileUrl() ?: return false
     var candidateUrl = candidate.toFileUrl()
     while (candidateUrl != null) {
         if (url == candidateUrl) return true
@@ -185,11 +173,38 @@ private fun isParentUri(parent: URI, candidate: URI): Boolean {
     return false
 }
 
-fun PsiDirectoryContainer.findDirectoryInSameSourceRoot(contextFile: PsiFile): PsiDirectory? {
-    val contextVirtualFile = contextFile.virtualFile ?: return null
-    val fileIndex = ProjectFileIndex.getInstance(contextFile.project)
-    val sourceRoot = fileIndex.getSourceRootForFile(contextVirtualFile) ?: return null
-    return directories.firstOrNull { directory ->
-        fileIndex.getSourceRootForFile(directory.virtualFile) == sourceRoot
+/**
+ * Executes logic of [com.intellij.refactoring.BaseRefactoringProcessor] in simplified way without showing UI.
+ */
+context(project: Project)
+fun executeRefactoringProcessor(processor: LSRefactoringProcessor) : Map<FileUrl, Pair<PsiFile, String>> {
+    if (!PsiDocumentManager.getInstance(project).commitAllDocumentsUnderProgress()) return emptyMap()
+    DumbService.getInstance(project).completeJustSubmittedTasks()
+
+    val usages = findUsages(processor) ?: return emptyMap()
+
+    val originals = startRefactoring(processor, usages) {
+        doRefactoring(processor, usages)
     }
+    return originals
+}
+
+context(project: Project)
+private fun startRefactoring(
+    processor: LSRefactoringProcessor,
+    usages: Array<UsageInfo>,
+    callback: () -> Unit
+): Map<FileUrl, Pair<PsiFile, String>> {
+    val originals = saveFileTexts(processor, usages)
+    callback()
+    SuggestedRefactoringProvider.getInstance(project).reset()
+    return originals
+}
+
+private fun saveFileTexts(processor: LSRefactoringProcessor, usages: Array<UsageInfo>): Map<FileUrl, Pair<PsiFile, String>> {
+    val fileList = processor.getFilesToSave(usages)
+    return fileList.mapNotNull {  file  ->
+        val virtualFile = file.virtualFile ?: return@mapNotNull null
+        file to virtualFile.fileUrl
+    }.distinctBy { it.second }.associate { it.second to (it.first to it.first.text) }
 }

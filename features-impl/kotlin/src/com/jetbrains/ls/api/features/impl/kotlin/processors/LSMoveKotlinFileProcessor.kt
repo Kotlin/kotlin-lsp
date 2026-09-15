@@ -6,8 +6,8 @@ import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiElement
 import com.intellij.refactoring.listeners.impl.RefactoringTransaction
 import com.intellij.usageView.UsageInfo
+import com.jetbrains.ls.api.core.processors.LSRefactoringProcessor
 import com.jetbrains.ls.api.features.impl.common.move.LSMoveFilesOrDirectoriesProcessor
-import com.jetbrains.ls.api.features.impl.common.processors.LSRefactoringProcessor
 import org.jetbrains.kotlin.analysis.api.permissions.KaAllowAnalysisFromWriteAction
 import org.jetbrains.kotlin.analysis.api.permissions.KaAllowAnalysisOnEdt
 import org.jetbrains.kotlin.analysis.api.permissions.allowAnalysisFromWriteAction

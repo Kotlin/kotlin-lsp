@@ -19,7 +19,7 @@ import com.intellij.refactoring.move.moveFilesOrDirectories.MoveFilesOrDirectori
 import com.intellij.refactoring.util.NonCodeUsageInfo
 import com.intellij.usageView.UsageInfo
 import com.intellij.util.containers.MultiMap
-import com.jetbrains.ls.api.features.impl.common.processors.LSRefactoringProcessor
+import com.jetbrains.ls.api.core.processors.LSRefactoringProcessor
 
 /**
  * @see com.intellij.refactoring.move.moveFilesOrDirectories.MoveFilesOrDirectoriesProcessor

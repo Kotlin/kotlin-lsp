@@ -6,8 +6,8 @@ import com.intellij.openapi.vfs.findPsiDirectory
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
-import com.jetbrains.ls.api.features.impl.common.processors.RenameSingleDirectoryContext
-import com.jetbrains.ls.api.features.impl.common.processors.createProcessor
+import com.jetbrains.ls.api.core.processors.RenameSingleDirectoryContext
+import com.jetbrains.ls.api.core.processors.createProcessor
 import com.jetbrains.ls.api.features.impl.common.processors.doRefactoring
 import com.jetbrains.ls.api.features.impl.common.rename.computeNameChange
 import com.jetbrains.ls.api.features.rename.LSRenameDirectoryProvider
