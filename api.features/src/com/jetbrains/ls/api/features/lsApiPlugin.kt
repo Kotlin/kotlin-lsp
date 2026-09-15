@@ -10,3 +10,10 @@ val lsApiPlugin: PluginMainDescriptor = makePlugin(
         "language-server/features/api" to "META-INF/language-server/features/api/lsApi.xml"
     ),
 )
+
+val nativeIoPlugin: PluginMainDescriptor = makePlugin(
+    pluginId = "ls.native.io",
+    xmlModules = mapOf(
+        "intellij.platform.ide.util.io.native" to "intellij.platform.ide.util.io.native.xml",
+    ),
+)
