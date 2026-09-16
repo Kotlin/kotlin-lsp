@@ -16,6 +16,8 @@ import com.jetbrains.analyzer.kotlin.kotlinPlugin
 import com.jetbrains.ls.api.features.KotlinFirCacheEntry
 import com.jetbrains.ls.api.features.WorkspaceComponentEntry
 import com.jetbrains.ls.api.features.impl.common.definitions.LSCommonDefinitionProvider
+import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInjectionInspectionDiagnosticProvider
+import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInjectionSyntaxErrorDiagnosticProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionDiagnosticProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionFixesCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonIntentionFixesCodeActionProvider
@@ -77,6 +79,10 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
             inspectionProfilePatcher = kotlinInspectionPatcher,
             quickFixBlacklist = kotlinQuickFixBlacklist,
         ),
+        LSCommonInjectionInspectionDiagnosticProvider(
+            supportedLanguages = setOf(LSKotlinLanguage),
+            inspectionProfilePatcher = kotlinInspectionPatcher,
+        ),
         LSCommonInspectionFixesCodeActionProvider(setOf(LSKotlinLanguage)),
         LSCommonIntentionFixesCodeActionProvider(
             supportedLanguages = setOf(LSKotlinLanguage),
@@ -86,6 +92,7 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
             converter = kotlinIntentionConverter()
         ),
         LSCommonSyntaxErrorDiagnosticProvider(setOf(LSKotlinLanguage)),
+        LSCommonInjectionSyntaxErrorDiagnosticProvider(setOf(LSKotlinLanguage)),
         LSKotlinCompilerDiagnosticsProvider,
         LSKotlinCompilerDiagnosticsFixesCodeActionProvider,
         LSKotlinWorkspaceSymbolProvider,
