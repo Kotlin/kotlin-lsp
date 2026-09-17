@@ -40,6 +40,8 @@ export interface BuiltinInitializationOptions {
   buildTools: Record<string, string>;
   projects: ConfiguredProject[];
   disableRocksDBWriteAheadLog: boolean;
+  /** URI of the workspace to fork a new workspace from; see the server's `InitializeOptions.fromWorkspace`. */
+  fromWorkspace: string | undefined;
 }
 
 export interface SettingProblem {

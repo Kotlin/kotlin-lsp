@@ -126,6 +126,7 @@ const OPT_DATA_SHARING = 'intellij.dataSharing';
 const OPT_REGION = 'intellij.region';
 const OPT_PROJECTS = 'intellij.projects';
 const OPT_DISABLE_ROCKS_DB_WAL = 'intellij.disableRocksDBWriteAheadLog';
+const OPT_FORK_FROM_WORKSPACE = 'intellij.forkFromWorkspace';
 const OPT_HTTP_PROXY = 'http.proxy';
 const OPT_HTTP_PROXY_SUPPORT = 'http.proxySupport';
 
@@ -1143,6 +1144,7 @@ const INITIALIZATION_OPTION_SETTINGS = [
   OPT_BUILD_TOOL,
   OPT_DEFAULT_WORKSPACE_SDK,
   OPT_DISABLE_ROCKS_DB_WAL,
+  OPT_FORK_FROM_WORKSPACE,
 ];
 /** Settings that become process arguments or environment, so only a new process applies them. */
 const LAUNCH_SETTINGS = [
@@ -1333,14 +1335,25 @@ function sanitizedInitializationSettings(): {
     OPT_DISABLE_ROCKS_DB_WAL,
     configOption(OPT_DISABLE_ROCKS_DB_WAL),
   );
+  const forkFromWorkspace = sanitizeOptionalString(
+    OPT_FORK_FROM_WORKSPACE,
+    configOption(OPT_FORK_FROM_WORKSPACE),
+  );
+  // The setting is a folder path; the server matches it against the source workspace's root URI.
+  const fromWorkspace = forkFromWorkspace.value
+    ? vscode.Uri.file(forkFromWorkspace.value).toString()
+    : undefined;
   return {
     values: {
       defaultSdk: defaultSdk.value,
       buildTools: buildTools.value,
       projects: projects.value,
       disableRocksDBWriteAheadLog: disableWal.value,
+      fromWorkspace,
     },
-    problems: [defaultSdk, buildTools, projects, disableWal].flatMap((setting) => setting.problems),
+    problems: [defaultSdk, buildTools, projects, disableWal, forkFromWorkspace].flatMap(
+      (setting) => setting.problems,
+    ),
   };
 }
 

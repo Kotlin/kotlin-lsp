@@ -469,6 +469,12 @@
             "default": false,
             "description": "Exposes developer-only commands"
           },
+          "intellij.forkFromWorkspace": {
+            "type": "string",
+            "scope": "window",
+            "default": null,
+            "markdownDescription": "Absolute path of the workspace to fork this workspace from, e.g. the main checkout of a git worktree. Used only when this workspace has no index yet: that workspace's index is copied and re-anchored to this one, so the new workspace starts warm instead of reindexing. Leave empty to disable."
+          },
           "intellij.additionalJvmArgs": {
             "type": "array",
             "default": [],
