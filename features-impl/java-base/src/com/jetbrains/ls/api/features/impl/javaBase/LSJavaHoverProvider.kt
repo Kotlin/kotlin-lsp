@@ -66,9 +66,10 @@ open class LSJavaHoverProvider : LSHoverProviderBase() {
     private fun atDeclaration(method: PsiMethod, from: PsiFile, offset: Int): Boolean {
         val methodFile = method.containingFile
         if (methodFile != from) return false
-        if (!method.textRange.containsOffset(offset)) return false
-        val body = method.body
-        return body == null || !body.textRange.containsOffset(offset)
+        val methodRange = method.textRange ?: return false
+        if (!methodRange.containsOffset(offset)) return false
+        val bodyRange = method.body?.textRange ?: return true
+        return !bodyRange.containsOffset(offset)
     }
 
     private fun render(element: PsiElement): String? {
