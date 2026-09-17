@@ -46,5 +46,6 @@
     <orderEntry type="module" module-name="intellij.platform.lang.impl" />
     <orderEntry type="module" module-name="language-server.api.core.util" />
     <orderEntry type="module" module-name="intellij.kotlin.base.analysis" />
+    <orderEntry type="module" module-name="intellij.platform.projectModel" />
   </component>
 </module>

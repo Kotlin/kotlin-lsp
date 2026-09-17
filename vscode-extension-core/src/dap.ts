@@ -29,15 +29,17 @@ import {
   setPendingBuild,
 } from './buildTask';
 import { type BuildToRun, buildToRun, errorMessage, launchBuildTargetOf } from './buildTaskModel';
+import { lensLaunchDecision } from './lensLaunchModel';
 
 /**
- * The launch configuration types, one per way of running a program.
+ * The launch configuration types, one per way of running a program: a plain JVM, or one type per build tool.
  *
  * They exist as separate types, with separate schemas, because they are configured in different vocabularies: a JVM
  * launch is a class path, a module path and a `java` binary, while a build-tool launch is a project, a source set and
  * the tool's own arguments — and neither set means anything to the other. One type carrying both would have to decide
  * which fields win, which is how setting `javaExec` on a Gradle module used to silently stop Gradle from building it
- * at all.
+ * at all. The build tools differ among themselves the same way: a Gradle launch names a project path and a source
+ * set, a Bazel launch names a target label.
  *
  * The names say *how the program runs*, which is the axis that has to stay one-dimensional: a kind of program (a main
  * class, a test) belongs in the schema, or the next feature turns these into a tool-by-kind matrix.
@@ -48,6 +50,7 @@ import { type BuildToRun, buildToRun, errorMessage, launchBuildTargetOf } from '
  */
 const JVM_DEBUG_TYPE = 'intellij_jvm';
 const GRADLE_DEBUG_TYPE = 'intellij_gradle';
+const BAZEL_DEBUG_TYPE = 'intellij_bazel';
 
 /**
  * The name [JVM_DEBUG_TYPE] used to have, still accepted so that launch configurations written against it keep
@@ -61,7 +64,24 @@ const GRADLE_DEBUG_TYPE = 'intellij_gradle';
 const LEGACY_JVM_DEBUG_TYPE = 'intellij_debugger';
 
 /** Build tool ids, as `intellij.java.resolveBuildToolLaunch` reports them, mapped to their configuration type. */
-const DEBUG_TYPE_BY_TOOL: Record<string, string> = { gradle: GRADLE_DEBUG_TYPE };
+const DEBUG_TYPE_BY_TOOL: Record<string, string> = {
+  gradle: GRADLE_DEBUG_TYPE,
+  bazel: BAZEL_DEBUG_TYPE,
+};
+
+/** The configuration types a build tool launches. Every other launch type runs a plain JVM. */
+const BUILD_TOOL_DEBUG_TYPES = new Set(Object.values(DEBUG_TYPE_BY_TOOL));
+
+/** The part of a product's `package.json` that names its debuggers. */
+interface DebuggersManifest {
+  contributes?: { debuggers?: Array<{ type: string }> };
+}
+
+/** The debugger types the running product contributes. Each product declares only the tools its server imports. */
+function declaredDebugTypes(context: ExtensionContext): Set<string> {
+  const manifest = context.extension.packageJSON as DebuggersManifest | undefined;
+  return new Set((manifest?.contributes?.debuggers ?? []).map((entry) => entry.type));
+}
 
 const RUN_MAIN_COMMAND = 'intellij.jvm.runMain';
 const DEFAULT_CONSOLE = 'integratedTerminal';
@@ -122,6 +142,8 @@ interface BuildToolLaunchResponse {
   tool?: string;
   moduleName?: string;
   scopeClassPaths?: string[];
+  /** Why the owning tool refused the launch, when `tool` is absent because it refused rather than never launches. */
+  reason?: string;
 }
 
 /**
@@ -179,20 +201,45 @@ interface JvmLaunchConfig extends CommonLaunchConfig {
 }
 
 /**
- * A launch that runs the program *through Gradle*, which compiles it as part of running.
+ * A launch that runs the program *through a build tool*, which compiles it as part of running.
  *
- * Nothing here says how the JVM runs — no class path, no module path, no `java` binary — because Gradle decides all
- * three from the source set and the project's toolchain. What a user can say is which project and source set to run,
- * and what to pass to the build.
+ * Nothing here says how the JVM runs — no class path, no module path, no `java` binary — because the tool decides all
+ * three from its own model of the project. What a user can say is which target to run and what to pass to the tool,
+ * each in the tool's own vocabulary, which is what the per-tool subtypes add.
  */
-interface GradleLaunchConfig extends CommonLaunchConfig {
-  projectPath?: string;
-  sourceSet?: string;
-  gradleArgs?: string[];
-  /** Server-resolved, not user-authored: what the adapter turns into Gradle's own command. */
+interface BuildToolLaunchConfig extends CommonLaunchConfig {
+  /** Server-resolved, not user-authored: what the adapter turns into the tool's own command. */
   buildToolTarget?: BuildToolTarget;
   /** Server-resolved, not user-authored: the breakpoint scope of the debug session. */
   classPaths?: string[];
+}
+
+/** A Gradle launch names a project and a source set, and passes Gradle its own arguments. */
+interface GradleLaunchConfig extends BuildToolLaunchConfig {
+  projectPath?: string;
+  sourceSet?: string;
+  gradleArgs?: string[];
+}
+
+/**
+ * A Bazel launch names a target label and passes Bazel its own options, which go before the label on the
+ * `bazel run` line; program and JVM arguments travel separately, after it.
+ */
+interface BazelLaunchConfig extends BuildToolLaunchConfig {
+  /** A Bazel target label; without one, the label the importer recorded for the module. */
+  target?: string;
+  bazelArgs?: string[];
+}
+
+/**
+ * What a build-tool configuration says in the tool's own vocabulary, read out by type for
+ * [resolveBuildToolLaunchConfig], plus the tool the server has to name for that type to be the right one.
+ */
+interface BuildToolLaunch {
+  expectedTool: string;
+  projectPath?: string;
+  sourceSet?: string;
+  toolArgs?: string[];
 }
 
 export function registerDapServer(context: ExtensionContext) {
@@ -240,15 +287,23 @@ export function registerDapServer(context: ExtensionContext) {
       // reached it — nothing to build, or a `preLaunchTask` pointing elsewhere — so no later task inherits it.
       // Only for a launch, which is the only request the slot is ever filled for.
       setPendingBuild(undefined);
-      // Anything that is not the build tool's type is a JVM launch, which is what makes
+      // Anything that is not a build tool's type is a JVM launch, which is what makes
       // [LEGACY_JVM_DEBUG_TYPE] an alias rather than a second code path.
-      return debugConfiguration.type === GRADLE_DEBUG_TYPE
-        ? await resolveGradleLaunchConfig(debugConfiguration as GradleLaunchConfig)
+      return BUILD_TOOL_DEBUG_TYPES.has(debugConfiguration.type)
+        ? await resolveBuildToolLaunchConfig(
+            debugConfiguration as BuildToolLaunchConfig,
+            buildToolLaunchOf(debugConfiguration),
+          )
         : await resolveJvmLaunchConfig(debugConfiguration as JvmLaunchConfig);
     },
   };
 
-  for (const type of [JVM_DEBUG_TYPE, LEGACY_JVM_DEBUG_TYPE, GRADLE_DEBUG_TYPE]) {
+  // Only the types this product's manifest declares. VS Code lets an extension register a descriptor factory only
+  // for a debugger it contributes, and throws otherwise; a product without a Bazel import (the Kotlin server)
+  // declares no `intellij_bazel`, and that throw would end activation before the language client starts.
+  const declared = declaredDebugTypes(context);
+  for (const type of [JVM_DEBUG_TYPE, LEGACY_JVM_DEBUG_TYPE, ...BUILD_TOOL_DEBUG_TYPES]) {
+    if (!declared.has(type)) continue;
     context.subscriptions.push(
       debug.registerDebugAdapterDescriptorFactory(type, dapServerFactory),
       debug.registerDebugConfigurationProvider(type, debugConfigProvider),
@@ -294,9 +349,15 @@ async function startLensLaunch(arg: RunMainArgs): Promise<void> {
   // Prefer the build tool's own configuration whenever one can run this module: it compiles as part of running, so a
   // lens launch through it needs no build step and no build terminal. The lens has no user to ask, which is why this
   // is the one place the *server's* answer picks the configuration type.
-  const tool = arg.uri ? await lensBuildTool(arg.uri, arg.mainClass) : undefined;
+  const answer = arg.uri ? await lensBuildTool(arg.uri, arg.mainClass) : undefined;
+  const decision = lensLaunchDecision(answer, DEBUG_TYPE_BY_TOOL, JVM_DEBUG_TYPE);
+  // A tool that refused the launch said why; a JVM launch instead would run the class outside the tool, silently.
+  if ('refused' in decision) {
+    failedToResolve(new Error(decision.refused));
+    return;
+  }
   const config: DebugConfiguration = {
-    type: (tool && DEBUG_TYPE_BY_TOOL[tool]) ?? JVM_DEBUG_TYPE,
+    type: decision.type,
     request: 'launch',
     name: arg.mainClass.split('.').pop() ?? 'Run main',
     mainClass: arg.mainClass,
@@ -325,20 +386,23 @@ async function startLensLaunch(arg: RunMainArgs): Promise<void> {
 }
 
 /**
- * The build tool that would launch [uri]'s module, or `undefined` for none — and also for a failure to ask, which
- * falls back to a JVM launch rather than refusing: that path resolves everything again and reports properly, so a
+ * The server's answer on which build tool would launch [uri]'s module: the tool, or a refusal with its reason, or
+ * neither when no tool launches it (`lensLaunchDecision` reads it). `undefined` for a failure to ask, which falls
+ * back to a JVM launch rather than refusing: that path resolves everything again and reports properly, so a
  * transient failure here should not be the end of the launch.
  */
-async function lensBuildTool(uri: string, mainClass: string): Promise<string | undefined> {
+async function lensBuildTool(
+  uri: string,
+  mainClass: string,
+): Promise<BuildToolLaunchResponse | undefined> {
   const client = getLspClient();
   if (!client) return undefined;
   try {
-    const response = await sendLspCommand<BuildToolLaunchResponse>(
+    return await sendLspCommand<BuildToolLaunchResponse>(
       client,
       'intellij.java.resolveBuildToolLaunch',
       [{ uri, mainClass }],
     );
-    return response.tool;
   } catch (e) {
     getOutputChannel().appendLine(
       `[lens] launching as a JVM program, the build tool could not be resolved: ${errorMessage(e)}`,
@@ -477,36 +541,75 @@ async function resolveJvmLaunchConfig(
 }
 
 /**
- * Fills in a Gradle launch: the target the adapter turns into Gradle's own compile-and-run command, plus the paths
- * the debug session is scoped to.
+ * Translates a build-tool configuration into the one vocabulary the adapter reads: a Gradle project path or a Bazel
+ * label is the target's `projectPath`, and the tool's own arguments are its `toolArgs`.
+ *
+ * Only for a type in [BUILD_TOOL_DEBUG_TYPES]; the two are the same list, so a type added to one is added to both.
  */
-async function resolveGradleLaunchConfig(
-  config: GradleLaunchConfig,
+function buildToolLaunchOf(config: DebugConfiguration): BuildToolLaunch {
+  switch (config.type) {
+    case GRADLE_DEBUG_TYPE: {
+      const gradle = config as GradleLaunchConfig;
+      return {
+        expectedTool: 'gradle',
+        projectPath: gradle.projectPath,
+        sourceSet: gradle.sourceSet,
+        toolArgs: gradle.gradleArgs,
+      };
+    }
+    case BAZEL_DEBUG_TYPE: {
+      const bazel = config as BazelLaunchConfig;
+      return { expectedTool: 'bazel', projectPath: bazel.target, toolArgs: bazel.bazelArgs };
+    }
+    default:
+      throw new Error(`"${config.type}" is not a build-tool configuration type`);
+  }
+}
+
+/**
+ * Fills in a build-tool launch: the target the adapter turns into the tool's own compile-and-run command, plus the
+ * paths the debug session is scoped to.
+ *
+ * The server names the tool that launches this module, and it has to be [BuildToolLaunch.expectedTool]: a
+ * configuration of one tool's type must not quietly run a module through another tool, or through none, which is
+ * the whole reason the types are separate.
+ */
+async function resolveBuildToolLaunchConfig(
+  config: BuildToolLaunchConfig,
+  { expectedTool, projectPath, sourceSet, toolArgs }: BuildToolLaunch,
 ): Promise<DebugConfiguration | undefined> {
   const client = launchPrerequisites(config);
   if (!client) return undefined;
   try {
     const uri = await launchTargetUri(client, config);
+    // The configured unit of the build goes along: a Bazel binary whose main class lives in a library module is
+    // launchable only through the binary's label, so the server has to judge the target the launch names.
     const response = await sendLspCommand<BuildToolLaunchResponse>(
       client,
       'intellij.java.resolveBuildToolLaunch',
-      [{ uri, mainClass: config.mainClass }],
+      [{ uri, mainClass: config.mainClass, projectPath }],
     );
     if (response.tool === undefined) {
-      // Named the wrong configuration type for this module: say so instead of quietly running it some other way,
-      // which is the whole reason the two types are separate.
       throw new Error(
-        `No build tool can launch "${config.mainClass}"; use a "${JVM_DEBUG_TYPE}" configuration instead`,
+        response.reason ??
+          `No build tool can launch "${config.mainClass}"; use a "${JVM_DEBUG_TYPE}" configuration instead`,
+      );
+    }
+    if (response.tool !== expectedTool) {
+      const type = DEBUG_TYPE_BY_TOOL[response.tool] ?? JVM_DEBUG_TYPE;
+      throw new Error(
+        `"${config.mainClass}" is launched by ${response.tool}, not ${expectedTool}; ` +
+          `use a "${type}" configuration instead`,
       );
     }
     config.buildToolTarget = {
       uri,
       moduleName: response.moduleName,
-      projectPath: config.projectPath,
-      sourceSet: config.sourceSet,
-      toolArgs: config.gradleArgs,
+      projectPath,
+      sourceSet,
+      toolArgs,
     };
-    // Gradle runs the debuggee itself, so nothing here says how — but the debug session still has to be scoped to
+    // The tool runs the debuggee itself, so nothing here says how — but the debug session still has to be scoped to
     // the module being run, or it falls back to the whole project and can resolve a breakpoint against a same-named
     // class in an unrelated module (LSP-1421).
     config.classPaths = response.scopeClassPaths ?? [];

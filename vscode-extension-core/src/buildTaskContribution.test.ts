@@ -9,11 +9,16 @@ import { BUILD_TASK_LABEL, BUILD_TASK_TYPE } from './buildTaskModel';
  * label VS Code derives from its type and name. Nothing else checks that the two halves still agree — a renamed
  * constant or an edited snippet string breaks a launch at runtime and passes every other test.
  *
- * Only the source manifest is read: `intellij-vscode/check-metadata-sync.mjs` copies `debuggers` (which carries the
- * snippets) and `taskDefinitions` into the other products' manifests, and fails when they differ, so checking one
- * checks all of them.
+ * The source manifest and one product manifest are read: `intellij-vscode/check-metadata-sync.mjs` copies
+ * `debuggers` (which carries the snippets) and `taskDefinitions` from the source into the products' manifests, and
+ * fails when they differ, so the source stands for every copy. A debugger only a product contributes, such as the
+ * Bazel one (the Kotlin server has no Bazel import), is read from that product's manifest.
  */
 const SOURCE_MANIFEST = '../../kotlin-vscode/package.json';
+const INTELLIJ_MANIFEST = '../../../intellij-vscode/intellij-server/package.json';
+
+/** The configuration types a build tool launches, as `dap.ts` registers them: one type per tool. */
+const BUILD_TOOL_DEBUG_TYPES = ['intellij_gradle', 'intellij_bazel'];
 
 interface TaskDefinition {
   type?: string;
@@ -30,14 +35,24 @@ interface Debugger {
   configurationSnippets?: Snippet[];
 }
 
-const manifest = JSON.parse(readFileSync(new URL(SOURCE_MANIFEST, import.meta.url), 'utf8')) as {
+interface Manifest {
   contributes: {
     taskDefinitions?: TaskDefinition[];
     debuggers?: Debugger[];
   };
-};
+}
 
-const debuggers = manifest.contributes.debuggers ?? [];
+const readManifest = (path: string): Manifest =>
+  JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8')) as Manifest;
+
+const manifest = readManifest(SOURCE_MANIFEST);
+const intellijManifest = readManifest(INTELLIJ_MANIFEST);
+
+// Snippets of every debugger either manifest contributes, each debugger type once: the synced ones are identical in
+// both, and a product-only one appears in one.
+const debuggers = [manifest, intellijManifest]
+  .flatMap((candidate) => candidate.contributes.debuggers ?? [])
+  .filter((entry, index, all) => all.findIndex((other) => other.type === entry.type) === index);
 const snippets = debuggers.flatMap((entry) =>
   (entry.configurationSnippets ?? []).map((snippet) => ({ entry, snippet })),
 );
@@ -94,15 +109,21 @@ describe('build task contribution', () => {
     }
   });
 
-  // The other side of that default: a Gradle launch *is* its build — the task it runs compiles the module on the way
-  // to running it — so a build task in front of it would compile the same source set twice per launch.
-  test('the Gradle launch snippet has no build task, because it compiles as it runs', () => {
-    const gradleLaunches = snippets.filter(({ entry }) => entry.type === 'intellij_gradle');
-    assert.notEqual(gradleLaunches.length, 0, 'no intellij_gradle snippet to check');
-    for (const { snippet } of gradleLaunches) {
-      assert.equal(snippet.body?.preLaunchTask, undefined);
-    }
-  });
+  // The other side of that default: a build-tool launch *is* its build — the tool compiles the module on the way to
+  // running it — so a build task in front of it would compile the same sources twice per launch.
+  for (const type of BUILD_TOOL_DEBUG_TYPES) {
+    test(`the ${type} launch snippet has no build task, because it compiles as it runs`, () => {
+      const launches = snippets.filter(({ entry }) => entry.type === type);
+      assert.notEqual(launches.length, 0, `no ${type} snippet to check`);
+      for (const { snippet } of launches) {
+        assert.equal(
+          snippet.body?.preLaunchTask,
+          undefined,
+          `the snippet ${JSON.stringify(snippet.label)} builds before a launch that builds by itself`,
+        );
+      }
+    });
+  }
 
   // An attach session has nothing to compile: the program it attaches to is already running.
   test('no attach snippet builds anything', () => {

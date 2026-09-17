@@ -44,6 +44,7 @@
     <module name="intellij.platform.indexing"/>
     <module name="intellij.platform.lang"/>
     <module name="intellij.platform.refactoring"/>
+    <module name="intellij.platform.workspace.storage"/>
     <module name="kotlin.fir"/>
     <module name="language-server.analyzer"/>
     <module name="language-server.analyzer.kotlin"/>

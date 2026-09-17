@@ -18,6 +18,7 @@ import com.intellij.usageView.UsageInfo
 import com.intellij.util.containers.MultiMap
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.processors.LSRefactoringProcessor
 import com.jetbrains.ls.api.core.util.findPsiFile
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toTextRange
@@ -30,7 +31,6 @@ import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.commands.LSCommandExecutor
 import com.jetbrains.ls.api.features.impl.common.inline.InlineActionKind
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCodeAction
-import com.jetbrains.ls.api.features.impl.common.processors.LSRefactoringProcessor
 import com.jetbrains.ls.api.features.impl.common.processors.doRefactoring
 import com.jetbrains.ls.api.features.impl.common.utils.findElementUnderCaret
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
