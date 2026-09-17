@@ -17,7 +17,7 @@ import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.entities
 import com.intellij.platform.workspace.storage.url.VirtualFileUrl
-import com.intellij.workspaceModel.ide.impl.createIdeVirtualFileUrlManager
+import com.intellij.workspaceModel.ide.impl.IdeVirtualFileUrlManagerImpl
 import com.jetbrains.ls.imports.api.LSConfiguredProjectData
 import com.jetbrains.ls.imports.api.LSDependencySubstitutionEntity
 import com.jetbrains.ls.imports.api.LSFolderImportRecord
@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class ApplyImportResultsTest {
-    private val urlManager = createIdeVirtualFileUrlManager(true)
+    private val urlManager = IdeVirtualFileUrlManagerImpl()
 
     private val folderA: VirtualFileUrl get() = url("/workspace/a")
     private val folderB: VirtualFileUrl get() = url("/workspace/b")

@@ -7,7 +7,7 @@ import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.entities
 import com.intellij.testFramework.common.timeoutRunBlocking
-import com.intellij.workspaceModel.ide.impl.createIdeVirtualFileUrlManager
+import com.intellij.workspaceModel.ide.impl.IdeVirtualFileUrlManagerImpl
 import com.jetbrains.analyzer.api.withAnalyzer
 import com.jetbrains.analyzer.api.withProject
 import com.jetbrains.analyzer.bootstrap.AnalyzerProjectId
@@ -79,7 +79,7 @@ class JdkSdkRootsTest {
                     )
                 ) {
                     val storage = MutableEntityStorage.create()
-                    storage.importWorkspaceData(data, workspacePath, object : EntitySource {}, createIdeVirtualFileUrlManager(true))
+                    storage.importWorkspaceData(data, workspacePath, object : EntitySource {}, IdeVirtualFileUrlManagerImpl())
                     storage.entities<SdkEntity>().single().roots
                         .filter { it.type == SdkRootTypeId.CLASSES }
                         .map { it.url.url }

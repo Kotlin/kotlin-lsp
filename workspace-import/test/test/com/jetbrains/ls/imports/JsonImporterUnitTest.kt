@@ -9,7 +9,7 @@ import com.intellij.platform.workspace.jps.entities.exModuleOptions
 import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.entities
-import com.intellij.workspaceModel.ide.impl.createIdeVirtualFileUrlManager
+import com.intellij.workspaceModel.ide.impl.IdeVirtualFileUrlManagerImpl
 import com.jetbrains.ls.imports.json.ContentRootData
 import com.jetbrains.ls.imports.json.DependencyData
 import com.jetbrains.ls.imports.json.DependencyDataScope
@@ -42,7 +42,7 @@ class JsonImporterUnitTest {
         )
 
         val storage = MutableEntityStorage.create()
-        storage.importWorkspaceData(data, workspacePath, object : EntitySource {}, createIdeVirtualFileUrlManager(true))
+        storage.importWorkspaceData(data, workspacePath, object : EntitySource {}, IdeVirtualFileUrlManagerImpl())
 
         val sdk = storage.entities<SdkEntity>().single()
         assertTrue(sdk.roots.isEmpty(), "Placeholder JDK home must not be resolved to SDK roots")
@@ -65,7 +65,7 @@ class JsonImporterUnitTest {
         )
 
         val storage = MutableEntityStorage.create()
-        storage.importWorkspaceData(data, workspacePath, object : EntitySource {}, createIdeVirtualFileUrlManager(true))
+        storage.importWorkspaceData(data, workspacePath, object : EntitySource {}, IdeVirtualFileUrlManagerImpl())
 
         val roots = storage.entities<SdkEntity>().single().roots.map { it.url.url }
         assertEquals(
@@ -111,7 +111,7 @@ class JsonImporterUnitTest {
         )
 
         val storage = MutableEntityStorage.create()
-        storage.importWorkspaceData(data, workspacePath, object : EntitySource {}, createIdeVirtualFileUrlManager(true))
+        storage.importWorkspaceData(data, workspacePath, object : EntitySource {}, IdeVirtualFileUrlManagerImpl())
 
         flattenExportedDependencies(storage)
 
@@ -144,7 +144,7 @@ class JsonImporterUnitTest {
 
         val storage = MutableEntityStorage.create()
         storage.importWorkspaceData(
-            data, workspacePath, object : EntitySource {}, createIdeVirtualFileUrlManager(true), externalSystemId = "GRADLE",
+            data, workspacePath, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(), externalSystemId = "GRADLE",
         )
 
         val modules = storage.entities<ModuleEntity>().associateBy { it.name }
@@ -177,7 +177,7 @@ class JsonImporterUnitTest {
 
         val storage = MutableEntityStorage.create()
         storage.importWorkspaceData(
-            data, workspacePath, object : EntitySource {}, createIdeVirtualFileUrlManager(true), externalSystemId = "GRADLE",
+            data, workspacePath, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(), externalSystemId = "GRADLE",
         )
 
         // Export the model back to the JSON data classes.
@@ -192,7 +192,7 @@ class JsonImporterUnitTest {
         val reimported = MutableEntityStorage.create()
         reimported.importWorkspaceData(
             WorkspaceData(modules = listOf(exported)),
-            workspacePath, object : EntitySource {}, createIdeVirtualFileUrlManager(true), externalSystemId = "JSON",
+            workspacePath, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(), externalSystemId = "JSON",
         )
         assertEquals(
             workspacePath.resolve("app").toString(),
@@ -224,7 +224,7 @@ class JsonImporterUnitTest {
 
         val storage = MutableEntityStorage.create()
         storage.importWorkspaceData(
-            data, workspacePath, object : EntitySource {}, createIdeVirtualFileUrlManager(true), externalSystemId = "GRADLE",
+            data, workspacePath, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(), externalSystemId = "GRADLE",
         )
         val imported = storage.entities<ModuleEntity>().associateBy { it.name }
         assertEquals(":core", imported.getValue("core.main").exModuleOptions?.linkedProjectId)
@@ -236,7 +236,7 @@ class JsonImporterUnitTest {
         val reimported = MutableEntityStorage.create()
         reimported.importWorkspaceData(
             WorkspaceData(modules = listOf(exported)),
-            workspacePath, object : EntitySource {}, createIdeVirtualFileUrlManager(true), externalSystemId = "JSON",
+            workspacePath, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(), externalSystemId = "JSON",
         )
         assertEquals(
             ":core",
@@ -270,7 +270,7 @@ class JsonImporterUnitTest {
 
         val storage = MutableEntityStorage.create()
         storage.importWorkspaceData(
-            data, workspacePath, object : EntitySource {}, createIdeVirtualFileUrlManager(true), externalSystemId = "GRADLE",
+            data, workspacePath, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(), externalSystemId = "GRADLE",
         )
 
         val exported = workspaceData(storage, workspacePath)
@@ -279,7 +279,7 @@ class JsonImporterUnitTest {
         // Re-import the way JsonWorkspaceImporter does: it passes its own id, which must not win over the recorded one.
         val reimported = MutableEntityStorage.create()
         reimported.importWorkspaceData(
-            exported, workspacePath, object : EntitySource {}, createIdeVirtualFileUrlManager(true),
+            exported, workspacePath, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(),
             externalSystemId = JSON_EXTERNAL_SYSTEM_ID,
         )
         assertEquals(
@@ -301,7 +301,7 @@ class JsonImporterUnitTest {
 
         val storage = MutableEntityStorage.create()
         storage.importWorkspaceData(
-            data, workspacePath, object : EntitySource {}, createIdeVirtualFileUrlManager(true),
+            data, workspacePath, object : EntitySource {}, IdeVirtualFileUrlManagerImpl(),
             externalSystemId = JSON_EXTERNAL_SYSTEM_ID,
         )
         assertEquals(JSON_EXTERNAL_SYSTEM_ID, storage.entities<ModuleEntity>().single().exModuleOptions?.externalSystem)
@@ -309,7 +309,7 @@ class JsonImporterUnitTest {
 
         // A pure-JPS workspace has no external system at all, and must not acquire one.
         val jps = MutableEntityStorage.create()
-        jps.importWorkspaceData(data, workspacePath, object : EntitySource {}, createIdeVirtualFileUrlManager(true))
+        jps.importWorkspaceData(data, workspacePath, object : EntitySource {}, IdeVirtualFileUrlManagerImpl())
         assertNull(jps.entities<ModuleEntity>().single().exModuleOptions)
         assertNull(workspaceData(jps, workspacePath).externalSystem)
     }
@@ -334,7 +334,7 @@ class JsonImporterUnitTest {
         )
 
         val storage = MutableEntityStorage.create()
-        storage.importWorkspaceData(data, workspacePath, object : EntitySource {}, createIdeVirtualFileUrlManager(true))
+        storage.importWorkspaceData(data, workspacePath, object : EntitySource {}, IdeVirtualFileUrlManagerImpl())
 
         val optionsEntity = storage.entities<JavaModuleCompilerOptionsEntity>().single()
         assertEquals("A", optionsEntity.module.name)
@@ -388,7 +388,7 @@ class JsonImporterUnitTest {
         )
 
         val storage = MutableEntityStorage.create()
-        storage.importWorkspaceData(data, workspacePath, object : EntitySource {}, createIdeVirtualFileUrlManager(true))
+        storage.importWorkspaceData(data, workspacePath, object : EntitySource {}, IdeVirtualFileUrlManagerImpl())
 
         substituteModuleDependencies(storage)
 
