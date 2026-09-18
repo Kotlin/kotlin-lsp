@@ -3,8 +3,9 @@ package com.jetbrains.ls.api.features.impl.kotlin.move
 
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiElement
-import com.jetbrains.ls.api.core.processors.LSRefactoringProcessor
+import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.impl.common.move.LSMoveHandlerDelegate
+import com.jetbrains.ls.api.features.impl.common.move.MoveAnalysisResult
 import com.jetbrains.ls.api.features.impl.kotlin.processors.LSMoveKotlinFileProcessor
 import org.jetbrains.kotlin.idea.base.util.KotlinSingleClassFileAnalyzer
 import org.jetbrains.kotlin.idea.k2.refactoring.move.ui.K2MoveModel
@@ -33,15 +34,15 @@ internal class LSKotlinMoveHandlerDelegate : LSMoveHandlerDelegate {
     override fun createProcessor(
         sources: Array<PsiElement>,
         targetDirectory: PsiDirectory
-    ): LSRefactoringProcessor? {
+    ): MoveAnalysisResult {
         val model = K2MoveModel.create(
             elements = sources,
             targetContainer = targetDirectory,
             editor = null,
             moveCallBack = null,
             canShowUI = false
-        ) ?: return null
+        ) ?: return MoveAnalysisResult.Error(LspServerBundle.message("error.move.unable.to.update.moved.files"))
 
-        return LSMoveKotlinFileProcessor.create(model)
+        return MoveAnalysisResult.Success(LSMoveKotlinFileProcessor.create(model))
     }
 }

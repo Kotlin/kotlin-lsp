@@ -4,10 +4,11 @@ package com.jetbrains.ls.api.features.impl.kotlin.move
 import com.intellij.ide.util.PackageUtil
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiElement
-import com.jetbrains.ls.api.core.processors.LSRefactoringProcessor
+import com.jetbrains.ls.api.core.processors.LSMoveDirectoryProcessor
 import com.jetbrains.ls.api.core.processors.MoveDirectoryContext
-import com.jetbrains.ls.api.core.processors.createProcessor
+import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.impl.common.move.LSMoveHandlerDelegate
+import com.jetbrains.ls.api.features.impl.common.move.MoveAnalysisResult
 
 internal class LSJvmDirectoryMoveHandlerDelegate : LSMoveHandlerDelegate {
     override val isOnlyDirectories: Boolean
@@ -25,9 +26,11 @@ internal class LSJvmDirectoryMoveHandlerDelegate : LSMoveHandlerDelegate {
     override fun createProcessor(
         sources: Array<PsiElement>,
         targetDirectory: PsiDirectory
-    ): LSRefactoringProcessor? {
+    ): MoveAnalysisResult {
         val directories = sources.map { it as PsiDirectory }.toTypedArray()
         val context = MoveDirectoryContext(targetDirectory, directories)
-        return createProcessor(context)
+        val processor = LSMoveDirectoryProcessor.create(context)
+            ?: return MoveAnalysisResult.Error(LspServerBundle.message("error.move.unable.to.update.moved.files"))
+        return MoveAnalysisResult.Success(processor)
     }
 }

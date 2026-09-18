@@ -3,7 +3,6 @@ package com.jetbrains.ls.api.features.impl.common.move
 
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiElement
-import com.jetbrains.ls.api.core.processors.LSRefactoringProcessor
 
 /**
  * Fallback handler for moving files and directories. It is used, for example, when both Java and text files are moved together.
@@ -18,12 +17,17 @@ internal object LSGenericMoveHandlerDelegate : LSMoveHandlerDelegate {
     override fun createProcessor(
         sources: Array<PsiElement>,
         targetDirectory: PsiDirectory
-    ): LSRefactoringProcessor {
+    ): MoveAnalysisResult {
         val adjustedElements = sources.map { element ->
             val file = element.containingFile
             file ?: element
         }.toTypedArray()
 
-        return LSMoveFilesOrDirectoriesProcessor.create(elementsToMove = adjustedElements, targetDirectory = targetDirectory)
+        return MoveAnalysisResult.Success(
+            LSMoveFilesOrDirectoriesProcessor.create(
+                elementsToMove = adjustedElements,
+                targetDirectory = targetDirectory
+            )
+        )
     }
 }

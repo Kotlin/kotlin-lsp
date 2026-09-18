@@ -31,7 +31,7 @@ interface LSMoveHandlerDelegate {
     /**
      * Creates [LSRefactoringProcessor] that will perform move refactoring for [sources] and [targetDirectory]
      */
-    fun createProcessor(sources: Array<PsiElement>, targetDirectory: PsiDirectory): LSRefactoringProcessor?
+    fun createProcessor(sources: Array<PsiElement>, targetDirectory: PsiDirectory): MoveAnalysisResult
 
     companion object {
         private val EP_NAME: ExtensionPointName<LSMoveHandlerDelegate> = ExtensionPointName.create("ls.moveHandlerDelegate")
