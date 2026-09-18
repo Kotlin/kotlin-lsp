@@ -12,16 +12,17 @@ import com.jetbrains.ls.api.features.impl.common.hover.LSHoverProviderBase
 import com.jetbrains.ls.api.features.impl.common.hover.markdownMultilineCode
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
+import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.KaNonPublicApi
 import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.analysis.api.javaInterop.callableSymbol
 import org.jetbrains.kotlin.analysis.api.javaInterop.namedClassSymbol
 import org.jetbrains.kotlin.analysis.api.kdoc.findKDoc
-import org.jetbrains.kotlin.analysis.api.renderer.base.annotations.KaRendererAnnotationsFilter
-import org.jetbrains.kotlin.analysis.api.renderer.base.annotations.renderers.KaAnnotationArgumentsRenderer
-import org.jetbrains.kotlin.analysis.api.renderer.declarations.impl.KaDeclarationRendererForSource
-import org.jetbrains.kotlin.analysis.api.renderer.declarations.renderers.classifiers.KaSingleTypeParameterSymbolRenderer
-import org.jetbrains.kotlin.analysis.api.renderer.types.renderers.KaErrorTypeRenderer
+import org.jetbrains.kotlin.analysis.api.rendering.KaPiece
+import org.jetbrains.kotlin.analysis.api.rendering.KaRenderer
+import org.jetbrains.kotlin.analysis.api.rendering.KaRenderingOption
+import org.jetbrains.kotlin.analysis.api.rendering.pushEmpty
+import org.jetbrains.kotlin.analysis.api.rendering.renderToString
 import org.jetbrains.kotlin.analysis.api.resolution.resolveSuccessfulSymbol
 import org.jetbrains.kotlin.analysis.api.session.analyze
 import org.jetbrains.kotlin.analysis.api.symbols.KaConstructorSymbol
@@ -33,6 +34,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.containingModule
 import org.jetbrains.kotlin.analysis.api.symbols.findPackage
 import org.jetbrains.kotlin.analysis.api.symbols.pointers.restoreSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.symbol
+import org.jetbrains.kotlin.load.java.NULLABILITY_ANNOTATIONS
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.render
 import org.jetbrains.kotlin.psi.KtCallElement
@@ -78,10 +80,10 @@ internal object LSKotlinHoverProvider : LSHoverProviderBase() {
             is KaDeclarationSymbol -> buildString {
                 if (symbol is KaConstructorSymbol) {
                     symbol.containingDeclaration?.let { classSymbol ->
-                        appendLine(classSymbol.render(renderer))
+                        appendLine(renderer.renderToString(classSymbol))
                     }
                 }
-                append(symbol.render(renderer))
+                append(renderer.renderToString(symbol))
             }
 
             else -> null
@@ -107,23 +109,20 @@ internal object LSKotlinHoverProvider : LSHoverProviderBase() {
         }
     }
 
-    private val renderer = KaDeclarationRendererForSource.WITH_SHORT_NAMES.with {
-        singleTypeParameterRenderer =
-            KaSingleTypeParameterSymbolRenderer.WITH_COMMA_SEPARATED_BOUNDS
+    @OptIn(KaExperimentalApi::class)
+    private val renderer: KaRenderer = KaRenderer.default.copy {
+        val previousAnnotations = get(KaRenderingOption.Annotations)
+        set(KaRenderingOption.Annotations) { annotated ->
+            previousAnnotations(annotated).filter { annotation ->
+                val fqName = annotation.classId?.asSingleFqName()
+                val renderedForSource = (fqName == null) || fqName !in NULLABILITY_ANNOTATIONS
 
-        typeRenderer = typeRenderer.with {
-            errorTypeRenderer = KaErrorTypeRenderer.AS_CODE_IF_POSSIBLE
+                // To avoid weird code on unresolved annotations caused by a bug in Kotlin Analysis API (KT-76373)
+                renderedForSource && annotation.classId?.shortClassName?.asString() != "<error>"
+            }
         }
 
-        annotationRenderer = annotationRenderer.with {
-            val originalFilter = annotationFilter
-            annotationFilter =
-                originalFilter and KaRendererAnnotationsFilter { annotation, _ ->
-                    // to avoid weird code on unresolved annotations caused by a bug in Kotlin Analysis API (KT-76373)
-                    annotation.classId?.shortClassName?.asString() != "<error>"
-                }
-
-            annotationArgumentsRenderer = KaAnnotationArgumentsRenderer.NONE
-        }
+        pushEmpty(KaPiece.AnnotationValues)
+        pushEmpty(KaPiece.ClassBody)
     }
 }
