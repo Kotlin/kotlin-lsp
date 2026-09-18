@@ -6,7 +6,7 @@
     <extensionPoint qualifiedName="ls.completionItemKindProvider" beanClass="com.intellij.lang.LanguageExtensionPoint" dynamic="true">
       <with attribute="implementationClass" implements="com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider"/>
     </extensionPoint>
-    <extensionPoint qualifiedName="ls.moveHandlerDelegate" interface="com.jetbrains.ls.api.features.impl.common.move.LSMoveHandlerDelegate"/>
+    <extensionPoint qualifiedName="ls.moveHandlerDelegate" interface="com.jetbrains.ls.api.features.impl.common.move.LSMoveHandlerDelegate" dynamic="true"/>
     <extensionPoint qualifiedName="com.intellij.customFoldingProvider" interface="com.intellij.lang.folding.CustomFoldingProvider" dynamic="true"/>
     <extensionPoint qualifiedName="com.intellij.platform.backend.documentation.targetProvider" dynamic="true"
                     interface="com.intellij.platform.backend.documentation.DocumentationTargetProvider"/>

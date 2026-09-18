@@ -6,7 +6,7 @@ import com.intellij.psi.PsiElement
 import com.jetbrains.ls.api.core.processors.LSRefactoringProcessor
 
 /**
- * Fallback handler for moving files and directories. It is used, for example, when both java and kotlin files are moved within request
+ * Fallback handler for moving files and directories. It is used, for example, when both Java and text files are moved together.
  *
  * @see com.intellij.refactoring.move.moveFilesOrDirectories.MoveFilesOrDirectoriesHandler
  */
