@@ -35,11 +35,12 @@
     "test": "pnpm run test:grammar && pnpm run test:unit",
     "test:grammar": "textmate-grammar-snap --grammar syntaxes/kotlin.tmLanguage.json --scope source.kotlin \"testSources/tokenization/*.kt\"",
     "typecheck": "tsc --noEmit",
-    "test:unit": "pnpm --filter @jetbrains/vscode-extension-core test && pnpm --filter @jetbrains/vscode-language-kotlin test",
+    "test:unit": "pnpm --filter @jetbrains/vscode-extension-core test && pnpm --filter @jetbrains/vscode-jvm-testing test && pnpm --filter @jetbrains/vscode-language-kotlin test",
     "updateGrammarTests": "textmate-grammar-snap --grammar syntaxes/kotlin.tmLanguage.json --scope source.kotlin -u \"testSources/tokenization/*.kt\""
   },
   "dependencies": {
     "@jetbrains/vscode-extension-core": "workspace:*",
+    "@jetbrains/vscode-jvm-testing": "workspace:*",
     "@jetbrains/vscode-language-kotlin": "workspace:*",
     "vscode-languageclient": "catalog:",
     "web-tree-sitter": "catalog:"

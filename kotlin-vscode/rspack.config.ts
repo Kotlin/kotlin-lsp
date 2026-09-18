@@ -23,6 +23,7 @@ const config = createExtensionConfig(
   [
     path.resolve(packageDir, 'src'),
     path.resolve(communityDir, 'vscode-extension-core/src'),
+    path.resolve(communityDir, 'vscode-jvm-testing/src'),
     path.resolve(communityDir, 'vscode-language-kotlin/src'),
     path.resolve(policyDir, 'src'),
   ],

@@ -12,6 +12,7 @@ import {
   stopLspClient,
   withLspClientStartPending,
 } from '@jetbrains/vscode-extension-core';
+import jvmTestingModule from '@jetbrains/vscode-jvm-testing';
 import kotlinModule from '@jetbrains/vscode-language-kotlin';
 import {
   checkBundledServerEulaAccepted,
@@ -45,7 +46,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
             }),
           enableDapServer: true,
           enableDecompiler: true,
-          modules: [kotlinModule],
+          modules: [kotlinModule, jvmTestingModule],
           onServerRestartStateChanged: serverOptions?.onServerRestartStateChanged,
         }),
     }),

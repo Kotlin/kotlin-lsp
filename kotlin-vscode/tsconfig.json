@@ -8,6 +8,11 @@
     "tsBuildInfoFile": "out/compile/tsconfig.tsbuildinfo",
     "types": ["node"]
   },
-  "include": ["src", "../vscode-extension-core/src", "../vscode-language-kotlin/src"],
+  "include": [
+    "src",
+    "../vscode-extension-core/src",
+    "../vscode-jvm-testing/src",
+    "../vscode-language-kotlin/src"
+  ],
   "exclude": ["node_modules", ".vscode-test"]
 }
