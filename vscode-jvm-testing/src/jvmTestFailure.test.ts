@@ -90,6 +90,22 @@ describe('what VS Code shows for a failure', () => {
     assert.equal(markedLine(message), 16);
   });
 
+  test('a Kotlin test named in backticks keeps the spaces in its name and still navigates', () => {
+    const message = jvmFailureMessage(
+      failed({
+        failureMessage: 'boom',
+        stacktrace: '\tat com.example.FooTest.adds two numbers(FooTest.kt:12)',
+      }),
+      fileOfClass,
+    );
+
+    assert.deepEqual(
+      message.stackTrace?.map((frame) => [frame.label, frame.uri?.toString()]),
+      [['com.example.FooTest.adds two numbers', FOO_FILE]],
+    );
+    assert.equal(markedLine(message), 11);
+  });
+
   test('a frame with no source line is listed, but has no line to navigate to', () => {
     const message = jvmFailureMessage(
       failed({

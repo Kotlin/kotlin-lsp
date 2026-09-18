@@ -8,6 +8,9 @@ import { WorkspaceImportStateRequest } from './workspaceImport';
 
 const DISCOVERY_CONCURRENCY = 4;
 
+/** The VS Code language ids of the sources the server scans for JVM tests. */
+const JVM_LANGUAGE_IDS: ReadonlySet<string> = new Set(['java', 'kotlin']);
+
 export interface JvmTestDiscoveryApi {
   testsInFile(uri: string): Promise<JvmTestItemDto[]>;
 
@@ -44,7 +47,9 @@ export class JvmTestDiscovery {
   ) {}
 
   refreshFile(document: TextDocument | Uri): Promise<void> {
-    if ('languageId' in document && document.languageId !== 'java') return Promise.resolve();
+    if ('languageId' in document && !JVM_LANGUAGE_IDS.has(document.languageId)) {
+      return Promise.resolve();
+    }
     return this.syncFile(('languageId' in document ? document.uri : document).toString());
   }
 

@@ -4,7 +4,9 @@ import type { TestFailed } from '@jetbrains/vscode-extension-core/testing/servic
 type FileOfClass = (className: string) => Uri | undefined;
 
 // `\tat com.example.Foo.bar(Foo.java:42)`, `at Foo.bar(Native Method)`, `at java.base/java.util.X.y(X.java:1)`.
-const FRAME = /^\s*at\s+([^\s(]+)\((.*)\)\s*$/;
+// A Kotlin test named in backticks keeps its spaces: `at com.example.FooTest.adds two numbers(FooTest.kt:12)`.
+// The source is the last parenthesized group, so the method name may hold any character but a parenthesis pair.
+const FRAME = /^\s*at\s+(\S.*)\(([^()]*)\)\s*$/;
 const SOURCE_LINE = /:(\d+)\s*$/;
 
 export function jvmFailureMessage(failed: TestFailed, fileOfClass: FileOfClass): TestMessage {

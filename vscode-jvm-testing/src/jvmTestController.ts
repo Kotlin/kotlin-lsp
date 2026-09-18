@@ -75,11 +75,11 @@ export function registerJvmTestController(context: ExtensionContext, client: Lan
 
   // A file created or deleted outside the editor still belongs in (or out of) the tree; edits to an
   // open file are covered by the document events below.
-  const javaWatcher = workspace.createFileSystemWatcher('**/*.java');
+  const sourceWatcher = workspace.createFileSystemWatcher('**/*.{java,kt}');
   context.subscriptions.push(
-    javaWatcher,
-    javaWatcher.onDidCreate((uri) => void discovery.refreshFile(uri)),
-    javaWatcher.onDidDelete((uri) => discovery.forgetFile(uri)),
+    sourceWatcher,
+    sourceWatcher.onDidCreate((uri) => void discovery.refreshFile(uri)),
+    sourceWatcher.onDidDelete((uri) => discovery.forgetFile(uri)),
   );
 
   // A file the user is looking at, or has just changed, is the one most worth keeping accurate.

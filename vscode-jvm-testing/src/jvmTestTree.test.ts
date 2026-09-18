@@ -577,6 +577,25 @@ describe('discovery of one file', () => {
     );
   });
 
+  test('happens for a Kotlin document too', async () => {
+    let asked = false;
+    const { discovery } = makeDiscovery(
+      fakeServer({
+        testsInFile: async () => {
+          asked = true;
+          return [];
+        },
+      }),
+    );
+
+    await discovery.refreshFile({
+      languageId: 'kotlin',
+      uri: fakeUri('file:///p/SampleTest.kt'),
+    } as unknown as TextDocument);
+
+    assert.equal(asked, true);
+  });
+
   test('does not happen at all for a document of another language', async () => {
     let asked = false;
     const { controller, discovery } = makeDiscovery(
