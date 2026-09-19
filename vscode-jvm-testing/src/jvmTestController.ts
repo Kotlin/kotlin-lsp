@@ -83,6 +83,11 @@ export function registerJvmTestController(context: ExtensionContext, client: Lan
   );
 
   // A file the user is looking at, or has just changed, is the one most worth keeping accurate.
+  // The editors already open when the controller registers get no event, so they are scanned here.
+  const refreshVisibleEditors = (): void => {
+    for (const editor of window.visibleTextEditors) void discovery.refreshFile(editor.document);
+  };
+  refreshVisibleEditors();
   context.subscriptions.push(
     window.onDidChangeActiveTextEditor((editor) => {
       if (editor) void discovery.refreshFile(editor.document);
@@ -106,7 +111,9 @@ export function registerJvmTestController(context: ExtensionContext, client: Lan
   context.subscriptions.push(
     workspace.onDidChangeWorkspaceFolders(() => void discovery.refreshWorkspace()),
     subscribeToClientEvent((client, stateChange) => {
-      if (stateChange.newState === State.Running) watchWorkspaceImports(client);
+      if (stateChange.newState !== State.Running) return;
+      watchWorkspaceImports(client);
+      refreshVisibleEditors();
     }),
     { dispose: () => importStateSubscription?.dispose() },
   );
