@@ -5,7 +5,10 @@ import com.intellij.ide.starter.sdk.JdkDownloaderFacade
 import com.intellij.platform.workspace.jps.entities.LibraryEntity
 import com.intellij.platform.workspace.jps.entities.LibraryRootTypeId
 import com.intellij.platform.workspace.jps.entities.ModuleEntity
+import com.intellij.platform.workspace.jps.entities.customImlData
+import com.jetbrains.ls.imports.api.IMPORT_JAVA_HOME_KEY
 import com.jetbrains.ls.imports.api.WorkspaceImportOptions
+import com.jetbrains.ls.imports.api.externalSystemId
 import com.jetbrains.ls.imports.core.provider.TestDataDirSource
 import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -149,9 +152,21 @@ class GradleProjectImportTest : GradleProjectImportTestCase() {
     // Java 17 should be used to run Gradle
     // Java 21 is expected as the project language level as well as language level for modules
     fun gradleToolchainAndJavaTargetVersion() = doGradleTest(
-        "GradleToolchainAndJavaTargetVersion",
-        JdkDownloaderFacade.jdk17,
-        WorkspaceComparator().withIgnoredJdkRoots()
+        project = "GradleToolchainAndJavaTargetVersion",
+        jdkToUse = JdkDownloaderFacade.jdk17,
+        comparator = WorkspaceComparator().withIgnoredJdkRoots(),
+        entityStorageVerifier = { storage ->
+            // The stamp names the JDK that ran Gradle, not the toolchain JDK the modules compile with.
+            val gradleModules = storage.entities(ModuleEntity::class.java).filter { it.externalSystemId == "GRADLE" }.toList()
+            assertTrue(gradleModules.isNotEmpty(), "The import produced no Gradle module")
+            for (module in gradleModules) {
+                assertEquals(
+                    JdkDownloaderFacade.jdk17.home.toString(),
+                    module.customImlData?.customModuleOptions?.get(IMPORT_JAVA_HOME_KEY),
+                    "Module ${module.name} carries no Gradle JDK stamp"
+                )
+            }
+        }
     )
 
     @Test

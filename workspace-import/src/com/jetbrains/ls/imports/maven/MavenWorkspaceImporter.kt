@@ -22,6 +22,7 @@ import com.jetbrains.ls.imports.api.WorkspaceImportOptions
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
+import com.jetbrains.ls.imports.utils.stampBuildToolJavaHome
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
 import com.jetbrains.ls.imports.json.WorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData
@@ -36,6 +37,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
+import org.jetbrains.annotations.ApiStatus
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Path
@@ -108,16 +110,21 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         LOG.info("Importing Maven project from: $projectDirectory (pom: $pomFile)")
         val wrapper = projectDirectory / (if (OS.CURRENT == OS.Windows) "mvnw.cmd" else "mvnw")
         val mavenHome = System.getProperty(JB_MAVEN_HOME_PROPERTY)?.let { Path.of(it) }
-        // A `java-home` configured for this project wins over the JVM property and the ambient environment.
+        // A `java-home` configured for this project wins over the JVM property, then the ambient `JAVA_HOME`, then
+        // the server's own JVM. The ambient value is named here because `runGoal` starts Maven from an empty
+        // environment, so nothing is inherited.
         val javaHome = options.javaHome?.toString()
             ?: System.getProperty(JB_MAVEN_JAVA_HOME_PROPERTY)
-            ?: if (System.getenv()["JAVA_HOME"] == null) System.getProperty("java.home") else null
+            ?: System.getenv("JAVA_HOME")
+            ?: System.getProperty("java.home")
+        // The value the Maven processes run with. `runGoal` applies the per-project `env` last, so it wins.
+        val mavenJavaHome = options.environment["JAVA_HOME"] ?: javaHome
         val execPath = when {
             wrapper.exists() -> wrapper
             mavenHome != null -> mavenHome / "bin" / if (OS.CURRENT == OS.Windows) "mvn.cmd" else "mvn"
             else -> Path.of(if (OS.CURRENT == OS.Windows) "mvn.cmd" else "mvn")
         }
-        LOG.info("Using Maven: $execPath (JAVA_HOME=${javaHome ?: "unspecified"})")
+        LOG.info("Using Maven: $execPath (JAVA_HOME=$mavenJavaHome)")
 
 
         // `-o` keeps the build in the local repository, so the import never reaches the network.
@@ -135,7 +142,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
             is SuccessResult -> result
         }
         send(ImportEvent.ProgressStatus("Maven model collected, commiting..."))
-        send(ImportEvent.UpdateWorkspaceModel(toStorage(modelWithDeps, null, parameters, pomFile, virtualFileUrlManager, channel)))
+        send(ImportEvent.UpdateWorkspaceModel(toStorage(modelWithDeps, null, parameters, pomFile, virtualFileUrlManager, channel, mavenJavaHome)))
 
         if (skipGenerateSources()) {
             LOG.info("Skipping source generation: $LSP_MAVEN_PROJECT_SKIP_GENERATE_SOURCES_PROPERTY is set")
@@ -157,12 +164,15 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         send(ImportEvent.ProgressStatus("Maven model collected, commiting..."))
         send(
             ImportEvent.UpdateWorkspaceModel(
-                toStorage(modelWithDeps, modelWithGeneratedSources, parameters, pomFile, virtualFileUrlManager, channel)
+                toStorage(modelWithDeps, modelWithGeneratedSources, parameters, pomFile, virtualFileUrlManager, channel, mavenJavaHome)
             )
         )
     }.buffer(Channel.UNLIMITED)
 
-    /** Merges the two goal results into one workspace model; [resultGenSources] is `null` before it has been built. */
+    /**
+     * Merges the two goal results into one workspace model; [resultGenSources] is `null` before it has been built.
+     * [javaHome] is the JDK the goals ran with; it is stamped on every module for the build command.
+     */
     private fun toStorage(
         resultDeps: SuccessResult,
         resultGenSources: SuccessResult?,
@@ -170,6 +180,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         pomFile: Path,
         virtualFileUrlManager: VirtualFileUrlManager,
         events: SendChannel<ImportEvent>,
+        javaHome: String?,
     ): EntityStorage {
         val projectDirectory = parameters.projectDirectory
         val merged = mergeResults(resultDeps, resultGenSources) as SuccessResult
@@ -183,7 +194,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                 projectDirectory,
                 WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager)),
                 virtualFileUrlManager, false,
-                "MAVEN"
+                MAVEN_EXTERNAL_SYSTEM_ID
             )
             // The launch/build path re-runs Maven from the module's import root and lets Maven resolve
             // the pom from the working directory; record the build file the import actually used so a
@@ -192,6 +203,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                 modifyExternalSystemModuleOptionsEntity(it) { rootProjectPath = pomFile.toString() }
             }
             fixMissingProjectSdk(parameters.options.javaHome ?: parameters.defaultSdkPath, virtualFileUrlManager)
+            stampMavenJavaHome(javaHome)
         }
     }
 
@@ -418,4 +430,15 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         val currentPath = environment[pathKey]
         environment[pathKey] = if (currentPath.isNullOrEmpty()) path else "$path${File.pathSeparator}$currentPath"
     }
+}
+
+private const val MAVEN_EXTERNAL_SYSTEM_ID = "MAVEN"
+
+/**
+ * Records [javaHome] as [com.jetbrains.ls.imports.api.importJavaHome] on every module the Maven importer produced.
+ * A `null` or blank [javaHome] records nothing, see [stampBuildToolJavaHome].
+ */
+@ApiStatus.Internal
+fun MutableEntityStorage.stampMavenJavaHome(javaHome: String?) {
+    stampBuildToolJavaHome(MAVEN_EXTERNAL_SYSTEM_ID, javaHome)
 }

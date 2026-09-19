@@ -30,6 +30,7 @@ import com.jetbrains.ls.imports.gradle.util.GradleSyncResultHandler
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter.postProcessWorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData
 import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
+import com.jetbrains.ls.imports.utils.stampBuildToolJavaHome
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.Flow
@@ -38,6 +39,7 @@ import kotlinx.coroutines.flow.channelFlow
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.IntermediateResultHandler
 import org.gradle.tooling.ProjectConnection
+import org.jetbrains.annotations.ApiStatus
 import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.div
@@ -89,7 +91,8 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                                 metadata,
                                 parameters,
                                 virtualFileUrlManager,
-                                channel
+                                channel,
+                                jdkToUse
                             )
                         )
                     )
@@ -107,6 +110,7 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         parameters: WorkspaceImportParameters,
         virtualFileUrlManager: VirtualFileUrlManager,
         events: SendChannel<ImportEvent>,
+        javaHome: String?,
     ): EntityStorage {
         val projectDirectory = parameters.projectDirectory
         val entitySource = WorkspaceEntitySource(projectDirectory.toVirtualFileUrl(virtualFileUrlManager))
@@ -121,9 +125,10 @@ object GradleWorkspaceImporter : WorkspaceImporter {
                 entitySource,
                 virtualFileUrlManager,
                 ignoreDuplicateLibsAndSdks = true,
-                "GRADLE"
+                GRADLE_EXTERNAL_SYSTEM_ID
             )
             fixMissingProjectSdk(parameters.options.javaHome ?: parameters.defaultSdkPath, virtualFileUrlManager)
+            stampGradleJavaHome(javaHome)
         }
     }
 
@@ -162,4 +167,15 @@ object GradleWorkspaceImporter : WorkspaceImporter {
         executer.run(syncResultHandler.asResultHandler())
         return syncResultHandler.getSyncResult()
     }
+}
+
+private const val GRADLE_EXTERNAL_SYSTEM_ID = "GRADLE"
+
+/**
+ * Records [javaHome] as [com.jetbrains.ls.imports.api.importJavaHome] on every module the Gradle importer produced.
+ * A `null` or blank [javaHome] records nothing, see [stampBuildToolJavaHome].
+ */
+@ApiStatus.Internal
+fun MutableEntityStorage.stampGradleJavaHome(javaHome: String?) {
+    stampBuildToolJavaHome(GRADLE_EXTERNAL_SYSTEM_ID, javaHome)
 }
