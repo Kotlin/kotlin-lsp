@@ -222,6 +222,7 @@ async function runBuild(
     tool: build.tool,
     command: build.command,
     cwd: build.cwd,
+    env: build.env,
     line,
     close: (exitCode) => closeEmitter.fire(exitCode),
     running,

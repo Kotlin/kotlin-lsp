@@ -197,6 +197,15 @@ export function createOutputLineSplitter(emit: (line: string) => void): OutputLi
   };
 }
 
+/**
+ * The environment of the build tool process, as the server chooses it. Gradle reports the `JAVA_HOME` the import
+ * ran with, so the wrapper starts a JVM that Gradle supports instead of whatever `java` is on the `PATH`.
+ *
+ * It is the *tool's* environment, never the debuggee's. The client lays it over the extension host's own
+ * environment, so a variable here wins over the shell's, and a variable the server does not name is inherited.
+ */
+export type BuildToolEnvironment = Record<string, string>;
+
 /** The shape `intellij.java.resolveBuildCommand` answers with; see the server's `BuildCommandResponse`. */
 export interface ResolvedBuildCommand {
   supported: boolean;
@@ -204,13 +213,15 @@ export interface ResolvedBuildCommand {
   tool?: string;
   cwd?: string;
   command?: string[];
+  env?: BuildToolEnvironment;
 }
 
-/** A build that has something to run: the tool's own invocation, and where to run it. */
+/** A build that has something to run: the tool's own invocation, where to run it, and what to run it with. */
 export interface BuildToRun {
   tool?: string;
   command: string[];
   cwd?: string;
+  env?: BuildToolEnvironment;
 }
 
 /**
@@ -227,7 +238,7 @@ export interface BuildToRun {
 export function buildToRun(resolved: ResolvedBuildCommand): BuildToRun | undefined {
   if (!resolved.supported) return undefined;
   if (!resolved.command || resolved.command.length === 0) return undefined;
-  return { tool: resolved.tool, command: resolved.command, cwd: resolved.cwd };
+  return { tool: resolved.tool, command: resolved.command, cwd: resolved.cwd, env: resolved.env };
 }
 
 /**
@@ -323,6 +334,8 @@ export interface RunProcessOptions {
   tool: string | undefined;
   command: string[];
   cwd: string | undefined;
+  /** Laid over the extension host's environment; see [BuildToolEnvironment]. Absent means inherit it as is. */
+  env?: BuildToolEnvironment;
   /** Writes one line wherever the build is being shown. */
   line: (text: string) => void;
   /**
@@ -344,6 +357,7 @@ export function runProcess({
   tool,
   command,
   cwd,
+  env,
   line,
   close,
   running,
@@ -378,7 +392,13 @@ export function runProcess({
     // `spawn` overload, not through the class. The wider type makes `child.stdout` nullable.
     let child: ChildProcessWithoutNullStreams;
     try {
-      child = spawn(spawnWith.command, spawnWith.args, { cwd, shell: spawnWith.shell });
+      child = spawn(spawnWith.command, spawnWith.args, {
+        cwd,
+        // The server's variables win over the host's, which is the whole point: a `JAVA_HOME` the shell did not
+        // set, or set to a JDK the tool cannot run on, is what made the wrapper pick `java` off the `PATH`.
+        env: env === undefined ? undefined : { ...process.env, ...env },
+        shell: spawnWith.shell,
+      });
     } catch (e) {
       line(`Failed to start the build: ${errorMessage(e)}`);
       finish(1);

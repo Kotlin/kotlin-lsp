@@ -233,7 +233,23 @@ describe('buildToRun', () => {
         tool: 'maven',
         cwd: '/p',
         command: ['mvn', 'compile'],
+        env: undefined,
       },
+    );
+  });
+
+  // Regression: the server started reporting the tool's environment, and the client dropped it on the floor, so
+  // a Gradle build from VS Code still ran on whatever `java` the PATH had.
+  test('keeps the environment the server chose for the tool', () => {
+    assert.deepEqual(
+      buildToRun({
+        supported: true,
+        tool: 'gradle',
+        cwd: '/p',
+        command: ['/p/gradlew', ':classes'],
+        env: { JAVA_HOME: '/jdks/jbr-25' },
+      })?.env,
+      { JAVA_HOME: '/jdks/jbr-25' },
     );
   });
 
@@ -386,6 +402,7 @@ describe('runProcess', () => {
   const run = (options: {
     command: string[];
     cwd?: string;
+    env?: Record<string, string>;
     running?: RunningBuild;
   }): Promise<{ lines: string[]; codes: number[] }> => {
     const lines: string[] = [];
@@ -395,6 +412,7 @@ describe('runProcess', () => {
       tool: 'maven',
       command: options.command,
       cwd: options.cwd,
+      env: options.env,
       line: (text) => lines.push(text),
       close: (exitCode) => codes.push(exitCode),
       running,
@@ -452,6 +470,20 @@ describe('runProcess', () => {
     assert.ok(reported, `the child did not report its cwd: ${JSON.stringify(lines)}`);
     // Compared through `realpath`, because macOS gives /var/folders/... for a /private/var/... directory.
     assert.equal(realpathSync(reported), realpathSync(tmpdir()));
+  });
+
+  // The server's `JAVA_HOME` has to reach the wrapper, and the rest of the host environment has to survive: a
+  // child with *only* the server's variables has no PATH, and a Gradle wrapper without one finds no `java` at all.
+  test('lays the environment it is given over the host environment', async () => {
+    const { lines } = await run({
+      command: node(
+        'process.stdout.write("env=" + JSON.stringify([process.env.JAVA_HOME, process.env.PATH !== undefined]))',
+      ),
+      env: { JAVA_HOME: '/jdks/jbr-25' },
+    });
+    const reported = lines.find((l) => l.startsWith('env='))?.slice('env='.length);
+    assert.ok(reported, `the child did not report its environment: ${JSON.stringify(lines)}`);
+    assert.deepEqual(JSON.parse(reported), ['/jdks/jbr-25', true]);
   });
 
   // Regression (LSP-1716): `spawn` reports a rejected argument with a *throw* and not with an `error` event.
