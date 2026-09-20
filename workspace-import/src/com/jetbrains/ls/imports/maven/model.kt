@@ -80,18 +80,20 @@ private fun rankSourceRoots(
     val typesRank = arrayOf("java-source", "java-test", "java-resource", "java-test-resource")
         .mapIndexed { i, s -> s to i }.toMap()
 
+    // The best-ranked type wins. A root is generated when any report of that path says so: a generator that
+    // registers its output as a plain compile source root reports the same path once with the flag and once without.
     val result = HashMap<String, SourceRootData>()
     fun addWithRank(data: SourceRootData) {
         val prev = result[data.path]
         if (prev == null) {
             result[data.path] = data
-        } else {
-            val previousRank = typesRank[prev.type]
-            val newRank = typesRank[data.type] ?: return
-            if (previousRank == null || previousRank > newRank) {
-                result[data.path] = data
-            }
+            return
         }
+        val generated = prev.generated || data.generated
+        val previousRank = typesRank[prev.type]
+        val newRank = typesRank[data.type]
+        val best = if (newRank != null && (previousRank == null || previousRank > newRank)) data else prev
+        result[data.path] = best.copy(generated = generated)
     }
     roots.forEach(::addWithRank)
     return result

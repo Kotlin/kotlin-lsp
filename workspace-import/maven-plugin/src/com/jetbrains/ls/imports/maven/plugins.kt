@@ -158,7 +158,7 @@ private fun MutableList<SourceRootData>.addOpenApiGeneratorGeneratedSources(proj
             ?: pluginConfig?.getChild("output")?.value?.trim()
             ?: "${project.build?.directory ?: "target"}/generated-sources/openapi"
         if (output.isNotEmpty()) {
-            add(SourceRootData(toAbsolutePath(project, "$output/src/main/java"), "java-source"))
+            add(SourceRootData(toAbsolutePath(project, "$output/src/main/java"), "java-source", generated = true))
         }
     }
 }
@@ -200,7 +200,7 @@ private fun MutableList<SourceRootData>.addJooqGeneratedSources(project: MavenPr
             ?.value?.trim()
             ?: "${project.build?.directory ?: "target"}/generated-sources/jooq"
         if (targetDir.isNotEmpty()) {
-            add(SourceRootData(toAbsolutePath(project, targetDir), "java-source"))
+            add(SourceRootData(toAbsolutePath(project, targetDir), "java-source", generated = true))
         }
     }
 }
@@ -259,7 +259,7 @@ private fun MutableList<SourceRootData>.addSwaggerGeneratedSources(project: Mave
             ?: pluginConfig?.getChild("outputPath")?.value?.trim()
             ?: "${project.build?.directory ?: "target"}/generated-sources/swagger"
         if (outputPath.isNotEmpty()) {
-            add(SourceRootData(toAbsolutePath(project, outputPath), "java-resource"))
+            add(SourceRootData(toAbsolutePath(project, outputPath), "java-resource", generated = true))
         }
     }
 }
@@ -280,7 +280,7 @@ private fun MutableList<SourceRootData>.addOutputDirectoryFromExecutions(
             ?: pluginConfig?.getChild(configChildName)?.value?.trim()
             ?: "${project.build?.directory ?: "target"}/$defaultRelativePath"
         if (outputDir.isNotEmpty()) {
-            add(SourceRootData(toAbsolutePath(project, outputDir), rootType))
+            add(SourceRootData(toAbsolutePath(project, outputDir), rootType, generated = true))
         }
     }
 }

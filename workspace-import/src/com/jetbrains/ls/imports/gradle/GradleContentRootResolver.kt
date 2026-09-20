@@ -30,12 +30,15 @@ class GradleContentRootResolver(metadata: ProjectMetadata) {
             sourceSet
         )
         val isTest = sourceSet.isTest()
+        // A root under the build directory holds files a task wrote, e.g. the annotation-processor output.
+        val buildRootPath = module.gradleProject.buildDirectory.toPath()
         val sourceRoots = mutableMapOf<File, SourceRootData>()
         for (sourceRootFolder in sourceSet.sources) {
             if (!sourceRoots.containsKey(sourceRootFolder) && sourceRootFolder.exists() && sourceRootFolder.isDirectory) {
                 sourceRoots[sourceRootFolder] = SourceRootData(
                     sourceRootFolder.path,
-                    if (isTest) "java-test" else "java-source"
+                    if (isTest) "java-test" else "java-source",
+                    generated = sourceRootFolder.toPath().startsWith(buildRootPath),
                 )
             }
         }
@@ -43,7 +46,8 @@ class GradleContentRootResolver(metadata: ProjectMetadata) {
             if (!sourceRoots.containsKey(sourceRootFolder) && sourceRootFolder.exists() && sourceRootFolder.isDirectory) {
                 sourceRoots[sourceRootFolder] = SourceRootData(
                     sourceRootFolder.path,
-                    if (isTest) "java-test-resource" else "java-resource"
+                    if (isTest) "java-test-resource" else "java-resource",
+                    generated = sourceRootFolder.toPath().startsWith(buildRootPath),
                 )
             }
         }

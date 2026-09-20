@@ -463,7 +463,8 @@
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/buildSrc/build/generated-sources/kotlin-dsl-external-plugin-spec-builders/kotlin",
-                            "type": "java-source"
+                            "type": "java-source",
+                            "generated": true
                         }
                     ]
                 },
@@ -472,7 +473,8 @@
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/buildSrc/build/generated-sources/kotlin-dsl-accessors/kotlin",
-                            "type": "java-source"
+                            "type": "java-source",
+                            "generated": true
                         }
                     ]
                 },
@@ -481,7 +483,8 @@
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/buildSrc/build/generated-sources/kotlin-dsl-plugins/kotlin",
-                            "type": "java-source"
+                            "type": "java-source",
+                            "generated": true
                         }
                     ]
                 }

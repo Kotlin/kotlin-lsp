@@ -390,7 +390,8 @@
                     "sourceRoots": [
                         {
                             "path": "<WORKSPACE>/app/build/generated/data_binding_base_class_source_out/debug/out",
-                            "type": "java-source"
+                            "type": "java-source",
+                            "generated": true
                         }
                     ]
                 }

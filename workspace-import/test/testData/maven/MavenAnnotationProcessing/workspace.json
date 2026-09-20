@@ -21,7 +21,8 @@
                         },
                         {
                             "path": "<WORKSPACE>/target/generated-sources/annotations",
-                            "type": "java-source"
+                            "type": "java-source",
+                            "generated": true
                         },
                         {
                             "path": "<WORKSPACE>/src/main/resources",
@@ -33,7 +34,8 @@
                         },
                         {
                             "path": "<WORKSPACE>/target/generated-test-sources/test-annotations",
-                            "type": "java-test"
+                            "type": "java-test",
+                            "generated": true
                         },
                         {
                             "path": "<WORKSPACE>/src/test/resources",

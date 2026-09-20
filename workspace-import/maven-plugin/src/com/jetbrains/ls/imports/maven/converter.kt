@@ -202,6 +202,11 @@ private fun dependencyData(importDependencies: List<MavenImportDependency>): Lis
 }
 
 
+/**
+ * Collects the source roots of [module]. A root that a build step writes is marked generated: the compiler's
+ * annotation-processor output, the output of a known source-generating plugin, and any root under the build
+ * directory (`target/`). A `build-helper-maven-plugin` root outside the build directory is a hand-written one.
+ */
 private fun sourceRootData(
     module: MavenModuleData,
     project: MavenProject,
@@ -218,7 +223,7 @@ private fun sourceRootData(
         (project.getCompilerGeneratedSourcesDir("default-compile")
          ?: project.defaultAnnotationProcessorSourcesDir(testSources = false))
             ?.takeIf { belongsToProject(it) }
-            ?.let { add(SourceRootData(it, "java-source")) }
+            ?.let { add(SourceRootData(it, "java-source", generated = true)) }
         project.resources
             ?.map { it.directory }
             ?.filter { belongsToProject(it) }
@@ -234,7 +239,7 @@ private fun sourceRootData(
         (project.getCompilerGeneratedTestSourcesDir("default-testCompile")
          ?: project.defaultAnnotationProcessorSourcesDir(testSources = true))
             ?.takeIf { belongsToProject(it) }
-            ?.let { add(SourceRootData(it, "java-test")) }
+            ?.let { add(SourceRootData(it, "java-test", generated = true)) }
         project.testResources
             ?.map { it.directory }
             ?.filter { belongsToProject(it) }
@@ -246,6 +251,15 @@ private fun sourceRootData(
             ?.forEach { add(SourceRootData(it, "java-test")) }
     }
     addPluginGeneratedSources(project, module.type)
+    markRootsUnderBuildDirectoryGenerated(project)
+}
+
+private fun MutableList<SourceRootData>.markRootsUnderBuildDirectoryGenerated(project: MavenProject) {
+    val buildDirectory = project.build?.directory?.let { Path(it).absolute() } ?: return
+    replaceAll { root ->
+        if (root.generated || !Path(root.path).absolute().startsWith(buildDirectory)) root
+        else root.copy(generated = true)
+    }
 }
 
 private fun contentRootData(

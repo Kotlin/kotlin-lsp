@@ -81,6 +81,8 @@ data class ContentRootData(
 data class SourceRootData(
     val path: String,
     val type: String,
+    /** True for a root that a build step writes, e.g. `target/generated-sources/annotations`. */
+    val generated: Boolean = false,
 )
 
 @Serializable
