@@ -1,0 +1,50 @@
+{
+    "modules": [
+        {
+            "name": "prefixed",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/src",
+                            "type": "java-source",
+                            "packagePrefix": "com.foo"
+                        },
+                        {
+                            "path": "<WORKSPACE>/gen",
+                            "type": "java-source",
+                            "generated": true
+                        },
+                        {
+                            "path": "<WORKSPACE>/resources",
+                            "type": "java-resource",
+                            "relativeOutputPath": "META-INF"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
+        }
+    ],
+    "javaSettings": [
+        {
+            "module": "prefixed",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": true,
+            "compilerOutputs": [
+                "<WORKSPACE>/out/production"
+            ],
+            "compilerOutputsForTests": [
+                "<WORKSPACE>/out/test"
+            ],
+            "languageLevelId": "JDK_17",
+            "manifestAttributes": {}
+        }
+    ]
+}

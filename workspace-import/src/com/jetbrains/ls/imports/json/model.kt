@@ -109,6 +109,12 @@ data class ContentRootData(
 data class SourceRootData(
     val path: String,
     val type: String,
+    /** The `packagePrefix` of a Java source root. Empty when the root has none. */
+    val packagePrefix: String = "",
+    /** True for a Java source or resource root that holds generated files. */
+    val generated: Boolean = false,
+    /** The `relativeOutputPath` of a Java resource root. Empty when the root has none. */
+    val relativeOutputPath: String = "",
 )
 
 @Serializable

@@ -2,6 +2,10 @@
 package com.jetbrains.ls.imports.jps
 
 import com.intellij.java.workspace.entities.JavaModuleSettingsEntity
+import com.intellij.java.workspace.entities.JavaResourceRootPropertiesEntity
+import com.intellij.java.workspace.entities.JavaSourceRootPropertiesEntity
+import com.intellij.java.workspace.entities.javaResourceRoots
+import com.intellij.java.workspace.entities.javaSourceRoots
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.components.ExpandMacroToPathMap
 import com.intellij.openapi.components.impl.getAllMacros
@@ -76,7 +80,9 @@ import org.jetbrains.idea.maven.aether.ProgressConsumer
 import org.jetbrains.idea.maven.aether.RetryProvider
 import org.jetbrains.jps.model.JpsElementFactory
 import org.jetbrains.jps.model.JpsModel
+import org.jetbrains.jps.model.java.JavaResourceRootProperties
 import org.jetbrains.jps.model.java.JavaResourceRootType
+import org.jetbrains.jps.model.java.JavaSourceRootProperties
 import org.jetbrains.jps.model.java.JavaSourceRootType
 import org.jetbrains.jps.model.java.JpsJavaExtensionService
 import org.jetbrains.jps.model.java.JpsJavaModuleType
@@ -291,8 +297,15 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
                                 entitySource = entitySource
                             ) {
                                 this.contentRoot = this@ContentRootEntity
+                                when (val properties = it.properties) {
+                                    is JavaSourceRootProperties -> this.javaSourceRoots = listOf(
+                                        JavaSourceRootPropertiesEntity(properties.isForGeneratedSources, properties.packagePrefix, entitySource)
+                                    )
+                                    is JavaResourceRootProperties -> this.javaResourceRoots = listOf(
+                                        JavaResourceRootPropertiesEntity(properties.isForGeneratedSources, properties.relativeOutputPath, entitySource)
+                                    )
+                                }
                             }
-
                         }
                         this.excludedUrls = module.excludeRootsList.urls.filter { it.startsWith(rootUrl) }.map {
                             ExcludeUrlEntity(

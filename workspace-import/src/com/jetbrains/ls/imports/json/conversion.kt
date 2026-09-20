@@ -5,7 +5,13 @@ package com.jetbrains.ls.imports.json
 import com.intellij.java.workspace.entities.JavaModuleCompilerOptionsEntity
 import com.intellij.java.workspace.entities.JavaModuleSettingsEntity
 import com.intellij.java.workspace.entities.JavaModuleSettingsEntityBuilder
+import com.intellij.java.workspace.entities.JavaResourceRootPropertiesEntity
+import com.intellij.java.workspace.entities.JavaSourceRootPropertiesEntity
+import com.intellij.java.workspace.entities.asJavaResourceRoot
+import com.intellij.java.workspace.entities.asJavaSourceRoot
 import com.intellij.java.workspace.entities.javaCompilerOptions
+import com.intellij.java.workspace.entities.javaResourceRoots
+import com.intellij.java.workspace.entities.javaSourceRoots
 import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.projectRoots.impl.JavaSdkImpl
 import com.intellij.openapi.util.io.FileUtilRt
@@ -40,6 +46,7 @@ import com.intellij.platform.workspace.jps.entities.SdkId
 import com.intellij.platform.workspace.jps.entities.SdkRoot
 import com.intellij.platform.workspace.jps.entities.SdkRootTypeId
 import com.intellij.platform.workspace.jps.entities.SourceRootEntity
+import com.intellij.platform.workspace.jps.entities.SourceRootEntityBuilder
 import com.intellij.platform.workspace.jps.entities.SourceRootTypeId
 import com.intellij.platform.workspace.jps.entities.customImlData
 import com.intellij.platform.workspace.jps.entities.exModuleOptions
@@ -62,6 +69,10 @@ import com.jetbrains.ls.imports.utils.jdkAnnotationsSdkRoots
 import com.jetbrains.ls.imports.utils.toIntellijUri
 import kotlinx.serialization.json.Json
 import org.jetbrains.jps.model.serialization.JpsMavenSettings
+import org.jetbrains.jps.model.serialization.java.JpsJavaModelSerializerExtension.JAVA_RESOURCE_ROOT_ID
+import org.jetbrains.jps.model.serialization.java.JpsJavaModelSerializerExtension.JAVA_TEST_RESOURCE_ROOT_ID
+import org.jetbrains.jps.model.serialization.module.JpsModuleRootModelSerializer.JAVA_SOURCE_ROOT_TYPE_ID
+import org.jetbrains.jps.model.serialization.module.JpsModuleRootModelSerializer.JAVA_TEST_ROOT_TYPE_ID
 import org.jetbrains.kotlin.config.KotlinModuleKind
 import org.jetbrains.kotlin.idea.workspaceModel.CompilerSettingsData
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
@@ -152,12 +163,30 @@ private fun toDataClass(
     excludedPatterns = contentRoot.excludedPatterns,
     excludedUrls = listOf(),
     sourceRoots = contentRoot.sourceRoots.map { sourceRoot ->
+        val javaProperties = sourceRoot.asJavaSourceRoot()
+        val resourceProperties = sourceRoot.asJavaResourceRoot()
         SourceRootData(
             path = toRelativePath(sourceRoot.url, workspacePath),
             type = sourceRoot.rootTypeId.name,
+            packagePrefix = javaProperties?.packagePrefix ?: "",
+            generated = javaProperties?.generated ?: resourceProperties?.generated ?: false,
+            relativeOutputPath = resourceProperties?.relativeOutputPath ?: "",
         )
     }
 )
+
+/**
+ * Attaches the Java properties child that the IDE's `.iml` serializer creates for the same root type.
+ * A Java source root gets its package prefix, a Java resource root gets its output path.
+ */
+private fun SourceRootEntityBuilder.addJavaRootProperties(data: SourceRootData, entitySource: EntitySource) {
+    when (data.type) {
+        JAVA_SOURCE_ROOT_TYPE_ID, JAVA_TEST_ROOT_TYPE_ID ->
+            javaSourceRoots = listOf(JavaSourceRootPropertiesEntity(data.generated, data.packagePrefix, entitySource))
+        JAVA_RESOURCE_ROOT_ID, JAVA_TEST_RESOURCE_ROOT_ID ->
+            javaResourceRoots = listOf(JavaResourceRootPropertiesEntity(data.generated, data.relativeOutputPath, entitySource))
+    }
+}
 
 private fun toDataClass(dependency: ModuleDependencyItem): DependencyData = when (dependency) {
     is ModuleDependency -> DependencyData.Module(
@@ -393,8 +422,11 @@ fun MutableEntityStorage.importWorkspaceData(
                 excludedPatterns = contentRootData.excludedPatterns,
                 entitySource = entitySource,
             ) {
-                sourceRoots =
-                    contentRootData.sourceRoots.map { SourceRootEntity(toAbsolutePath(it.path, workspacePath).toIntellijUri(virtualFileUrlManager), SourceRootTypeId(it.type), entitySource) }
+                sourceRoots = contentRootData.sourceRoots.map {
+                    SourceRootEntity(toAbsolutePath(it.path, workspacePath).toIntellijUri(virtualFileUrlManager), SourceRootTypeId(it.type), entitySource) {
+                        addJavaRootProperties(it, entitySource)
+                    }
+                }
             }
         }
 
