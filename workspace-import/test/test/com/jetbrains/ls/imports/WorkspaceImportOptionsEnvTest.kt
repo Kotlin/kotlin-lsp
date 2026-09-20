@@ -1,9 +1,13 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports
 
+import com.intellij.util.system.OS
 import com.jetbrains.ls.imports.api.WorkspaceImportOptions
+import com.jetbrains.ls.imports.api.environmentVariable
+import com.jetbrains.ls.imports.api.putEnvironment
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import java.nio.file.Path
 
@@ -82,6 +86,37 @@ class WorkspaceImportOptionsEnvTest {
         assertEquals("C:\\Temp", resolved.environment["TMP"])
         assertEquals("C:\\Windows", resolved.environment["SystemRoot"])
         assertFalse("TMPDIR" in resolved.environment)
+    }
+
+    @Test
+    fun `environment variable lookup ignores case on Windows only`() {
+        // Windows accepts `Java_Home` for `JAVA_HOME`, and the resolved environment keeps the client's spelling.
+        val environment = mapOf("Java_Home" to "C:\\jdk-17")
+        assertEquals("C:\\jdk-17", environment.environmentVariable("JAVA_HOME", OS.Windows))
+        assertNull(environment.environmentVariable("JAVA_HOME", OS.Linux))
+        assertNull(environment.environmentVariable("JAVA_HOME", OS.macOS))
+    }
+
+    @Test
+    fun `environment variable lookup prefers the exact key`() {
+        val environment = mapOf("JAVA_HOME" to "/jdk-21", "java_home" to "/jdk-17")
+        assertEquals("/jdk-21", environment.environmentVariable("JAVA_HOME", OS.Windows))
+        assertEquals("/jdk-21", environment.environmentVariable("JAVA_HOME", OS.Linux))
+    }
+
+    @Test
+    fun `put environment replaces a name that differs only in case on Windows`() {
+        // The child gets one JAVA_HOME: the client's `Java_Home` replaces the builder's `JAVA_HOME` instead of joining it.
+        val environment = mutableMapOf("JAVA_HOME" to "C:\\jdk-21", "Path" to "C:\\Windows")
+        environment.putEnvironment(mapOf("Java_Home" to "C:\\jdk-17", "MAVEN_OPTS" to "-Xmx1g"), OS.Windows)
+        assertEquals(mapOf("Java_Home" to "C:\\jdk-17", "Path" to "C:\\Windows", "MAVEN_OPTS" to "-Xmx1g"), environment)
+    }
+
+    @Test
+    fun `put environment keeps differently cased names apart elsewhere`() {
+        val environment = mutableMapOf("JAVA_HOME" to "/jdk-21")
+        environment.putEnvironment(mapOf("Java_Home" to "/jdk-17"), OS.Linux)
+        assertEquals(mapOf("JAVA_HOME" to "/jdk-21", "Java_Home" to "/jdk-17"), environment)
     }
 
     @Test

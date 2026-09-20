@@ -75,9 +75,9 @@ object GradleWorkspaceImporter : WorkspaceImporter {
             .withCustomGradleHome()
             .connect()
 
-        // A `java-home` configured for this project wins over auto-detection.
+        // A `java-home` configured for this project wins over `JAVA_HOME` and auto-detection.
         val jdkToUse = parameters.options.javaHome?.toString()
-            ?: findTheMostCompatibleJdk(project, projectDirectory)
+            ?: findTheMostCompatibleJdk(project, projectDirectory, parameters.options.environment)
 
         // The models are handed over with `trySend` (the channel is unbounded): the Tooling API calls below are
         // blocking and run inside non-suspending lambdas.

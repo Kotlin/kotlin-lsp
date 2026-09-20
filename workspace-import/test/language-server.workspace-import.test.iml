@@ -54,6 +54,7 @@
     <orderEntry type="module" module-name="intellij.platform.testFramework.common" scope="TEST" />
     <orderEntry type="module" module-name="intellij.platform.util" scope="TEST" />
     <orderEntry type="module" module-name="language-server.workspace-import" scope="TEST" />
+    <orderEntry type="module" module-name="intellij.libraries.gradle.tooling" scope="TEST" />
     <orderEntry type="module" module-name="language-server.workspace-import.maven-plugin" scope="TEST" />
     <orderEntry type="library" scope="TEST" name="apache.maven.plugin.api" level="project" />
     <orderEntry type="library" scope="TEST" name="apache.maven.core" level="project" />

@@ -4,9 +4,9 @@ package com.jetbrains.ls.imports.gradle
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.projectRoots.JdkUtil
 import com.intellij.openapi.projectRoots.SimpleJavaSdkType
 import com.intellij.openapi.projectRoots.impl.JavaHomeFinder
-import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.openapi.util.io.toNioPathOrNull
 import com.intellij.util.PathUtil
 import com.intellij.util.SystemProperties
@@ -15,12 +15,15 @@ import com.intellij.util.io.delete
 import com.intellij.util.lang.JavaVersion
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
+import com.jetbrains.ls.imports.api.environmentVariable
+import com.jetbrains.ls.imports.api.putEnvironment
 import com.jetbrains.ls.imports.gradle.compatibility.GradleJvmCompatibilityChecker
 import com.jetbrains.ls.imports.gradle.util.GradleOutputStream
 import kotlinx.coroutines.channels.SendChannel
 import org.gradle.tooling.BuildActionExecuter
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.events.OperationType
+import org.gradle.initialization.layout.BuildLayoutFactory
 import org.gradle.tooling.events.ProgressEvent
 import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.tooling.core.Extras
@@ -34,7 +37,6 @@ import java.util.Properties
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.createTempFile
 import kotlin.io.path.exists
-import kotlin.io.path.isDirectory
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.writeText
 import kotlin.use
@@ -52,6 +54,7 @@ object GradleToolingApiHelper {
     const val LSP_GRADLE_PROJECT_SELF_CONTAINED_INIT_SCRIPT: String = "com.jetbrains.ls.imports.gradle.selfContainedInitScript"
     const val LSP_GRADLE_PROJECT_SELF_CONTAINED_PROXY_URL_PROPERTY: String = "com.jetbrains.ls.imports.gradle.selfContainedProxyUrl"
 
+    private const val WRAPPER_PROPERTIES: String = "gradle/wrapper/gradle-wrapper.properties"
     private const val IDEA_ACTIVE_PROPERTY: String = "idea.active"
     private const val IDEA_SYNC_ACTIVE_PROPERTY: String = "idea.sync.active"
     private const val KOTLIN_LSP_IMPORT_PROPERTY: String = "com.jetbrains.ls.imports.gradle"
@@ -64,13 +67,30 @@ object GradleToolingApiHelper {
         KOTLIN_LSP_IMPORT_PROPERTY to "true",
     )
 
-    fun findTheMostCompatibleJdk(project: Project, projectDirectory: Path): String? {
+    /**
+     * The JDK the Gradle Tooling API runs on, in this order: the [LSP_GRADLE_JAVA_HOME_PROPERTY] system property,
+     * the `JAVA_HOME` of [environment] or of this process when the effective Gradle version can run on it, the
+     * newest compatible installed JDK, then the server's own JVM. The effective Gradle version is the wrapper's,
+     * or the Tooling API's own version when the project has no wrapper. Without a wrapper the method returns
+     * `null` when `JAVA_HOME` does not help, and the Tooling API runs on the server's own JVM. A wrapper whose
+     * distribution is not a known Gradle release gives `null` right away: no JDK can be checked against it.
+     */
+    fun findTheMostCompatibleJdk(project: Project, projectDirectory: Path, environment: Map<String, String> = emptyMap()): String? {
         val explicitJavaHomeValue = getProperty(LSP_GRADLE_JAVA_HOME_PROPERTY)
         if (explicitJavaHomeValue != null) {
             return explicitJavaHomeValue
         }
-        val gradleVersion = guessGradleVersion(projectDirectory) ?: return null
-        val suggestedJavaPath = suggestJavaPath(project, gradleVersion) ?: tryJavaFromJavaHome(gradleVersion)
+        val wrapperProperties = findWrapperProperties(projectDirectory)
+        val wrapperVersion = wrapperProperties?.let(::guessGradleVersion)
+        if (wrapperProperties != null && wrapperVersion == null) {
+            LOG.info("Gradle wrapper $wrapperProperties names no known Gradle release, the server's own JVM runs the Tooling API")
+            return null
+        }
+        val gradleVersion = wrapperVersion ?: GradleVersion.current()
+        val ambientJavaHome = environment.environmentVariable("JAVA_HOME") ?: System.getenv("JAVA_HOME")
+        javaHomeForGradle(ambientJavaHome, gradleVersion, ::javaVersionOf)?.let { return it }
+        if (wrapperVersion == null) return null
+        val suggestedJavaPath = suggestJavaPath(project, gradleVersion) ?: tryServerJvm(gradleVersion)
 
         if (suggestedJavaPath == null) {
             throw WorkspaceImportException(
@@ -85,6 +105,32 @@ object GradleToolingApiHelper {
 
         LOG.info("Gradle Tooling API will use Java located in $suggestedJavaPath")
         return suggestedJavaPath
+    }
+
+    /**
+     * Returns [javaHome] when Gradle can run on it: [javaVersionOf] parses the JDK it names, and [gradleVersion]
+     * supports that Java version. A `null` or blank [javaHome] gives `null`.
+     */
+    fun javaHomeForGradle(javaHome: String?, gradleVersion: GradleVersion, javaVersionOf: (String) -> JavaVersion?): String? {
+        if (javaHome.isNullOrBlank()) return null
+        val javaVersion = javaVersionOf(javaHome)
+        if (javaVersion == null) {
+            LOG.warn("JAVA_HOME=$javaHome does not name a JDK, it is ignored")
+            return null
+        }
+        if (!GradleJvmCompatibilityChecker.isSupported(gradleVersion, javaVersion)) {
+            LOG.info("JAVA_HOME=$javaHome (Java $javaVersion) cannot run $gradleVersion, looking for another JDK")
+            return null
+        }
+        LOG.info("Gradle Tooling API will use JAVA_HOME=$javaHome")
+        return javaHome
+    }
+
+    /** The Java version of the JDK at [javaHome], or `null` when the directory holds no complete JDK. */
+    private fun javaVersionOf(javaHome: String): JavaVersion? {
+        val home = javaHome.toNioPathOrNull() ?: return null
+        if (!JdkUtil.checkForJdk(home)) return null
+        return JavaVersion.tryParse(SimpleJavaSdkType.getInstance().getVersionString(javaHome))
     }
 
     fun <T> BuildActionExecuter<T>.addInitScripts(initScripts: Iterable<Path>): BuildActionExecuter<T> {
@@ -111,7 +157,7 @@ object GradleToolingApiHelper {
     fun <T> BuildActionExecuter<T>.configureEnvironment(externalEnvironment: Map<String, String>): BuildActionExecuter<T> {
         val effectiveEnvironment: Map<String, String> = buildMap {
             putAll(System.getenv())
-            putAll(externalEnvironment)
+            putEnvironment(externalEnvironment)
             if (getProperty(LSP_GRADLE_PROJECT_OFFLINE_PROPERTY)?.toBoolean() == true) {
                 put("SELF_CONTAINED_PROXY_URL", getProperty(LSP_GRADLE_PROJECT_SELF_CONTAINED_PROXY_URL_PROPERTY))
                 put("GRADLE_USER_HOME", getProperty(LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY))
@@ -269,13 +315,11 @@ object GradleToolingApiHelper {
             ?.second
     }
 
-    private fun tryJavaFromJavaHome(gradleVersion: GradleVersion): String? {
+    private fun tryServerJvm(gradleVersion: GradleVersion): String? {
         val javaHome = SystemProperties.getJavaHome()
-        val javaHomeVersionString = SimpleJavaSdkType.getInstance()
-            .getVersionString(javaHome)
-        val javaHomeVersion = JavaVersion.tryParse(javaHomeVersionString) ?: return null
+        val javaHomeVersion = javaVersionOf(javaHome) ?: return null
         if (GradleJvmCompatibilityChecker.isSupported(gradleVersion, javaHomeVersion)) {
-            LOG.info("A Java distribution defined by the JAVA_HOME environment variable will be used for Gradle execution")
+            LOG.info("The server's own JVM $javaHome will be used for Gradle execution")
             return javaHome
         }
         return null
@@ -286,54 +330,56 @@ object GradleToolingApiHelper {
             .replace("'", "\\'")
     }
 
-    private fun guessGradleVersion(projectDirectory: Path): GradleVersion? {
-        val propertiesPath = findWrapperProperties(projectDirectory) ?: return null
+    private fun guessGradleVersion(propertiesPath: Path): GradleVersion? {
         val properties = readGradleProperties(propertiesPath) ?: return null
-        val url: URI = properties["distributionUrl"]
-            .let {
-                return@let try {
-                    URI.create(it as String)
-                } catch (_: Exception) {
-                    null
-                }
-            } ?: return null
-        val versionString = url.path.split("/")
-            .last()
+        val distributionUrl = properties.getProperty("distributionUrl") ?: return null
+        return gradleVersionOfDistribution(distributionUrl)
+    }
+
+    /**
+     * The Gradle release a wrapper `distributionUrl` names, such as `.../gradle-8.11-bin.zip`, or `null` for
+     * a custom distribution whose file name carries no version, such as `.../8.11/gradle.zip`.
+     */
+    fun gradleVersionOfDistribution(distributionUrl: String): GradleVersion? {
+        val path = try {
+            URI.create(distributionUrl).path
+        } catch (_: Exception) {
+            null
+        } ?: return null
+        val versionString = path.substringAfterLast('/')
             .removeSuffix("-bin.zip")
             .removeSuffix("-all.zip")
             .removePrefix("gradle-")
         return try {
             GradleVersion.version(versionString)
         } catch (_: Exception) {
-            return null
+            null
         }
     }
 
-    private fun findWrapperProperties(root: Path): Path? {
-        val gradleDir = if (root.isRegularFile()) root.resolveSibling("gradle") else root.resolve("gradle")
-        if (!gradleDir.isDirectory()) {
-            return null
+    /**
+     * The build root the Gradle connector resolves for [projectDirectory], through Gradle's own [BuildLayoutFactory]
+     * with the connector's default upward search: the nearest directory, [projectDirectory] itself or an ancestor,
+     * that holds a `settings.gradle`, `settings.gradle.kts` or `settings.gradle.dcl` script, else [projectDirectory].
+     * A `buildSrc` directory is its own root, Gradle does not search above it. Importing a subproject must read the
+     * wrapper of the build it belongs to, as the connector does.
+     */
+    fun gradleBuildRoot(projectDirectory: Path): Path {
+        val start = if (projectDirectory.isRegularFile()) projectDirectory.parent ?: projectDirectory else projectDirectory
+        return try {
+            BuildLayoutFactory().getLayoutFor(start.toFile(), true).rootDirectory.toPath()
+        } catch (e: Exception) {
+            LOG.warn("Gradle build layout of $start is unknown, it is taken as the build root", e)
+            start
         }
-        val wrapperDir = gradleDir.resolve("wrapper")
-        if (!wrapperDir.isDirectory()) {
-            return null
-        }
-        try {
-            Files.list(wrapperDir)
-                .use { pathsStream ->
-                    val candidates = pathsStream
-                        .filter {
-                            FileUtilRt.extensionEquals(it.fileName.toString(), "properties") && it.isRegularFile()
-                        }
-                        .toList()
-                    if (candidates.size != 1) {
-                        return null
-                    }
-                    return candidates.first()
-                }
-        } catch (_: Exception) {
-            return null
-        }
+    }
+
+    /**
+     * The `gradle/wrapper/gradle-wrapper.properties` of the build [projectDirectory] belongs to, the file the connector
+     * reads, or `null` when that build has no wrapper.
+     */
+    fun findWrapperProperties(projectDirectory: Path): Path? {
+        return gradleBuildRoot(projectDirectory).resolve(WRAPPER_PROPERTIES).takeIf { it.isRegularFile() }
     }
 
     private fun readGradleProperties(propertiesFile: Path): Properties? {
