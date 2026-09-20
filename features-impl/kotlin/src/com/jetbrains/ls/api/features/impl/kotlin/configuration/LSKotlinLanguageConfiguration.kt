@@ -51,6 +51,7 @@ import com.jetbrains.ls.api.features.impl.kotlin.semanticTokens.LSKotlinSemantic
 import com.jetbrains.ls.api.features.impl.kotlin.signatureHelp.LSKotlinSignatureHelpProvider
 import com.jetbrains.ls.api.features.impl.kotlin.symbols.LSKotlinDocumentSymbolProvider
 import com.jetbrains.ls.api.features.impl.kotlin.symbols.LSKotlinWorkspaceSymbolProvider
+import com.jetbrains.ls.api.features.impl.kotlin.typeHierarchy.LSKotlinTypeHierarchyProvider
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.analyzer.api.AnalyzerContextKind
 import com.jetbrains.ls.snapshot.api.impl.core.LSConfigurationData
@@ -105,6 +106,7 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
                 else -> FoldingRangeKind.Region
             }
         },
+        LSKotlinTypeHierarchyProvider,
         LSKotlinCallHierarchyProvider,
         LSKotlinCallHierarchyRenderer
     ),
