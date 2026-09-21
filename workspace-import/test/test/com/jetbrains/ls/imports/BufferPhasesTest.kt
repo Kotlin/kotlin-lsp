@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
-/** Buffering of the import phases, which is all a `DelegatedBufferizedImporter` adds to the importer it wraps. */
-class DelegatedBufferizedImporterTest {
+/** Buffering of the import phases: the `bufferPhases` operator the import cycle applies per target. */
+class BufferPhasesTest {
     private val firstPhase: EntityStorage = MutableEntityStorage.create().toSnapshot()
     private val lastPhase: EntityStorage = MutableEntityStorage.create().toSnapshot()
 
