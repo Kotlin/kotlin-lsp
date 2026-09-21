@@ -29,6 +29,7 @@ import com.intellij.psi.search.SearchScope
 import com.intellij.psi.search.searches.AnnotatedElementsSearch
 import com.intellij.psi.search.searches.ClassInheritorsSearch
 import com.intellij.psi.search.searches.FunctionalExpressionSearch
+import com.intellij.psi.util.PsiUtilCore
 import com.intellij.psi.util.parentOfType
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
@@ -147,7 +148,7 @@ internal object LSKotlinTypeHierarchyProvider : LSTypeHierarchyProvider, LSUniqu
         val editor = ImaginaryEditor(psiFile.project, psiFile.fileDocument)
         val resolved = findElementUnderCaret(editor, offset)?.asClass()
         if (resolved != null) return resolved
-        val leaf = psiFile.findElementAt(offset) ?: return null
+        val leaf = PsiUtilCore.getElementAtOffset(psiFile, offset)
         return generateSequence(leaf.parentOfType<KtClassOrObject>(withSelf = true)) { it.parentOfType<KtClassOrObject>() }
             .firstOrNull { it.name != null }
     }
