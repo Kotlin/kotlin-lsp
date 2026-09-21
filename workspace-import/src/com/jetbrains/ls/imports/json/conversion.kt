@@ -614,7 +614,6 @@ private fun addFacetRecursive(
     FacetEntity(
         name = data.name,
         typeId = FacetEntityTypeId(data.type),
-        moduleId = ModuleId(moduleEntity.name),
         entitySource = moduleEntity.entitySource
     ) {
         configurationXmlTag = data.configuration?.let { toXml(it.copy(tag = "configuration")) }

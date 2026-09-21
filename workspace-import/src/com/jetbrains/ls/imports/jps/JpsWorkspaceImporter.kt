@@ -323,10 +323,9 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
                 }
                 if (kotlinFacetModuleExtension != null) {
                     val settings = kotlinFacetModuleExtension.settings
-                    this.kotlinSettings = listOf(
+                    this.moduleSettings = listOf(
                         KotlinSettingsEntity(
                             name = KotlinFacetType.INSTANCE.presentableName,
-                            moduleId = ModuleId(module.name),
                             sourceRoots = emptyList(),
                             configFileItems = emptyList(),
                             useProjectSettings = settings.useProjectSettings,
