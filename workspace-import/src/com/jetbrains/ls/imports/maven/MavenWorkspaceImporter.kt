@@ -22,6 +22,8 @@ import com.jetbrains.ls.imports.api.WorkspaceImportOptions
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
+import com.jetbrains.ls.imports.api.environmentVariable
+import com.jetbrains.ls.imports.api.putEnvironment
 import com.jetbrains.ls.imports.utils.stampBuildToolJavaHome
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
 import com.jetbrains.ls.imports.json.WorkspaceData
@@ -118,7 +120,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
             ?: System.getenv("JAVA_HOME")
             ?: System.getProperty("java.home")
         // The value the Maven processes run with. `runGoal` applies the per-project `env` last, so it wins.
-        val mavenJavaHome = options.environment["JAVA_HOME"] ?: javaHome
+        val mavenJavaHome = options.environment.environmentVariable("JAVA_HOME") ?: javaHome
         val execPath = when {
             wrapper.exists() -> wrapper
             mavenHome != null -> mavenHome / "bin" / if (OS.CURRENT == OS.Windows) "mvn.cmd" else "mvn"
@@ -289,7 +291,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                         prependToPath(environment(), it)
                     }
                     // Per-project `env` is applied last so it wins over the defaults above.
-                    environment().putAll(options.environment)
+                    environment().putEnvironment(options.environment)
                 }
                 .directory(projectDirectory.toFile())
                 .runWithErrorReporting("Maven", events)
@@ -380,7 +382,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
                         prependToPath(environment(), it)
                     }
                     // Per-project `env` is applied last so it wins over the defaults above.
-                    environment().putAll(options.environment)
+                    environment().putEnvironment(options.environment)
                 }
                 .directory(projectDirectory.toFile())
                 .runWithErrorReporting("Maven", events)
