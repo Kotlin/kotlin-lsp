@@ -145,7 +145,7 @@ fun registerLazyFixes(server: LSServer, virtualFile: VirtualFile, fixes: List<La
     val uri = virtualFile.uri
     val session = LazyActionSession(
         fileUrl = virtualFile.url,
-        documentVersion = server.documents.getVersion(uri)?.toLong() ?: virtualFile.modificationStamp,
+        documentVersion = server.documents.getVersion(uri)?.toLong() ?: 0,
         fileUri = uri,
         fixes = fixes,
     )
