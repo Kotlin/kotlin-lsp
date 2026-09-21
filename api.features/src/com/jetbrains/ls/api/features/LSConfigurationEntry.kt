@@ -4,7 +4,7 @@ package com.jetbrains.ls.api.features
 import com.intellij.ide.plugins.PluginMainDescriptor
 import com.jetbrains.ls.api.core.launch.BuildToolLaunchContributor
 import com.jetbrains.ls.api.features.language.LSLanguage
-import com.jetbrains.ls.imports.api.WorkspaceImporter
+import com.jetbrains.ls.imports.api.BuildToolDriver
 import com.jetbrains.ls.snapshot.api.impl.core.InitConfigurationKey
 import com.jetbrains.ls.snapshot.api.impl.core.KotlinFirCache
 import com.jetbrains.ls.snapshot.api.impl.core.LSConfigurationData
@@ -19,26 +19,14 @@ interface LSLanguageSpecificConfigurationEntry : LSConfigurationEntry {
     val supportedLanguages: Set<LSLanguage>
 }
 
-class WorkspaceImporterEntry(
-    val id: String,
-    val importer: WorkspaceImporter,
+/**
+ * Registers a build tool. Its id is [BuildToolDriver.type]; [order] is a `LoadingOrder` string
+ * (`first`, `last`, `after <id>`, ...).
+ */
+class BuildToolDriverEntry(
+    val driver: BuildToolDriver,
     val order: String = "",
-) : LSConfigurationEntry {
-    init {
-        // Checked once, here, because a name that cannot match any file would otherwise silently never re-import.
-        importer.settingsFileNames.forEach { name ->
-            require(name.isNotEmpty()) { "Importer '$id' declares an empty settings file name" }
-            val unmatchable = name.filter { it in UNMATCHABLE_FILE_NAME_CHARACTERS }
-            require(unmatchable.isEmpty()) {
-                "Importer '$id' declares the settings file name '$name', which is compared to a file's own name " +
-                "and so can never match. Remove the '$unmatchable' from it, or declare each name it stands for."
-            }
-        }
-    }
-}
-
-/** Glob syntax and path separators: a settings file's own name contains neither. */
-private const val UNMATCHABLE_FILE_NAME_CHARACTERS = "*?[]{}/\\"
+) : LSConfigurationEntry
 
 /** Registers a build tool's build and launch support (see [BuildToolLaunchContributor]). */
 class BuildToolLaunchEntry(

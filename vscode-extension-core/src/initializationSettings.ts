@@ -125,8 +125,8 @@ export function settingsChangeAction(change: {
 }
 
 const REQUIRED_STRING_FIELDS = ['type', 'path'] as const;
-// Keep in sync with the product package.json schemas and server WorkspaceImporterEntry IDs.
-// "subproject" is a server-owned pointer type rather than a WorkspaceImporterEntry.
+// Keep in sync with the product package.json schemas and the server build tool types (BuildToolDriver.type).
+// "subproject" is a server-owned pointer type rather than a registered build tool.
 const PROJECT_TYPES = new Set([
   'gradle',
   'maven',
