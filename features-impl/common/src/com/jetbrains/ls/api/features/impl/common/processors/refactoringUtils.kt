@@ -13,7 +13,7 @@ import com.jetbrains.analyzer.api.FileUrl
 import com.jetbrains.analyzer.api.fileUrl
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.core.processors.LSRefactoringProcessorBase
+import com.jetbrains.ls.api.core.processors.LSBaseRefactoringProcessor
 import com.jetbrains.ls.api.core.processors.planRefactoring
 import com.jetbrains.ls.api.core.processors.writeRefactoring
 import com.jetbrains.ls.api.core.project
@@ -50,7 +50,7 @@ import kotlinx.coroutines.withContext
  */
 context(server: LSServer, _: LSAnalysisContext, _: LspHandlerContext)
 suspend fun doRefactoring(
-    processor: LSRefactoringProcessorBase,
+    processor: LSBaseRefactoringProcessor,
     granularity: DiffGranularity,
     uriToSkip: URI?,
     showNotificationWithError : Boolean
@@ -69,7 +69,7 @@ suspend fun doRefactoring(
  */
 context(server: LSServer, _: LSAnalysisContext, _: LspHandlerContext)
 suspend fun doRefactoring(
-    processor: LSRefactoringProcessorBase,
+    processor: LSBaseRefactoringProcessor,
     granularity: DiffGranularity,
     uriToSkip: List<URI>,
     showNotificationWithError : Boolean
@@ -77,9 +77,7 @@ suspend fun doRefactoring(
     val originals = try {
         withContext(Dispatchers.EDT) {
             writeIntentReadAction {
-                context(project) {
-                    executeRefactoringProcessor(processor)
-                }
+                executeRefactoringProcessor(project, processor)
             }
         }
     } catch (ex: CancellationException) {
@@ -175,19 +173,18 @@ private fun isParentUri(parent: URI?, candidate: URI): Boolean {
 /**
  * Executes logic of [com.intellij.refactoring.BaseRefactoringProcessor] in simplified way without showing UI.
  *
- * It returns the URL and the text of each file of [LSRefactoringProcessorBase.getFilesToSave], before
+ * It returns the URL and the text of each file of [LSBaseRefactoringProcessor.getFilesToSave], before
  * the refactoring writes. The map is empty when the refactoring changes nothing.
  */
-context(project: Project)
-fun executeRefactoringProcessor(processor: LSRefactoringProcessorBase): Map<FileUrl, Pair<PsiFile, String>> {
-    val usages = planRefactoring(processor) ?: return emptyMap()
+fun executeRefactoringProcessor(project: Project, processor: LSBaseRefactoringProcessor): Map<FileUrl, Pair<PsiFile, String>> {
+    val usages = planRefactoring(project, processor) ?: return emptyMap()
     return startRefactoring(processor, usages) {
-        writeRefactoring(processor, usages)
+        writeRefactoring(project, processor, usages)
     }
 }
 
 private fun startRefactoring(
-    processor: LSRefactoringProcessorBase,
+    processor: LSBaseRefactoringProcessor,
     usages: Array<UsageInfo>,
     callback: () -> Unit,
 ): Map<FileUrl, Pair<PsiFile, String>> {
@@ -197,7 +194,7 @@ private fun startRefactoring(
 }
 
 /** The URL and the text of each file to save, before the refactoring writes. */
-private fun saveFileTexts(processor: LSRefactoringProcessorBase, usages: Array<UsageInfo>): Map<FileUrl, Pair<PsiFile, String>> {
+private fun saveFileTexts(processor: LSBaseRefactoringProcessor, usages: Array<UsageInfo>): Map<FileUrl, Pair<PsiFile, String>> {
     return processor.getFilesToSave(usages)
         .mapNotNull { file -> file.virtualFile?.let { file to it.fileUrl } }
         .distinctBy { it.second }
