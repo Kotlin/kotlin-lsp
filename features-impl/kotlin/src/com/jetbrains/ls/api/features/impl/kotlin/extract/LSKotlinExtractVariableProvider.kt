@@ -110,8 +110,10 @@ internal object LSKotlinExtractVariableProvider :
     context(server: LSServer, analysisContext: LSAnalysisContext, handlerContext: LspHandlerContext)
     override suspend fun executeRefactoring(context: ExtractVariableContext?): RefactoringResult? {
         if (context == null) return null
-        val fileDocument = context.file.fileDocument
-        val oldText = readAction { fileDocument.text }
+        val (fileDocument, oldText) = readAction {
+            val document = context.file.fileDocument
+            document to document.text
+        }
 
         val introduced = withContext(Dispatchers.EDT) {
             writeIntentReadAction {
