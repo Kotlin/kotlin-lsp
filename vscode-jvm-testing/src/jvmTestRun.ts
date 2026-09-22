@@ -1,5 +1,6 @@
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 import { randomUUID } from 'node:crypto';
-import { type CancellationToken, type TestRun, workspace } from 'vscode';
+import { type CancellationToken, type DebugConfiguration, type TestRun, workspace } from 'vscode';
 import { getLspClient, sendLspCommand } from '@jetbrains/vscode-extension-core';
 import { jvmFailureMessage } from './jvmTestFailure';
 import { launchAndCollectOutput, type TrackedDebugConfiguration } from './jvmDebugLaunch';
@@ -23,8 +24,15 @@ interface JvmTestLaunchConfig extends TrackedDebugConfiguration {
   file: string;
   args: string[];
   classPaths: string[];
+  modulePaths: string[];
+  vmArgs: string[];
   console: 'none';
   internalConsoleOptions?: 'neverOpen';
+}
+
+interface ResolvedTestRun {
+  launches: JvmTestLaunch[];
+  paths: JvmTestRunPaths;
 }
 
 export interface RunTestGroupOptions {
@@ -34,6 +42,8 @@ export interface RunTestGroupOptions {
   builds: JvmTestBuilds;
   noDebug: boolean;
   token: CancellationToken;
+  resolve?: (group: JvmTestLaunchGroup, request: JvmTestLaunchRequest) => Promise<ResolvedTestRun>;
+  spawn?: (config: DebugConfiguration) => Promise<number | undefined>;
 }
 
 /**
@@ -47,15 +57,18 @@ export async function runTestGroup({
   builds,
   noDebug,
   token,
+  resolve = askServer,
+  spawn,
 }: RunTestGroupOptions): Promise<void> {
   const { uri, items } = group;
-  const [configs, built] = await Promise.all([
-    resolveLaunchConfigs(group, {
+  const [resolved, built] = await Promise.all([
+    resolve(group, {
       testIds: [...group.testIds],
       uniqueIds: [...group.uniqueIds],
     }),
     builds.ensureBuilt(uri, token),
   ]);
+  const configs = testLaunchConfigs({ group, ...resolved });
   if (token.isCancellationRequested) return;
   if (built === 'failed') {
     throw new Error('Compilation failed. See the build output in Test Results.');
@@ -73,13 +86,15 @@ export async function runTestGroup({
   let exitCode: number | undefined = 0;
   for (const config of configs) {
     if (noDebug) config.internalConsoleOptions = 'neverOpen';
-    const code = await launchAndCollectOutput(
-      workspace.getWorkspaceFolder(uri),
-      config,
-      reporter.feed,
-      noDebug,
-      token,
-    );
+    const code = spawn
+      ? await spawn(config)
+      : await launchAndCollectOutput(
+          workspace.getWorkspaceFolder(uri),
+          config,
+          reporter.feed,
+          noDebug,
+          token,
+        );
     // A cancelled process has no meaningful exit code — leaving its tests unresolved is honest.
     if (token.isCancellationRequested) return;
     if (exitCode === 0) exitCode = code;
@@ -87,22 +102,40 @@ export async function runTestGroup({
   reporter.finish(exitCode);
 }
 
-/** Asks the server what it takes to launch [request], as one debug configuration per process. */
-async function resolveLaunchConfigs(
+/** Asks the server how to run [request] and what to run it on. */
+async function askServer(
   group: JvmTestLaunchGroup,
   request: JvmTestLaunchRequest,
-): Promise<JvmTestLaunchConfig[]> {
+): Promise<ResolvedTestRun> {
   const client = getLspClient();
   if (!client) throw new Error('IntelliJ LSP is not running');
 
-  // Any file of the group resolves the same classpath — they all live in one module.
-  const [{ classpath }, launches] = await Promise.all([
-    sendLspCommand<{ classpath?: string[] }>(client, RESOLVE_LAUNCH_COMMAND, [
+  // Any file of the group resolves the same paths — they all live in one module.
+  const [paths, launches] = await Promise.all([
+    sendLspCommand<JvmTestRunPaths>(client, RESOLVE_LAUNCH_COMMAND, [
       { uri: group.uri.toString() },
     ]),
     sendLspCommand<JvmTestLaunch[]>(client, JvmTestCommands.resolveTestLaunch, [request]),
   ]);
 
+  return { launches, paths };
+}
+
+interface JvmTestRunPaths {
+  classpath?: string[];
+  modulePath?: string[];
+  vmArgs?: string[];
+}
+
+function testLaunchConfigs({
+  group,
+  launches,
+  paths,
+}: {
+  group: JvmTestLaunchGroup;
+  launches: JvmTestLaunch[];
+  paths: JvmTestRunPaths;
+}): JvmTestLaunchConfig[] {
   return launches.map((launch) => ({
     type: DEBUG_TYPE,
     request: 'launch',
@@ -110,7 +143,9 @@ async function resolveLaunchConfigs(
     mainClass: launch.mainClass,
     file: group.uri.fsPath,
     args: launch.args,
-    classPaths: [...launch.runtimeClasspath, ...(classpath ?? [])],
+    classPaths: [...launch.runtimeClasspath, ...(paths.classpath ?? [])],
+    modulePaths: paths.modulePath ?? [],
+    vmArgs: paths.vmArgs ?? [],
     jvmTestRunToken: randomUUID(),
     console: 'none',
   }));
