@@ -500,12 +500,12 @@
               "Never"
             ],
             "enumDescriptions": [
-              "Reload the workspace automatically after a build file is saved.",
+              "Reload the workspace automatically after the workspace settings file is saved.",
               "Ask before the extension reloads the workspace.",
-              "Do not reload the workspace after a build file is saved."
+              "Do not reload the workspace after the workspace settings file is saved."
             ],
             "default": "always",
-            "description": "Controls workspace reloads after a build file is saved."
+            "description": "Controls workspace reloads after the workspace settings file is saved."
           },
           "intellij.projects": {
             "type": "array",

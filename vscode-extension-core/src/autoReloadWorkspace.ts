@@ -11,7 +11,7 @@ import {
   window,
   workspace,
 } from 'vscode';
-import { isBuildFilePath } from './buildFiles';
+import { isWorkspaceSettingsPath } from './workspaceSettingsFile';
 import {
   WORKSPACE_RELOAD_SETTING,
   type WorkspaceReloadMode,
@@ -30,7 +30,7 @@ interface AutoReloadWorkspaceOptions {
 
 async function showReloadPrompt(): Promise<WorkspaceReloadPromptAction | undefined> {
   const action = await window.showInformationMessage(
-    'A build file was modified. Do you want to reload the workspace?',
+    'The workspace settings file was modified. Do you want to reload the workspace?',
     RELOAD_ACTION,
     ALWAYS_ACTION,
     NEVER_ACTION,
@@ -66,7 +66,7 @@ function clearDisabledReloadProblems(diagnostics: DiagnosticCollection): void {
 function markReloadRequired(diagnostics: DiagnosticCollection, resource: Uri): void {
   const diagnostic = new Diagnostic(
     new Range(0, 0, 0, 0),
-    'The build file changed. Reload the workspace to apply the change.',
+    'The workspace settings file changed. Reload the workspace to apply the change.',
     DiagnosticSeverity.Information,
   );
   diagnostic.source = 'IntelliJ';
@@ -74,20 +74,19 @@ function markReloadRequired(diagnostics: DiagnosticCollection, resource: Uri): v
 }
 
 /**
- * Reloads the workspace or prompts the user whenever a build descriptor (Maven, Gradle, or Bazel)
- * is saved. The configured mode controls the behavior.
+ * Reloads the workspace or prompts the user whenever a `.vscode/settings.json` is saved: the file
+ * the `intellij.projects` configuration lives in. The configured mode controls the behavior.
  *
- * This covers only build systems whose settings files are listed in `buildFiles.ts`. A build system can
- * instead declare its settings files server-side on its `WorkspaceImporter`, and the server then
- * watches them itself and reloads without this listener. Do not list such a file here as well: the reload
- * below is a manual one and is not coalesced with the server's automatic reload, so every save would run two
- * imports and show a reload notification.
+ * A build system's own settings files (`pom.xml`, `BUILD.bazel`, ...) are declared server-side on
+ * its build tool, and the server watches them itself and reloads without this listener. Do not
+ * match such a file here as well: the reload below is a manual one and is not coalesced with the
+ * server's automatic reload, so every save would run two imports and show a reload notification.
  */
 export function registerAutoReloadWorkspace(
   context: ExtensionContext,
   { reloadWorkspace, onDidReloadWorkspace }: AutoReloadWorkspaceOptions,
 ): void {
-  const diagnostics = languages.createDiagnosticCollection('intellij-build-file-reload');
+  const diagnostics = languages.createDiagnosticCollection('intellij-settings-file-reload');
   const reloadOnSaveHandler = new WorkspaceReloadOnSaveHandler({
     reloadWorkspace,
     showPrompt: showReloadPrompt,
@@ -101,7 +100,7 @@ export function registerAutoReloadWorkspace(
       }
     }),
     workspace.onDidSaveTextDocument(async (document) => {
-      if (!isBuildFilePath(document.uri.fsPath)) return;
+      if (!isWorkspaceSettingsPath(document.uri.fsPath)) return;
 
       await reloadOnSaveHandler.handleBuildFileSave({
         mode: workspaceReloadMode(),
