@@ -594,6 +594,39 @@
 >multi-line string"""
 #^^^^^^^^^^^^^^^^^ source.kotlin string.quoted.triple.kotlin
 #                 ^^^ source.kotlin string.quoted.triple.kotlin punctuation.definition.string.end.kotlin
+>val rawWithInnerQuotes = """say "hi" and "" now"""
+#^^^ source.kotlin storage.type.kotlin
+#   ^^^^^^^^^^^^^^^^^^^^ source.kotlin
+#                       ^ source.kotlin keyword.operator.kotlin
+#                        ^ source.kotlin
+#                         ^^^ source.kotlin string.quoted.triple.kotlin punctuation.definition.string.begin.kotlin
+#                            ^^^^^^^^^^^^^^^^^^^ source.kotlin string.quoted.triple.kotlin
+#                                               ^^^ source.kotlin string.quoted.triple.kotlin punctuation.definition.string.end.kotlin
+>val rawEndingWithQuote = Regex("""(ToolIdentifier\.of\("atlas-cli",\s*")[^"]*"""")
+#^^^ source.kotlin storage.type.kotlin
+#   ^^^^^^^^^^^^^^^^^^^^ source.kotlin
+#                       ^ source.kotlin keyword.operator.kotlin
+#                        ^^^^^^^ source.kotlin
+#                               ^^^ source.kotlin string.quoted.triple.kotlin punctuation.definition.string.begin.kotlin
+#                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.kotlin string.quoted.triple.kotlin
+#                                                                              ^^^ source.kotlin string.quoted.triple.kotlin punctuation.definition.string.end.kotlin
+#                                                                                 ^^ source.kotlin
+>val rawContainingOneQuote = """""""
+#^^^ source.kotlin storage.type.kotlin
+#   ^^^^^^^^^^^^^^^^^^^^^^^ source.kotlin
+#                          ^ source.kotlin keyword.operator.kotlin
+#                           ^ source.kotlin
+#                            ^^^ source.kotlin string.quoted.triple.kotlin punctuation.definition.string.begin.kotlin
+#                               ^ source.kotlin string.quoted.triple.kotlin
+#                                ^^^ source.kotlin string.quoted.triple.kotlin punctuation.definition.string.end.kotlin
+>val rawContainingTwoQuotes = """"""""
+#^^^ source.kotlin storage.type.kotlin
+#   ^^^^^^^^^^^^^^^^^^^^^^^^ source.kotlin
+#                           ^ source.kotlin keyword.operator.kotlin
+#                            ^ source.kotlin
+#                             ^^^ source.kotlin string.quoted.triple.kotlin punctuation.definition.string.begin.kotlin
+#                                ^^ source.kotlin string.quoted.triple.kotlin
+#                                  ^^^ source.kotlin string.quoted.triple.kotlin punctuation.definition.string.end.kotlin
 >
 #^ source.kotlin
 >fun operatorsTest(a: Int, b: Int): Int {
