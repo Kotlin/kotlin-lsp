@@ -30,7 +30,7 @@ internal class LSJvmDirectoryMoveHandlerDelegate : LSMoveHandlerDelegate {
         val directories = sources.map { it as PsiDirectory }.toTypedArray()
         val context = MoveDirectoryContext(targetDirectory, directories)
         val processor = LSMoveDirectoryProcessor.create(context)
-            ?: return MoveAnalysisResult.Error(LspServerBundle.message("error.move.unable.to.update.moved.files"))
+            ?: return MoveAnalysisResult.Error(LspServerBundle.message("error.move.unknown.problem"))
         return MoveAnalysisResult.Success(processor)
     }
 }

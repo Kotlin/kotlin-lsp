@@ -41,7 +41,7 @@ internal class LSKotlinMoveHandlerDelegate : LSMoveHandlerDelegate {
             editor = null,
             moveCallBack = null,
             canShowUI = false
-        ) ?: return MoveAnalysisResult.Error(LspServerBundle.message("error.move.unable.to.update.moved.files"))
+        ) ?: return MoveAnalysisResult.Error(LspServerBundle.message("error.move.unknown.problem"))
 
         return MoveAnalysisResult.Success(LSMoveKotlinFileProcessor.create(model))
     }

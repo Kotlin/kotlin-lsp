@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features.impl.common.move
 
 import com.jetbrains.ls.api.core.processors.LSRefactoringProcessor
+import org.jetbrains.annotations.Nls
 
 /**
  * The move refactoring consists of 2 main steps:
@@ -22,5 +23,5 @@ sealed interface MoveAnalysisResult {
      * There was some error preventing files/directories move.
      */
     @JvmInline
-    value class Error(val message: String) : MoveAnalysisResult
+    value class Error(val message: @Nls String) : MoveAnalysisResult
 }
