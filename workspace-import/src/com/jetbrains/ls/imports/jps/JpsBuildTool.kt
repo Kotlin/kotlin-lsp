@@ -63,6 +63,7 @@ import com.jetbrains.ls.imports.api.applyChangesWithDeduplication
 import com.jetbrains.ls.imports.gradle.GradleTool
 import com.jetbrains.ls.imports.json.flattenExportedDependencies
 import com.jetbrains.ls.imports.maven.MavenTool
+import com.jetbrains.ls.imports.utils.LsImportBundle
 import com.jetbrains.ls.imports.utils.toIntellijUri
 import com.jetbrains.ls.snapshot.api.impl.core.toFileUrl
 import kotlinx.coroutines.CancellationException
@@ -871,7 +872,7 @@ private fun findJdks(projectPath: Path, defaultSdkHome: Path?): Collection<JavaH
         return listOf(JavaHomeFinder.JdkEntry(defaultSdkHome.absolutePathString(), null))
     }
     throw WorkspaceImportException(
-        "Unable to find a JDK on the machine. JPS workspace import requires at least one configured JDK.",
+        LsImportBundle.message("jps.workspace.unable.find.jdk"),
         "No JDKs found while importing the JPS (.iml) workspace."
     )
 }
