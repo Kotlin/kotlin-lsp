@@ -11,7 +11,9 @@ import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.entities
 import com.jetbrains.ls.imports.core.provider.TestDataDirSource
 import com.jetbrains.ls.imports.jps.JpsWorkspaceImporter
+import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import kotlin.io.path.Path
 import kotlin.io.path.div
@@ -21,6 +23,40 @@ class JpsProjectImportTest : AbstractProjectImportTestCase() {
 
     @Test
     fun jpsKotlinFacet() = doJpsTest("JpsKotlinFacet")
+
+    /**
+     * `.idea/kotlinc.xml` settings reach a module without a Kotlin facet and facets with `useProjectSettings="true"`,
+     * whose own arguments are ignored like in the IDE; all come out resolved, with `useProjectSettings=false`.
+     * A non-JVM facet keeps its arguments class and gets only the common project arguments, whether it spells out
+     * `<compilerArguments>` (moduleC, JS) or only its platform (moduleD, JS).
+     */
+    @Test
+    fun jpsKotlinProjectSettings() = doJpsTest("JpsKotlinProjectSettings") { storage ->
+        val settings = storage.entities<KotlinSettingsEntity>().associateBy { it.module.name }
+        assertEquals(setOf("moduleA", "moduleB", "moduleC", "moduleD"), settings.keys)
+        val jsModules = setOf("moduleC", "moduleD")
+        for (entity in settings.values) {
+            val name = entity.module.name
+            assertEquals(false, entity.useProjectSettings, name)
+            assertEquals("-Xjvm-default=all -progressive", entity.compilerSettings?.additionalArguments, name)
+            val arguments = entity.compilerArguments.orEmpty()
+            val expected = listOf("\"languageVersion\":\"2.3\"", "\"apiVersion\":\"2.3\"") +
+                    listOf("\"jvmTarget\":\"21\"").filter { name !in jsModules }
+            for (argument in expected) {
+                assertTrue(argument in arguments, "$name: $argument not in $arguments")
+            }
+            if (name in jsModules) {
+                assertEquals("JS", entity.targetPlatform, name)
+                // "S" is the CompilerArgumentsSerializer prefix of K2JSCompilerArguments.
+                assertTrue(arguments.startsWith("S{"), "$name: $arguments")
+            }
+        }
+        // The facet of moduleB says "JVM 1.8", the default JVM platform, which the Kotlin plugin re-derives from the arguments.
+        assertEquals("JVM (21)", settings.getValue("moduleA").targetPlatform)
+        assertEquals(false, settings.getValue("moduleA").isTestModule)
+        assertEquals("JVM (21)", settings.getValue("moduleB").targetPlatform)
+        assertEquals(true, settings.getValue("moduleB").isTestModule)
+    }
 
     @Test
     fun jpsJavaModule() = doJpsTest("JpsJavaModule")

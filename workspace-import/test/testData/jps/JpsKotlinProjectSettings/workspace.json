@@ -1,0 +1,228 @@
+{
+    "modules": [
+        {
+            "name": "moduleA",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/a",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/a/src",
+                            "type": "java-source"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
+        },
+        {
+            "name": "moduleB",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/b",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/b/test",
+                            "type": "java-test"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
+        },
+        {
+            "name": "moduleC",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/c",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/c/src",
+                            "type": "java-source"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
+        },
+        {
+            "name": "moduleD",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/d",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/d/src",
+                            "type": "java-source"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
+        }
+    ],
+    "kotlinSettings": [
+        {
+            "name": "Kotlin",
+            "sourceRoots": [],
+            "configFileItems": [],
+            "module": "moduleA",
+            "useProjectSettings": false,
+            "implementedModuleNames": [],
+            "dependsOnModuleNames": [],
+            "additionalVisibleModuleNames": [],
+            "productionOutputPath": null,
+            "testOutputPath": null,
+            "sourceSetNames": [],
+            "isTestModule": false,
+            "externalProjectId": "",
+            "isHmppEnabled": false,
+            "pureKotlinSourceFolders": [],
+            "kind": "default",
+            "compilerArguments": "J{\"jvmTarget\":\"21\",\"apiVersion\":\"2.3\",\"languageVersion\":\"2.3\"}",
+            "additionalArguments": "-Xjvm-default=all -progressive",
+            "scriptTemplates": null,
+            "scriptTemplatesClasspath": null,
+            "copyJsLibraryFiles": true,
+            "outputDirectoryForJsLibraryFiles": "lib",
+            "targetPlatform": "JVM (21)",
+            "externalSystemRunTasks": [],
+            "version": 5,
+            "flushNeeded": false
+        },
+        {
+            "name": "Kotlin",
+            "sourceRoots": [],
+            "configFileItems": [],
+            "module": "moduleB",
+            "useProjectSettings": false,
+            "implementedModuleNames": [],
+            "dependsOnModuleNames": [],
+            "additionalVisibleModuleNames": [],
+            "productionOutputPath": null,
+            "testOutputPath": null,
+            "sourceSetNames": [],
+            "isTestModule": true,
+            "externalProjectId": "",
+            "isHmppEnabled": false,
+            "pureKotlinSourceFolders": [],
+            "kind": "default",
+            "compilerArguments": "J{\"jvmTarget\":\"21\",\"apiVersion\":\"2.3\",\"languageVersion\":\"2.3\"}",
+            "additionalArguments": "-Xjvm-default=all -progressive",
+            "scriptTemplates": null,
+            "scriptTemplatesClasspath": null,
+            "copyJsLibraryFiles": true,
+            "outputDirectoryForJsLibraryFiles": "lib",
+            "targetPlatform": "JVM (21)",
+            "externalSystemRunTasks": [],
+            "version": 5,
+            "flushNeeded": false
+        },
+        {
+            "name": "Kotlin",
+            "sourceRoots": [],
+            "configFileItems": [],
+            "module": "moduleC",
+            "useProjectSettings": false,
+            "implementedModuleNames": [],
+            "dependsOnModuleNames": [],
+            "additionalVisibleModuleNames": [],
+            "productionOutputPath": null,
+            "testOutputPath": null,
+            "sourceSetNames": [],
+            "isTestModule": false,
+            "externalProjectId": "",
+            "isHmppEnabled": false,
+            "pureKotlinSourceFolders": [],
+            "kind": "default",
+            "compilerArguments": "S{\"apiVersion\":\"2.3\",\"languageVersion\":\"2.3\"}",
+            "additionalArguments": "-Xjvm-default=all -progressive",
+            "scriptTemplates": null,
+            "scriptTemplatesClasspath": null,
+            "copyJsLibraryFiles": true,
+            "outputDirectoryForJsLibraryFiles": "lib",
+            "targetPlatform": "JS",
+            "externalSystemRunTasks": [],
+            "version": 5,
+            "flushNeeded": false
+        },
+        {
+            "name": "Kotlin",
+            "sourceRoots": [],
+            "configFileItems": [],
+            "module": "moduleD",
+            "useProjectSettings": false,
+            "implementedModuleNames": [],
+            "dependsOnModuleNames": [],
+            "additionalVisibleModuleNames": [],
+            "productionOutputPath": null,
+            "testOutputPath": null,
+            "sourceSetNames": [],
+            "isTestModule": false,
+            "externalProjectId": "",
+            "isHmppEnabled": false,
+            "pureKotlinSourceFolders": [],
+            "kind": "default",
+            "compilerArguments": "S{\"apiVersion\":\"2.3\",\"languageVersion\":\"2.3\"}",
+            "additionalArguments": "-Xjvm-default=all -progressive",
+            "scriptTemplates": null,
+            "scriptTemplatesClasspath": null,
+            "copyJsLibraryFiles": true,
+            "outputDirectoryForJsLibraryFiles": "lib",
+            "targetPlatform": "JS",
+            "externalSystemRunTasks": [],
+            "version": 5,
+            "flushNeeded": false
+        }
+    ],
+    "javaSettings": [
+        {
+            "module": "moduleA",
+            "inheritedCompilerOutput": true,
+            "excludeOutput": true,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "moduleB",
+            "inheritedCompilerOutput": true,
+            "excludeOutput": true,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "moduleC",
+            "inheritedCompilerOutput": true,
+            "excludeOutput": true,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "moduleD",
+            "inheritedCompilerOutput": true,
+            "excludeOutput": true,
+            "languageLevelId": "JDK_21",
+            "manifestAttributes": {}
+        }
+    ]
+}

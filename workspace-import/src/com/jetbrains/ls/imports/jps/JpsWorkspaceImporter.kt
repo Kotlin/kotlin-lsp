@@ -95,6 +95,7 @@ import org.jetbrains.jps.model.library.JpsMavenRepositoryLibraryDescriptor
 import org.jetbrains.jps.model.library.JpsOrderRootType
 import org.jetbrains.jps.model.library.JpsRepositoryLibraryType
 import org.jetbrains.jps.model.module.JpsLibraryDependency
+import org.jetbrains.jps.model.module.JpsModule
 import org.jetbrains.jps.model.module.JpsModuleDependency
 import org.jetbrains.jps.model.module.JpsModuleSourceDependency
 import org.jetbrains.jps.model.module.JpsSdkDependency
@@ -107,14 +108,21 @@ import org.jetbrains.jps.model.serialization.PathMacroUtil
 import org.jetbrains.jps.model.serialization.impl.JpsPathVariablesConfigurationImpl
 import org.jetbrains.jps.util.JpsPathUtil
 import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
+import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
+import org.jetbrains.kotlin.cli.common.arguments.copyCommonCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.copyOf
+import org.jetbrains.kotlin.config.JvmTarget
+import org.jetbrains.kotlin.config.KotlinFacetSettings
+import org.jetbrains.kotlin.config.createArguments
 import org.jetbrains.kotlin.config.isHmpp
 import org.jetbrains.kotlin.idea.facet.KotlinFacetType
 import org.jetbrains.kotlin.idea.workspaceModel.CompilerArgumentsSerializer
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
 import org.jetbrains.kotlin.idea.workspaceModel.kotlinSettings
 import org.jetbrains.kotlin.idea.workspaceModel.toCompilerSettingsData
+import org.jetbrains.kotlin.jps.model.JpsKotlinCompilerSettings
 import org.jetbrains.kotlin.jps.model.JpsKotlinFacetModuleExtension
+import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 import java.io.IOException
 import java.nio.file.Path
 import java.time.Duration
@@ -210,8 +218,9 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
         val sdks = mutableSetOf<String>()
         downloadMissingLibraries(model, projectDirectory, parameters.options)
 
+        val projectKotlinSettings = model.project.container.getChild(JpsKotlinCompilerSettings.ROLE)
         model.project.modules.forEach { module ->
-            val kotlinFacetModuleExtension = module.container.getChild(JpsKotlinFacetModuleExtension.KIND)
+            val kotlinFacetSettings = resolveKotlinFacetSettings(module, projectKotlinSettings)
 
             val directDeps = module.dependenciesList.dependencies.mapNotNull { dependency ->
                 val javaExtension = JpsJavaExtensionService.getInstance().getDependencyExtension(dependency)
@@ -330,8 +339,8 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
                     ?.let { productionModuleName ->
                         this.testProperties = TestModulePropertiesEntity(ModuleId(productionModuleName), entitySource)
                     }
-                if (kotlinFacetModuleExtension != null) {
-                    val settings = kotlinFacetModuleExtension.settings
+                if (kotlinFacetSettings != null) {
+                    val settings = kotlinFacetSettings
                     this.moduleSettings = listOf(
                         KotlinSettingsEntity(
                             name = KotlinFacetType.INSTANCE.presentableName,
@@ -765,6 +774,36 @@ private fun loadIdeaXml(projectDirectory: Path, fileName: String): Element? {
         LOG.warn("Failed to parse $xml: ${e.message}")
         null
     }
+}
+
+/**
+ * Resolves the Kotlin compiler settings of a module the way the IDE does. A module without a Kotlin facet, or whose
+ * facet says `useProjectSettings="true"`, compiles with the project-wide settings from `.idea/kotlinc.xml`. The IDE
+ * reads those lazily from the `KotlinCompilerSettings` project services; the analyzer has no such services, so the
+ * import inlines them into per-module settings with `useProjectSettings=false`, as the Gradle and Maven importers do.
+ * A project without `kotlinc.xml` keeps only the explicit facets.
+ */
+private fun resolveKotlinFacetSettings(module: JpsModule, projectSettings: JpsKotlinCompilerSettings?): KotlinFacetSettings? {
+    val facetSettings = module.container.getChild(JpsKotlinFacetModuleExtension.KIND)?.settings
+    if (facetSettings != null && !facetSettings.useProjectSettings) return facetSettings
+    if (projectSettings == null) return facetSettings
+    // The facet object belongs to the JPS model that is discarded after the import, so it is safe to resolve in place.
+    val settings = facetSettings ?: KotlinFacetSettings()
+    // The project keeps one arguments set per platform (JVM, JS, metadata). The facet's arguments class names it; a facet
+    // without a `<compilerArguments>` element has null arguments, so its platform names it; no facet at all means JVM.
+    val argumentsClass = facetSettings?.compilerArguments?.javaClass
+        ?: facetSettings?.targetPlatform?.createArguments()?.javaClass
+        ?: K2JVMCompilerArguments::class.java
+    settings.useProjectSettings = false
+    settings.compilerSettings = projectSettings.compilerSettings
+    settings.compilerArguments = projectSettings[argumentsClass].copyOf().also { arguments ->
+        copyCommonCompilerArguments(projectSettings.commonCompilerArguments, arguments)
+    }
+    if (settings.targetPlatform == null) {
+        val jvmTarget = projectSettings.k2JvmCompilerArguments.jvmTarget?.let { JvmTarget.fromString(it) }
+        settings.targetPlatform = jvmTarget?.let { JvmPlatforms.jvmPlatformByTargetVersion(it) } ?: JvmPlatforms.defaultJvmPlatform
+    }
+    return settings
 }
 
 /**
