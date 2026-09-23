@@ -41,7 +41,9 @@ import com.intellij.platform.workspace.jps.entities.SdkRoot
 import com.intellij.platform.workspace.jps.entities.SdkRootTypeId
 import com.intellij.platform.workspace.jps.entities.SourceRootEntity
 import com.intellij.platform.workspace.jps.entities.SourceRootTypeId
+import com.intellij.platform.workspace.jps.entities.TestModulePropertiesEntity
 import com.intellij.platform.workspace.jps.entities.exModuleOptions
+import com.intellij.platform.workspace.jps.entities.testProperties
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.PathUtil
@@ -321,6 +323,13 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
                 this.exModuleOptions = ExternalSystemModuleOptionsEntity(entitySource) {
                     this.linkedProjectPath = moduleProjectPath
                 }
+                // `TestModuleProperties` in the .iml: the production module whose `internal` declarations this tests module may use.
+                // The JPS loader keeps an empty `production-module=""`; the platform .iml serializer skips it, so do we.
+                JpsJavaExtensionService.getInstance().getTestModuleProperties(module)
+                    ?.productionModuleReference?.moduleName?.takeIf { it.isNotEmpty() }
+                    ?.let { productionModuleName ->
+                        this.testProperties = TestModulePropertiesEntity(ModuleId(productionModuleName), entitySource)
+                    }
                 if (kotlinFacetModuleExtension != null) {
                     val settings = kotlinFacetModuleExtension.settings
                     this.moduleSettings = listOf(

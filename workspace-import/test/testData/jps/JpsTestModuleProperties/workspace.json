@@ -1,0 +1,77 @@
+{
+    "modules": [
+        {
+            "name": "foo",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/src",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/src",
+                            "type": "java-source"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
+        },
+        {
+            "name": "foo.tests",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "module",
+                    "name": "foo",
+                    "scope": "test"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/testSrc",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/testSrc",
+                            "type": "java-test"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/"
+        }
+    ],
+    "javaSettings": [
+        {
+            "module": "foo",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": true,
+            "compilerOutputs": [
+                "<WORKSPACE>/out/production"
+            ],
+            "compilerOutputsForTests": [
+                "<WORKSPACE>/out/test"
+            ],
+            "languageLevelId": "JDK_17",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "foo.tests",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": true,
+            "compilerOutputs": [
+                "<WORKSPACE>/out/production"
+            ],
+            "compilerOutputsForTests": [
+                "<WORKSPACE>/out/test"
+            ],
+            "languageLevelId": "JDK_17",
+            "manifestAttributes": {}
+        }
+    ]
+}

@@ -3,7 +3,10 @@ package com.jetbrains.ls.imports
 
 import com.intellij.java.workspace.entities.asJavaResourceRoot
 import com.intellij.java.workspace.entities.asJavaSourceRoot
+import com.intellij.platform.workspace.jps.entities.ModuleEntity
 import com.intellij.platform.workspace.jps.entities.SourceRootEntity
+import com.intellij.platform.workspace.jps.entities.TestModulePropertiesEntity
+import com.intellij.platform.workspace.jps.entities.testProperties
 import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.entities
 import com.jetbrains.ls.imports.core.provider.TestDataDirSource
@@ -31,6 +34,15 @@ class JpsProjectImportTest : AbstractProjectImportTestCase() {
         assertEquals("com.foo", roots.getValue("src").asJavaSourceRoot()?.packagePrefix)
         assertEquals(true, roots.getValue("gen").asJavaSourceRoot()?.generated)
         assertEquals("META-INF", roots.getValue("resources").asJavaResourceRoot()?.relativeOutputPath)
+    }
+
+    @Test
+    fun jpsTestModuleProperties() = doJpsTest("JpsTestModuleProperties") { storage ->
+        val properties = storage.entities<TestModulePropertiesEntity>().single()
+        assertEquals("foo.tests", properties.module.name)
+        assertEquals("foo", properties.productionModuleId.name)
+        val production = storage.entities<ModuleEntity>().single { it.name == "foo" }
+        assertEquals(null, production.testProperties)
     }
 
     private fun doJpsTest(project: String, entityStorageVerifier: (EntityStorage) -> Unit = { }) {
