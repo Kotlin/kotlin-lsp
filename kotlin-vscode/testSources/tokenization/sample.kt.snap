@@ -602,15 +602,15 @@
 #                         ^^^ source.kotlin string.quoted.triple.kotlin punctuation.definition.string.begin.kotlin
 #                            ^^^^^^^^^^^^^^^^^^^ source.kotlin string.quoted.triple.kotlin
 #                                               ^^^ source.kotlin string.quoted.triple.kotlin punctuation.definition.string.end.kotlin
->val rawEndingWithQuote = Regex("""(ToolIdentifier\.of\("atlas-cli",\s*")[^"]*"""")
+>val rawEndingWithQuote = Regex("""([a-z]+)\("item",\s*")[^"]*"""")
 #^^^ source.kotlin storage.type.kotlin
 #   ^^^^^^^^^^^^^^^^^^^^ source.kotlin
 #                       ^ source.kotlin keyword.operator.kotlin
 #                        ^^^^^^^ source.kotlin
 #                               ^^^ source.kotlin string.quoted.triple.kotlin punctuation.definition.string.begin.kotlin
-#                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.kotlin string.quoted.triple.kotlin
-#                                                                              ^^^ source.kotlin string.quoted.triple.kotlin punctuation.definition.string.end.kotlin
-#                                                                                 ^^ source.kotlin
+#                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.kotlin string.quoted.triple.kotlin
+#                                                              ^^^ source.kotlin string.quoted.triple.kotlin punctuation.definition.string.end.kotlin
+#                                                                 ^^ source.kotlin
 >val rawContainingOneQuote = """""""
 #^^^ source.kotlin storage.type.kotlin
 #   ^^^^^^^^^^^^^^^^^^^^^^^ source.kotlin

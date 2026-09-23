@@ -108,7 +108,7 @@ val escapedString = "Line break: \n Tab: \t Unicode: \u1234"
 val tripleQuotedString = """This is a 
 multi-line string"""
 val rawWithInnerQuotes = """say "hi" and "" now"""
-val rawEndingWithQuote = Regex("""(ToolIdentifier\.of\("atlas-cli",\s*")[^"]*"""")
+val rawEndingWithQuote = Regex("""([a-z]+)\("item",\s*")[^"]*"""")
 val rawContainingOneQuote = """""""
 val rawContainingTwoQuotes = """"""""
 
