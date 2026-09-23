@@ -1,11 +1,10 @@
-// Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 @file:Suppress("IO_FILE_USAGE")
 
 package com.jetbrains.ls.imports.maven
 
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.logger
-import com.intellij.openapi.project.Project
 import com.intellij.platform.workspace.jps.entities.ModuleEntity
 import com.intellij.platform.workspace.jps.entities.exModuleOptions
 import com.intellij.platform.workspace.jps.entities.modifyExternalSystemModuleOptionsEntity
@@ -15,26 +14,37 @@ import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.io.delete
 import com.intellij.util.system.OS
+import com.jetbrains.analyzer.api.FileUrl
+import com.jetbrains.analyzer.filesystem.forEach
+import com.jetbrains.ls.imports.api.BuildTool
+import com.jetbrains.ls.imports.api.BuildToolContext
+import com.jetbrains.ls.imports.api.BuildToolDriverContext
+import com.jetbrains.ls.imports.api.FullImportRequest
+import com.jetbrains.ls.imports.api.ImportRequest
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceException
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportOptions
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
-import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
 import com.jetbrains.ls.imports.api.environmentVariable
 import com.jetbrains.ls.imports.api.putEnvironment
-import com.jetbrains.ls.imports.utils.stampBuildToolJavaHome
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
 import com.jetbrains.ls.imports.json.WorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData
 import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
 import com.jetbrains.ls.imports.utils.runWithErrorReporting
+import com.jetbrains.ls.imports.utils.stampBuildToolJavaHome
+import com.jetbrains.ls.snapshot.api.impl.core.rocks.FileSystemChange
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -42,71 +52,143 @@ import kotlinx.serialization.json.decodeFromStream
 import org.jetbrains.annotations.ApiStatus
 import java.io.File
 import java.io.InputStream
+import java.nio.file.InvalidPathException
 import java.nio.file.Path
 import kotlin.io.path.createTempFile
 import kotlin.io.path.div
 import kotlin.io.path.exists
 import kotlin.io.path.inputStream
 import kotlin.io.path.isRegularFile
-import kotlin.io.path.name
 import kotlin.io.path.writeText
 
-private val LOG = logger<MavenWorkspaceImporter>()
+private val LOG = logger<MavenTool>()
 
-object MavenWorkspaceImporter : WorkspaceImporter {
-    /** The Maven distribution to import with, when the project has no wrapper. */
-    const val JB_MAVEN_HOME_PROPERTY: String = "JB_MAVEN_HOME"
+/** One folder's live Maven build tool; [MavenDriver] starts it. */
+class MavenTool(
+    toolContext: BuildToolDriverContext,
+    private val parameters: WorkspaceImportParameters,
+) : BuildTool {
+    companion object {
+        /** The Maven distribution to import with, when the project has no wrapper. */
+        const val JB_MAVEN_HOME_PROPERTY: String = "JB_MAVEN_HOME"
 
-    /** The JDK to run Maven under. Named so that callers scoping these properties do not have to spell them. */
-    const val JB_MAVEN_JAVA_HOME_PROPERTY: String = "JB_MAVEN_JAVA_HOME"
+        /** The JDK to run Maven under. Named so that callers scoping these properties do not have to spell them. */
+        const val JB_MAVEN_JAVA_HOME_PROPERTY: String = "JB_MAVEN_JAVA_HOME"
 
-    const val LSP_MAVEN_PROJECT_OFFLINE_PROPERTY: String = "com.jetbrains.ls.imports.maven.offline"
-    const val LSP_MAVEN_PROJECT_MAVEN_USER_HOME_PROPERTY: String = "com.jetbrains.ls.imports.maven.mavenUserHome"
-    const val LSP_MAVEN_PROJECT_MAVEN_OPTS_PROPERTY: String = "com.jetbrains.ls.imports.maven.opts"
-    const val LSP_MAVEN_PROJECT_PATH_PREPEND_PROPERTY: String = "com.jetbrains.ls.imports.maven.path.prepend"
+        const val LSP_MAVEN_PROJECT_OFFLINE_PROPERTY: String = "com.jetbrains.ls.imports.maven.offline"
+        const val LSP_MAVEN_PROJECT_MAVEN_USER_HOME_PROPERTY: String = "com.jetbrains.ls.imports.maven.mavenUserHome"
+        const val LSP_MAVEN_PROJECT_MAVEN_OPTS_PROPERTY: String = "com.jetbrains.ls.imports.maven.opts"
+        const val LSP_MAVEN_PROJECT_PATH_PREPEND_PROPERTY: String = "com.jetbrains.ls.imports.maven.path.prepend"
+
+        /**
+         * Skips the `model-process-sources` goal, whose forked `generate-sources` lifecycle actually runs the project's
+         * code generators. The import gets faster and nothing is written to `target/`, at the cost of the source roots
+         * that only become visible after the generating plugins have run.
+         *
+         * The environment variable is for clients that launch the server but do not control its command line
+         * (the property wins when both are set).
+         */
+        const val LSP_MAVEN_PROJECT_SKIP_GENERATE_SOURCES_PROPERTY: String = "com.jetbrains.ls.imports.maven.skipGenerateSources"
+        const val LSP_MAVEN_PROJECT_SKIP_GENERATE_SOURCES_ENV: String = "INTELLIJ_MAVEN_SKIP_GENERATE_SOURCES"
+
+        fun useMavenAndJava(mavenHome: Path, javaHome: Path) {
+            System.setProperty(JB_MAVEN_HOME_PROPERTY, mavenHome.toString())
+            System.setProperty(JB_MAVEN_JAVA_HOME_PROPERTY, javaHome.toString())
+        }
+    }
+
+    override fun sync(context: BuildToolContext, request: ImportRequest): Flow<ImportEvent> = flow {
+        try {
+            emitAll(importWorkspace(context.virtualFileUrlManager))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            emit(ImportEvent.Failed(e))
+        }
+    }
 
     /**
-     * Skips the `model-process-sources` goal, whose forked `generate-sources` lifecycle actually runs the project's
-     * code generators. The import gets faster and nothing is written to `target/`, at the cost of the source roots
-     * that only become visible after the generating plugins have run.
-     *
-     * The environment variable is for clients that launch the server but do not control its command line
-     * (the property wins when both are set).
+     * The build file of this target: the configured file, or the conventional pom in the project directory.
+     * A configured project may point directly at a non-standard build file (`mvn -f dev_pom.xml`);
+     * auto-detected folders arrive as directories.
      */
-    const val LSP_MAVEN_PROJECT_SKIP_GENERATE_SOURCES_PROPERTY: String = "com.jetbrains.ls.imports.maven.skipGenerateSources"
-    const val LSP_MAVEN_PROJECT_SKIP_GENERATE_SOURCES_ENV: String = "INTELLIJ_MAVEN_SKIP_GENERATE_SOURCES"
+    private val rootPomFile: Path =
+        parameters.projectFileOrDirectory.let { if (it.isRegularFile()) it else it / "pom.xml" }
 
-
-    fun useMavenAndJava(mavenHome: Path, javaHome: Path) {
-        System.setProperty(JB_MAVEN_HOME_PROPERTY, mavenHome.toString())
-        System.setProperty(JB_MAVEN_JAVA_HOME_PROPERTY, javaHome.toString())
+    /**
+     * The fixed-location configuration of this target: Maven reads `.mvn/maven.config` and
+     * `.mvn/settings.xml` from the base directory of the build file, and the wrapper lives next to it.
+     * The user-level `~/.m2/settings.xml` lies outside the workspace, so the watcher cannot report it.
+     */
+    private val settingsFiles: Set<Path> = with(parameters.projectDirectory) {
+        setOf(
+            this / ".mvn" / "maven.config",
+            this / ".mvn" / "settings.xml",
+            this / "mvnw",
+            this / "mvnw.cmd",
+            this / ".mvn" / "wrapper" / "maven-wrapper.properties",
+        )
     }
 
-    override fun canImportWorkspace(projectFileOrDirectory: Path): Boolean {
-        // A file is importable when its name is a recognizable pom spelling (`mvn -f dev_pom.xml`-style
-        // non-standard names included); a directory when it holds the conventional pom.
-        return if (projectFileOrDirectory.isRegularFile()) isPomFileName(projectFileOrDirectory.name)
-               else (projectFileOrDirectory / "pom.xml").exists()
+    /** A change to a pom the last import read, or to a settings file of this target, asks for a re-import. */
+    override val reimportRequests: Flow<ImportRequest> =
+        toolContext.fileChanges.mapNotNull { change ->
+            when (change) {
+                is FileSystemChange.Invalidate -> {
+                    // Read per event: the committed model lists the poms the last import actually read.
+                    val watched = settingsFiles + importedPomFiles(toolContext.entityStorage())
+                    val changed = buildList {
+                        change.files.forEach { file -> pathOf(file)?.takeIf { it in watched }?.let(::add) }
+                    }
+                    when {
+                        changed.isEmpty() -> null
+                        else -> {
+                            LOG.info("Maven settings files changed: ${changed.joinToString()}")
+                            FullImportRequest
+                        }
+                    }
+                }
+                FileSystemChange.Rescan -> {
+                    LOG.info("The file watcher lost changes, so a Maven settings file may have changed too")
+                    FullImportRequest
+                }
+            }
+        }
+
+    /**
+     * The poms the last import read, as recorded in the committed model: every module of this target
+     * carries its Maven project directory, and the import stamps the build file it ran with as the root
+     * project path, which also tells this target's modules from another target's. Read from the model
+     * rather than remembered, so it stays correct across a restart that restores the model from cache
+     * without running an import.
+     *
+     * ponytail: a submodule's pom is taken as `<module directory>/pom.xml`; a reactor that names a module
+     * pom differently (a file path in `<module>`) re-imports only on a root pom change.
+     */
+    private fun importedPomFiles(storage: EntityStorage): Set<Path> {
+        val poms = mutableSetOf(rootPomFile)
+        storage.entities(ModuleEntity::class.java)
+            .mapNotNull { it.exModuleOptions }
+            .filter { it.externalSystem == MAVEN_EXTERNAL_SYSTEM_ID && it.rootProjectPath == rootPomFile.toString() }
+            .mapNotNullTo(poms) { options -> options.linkedProjectPath?.let { Path.of(it) / "pom.xml" } }
+        return poms
     }
 
-    private fun isPomFileName(name: String): Boolean =
-        name.endsWith("pom.xml") || name.startsWith("pom.") || name.endsWith(".pom")
+    private fun pathOf(file: FileUrl): Path? = try {
+        Path.of(file.path)
+    } catch (_: InvalidPathException) {
+        null
+    }
 
     /**
      * Publishes the dependency model (`model-with-deps`) as soon as it is built, then republishes it with the source
      * roots that only exist once the code generators have run (`model-process-sources`), so the analyzer does not wait
      * for the generating plugins before it can resolve the project's dependencies.
      */
-    override fun importWorkspace(
-        project: Project,
-        parameters: WorkspaceImportParameters,
-        virtualFileUrlManager: VirtualFileUrlManager,
-    ): Flow<ImportEvent> = channelFlow {
+    private fun importWorkspace(virtualFileUrlManager: VirtualFileUrlManager): Flow<ImportEvent> = channelFlow {
         val projectDirectory = parameters.projectDirectory
         val options = parameters.options
-        // A configured project may point directly at a non-standard build file (`mvn -f dev_pom.xml`);
-        // auto-detected folders arrive as directories and use the conventional pom.xml.
-        val pomFile = parameters.projectFileOrDirectory.let { if (it.isRegularFile()) it else it / "pom.xml" }
+        val pomFile = rootPomFile
         if (!pomFile.exists()) return@channelFlow
 
         LOG.info("Importing Maven project from: $projectDirectory (pom: $pomFile)")
@@ -144,7 +226,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
             is SuccessResult -> result
         }
         send(ImportEvent.ProgressStatus("Maven model collected, commiting..."))
-        send(ImportEvent.UpdateWorkspaceModel(toStorage(modelWithDeps, null, parameters, pomFile, virtualFileUrlManager, channel, mavenJavaHome)))
+        send(ImportEvent.UpdateWorkspaceModel(toStorage(modelWithDeps, null, pomFile, virtualFileUrlManager, channel, mavenJavaHome)))
 
         if (skipGenerateSources()) {
             LOG.info("Skipping source generation: $LSP_MAVEN_PROJECT_SKIP_GENERATE_SOURCES_PROPERTY is set")
@@ -166,7 +248,7 @@ object MavenWorkspaceImporter : WorkspaceImporter {
         send(ImportEvent.ProgressStatus("Maven model collected, commiting..."))
         send(
             ImportEvent.UpdateWorkspaceModel(
-                toStorage(modelWithDeps, modelWithGeneratedSources, parameters, pomFile, virtualFileUrlManager, channel, mavenJavaHome)
+                toStorage(modelWithDeps, modelWithGeneratedSources, pomFile, virtualFileUrlManager, channel, mavenJavaHome)
             )
         )
     }.buffer(Channel.UNLIMITED)
@@ -178,7 +260,6 @@ object MavenWorkspaceImporter : WorkspaceImporter {
     private fun toStorage(
         resultDeps: SuccessResult,
         resultGenSources: SuccessResult?,
-        parameters: WorkspaceImportParameters,
         pomFile: Path,
         virtualFileUrlManager: VirtualFileUrlManager,
         events: SendChannel<ImportEvent>,

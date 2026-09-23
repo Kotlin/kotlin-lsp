@@ -10,7 +10,7 @@ import com.intellij.platform.workspace.jps.entities.testProperties
 import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.entities
 import com.jetbrains.ls.imports.core.provider.TestDataDirSource
-import com.jetbrains.ls.imports.jps.JpsWorkspaceImporter
+import com.jetbrains.ls.imports.jps.JpsDriver
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -23,6 +23,20 @@ class JpsProjectImportTest : AbstractProjectImportTestCase() {
 
     @Test
     fun jpsKotlinFacet() = doJpsTest("JpsKotlinFacet")
+
+    @Test
+    fun jpsJavaModule() = doJpsTest("JpsJavaModule")
+
+    @Test
+    fun jpsExportedModuleLibrary() = doJpsTest("JpsExportedModuleLibrary")
+
+    @Test
+    fun jpsPackagePrefix() = doJpsTest("JpsPackagePrefix") { storage ->
+        val roots = storage.entities<SourceRootEntity>().associateBy { it.url.fileName }
+        assertEquals("com.foo", roots.getValue("src").asJavaSourceRoot()?.packagePrefix)
+        assertEquals(true, roots.getValue("gen").asJavaSourceRoot()?.generated)
+        assertEquals("META-INF", roots.getValue("resources").asJavaResourceRoot()?.relativeOutputPath)
+    }
 
     /**
      * `.idea/kotlinc.xml` settings reach a module without a Kotlin facet and facets with `useProjectSettings="true"`,
@@ -59,20 +73,6 @@ class JpsProjectImportTest : AbstractProjectImportTestCase() {
     }
 
     @Test
-    fun jpsJavaModule() = doJpsTest("JpsJavaModule")
-
-    @Test
-    fun jpsExportedModuleLibrary() = doJpsTest("JpsExportedModuleLibrary")
-
-    @Test
-    fun jpsPackagePrefix() = doJpsTest("JpsPackagePrefix") { storage ->
-        val roots = storage.entities<SourceRootEntity>().associateBy { it.url.fileName }
-        assertEquals("com.foo", roots.getValue("src").asJavaSourceRoot()?.packagePrefix)
-        assertEquals(true, roots.getValue("gen").asJavaSourceRoot()?.generated)
-        assertEquals("META-INF", roots.getValue("resources").asJavaResourceRoot()?.relativeOutputPath)
-    }
-
-    @Test
     fun jpsTestModuleProperties() = doJpsTest("JpsTestModuleProperties") { storage ->
         val properties = storage.entities<TestModulePropertiesEntity>().single()
         assertEquals("foo.tests", properties.module.name)
@@ -83,7 +83,7 @@ class JpsProjectImportTest : AbstractProjectImportTestCase() {
 
     private fun doJpsTest(project: String, entityStorageVerifier: (EntityStorage) -> Unit = { }) {
         doTest(
-            project, JpsWorkspaceImporter, testDataDir / "jps",
+            project, JpsDriver, testDataDir / "jps",
             entityStorageVerifier = entityStorageVerifier,
             // A TC Windows agent can have no discoverable JDK inside the Bazel sandbox.
             importParametersCustomizer = { it.copy(defaultSdkPath = Path(System.getProperty("java.home"))) },

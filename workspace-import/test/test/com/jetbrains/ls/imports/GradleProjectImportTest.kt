@@ -10,7 +10,7 @@ import com.jetbrains.ls.imports.api.IMPORT_JAVA_HOME_KEY
 import com.jetbrains.ls.imports.api.WorkspaceImportOptions
 import com.jetbrains.ls.imports.api.externalSystemId
 import com.jetbrains.ls.imports.core.provider.TestDataDirSource
-import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
+import com.jetbrains.ls.imports.gradle.GradleDriver
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -37,7 +37,7 @@ class GradleProjectImportTest : GradleProjectImportTestCase() {
     fun brokenPetClinic() = doTestBrokenProject(
         "BrokenPetClinic",
         "Gradle sync failed",
-        GradleWorkspaceImporter,
+        GradleDriver,
         testDataDir / "gradle",
     )
 
@@ -195,7 +195,7 @@ class GradleProjectImportTest : GradleProjectImportTestCase() {
     fun buildExceptionProject() = doTestBrokenProject(
         "GradleBuildExceptionProject",
         "Gradle sync failed",
-        GradleWorkspaceImporter,
+        GradleDriver,
         testDataDir / "gradle",
     )
 

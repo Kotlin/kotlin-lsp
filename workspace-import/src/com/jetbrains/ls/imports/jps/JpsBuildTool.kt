@@ -10,7 +10,6 @@ import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.components.ExpandMacroToPathMap
 import com.intellij.openapi.components.impl.getAllMacros
 import com.intellij.openapi.diagnostic.fileLogger
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.JavaSdk
 import com.intellij.openapi.projectRoots.impl.JavaHomeFinder
 import com.intellij.openapi.projectRoots.impl.JavaHomeFinder.getFinder
@@ -49,7 +48,11 @@ import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.PathUtil
 import com.intellij.util.containers.nullize
 import com.intellij.util.lang.JavaVersion
-import com.jetbrains.ls.imports.api.ConflictAverseImporter
+import com.jetbrains.ls.imports.api.BuildTool
+import com.jetbrains.ls.imports.api.BuildToolContext
+import com.jetbrains.ls.imports.api.BuildToolDriverContext
+import com.jetbrains.ls.imports.api.FullImportRequest
+import com.jetbrains.ls.imports.api.ImportRequest
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceException
 import com.jetbrains.ls.imports.api.WorkspaceImportException
@@ -57,18 +60,24 @@ import com.jetbrains.ls.imports.api.WorkspaceImportOptions
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.api.applyChangesWithDeduplication
-import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
+import com.jetbrains.ls.imports.gradle.GradleTool
 import com.jetbrains.ls.imports.json.flattenExportedDependencies
-import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
+import com.jetbrains.ls.imports.maven.MavenTool
 import com.jetbrains.ls.imports.utils.toIntellijUri
 import com.jetbrains.ls.snapshot.api.impl.core.toFileUrl
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
@@ -118,7 +127,6 @@ import org.jetbrains.kotlin.config.isHmpp
 import org.jetbrains.kotlin.idea.facet.KotlinFacetType
 import org.jetbrains.kotlin.idea.workspaceModel.CompilerArgumentsSerializer
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
-import org.jetbrains.kotlin.idea.workspaceModel.kotlinSettings
 import org.jetbrains.kotlin.idea.workspaceModel.toCompilerSettingsData
 import org.jetbrains.kotlin.jps.model.JpsKotlinCompilerSettings
 import org.jetbrains.kotlin.jps.model.JpsKotlinFacetModuleExtension
@@ -136,18 +144,41 @@ private val LOG = fileLogger()
 
 private const val DOWNLOAD_PARALLELISM = 16
 
-object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
+/** One folder's live JPS build tool; [JpsDriver] starts it. */
+class JpsBuildTool(
+    private val toolContext: BuildToolDriverContext,
+    private val parameters: WorkspaceImportParameters,
+) : BuildTool {
+
+    override fun sync(context: BuildToolContext, request: ImportRequest): Flow<WorkspaceImporter.ImportEvent> = flow {
+        try {
+            emitAll(importWorkspace(context))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            emit(WorkspaceImporter.ImportEvent.Failed(e))
+        }
+    }
+
+    /** The linked Maven and Gradle tools of the last sync; each sync replaces the whole set. */
+    private val linkedTools = MutableStateFlow<List<BuildTool>>(emptyList())
+
+    /**
+     * The re-import requests of the linked tools. A request from a linked tool re-runs the whole JPS
+     * import, because the linked models merge into the `.idea` model this tool publishes.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override val reimportRequests: Flow<ImportRequest> =
+        linkedTools.flatMapLatest { tools -> tools.map { it.reimportRequests }.merge() }
+
     /**
      * Publishes the `.idea` model as soon as it is read, then republishes it after each linked Maven/Gradle project
      * is imported into it, so the analyzer can start indexing the JPS modules without waiting for the builds.
      */
-    override fun importWorkspace(
-        project: Project,
-        parameters: WorkspaceImportParameters,
-        virtualFileUrlManager: VirtualFileUrlManager,
-    ): Flow<WorkspaceImporter.ImportEvent> = channelFlow {
+    private fun importWorkspace(context: BuildToolContext): Flow<WorkspaceImporter.ImportEvent> = channelFlow {
+        val virtualFileUrlManager = context.virtualFileUrlManager
         val projectDirectory = parameters.projectDirectory
-        if (!canImportWorkspace(projectDirectory)) return@channelFlow
+        if (!JpsDriver.canImportWorkspace(projectDirectory)) return@channelFlow
         try {
             val model = JpsElementFactory.getInstance().createModel()
             val macroExpandMap = ExpandMacroToPathMap()
@@ -177,13 +208,14 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
             }
             send(WorkspaceImporter.ImportEvent.UpdateWorkspaceModel(storage.toSnapshot()))
 
-            findLinkedProjects(projectDirectory, macroExpandMap).forEach { (path, importer) ->
+            val linkedProjects = findLinkedProjects(projectDirectory, macroExpandMap, toolContext)
+                .map { (path, toolFactory) -> path to toolFactory(parameters.copy(projectFileOrDirectory = path)) }
+                .toList()
+            // Published before the imports run, so the linked tools' re-import requests flow during them too.
+            linkedTools.value = linkedProjects.map { it.second }
+            linkedProjects.forEach { (path, linkedTool) ->
                 LOG.info("Importing linked project: $path")
-                importer.importWorkspace(
-                    project = project,
-                    parameters = parameters.copy(projectFileOrDirectory = path),
-                    virtualFileUrlManager = virtualFileUrlManager,
-                ).collect { event ->
+                linkedTool.sync(context, FullImportRequest).collect { event ->
                     when (event) {
                         is WorkspaceImporter.ImportEvent.UpdateWorkspaceModel -> {
                             storage.applyChangesWithDeduplication(event.storage)
@@ -434,10 +466,6 @@ object JpsWorkspaceImporter : WorkspaceImporter, ConflictAverseImporter {
         }
     }
 
-    override fun canImportWorkspace(projectFileOrDirectory: Path): Boolean {
-        return (projectFileOrDirectory / ".idea" / "modules.xml").exists()
-    }
-
     private fun detectJavaSdks(
         projectDirectory: Path,
         sdks: Collection<String>,
@@ -680,7 +708,7 @@ private fun readRemoteRepositories(projectDirectory: Path): List<RemoteRepositor
 }
 
 /**
- * Returns linked external project directories paired with the importer that should handle them.
+ * Returns linked external project directories paired with the build tool factory that should handle them.
  *
  * Currently looks for:
  *  - Maven projects registered in `.idea/misc.xml` under `MavenProjectsManager.originalFiles`
@@ -710,10 +738,15 @@ private fun readRemoteRepositories(projectDirectory: Path): List<RemoteRepositor
  */
 private fun findLinkedProjects(
     projectDirectory: Path,
-    macroExpandMap: ExpandMacroToPathMap
-): Sequence<Pair<Path, WorkspaceImporter>> = sequence {
-    yieldAll(findLinkedMavenProjects(projectDirectory, macroExpandMap).map { it to MavenWorkspaceImporter })
-    yieldAll(findLinkedGradleProjects(projectDirectory, macroExpandMap).map { it to GradleWorkspaceImporter })
+    macroExpandMap: ExpandMacroToPathMap,
+    toolContext: BuildToolDriverContext,
+): Sequence<Pair<Path, (WorkspaceImportParameters) -> BuildTool>> = sequence {
+    yieldAll(findLinkedMavenProjects(projectDirectory, macroExpandMap).map { path ->
+        path to { params: WorkspaceImportParameters -> MavenTool(toolContext, params) }
+    })
+    yieldAll(findLinkedGradleProjects(projectDirectory, macroExpandMap).map { path ->
+        path to { params: WorkspaceImportParameters -> GradleTool(toolContext, params) }
+    })
 }
 
 private fun findLinkedMavenProjects(

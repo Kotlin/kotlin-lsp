@@ -11,8 +11,8 @@ import com.jetbrains.analyzer.bootstrap.WorkspaceModelSnapshot
 import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
 import com.jetbrains.ls.imports.api.WorkspaceException
 import com.jetbrains.ls.imports.api.WorkspaceImportException
+import com.jetbrains.ls.imports.api.BuildToolDriver
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
-import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.api.importWorkspaceFully
 import com.jetbrains.ls.imports.core.provider.TestDataDirProvider
 import com.jetbrains.ls.imports.core.provider.TestDataDirs
@@ -63,7 +63,7 @@ abstract class AbstractProjectImportTestCase {
     protected fun doTestBrokenProject(
         project: String,
         failureMessage: String,
-        importer: WorkspaceImporter,
+        driver: BuildToolDriver,
         testDataDir: Path,
         failureCause: Class<*> = WorkspaceImportException::class.java
     ) {
@@ -84,7 +84,7 @@ abstract class AbstractProjectImportTestCase {
                     )
                 ) {
                     val result = runCatching {
-                        importer.importWorkspaceFully(it.project, WorkspaceImportParameters(projectDir, null), virtualFileUrlManager, reporter)
+                        driver.importWorkspaceFully(it.project, WorkspaceImportParameters(projectDir, null), virtualFileUrlManager, reporter)
                     }
                     assertTrue(result.isFailure)
                     val actualFailure = result.exceptionOrNull()!!
@@ -97,7 +97,7 @@ abstract class AbstractProjectImportTestCase {
 
     protected fun doTest(
         project: String,
-        importer: WorkspaceImporter,
+        driver: BuildToolDriver,
         testDataDir: Path,
         reporter: LoggingWorkspaceProgressReporter = LoggingWorkspaceProgressReporter(),
         comparator: WorkspaceComparator = WorkspaceComparator(),
@@ -123,7 +123,7 @@ abstract class AbstractProjectImportTestCase {
                     try {
                         val importPath = projectFile?.let { name -> projectDir / name } ?: projectDir
                         val importParameters = importParametersCustomizer(WorkspaceImportParameters(importPath, null))
-                        importer.importWorkspaceFully(it.project, importParameters, virtualFileUrlManager, reporter)
+                        driver.importWorkspaceFully(it.project, importParameters, virtualFileUrlManager, reporter)
                     } catch (e: WorkspaceImportException) {
                         throw AssertionError(
                             "Import of '$project' failed: ${e.message}\n" +

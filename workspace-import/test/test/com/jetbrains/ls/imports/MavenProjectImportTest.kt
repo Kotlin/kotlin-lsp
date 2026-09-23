@@ -8,7 +8,8 @@ import com.intellij.platform.workspace.storage.EntityStorage
 import com.jetbrains.ls.imports.api.IMPORT_JAVA_HOME_KEY
 import com.jetbrains.ls.imports.api.externalSystemId
 import com.jetbrains.ls.imports.core.provider.TestDataDirSource
-import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
+import com.jetbrains.ls.imports.maven.MavenDriver
+import com.jetbrains.ls.imports.maven.MavenTool
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -73,11 +74,11 @@ class MavenProjectImportTest : AbstractProjectImportTestCase() {
         entityStorageVerifier: (EntityStorage) -> Unit = { },
     ) {
         downloadMavenBinaries().let { path ->
-            MavenWorkspaceImporter.useMavenAndJava(path, Path.of(System.getProperty("java.home")))
+            MavenTool.useMavenAndJava(path, Path.of(System.getProperty("java.home")))
         }
         doTest(
             project,
-            MavenWorkspaceImporter,
+            MavenDriver,
             testDataDir / "maven",
             projectFile = projectFile,
             entityStorageVerifier = entityStorageVerifier

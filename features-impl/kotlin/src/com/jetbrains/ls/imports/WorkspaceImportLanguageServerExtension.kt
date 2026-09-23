@@ -5,10 +5,10 @@ import com.jetbrains.ls.api.features.BuildToolDriverEntry
 import com.jetbrains.ls.api.features.LanguageServerExtension
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.imports.api.DelegatedBuildToolDriver
-import com.jetbrains.ls.imports.gradle.GradleWorkspaceImporter
-import com.jetbrains.ls.imports.jps.JpsWorkspaceImporter
+import com.jetbrains.ls.imports.gradle.GradleDriver
+import com.jetbrains.ls.imports.jps.JpsDriver
 import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
-import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
+import com.jetbrains.ls.imports.maven.MavenDriver
 
 class WorkspaceImportLanguageServerExtension : LanguageServerExtension {
     override val configuration: LSConfigurationPiece
@@ -17,9 +17,9 @@ class WorkspaceImportLanguageServerExtension : LanguageServerExtension {
                 LSExportWorkspaceCommandDescriptorProvider,
 
                 BuildToolDriverEntry(DelegatedBuildToolDriver.of(JsonWorkspaceImporter, "json")),
-                BuildToolDriverEntry(DelegatedBuildToolDriver.of(MavenWorkspaceImporter, "maven")),
-                BuildToolDriverEntry(DelegatedBuildToolDriver.of(GradleWorkspaceImporter, "gradle")),
-                BuildToolDriverEntry(DelegatedBuildToolDriver.of(JpsWorkspaceImporter, "jps")),
+                BuildToolDriverEntry(MavenDriver),
+                BuildToolDriverEntry(GradleDriver),
+                BuildToolDriverEntry(JpsDriver),
             ),
         )
 }

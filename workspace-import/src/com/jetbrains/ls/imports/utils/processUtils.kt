@@ -1,12 +1,9 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.utils
 
-import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.diagnostic.logger
 import com.intellij.util.io.awaitExit
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImporter
-import com.jetbrains.ls.imports.maven.MavenWorkspaceImporter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +22,7 @@ internal suspend fun ProcessBuilder.runWithErrorReporting(toolName: String, even
                 e
             )
         }
-        val outputJob = logOutput(process, logger<MavenWorkspaceImporter>(), events)
+        val outputJob = logOutput(process, events)
         process.awaitExit()
         outputJob.join()
         process.exitValue()
@@ -38,7 +35,7 @@ internal suspend fun ProcessBuilder.runWithErrorReporting(toolName: String, even
     }
 }
 
-internal fun CoroutineScope.logOutput(process: Process, logger: Logger, events: SendChannel<WorkspaceImporter.ImportEvent>): Job {
+internal fun CoroutineScope.logOutput(process: Process, events: SendChannel<WorkspaceImporter.ImportEvent>): Job {
 
     return launch {
         launch(Dispatchers.IO) {
