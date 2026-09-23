@@ -83,6 +83,7 @@ import {
   handleServerDownloadChecksumMismatch,
 } from './serverDownloadRecovery';
 import { proxyJvmOptions } from './proxySettings';
+import { wslJvmOptions } from './wslJvmOptions';
 import {
   buildToolConflictState,
   createLatestSnapshotTracker,
@@ -909,13 +910,14 @@ async function startServer({
     configOption<string>(OPT_HTTP_PROXY),
     configOption<string>(OPT_HTTP_PROXY_SUPPORT),
   );
+  const wslOptions = wslJvmOptions(process.platform, vscode.env.remoteName, process.env);
   const rawDataSharing = configOption(OPT_DATA_SHARING);
   const dataSharing = isDataSharingChoice(rawDataSharing) ? rawDataSharing : 'none';
   const rawRegion = configOption(OPT_REGION);
   const region = isRegion(rawRegion) ? rawRegion : undefined;
   const env = buildLaunchEnvironment(
     process.env,
-    configuredProxyOptions,
+    [...configuredProxyOptions, ...wslOptions],
     userJvmOptions,
     dataSharing,
     region,
@@ -930,6 +932,7 @@ async function startServer({
   logInfo(`  args   : ${JSON.stringify(args)}`);
   logInfo(`  VM opts: ${JSON.stringify(userJvmOptions)}`);
   if (configuredProxyOptions.length > 0) logInfo('  proxy  : configured from VS Code settings');
+  if (wslOptions.length > 0) logInfo('  WSL    : IPv4 stack forced for the localhost relay');
   logInfo('');
 
   const serverProcess = spawn(launcherPath, args, {
@@ -1042,13 +1045,14 @@ async function startDaemonServer({
     configOption<string>(OPT_HTTP_PROXY),
     configOption<string>(OPT_HTTP_PROXY_SUPPORT),
   );
+  const wslOptions = wslJvmOptions(process.platform, vscode.env.remoteName, process.env);
   const rawDataSharing = configOption(OPT_DATA_SHARING);
   const dataSharing = isDataSharingChoice(rawDataSharing) ? rawDataSharing : 'none';
   const rawRegion = configOption(OPT_REGION);
   const region = isRegion(rawRegion) ? rawRegion : undefined;
   const env = buildLaunchEnvironment(
     process.env,
-    configuredProxyOptions,
+    [...configuredProxyOptions, ...wslOptions],
     userJvmOptions,
     dataSharing,
     region,
@@ -1062,6 +1066,7 @@ async function startDaemonServer({
   logInfo(`  args   : ${JSON.stringify(args)}`);
   logInfo(`  VM opts: ${JSON.stringify(userJvmOptions)}`);
   if (configuredProxyOptions.length > 0) logInfo('  proxy  : configured from VS Code settings');
+  if (wslOptions.length > 0) logInfo('  WSL    : IPv4 stack forced for the localhost relay');
   logInfo('');
 
   // detached + unref: the server keeps running after this editor exits, so another editor can reuse it.
@@ -1444,14 +1449,14 @@ function getUserJvmOptions(): string[] {
 
 function buildLaunchEnvironment(
   baseEnv: NodeJS.ProcessEnv,
-  configuredProxyOptions: string[],
+  generatedOptions: string[],
   extraOptions: string[],
   dataSharing: string,
   region: string | undefined,
 ): NodeJS.ProcessEnv {
   const env = { ...baseEnv };
-  // VS Code launch settings override inherited launcher defaults; additionalJvmArgs stays strongest.
-  const jvmOptions = [...configuredProxyOptions, ...extraOptions];
+  // Generated options (proxy, WSL) override inherited launcher defaults; additionalJvmArgs stays strongest.
+  const jvmOptions = [...generatedOptions, ...extraOptions];
   if (jvmOptions.length > 0) {
     const option = 'IJ_JAVA_OPTIONS';
     const current = env[option] ?? '';
