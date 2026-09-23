@@ -1,3 +1,4 @@
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 export const JvmTestCommands = {
   /** One document → its test classes and their methods. */
   discoverTestsInFile: 'intellij.jvm.discoverTestsInFile',
@@ -59,4 +60,5 @@ export interface JvmTestLaunch {
   mainClass: string;
   args: string[];
   runtimeClasspath: string[];
+  runtimeModulePath?: string[];
 }

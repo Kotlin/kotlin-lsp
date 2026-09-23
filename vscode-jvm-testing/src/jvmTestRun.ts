@@ -136,6 +136,7 @@ function testLaunchConfigs({
   launches: JvmTestLaunch[];
   paths: JvmTestRunPaths;
 }): JvmTestLaunchConfig[] {
+  const modular = (paths.modulePath ?? []).length > 0;
   return launches.map((launch) => ({
     type: DEBUG_TYPE,
     request: 'launch',
@@ -143,8 +144,15 @@ function testLaunchConfigs({
     mainClass: launch.mainClass,
     file: group.uri.fsPath,
     args: launch.args,
-    classPaths: [...launch.runtimeClasspath, ...(paths.classpath ?? [])],
-    modulePaths: paths.modulePath ?? [],
+    classPaths: [
+      ...launch.runtimeClasspath,
+      ...(modular ? [] : (launch.runtimeModulePath ?? [])),
+      ...(paths.classpath ?? []),
+    ],
+    modulePaths: [
+      ...(paths.modulePath ?? []),
+      ...(modular ? (launch.runtimeModulePath ?? []) : []),
+    ],
     vmArgs: paths.vmArgs ?? [],
     jvmTestRunToken: randomUUID(),
     console: 'none',
