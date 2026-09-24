@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features.impl.common.move
 
 import com.intellij.openapi.application.readAction
+import com.intellij.openapi.application.writeAction
 import com.intellij.openapi.vfs.findPsiDirectory
 import com.intellij.openapi.vfs.findPsiFile
 import com.jetbrains.ls.api.core.LSServer
@@ -10,7 +11,9 @@ import com.jetbrains.ls.api.core.util.fileName
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.impl.common.processors.doRefactoring
+import com.jetbrains.ls.api.features.impl.common.utils.createDestination
 import com.jetbrains.ls.api.features.impl.common.utils.findDestination
+import com.jetbrains.ls.api.features.impl.common.utils.findParentPath
 import com.jetbrains.ls.api.features.move.LSMoveProvider
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer
 import com.jetbrains.lsp.implementation.LspHandlerContext
@@ -42,6 +45,11 @@ internal object LSCommonMoveProvider : LSMoveProvider {
         isOnlyDirectories: Boolean
     ): WorkspaceEdit {
         val changes = server.withWriteAnalysisContext {
+            val destinationPath = findParentPath(params)
+
+            val targetDirectory =
+                readAction { findDestination(project, destinationPath) } ?: writeAction { createDestination(project, destinationPath) }
+
             val result = readAction {
                 val existedFile = params.find { it.newUri.findVirtualFile() != null }
                 if (existedFile != null) return@readAction MoveAnalysisResult.Error(
@@ -51,8 +59,7 @@ internal object LSCommonMoveProvider : LSMoveProvider {
                     )
                 )
 
-                val targetDirectory = findDestination(project, params)
-                    ?: return@readAction MoveAnalysisResult.Error(LspServerBundle.message("error.move.destination.not.found"))
+                if (targetDirectory == null) return@readAction MoveAnalysisResult.Error(LspServerBundle.message("error.move.destination.not.found"))
 
                 val sources = params.map {
                     val vFile = it.oldUri.findVirtualFile() ?: return@readAction MoveAnalysisResult.Error(
