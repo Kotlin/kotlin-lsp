@@ -83,15 +83,17 @@ object LSRename {
     }
 
     private fun isMove(operations: List<FileRename>): Boolean {
-        return operations.all { operation ->
-            val oldUri = operation.oldUri
-            val newUri = operation.newUri
+        val isSameDestination = operations.map { it.newUri.toPath()?.parent ?: return false }.distinct().size == 1
+        if (!isSameDestination) return false
 
-            val oldParent = oldUri.toPath()?.parent ?: return@all false
-            val newParent = newUri.toPath()?.parent ?: return@all false
+        val isFilenamePreserved =
+            operations.all { operation ->
+                val oldUri = operation.oldUri
+                val newUri = operation.newUri
+                oldUri.fileName == newUri.fileName
+            }
 
-            oldUri.fileName == newUri.fileName && oldParent != newParent
-        }
+        return isFilenamePreserved
     }
 
     private enum class OperationKind {

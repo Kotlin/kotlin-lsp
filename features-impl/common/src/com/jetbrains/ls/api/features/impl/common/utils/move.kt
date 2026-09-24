@@ -6,22 +6,49 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.findPsiDirectory
 import com.intellij.psi.PsiDirectory
 import com.intellij.util.concurrency.annotations.RequiresReadLock
+import com.intellij.util.concurrency.annotations.RequiresWriteLock
 import com.jetbrains.ls.api.core.util.toPath
 import com.jetbrains.lsp.protocol.FileRename
-
+import java.nio.file.Path
 
 /**
- * Searches for the destination directory for a move operation.
- * @param params The list of file movements.
+ * Searches for the [Path] for a move operation.
+ */
+fun findParentPath(params: List<FileRename>): Path? {
+    val files = params.map {
+        it.newUri.toPath()?.parent ?: return null
+    }.distinct()
+    return files.singleOrNull()
+}
+
+/**
+ * Searches for the [PsiDirectory] for a move operation.
  */
 @RequiresReadLock
-fun findDestination(project: Project, params: List<FileRename>): PsiDirectory? {
-    val files = params.map {
-        val parent = it.newUri.toPath()?.parent ?: return null
-        VirtualFileManager.getInstance().findFileByNioPath(parent) ?: return null
-    }.distinct()
+fun findDestination(project: Project, destinationPath: Path?): PsiDirectory? {
+    if (destinationPath == null) return null
+    val destinationVFile = VirtualFileManager.getInstance().findFileByNioPath(destinationPath) ?: return null
 
-    val destination = files.singleOrNull() ?: return null
+    return destinationVFile.findPsiDirectory(project)
+}
 
-    return destination.findPsiDirectory(project)
+/**
+ * Creates the [PsiDirectory] for a move operation.
+ */
+@RequiresWriteLock
+fun createDestination(project: Project, destinationPath: Path?): PsiDirectory? {
+    if (destinationPath == null) return null
+    val missingNames = mutableListOf<String>()
+    var path: Path = destinationPath
+
+    while (true) {
+        val file = VirtualFileManager.getInstance().findFileByNioPath(path)
+        if (file != null) {
+            val directory = file.findPsiDirectory(project) ?: return null
+            return missingNames.asReversed().fold(directory) { parent, name -> parent.createSubdirectory(name) }
+        }
+
+        missingNames += path.fileName?.toString() ?: return null
+        path = path.parent ?: return null
+    }
 }

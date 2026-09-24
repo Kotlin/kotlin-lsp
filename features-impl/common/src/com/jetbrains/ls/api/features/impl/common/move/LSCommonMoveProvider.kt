@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features.impl.common.move
 
 import com.intellij.openapi.application.readAction
+import com.intellij.openapi.application.writeAction
 import com.intellij.openapi.vfs.findPsiDirectory
 import com.intellij.openapi.vfs.findPsiFile
 import com.jetbrains.ls.api.core.LSServer
@@ -9,9 +10,10 @@ import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.fileName
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.features.LspServerBundle
-import com.jetbrains.ls.api.features.impl.common.processors.LSRefactoringProcessor
 import com.jetbrains.ls.api.features.impl.common.processors.doRefactoring
+import com.jetbrains.ls.api.features.impl.common.utils.createDestination
 import com.jetbrains.ls.api.features.impl.common.utils.findDestination
+import com.jetbrains.ls.api.features.impl.common.utils.findParentPath
 import com.jetbrains.ls.api.features.move.LSMoveProvider
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer
 import com.jetbrains.lsp.implementation.LspHandlerContext
@@ -39,23 +41,38 @@ internal object LSCommonMoveProvider : LSMoveProvider {
     context(server: LSServer, handlerContext: LspHandlerContext)
     private suspend fun doMove(
         params: List<FileRename>,
-        isOnlyDirectories : Boolean
+        isOnlyDirectories: Boolean
     ): WorkspaceEdit {
         val changes = server.withWriteAnalysisContext {
-            val processorOrError: ProcessorOrError = readAction {
-                val existedFile = params.find { it.newUri.findVirtualFile() != null }
-                if (existedFile != null) return@readAction ProcessorOrError.Error(LspServerBundle.message("error.move.file.exists.in.destination", existedFile.newUri.fileName))
+            val destinationPath = findParentPath(params)
 
-                val targetDirectory = findDestination(project, params) ?: return@readAction ProcessorOrError.Error(LspServerBundle.message("error.move.destination.not.found"))
+            val targetDirectory =
+                readAction { findDestination(project, destinationPath) } ?: writeAction { createDestination(project, destinationPath) }
+
+            val result = readAction {
+                val existedFile = params.find { it.newUri.findVirtualFile() != null }
+                if (existedFile != null) return@readAction MoveAnalysisResult.Error(
+                    LspServerBundle.message(
+                        "error.move.file.exists.in.destination",
+                        existedFile.newUri.fileName
+                    )
+                )
+
+                if (targetDirectory == null) return@readAction MoveAnalysisResult.Error(LspServerBundle.message("error.move.destination.not.found"))
 
                 val sources = params.map {
-                    val vFile = it.oldUri.findVirtualFile() ?: return@readAction ProcessorOrError.Error(LspServerBundle.message("error.move.file.not.found", it.oldUri.fileName))
+                    val vFile = it.oldUri.findVirtualFile() ?: return@readAction MoveAnalysisResult.Error(
+                        LspServerBundle.message(
+                            "error.move.file.not.found",
+                            it.oldUri.fileName
+                        )
+                    )
 
                     when {
                         vFile.isDirectory -> vFile.findPsiDirectory(project)
                         !isOnlyDirectories -> vFile.findPsiFile(project)
                         else -> null
-                    } ?: return@readAction ProcessorOrError.Error(LspServerBundle.message("error.move.file.not.found", it.oldUri.fileName))
+                    } ?: return@readAction MoveAnalysisResult.Error(LspServerBundle.message("error.move.file.not.found", it.oldUri.fileName))
                 }
 
                 val classified = sources.groupBy { it.name }
@@ -64,7 +81,7 @@ internal object LSCommonMoveProvider : LSMoveProvider {
                         if (value.size > 1) value.first().name else null
                     }
 
-                    return@readAction ProcessorOrError.Error(LspServerBundle.message("error.move.files.with.same.name", duplicate))
+                    return@readAction MoveAnalysisResult.Error(LspServerBundle.message("error.move.files.with.same.name", duplicate))
                 }
 
                 val extensions = if (isOnlyDirectories) LSMoveHandlerDelegate.forDirectories() else LSMoveHandlerDelegate.forFiles()
@@ -76,12 +93,13 @@ internal object LSCommonMoveProvider : LSMoveProvider {
                 val handler = extensions.find { it.canMove(candidates, targetDirectory) } ?: LSGenericMoveHandlerDelegate
 
                 val processor = handler.createProcessor(candidates, targetDirectory)
-                if (processor != null) ProcessorOrError.Processor(processor = processor) else error("unable to create processor")
+                if (processor != null) MoveAnalysisResult.Success(processor = processor) else MoveAnalysisResult.Error(LspServerBundle.message("error.move.unknown.problem")
+                )
             }
 
-            when (processorOrError) {
-                is ProcessorOrError.Error -> failMove(processorOrError.message)
-                is ProcessorOrError.Processor -> doRefactoring(processor = processorOrError.processor, granularity = TextEditsComputer.DiffGranularity.WORD, uriToSkip = params.map { it.oldUri }, true)
+            when (result) {
+                is MoveAnalysisResult.Error -> failMove(result.message)
+                is MoveAnalysisResult.Success -> doRefactoring(processor = result.processor, granularity = TextEditsComputer.DiffGranularity.WORD, uriToSkip = params.map { it.oldUri }, true)
             }
         }
 
@@ -98,13 +116,5 @@ internal object LSCommonMoveProvider : LSMoveProvider {
             )
         )
         throwLspError(RenameRequestType, message, Unit, ErrorCodes.InvalidParams)
-    }
-
-    private sealed interface ProcessorOrError {
-        @JvmInline
-        value class Processor(val processor: LSRefactoringProcessor) : ProcessorOrError
-
-        @JvmInline
-        value class Error(val message: String) : ProcessorOrError
     }
 }
