@@ -15,6 +15,7 @@ import com.jetbrains.analyzer.kotlin.initKotlinWorkspaceModelCaches
 import com.jetbrains.analyzer.kotlin.kotlinPlugin
 import com.jetbrains.ls.api.features.KotlinFirCacheEntry
 import com.jetbrains.ls.api.features.WorkspaceComponentEntry
+import com.jetbrains.ls.api.features.impl.common.codeLens.LSRelatedItemsCodeLensProvider
 import com.jetbrains.ls.api.features.impl.common.definitions.LSCommonDefinitionProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInjectionInspectionDiagnosticProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInjectionSyntaxErrorDiagnosticProvider
@@ -105,6 +106,7 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSCommonFormattingProvider(setOf(LSKotlinLanguage)),
         LSCommonImplementationProvider(setOf(LSKotlinLanguage)),
         LSCommonTypeDefinitionProvider(setOf(LSKotlinLanguage)),
+        LSRelatedItemsCodeLensProvider(setOf(LSKotlinLanguage)),
         LSKotlinInlayHintsProvider,
         LSCommonFoldingRangeProvider(setOf(LSKotlinLanguage)) {
             when (it) {
