@@ -11,7 +11,9 @@ import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticToken
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokenModifier
+import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokenModifierCustom
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokenModifierPredefined
+import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokenType
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokenTypePredefined
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokenWithRange
 import com.jetbrains.ls.api.features.semanticTokens.LSSemanticTokensProviderBase
@@ -26,6 +28,7 @@ import org.jetbrains.kotlin.analysis.api.symbols.KaCallableSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassKind
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassLikeSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaClassSymbol
+import org.jetbrains.kotlin.analysis.api.symbols.KaConstructorSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaContextParameterSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaDeclarationSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.KaEnumEntrySymbol
@@ -49,17 +52,26 @@ import org.jetbrains.kotlin.builtins.StandardNames
 import org.jetbrains.kotlin.idea.references.mainReference
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtLabelReferenceExpression
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtSimpleNameExpression
+import org.jetbrains.kotlin.psi.KtValueArgumentName
 
 private val LOG = logger<LSKotlinSemanticTokensProvider>()
+
+/**
+ * Marks a `parameter` token on a named-argument name (`foo(name = 1)`).
+ * Clients that do not know it color the name as a parameter; Draft drops such tokens to keep its native named-argument color.
+ * Keep in sync with `NAMED_ARGUMENT_TOKEN_MODIFIER` in Draft's `DraftIntelliJServerLspIntegrationProvider.kt`.
+ */
+private val NAMED_ARGUMENT: LSSemanticTokenModifierCustom = LSSemanticTokenModifierCustom("namedArgument")
 
 @ApiStatus.Internal
 object LSKotlinSemanticTokensProvider : LSSemanticTokensProviderBase() {
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
-    override val supportedTokenTypes: List<LSSemanticTokenTypePredefined> = LSSemanticTokenTypePredefined.ALL
-    override val supportedTokenModifiers: List<LSSemanticTokenModifierPredefined> = LSSemanticTokenModifierPredefined.ALL
+    override val supportedTokenTypes: List<LSSemanticTokenType> = LSSemanticTokenTypePredefined.ALL
+    override val supportedTokenModifiers: List<LSSemanticTokenModifier> = LSSemanticTokenModifierPredefined.ALL + NAMED_ARGUMENT
 
     context(server: LSServer)
     override fun getSemanticTokens(
@@ -80,6 +92,19 @@ object LSKotlinSemanticTokensProvider : LSSemanticTokensProviderBase() {
         val psiElement = this
         with(kaSession) {
             when (psiElement) {
+                // label declarations and references (`lit@`, `return@lit`, `this@Outer`), no resolve needed
+                is KtLabelReferenceExpression -> {
+                    LSSemanticTokenWithRange(LSSemanticToken(LSSemanticTokenTypePredefined.LABEL), textRange.toLspRange(document))
+                }
+
+                // a named-argument name (`foo(name = 1)`) always names a parameter, no resolve needed
+                is KtSimpleNameExpression if psiElement.parent is KtValueArgumentName -> {
+                    LSSemanticTokenWithRange(
+                        LSSemanticToken(LSSemanticTokenTypePredefined.PARAMETER, listOf(NAMED_ARGUMENT)),
+                        textRange.toLspRange(document),
+                    )
+                }
+
                 is KtSimpleNameExpression -> {
                     val resolvedTo = psiElement.mainReference.resolveToSymbol() ?: return null
                     val token = getRangeWithToken(resolvedTo) ?: return null
@@ -141,6 +166,15 @@ object LSKotlinSemanticTokensProvider : LSSemanticTokensProviderBase() {
                 is KaReceiverParameterSymbol -> null
             }
 
+            // a constructor call is colored as its class, like IDEA; via a typealias the container is the alias
+            is KaConstructorSymbol -> {
+                val classToken = (symbol.containingDeclaration as? KaClassLikeSymbol)?.let { getRangeWithToken(it) } ?: return null
+                // a deprecated constructor of a live class keeps its own modifier
+                return if (symbol.isDeprecated && LSSemanticTokenModifierPredefined.DEPRECATED !in classToken.modifiers) {
+                    classToken.withModifiers(LSSemanticTokenModifierPredefined.DEPRECATED)
+                }
+                else classToken
+            }
             is KaFunctionSymbol -> when (symbol) {
                 is KaNamedFunctionSymbol if symbol.isOperator -> LSSemanticTokenTypePredefined.OPERATOR
                 else -> when (symbol.location) {

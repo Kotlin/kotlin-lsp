@@ -101,6 +101,13 @@ class LSSemanticTokenTypePredefined private constructor(
          */
         val DECORATOR: LSSemanticTokenTypePredefined = predefined("decorator")
 
+        /**
+         * For identifiers that declare or reference a label.
+         *
+         * @since 3.18.0
+         */
+        val LABEL: LSSemanticTokenTypePredefined = predefined("label")
+
         val ALL: List<LSSemanticTokenTypePredefined> = all.toList()
 
         init {

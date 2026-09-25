@@ -16,8 +16,8 @@ import com.jetbrains.lsp.protocol.SemanticTokensRangeParams
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 
 abstract class LSSemanticTokensProviderBase : LSSemanticTokensProvider {
-    abstract val supportedTokenTypes: List<LSSemanticTokenTypePredefined>
-    abstract val supportedTokenModifiers: List<LSSemanticTokenModifierPredefined>
+    abstract val supportedTokenTypes: List<LSSemanticTokenType>
+    abstract val supportedTokenModifiers: List<LSSemanticTokenModifier>
 
     /**
      * @param documentRange `null` means tokens from the whole file`
