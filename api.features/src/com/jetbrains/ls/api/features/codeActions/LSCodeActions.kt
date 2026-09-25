@@ -46,7 +46,7 @@ object LSCodeActions {
         }
     }
 
-    context(configuration: LSConfiguration)
+    context(server: LSServer, configuration: LSConfiguration)
     private fun getProviders(params: CodeActionParams): List<LSCodeActionProvider> {
         val all = configuration.entriesFor<LSCodeActionProvider>(params.textDocument)
         val only = params.context.only ?: return all

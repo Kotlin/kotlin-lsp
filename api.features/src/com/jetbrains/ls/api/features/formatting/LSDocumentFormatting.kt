@@ -22,7 +22,7 @@ object LSDocumentFormatting {
         return provider.getFormattingRanged(params)
     }
 
-    context(configuration: LSConfiguration)
+    context(server: LSServer, configuration: LSConfiguration)
     private fun provider(textDocument: TextDocumentIdentifier): LSFormattingProvider? {
         val providers = configuration.entriesFor<LSFormattingProvider>(textDocument)
         return when (providers.size) {

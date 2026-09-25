@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features
 
 import com.intellij.ide.plugins.PluginMainDescriptor
+import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
@@ -11,6 +12,8 @@ import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.language.matches
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 import com.jetbrains.lsp.protocol.URI
+
+data class TextDocumentIdentifierWithLspLanguage(val document: TextDocumentIdentifier, val lspLanguage: String?)
 
 class LSConfiguration(
     val entries: List<LSConfigurationEntry>,
@@ -51,10 +54,17 @@ class LSConfiguration(
     }
 
     inline fun <reified E : LSLanguageSpecificConfigurationEntry> entriesFor(
-        document: TextDocumentIdentifier,
+        document: TextDocumentIdentifierWithLspLanguage,
     ): List<E> {
         val language = languageFor(document) ?: return emptyList()
         return entriesFor(language)
+    }
+
+    context(server: LSServer)
+    inline fun <reified E : LSLanguageSpecificConfigurationEntry> entriesFor(
+        document: TextDocumentIdentifier,
+    ): List<E> {
+        return entriesFor(TextDocumentIdentifierWithLspLanguage(document, server.documents.getLanguageId(document.uri.uri)))
     }
 
     inline fun <reified E : LSLanguageSpecificConfigurationEntry> entriesFor(
@@ -76,6 +86,11 @@ class LSConfiguration(
     ): E? {
         val entries = entries<E>()
         return entries.firstOrNull { it.uniqueId == id }
+    }
+
+    fun languageFor(document: TextDocumentIdentifierWithLspLanguage): LSLanguage? {
+        return languageFor(document.document)
+            ?: document.lspLanguage?.let { lspName -> languages.firstOrNull { it.lspName == lspName } }
     }
 
     fun languageFor(document: TextDocumentIdentifier): LSLanguage? {
