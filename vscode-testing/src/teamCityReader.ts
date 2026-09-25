@@ -17,6 +17,7 @@ export class TeamCityReader {
   private readonly nodesById = new Map<string, TestRunNode>();
   private readonly takenLocations = new Set<string>();
   private readonly nodesByName = new Map<string, TestRunNode>();
+  private readonly configurations = new Map<string, MessageAttributes>();
 
   constructor(
     private readonly report: TestRunReport,
@@ -47,15 +48,18 @@ export class TeamCityReader {
     const { attributes } = message;
     switch (message.name) {
       case 'testStarted':
+        if (this.holdsConfiguration(attributes)) break;
         this.report.testStarted(this.started(attributes));
         break;
       case 'testSuiteStarted':
         this.report.suiteStarted(this.started(attributes));
         break;
       case 'testFinished':
+        if (this.endsConfiguration(attributes)) break;
         this.report.passed({ node: this.named(attributes), duration: message.testDuration });
         break;
       case 'testFailed': {
+        this.startFailedConfiguration(attributes);
         const result = {
           node: this.named(attributes),
           failure: this.failureOf(message),
@@ -81,6 +85,23 @@ export class TeamCityReader {
         // Another kind of service message (`buildStatus`, ...): nothing about a test node.
         break;
     }
+  }
+
+  private holdsConfiguration(attributes: MessageAttributes): boolean {
+    if (attributes.config !== 'true' || attributes.nodeId === undefined) return false;
+    this.configurations.set(attributes.nodeId, attributes);
+    return true;
+  }
+
+  private endsConfiguration({ nodeId }: MessageAttributes): boolean {
+    return nodeId !== undefined && this.configurations.delete(nodeId);
+  }
+
+  private startFailedConfiguration({ nodeId }: MessageAttributes): void {
+    const started = nodeId === undefined ? undefined : this.configurations.get(nodeId);
+    if (!started) return;
+    this.endsConfiguration(started);
+    this.report.testStarted(this.started(started));
   }
 
   private failureOf({ failureMessage, stacktrace, expected, actual }: TestFailed): TestFailure {

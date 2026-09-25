@@ -36,6 +36,14 @@ function readerFor(stackFrames?: StackFrameParser) {
 const CLASS_HINT = 'java:suite://com.example.Foo';
 const METHOD_HINT = 'java:test://com.example.Foo/test';
 const PARAM_HINT = 'java:test://com.example.Foo/paramTest';
+/** A `@BeforeMethod` before the first test, as the TestNG runner reports it. */
+const SET_UP = {
+  name: 'Foo.setUp',
+  nodeId: 'com.example.Foo/setUp[1]',
+  parentNodeId: 'com.example.Foo',
+  locationHint: 'java:test://com.example.Foo/setUp[1]',
+  config: 'true',
+};
 
 describe('which node a runner message is about', () => {
   const cases: {
@@ -233,6 +241,55 @@ describe('which node a runner message is about', () => {
 
     assert.deepEqual(calls, ['started moduleA/class/configuration']);
     assert.equal(tree.get('moduleA/class/configuration')?.item.label, 'Class Configuration');
+  });
+
+  test('a configuration method that passes is no node, as the IDE hides it', () => {
+    const { feed, calls, tree } = readerFor();
+
+    feed(
+      teamcity('testSuiteStarted', { nodeId: 'com.example.Foo', locationHint: CLASS_HINT }),
+      teamcity('testStarted', SET_UP),
+      teamcity('testFinished', { name: 'Foo.setUp', nodeId: SET_UP.nodeId }),
+      teamcity('testStarted', { nodeId: 'com.example.Foo/test', locationHint: METHOD_HINT }),
+      teamcity('testFinished', { nodeId: 'com.example.Foo/test' }),
+    );
+
+    assert.deepEqual(calls, [
+      'started moduleA/com.example.Foo#test',
+      'passed moduleA/com.example.Foo#test',
+    ]);
+    assert.equal(tree.get('moduleA/com.example.Foo/setUp[1]'), undefined);
+  });
+
+  test('a configuration method that fails is a node of its own under the class', () => {
+    const { feed, calls } = readerFor();
+
+    feed(
+      teamcity('testSuiteStarted', { nodeId: 'com.example.Foo', locationHint: CLASS_HINT }),
+      teamcity('testStarted', SET_UP),
+      teamcity('testFailed', { name: 'Foo.setUp', nodeId: SET_UP.nodeId, message: 'boom' }),
+      teamcity('testFinished', { name: 'Foo.setUp', nodeId: SET_UP.nodeId }),
+    );
+
+    assert.deepEqual(calls, [
+      'started moduleA/com.example.Foo/setUp[1]',
+      'failed moduleA/com.example.Foo/setUp[1]',
+    ]);
+  });
+
+  test('a configuration method that passes says nothing about the one test the run is about', () => {
+    const { report, calls } = makeReport({ launched: ['com.example.Foo#a'] });
+    const reader = new TeamCityReader(report);
+
+    reader.feed(
+      [
+        teamcity('testSuiteStarted', { nodeId: 'com.example.Foo', locationHint: CLASS_HINT }),
+        teamcity('testStarted', SET_UP),
+        teamcity('testFinished', { name: 'Foo.setUp', nodeId: SET_UP.nodeId }),
+      ].join('\n') + '\n',
+    );
+
+    assert.deepEqual(calls, []);
   });
 
   test('a run named by a suite file still lands on the classes and methods of the tree', () => {
