@@ -205,6 +205,26 @@ describe('status bar text', () => {
     );
   });
 
+  it('shows the license state instead of Running for an unlicensed server', () => {
+    const unlicensed = {
+      ...contribution,
+      presentation: {
+        text: '$(jetbrains-ij-crossed)',
+        tooltip: 'Activate a license to access all extension features',
+        isProblem: true,
+        statusText: 'No active license',
+      },
+    };
+    const content = computeStatusTooltipContent('running', 'Java and Kotlin', unlicensed, []);
+
+    assert.equal(content.heading, '**Java and Kotlin**&nbsp;&nbsp;No active license');
+    assert.equal(content.detail, 'Activate a license to access all extension features');
+    assert.equal(
+      computeStatusText('running', 'Java and Kotlin', unlicensed),
+      '$(jetbrains-ij-crossed) Java and Kotlin',
+    );
+  });
+
   it('hides a healthy contribution detail after LSP startup fails', () => {
     const content = computeStatusTooltipContent(
       'stopped',
