@@ -1,7 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 import assert from 'node:assert/strict';
 import { beforeEach, describe, test } from 'node:test';
-import type { CancellationToken, Uri } from 'vscode';
+import type { CancellationToken, TestRun, Uri } from 'vscode';
 import type { ResolvedBuildCommand } from '@jetbrains/vscode-extension-core/build';
 import type { TestRunGroup, TestRunInput, TestRunReport } from '@jetbrains/vscode-testing';
 import { JvmTestBuilds } from './jvmTestBuild';
@@ -31,7 +31,7 @@ function inputOf(path: string, token = tokenOf()): TestRunInput {
   const report = {
     output: ({ text }: { text: string }) => output.push(text),
   } as unknown as TestRunReport;
-  return { group, report, token };
+  return { group, report, token, run: {} as TestRun };
 }
 
 describe('JvmTestBuilds', () => {

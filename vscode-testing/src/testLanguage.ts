@@ -1,5 +1,5 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
-import type { CancellationToken, Uri } from 'vscode';
+import type { CancellationToken, TestRun, Uri } from 'vscode';
 import type { ServerCapabilities } from 'vscode-languageclient/node';
 import type { TestItemDto, TestNodeId, UniqueTestNode } from './testProtocol';
 import type { TestRunReport } from './testRunReport';
@@ -35,6 +35,7 @@ export interface TestRunInput {
   readonly group: TestRunGroup;
   readonly report: TestRunReport;
   readonly token: CancellationToken;
+  readonly run: TestRun;
 }
 
 export interface TestRunGroup {

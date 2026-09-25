@@ -1,7 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { type CancellationToken, Uri } from 'vscode';
+import { type CancellationToken, type TestRun, Uri } from 'vscode';
 import { debugAdapterRunner, type TestLaunchConfig } from './debugAdapterRunner';
 import type { TrackedDebugConfiguration } from './testDebugLaunch';
 import type { TestRunGroup } from './testLanguage';
@@ -26,6 +26,8 @@ const GROUP: TestRunGroup = {
   uri: Uri.parse('file:///p/moduleA/src/FooTest.java'),
   name: 'Run FooTest',
 };
+
+const RUN = {} as TestRun;
 
 /** The process side of a report: what each process printed and how it exited, as `<call> <value>`. */
 function recordingReport(): { readonly report: TestRunReport; readonly calls: string[] } {
@@ -71,17 +73,19 @@ function makeRunner({
   readonly whileRunning?: () => void;
 } = {}) {
   const configs: TrackedDebugConfiguration[] = [];
+  const runs: TestRun[] = [];
   const runner = debugAdapterRunner<FakeLaunch>({
     mode,
     launches: async () => launches,
-    spawn: async (config, print) => {
+    spawn: async ({ config, output: print, testRun }) => {
       configs.push(config);
+      runs.push(testRun);
       print(output);
       whileRunning();
       return exitCode;
     },
   });
-  return { runner, configs };
+  return { runner, configs, runs };
 }
 
 describe('running a group through a debug adapter', () => {
@@ -89,7 +93,7 @@ describe('running a group through a debug adapter', () => {
     const { runner, configs } = makeRunner({ launches: [launch('FooTest'), launch('BarTest')] });
     const { report } = recordingReport();
 
-    await runner.run({ group: GROUP, report, token: cancellation().token });
+    await runner.run({ group: GROUP, report, token: cancellation().token, run: RUN });
 
     assert.deepEqual(
       configs.map(({ mainClass, name, type, request }) => ({ mainClass, name, type, request })),
@@ -101,6 +105,19 @@ describe('running a group through a debug adapter', () => {
     assert.notEqual(configs[0].testRunToken, configs[1].testRunToken);
   });
 
+  test('links each process to the test run, so stopping it cancels the run', async () => {
+    const { runner, runs } = makeRunner({ launches: [launch('FooTest'), launch('BarTest')] });
+
+    await runner.run({
+      group: GROUP,
+      report: recordingReport().report,
+      token: cancellation().token,
+      run: RUN,
+    });
+
+    assert.deepEqual(runs, [RUN, RUN]);
+  });
+
   test('passes on the console the language chose for its adapter', async () => {
     const { runner, configs } = makeRunner({ launches: [launch('FooTest', 'internalConsole')] });
 
@@ -108,6 +125,7 @@ describe('running a group through a debug adapter', () => {
       group: GROUP,
       report: recordingReport().report,
       token: cancellation().token,
+      run: RUN,
     });
 
     assert.equal(configs[0].console, 'internalConsole');
@@ -121,11 +139,13 @@ describe('running a group through a debug adapter', () => {
       group: GROUP,
       report: recordingReport().report,
       token: cancellation().token,
+      run: RUN,
     });
     await debug.runner.run({
       group: GROUP,
       report: recordingReport().report,
       token: cancellation().token,
+      run: RUN,
     });
 
     assert.equal(run.configs[0].internalConsoleOptions, 'neverOpen');
@@ -140,7 +160,7 @@ describe('running a group through a debug adapter', () => {
     });
     const { report, calls } = recordingReport();
 
-    await runner.run({ group: GROUP, report, token: cancellation().token });
+    await runner.run({ group: GROUP, report, token: cancellation().token, run: RUN });
 
     assert.deepEqual(calls, [
       'line first',
@@ -156,7 +176,12 @@ describe('running a group through a debug adapter', () => {
     const { runner } = makeRunner({ launches: [] });
 
     await assert.rejects(
-      runner.run({ group: GROUP, report: recordingReport().report, token: cancellation().token }),
+      runner.run({
+        group: GROUP,
+        report: recordingReport().report,
+        token: cancellation().token,
+        run: RUN,
+      }),
       /The server found no way to run these tests\./,
     );
   });
@@ -166,7 +191,7 @@ describe('running a group through a debug adapter', () => {
     const { token, cancel } = cancellation();
     cancel();
 
-    await runner.run({ group: GROUP, report: recordingReport().report, token });
+    await runner.run({ group: GROUP, report: recordingReport().report, token, run: RUN });
 
     assert.deepEqual(configs, []);
   });
@@ -179,7 +204,7 @@ describe('running a group through a debug adapter', () => {
     });
     const { report, calls } = recordingReport();
 
-    await runner.run({ group: GROUP, report, token });
+    await runner.run({ group: GROUP, report, token, run: RUN });
 
     assert.equal(configs.length, 1);
     assert.deepEqual(calls, []);

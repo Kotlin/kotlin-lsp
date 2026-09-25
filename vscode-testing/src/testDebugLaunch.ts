@@ -5,6 +5,7 @@ import {
   type DebugConfiguration,
   type DebugSession,
   type Disposable,
+  type TestRun,
   type WorkspaceFolder,
 } from 'vscode';
 
@@ -24,6 +25,7 @@ export interface TestProcessLaunch {
   readonly output: (text: string) => void;
   readonly mode: 'run' | 'debug';
   readonly token: CancellationToken;
+  readonly testRun: TestRun;
 }
 
 export function launchAndCollectOutput({
@@ -32,6 +34,7 @@ export function launchAndCollectOutput({
   output,
   mode,
   token,
+  testRun,
 }: TestProcessLaunch): Promise<number | undefined> {
   return new Promise((resolve, reject) => {
     let exitCode: number | undefined;
@@ -76,7 +79,7 @@ export function launchAndCollectOutput({
       }),
     );
 
-    debug.startDebugging(folder, config, { noDebug: mode === 'run' }).then(
+    debug.startDebugging(folder, config, { noDebug: mode === 'run', testRun }).then(
       (started) => {
         if (!started) settle(() => reject(new Error('Failed to start the test process.')));
       },
