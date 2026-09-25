@@ -294,13 +294,22 @@ describe('a run that ends without saying why', () => {
     assert.equal(text(messages.get(A_ID)), 'Process exited with code 1.');
   });
 
-  test('a process that exits cleanly leaves its unmentioned test passing', () => {
+  test('a process that exits cleanly skips the test it never mentioned', () => {
     const { report, calls } = single();
     report.processExited(0);
 
     withErrorLog(() => report.conclude());
 
-    assert.deepEqual(calls, [`passed ${A_ID}`]);
+    assert.deepEqual(calls, [`skipped ${A_ID}`]);
+  });
+
+  test('a process that exits cleanly without a word about a class skips the class and its tests', () => {
+    const { report, calls } = makeReport({ launched: ['com.example.Foo'] });
+    report.processExited(0);
+
+    withErrorLog(() => report.conclude());
+
+    assert.deepEqual(calls, [`skipped ${FOO_ID}`, `skipped ${A_ID}`, `skipped ${B_ID}`]);
   });
 
   test('the first process that failed says how the group went', () => {

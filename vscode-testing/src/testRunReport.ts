@@ -256,8 +256,8 @@ export class GroupReport implements TestRunReport {
     }
     console.error(`[test] No result for '${item.id}'.`);
     if (this.exitCode === 0) {
-      this.state.conclude(item, 'passed');
-      this.options.run.passed(item);
+      this.state.conclude(item, 'skipped');
+      this.options.run.skipped(item);
     } else {
       this.state.conclude(item, 'errored');
       this.options.run.errored(item, this.exitFailure());
