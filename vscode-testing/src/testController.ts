@@ -1,3 +1,4 @@
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 import {
   type CancellationToken,
   type Disposable,
@@ -12,57 +13,74 @@ import {
 } from 'vscode';
 import { subscribeToClientEvent } from '@jetbrains/vscode-extension-core';
 import { type LanguageClient, State } from 'vscode-languageclient/node';
-import { JvmTestBuilds } from './jvmTestBuild';
-import { JvmTestDiscovery } from './jvmTestDiscovery';
-import { leafTests, planTestRun } from './jvmTestPlan';
-import { JvmTestTree, RUNNABLE_TAG } from './jvmTestTree';
-import { runTestGroup } from './jvmTestRun';
+import { LanguageFileCoverage } from './testCoverage';
+import { lspDiscoveryServer, TestTreeDiscovery } from './testDiscovery';
+import { leafTests } from './testItems';
+import type { TestLanguage, TestProfile } from './testLanguage';
+import { TestProfileTags } from './testProfileTags';
+import { GroupReport } from './testRunReport';
+import { TestTree } from './testTree';
 import { WorkspaceImportStateNotification } from './workspaceImport';
 
 const CHANGE_DEBOUNCE_MS = 500;
 
-export function registerJvmTestController(context: ExtensionContext, client: LanguageClient) {
-  const controller = tests.createTestController('intellijJvmTest', 'JVM Tests');
+export function registerTestController<Profile extends string>(
+  context: ExtensionContext,
+  client: LanguageClient,
+  language: TestLanguage<Profile>,
+) {
+  const controller = tests.createTestController(language.controller.id, language.controller.label);
   context.subscriptions.push(controller);
 
-  const tree = new JvmTestTree(controller);
-  const discovery = new JvmTestDiscovery(tree);
+  const tags = new TestProfileTags(language.profiles);
+  const tree = new TestTree(controller, tags);
+  const discovery = new TestTreeDiscovery(tree, language.discovery, lspDiscoveryServer);
 
-  const runHandler = async (request: TestRunRequest, token: CancellationToken): Promise<void> => {
-    // A module holds no test until it is scanned, and a run of one has to find them.
-    await discovery.resolveModules(
-      request.include ?? [...controller.items].map(([, item]) => item),
+  const runHandler =
+    (profile: TestProfile<Profile>) =>
+    async (request: TestRunRequest, token: CancellationToken): Promise<void> => {
+      const groups = await discovery.planRun(request, controller.items, tags.of(profile));
+      if (groups.length === 0) {
+        void window.showInformationMessage('There is no test to run.');
+        return;
+      }
+      const run = controller.createTestRun(request);
+      try {
+        const runner = language.startRun(profile.id);
+        for (const group of groups) {
+          for (const item of group.items) {
+            for (const test of leafTests(item)) run.enqueued(test);
+          }
+        }
+        for (const group of groups) {
+          if (token.isCancellationRequested) break;
+          const report = new GroupReport({ run, tree, group });
+          try {
+            await runner.run({ group, report, token });
+            if (!token.isCancellationRequested) report.conclude();
+          } catch (e) {
+            const message = new TestMessage(e instanceof Error ? e.message : String(e));
+            for (const item of group.items) run.errored(item, message);
+          }
+        }
+      } finally {
+        run.end();
+      }
+    };
+  const buttonsWithDefault = new Set<TestProfile['button']>();
+  for (const profile of language.profiles) {
+    const runProfile = controller.createRunProfile(
+      profile.label,
+      kindOf(profile.button),
+      runHandler(profile),
+      !buttonsWithDefault.has(profile.button),
+      tags.of(profile),
     );
-    const groups = planTestRun(request, controller.items, tree);
-    if (groups.length === 0) {
-      void window.showInformationMessage('There is no test to run.');
-      return;
-    }
-    await discovery.resolveMethods(groups.flatMap((group) => group.items));
-    const run = controller.createTestRun(request);
-    const builds = new JvmTestBuilds({ run });
-    const noDebug = request.profile?.kind !== TestRunProfileKind.Debug;
-    try {
-      for (const group of groups) {
-        for (const item of group.items) {
-          for (const test of leafTests(item)) run.enqueued(test);
-        }
-      }
-      for (const group of groups) {
-        if (token.isCancellationRequested) break;
-        try {
-          await runTestGroup({ group, run, tree, builds, noDebug, token });
-        } catch (e) {
-          const message = new TestMessage(e instanceof Error ? e.message : String(e));
-          for (const item of group.items) run.errored(item, message);
-        }
-      }
-    } finally {
-      run.end();
-    }
-  };
-  controller.createRunProfile('Run', TestRunProfileKind.Run, runHandler, true, RUNNABLE_TAG);
-  controller.createRunProfile('Debug', TestRunProfileKind.Debug, runHandler, false, RUNNABLE_TAG);
+    buttonsWithDefault.add(profile.button);
+    // Any profile may measure coverage: a debug run can, and so can one with a profiler.
+    runProfile.loadDetailedCoverage = async (_run, coverage, token) =>
+      coverage instanceof LanguageFileCoverage ? coverage.details(token) : [];
+  }
   controller.refreshHandler = () => discovery.refreshWorkspace();
   controller.resolveHandler = (item) =>
     item ? discovery.resolve(item) : discovery.refreshWorkspace();
@@ -75,7 +93,7 @@ export function registerJvmTestController(context: ExtensionContext, client: Lan
 
   // A file created or deleted outside the editor still belongs in (or out of) the tree; edits to an
   // open file are covered by the document events below.
-  const sourceWatcher = workspace.createFileSystemWatcher('**/*.{java,kt}');
+  const sourceWatcher = workspace.createFileSystemWatcher(language.discovery.sourceGlob);
   context.subscriptions.push(
     sourceWatcher,
     sourceWatcher.onDidCreate((uri) => void discovery.refreshFile(uri)),
@@ -117,6 +135,17 @@ export function registerJvmTestController(context: ExtensionContext, client: Lan
     }),
     { dispose: () => importStateSubscription?.dispose() },
   );
+}
+
+function kindOf(button: TestProfile['button']): TestRunProfileKind {
+  switch (button) {
+    case 'run':
+      return TestRunProfileKind.Run;
+    case 'debug':
+      return TestRunProfileKind.Debug;
+    case 'coverage':
+      return TestRunProfileKind.Coverage;
+  }
 }
 
 function debounce<T>(

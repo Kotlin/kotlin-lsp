@@ -1,6 +1,13 @@
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 import type { TestController, TestItem, Uri } from 'vscode';
-import type { TestTreeGrouping } from './jvmTestGrouping';
-import { JvmTestTree } from './jvmTestTree';
+import type { TestProfile } from './testLanguage';
+import { TestProfileTags } from './testProfileTags';
+import { TestTree } from './testTree';
+
+export const PROFILES = {
+  run: { id: 'run', label: 'Run', button: 'run', nodes: 'any' },
+  fuzz: { id: 'fuzz', label: 'Fuzz', button: 'run', nodes: 'tagged' },
+} as const satisfies Record<string, TestProfile>;
 
 export function makeCollection(owner: TestItem | undefined) {
   const items = new Map<string, TestItem>();
@@ -37,10 +44,11 @@ export function makeItem(id: string, label: string, uri?: Uri): TestItem {
   return item;
 }
 
-export function makeTree(grouping?: TestTreeGrouping) {
+export function makeTree() {
   const controller = {
     createTestItem: (id: string, label: string, uri?: Uri) => makeItem(id, label, uri),
   } as unknown as TestController;
   (controller as { items: unknown }).items = makeCollection(undefined);
-  return { controller, tree: new JvmTestTree(controller, grouping) };
+  const tags = new TestProfileTags(Object.values(PROFILES));
+  return { controller, tags, tree: new TestTree(controller, tags) };
 }

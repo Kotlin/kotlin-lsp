@@ -1,3 +1,4 @@
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from '@rspack/cli';
@@ -25,6 +26,7 @@ const config = createExtensionConfig(
     path.resolve(communityDir, 'vscode-extension-core/src'),
     path.resolve(communityDir, 'vscode-jvm-testing/src'),
     path.resolve(communityDir, 'vscode-language-kotlin/src'),
+    path.resolve(communityDir, 'vscode-testing/src'),
     path.resolve(policyDir, 'src'),
   ],
 );

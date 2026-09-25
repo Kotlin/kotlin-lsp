@@ -1,11 +1,10 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import type { CancellationToken, DebugConfiguration, TestItem, TestRun, Uri } from 'vscode';
-import { runTestGroup } from './jvmTestRun';
-import type { JvmTestBuilds } from './jvmTestBuild';
-import type { JvmTestLaunchGroup } from './jvmTestPlan';
-import type { JvmTestTree } from './jvmTestTree';
+import type { Uri } from 'vscode';
+import type { TestNodeId, TestRunGroup } from '@jetbrains/vscode-testing';
+import type { JvmTestRunPaths } from './jvmTestProtocol';
+import { JvmTestLanguage, type JvmTestLaunchConfig } from './jvmTestLanguage';
 
 const RUNNER_JARS = ['/idea/lib/idea_rt.jar', '/idea/lib/junit5_rt.jar'];
 
@@ -19,70 +18,24 @@ function uriOf(path: string): Uri {
   return { toString: () => `file://${path}`, fsPath: path } as unknown as Uri;
 }
 
-function tokenOf(): CancellationToken {
-  return {
-    isCancellationRequested: false,
-    onCancellationRequested: () => ({ dispose() {} }),
-  } as unknown as CancellationToken;
-}
+const GROUP: TestRunGroup = {
+  moduleName: 'app',
+  testIds: ['apptest.MainTest' as TestNodeId],
+  uniqueIds: [],
+  uri: uriOf('/project/app/testSrc/apptest/MainTest.java'),
+  name: 'Run MainTest',
+};
 
-/** A group of one class, enough for a run: the tree is only read for nodes the runner reports. */
-function groupOf(): JvmTestLaunchGroup {
-  const item = {
-    id: 'app/apptest.MainTest',
-    label: 'MainTest',
-    children: [],
-  } as unknown as TestItem;
-  return {
-    moduleName: 'app',
-    items: [item],
-    testIds: ['apptest.MainTest'],
-    uniqueIds: [],
-    uri: uriOf('/project/app/testSrc/apptest/MainTest.java'),
-  };
-}
-
-/**
- * Runs one group against a server that answers [paths], and returns the debug configurations that reached
- * `startDebugging`.
- */
-async function launchedConfigs(paths: {
-  classpath?: string[];
-  modulePath?: string[];
-  vmArgs?: string[];
-}): Promise<DebugConfiguration[]> {
-  const launched: DebugConfiguration[] = [];
-  await runTestGroup({
-    group: groupOf(),
-    run: {
-      enqueued() {},
-      started() {},
-      passed() {},
-      failed() {},
-      skipped() {},
-      errored() {},
-      appendOutput() {},
-      end() {},
-    } as unknown as TestRun,
-    tree: {
-      forgetRuntimeChildren() {},
-      get: () => undefined,
-      itemByLocation: () => undefined,
-      fileOfClass: () => undefined,
-    } as unknown as JvmTestTree,
-    builds: { ensureBuilt: () => Promise.resolve('skipped') } as unknown as JvmTestBuilds,
-    noDebug: true,
-    token: tokenOf(),
-    resolve: () => Promise.resolve({ launches: [junitLaunch], paths }),
-    spawn: (config) => {
-      launched.push(config);
-      return Promise.resolve(0);
-    },
+/** The launches of one group, against a server that answers [paths]. */
+function launchedConfigs(paths: JvmTestRunPaths): Promise<JvmTestLaunchConfig[]> {
+  const language = new JvmTestLanguage({
+    paths: () => Promise.resolve(paths),
+    launches: () => Promise.resolve([junitLaunch]),
   });
-  return launched;
+  return language.resolveLaunches(GROUP);
 }
 
-describe('running a group of tests', () => {
+describe('launching a group of JVM tests', () => {
   /**
    * VS Code resolves the configuration once more on the way to the debug session, and that resolution answers an
    * override verbatim. A path the run leaves out is therefore not merely missing — it is resolved again from the
@@ -120,5 +73,11 @@ describe('running a group of tests', () => {
 
     assert.deepEqual(config.modulePaths, []);
     assert.deepEqual(config.vmArgs, []);
+  });
+
+  test('keeps the output of the test process out of the Debug Console', async () => {
+    const [config] = await launchedConfigs({ classpath: ['/project/out/test/app'] });
+
+    assert.equal(config.console, 'none');
   });
 });

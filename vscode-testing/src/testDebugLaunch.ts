@@ -1,3 +1,4 @@
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 import {
   type CancellationToken,
   debug,
@@ -8,7 +9,7 @@ import {
 } from 'vscode';
 
 export interface TrackedDebugConfiguration extends DebugConfiguration {
-  jvmTestRunToken: string;
+  testRunToken: string;
 }
 
 interface DapMessage {
@@ -17,13 +18,21 @@ interface DapMessage {
   body?: { output?: string; exitCode?: number };
 }
 
-export function launchAndCollectOutput(
-  folder: WorkspaceFolder | undefined,
-  config: TrackedDebugConfiguration,
-  onOutput: (text: string) => void,
-  noDebug: boolean,
-  token: CancellationToken,
-): Promise<number | undefined> {
+export interface TestProcessLaunch {
+  readonly folder: WorkspaceFolder | undefined;
+  readonly config: TrackedDebugConfiguration;
+  readonly output: (text: string) => void;
+  readonly mode: 'run' | 'debug';
+  readonly token: CancellationToken;
+}
+
+export function launchAndCollectOutput({
+  folder,
+  config,
+  output,
+  mode,
+  token,
+}: TestProcessLaunch): Promise<number | undefined> {
   return new Promise((resolve, reject) => {
     let exitCode: number | undefined;
     const subscriptions: Disposable[] = [];
@@ -34,8 +43,7 @@ export function launchAndCollectOutput(
       outcome();
     };
     const isOurs = (session: DebugSession): boolean =>
-      (session.configuration as TrackedDebugConfiguration).jvmTestRunToken ===
-      config.jvmTestRunToken;
+      (session.configuration as TrackedDebugConfiguration).testRunToken === config.testRunToken;
 
     subscriptions.push(
       debug.registerDebugAdapterTrackerFactory(config.type, {
@@ -45,7 +53,7 @@ export function launchAndCollectOutput(
             onDidSendMessage(message: DapMessage) {
               if (message.type !== 'event') return;
               if (message.event === 'output' && typeof message.body?.output === 'string') {
-                onOutput(message.body.output);
+                output(message.body.output);
               } else if (message.event === 'exited') {
                 exitCode = message.body?.exitCode;
               }
@@ -68,7 +76,7 @@ export function launchAndCollectOutput(
       }),
     );
 
-    debug.startDebugging(folder, config, { noDebug }).then(
+    debug.startDebugging(folder, config, { noDebug: mode === 'run' }).then(
       (started) => {
         if (!started) settle(() => reject(new Error('Failed to start the test process.')));
       },

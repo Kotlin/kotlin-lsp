@@ -1,16 +1,15 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "out/compile",
-    "rootDir": "..",
-    "sourceMap": true,
-    "composite": true,
-    "tsBuildInfoFile": "out/compile/tsconfig.tsbuildinfo",
+    "noEmit": true,
     "types": ["node"]
   },
   "include": [
+    "rspack.config.ts",
+    "rspack.base.config.ts",
     "src",
     "../vscode-extension-core/src",
+    "../vscode-testing/src",
     "../vscode-jvm-testing/src",
     "../vscode-language-kotlin/src"
   ],

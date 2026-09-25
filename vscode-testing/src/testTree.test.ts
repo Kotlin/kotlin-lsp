@@ -1,29 +1,44 @@
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import type { TestController, TestItem, TextDocument, Uri } from 'vscode';
-import { JvmTestDiscovery, type JvmTestDiscoveryApi } from './jvmTestDiscovery';
-import type { GroupNode, TestTreeGrouping } from './jvmTestGrouping';
-import type { JvmTestItemDto } from './jvmTestProtocol';
-import { fileScope, moduleScope } from './jvmTestScope';
-import { type JvmTestTree, RUNNABLE_TAG, treeId } from './jvmTestTree';
-import { makeItem, makeTree } from './jvmTestTreeFixture';
+import {
+  type TestController,
+  type TestItem,
+  type TestRunRequest,
+  TestTag,
+  type TextDocument,
+  type Uri,
+} from 'vscode';
+import { type DiscoveryServer, TestTreeDiscovery } from './testDiscovery';
+import type { TestDiscovery } from './testLanguage';
+import type { TestGroup, TestItemDto, TestNodeId } from './testProtocol';
+import { fileScope, moduleScope } from './testScope';
+import { type TestTree, treeId } from './testTree';
+import { makeItem, makeTree, PROFILES } from './testTreeFixture';
 
 const RANGE = { start: { line: 1, character: 2 }, end: { line: 1, character: 8 } };
 
-const idOfMethod = (fqn: string, method: string): string => `${fqn}#${method}`;
+const nodeId = (id: string): TestNodeId => id as TestNodeId;
 
-function classDto(moduleName: string | null, fqn: string, uri: string): JvmTestItemDto {
+const idOfMethod = (fqn: string, method: string): TestNodeId => nodeId(`${fqn}#${method}`);
+
+function packageOf(fqn: string): TestGroup[] {
+  const lastDot = fqn.lastIndexOf('.');
+  const packageName = lastDot === -1 ? '' : fqn.substring(0, lastDot);
+  return [{ id: packageName, label: packageName || '(default package)' }];
+}
+
+function classDto(moduleName: string | null, fqn: string, uri: string): TestItemDto {
   return {
-    id: fqn,
-    kind: 'CLASS',
+    id: nodeId(fqn),
+    kind: 'SUITE',
     displayName: fqn.substring(fqn.lastIndexOf('.') + 1),
     uri,
     range: RANGE,
     parentId: null,
     location: `java:suite://${fqn}`,
-    className: fqn,
     moduleName,
-    runnable: true,
+    groups: packageOf(fqn),
   };
 }
 
@@ -32,11 +47,11 @@ function nestedClassDto(
   outerFqn: string,
   name: string,
   uri: string,
-): JvmTestItemDto {
+): TestItemDto {
   return {
     ...classDto(moduleName, `${outerFqn}$${name}`, uri),
     displayName: name,
-    parentId: outerFqn,
+    parentId: nodeId(outerFqn),
   };
 }
 
@@ -45,19 +60,28 @@ function methodDto(
   fqn: string,
   method: string,
   uri: string,
-): JvmTestItemDto {
+): TestItemDto {
   return {
     id: idOfMethod(fqn, method),
-    kind: 'METHOD',
+    kind: 'TEST',
     displayName: method,
     uri,
     range: RANGE,
-    parentId: fqn,
+    parentId: nodeId(fqn),
     location: `java:test://${fqn}/${method}`,
-    className: fqn,
     moduleName,
-    runnable: true,
+    groups: packageOf(fqn),
   };
+}
+
+/** The dto of a node discovery reported, or undefined for any other. */
+function discovered(tree: TestTree, id: string): TestItemDto | undefined {
+  const entry = tree.get(id);
+  return entry?.origin === 'discovered' ? entry.dto : undefined;
+}
+
+function tagIds(item: TestItem): string[] {
+  return item.tags.map((tag) => tag.id);
 }
 
 /** Ids of the whole tree, depth first, as `parent > child` paths. */
@@ -88,15 +112,14 @@ describe('the tree', () => {
 
     assert.deepEqual(paths(controller.items), [
       'module:moduleA',
-      'module:moduleA > package:moduleA/com.example',
-      'module:moduleA > package:moduleA/com.example > moduleA/com.example.SampleTest',
-      'module:moduleA > package:moduleA/com.example > moduleA/com.example.SampleTest > moduleA/com.example.SampleTest#testOne',
-      'module:moduleA > package:moduleA/com.example > moduleA/com.example.SampleTest > moduleA/com.example.SampleTest#testTwo',
+      'module:moduleA > group:moduleA/com.example',
+      'module:moduleA > group:moduleA/com.example > moduleA/com.example.SampleTest',
+      'module:moduleA > group:moduleA/com.example > moduleA/com.example.SampleTest > moduleA/com.example.SampleTest#testOne',
+      'module:moduleA > group:moduleA/com.example > moduleA/com.example.SampleTest > moduleA/com.example.SampleTest#testTwo',
     ]);
-    const entry = tree.get(treeId('moduleA', 'com.example.SampleTest'));
-    assert.equal(entry?.dto.id, 'com.example.SampleTest');
-    assert.equal(entry?.dto.className, 'com.example.SampleTest');
-    assert.equal(entry?.dto.uri, URI_A);
+    const dto = discovered(tree, treeId('moduleA', 'com.example.SampleTest'));
+    assert.equal(dto?.id, 'com.example.SampleTest');
+    assert.equal(dto?.uri, URI_A);
   });
 
   test('a class the server sent without a parentId is a root', () => {
@@ -109,8 +132,8 @@ describe('the tree', () => {
 
     assert.deepEqual(paths(controller.items), [
       'module:moduleA',
-      'module:moduleA > package:moduleA/com.example',
-      'module:moduleA > package:moduleA/com.example > moduleA/com.example.SampleTest',
+      'module:moduleA > group:moduleA/com.example',
+      'module:moduleA > group:moduleA/com.example > moduleA/com.example.SampleTest',
     ]);
   });
 
@@ -126,7 +149,7 @@ describe('the tree', () => {
       methodDto('moduleA', inner, 'testTwo', URI_A),
     ]);
 
-    const pkg = `module:moduleA > package:moduleA/com.example`;
+    const pkg = `module:moduleA > group:moduleA/com.example`;
     assert.deepEqual(paths(controller.items), [
       'module:moduleA',
       pkg,
@@ -138,36 +161,51 @@ describe('the tree', () => {
     assert.equal(tree.get(`moduleA/${inner}`)?.item.label, 'Inner');
   });
 
-  test('group nodes carry the runnable tag, or the Run profile refuses to run a package', () => {
-    // Both run profiles are tag-filtered (`jvmTestController.ts`), and VS Code only offers a
-    // profile on items carrying its tag — an untagged package node simply has no Run action.
+  test('group nodes carry the tags of the profiles that run any node, and only those', () => {
+    // VS Code offers a profile only on items carrying its tag, so an untagged package node has no
+    // Run action; a profile for tagged nodes cannot run a package, whatever is inside it.
     const { controller, tree } = makeTree();
 
-    tree.sync(fileScope(URI_A), [classDto('moduleA', 'com.example.SampleTest', URI_A)]);
+    tree.sync(fileScope(URI_A), [
+      { ...classDto('moduleA', 'com.example.SampleTest', URI_A), tags: [PROFILES.fuzz.id] },
+    ]);
 
     const moduleNode = controller.items.get('module:moduleA')!;
-    assert.deepEqual(moduleNode.tags, [RUNNABLE_TAG]);
-    assert.deepEqual(moduleNode.children.get('package:moduleA/com.example')?.tags, [RUNNABLE_TAG]);
+    assert.deepEqual(tagIds(moduleNode), [PROFILES.run.id]);
+    assert.deepEqual(tagIds(moduleNode.children.get('group:moduleA/com.example')!), [
+      PROFILES.run.id,
+    ]);
   });
 
-  test('a class the runner cannot instantiate carries no runnable tag', () => {
+  test('a test carries the tag of a profile for tagged nodes only when the server named it', () => {
     const { tree } = makeTree();
 
     tree.sync(fileScope(URI_A), [
-      { ...classDto('moduleA', 'com.example.SampleTest', URI_A), runnable: false },
+      classDto('moduleA', 'com.example.SampleTest', URI_A),
+      {
+        ...methodDto('moduleA', 'com.example.SampleTest', 'fuzzOne', URI_A),
+        tags: [PROFILES.fuzz.id],
+      },
+      methodDto('moduleA', 'com.example.SampleTest', 'testOne', URI_A),
     ]);
 
-    assert.deepEqual(tree.get('moduleA/com.example.SampleTest')?.item.tags, []);
+    assert.deepEqual(tagIds(tree.get('moduleA/com.example.SampleTest#fuzzOne')!.item), [
+      PROFILES.run.id,
+      PROFILES.fuzz.id,
+    ]);
+    assert.deepEqual(tagIds(tree.get('moduleA/com.example.SampleTest#testOne')!.item), [
+      PROFILES.run.id,
+    ]);
   });
 
-  test('a test of a server that reports no runnable flag keeps the tag', () => {
+  test('a tag the server named for no known profile is dropped', () => {
     const { tree } = makeTree();
-    const older = classDto('moduleA', 'com.example.SampleTest', URI_A);
-    delete older.runnable;
 
-    tree.sync(fileScope(URI_A), [older]);
+    tree.sync(fileScope(URI_A), [
+      { ...classDto('moduleA', 'com.example.SampleTest', URI_A), tags: ['profiler'] },
+    ]);
 
-    assert.deepEqual(tree.get('moduleA/com.example.SampleTest')?.item.tags, [RUNNABLE_TAG]);
+    assert.deepEqual(tagIds(tree.get('moduleA/com.example.SampleTest')!.item), [PROFILES.run.id]);
   });
 
   test('a class in the default package of a module-less file goes to the top level', () => {
@@ -175,8 +213,8 @@ describe('the tree', () => {
 
     tree.sync(fileScope(URI_ROOTLESS), [classDto(null, 'SampleTest', URI_ROOTLESS)]);
 
-    assert.deepEqual(paths(controller.items), ['package:/', 'package:/ > /SampleTest']);
-    assert.equal(controller.items.get('package:/')?.label, '(default package)');
+    assert.deepEqual(paths(controller.items), ['group:/', 'group:/ > /SampleTest']);
+    assert.equal(controller.items.get('group:/')?.label, '(default package)');
   });
 
   test('the same test class in two modules gives two independent nodes', () => {
@@ -187,11 +225,11 @@ describe('the tree', () => {
 
     assert.deepEqual(paths(controller.items), [
       'module:moduleA',
-      'module:moduleA > package:moduleA/com.example',
-      'module:moduleA > package:moduleA/com.example > moduleA/com.example.SampleTest',
+      'module:moduleA > group:moduleA/com.example',
+      'module:moduleA > group:moduleA/com.example > moduleA/com.example.SampleTest',
       'module:moduleB',
-      'module:moduleB > package:moduleB/com.example',
-      'module:moduleB > package:moduleB/com.example > moduleB/com.example.SampleTest',
+      'module:moduleB > group:moduleB/com.example',
+      'module:moduleB > group:moduleB/com.example > moduleB/com.example.SampleTest',
     ]);
     assert.notEqual(
       tree.get('moduleA/com.example.SampleTest')?.item,
@@ -274,8 +312,8 @@ describe('the tree', () => {
 
     assert.deepEqual(paths(controller.items), [
       'module:moduleB',
-      'module:moduleB > package:moduleB/com.example',
-      'module:moduleB > package:moduleB/com.example > moduleB/com.example.SampleTest',
+      'module:moduleB > group:moduleB/com.example',
+      'module:moduleB > group:moduleB/com.example > moduleB/com.example.SampleTest',
     ]);
     // The class going away takes its methods with it.
     assert.equal(tree.get('moduleA/com.example.SampleTest'), undefined);
@@ -291,7 +329,7 @@ describe('the tree', () => {
     // The old file reporting nothing must not take the test with it — it lives in `moved` now.
     tree.sync(fileScope(URI_A), []);
 
-    assert.equal(tree.get('moduleA/com.example.SampleTest')?.dto.uri, moved);
+    assert.equal(discovered(tree, 'moduleA/com.example.SampleTest')?.uri, moved);
   });
 
   test('an inherited method survives a scan of the file it is written in', () => {
@@ -304,7 +342,7 @@ describe('the tree', () => {
 
     tree.sync(fileScope(base), [classDto('moduleA', 'com.example.BaseTest', base)]);
 
-    assert.equal(tree.get('moduleA/com.example.SampleTest#testOne')?.dto.uri, base);
+    assert.equal(discovered(tree, 'moduleA/com.example.SampleTest#testOne')?.uri, base);
   });
 
   test('a module scope prunes only its own classes, not tests outside any module', () => {
@@ -315,7 +353,7 @@ describe('the tree', () => {
     tree.sync(moduleScope('moduleA'), []);
 
     assert.equal(tree.get('moduleA/com.example.SampleTest'), undefined);
-    assert.equal(tree.get('/SampleTest')?.dto.id, 'SampleTest');
+    assert.equal(discovered(tree, '/SampleTest')?.id, 'SampleTest');
   });
 });
 
@@ -332,14 +370,10 @@ describe('a node the runner reported but discovery never did', () => {
     return made;
   }
 
-  const itemOf = (tree: JvmTestTree, id: string): TestItem => tree.get(treeId('moduleA', id))!.item;
+  const itemOf = (tree: TestTree, id: string): TestItem => tree.get(treeId('moduleA', id))!.item;
 
-  const runtimeItem = (
-    tree: JvmTestTree,
-    parentId: string,
-    nodeId = NODE_ID,
-    label = 'testOne()',
-  ) => tree.ensureRuntimeItem({ parent: itemOf(tree, parentId), nodeId, displayName: label });
+  const runtimeItem = (tree: TestTree, parentId: string, nodeId = NODE_ID, label = 'testOne()') =>
+    tree.ensureRuntimeItem({ parent: itemOf(tree, parentId), nodeId, displayName: label });
 
   test('is created under its class, inheriting everything it takes to launch it', () => {
     const { controller, tree } = treeWithCollapsedClass();
@@ -348,14 +382,25 @@ describe('a node the runner reported but discovery never did', () => {
 
     assert.equal(item?.label, 'testOne()');
     assert.equal(paths(controller.items).at(-1)?.endsWith(`> moduleA/${NODE_ID}`), true);
-    const dto = tree.get(treeId('moduleA', NODE_ID))?.dto;
+    const entry = tree.get(treeId('moduleA', NODE_ID));
+    assert.ok(entry?.origin === 'runtime');
     assert.deepEqual(
-      { kind: dto?.kind, parentId: dto?.parentId, className: dto?.className, uri: dto?.uri },
-      { kind: 'METHOD', parentId: CLASS_ID, className: CLASS_ID, uri: URI_A },
+      { ownerId: entry.owner.id, uniqueId: entry.uniqueId, uri: item?.uri?.toString() },
+      { ownerId: CLASS_ID, uniqueId: NODE_ID, uri: URI_A },
     );
     // Only a discovered node has a location, so this one is found by the runner's id alone.
-    assert.equal(dto?.location, undefined);
-    assert.equal(tree.get(treeId('moduleA', NODE_ID))?.uniqueId, NODE_ID);
+    assert.equal(tree.itemAtLocation({ moduleName: 'moduleA', location: NODE_ID }), undefined);
+  });
+
+  test('carries the tags of the discovered node it runs under', () => {
+    const { tree } = makeTree();
+    tree.sync(moduleScope('moduleA'), [
+      { ...classDto('moduleA', CLASS_ID, URI_A), tags: [PROFILES.fuzz.id] },
+    ]);
+
+    const item = runtimeItem(tree, CLASS_ID);
+
+    assert.deepEqual(tagIds(item!), [PROFILES.run.id, PROFILES.fuzz.id]);
   });
 
   test('is returned as is when asked for twice, so a rerun does not duplicate it', () => {
@@ -379,7 +424,8 @@ describe('a node the runner reported but discovery never did', () => {
       ['moduleA/uid-10', 'moduleA/uid-2'],
     );
     assert.equal(second!.sortText! < first!.sortText!, true);
-    assert.equal(tree.get(first!.id)?.uniqueId, 'uid-2');
+    const entry = tree.get(first!.id);
+    assert.equal(entry?.origin === 'runtime' && entry.uniqueId, 'uid-2');
   });
 
   test('has nowhere to go when the node it hangs under is not in the tree', () => {
@@ -452,37 +498,40 @@ describe('a node the runner reported but discovery never did', () => {
   });
 });
 
-// Grouping is a strategy, so the tree must not assume the two levels the default one happens to build.
-/** Three levels deep, so pruning has more than the default's module/package to fold up. */
-const nestedGrouping: TestTreeGrouping = {
-  groupsFor: (dto): GroupNode[] => [
-    { id: 'root', label: 'All' },
-    { id: `by-module:${dto.moduleName}`, label: dto.moduleName ?? '(none)' },
-    { id: `by-file:${dto.uri}`, label: dto.uri },
+// The groups come from the server, so the tree must not assume the one level a JVM package happens to be.
+/** Three levels deep, so pruning has more than one group to fold up. */
+const nestedDto = (): TestItemDto => ({
+  ...classDto('moduleA', 'SampleTest', URI_A),
+  groups: [
+    { id: 'github.com', label: 'github.com' },
+    { id: 'acme/tools', label: 'acme/tools' },
+    { id: 'sample', label: 'sample' },
   ],
-};
+});
 
-describe('a custom grouping', () => {
-  test('decides the shape of the tree', () => {
-    const { controller, tree } = makeTree(nestedGrouping);
+describe('the groups the server reports', () => {
+  test('decide the shape of the tree, each nested in the one before it', () => {
+    const { controller, tree } = makeTree();
 
     tree.sync(fileScope(URI_A), [
-      classDto('moduleA', 'com.example.SampleTest', URI_A),
-      methodDto('moduleA', 'com.example.SampleTest', 'testOne', URI_A),
+      nestedDto(),
+      methodDto('moduleA', 'SampleTest', 'testOne', URI_A),
     ]);
 
+    const deepest = 'group:moduleA/github.com/acme%2Ftools/sample';
     assert.deepEqual(paths(controller.items), [
-      'root',
-      'root > by-module:moduleA',
-      `root > by-module:moduleA > by-file:${URI_A}`,
-      `root > by-module:moduleA > by-file:${URI_A} > moduleA/com.example.SampleTest`,
-      `root > by-module:moduleA > by-file:${URI_A} > moduleA/com.example.SampleTest > moduleA/com.example.SampleTest#testOne`,
+      'module:moduleA',
+      'module:moduleA > group:moduleA/github.com',
+      'module:moduleA > group:moduleA/github.com > group:moduleA/github.com/acme%2Ftools',
+      `module:moduleA > group:moduleA/github.com > group:moduleA/github.com/acme%2Ftools > ${deepest}`,
+      `module:moduleA > group:moduleA/github.com > group:moduleA/github.com/acme%2Ftools > ${deepest} > moduleA/SampleTest`,
+      `module:moduleA > group:moduleA/github.com > group:moduleA/github.com/acme%2Ftools > ${deepest} > moduleA/SampleTest > moduleA/SampleTest#testOne`,
     ]);
   });
 
-  test('has its empty group nodes folded up at any depth', () => {
-    const { controller, tree } = makeTree(nestedGrouping);
-    tree.sync(fileScope(URI_A), [classDto('moduleA', 'com.example.SampleTest', URI_A)]);
+  test('have their empty nodes folded up at any depth', () => {
+    const { controller, tree } = makeTree();
+    tree.sync(fileScope(URI_A), [nestedDto()]);
 
     tree.sync(fileScope(URI_A), []);
 
@@ -492,26 +541,48 @@ describe('a custom grouping', () => {
 
 // --- discovery: the real tree, against a server that answers the three discovery commands
 
-/** The discovery commands, each defaulting to "nothing found" so a test only spells out what it cares about. */
-function fakeServer(overrides: Partial<JvmTestDiscoveryApi> = {}): JvmTestDiscoveryApi {
+/** What the fake server answers, a file by its uri string, so a test compares plain strings. */
+interface FakeServer extends DiscoveryServer {
+  testsInFile(uri: string): Promise<TestItemDto[]>;
+  modules(): Promise<string[]>;
+  testsInModule(moduleName: string): Promise<TestItemDto[]>;
+}
+
+/** The discovery answers, each defaulting to "nothing found" so a test only spells out what it cares about. */
+function fakeServer(overrides: Partial<FakeServer> = {}): FakeServer {
   return {
     testsInFile: async () => [],
-    testModules: async () => [],
+    modules: async () => [],
     testsInModule: async () => [],
     importInProgress: async () => false,
     ...overrides,
   };
 }
 
-function makeDiscovery(server: JvmTestDiscoveryApi) {
+/** The sources the fake server scans; any other document is none of discovery's business. */
+const LANGUAGE_IDS: ReadonlySet<string> = new Set(['java', 'kotlin']);
+
+function languageDiscovery(server: FakeServer): TestDiscovery {
+  return {
+    languageIds: LANGUAGE_IDS,
+    sourceGlob: '**/*.{java,kt}',
+    supportedBy: () => true,
+    testsInFile: (uri) => server.testsInFile(uri.toString()),
+    modules: () => server.modules(),
+    testsInModule: (moduleName) => server.testsInModule(moduleName),
+  };
+}
+
+function makeDiscovery(server: FakeServer) {
   const { controller, tree } = makeTree();
-  return { controller, tree, discovery: new JvmTestDiscovery(tree, () => server) };
+  const discovery = new TestTreeDiscovery(tree, languageDiscovery(server), () => server);
+  return { controller, tree, discovery };
 }
 
 /** What VS Code does when the user expands a module node: its classes are scanned only then. */
 async function expandModule(
   controller: TestController,
-  discovery: JvmTestDiscovery,
+  discovery: TestTreeDiscovery,
   moduleName: string,
 ): Promise<void> {
   const item = controller.items.get(`module:${moduleName}`);
@@ -552,8 +623,11 @@ describe('discovery of one file', () => {
 
     await discovery.refreshFile(javaDocument(URI_A));
 
-    assert.equal(tree.get('moduleA/com.example.SampleTest')?.dto.uri, URI_A);
-    assert.equal(tree.get('moduleA/com.example.SampleTest#testOne')?.dto.displayName, 'testOne');
+    assert.equal(discovered(tree, 'moduleA/com.example.SampleTest')?.uri, URI_A);
+    assert.equal(
+      discovered(tree, 'moduleA/com.example.SampleTest#testOne')?.displayName,
+      'testOne',
+    );
   });
 
   test('leaves the file as it was when the request fails', async () => {
@@ -619,7 +693,7 @@ describe('discovery of one file', () => {
   test('fills in the methods of a class the user expanded', async () => {
     const { controller, tree, discovery } = makeDiscovery(
       fakeServer({
-        testModules: async () => ['moduleA'],
+        modules: async () => ['moduleA'],
         testsInModule: async () => [classDto('moduleA', 'com.example.SampleTest', URI_A)],
         testsInFile: async () => [
           classDto('moduleA', 'com.example.SampleTest', URI_A),
@@ -657,7 +731,7 @@ describe('discovery before a run', () => {
   async function classesOfModuleA(asked: string[]) {
     const { controller, tree, discovery } = makeDiscovery(
       fakeServer({
-        testModules: async () => ['moduleA'],
+        modules: async () => ['moduleA'],
         testsInModule: async () => [
           classDto('moduleA', 'com.example.SampleTest', URI_A),
           classDto('moduleA', 'com.example.OtherTest', URI_OTHER),
@@ -682,7 +756,7 @@ describe('discovery before a run', () => {
       tree.get('moduleA/com.example.OtherTest')!.item,
     ];
 
-    await discovery.resolveMethods(running);
+    await discovery.resolveTests(running);
 
     assert.deepEqual(paths(running[0].children), ['moduleA/com.example.SampleTest#testOne']);
     assert.deepEqual(paths(running[1].children), ['moduleA/com.example.OtherTest#testOne']);
@@ -694,7 +768,7 @@ describe('discovery before a run', () => {
     const nested = 'com.example.SampleTest$Inner';
     const { controller, tree, discovery } = makeDiscovery(
       fakeServer({
-        testModules: async () => ['moduleA'],
+        modules: async () => ['moduleA'],
         testsInModule: async () => [
           classDto('moduleA', 'com.example.SampleTest', URI_A),
           nestedClassDto('moduleA', 'com.example.SampleTest', 'Inner', URI_A),
@@ -713,7 +787,7 @@ describe('discovery before a run', () => {
     await discovery.refreshWorkspace();
     await expandModule(controller, discovery, 'moduleA');
 
-    await discovery.resolveMethods([
+    await discovery.resolveTests([
       tree.get('moduleA/com.example.SampleTest')!.item,
       tree.get(`moduleA/${nested}`)!.item,
     ]);
@@ -745,7 +819,7 @@ describe('discovery before a run', () => {
       displayName: 'testOne()',
     });
 
-    await discovery.resolveMethods([tree.get('moduleA/com.example.SampleTest')!.item]);
+    await discovery.resolveTests([tree.get('moduleA/com.example.SampleTest')!.item]);
 
     assert.deepEqual(asked, [URI_A]);
     assert.equal(tree.get(`moduleA/${testId}`)?.origin, 'discovered');
@@ -767,12 +841,73 @@ describe('discovery before a run', () => {
     await discovery.refreshFile(javaDocument(URI_A));
     asked.length = 0;
 
-    await discovery.resolveMethods([
+    await discovery.resolveTests([
       tree.get('moduleA/com.example.SampleTest')!.item,
       tree.get('moduleA/com.example.SampleTest#testOne')!.item,
     ]);
 
     assert.deepEqual(asked, []);
+  });
+
+  test('finds the tagged tests of a class no one has expanded', async () => {
+    const { controller, discovery } = makeDiscovery(
+      fakeServer({
+        modules: async () => ['moduleA'],
+        testsInModule: async () => [classDto('moduleA', 'com.example.SampleTest', URI_A)],
+        testsInFile: async () => [
+          classDto('moduleA', 'com.example.SampleTest', URI_A),
+          {
+            ...methodDto('moduleA', 'com.example.SampleTest', 'fuzzed', URI_A),
+            tags: [PROFILES.fuzz.id],
+          },
+          methodDto('moduleA', 'com.example.SampleTest', 'plain', URI_A),
+        ],
+      }),
+    );
+    await discovery.refreshWorkspace();
+
+    const groups = await discovery.planRun(
+      {} as TestRunRequest,
+      controller.items,
+      new TestTag(PROFILES.fuzz.id),
+    );
+
+    assert.deepEqual(
+      groups.map((group) => group.testIds),
+      [[idOfMethod('com.example.SampleTest', 'fuzzed')]],
+    );
+  });
+
+  test('runs the tests of a class whose nested class is excluded before its tests are known', async () => {
+    const nested = 'com.example.SampleTest$Inner';
+    const { controller, tree, discovery } = makeDiscovery(
+      fakeServer({
+        modules: async () => ['moduleA'],
+        testsInModule: async () => [
+          classDto('moduleA', 'com.example.SampleTest', URI_A),
+          nestedClassDto('moduleA', 'com.example.SampleTest', 'Inner', URI_A),
+        ],
+        testsInFile: async () => [
+          classDto('moduleA', 'com.example.SampleTest', URI_A),
+          methodDto('moduleA', 'com.example.SampleTest', 'testOne', URI_A),
+          nestedClassDto('moduleA', 'com.example.SampleTest', 'Inner', URI_A),
+          methodDto('moduleA', nested, 'testTwo', URI_A),
+        ],
+      }),
+    );
+    await discovery.refreshWorkspace();
+    await expandModule(controller, discovery, 'moduleA');
+
+    const groups = await discovery.planRun(
+      { exclude: [tree.get(`moduleA/${nested}`)!.item] } as unknown as TestRunRequest,
+      controller.items,
+      new TestTag(PROFILES.run.id),
+    );
+
+    assert.deepEqual(
+      groups.map((group) => group.testIds),
+      [[idOfMethod('com.example.SampleTest', 'testOne')]],
+    );
   });
 });
 
@@ -781,7 +916,7 @@ describe('discovery of the whole workspace', () => {
     const scanned: string[] = [];
     const { controller, discovery } = makeDiscovery(
       fakeServer({
-        testModules: async () => ['moduleA', 'moduleB'],
+        modules: async () => ['moduleA', 'moduleB'],
         testsInModule: async (name) => {
           scanned.push(name);
           return [];
@@ -798,7 +933,7 @@ describe('discovery of the whole workspace', () => {
   test('fills a module the user expanded, and only that one', async () => {
     const { controller, discovery } = makeDiscovery(
       fakeServer({
-        testModules: async () => ['moduleA', 'moduleB'],
+        modules: async () => ['moduleA', 'moduleB'],
         testsInModule: async (name) => [
           classDto(name, `com.example.${name}Test`, name === 'moduleA' ? URI_A : URI_B),
         ],
@@ -810,8 +945,8 @@ describe('discovery of the whole workspace', () => {
 
     assert.deepEqual(paths(controller.items), [
       'module:moduleA',
-      'module:moduleA > package:moduleA/com.example',
-      'module:moduleA > package:moduleA/com.example > moduleA/com.example.moduleATest',
+      'module:moduleA > group:moduleA/com.example',
+      'module:moduleA > group:moduleA/com.example > moduleA/com.example.moduleATest',
       'module:moduleB',
     ]);
   });
@@ -820,7 +955,7 @@ describe('discovery of the whole workspace', () => {
     let brokenFails = false;
     const { controller, tree, discovery } = makeDiscovery(
       fakeServer({
-        testModules: async () => ['broken', 'moduleB'],
+        modules: async () => ['broken', 'moduleB'],
         testsInModule: async (name) => {
           if (name === 'broken') {
             if (brokenFails) throw new Error('indexing');
@@ -846,7 +981,7 @@ describe('discovery of the whole workspace', () => {
     let modules = ['moduleA', 'moduleB'];
     const { controller, tree, discovery } = makeDiscovery(
       fakeServer({
-        testModules: async () => modules,
+        modules: async () => modules,
         testsInModule: async (name) => [
           classDto(name, 'com.example.SampleTest', name === 'moduleA' ? URI_A : URI_B),
         ],
@@ -868,7 +1003,7 @@ describe('discovery of the whole workspace', () => {
     let listFails = false;
     const { controller, tree, discovery } = makeDiscovery(
       fakeServer({
-        testModules: async () => {
+        modules: async () => {
           if (listFails) throw new Error('no project yet');
           return ['moduleA'];
         },
@@ -894,7 +1029,7 @@ describe('discovery of the whole workspace', () => {
     let peak = 0;
     const { controller, discovery } = makeDiscovery(
       fakeServer({
-        testModules: async () => modules,
+        modules: async () => modules,
         testsInModule: async (name) => {
           peak = Math.max(peak, ++inFlight);
           await new Promise((resolve) => setTimeout(resolve, 1));
@@ -921,7 +1056,7 @@ describe('discovery of the whole workspace', () => {
     const { controller, tree, discovery } = makeDiscovery(
       fakeServer({
         importInProgress: async () => importing,
-        testModules: async () => {
+        modules: async () => {
           asked.push('modules');
           return ['moduleA'];
         },
@@ -960,7 +1095,7 @@ describe('discovery of the whole workspace', () => {
         importInProgress: async () => {
           throw new Error('unknown method');
         },
-        testModules: async () => ['moduleA'],
+        modules: async () => ['moduleA'],
         testsInModule: async () => [classDto('moduleA', 'com.example.SampleTest', URI_A)],
       }),
     );
@@ -976,7 +1111,7 @@ describe('discovery of the whole workspace', () => {
     let running = 0;
     const { discovery } = makeDiscovery(
       fakeServer({
-        testModules: async () => {
+        modules: async () => {
           assert.equal(running, 0, 'a second pass started while the first was still running');
           running++;
           await new Promise((resolve) => setTimeout(resolve, 1));
@@ -992,7 +1127,7 @@ describe('discovery of the whole workspace', () => {
 
 test('nothing is discovered while the language server is down', async () => {
   const { controller, tree } = makeTree();
-  const discovery = new JvmTestDiscovery(tree, () => undefined);
+  const discovery = new TestTreeDiscovery(tree, languageDiscovery(fakeServer()), () => undefined);
 
   await discovery.refreshFile(javaDocument(URI_A));
   await discovery.refreshWorkspace();

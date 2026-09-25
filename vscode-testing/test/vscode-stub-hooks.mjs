@@ -1,3 +1,5 @@
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+
 // Redirects the bare `vscode` specifier to the CJS stub for unit tests (see vscode-stub.cjs).
 import { registerHooks } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';

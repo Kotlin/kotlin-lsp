@@ -1,3 +1,4 @@
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 class TestMessage {
   constructor(message) {
     this.message = message;
@@ -36,10 +37,68 @@ class TestMessageStackFrame {
   }
 }
 
+class TestTag {
+  constructor(id) {
+    this.id = id;
+  }
+}
+
+class TestCoverageCount {
+  constructor(covered, total) {
+    this.covered = covered;
+    this.total = total;
+  }
+}
+
+class FileCoverage {
+  constructor(uri, statementCoverage, branchCoverage, declarationCoverage) {
+    this.uri = uri;
+    this.statementCoverage = statementCoverage;
+    this.branchCoverage = branchCoverage;
+    this.declarationCoverage = declarationCoverage;
+  }
+}
+
+class StatementCoverage {
+  constructor(executed, location, branches = []) {
+    this.executed = executed;
+    this.location = location;
+    this.branches = branches;
+  }
+}
+
+class BranchCoverage {
+  constructor(executed, location, label) {
+    this.executed = executed;
+    this.location = location;
+    this.label = label;
+  }
+}
+
+class DeclarationCoverage {
+  constructor(name, executed, location) {
+    this.name = name;
+    this.executed = executed;
+    this.location = location;
+  }
+}
+
 // Classes the code under test builds and a test then reads back. The `get` trap has to name them:
 // a `module.exports.X = ...` assignment below only makes `X` an importable name, it never reaches a
 // reader, because the trap answers every property lookup itself.
-const REAL = { Location, Position, TestMessage, TestMessageStackFrame, Uri };
+const REAL = {
+  BranchCoverage,
+  DeclarationCoverage,
+  FileCoverage,
+  Location,
+  Position,
+  StatementCoverage,
+  TestCoverageCount,
+  TestMessage,
+  TestMessageStackFrame,
+  TestTag,
+  Uri,
+};
 
 function makeStub() {
   const target = function () {};
@@ -63,6 +122,11 @@ function makeStub() {
 
 module.exports = makeStub();
 module.exports.TestMessage = TestMessage;
+module.exports.BranchCoverage = BranchCoverage;
+module.exports.DeclarationCoverage = DeclarationCoverage;
+module.exports.FileCoverage = FileCoverage;
+module.exports.StatementCoverage = StatementCoverage;
+module.exports.TestCoverageCount = TestCoverageCount;
 module.exports.CancellationTokenSource = makeStub();
 module.exports.commands = makeStub();
 module.exports.ConfigurationTarget = makeStub();
@@ -93,7 +157,7 @@ module.exports.TaskScope = makeStub();
 module.exports.tasks = makeStub();
 module.exports.TestMessageStackFrame = TestMessageStackFrame;
 module.exports.TestRunProfileKind = makeStub();
-module.exports.TestTag = makeStub();
+module.exports.TestTag = TestTag;
 module.exports.tests = makeStub();
 module.exports.TextDocument = makeStub();
 module.exports.TextDocumentChangeReason = makeStub();
