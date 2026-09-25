@@ -27,6 +27,7 @@ val LSJavaBaseLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece
         },
     ),
     plugins = listOf(
+        // Java Core depends on XML Core, which `LSCommonConfiguration` lists. Kotlin relies on `javaPlugin` listed here.
         javaPlugin,
         javaBaseFeature,
     ),
