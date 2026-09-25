@@ -7,6 +7,7 @@ export interface StatusBarContributionPresentation {
   text: string;
   tooltip: string;
   isProblem: boolean;
+  statusText?: string;
 }
 
 export interface StatusBarContribution {
@@ -131,8 +132,18 @@ export function computeStatusTooltipContent(
   } else if (showContributionDetail) {
     detail = presentation.tooltip;
   }
+  let statusHeading = statusStateText(clientState);
+  if (workspaceImportBlocked) {
+    statusHeading = '$(circle-slash) Build tool required';
+  } else if (
+    clientState === 'running' &&
+    contributionProblem &&
+    presentation?.statusText !== undefined
+  ) {
+    statusHeading = presentation.statusText;
+  }
   return {
-    heading: `**${title}**&nbsp;&nbsp;${workspaceImportBlocked ? '$(circle-slash) Build tool required' : statusStateText(clientState)}`,
+    heading: `**${title}**&nbsp;&nbsp;${statusHeading}`,
     detail,
     actions,
     enabledCommands: actions.map((action) => action.command),
