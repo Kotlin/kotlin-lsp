@@ -17,7 +17,6 @@ import {
 } from 'vscode-languageclient/node';
 import { chmodSync } from 'fs';
 import { rm } from 'node:fs/promises';
-import * as net from 'node:net';
 import * as os from 'node:os';
 import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import {
@@ -63,7 +62,7 @@ import {
   serverLauncherPath,
 } from './serverBundleDownload';
 import { type ClientFeatureFactory, startClientWithFeatures } from './clientFeatureFactories';
-import { computePortFilePath, readPortFile } from './portFile';
+import { routerArgs, routerPath } from './lspRouter';
 import { isDataSharingChoice, isRegion } from './consentValues';
 import type { ServerRestartState } from './serverRestartState';
 import {
@@ -101,24 +100,8 @@ interface ExtensionPackageJson {
 const LAUNCHED_SERVER_START_TIMEOUT_MS = 60_000;
 const LAUNCHED_SERVER_EXIT_WAIT_MS = 1_000;
 const LAUNCHED_SERVER_STOP_TIMEOUT_MS = 6_000;
-const LOCAL_SERVER_CONNECTION_TIMEOUT_MS = 10_000;
-const CONNECTION_RETRY_DELAY_MS = 100;
-/** How long to wait for a daemonized server to bind, publish its port, and accept a connection. */
-const DAEMON_START_TIMEOUT_MS = 60_000;
-/** One connect attempt to a port read from the discovery file; a dead port fails fast, then we retry. */
-const DAEMON_CONNECT_TIMEOUT_MS = 2_000;
-/** The daemon stops itself after this idle period with no editor connected. Sent as the server's --idle-timeout. */
-const DAEMON_IDLE_TIMEOUT = '10s';
-/**
- * How many times to (re)start against the daemon before giving up. A daemon can idle-shut-down in the exact
- * window a new editor is connecting, hanging up before initialize; a retry re-runs discovery and starts a
- * fresh daemon, which cannot race (it is armed for the full idle window from launch).
- */
-const MAX_DAEMON_START_ATTEMPTS = 3;
-
 const LANGUAGE_CLIENT_ID = 'intellij';
 const OPT_DEV_SERVER_PORT = 'intellij.dev.serverPort';
-const OPT_DEV_SERVER_TIMEOUT = 'intellij.dev.serverTimeoutMs';
 const OPT_SERVER_PATH = 'intellij.serverPath';
 const OPT_JVM_ARGS = 'intellij.additionalJvmArgs';
 const OPT_DEFAULT_WORKSPACE_SDK = 'intellij.jdkForSymbolResolution';
@@ -140,7 +123,6 @@ let restartRequestedDuringStart = false;
 let bundledServerLauncherCache: { key: string; promise: Promise<string> } | undefined;
 let bundledServerSetupPhase: ServerBundlePhase = 'downloading';
 let configuredClientFeatureFactories: ClientFeatureFactory[] = [];
-let configuredStorageUri: vscode.Uri | undefined;
 /** The launched server outliving a single start, so a later stop can still terminate it. */
 let launchedServer: LaunchedServerStartup | undefined;
 /**
@@ -197,7 +179,6 @@ interface LspClientPolicyOptions {
   getAcceptedEulaHash: AcceptedEulaHashProvider;
   checkEulaAccepted: () => Promise<boolean>;
   clientFeatureFactories?: ClientFeatureFactory[];
-  storageUri?: vscode.Uri;
   onServerRestartStateChanged?: (state: ServerRestartState) => void;
 }
 
@@ -205,12 +186,10 @@ export function initLspClient({
   getAcceptedEulaHash,
   checkEulaAccepted,
   clientFeatureFactories = [],
-  storageUri,
   onServerRestartStateChanged,
 }: LspClientPolicyOptions): void {
   setLspActionsAvailable(true);
   configuredClientFeatureFactories = [...clientFeatureFactories];
-  configuredStorageUri = storageUri;
   registerIntellijExtensionsInitOption();
   const restartServer = (): Promise<boolean> =>
     runWithEulaGate({
@@ -562,15 +541,6 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
       // that follows, and without the detail already written to the log.
       const rejection = launchedServerState.initializationRejection;
       if (rejection !== undefined) throw new Error(rejection);
-      // A shared daemon can idle-shut-down in the exact window this editor is connecting, hanging up
-      // before initialize. That socket race is inherent; retry re-runs discovery and starts a fresh
-      // daemon. A server verdict (handled above) is never retried.
-      if (isDaemonStart() && attempt < MAX_DAEMON_START_ATTEMPTS) {
-        logInfo(
-          `Language server connection dropped during startup; retrying (attempt ${attempt + 1} of ${MAX_DAEMON_START_ATTEMPTS})`,
-        );
-        continue;
-      }
       const cause = e instanceof Error ? e : new Error(String(e));
       throw launchedServerAttempt?.startupError(cause) ?? cause;
     } finally {
@@ -811,53 +781,33 @@ export function prefetchBundledServerLauncher(): void {
   });
 }
 
+/**
+ * How this editor reaches a language server.
+ *
+ * Normally it runs `lsp-router` and speaks LSP to it over stdio. The router finds the server that
+ * serves this workspace and starts one when none does, so editors on one workspace share a server.
+ *
+ * Without a workspace folder there is nothing to share, so the launcher runs as this window's own
+ * child and the router is not involved.
+ */
 function getServerOptions(
   launchedServerState: LaunchedServerState,
   getAcceptedEulaHash: AcceptedEulaHashProvider,
 ): ServerOptions {
-  const predefinedPort = configOption<number>(OPT_DEV_SERVER_PORT) ?? -1;
-  if (predefinedPort !== -1) {
-    // Connecting to an already-running (dev) server: we didn't start it, so we can't pass `--eula`.
-    // The server skips EULA enforcement when running from sources, so no hash is needed here.
-    return () =>
-      getStreamInfoForRunningServer(
-        predefinedPort,
-        configOption<number>(OPT_DEV_SERVER_TIMEOUT) ?? LOCAL_SERVER_CONNECTION_TIMEOUT_MS,
-      );
-  }
   return () => {
-    const workspaceRoot = primaryWorkspaceRoot();
-    if (workspaceRoot === undefined) {
-      // No folder to key a per-workspace server on (e.g. a single loose file): keep the private stdio child.
-      const launchedServerAttempt = new LaunchedServerStartup();
-      launchedServerState.currentAttempt = launchedServerAttempt;
-      return getStreamInfoForLaunchedServer({
-        launchedServerAttempt,
-        launcherPath: configuredServerLauncherPath(),
-        getAcceptedEulaHash,
-      });
-    }
-    return getStreamInfoForDaemonServer({
-      workspaceRoot,
+    const launchedServerAttempt = new LaunchedServerStartup();
+    launchedServerState.currentAttempt = launchedServerAttempt;
+    return getStreamInfoForLaunchedServer({
+      launchedServerAttempt,
       launcherPath: configuredServerLauncherPath(),
       getAcceptedEulaHash,
     });
   };
 }
 
-/** The workspace root whose hash names the port discovery file. The first folder identifies the workspace. */
-function primaryWorkspaceRoot(): string | undefined {
-  return workspace.workspaceFolders?.[0]?.uri.fsPath;
-}
-
-/**
- * Whether a start goes through the shared daemon (a workspace folder is open and no dev port is set). Only
- * this path is subject to the connect-versus-idle-shutdown race, and only it is worth retrying on a
- * transport failure — a retry re-runs discovery and starts a fresh daemon.
- */
-function isDaemonStart(): boolean {
-  const predefinedPort = configOption<number>(OPT_DEV_SERVER_PORT) ?? -1;
-  return predefinedPort === -1 && primaryWorkspaceRoot() !== undefined;
+/** Whether the router is used. Without a workspace folder there is no workspace to share a server for. */
+function usesRouter(): boolean {
+  return isExternalServerConfigured() || workspace.workspaceFolders?.[0] !== undefined;
 }
 
 function configuredServerLauncherPath(): string | undefined {
@@ -891,20 +841,26 @@ async function startServer({
   launcherPath?: string;
   getAcceptedEulaHash: AcceptedEulaHashProvider;
 }): Promise<ChildProcessWithoutNullStreams> {
-  const launcherPath = configuredLauncherPath ?? (await ensureBundledServerLauncher());
-
   const context = getContext();
-  const args: string[] = [];
-  args.push('--stdio');
-  const storageUri = configuredStorageUri ?? context.storageUri;
-  if (storageUri) {
-    args.push('--system-path', storageUri.fsPath);
-  }
-  // The launcher owns the accepted-EULA hash: we start the process, so we pass it on the command line.
-  // Clients that only connect to an already-running server cannot, which is why this is not in `initialize`.
+  const devPort = configOption<number>(OPT_DEV_SERVER_PORT) ?? -1;
+  // A dev server already runs, so nothing here has to be able to start one. A configured server
+  // path is still used, because the router ships beside its launcher.
+  const launcherPath =
+    devPort !== -1
+      ? configuredLauncherPath
+      : (configuredLauncherPath ?? (await ensureBundledServerLauncher()));
+
+  // Arguments for the server itself, whether the router starts it or it runs as this window's child.
+  //
+  // The extension names no paths. A per-client path would put one workspace's database in as many
+  // places as there are clients, so the router names the server's own directory and the server
+  // puts every database under the cache root of the machine. See `language-server/docs/paths.md`.
+  const serverArgs: string[] = [];
+  // Whoever starts the process owns the accepted-EULA hash, so it goes on the command line. A client
+  // that only connects to a running server cannot pass it, which is why it is not in `initialize`.
   const eulaHash = getAcceptedEulaHash(context);
   if (eulaHash !== undefined) {
-    args.push('--eula', eulaHash);
+    serverArgs.push('--eula', eulaHash);
   }
   const userJvmOptions = getUserJvmOptions();
   const configuredProxyOptions = proxyJvmOptions(
@@ -927,16 +883,41 @@ async function startServer({
   if (context.extensionMode === vscode.ExtensionMode.Test) {
     env.INTELLIJ_SERVER_EULA_PERSISTENCE = 'false';
   }
+  if (devPort !== -1) {
+    // The router connects here and starts nothing.
+    env.DEV_PORT = String(devPort);
+  }
 
-  logInfo('Starting language server');
-  logInfo(`  command: ${launcherPath}`);
+  const throughRouter = usesRouter();
+  const command = throughRouter ? routerPath({ launcherPath }) : launcherPath;
+  if (command === undefined) {
+    throw new Error(
+      throughRouter
+        ? 'The language server router was not found. It ships with the language server, so set ' +
+            '`intellij.serverPath` to a server you built, or set INTELLIJ_LSP_ROUTER to a router binary.'
+        : 'A dev server port is set, but no workspace folder is open, so there is nothing to connect to',
+    );
+  }
+  let args: string[];
+  if (!throughRouter) {
+    args = ['--stdio', ...serverArgs];
+  } else if (launcherPath === undefined) {
+    // DEV_PORT names a server that already runs, so the router starts nothing and needs no launcher.
+    args = [];
+  } else {
+    args = routerArgs({ launcherPath, serverArgs });
+  }
+
+  logInfo(throughRouter ? 'Starting the language server router' : 'Starting the language server');
+  logInfo(`  command: ${command}`);
   logInfo(`  args   : ${JSON.stringify(args)}`);
   logInfo(`  VM opts: ${JSON.stringify(userJvmOptions)}`);
+  if (devPort !== -1) logInfo(`  dev port: ${devPort}`);
   if (configuredProxyOptions.length > 0) logInfo('  proxy  : configured from VS Code settings');
   if (wslOptions.length > 0) logInfo('  WSL    : IPv4 stack forced for the localhost relay');
   logInfo('');
 
-  const serverProcess = spawn(launcherPath, args, {
+  const serverProcess = spawn(command, args, {
     env,
     stdio: ['pipe', 'pipe', 'pipe'],
   });
@@ -958,156 +939,6 @@ async function startServer({
   // closed connection, so a server that spawns but never answers initialize is invisible to it.
   launchedServerAttempt.startTimeout(LAUNCHED_SERVER_START_TIMEOUT_MS);
   return serverProcess;
-}
-
-/**
- * Connects to the server that serves [workspaceRoot], starting one if none is running.
- *
- * The server publishes its TCP port to a discovery file named by the workspace hash (see [computePortFilePath]).
- * We read that file and connect. When it is absent or names a dead port, we spawn one daemonized server and
- * keep polling until it binds, publishes its port, and accepts a connection, or the deadline passes. A stale
- * file left by a crashed server resolves itself: the connect fails, the new server overwrites the file. A live
- * server another editor started is reused: several editors on one workspace share one server.
- */
-async function getStreamInfoForDaemonServer({
-  workspaceRoot,
-  launcherPath,
-  getAcceptedEulaHash,
-}: {
-  workspaceRoot: string;
-  launcherPath?: string;
-  getAcceptedEulaHash: AcceptedEulaHashProvider;
-}): Promise<StreamInfo> {
-  const portFilePath = computePortFilePath(workspaceRoot);
-  const deadline = Date.now() + DAEMON_START_TIMEOUT_MS;
-  let spawned = false;
-  let lastError: unknown;
-  while (Date.now() < deadline) {
-    const port = readPortFile(portFilePath);
-    if (port !== undefined) {
-      try {
-        const socket = await connectToPort(port, DAEMON_CONNECT_TIMEOUT_MS);
-        logInfo(`Connected to language server on port ${port}`);
-        return { reader: socket, writer: socket };
-      } catch (e) {
-        // The port is not accepting yet, or names a server that has died: fall through and (re)start one.
-        lastError = e;
-      }
-    }
-    if (!spawned) {
-      await startDaemonServer({ workspaceRoot, launcherPath, getAcceptedEulaHash });
-      spawned = true;
-    }
-    await new Promise((resolve) => setTimeout(resolve, CONNECTION_RETRY_DELAY_MS));
-  }
-  throw new Error(
-    `Timed out after ${DAEMON_START_TIMEOUT_MS / 1000}s starting or connecting to the language server for ${workspaceRoot}`,
-    lastError instanceof Error ? { cause: lastError } : undefined,
-  );
-}
-
-/**
- * Spawns a daemonized language server in TCP mode with an ephemeral port. The server publishes its port to the
- * discovery file for [workspaceRoot]. The process is detached and unref'd, so it outlives this editor; it is
- * not killed on stop. The server counts its clients and shuts itself down once none is left for a while. Its
- * stdio is ignored, since it writes to its own log directory rather than to a pipe this editor owns.
- */
-async function startDaemonServer({
-  workspaceRoot,
-  launcherPath: configuredLauncherPath,
-  getAcceptedEulaHash,
-}: {
-  workspaceRoot: string;
-  launcherPath?: string;
-  getAcceptedEulaHash: AcceptedEulaHashProvider;
-}): Promise<void> {
-  const launcherPath = configuredLauncherPath ?? (await ensureBundledServerLauncher());
-
-  const context = getContext();
-  const args: string[] = [
-    '--socket=127.0.0.1:0',
-    '--multi-client',
-    '--workspace-root',
-    workspaceRoot,
-    // The daemon outlives this editor; make it stop on its own once every editor has disconnected.
-    '--idle-timeout',
-    DAEMON_IDLE_TIMEOUT,
-  ];
-  const storageUri = configuredStorageUri ?? context.storageUri;
-  if (storageUri) {
-    args.push('--system-path', storageUri.fsPath);
-  }
-  const eulaHash = getAcceptedEulaHash(context);
-  if (eulaHash !== undefined) {
-    args.push('--eula', eulaHash);
-  }
-  const userJvmOptions = getUserJvmOptions();
-  const configuredProxyOptions = proxyJvmOptions(
-    configOption<string>(OPT_HTTP_PROXY),
-    configOption<string>(OPT_HTTP_PROXY_SUPPORT),
-  );
-  const wslOptions = wslJvmOptions(process.platform, vscode.env.remoteName, process.env);
-  const rawDataSharing = configOption(OPT_DATA_SHARING);
-  const dataSharing = isDataSharingChoice(rawDataSharing) ? rawDataSharing : 'none';
-  const rawRegion = configOption(OPT_REGION);
-  const region = isRegion(rawRegion) ? rawRegion : undefined;
-  const env = buildLaunchEnvironment(
-    process.env,
-    [...configuredProxyOptions, ...wslOptions],
-    userJvmOptions,
-    dataSharing,
-    region,
-  );
-  if (context.extensionMode === vscode.ExtensionMode.Test) {
-    env.INTELLIJ_SERVER_EULA_PERSISTENCE = 'false';
-  }
-
-  logInfo('Starting daemonized language server');
-  logInfo(`  command: ${launcherPath}`);
-  logInfo(`  args   : ${JSON.stringify(args)}`);
-  logInfo(`  VM opts: ${JSON.stringify(userJvmOptions)}`);
-  if (configuredProxyOptions.length > 0) logInfo('  proxy  : configured from VS Code settings');
-  if (wslOptions.length > 0) logInfo('  WSL    : IPv4 stack forced for the localhost relay');
-  logInfo('');
-
-  // detached + unref: the server keeps running after this editor exits, so another editor can reuse it.
-  const serverProcess = spawn(launcherPath, args, {
-    env,
-    detached: true,
-    stdio: 'ignore',
-  });
-  // A spawn failure (e.g. a missing launcher) must not take down the extension host through an unhandled event.
-  serverProcess.on('error', (error) =>
-    logInfo(`Failed to start the language server: ${error.message}`),
-  );
-  serverProcess.unref();
-}
-
-async function getStreamInfoForRunningServer(port: number, timeoutMs: number): Promise<StreamInfo> {
-  let timeout = timeoutMs;
-  const deadline = Date.now() + timeoutMs;
-
-  let error: unknown = null;
-  while (timeout > 0) {
-    try {
-      const socket = await connectToPort(port, timeout);
-      return { reader: socket, writer: socket };
-    } catch (e) {
-      logInfo(`Failed to connect to LSP server on port ${port}: ${e}`);
-      error ??= e;
-      await new Promise((resolve) => setTimeout(resolve, CONNECTION_RETRY_DELAY_MS));
-      timeout = deadline - Date.now();
-      if (timeout > 0) {
-        logInfo(`Retrying connection to LSP server`);
-      }
-    }
-  }
-
-  if (error) {
-    throw error;
-  }
-
-  throw new Error(`Failed to connect to LSP server on port ${port}`);
 }
 
 function buildDocumentSelector(): LanguageClientOptions['documentSelector'] {
@@ -1156,7 +987,6 @@ const LAUNCH_SETTINGS = [
   OPT_JVM_ARGS,
   OPT_SERVER_PATH,
   OPT_DEV_SERVER_PORT,
-  OPT_DEV_SERVER_TIMEOUT,
   OPT_HTTP_PROXY,
   OPT_HTTP_PROXY_SUPPORT,
 ];
@@ -1498,30 +1328,4 @@ function shellQuoteIfNeeded(arg: string): string {
   // Escape special characters
   const escaped = arg.replace(/(["\\$`])/g, '\\$1');
   return `"${escaped}"`;
-}
-
-function connectToPort(port: number, timeoutMs: number): Promise<net.Socket> {
-  return new Promise((resolve, reject) => {
-    const socket = net.connect({ port });
-
-    const timer = setTimeout(() => {
-      socket.destroy();
-      reject(new Error(`Timed out connecting to port ${port}`));
-    }, timeoutMs);
-
-    const cleanup = () => {
-      clearTimeout(timer);
-      socket.removeAllListeners();
-    };
-
-    socket.once('connect', () => {
-      cleanup();
-      resolve(socket);
-    });
-
-    socket.once('error', (err) => {
-      cleanup();
-      reject(err);
-    });
-  });
 }

@@ -460,11 +460,6 @@
             "default": -1,
             "markdownDescription": "Port for a locally started language server. Specify `-1` to use the bundled server."
           },
-          "intellij.dev.serverTimeoutMs": {
-            "type": "number",
-            "default": 10000,
-            "description": "Timeout (ms) for connecting to an external language server"
-          },
           "intellij.dev.commands": {
             "type": "boolean",
             "default": false,

@@ -78,7 +78,6 @@ export interface ActivationOptions {
   enableDapServer?: boolean;
   checkEulaAccepted?: EulaAcceptanceCheck;
   getAcceptedEulaHash?: AcceptedEulaHashProvider;
-  storageUri?: Uri;
   onServerRestartStateChanged?: (state: ServerRestartState) => void;
 }
 
@@ -284,7 +283,6 @@ async function activateAcceptedExtension(
       checkEulaAccepted: () => checkEulaAcceptedFn(context),
       clientFeatureFactories: options.clientFeatureFactories,
       onServerRestartStateChanged: options.onServerRestartStateChanged,
-      storageUri: options.storageUri,
     });
     serverActivated = true;
   }
