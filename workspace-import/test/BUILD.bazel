@@ -51,8 +51,8 @@ jvm_library(
     deps = [
         # do not sort,
         "@lib//:kotlin-stdlib",
-        "@community//libraries/junit5",
-        "@community//libraries/junit5:junit5_test_lib",
+        "@community//libraries/junit6",
+        "@community//libraries/junit6:junit6_test_lib",
         "@community//libraries/gson",
         "@community//libraries/gson:gson_test_lib",
         "@community//platform/workspace/storage",
