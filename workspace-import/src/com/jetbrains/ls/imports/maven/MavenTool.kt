@@ -29,9 +29,9 @@ import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
 import com.jetbrains.ls.imports.api.environmentVariable
 import com.jetbrains.ls.imports.api.putEnvironment
-import com.jetbrains.ls.imports.json.JsonWorkspaceImporter
 import com.jetbrains.ls.imports.json.WorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData
+import com.jetbrains.ls.imports.json.postProcessWorkspaceData
 import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
 import com.jetbrains.ls.imports.utils.runWithErrorReporting
 import com.jetbrains.ls.imports.utils.stampBuildToolJavaHome
@@ -269,7 +269,7 @@ class MavenTool(
         val merged = mergeResults(resultDeps, resultGenSources) as SuccessResult
         return MutableEntityStorage.create().apply {
             importWorkspaceData(
-                JsonWorkspaceImporter.postProcessWorkspaceData(
+                postProcessWorkspaceData(
                     merged.workspaceData,
                     projectDirectory,
                     onUnresolvedDependency = { events.trySend(ImportEvent.UnresolvedDependency(it)) },

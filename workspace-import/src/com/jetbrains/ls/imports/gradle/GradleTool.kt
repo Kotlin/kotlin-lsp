@@ -35,8 +35,8 @@ import com.jetbrains.ls.imports.gradle.action.PrepareKotlinIdeaImportAction
 import com.jetbrains.ls.imports.gradle.action.ProjectMetadata
 import com.jetbrains.ls.imports.gradle.action.ProjectMetadataBuilder
 import com.jetbrains.ls.imports.gradle.util.GradleSyncResultHandler
-import com.jetbrains.ls.imports.json.JsonWorkspaceImporter.postProcessWorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData
+import com.jetbrains.ls.imports.json.postProcessWorkspaceData
 import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
 import com.jetbrains.ls.imports.utils.stampBuildToolJavaHome
 import com.jetbrains.ls.snapshot.api.impl.core.rocks.FileSystemChange
