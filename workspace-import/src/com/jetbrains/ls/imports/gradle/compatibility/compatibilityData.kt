@@ -25,5 +25,7 @@ internal val DEFAULT_DATA = listOf(
     VersionMapping(java = "22-23", gradle = "8.8-INF"),
     VersionMapping(java = "23-24", gradle = "8.10-INF"),
     VersionMapping(java = "24-25", gradle = "8.14-INF"),
-    VersionMapping(java = "25-26", gradle = "9.1.0-INF")
+    VersionMapping(java = "25-26", gradle = "9.1.0-INF"),
+    VersionMapping(java = "26-27", gradle = "9.4.0-INF"),
+    VersionMapping(java = "27-28", gradle = "9.8.0-INF")
 )
