@@ -505,6 +505,8 @@ class JpsBuildTool(
                 entitySource = entitySource
             ) {
                 homePath = virtualFileUrlManager.storeAndGet(Path.of(sdk.path).toFileUrl().url)
+                // the same format as JavaSdkImpl.getVersionString
+                version = sdk.versionInfo?.displayVersionString()
             }
         }
     }
