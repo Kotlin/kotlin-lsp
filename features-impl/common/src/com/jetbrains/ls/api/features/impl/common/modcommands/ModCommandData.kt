@@ -33,12 +33,12 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.getLspLocationForDefinition
 import com.jetbrains.ls.api.core.util.intellijUriToLspUri
 import com.jetbrains.ls.api.core.util.positionByOffset
+import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.impl.common.modcommands.LazyFix
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCommand
 import com.jetbrains.ls.api.features.impl.common.modcommands.registerLazyFixes
 import com.jetbrains.ls.api.features.impl.common.utils.showDocumentIfSupported
-import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
 import com.jetbrains.lsp.implementation.LspClient
 import com.jetbrains.lsp.protocol.ApplyEditRequests.ApplyEdit
 import com.jetbrains.lsp.protocol.ApplyWorkspaceEditParams
@@ -171,7 +171,26 @@ sealed class ModCommandData {
     data class MoveFile(val fileUrl: String, val targetUrl: String) : ModCommandData()
 
     @Serializable
-    data class UpdateFileText(val fileUrl: String, val oldText: String, val newText: String) : ModCommandData()
+    data class Edit(val from: Int, val to: Int, val text: String) {
+        /** The LSP form of the edit, with the offsets of [document] mapped to lines and columns. */
+        fun toTextEdit(document: Document): TextEdit = TextEdit(TextRange(from, to).toLspRange(document), text)
+
+    }
+
+    @Serializable
+    data class UpdateFileText(val fileUrl: String, val edits: List<Edit>) : ModCommandData() {
+        /** The text after the [edits] are applied to [oldText]. The edits are sorted by offset, do not overlap, and refer to [oldText]. */
+        fun applyEdits(oldText: String): String {
+            val result = StringBuilder()
+            var pos = 0
+            for ((from, to, text) in edits) {
+                result.append(oldText, pos, from).append(text)
+                pos = to
+            }
+            return result.append(oldText, pos, oldText.length).toString()
+        }
+
+    }
 
     @Serializable
     data class DisplayMessage(val message: String, val messageKind: ModDisplayMessage.MessageKind) : ModCommandData()
@@ -299,7 +318,7 @@ sealed class ModCommandData {
 
             is ModDeleteFile -> DeleteFile(command.file.url)
             is ModMoveFile -> MoveFile(command.file.url, command.targetFile.url.toFileUrl())
-            is ModUpdateFileText -> UpdateFileText(command.file.url, command.oldText, command.newText)
+            is ModUpdateFileText -> UpdateFileText(command.file.url, command.toEdits())
             is ModDisplayMessage -> DisplayMessage(command.messageText, command.kind)
             // Relies on the custom `intellij/copyToClipboard` notification, so only clients,
             // which declare `intellijExtensions` can handle it; abort for the others.
@@ -438,6 +457,22 @@ sealed class ModCommandData {
     }
 }
 
+private fun ModUpdateFileText.toEdits(): List<ModCommandData.Edit> {
+    if (this.updatedRanges.isEmpty()) {
+        // The command has no fragments, so one edit replaces the whole text.
+        return listOf(ModCommandData.Edit(0, oldText.length, newText))
+    }
+    var diff = 0
+    return this.updatedRanges.map {
+        val edit = ModCommandData.Edit(
+            it.offset + diff, it.offset + diff + it.oldLength,
+            this.newText.substring(it.offset, it.offset + it.newLength)
+        )
+        diff += it.oldLength - it.newLength
+        edit
+    }
+}
+
 /**
  * Executes [command] against [client], and returns `false` when the user stopped it. Only a
  * [ModCommandData.ShowConflicts] can answer `false`, and only a [ModCommandData.Composite] reads the answer: it
@@ -453,6 +488,8 @@ suspend fun executeCommand(
     client: LspClient,
     changedFiles: MutableMap<String, String> = mutableMapOf(),
 ): Boolean {
+    fun findDocument(fileUrl: String): Document? =
+        changedFiles[fileUrl]?.let { DocumentImpl(it) } ?: VirtualFileManager.getInstance().findFileByUrl(fileUrl)?.findDocument()
     when (command) {
         is ModCommandData.Nothing -> {}
 
@@ -512,9 +549,7 @@ suspend fun executeCommand(
         }
 
         is ModCommandData.Snippet -> {
-            val doc =
-                changedFiles[command.fileUrl]?.let { DocumentImpl(it) } ?: VirtualFileManager.getInstance().findFileByUrl(command.fileUrl)
-                    ?.findDocument()
+            val doc = findDocument(command.fileUrl)
             // A template without tab stops has nothing to start, and its text is already in the document
             // (`toTextEdit` derives its range from the tab stops, so it cannot even be built).
             if (doc != null && command.vars.isNotEmpty()) {
@@ -536,21 +571,25 @@ suspend fun executeCommand(
         }
 
         is ModCommandData.UpdateFileText -> {
-            client.request(
-                requestType = ApplyEdit,
-                params = ApplyWorkspaceEditParams(
-                    label = "Update ${command.fileUrl}",
-                    edit = WorkspaceEdit(
-                        changes = mapOf(
-                            DocumentUri(command.fileUrl.intellijUriToLspUri()) to computeTextEdits(
-                                oldText = command.oldText,
-                                newText = command.newText,
+            // The edits refer to the text after the previous commands, which the document on disk does not have yet.
+            val doc = findDocument(command.fileUrl)
+            if (doc == null) {
+                LOG.warn("No document to update: ${command.fileUrl}")
+            }
+            else {
+                client.request(
+                    requestType = ApplyEdit,
+                    params = ApplyWorkspaceEditParams(
+                        label = "Update ${command.fileUrl}",
+                        edit = WorkspaceEdit(
+                            changes = mapOf(
+                                DocumentUri(command.fileUrl.intellijUriToLspUri()) to command.edits.map { it.toTextEdit(doc) },
                             ),
                         ),
                     ),
-                ),
-            )
-            changedFiles[command.fileUrl] = command.newText
+                )
+                changedFiles[command.fileUrl] = command.applyEdits(doc.text)
+            }
         }
 
         is ModCommandData.Navigate -> {
@@ -558,9 +597,7 @@ suspend fun executeCommand(
             val selectionEnd = command.selectionEnd.takeIf { it != -1 } ?: command.caret
             var selection: Range? = null
             if (selectionStart != -1 && selectionEnd != -1) {
-                val doc = changedFiles[command.fileUrl]?.let { DocumentImpl(it) } ?: 
-                    VirtualFileManager.getInstance().findFileByUrl(command.fileUrl)?.findDocument()
-
+                val doc = findDocument(command.fileUrl)
                 if (doc != null) {
                     selection = Range(
                         start = doc.positionByOffset(selectionStart),
