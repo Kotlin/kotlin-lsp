@@ -10,4 +10,9 @@
                                 implementationClass="com.jetbrains.ls.api.features.impl.kotlin.completion.LSKotlinCompletionItemKindProvider"/>
 
   </extensions>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <lang.inspectionSuppressor language="kotlin"
+                               implementationClass="com.jetbrains.ls.api.features.impl.kotlin.diagnostics.ComposableFunctionNameSuppressor"/>
+  </extensions>
 </idea-plugin>
