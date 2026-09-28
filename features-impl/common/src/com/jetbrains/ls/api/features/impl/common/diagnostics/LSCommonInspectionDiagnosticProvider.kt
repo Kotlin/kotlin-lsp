@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.encodeToJsonElement
 
 
-// TODO: LSP-278 Optimize performance of inspections
 class LSCommonInspectionDiagnosticProvider(
     override val supportedLanguages: Set<LSLanguage>,
     private val inspectionProfilePatcher: InspectionProfilePatcher = InspectionProfilePatcher(),
