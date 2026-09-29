@@ -47,6 +47,10 @@ internal object LSCommonMoveProvider : LSMoveProvider {
         val changes = server.withWriteAnalysisContext {
             val destinationPath = findParentPath(params)
 
+            if (destinationPath == null) {
+                failMove(LspServerBundle.message("error.move.destination.not.found"))
+            }
+
             val targetDirectory =
                 readAction { findDestination(project, destinationPath) } ?: writeAction { createDestination(project, destinationPath) }
 
