@@ -1,7 +1,5 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
-@file:Suppress("PackageDirectoryMismatch")
-
-package org.jetbrains.kotlin.jps.model
+package com.jetbrains.ls.imports.jps
 
 import com.intellij.util.xmlb.XmlSerializer
 import org.jdom.Element
@@ -24,10 +22,11 @@ import org.jetbrains.kotlin.config.KotlinFacetSettings
 import org.jetbrains.kotlin.config.SettingConstants
 import org.jetbrains.kotlin.config.deserializeFacetSettings
 
-// A copy-paste from the obsolete and incompatible
-// kotlin-jps-plugin-classpath-2.1.21.jar library
-// reusing the same package because in some runs
-// the original library is present (all-tests)
+// A copy-paste from the obsolete and incompatible kotlin-jps-plugin-classpath-2.1.21.jar library.
+// These classes live in this module's own package on purpose: test classpaths (all-tests, lsp.test,
+// performanceTests) also carry the original library, and sharing its package made which copy won
+// depend on jar order. The library's copy declares ROLE differently, so when it won, the import
+// failed with NoSuchMethodError on JpsKotlinCompilerSettings.Companion.getROLE().
 internal class KotlinModelSerializerService : KotlinCommonJpsModelSerializerExtension() {
     override fun getProjectExtensionSerializers() = listOf(
         KotlinCommonCompilerArgumentsSerializer(),

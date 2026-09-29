@@ -129,8 +129,6 @@ import org.jetbrains.kotlin.idea.facet.KotlinFacetType
 import org.jetbrains.kotlin.idea.workspaceModel.CompilerArgumentsSerializer
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
 import org.jetbrains.kotlin.idea.workspaceModel.toCompilerSettingsData
-import org.jetbrains.kotlin.jps.model.JpsKotlinCompilerSettings
-import org.jetbrains.kotlin.jps.model.JpsKotlinFacetModuleExtension
 import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 import java.io.IOException
 import java.nio.file.Path
