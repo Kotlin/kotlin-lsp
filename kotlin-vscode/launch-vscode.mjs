@@ -3,7 +3,7 @@
 //
 // Compiles the dev extension for the requested bundle (rspack, runs from the
 // package sources -- no bundled server), creates an isolated VS Code profile
-// preconfigured with `intellij.dev.serverPort`, and opens it.
+// preconfigured with `intellij.dev.serverPort`, builds `lsp-router`, and opens it.
 //
 // Usage: node launch-vscode.mjs --bundle-type=<kotlin-server|intellij-server|intellij-server-experimental|goland-server> [--port=9999] [workspace-folder]
 //
@@ -204,7 +204,40 @@ if (!fs.existsSync(keybindingsFile)) {
   fs.writeFileSync(keybindingsFile, `${JSON.stringify(keybindings, null, 2)}\n`);
 }
 
-// --- 4. Launch the isolated VS Code instance ---------------------------------
+// --- 4. Resolve the LSP router -----------------------------------------------
+// The extension starts the server through `lsp-router`, also with a dev server port. It takes the
+// router from a bundled server, and the dev extension has none. So the launcher builds one and
+// names it in `INTELLIJ_LSP_ROUTER` for VS Code. A router that the caller names already wins.
+
+function resolveRouter() {
+  const named = process.env.INTELLIJ_LSP_ROUTER?.trim();
+  if (named) return named;
+  console.log(green('Building lsp-router'));
+  // `bazel.cmd` is a batch file and a shell script in one, with no shebang: outside Windows it runs through bash.
+  const bazel = path.join(REPO_ROOT, 'bazel.cmd');
+  const buildArgs = ['build', '//language-server/native/lsp-router:lsp-router'];
+  const status = IS_WIN
+    ? run(bazel, buildArgs, { cwd: REPO_ROOT })
+    : run('bash', [bazel, ...buildArgs], { cwd: REPO_ROOT });
+  if (status !== 0) {
+    fail('Error: lsp-router build failed.');
+  }
+  const routerName = IS_WIN ? 'lsp-router.exe' : 'lsp-router';
+  const router = path.join(
+    REPO_ROOT,
+    'out',
+    'bazel-bin',
+    'language-server',
+    'native',
+    'lsp-router',
+    routerName,
+  );
+  if (!fs.existsSync(router)) fail(`Error: lsp-router was not found at ${router}`);
+  return router;
+}
+const routerPath = resolveRouter();
+
+// --- 5. Launch the isolated VS Code instance ---------------------------------
 const timeoutMs = 360_000;
 const intervalMs = 500;
 const host = '127.0.0.1';
@@ -240,7 +273,9 @@ function waitForPort() {
 }
 await waitForPort();
 
-console.log(green(`Launching VS Code (port ${serverPort}, profile ${isoDir})`));
+console.log(
+  green(`Launching VS Code (port ${serverPort}, profile ${isoDir}, router ${routerPath})`),
+);
 const codeArgs = [
   `--extensionDevelopmentPath=${extensionDir}`,
   `--user-data-dir=${userDataDir}`,
@@ -249,4 +284,4 @@ const codeArgs = [
 ];
 if (workspace) codeArgs.push(workspace);
 
-process.exit(run(codeBin, codeArgs));
+process.exit(run(codeBin, codeArgs, { env: { ...process.env, INTELLIJ_LSP_ROUTER: routerPath } }));
