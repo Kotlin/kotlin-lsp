@@ -14,7 +14,9 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.nio.file.Path
+import kotlin.io.path.createTempFile
 import kotlin.io.path.div
+import kotlin.io.path.writeText
 
 @TestDataDirSource
 class MavenProjectImportTest : AbstractProjectImportTestCase() {
@@ -81,7 +83,35 @@ class MavenProjectImportTest : AbstractProjectImportTestCase() {
             MavenDriver,
             testDataDir / "maven",
             projectFile = projectFile,
-            entityStorageVerifier = entityStorageVerifier
+            entityStorageVerifier = entityStorageVerifier,
+            importParametersCustomizer = { params ->
+                params.copy(
+                    options = params.options.copy(
+                        environment = params.options.environment + ("MAVEN_ARGS" to "-s $cacheRedirectorSettingsFile")
+                    )
+                )
+            }
         )
+    }
+
+    companion object {
+        private val cacheRedirectorSettingsFile: Path by lazy {
+            createTempFile("maven-cache-redirector-settings", ".xml").also { file ->
+                file.writeText(
+                    """
+                    <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
+                      <mirrors>
+                        <mirror>
+                          <id>cache-redirector</id>
+                          <name>JetBrains cache redirector</name>
+                          <url>https://cache-redirector.jetbrains.com/repo.maven.apache.org/maven2</url>
+                          <mirrorOf>*</mirrorOf>
+                        </mirror>
+                      </mirrors>
+                    </settings>
+                    """.trimIndent()
+                )
+            }
+        }
     }
 }
