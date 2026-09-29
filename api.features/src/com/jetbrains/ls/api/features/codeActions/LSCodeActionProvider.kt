@@ -20,6 +20,12 @@ interface LSCodeActionProvider : LSLanguageSpecificConfigurationEntry {
      */
     val providesOnlyKinds: Set<CodeActionKind>
 
+    /**
+     * Whether the code actions of this provider go after those of the other providers, as the IDE lists
+     * the suppression of a warning after its fixes.
+     */
+    val listedLast: Boolean get() = false
+
     context(server: LSServer, handlerContext: LspHandlerContext)
     fun getCodeActions(params: CodeActionParams): Flow<CodeAction>
 }
