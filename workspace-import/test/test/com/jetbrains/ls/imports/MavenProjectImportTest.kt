@@ -105,7 +105,7 @@ class MavenProjectImportTest : AbstractProjectImportTestCase() {
                           <id>cache-redirector</id>
                           <name>JetBrains cache redirector</name>
                           <url>https://cache-redirector.jetbrains.com/repo.maven.apache.org/maven2</url>
-                          <mirrorOf>*</mirrorOf>
+                          <mirrorOf>central</mirrorOf>
                         </mirror>
                       </mirrors>
                     </settings>
