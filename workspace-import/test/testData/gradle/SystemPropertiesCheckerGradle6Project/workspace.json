@@ -9,7 +9,7 @@
                 {
                     "type": "sdk",
                     "name": "11",
-                    "kind": "jdk"
+                    "kind": "JavaSDK"
                 }
             ],
             "contentRoots": [
@@ -24,7 +24,7 @@
     "sdks": [
         {
             "name": "11",
-            "type": "jdk",
+            "type": "JavaSDK",
             "version": "JDK_11",
             "homePath": null,
             "roots": [],

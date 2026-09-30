@@ -462,7 +462,7 @@ internal class IdeaProjectMapper {
             }
             SdkData(
                 name = module.jdkName,
-                type = "jdk",
+                type = "JavaSDK",
                 homePath = jdkSettings.javaHome?.path,
                 version = jdkSettings.javaVersion?.name,
                 additionalData = ""
@@ -475,7 +475,7 @@ internal class IdeaProjectMapper {
     private fun IdeaProject.getProjectJdk(): SdkData {
         return SdkData(
             name = jdkName,
-            type = "jdk",
+            type = "JavaSDK",
             homePath = javaLanguageSettings?.jdk?.javaHome?.path,
             version = javaLanguageSettings?.jdk?.javaVersion?.majorVersion?.let { "JDK_$it" },
             additionalData = ""

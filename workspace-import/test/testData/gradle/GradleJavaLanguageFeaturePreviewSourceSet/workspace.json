@@ -9,7 +9,7 @@
                 {
                     "type": "sdk",
                     "name": "25",
-                    "kind": "jdk"
+                    "kind": "JavaSDK"
                 }
             ],
             "contentRoots": [
@@ -29,7 +29,7 @@
                 {
                     "type": "sdk",
                     "name": "25",
-                    "kind": "jdk"
+                    "kind": "JavaSDK"
                 }
             ],
             "contentRoots": [
@@ -54,7 +54,7 @@
                 {
                     "type": "sdk",
                     "name": "25",
-                    "kind": "jdk"
+                    "kind": "JavaSDK"
                 }
             ],
             "contentRoots": [
@@ -74,7 +74,7 @@
                 {
                     "type": "sdk",
                     "name": "25",
-                    "kind": "jdk"
+                    "kind": "JavaSDK"
                 }
             ],
             "contentRoots": [
@@ -94,7 +94,7 @@
                 {
                     "type": "sdk",
                     "name": "25",
-                    "kind": "jdk"
+                    "kind": "JavaSDK"
                 }
             ],
             "contentRoots": [
@@ -125,7 +125,7 @@
                 {
                     "type": "sdk",
                     "name": "25",
-                    "kind": "jdk"
+                    "kind": "JavaSDK"
                 }
             ],
             "contentRoots": [
@@ -145,7 +145,7 @@
                 {
                     "type": "sdk",
                     "name": "25",
-                    "kind": "jdk"
+                    "kind": "JavaSDK"
                 }
             ],
             "contentRoots": [
@@ -165,7 +165,7 @@
                 {
                     "type": "sdk",
                     "name": "25",
-                    "kind": "jdk"
+                    "kind": "JavaSDK"
                 }
             ],
             "contentRoots": [
@@ -196,7 +196,7 @@
                 {
                     "type": "sdk",
                     "name": "25",
-                    "kind": "jdk"
+                    "kind": "JavaSDK"
                 }
             ],
             "contentRoots": [
@@ -211,7 +211,7 @@
     "sdks": [
         {
             "name": "25",
-            "type": "jdk",
+            "type": "JavaSDK",
             "version": "JDK_25",
             "homePath": null,
             "roots": [],
