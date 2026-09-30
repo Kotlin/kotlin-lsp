@@ -98,7 +98,9 @@ abstract class GradleProjectImportTestCase : AbstractProjectImportTestCase() {
         downloadGradleBinaries()
         withGradleUserHomeIsolation {
             withConditionalScopedSystemProperty(
-                condition = { System.getenv("TEAMCITY_VERSION") != null && !project.contains("android", true) },
+                // The cache redirector is reachable from a developer machine and from a CI agent, so the redirect runs
+                // everywhere and no build reaches Maven Central directly (a 429). Android keeps its own repositories.
+                condition = { !project.contains("android", true) },
                 key = LSP_GRADLE_PROJECT_INIT_SCRIPTS,
                 value = getCacheRedirectorInitScriptPath().toString()
             ) {
@@ -216,11 +218,36 @@ abstract class GradleProjectImportTestCase : AbstractProjectImportTestCase() {
         return createTempFile("lsp-test-cache-redirector-patch", ".gradle").also {
             it.writeText(
                 """
+                def replaceMavenCentral(repositories) {
+                    def redirected = 'https://cache-redirector.jetbrains.com/repo.maven.apache.org/maven2'
+                    def obsolete = repositories.findAll { repo ->
+                        repo instanceof MavenArtifactRepository &&
+                        (repo.url.toString().startsWith('https://repo.maven.apache.org/maven2') ||
+                         repo.url.toString().startsWith('https://repo1.maven.org/maven2'))
+                    }
+                    repositories.removeAll(obsolete)
+                    if (repositories.findAll { it instanceof MavenArtifactRepository && it.url.toString() == redirected }.isEmpty()) {
+                        repositories.maven { url = redirected }
+                    }
+                }
+
                 allprojects {
-                    repositories {
-                        maven {
-                            url = 'https://repo.labs.intellij.net/repo1'
-                        }
+                    buildscript {
+                        replaceMavenCentral(repositories)
+                    }
+                    replaceMavenCentral(repositories)
+                }
+
+                settingsEvaluated { settings ->
+                    def pluginRepos = settings.pluginManagement.repositories
+                    replaceMavenCentral(pluginRepos)
+                    // Adding any repository to pluginManagement drops the implicit gradlePluginPortal default, so a
+                    // plugin marker (a Kotlin DSL, a Spring plugin) no longer resolves. Re-add the portal to keep it.
+                    if (pluginRepos.findAll { it.name == 'Gradle Central Plugin Repository' }.isEmpty()) {
+                        pluginRepos.gradlePluginPortal()
+                    }
+                    if (settings.hasProperty('dependencyResolutionManagement')) {
+                        replaceMavenCentral(settings.dependencyResolutionManagement.repositories)
                     }
                 }
             """.trimIndent()
