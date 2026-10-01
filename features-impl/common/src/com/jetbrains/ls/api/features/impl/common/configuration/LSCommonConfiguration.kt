@@ -3,6 +3,7 @@ package com.jetbrains.ls.api.features.impl.common.configuration
 
 import com.jetbrains.ls.api.features.ExtraPluginsProvider
 import com.jetbrains.ls.api.features.SessionComponentEntry
+import com.jetbrains.ls.api.features.WorkspaceComponentEntry
 import com.jetbrains.ls.api.features.impl.common.api.commonLsApiPlugin
 import com.jetbrains.ls.api.features.impl.common.decompiler.LSDecompileCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.fileTemplates.LSInterpolateFileTemplateCommandDescriptorProvider
@@ -18,6 +19,7 @@ import com.jetbrains.ls.snapshot.api.impl.core.LazyActionSessionComponent
 
 val LSCommonConfiguration: LSConfigurationPiece = LSConfigurationPiece(
     entries = listOf(
+        WorkspaceComponentEntry { LSSettingsComponent },
         SessionComponentEntry { LatestCompletionSessionComponent },
         SessionComponentEntry { LazyActionSessionComponent },
         LSDecompileCommandDescriptorProvider,
