@@ -9,9 +9,10 @@ import com.jetbrains.ls.api.core.util.toPath
 import com.jetbrains.ls.snapshot.api.impl.core.LSConfigurationData
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceComponent
 import java.nio.file.Files
+import java.nio.file.Path
 
 
-class State {
+class State(private val settingsRoot : Path? = null) {
     companion object {
         val EMPTY: State = State()
     }
@@ -24,11 +25,13 @@ internal object LSSettingsComponent : WorkspaceComponent<State> {
     override fun init(configData: LSConfigurationData): State {
         val root = configData[RootUriKey]?.toPath() ?: return State.EMPTY
 
-        val ideaDirectory = root.resolve(".idea")
-        if (!Files.isDirectory(ideaDirectory)) return State.EMPTY
+        val settingsRoot = root.resolve(Project.DIRECTORY_STORE_FOLDER)
+        if (!Files.isDirectory(settingsRoot)) return State.EMPTY
 
-        return State()
+        return State(settingsRoot = settingsRoot)
     }
+
+    override fun projectConfigurationChanged(state: State): State = state
 
     override suspend fun registerInProjectContainer(
         builder: AnalyzerContainerBuilder,
