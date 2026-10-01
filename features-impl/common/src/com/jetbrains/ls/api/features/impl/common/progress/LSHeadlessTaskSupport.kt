@@ -8,8 +8,8 @@ import com.intellij.openapi.progress.LockParallelizationSharingPolicy
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.getLockPermitContext
 import com.intellij.openapi.progress.prepareThreadContext
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.NlsContexts.ProgressTitle
+import com.intellij.platform.ide.progress.BackgroundTaskOwner
 import com.intellij.platform.ide.progress.ModalTaskOwner
 import com.intellij.platform.ide.progress.TaskCancellation
 import com.intellij.platform.ide.progress.TaskSupport
@@ -21,7 +21,7 @@ import kotlin.coroutines.cancellation.CancellationException
 
 internal class LSHeadlessTaskSupport : TaskSupport {
     override suspend fun <T> withBackgroundProgressInternal(
-        project: Project,
+        owner: BackgroundTaskOwner,
         title: @ProgressTitle String,
         cancellation: TaskCancellation,
         suspender: TaskSuspender?,
