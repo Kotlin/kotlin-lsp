@@ -11,4 +11,11 @@ import kotlinx.coroutines.flow.Flow
 interface LSWorkspaceSymbolProvider : LSConfigurationEntry {
     context(server: LSServer, handlerContext: LspHandlerContext)
     fun getWorkspaceSymbols(params: WorkspaceSymbolParams): Flow<WorkspaceSymbol>
+
+    /**
+     * Fills the location range of a [symbol] that this provider gave with a URI-only location, see `workspaceSymbol/resolve`.
+     * `null`: not a symbol of this provider.
+     */
+    context(server: LSServer, handlerContext: LspHandlerContext)
+    suspend fun resolveWorkspaceSymbol(symbol: WorkspaceSymbol): WorkspaceSymbol? = null
 }

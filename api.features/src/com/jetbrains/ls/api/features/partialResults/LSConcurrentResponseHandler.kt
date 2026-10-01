@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flattenMerge
 import kotlinx.coroutines.flow.produceIn
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.serialization.KSerializer
 
@@ -29,20 +31,23 @@ internal object LSConcurrentResponseHandler {
     }
 
 
+    /** @param arrange sorts or trims all the results before any is sent, so nothing streams before the providers finish. */
     context(handlerContext: LspHandlerContext, _: LSServer)
     suspend fun <H, R> streamResultsIfPossibleOrRespondDirectly(
         partialResultToken: ProgressToken?,
         resultSerializer: KSerializer<R>,
         providers: List<H>,
         isListedLast: (H) -> Boolean = { false },
+        arrange: ((List<R>) -> List<R>)? = null,
         getResults: (H) -> Flow<R>
     ): List<R> {
         if (providers.isEmpty()) return emptyList()
         val (last, first) = providers.partition(isListedLast)
         val results = first.map { getResults(it) }.concurrentMerge()
         val lastResults = last.map { getResults(it) }.concurrentMerge()
-        return (if (last.isEmpty()) results else results.followedBy(lastResults))
-            .streamResultsIfPossibleOrRespondDirectly(lspClient, partialResultToken, resultSerializer)
+        val merged = if (last.isEmpty()) results else results.followedBy(lastResults)
+        val arranged = if (arrange == null) merged else flow { emitAll(arrange(merged.toList()).asFlow()) }
+        return arranged.streamResultsIfPossibleOrRespondDirectly(lspClient, partialResultToken, resultSerializer)
 
     }
 
