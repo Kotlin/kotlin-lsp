@@ -15,6 +15,7 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.parents
 import com.jetbrains.ls.api.core.LSServer
@@ -95,27 +96,30 @@ class LSCommonIntentionFixesCodeActionProvider(
         for ((isInfo, list) in listOf(false to normalInspections, true to infoInspections)) {
             for (localInspection in list) {
                 val visitor = localInspection.buildVisitor(problemsHolder, true, session)
-                psiElement.parents(true).forEach { element ->
-                    runCatching {
-                        element.accept(visitor)
-                    }.getOrHandleException {
-                        LOG.warn(it)
-                    }
-                    for (descriptor in problemsHolder.results) {
-                        if ((isInfo || descriptor.highlightType == ProblemHighlightType.INFORMATION) &&
-                            !lsIsSuppressed(localInspection, descriptor)
-                        ) {
-                            val elementRange = (descriptor.psiElement ?: descriptor.startElement)?.textRange ?: continue
-                            val range = descriptor.textRangeInElement?.shiftRight(elementRange.startOffset) 
-                                ?: elementRange
-                            if (!range.containsOffset(offset)) continue
-                            for ((name, modCommandData) in lsInspectionManager.createDiagnosticData(descriptor).fixes) {
-                                result.add(applyFixCodeAction(name, codeActionKind, modCommandData))
-                            }
+                if (visitor == PsiElementVisitor.EMPTY_VISITOR) continue
+                // Same lifecycle as InspectionEngine: some inspections set up state in inspectionStarted
+                // and report problems in inspectionFinished.
+                runCatching {
+                    localInspection.inspectionStarted(session, true)
+                    psiElement.parents(true).forEach { element -> element.accept(visitor) }
+                    localInspection.inspectionFinished(session, problemsHolder)
+                }.getOrHandleException {
+                    LOG.warn(it)
+                }
+                for (descriptor in problemsHolder.results) {
+                    if ((isInfo || descriptor.highlightType == ProblemHighlightType.INFORMATION) &&
+                        !lsIsSuppressed(localInspection, descriptor)
+                    ) {
+                        val elementRange = (descriptor.psiElement ?: descriptor.startElement)?.textRange ?: continue
+                        val range = descriptor.textRangeInElement?.shiftRight(elementRange.startOffset)
+                            ?: elementRange
+                        if (!range.containsOffset(offset)) continue
+                        for ((name, modCommandData) in lsInspectionManager.createDiagnosticData(descriptor).fixes) {
+                            result.add(applyFixCodeAction(name, codeActionKind, modCommandData))
                         }
                     }
-                    problemsHolder.clearResults()
                 }
+                problemsHolder.clearResults()
             }
         }
         return result.asSequence()
