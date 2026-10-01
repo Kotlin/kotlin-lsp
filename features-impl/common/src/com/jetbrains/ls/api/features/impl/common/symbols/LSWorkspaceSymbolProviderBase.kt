@@ -5,6 +5,7 @@ import com.intellij.openapi.diagnostic.logger
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.features.LSWorkspaceSymbolCustomizer
 import com.jetbrains.ls.api.core.features.lsContributeWorkspaceSymbols
+import com.jetbrains.ls.api.core.features.requestedKinds
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.features.symbols.LSWorkspaceSymbolProvider
 import com.jetbrains.lsp.implementation.LspHandlerContext
@@ -26,10 +27,10 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
         val customizer = createCustomizer()
         server.withAnalysisContext {
             coroutineScope {
-                for (contributor in customizer.getContributors()) {
+                for (contributor in customizer.getContributors(params.requestedKinds())) {
                     launch {
                         try {
-                            lsContributeWorkspaceSymbols(project, customizer, contributor, params).collect(::send)
+                            lsContributeWorkspaceSymbols(project, customizer, contributor, params, lazyLocation = false).collect(::send)
                         } catch (e: CancellationException) {
                             throw e
                         } catch (e: Exception) {

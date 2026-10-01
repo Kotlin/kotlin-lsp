@@ -5,7 +5,9 @@ import com.intellij.navigation.NavigationItem
 import com.intellij.navigation.PsiElementNavigationItem
 import com.intellij.psi.util.parentsOfType
 import com.jetbrains.ls.api.core.features.LSWorkspaceSymbolCustomizer
-import com.jetbrains.ls.api.core.util.getLspLocationForDefinition
+import com.jetbrains.ls.api.core.features.onlyTypeSymbolKinds
+import com.jetbrains.ls.api.core.util.getWorkspaceSymbolLocation
+import com.jetbrains.lsp.protocol.SymbolKind
 import com.jetbrains.lsp.protocol.WorkspaceSymbol
 import org.jetbrains.kotlin.idea.goto.KotlinGotoClassSymbolContributor
 import org.jetbrains.kotlin.idea.goto.KotlinGotoFunctionSymbolContributor
@@ -21,10 +23,15 @@ class LSKotlinWorkspaceSymbolCustomizer : LSWorkspaceSymbolCustomizer {
         KotlinGotoPropertySymbolContributor(),
     )
 
+    // A type alias has the Class kind, see `getKind`.
+    override fun getContributors(kinds: Set<SymbolKind>?): List<ChooseByNameContributor> =
+        if (onlyTypeSymbolKinds(kinds)) listOf(KotlinGotoClassSymbolContributor(), KotlinGotoTypeAliasContributor()) else getContributors()
+
     override fun createWorkspaceSymbol(
         item: NavigationItem,
         contributor: ChooseByNameContributor,
-        qualifiedQuery: Boolean
+        qualifiedQuery: Boolean,
+        lazyLocation: Boolean,
     ): WorkspaceSymbol? {
         val ktNamedDeclaration = when (item) {
             is PsiElementNavigationItem -> item.targetElement as? KtNamedDeclaration
@@ -36,7 +43,7 @@ class LSKotlinWorkspaceSymbolCustomizer : LSWorkspaceSymbolCustomizer {
             kind = ktNamedDeclaration.getKind() ?: return null,
             tags = null, // TODO: Handle deprecated declarations.
             containerName = ktNamedDeclaration.getClosestContainerQualifiedName(),
-            location = ktNamedDeclaration.getLspLocationForDefinition()?.let { WorkspaceSymbol.SymbolLocation.Full(it) } ?: return null,
+            location = ktNamedDeclaration.getWorkspaceSymbolLocation(lazyLocation) ?: return null,
             data = null,
         )
     }
