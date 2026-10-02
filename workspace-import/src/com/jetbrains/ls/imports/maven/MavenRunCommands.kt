@@ -1,0 +1,77 @@
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+@file:Suppress("IO_FILE_USAGE")
+
+package com.jetbrains.ls.imports.maven
+
+import com.jetbrains.ls.api.run.BuildUnit
+import com.jetbrains.ls.api.run.RunOptions
+import com.jetbrains.ls.api.run.RunTask
+import org.jetbrains.annotations.VisibleForTesting
+import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.div
+
+/**
+ * The arguments after `mvn` for [task] in its [RunTask.unit]. [BuildUnit.projectPath] is the module directory relative to
+ * the reactor root, as `-pl` takes it; `null` or empty means the whole reactor. `-am` keeps the modules the unit
+ * depends on in the build, so a sibling resolves from `target/classes` without an `install`.
+ *
+ * [RunTask.Build] compiles: `compile`, or `test-compile` for the test scope. The whole reactor builds with
+ * `--fail-at-end`, so one module's compile error does not hide another's.
+ *
+ * [RunTask.Run] compiles and writes the runtime classpath of the unit into [classpathFile]: Maven cannot run the
+ * main class of one module in the same invocation, see [mavenJavaArgs]. Every module writes the file; the unit
+ * is last in the reactor order, so its classpath stays.
+ *
+ * [RunTask.Test] runs [RunTask.Test.tests] through Surefire. `surefire.failIfNoSpecifiedTests=false` keeps a
+ * dependency module without the named test from failing the build. [argLine] holds the JVM arguments of the
+ * Surefire fork; `null` adds none.
+ *
+ * [RunOptions.toolArgs] go last, so a configuration wins where Maven takes the later occurrence.
+ */
+@VisibleForTesting
+fun mavenArgs(task: RunTask, options: RunOptions, classpathFile: Path? = null, argLine: String? = null): List<String> = buildList {
+    val projectPath = task.unit.projectPath?.takeIf { it.isNotBlank() }
+    if (projectPath != null) {
+        add("-pl"); add(projectPath); add("-am")
+    }
+    when (task) {
+        is RunTask.Build -> {
+            if (projectPath == null) add("--fail-at-end")
+            add(if (task.testScope || projectPath == null) "test-compile" else "compile")
+        }
+        is RunTask.Run -> {
+            add("compile")
+            add("dependency:build-classpath")
+            add("-Dmdep.includeScope=runtime")
+            add("-Dmdep.outputFile=${requireNotNull(classpathFile) { "A Run needs a classpath file" }}")
+        }
+        is RunTask.Test -> {
+            add("test")
+            add("-Dtest=${task.tests.joinToString(",")}")
+            add("-Dsurefire.failIfNoSpecifiedTests=false")
+            if (argLine != null) add("-DargLine=$argLine")
+        }
+    }
+    addAll(options.toolArgs)
+}
+
+/**
+ * The `java` command that runs [RunTask.Run.entry] of its unit under [root]: [vmArgs], the classpath of
+ * `<unit>/target/classes` plus the entries of [classpath], the entry, then [RunOptions.programArgs].
+ * [classpath] is the content of the file [mavenArgs] wrote: one line, `File.pathSeparator` between entries.
+ */
+@VisibleForTesting
+fun mavenJavaArgs(java: Path, root: Path, task: RunTask.Run, options: RunOptions, vmArgs: List<String>, classpath: String): List<String> = buildList {
+    add(java.toString())
+    addAll(vmArgs)
+    val classes = (task.unit.projectPath?.takeIf { it.isNotBlank() }?.let { root / it } ?: root) / "target" / "classes"
+    add("-cp")
+    add(listOf(classes.toString(), classpath.trim()).filter { it.isNotEmpty() }.joinToString(File.pathSeparator))
+    add(task.entry)
+    addAll(options.programArgs)
+}
+
+/** The Surefire `argLine`: [vmArgs] in order, space-separated, or `null` when there are none. */
+@VisibleForTesting
+fun surefireArgLine(vmArgs: List<String>): String? = vmArgs.filter { it.isNotBlank() }.joinToString(" ").ifEmpty { null }

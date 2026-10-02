@@ -11,6 +11,9 @@ import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
+import com.intellij.util.io.delete
+import com.intellij.util.system.LowLevelLocalMachineAccess
+import com.intellij.util.system.OS
 import com.jetbrains.analyzer.api.FileUrl
 import com.jetbrains.analyzer.filesystem.forEach
 import com.jetbrains.ls.imports.api.BuildTool
@@ -21,6 +24,17 @@ import com.jetbrains.ls.imports.api.ImportRequest
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
+import com.jetbrains.ls.api.run.RunHandle
+import com.jetbrains.ls.api.run.RunRequest
+import com.jetbrains.ls.api.run.RunTask
+import com.jetbrains.ls.api.run.RunTaskEvent
+import com.jetbrains.ls.api.run.UnsupportedRunException
+import com.jetbrains.ls.api.run.failedRunHandle
+import com.jetbrains.ls.imports.api.putEnvironment
+import com.jetbrains.ls.imports.utils.asResource
+import com.jetbrains.ls.imports.utils.freePort
+import com.jetbrains.ls.imports.utils.jdwpAgent
+import com.jetbrains.ls.imports.utils.toRunHandle
 import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.addInitScripts
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.configureEnvironment
@@ -40,6 +54,8 @@ import com.jetbrains.ls.imports.json.postProcessWorkspaceData
 import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
 import com.jetbrains.ls.imports.utils.stampBuildToolJavaHome
 import com.jetbrains.ls.snapshot.api.impl.core.rocks.FileSystemChange
+import fleet.util.async.Resource
+import fleet.util.async.resourceOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.SendChannel
@@ -49,6 +65,8 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.IntermediateResultHandler
 import org.gradle.tooling.ProjectConnection
@@ -56,7 +74,10 @@ import org.jetbrains.annotations.ApiStatus
 import java.io.File
 import java.nio.file.InvalidPathException
 import java.nio.file.Path
+import kotlin.io.path.createTempDirectory
 import kotlin.io.path.div
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.writeText
 
 private val LOG = logger<GradleTool>()
 
@@ -152,6 +173,52 @@ class GradleTool(
         null
     }
 
+    /** The JDK the last sync ran Gradle with; a run before the first sync uses the configured `java-home` or none. */
+    @Volatile
+    private var syncJavaHome: String? = parameters.options.javaHome?.toString()
+
+    /**
+     * One `gradle` process per request: the wrapper of the project, or `gradle` on the `PATH`. `JAVA_HOME` is the
+     * JDK of the import, so the wrapper starts a JVM the Gradle version supports. The program is forked by the
+     * daemon, so its arguments, environment and working directory go through the init script; see
+     * [gradleInitScript]. With `debug` the JDWP agent travels as a system property, and the handle reports
+     * [RunTaskEvent.DebuggerReady] first: the JVM waits for the debugger.
+     */
+    override fun run(request: RunRequest): Resource<RunHandle> {
+        request.extensions.firstOrNull()?.let {
+            return resourceOf(failedRunHandle(UnsupportedRunException("Gradle does not support ${it::class.simpleName}")))
+        }
+        val task = request.task
+        val options = request.options
+        val debugPort = if (request.debug && task !is RunTask.Build) freePort() else null
+        val launchDir = if (task is RunTask.Build) null else createTempDirectory("gradle-run").also {
+            (it / GRADLE_INIT_SCRIPT_NAME).writeText(gradleInitScript(task, options))
+        }
+        val args = gradleArgs(
+            task, options,
+            initScript = launchDir?.let { (it / GRADLE_INIT_SCRIPT_NAME).toString() },
+            debugAgent = listOfNotNull(debugPort?.let(::jdwpAgent)),
+        )
+        val process = ProcessBuilder(listOf(gradleExecutable()) + args).apply {
+            syncJavaHome?.let { environment()["JAVA_HOME"] = it }
+            environment().putEnvironment(parameters.options.environment)
+        }.directory(parameters.projectDirectory.toFile())
+        val handle = process.toRunHandle()
+        return object : RunHandle by handle {
+            override val events: Flow<RunTaskEvent> = handle.events
+                .onStart { debugPort?.let { emit(RunTaskEvent.DebuggerReady("127.0.0.1", it)) } }
+                .onCompletion { launchDir?.delete() }
+        }.asResource()
+    }
+
+    /** `gradlew` (`gradlew.bat`) in the project directory when the project ships one, else `gradle` (`gradle.bat`). */
+    @OptIn(LowLevelLocalMachineAccess::class)
+    private fun gradleExecutable(): String {
+        val windows = OS.CURRENT == OS.Windows
+        val wrapper = parameters.projectDirectory / if (windows) "gradlew.bat" else "gradlew"
+        return if (wrapper.isRegularFile()) wrapper.toString() else if (windows) "gradle.bat" else "gradle"
+    }
+
     /**
      * Publishes the model as Gradle declares it first, then republishes it after the sync tasks have generated their
      * sources, so the analyzer does not wait for code generation before it can resolve the project's dependencies.
@@ -171,6 +238,7 @@ class GradleTool(
         // A `java-home` configured for this project wins over `JAVA_HOME` and auto-detection.
         val jdkToUse = parameters.options.javaHome?.toString()
             ?: findTheMostCompatibleJdk(project, projectDirectory, parameters.options.environment)
+        syncJavaHome = jdkToUse
 
         // The models are handed over with `trySend` (the channel is unbounded): the Tooling API calls below are
         // blocking and run inside non-suspending lambdas.

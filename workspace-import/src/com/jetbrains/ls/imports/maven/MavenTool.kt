@@ -13,6 +13,7 @@ import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.io.delete
+import com.intellij.util.system.LowLevelLocalMachineAccess
 import com.intellij.util.system.OS
 import com.jetbrains.analyzer.api.FileUrl
 import com.jetbrains.analyzer.filesystem.forEach
@@ -29,6 +30,16 @@ import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
 import com.jetbrains.ls.imports.api.environmentVariable
 import com.jetbrains.ls.imports.api.putEnvironment
+import com.jetbrains.ls.api.run.RunHandle
+import com.jetbrains.ls.api.run.RunRequest
+import com.jetbrains.ls.api.run.RunTask
+import com.jetbrains.ls.api.run.RunTaskEvent
+import com.jetbrains.ls.api.run.UnsupportedRunException
+import com.jetbrains.ls.api.run.failedRunHandle
+import com.jetbrains.ls.imports.utils.asResource
+import com.jetbrains.ls.imports.utils.freePort
+import com.jetbrains.ls.imports.utils.jdwpAgent
+import com.jetbrains.ls.imports.utils.toRunHandle
 import com.jetbrains.ls.imports.json.WorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData
 import com.jetbrains.ls.imports.json.postProcessWorkspaceData
@@ -36,6 +47,8 @@ import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
 import com.jetbrains.ls.imports.utils.runWithErrorReporting
 import com.jetbrains.ls.imports.utils.stampBuildToolJavaHome
 import com.jetbrains.ls.snapshot.api.impl.core.rocks.FileSystemChange
+import fleet.util.async.Resource
+import fleet.util.async.resourceOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.SendChannel
@@ -45,6 +58,7 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -59,6 +73,7 @@ import kotlin.io.path.div
 import kotlin.io.path.exists
 import kotlin.io.path.inputStream
 import kotlin.io.path.isRegularFile
+import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
 private val LOG = logger<MavenTool>()
@@ -181,22 +196,9 @@ class MavenTool(
         if (!pomFile.exists()) return@channelFlow
 
         LOG.info("Importing Maven project from: $projectDirectory (pom: $pomFile)")
-        val wrapper = projectDirectory / (if (OS.CURRENT == OS.Windows) "mvnw.cmd" else "mvnw")
-        val mavenHome = System.getProperty(JB_MAVEN_HOME_PROPERTY)?.let { Path.of(it) }
-        // A `java-home` configured for this project wins over the JVM property, then the ambient `JAVA_HOME`, then
-        // the server's own JVM. The ambient value is named here because `runGoal` starts Maven from an empty
-        // environment, so nothing is inherited.
-        val javaHome = options.javaHome?.toString()
-            ?: System.getProperty(JB_MAVEN_JAVA_HOME_PROPERTY)
-            ?: System.getenv("JAVA_HOME")
-            ?: System.getProperty("java.home")
-        // The value the Maven processes run with. `runGoal` applies the per-project `env` last, so it wins.
-        val mavenJavaHome = options.environment.environmentVariable("JAVA_HOME") ?: javaHome
-        val execPath = when {
-            wrapper.exists() -> wrapper
-            mavenHome != null -> mavenHome / "bin" / if (OS.CURRENT == OS.Windows) "mvn.cmd" else "mvn"
-            else -> Path.of(if (OS.CURRENT == OS.Windows) "mvn.cmd" else "mvn")
-        }
+        val javaHome = javaHome()
+        val mavenJavaHome = mavenJavaHome()
+        val execPath = execPath()
         LOG.info("Using Maven: $execPath (JAVA_HOME=$mavenJavaHome)")
 
 
@@ -210,7 +212,7 @@ class MavenTool(
 
         send(ImportEvent.ProgressStatus("Collecting Maven model..."))
         val modelWithDeps = when (val result =
-            runMavenPluginGoal(execPath, javaHome, projectDirectory, pomFile, "model-with-deps", channel, offlineOpts, options)) {
+            runMavenPluginGoal(javaHome, pomFile, "model-with-deps", channel, offlineOpts, options)) {
             is ErrorResult -> throw result.e
             is SuccessResult -> result
         }
@@ -223,7 +225,7 @@ class MavenTool(
         }
         send(ImportEvent.ProgressStatus("Generating sources..."))
         val modelWithGeneratedSources = when (val result =
-            runMavenPluginGoal(execPath, javaHome, projectDirectory, pomFile, "model-process-sources", channel, offlineOpts, options)) {
+            runMavenPluginGoal(javaHome, pomFile, "model-process-sources", channel, offlineOpts, options)) {
             // As before: source generation is best-effort, the dependency model already published stands on its own.
             // Reported as output rather than as `Failed`, which would show the client an error for an import that
             // succeeded, only without generated sources.
@@ -287,10 +289,107 @@ class MavenTool(
      */
     private fun skipGenerateSources(options: WorkspaceImportOptions): Boolean = options.skipGenerateSources == true
 
+    /** The Maven to run: the wrapper of the project, the [JB_MAVEN_HOME_PROPERTY] distribution, or `mvn` on the `PATH`. */
+    @OptIn(LowLevelLocalMachineAccess::class)
+    private fun execPath(): Path {
+        val projectDirectory = parameters.projectDirectory
+        val wrapper = projectDirectory / (if (OS.CURRENT == OS.Windows) "mvnw.cmd" else "mvnw")
+        val mavenHome = System.getProperty(JB_MAVEN_HOME_PROPERTY)?.let { Path.of(it) }
+        return when {
+            wrapper.exists() -> wrapper
+            mavenHome != null -> mavenHome / "bin" / if (OS.CURRENT == OS.Windows) "mvn.cmd" else "mvn"
+            else -> Path.of(if (OS.CURRENT == OS.Windows) "mvn.cmd" else "mvn")
+        }
+    }
+
+    /**
+     * The JDK Maven runs under. A `java-home` configured for this project wins over the JVM property, then the
+     * ambient `JAVA_HOME`, then the server's own JVM. The ambient value is named here because [mavenProcess]
+     * starts Maven from an empty environment, so nothing is inherited.
+     */
+    private fun javaHome(): String? =
+        parameters.options.javaHome?.toString()
+        ?: System.getProperty(JB_MAVEN_JAVA_HOME_PROPERTY)
+        ?: System.getenv("JAVA_HOME")
+        ?: System.getProperty("java.home")
+
+    /** The `JAVA_HOME` the Maven processes see: [mavenProcess] applies the per-project `env` last, so it wins. */
+    private fun mavenJavaHome(): String? = parameters.options.environment.environmentVariable("JAVA_HOME") ?: javaHome()
+
+    /**
+     * The Maven process for [args], in the project directory. The environment starts empty, so the analyzer's own
+     * variables (a JDK9+ `JAVA_TOOL_OPTIONS=-Xlog`) do not reach a possibly-JDK8 Maven JVM. [extraEnvironment] is
+     * applied last, after the per-project `env`.
+     */
+    private fun mavenProcess(args: List<String>, javaHome: String? = javaHome(), extraEnvironment: Map<String, String> = emptyMap()): ProcessBuilder =
+        ProcessBuilder(listOf(execPath().toString()) + args).apply {
+            environment().clear()
+            javaHome?.let { environment()["JAVA_HOME"] = it }
+            System.getProperty(LSP_MAVEN_PROJECT_MAVEN_USER_HOME_PROPERTY)?.let { environment()["MAVEN_USER_HOME"] = it }
+            System.getProperty(LSP_MAVEN_PROJECT_MAVEN_OPTS_PROPERTY)?.let { environment()["MAVEN_OPTS"] = it }
+            System.getProperty(LSP_MAVEN_PROJECT_PATH_PREPEND_PROPERTY)?.let { prependToPath(environment(), it) }
+            // Per-project `env` is applied after the defaults above so it wins over them.
+            environment().putEnvironment(parameters.options.environment)
+            environment().putEnvironment(extraEnvironment)
+        }.directory(parameters.projectDirectory.toFile())
+
+    /**
+     * [RunTask.Build] and [RunTask.Test] are one `mvn` process. [RunTask.Run] is two: `mvn` compiles the unit and
+     * writes its runtime classpath, then `java` runs the entry on it. Maven cannot run the main class of one
+     * module in the same invocation that builds the reactor (`exec:java` binds to every module `-am` builds), and
+     * a separate `mvn exec:java` without `-am` needs the siblings installed. The `java` is the JDK Maven runs under.
+     *
+     * [RunRequest.options] `env` goes to the process: the Surefire fork and `java` inherit it. `workingDirectory`
+     * reaches `java` only; Surefire runs in the module directory and takes no other from the command line.
+     */
+    @OptIn(LowLevelLocalMachineAccess::class)
+    override fun run(request: RunRequest): Resource<RunHandle> {
+        request.extensions.firstOrNull()?.let {
+            return resourceOf(failedRunHandle(UnsupportedRunException("Maven does not support ${it::class.simpleName}")))
+        }
+        val options = request.options
+        val debugPort = if (request.debug) freePort() else null
+        val vmArgs = options.vmArgs + listOfNotNull(debugPort?.let(::jdwpAgent))
+        val debuggerReady = listOfNotNull(debugPort?.let { RunTaskEvent.DebuggerReady("127.0.0.1", it) })
+        return when (val task = request.task) {
+            is RunTask.Build -> mavenProcess(mavenArgs(task, options)).toRunHandle().asResource()
+            is RunTask.Test -> {
+                val warning = options.workingDirectory?.let {
+                    RunTaskEvent.SystemOutput("Maven ignores the working directory '$it': the tests run in the module directory")
+                }
+                val handle = listOf(mavenProcess(mavenArgs(task, options, argLine = surefireArgLine(vmArgs)), extraEnvironment = options.env))
+                    .toRunHandle()
+                object : RunHandle by handle {
+                    override val events: Flow<RunTaskEvent> = flow {
+                        warning?.let { emit(it) }
+                        debuggerReady.forEach { emit(it) }
+                        emitAll(handle.events)
+                    }
+                }.asResource()
+            }
+            is RunTask.Run -> {
+                val classpathFile = createTempFile("maven-classpath", ".txt")
+                val java = Path.of(requireNotNull(javaHome())) / "bin" / if (OS.CURRENT == OS.Windows) "java.exe" else "java"
+                // The `java` command is assembled after `mvn` has written the classpath file; `between` runs then.
+                val javaProcess = ProcessBuilder().apply {
+                    environment().putEnvironment(options.env)
+                    directory((options.workingDirectory?.let(Path::of) ?: parameters.projectDirectory).toFile())
+                }
+                val handle = listOf(mavenProcess(mavenArgs(task, options, classpathFile = classpathFile)), javaProcess)
+                    .toRunHandle(between = { _ ->
+                        javaProcess.command(mavenJavaArgs(java, parameters.projectDirectory, task, options, vmArgs, classpathFile.readText()))
+                        debuggerReady
+                    })
+                object : RunHandle by handle {
+                    override val events: Flow<RunTaskEvent> = handle.events.onCompletion { classpathFile.delete() }
+                }.asResource()
+            }
+        }
+    }
+
+
     private suspend fun runMavenPluginGoal(
-        execPath: Path?,
         javaHome: String?,
-        projectDirectory: Path,
         pomFile: Path,
         pluginGoal: String,
         events: SendChannel<ImportEvent>,
@@ -298,26 +397,20 @@ class MavenTool(
         options: WorkspaceImportOptions = WorkspaceImportOptions.EMPTY,
     ): MavenRunResult {
         return runGoal(
-            execPath, javaHome, projectDirectory, pomFile,
+            javaHome, pomFile,
             "com.jetbrains.ls:imports-maven-plugin:$pluginGoal",
             events, additionalParams, options
         )
     }
 
     private suspend fun runGoal(
-        execPath: Path?,
         javaHome: String?,
-        projectDirectory: Path,
         pomFile: Path,
         goal: String,
         events: SendChannel<ImportEvent>,
         additionalParams: List<String> = emptyList(),
         options: WorkspaceImportOptions = WorkspaceImportOptions.EMPTY,
     ): MavenRunResult {
-
-        val mavenUserHomeProperty = System.getProperty(LSP_MAVEN_PROJECT_MAVEN_USER_HOME_PROPERTY)
-        val mavenOpts = System.getProperty(LSP_MAVEN_PROJECT_MAVEN_OPTS_PROPERTY)
-        val pathPrepend = System.getProperty(LSP_MAVEN_PROJECT_PATH_PREPEND_PROPERTY)
         // Per-project `system-properties` are forwarded to the build as `-Dkey=value`.
         val extraSystemProps = options.systemProperties.map { (key, value) -> "-D$key=$value" }
         // `-P` activates the configured profiles, so the goal sees the same effective model as a manual build.
@@ -325,7 +418,6 @@ class MavenTool(
         val workspaceJsonFile = createTempFile("workspace", ".json")
         try {
             val command = listOf(
-                execPath.toString(),
                 goal,
                 "-f",
                 pomFile.toString(),
@@ -339,35 +431,14 @@ class MavenTool(
                 "-Dair.check.skip-enforcer=true"
 
             )
-            ProcessBuilder(command + extraSystemProps + profileParams + additionalParams)
+            mavenProcess(command + extraSystemProps + profileParams + additionalParams, javaHome)
                 .apply {
-                    // ponytail: start from a clean env so the analyzer's own vars (e.g. JDK9+ JAVA_TOOL_OPTIONS=-Xlog) don't leak into a possibly-JDK8 Maven JVM.
-                    environment().clear()
-                    javaHome?.let {
-                        environment()["JAVA_HOME"] = it
-                    }
                     if (System.getProperty("maven.importer.debug").toBoolean()) {
                         val agentLibOpt = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"
                         val currentMavenOpts = environment()["MAVEN_OPTS"]
-                        environment()["MAVEN_OPTS"] = if (currentMavenOpts.isNullOrEmpty()) {
-                            agentLibOpt
-                        } else {
-                            "$currentMavenOpts $agentLibOpt"
-                        }
+                        environment()["MAVEN_OPTS"] = if (currentMavenOpts.isNullOrEmpty()) agentLibOpt else "$currentMavenOpts $agentLibOpt"
                     }
-                    mavenUserHomeProperty?.let {
-                        environment()["MAVEN_USER_HOME"] = it
-                    }
-                    mavenOpts?.let {
-                        environment()["MAVEN_OPTS"] = it
-                    }
-                    pathPrepend?.let {
-                        prependToPath(environment(), it)
-                    }
-                    // Per-project `env` is applied last so it wins over the defaults above.
-                    environment().putEnvironment(options.environment)
                 }
-                .directory(projectDirectory.toFile())
                 .runWithErrorReporting("Maven", events)
 
             return SuccessResult(workspaceJsonFile.inputStream().use<InputStream, WorkspaceData> { stream ->
