@@ -3,7 +3,7 @@ package com.jetbrains.ls.api.features.impl.common.diagnostics
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.features.InspectionProfilePatcher
-import com.jetbrains.ls.api.core.features.lsRunInspections
+import com.jetbrains.ls.api.core.features.LSInspections
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnosticProvider
@@ -44,7 +44,9 @@ class LSCommonInspectionDiagnosticProvider(
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
         val onTheFly = true
         val diagnostics = server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
-            return@withAnalysisContextAndFileSettings lsRunInspections(params, project, onTheFly, inspectionProfilePatcher) { _, problemDescriptor ->
+            return@withAnalysisContextAndFileSettings LSInspections.runInspections(
+                params, project, onTheFly, inspectionProfilePatcher,
+            ) { _, problemDescriptor ->
                 LSP.json.encodeToJsonElement(lsInspectionManager.createDiagnosticData(problemDescriptor))
             }
         }

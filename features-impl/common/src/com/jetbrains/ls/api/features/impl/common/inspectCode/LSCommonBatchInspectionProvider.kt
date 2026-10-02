@@ -7,10 +7,8 @@ import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.SingleRootFileViewProvider
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.features.InspectionProfilePatcher
-import com.jetbrains.ls.api.core.features.LSInspectionMetadata
-import com.jetbrains.ls.api.core.features.lsBatchInspectionsDispatcher
-import com.jetbrains.ls.api.core.features.lsInspectionMetadata
-import com.jetbrains.ls.api.core.features.lsRunInspectionsOn
+import com.jetbrains.ls.api.core.features.LSInspections
+import com.jetbrains.ls.api.core.features.LSInspections.LSInspectionMetadata
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toLspRange
@@ -32,7 +30,7 @@ import java.util.WeakHashMap
 
 /**
  * The batch run of the local inspections of [supportedLanguages]: the same tools as [LSCommonInspectionDiagnosticProvider]
- * with the same [inspectionProfilePatcher], but `onTheFly = false` and on [lsBatchInspectionsDispatcher].
+ * with the same [inspectionProfilePatcher], but `onTheFly = false` and on [LSInspections.batchInspectionsDispatcher].
  *
  * A problem carries [batchData] and no fixes: a run over a project would register lazy fixes for thousands of problems,
  * each holding PSI. `LSCommonInspectionFixesCodeActionProvider` finds them when the client asks.
@@ -66,7 +64,7 @@ class LSCommonBatchInspectionProvider(
                 virtualFile.findPsiFile(project)?.takeIf { ProblemHighlightFilter.shouldProcessFileInBatch(it) }
             } ?: return@withAnalysisContextAndFileSettings LSBatchFileResult.SKIPPED
             val document = readAction { psiFile.fileDocument }
-            val diagnostics = lsRunInspectionsOn(
+            val diagnostics = LSInspections.runInspectionsOn(
                 psiFile = psiFile,
                 language = psiFile.language,
                 toLspRange = { it.toLspRange(document) },
@@ -74,7 +72,7 @@ class LSCommonBatchInspectionProvider(
                 inspectionProfilePatcher = inspectionProfilePatcher,
                 diagnosticDataFactory = { _, _ -> batchData },
                 inspectionIds = inspectionIds,
-                dispatcher = lsBatchInspectionsDispatcher,
+                dispatcher = LSInspections.batchInspectionsDispatcher,
             )
             LSBatchFileResult(diagnostics)
         }
@@ -85,7 +83,9 @@ class LSCommonBatchInspectionProvider(
         inspectionsLock.withLock {
             inspectionsByServer[server] ?: server.withAnalysisContext {
                 supportedLanguages
-                    .flatMap { language -> lsInspectionMetadata(language.intellijLanguage, inspectionProfilePatcher).map { language to it } }
+                    .flatMap { language ->
+                        LSInspections.inspectionMetadata(language.intellijLanguage, inspectionProfilePatcher).map { language to it }
+                    }
                     .groupBy { (_, metadata) -> metadata.id }
                     .map { (_, byLanguage) -> byLanguage.first().second.toBatchInspection(byLanguage.mapTo(HashSet()) { it.first }) }
             }.also { inspectionsByServer[server] = it }

@@ -12,8 +12,8 @@ import com.intellij.util.InjectionUtils
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.features.InspectionProfilePatcher
 import com.jetbrains.ls.api.core.features.LSInjectedFile
+import com.jetbrains.ls.api.core.features.LSInspections
 import com.jetbrains.ls.api.core.features.lsCollectInjectedFiles
-import com.jetbrains.ls.api.core.features.lsRunInspectionsOn
 import com.jetbrains.ls.api.core.features.toHostLspRange
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
@@ -68,7 +68,7 @@ class LSCommonInjectionInspectionDiagnosticProvider(
             if (!psiFile.isValid) return@readAction null
             injectedLanguageManager.shouldInspectionsBeLenient(psiFile) || injectedLanguageManager.isFrankensteinInjection(psiFile)
         } ?: return emptyList()
-        val diagnostics = lsRunInspectionsOn(
+        val diagnostics = LSInspections.runInspectionsOn(
             psiFile = psiFile,
             language = psiFile.language,
             toLspRange = { injected.toHostLspRange(it, hostDocument) },

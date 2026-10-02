@@ -21,8 +21,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.features.InspectionProfilePatcher
-import com.jetbrains.ls.api.core.features.lsGetLocalInspections
-import com.jetbrains.ls.api.core.features.lsGetSharedLocalInspectionsFromGlobalTools
+import com.jetbrains.ls.api.core.features.LSInspections
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.isSource
@@ -86,9 +85,9 @@ class LSCommonInspectionSuppressionCodeActionProvider(
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
                 // The same tools the diagnostic provider runs, by the id it reports as the diagnostic code.
                 val liveTools = if (live.isEmpty()) emptyList() else
-                    lsGetLocalInspections(psiFile, inspectionProfilePatcher) +
-                    lsGetSharedLocalInspectionsFromGlobalTools(psiFile.language, inspectionProfilePatcher)
-                val tools = (liveTools + batchTools(psiFile, batchIds)).associateBy { it.id }
+                    LSInspections.getLocalInspections(psiFile, inspectionProfilePatcher) +
+                    LSInspections.getSharedLocalInspectionsFromGlobalTools(psiFile.project, psiFile.language, inspectionProfilePatcher)
+                val tools = (liveTools.map { it.tool } + batchTools(psiFile, batchIds)).associateBy { it.id }
                 diagnostics.flatMap { diagnostic ->
                     val tool = tools[diagnostic.code?.value?.content] ?: return@flatMap emptyList()
                     val offset = document.offsetByPosition(diagnostic.range.start)
@@ -103,8 +102,11 @@ class LSCommonInspectionSuppressionCodeActionProvider(
     /** The tools named by [inspectionIds], the codes of batch diagnostics; none without codes. */
     private fun batchTools(psiFile: PsiFile, inspectionIds: Set<String>): List<LocalInspectionTool> {
         if (inspectionIds.isEmpty()) return emptyList()
-        return lsGetLocalInspections(psiFile, inspectionProfilePatcher, inspectionIds = inspectionIds) +
-               lsGetSharedLocalInspectionsFromGlobalTools(psiFile.language, inspectionProfilePatcher, inspectionIds = inspectionIds)
+        return (LSInspections.getLocalInspections(psiFile, inspectionProfilePatcher, inspectionIds = inspectionIds) +
+                LSInspections.getSharedLocalInspectionsFromGlobalTools(
+                    psiFile.project, psiFile.language, inspectionProfilePatcher, inspectionIds = inspectionIds,
+                ))
+            .map { it.tool }
     }
 
     /** The suppression actions of [tool] at [offset], in the order the IDE shows them. */

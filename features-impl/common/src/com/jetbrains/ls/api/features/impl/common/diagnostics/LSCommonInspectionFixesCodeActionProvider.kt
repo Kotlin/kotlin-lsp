@@ -5,7 +5,7 @@ import com.intellij.openapi.application.readAction
 import com.intellij.openapi.vfs.findPsiFile
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.features.InspectionProfilePatcher
-import com.jetbrains.ls.api.core.features.lsRunInspectionsOn
+import com.jetbrains.ls.api.core.features.LSInspections
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.isSource
@@ -74,7 +74,7 @@ class LSCommonInspectionFixesCodeActionProvider(
                 params.textDocument.findVirtualFile()?.findPsiFile(project)
             } ?: return@withAnalysisContextAndFileSettings emptyList()
             val document = readAction { psiFile.fileDocument }
-            lsRunInspectionsOn(
+            LSInspections.runInspectionsOn(
                 psiFile = psiFile,
                 language = psiFile.language,
                 toLspRange = { it.toLspRange(document) },

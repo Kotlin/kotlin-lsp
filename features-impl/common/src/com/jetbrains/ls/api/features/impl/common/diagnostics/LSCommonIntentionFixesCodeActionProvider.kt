@@ -20,18 +20,17 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.util.parents
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.features.InspectionProfilePatcher
-import com.jetbrains.ls.api.core.features.lsGetLocalInspections
-import com.jetbrains.ls.api.core.features.lsGetSharedLocalInspectionsFromGlobalTools
-import com.jetbrains.ls.api.core.features.lsIsSuppressed
+import com.jetbrains.ls.api.core.features.LSInspections
+import com.jetbrains.ls.api.core.features.LSInspections.range
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
+import com.jetbrains.ls.api.core.util.isSource
 import com.jetbrains.ls.api.core.util.toTextRange
 import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCodeAction
 import com.jetbrains.ls.api.features.impl.common.modcommands.toModCommandFixes
 import com.jetbrains.ls.api.features.language.LSLanguage
-import com.jetbrains.ls.api.core.util.isSource
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.CodeAction
 import com.jetbrains.lsp.protocol.CodeActionKind
@@ -88,15 +87,16 @@ class LSCommonIntentionFixesCodeActionProvider(
         val project = psiFile.project
         val inspectionManager = InspectionManagerEx(project)
         val problemsHolder = ProblemsHolder(inspectionManager, psiFile, true)
-        val infoInspections = lsGetLocalInspections(psiFile, inspectionProfilePatcher, true) +
-                lsGetSharedLocalInspectionsFromGlobalTools(psiFile.language, inspectionProfilePatcher, true)
-        val normalInspections = lsGetLocalInspections(psiFile, inspectionProfilePatcher, false) +
-                lsGetSharedLocalInspectionsFromGlobalTools(psiFile.language, inspectionProfilePatcher,false)
+        val infoInspections = LSInspections.getLocalInspections(psiFile, inspectionProfilePatcher, true) +
+                LSInspections.getSharedLocalInspectionsFromGlobalTools(psiFile.project, psiFile.language, inspectionProfilePatcher, true)
+        val normalInspections = LSInspections.getLocalInspections(psiFile, inspectionProfilePatcher, false) +
+                LSInspections.getSharedLocalInspectionsFromGlobalTools(psiFile.project, psiFile.language, inspectionProfilePatcher, false)
         val fileRange = psiFile.textRange
         val session = LocalInspectionToolSession(psiFile, fileRange, fileRange, null)
         val result = mutableListOf<CodeAction>()
         for ((isInfo, list) in listOf(false to normalInspections, true to infoInspections)) {
-            for (localInspection in list) {
+            for (configuredInspection in list) {
+                val localInspection = configuredInspection.tool
                 val visitor = localInspection.buildVisitor(problemsHolder, true, session)
                 if (visitor == PsiElementVisitor.EMPTY_VISITOR) continue
                 // Same lifecycle as InspectionEngine: some inspections set up state in inspectionStarted
@@ -110,11 +110,9 @@ class LSCommonIntentionFixesCodeActionProvider(
                 }
                 for (descriptor in problemsHolder.results) {
                     if ((isInfo || descriptor.highlightType == ProblemHighlightType.INFORMATION) &&
-                        !lsIsSuppressed(localInspection, descriptor)
+                        !LSInspections.isSuppressed(localInspection, descriptor)
                     ) {
-                        val elementRange = (descriptor.psiElement ?: descriptor.startElement)?.textRange ?: continue
-                        val range = descriptor.textRangeInElement?.shiftRight(elementRange.startOffset)
-                            ?: elementRange
+                        val range = descriptor.range() ?: continue
                         if (!range.containsOffset(offset)) continue
                         for ((name, modCommandData) in lsInspectionManager.createDiagnosticData(descriptor).fixes) {
                             result.add(applyFixCodeAction(name, codeActionKind, modCommandData))
