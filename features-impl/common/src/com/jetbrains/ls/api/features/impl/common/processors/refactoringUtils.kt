@@ -14,7 +14,13 @@ import com.jetbrains.analyzer.api.fileUrl
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.processors.LSBaseRefactoringProcessor
+import com.jetbrains.ls.api.core.processors.LSRenameProcessor
+import com.jetbrains.ls.api.core.processors.RefactoringConflictsException
+import com.jetbrains.ls.api.core.processors.RefactoringErrorCategory
 import com.jetbrains.ls.api.core.processors.planRefactoring
+import com.jetbrains.ls.api.core.processors.renameFailureMessage
+import com.jetbrains.ls.api.core.processors.throwRefactoringError
+import com.jetbrains.ls.api.core.processors.throwRenameFailure
 import com.jetbrains.ls.api.core.processors.writeRefactoring
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.features.LspServerBundle
@@ -97,26 +103,47 @@ internal suspend fun failRefactoring(ex: Throwable, showNotificationWithError: B
         is LspException -> throw ex
         else -> {
             val cause = refactoringErrorCause(ex)
+            val message = cause.message ?: LspServerBundle.message("error.performing.refactoring")
 
             if (showNotificationWithError) {
-                lspClient.notify(
-                    ShowMessageNotificationType,
-                    ShowMessageParams(
-                        MessageType.Error,
-                        cause.message ?: LspServerBundle.message("error.performing.refactoring")
-                    )
-                )
+                notifyRefactoringError(message)
             }
 
-            throwLspError(
-                RenameRequestType,
-                cause.message ?: LspServerBundle.message("error.performing.refactoring"),
-                Unit,
-                ErrorCodes.InvalidParams,
-                cause
-            )
+            when {
+                ex is RefactoringConflictsException ->
+                    throwRefactoringError(message, RefactoringErrorCategory.CONFLICT, conflicts = ex.conflicts, cause = ex)
+                // The platform states with it that the operation cannot be done.
+                cause is IncorrectOperationException ->
+                    throwRefactoringError(message, RefactoringErrorCategory.REFUSAL, cause = cause)
+                else -> throwLspError(
+                    RenameRequestType,
+                    message,
+                    Unit,
+                    ErrorCodes.InvalidParams,
+                    cause
+                )
+            }
         }
     }
+}
+
+/** Reports the [LSRenameProcessor.failure] of [processor] as an LSP error. Returns when the rename ran. */
+context(_: LspHandlerContext)
+internal suspend fun failRenameIfRefused(processor: LSRenameProcessor, showNotificationWithError: Boolean) {
+    val failure = processor.failure ?: return
+    val fallbackMessage = LspServerBundle.message("error.performing.refactoring")
+    if (showNotificationWithError) {
+        notifyRefactoringError(renameFailureMessage(failure) ?: fallbackMessage)
+    }
+    throwRenameFailure(failure, fallbackMessage)
+}
+
+context(_: LspHandlerContext)
+private suspend fun notifyRefactoringError(message: String) {
+    lspClient.notify(
+        ShowMessageNotificationType,
+        ShowMessageParams(MessageType.Error, message)
+    )
 }
 
 /** Prefers the first [IncorrectOperationException] in the cause chain. It carries the readable message. */
