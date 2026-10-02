@@ -524,15 +524,15 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
       }
       launchedServerAttempt?.kill();
       // A second chance to observe the exit code: only the first exit is latched, so the kill above
-      // cannot mask a natural one, and expiredBuild below needs it to classify the failure.
+      // cannot mask a natural one, and licensingFailure below needs it to classify the failure.
       await launchedServerAttempt?.waitForExit(LAUNCHED_SERVER_EXIT_WAIT_MS);
       if (_client === runClient) _client = undefined;
       if (launchedServer === launchedServerAttempt) launchedServer = undefined;
       updateLspStatusBar();
 
-      if (launchedServerAttempt?.expiredBuild) {
+      if (launchedServerAttempt?.licensingFailure) {
         void vscode.window.showErrorMessage(
-          `${extensionDisplayName()} could not start the language server because the bundled build has expired. Update the extension and try again.`,
+          `${extensionDisplayName()} could not start the language server over a licensing problem: the bundled build may have expired, or the license does not cover it. Update the extension or check the license, then try again.`,
           { modal: true },
         );
         return;

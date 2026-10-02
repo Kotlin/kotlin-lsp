@@ -1,7 +1,10 @@
 import { type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { once } from 'node:events';
 
-const EXPIRED_SERVER_BUILD_EXIT_CODE = 7; // AppExitCodes.LICENSE_ERROR
+// AppExitCodes.LICENSE_ERROR: a licensing problem the server cannot run with — an expired build, or a
+// feature its license does not cover. A server without a license starts and parks its requests instead.
+// lsp-router exits with the same code when the server it started stopped this way.
+const LICENSING_EXIT_CODE = 7;
 const KILL_ESCALATION_MS = 5_000;
 
 interface ServerProcessExit {
@@ -140,8 +143,8 @@ export class LaunchedServerStartup {
     this.killTimer = undefined;
   }
 
-  get expiredBuild(): boolean {
-    return this.exit?.code === EXPIRED_SERVER_BUILD_EXIT_CODE;
+  get licensingFailure(): boolean {
+    return this.exit?.code === LICENSING_EXIT_CODE;
   }
 
   startupError(cause: Error): Error {

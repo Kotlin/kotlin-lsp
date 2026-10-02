@@ -255,7 +255,7 @@ test('a second process cannot mask the first process exit', () => {
   firstProcess.emit('exit', 7, null);
 
   assert.throws(() => startup.setProcess(fakeProcess()), /already owns a process/);
-  assert.equal(startup.expiredBuild, true);
+  assert.equal(startup.licensingFailure, true);
 });
 
 test('waitForExit observes a late exit within the bound', async () => {
@@ -319,8 +319,8 @@ test('suppresses a restart while the initial start is still failing', async () =
   setTimeout(() => process.emit('exit', 7, null), 5);
 
   assert.equal(await shouldSuppressRestart(state, 50), true);
-  // the wait is what lets the caller report an expired build instead of a generic failure
-  assert.equal(startup.expiredBuild, true);
+  // the wait is what lets the caller report a licensing failure instead of a generic one
+  assert.equal(startup.licensingFailure, true);
 });
 
 test('suppresses a restart after the server rejected initialize, even once started', async () => {
@@ -352,11 +352,11 @@ test('lets the client reconnect to an external dev server it did not launch', as
   assert.equal(await shouldSuppressRestart(state, 50), false);
 });
 
-test('does not classify another exit code as an expired build', () => {
+test('does not classify another exit code as a licensing failure', () => {
   const startup = new LaunchedServerStartup();
   const process = fakeProcess();
   startup.setProcess(process);
   process.emit('exit', 1, null);
 
-  assert.equal(startup.expiredBuild, false);
+  assert.equal(startup.licensingFailure, false);
 });
