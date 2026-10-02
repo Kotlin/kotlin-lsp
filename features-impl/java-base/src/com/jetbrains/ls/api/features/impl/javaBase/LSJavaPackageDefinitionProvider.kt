@@ -8,13 +8,15 @@ import com.intellij.psi.search.EverythingGlobalScope
 import com.intellij.psi.stubs.StubIndex
 import com.jetbrains.analyzer.java.JavaFilePackageIndex
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.features.LSDefinitionLocation
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.isFromLibrary
 import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.features.definition.LSDefinitionProvider
 import com.jetbrains.ls.api.core.util.TargetKind
-import com.jetbrains.ls.api.core.util.getTargetsAtPosition
+import com.jetbrains.ls.api.core.util.getTargetsAndOriginAtPosition
+import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.DefinitionParams
@@ -30,12 +32,13 @@ class LSJavaPackageDefinitionProvider(
 ) : LSDefinitionProvider {
 
     context(server: LSServer, handlerContext: LspHandlerContext)
-    override fun provideDefinitions(params: DefinitionParams): Flow<Location> = flow {
+    override fun provideDefinitions(params: DefinitionParams): Flow<LSDefinitionLocation> = flow {
         server.withAnalysisContext {
             readAction {
                 val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
-                val targets = psiFile.getTargetsAtPosition(params.position, targetKinds)
+                val (targets, originRange) = psiFile.getTargetsAndOriginAtPosition(params.position, targetKinds)
+                val origin = originRange?.toLspRange(psiFile.fileDocument)
 
                 targets.filterIsInstance<PsiPackage>().mapNotNull { psiElement ->
                     val directory = StubIndex.getInstance()
@@ -48,7 +51,7 @@ class LSJavaPackageDefinitionProvider(
                         .asSequence()
                         .filterNot { virtualFile -> virtualFile.isFromLibrary() }
                         .firstNotNullOfOrNull { virtualFile -> virtualFile.parent }
-                    directory?.uri?.let { uri -> Location(DocumentUri(uri), Range.BEGINNING) }
+                    directory?.uri?.let { uri -> LSDefinitionLocation(Location(DocumentUri(uri), Range.BEGINNING), origin) }
                 }
             }
         }.forEach { location -> emit(location) }

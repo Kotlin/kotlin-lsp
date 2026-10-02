@@ -7,13 +7,15 @@ import com.intellij.psi.PsiPackage
 import com.intellij.psi.search.EverythingGlobalScope
 import com.intellij.psi.stubs.StubIndex
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.features.LSDefinitionLocation
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.isFromLibrary
 import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.features.definition.LSDefinitionProvider
 import com.jetbrains.ls.api.core.util.TargetKind
-import com.jetbrains.ls.api.core.util.getTargetsAtPosition
+import com.jetbrains.ls.api.core.util.getTargetsAndOriginAtPosition
+import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.lsp.implementation.LspHandlerContext
@@ -30,13 +32,14 @@ internal object LSKotlinPackageDefinitionProvider : LSDefinitionProvider {
     private val targetKinds = setOf(TargetKind.REFERENCE)
 
     context(server: LSServer, handlerContext: LspHandlerContext)
-    override fun provideDefinitions(params: DefinitionParams): Flow<Location> = flow {
+    override fun provideDefinitions(params: DefinitionParams): Flow<LSDefinitionLocation> = flow {
         val uri = params.textDocument.uri.uri
         server.withAnalysisContext {
             readAction {
                 val virtualFile = uri.findVirtualFile() ?: return@readAction emptyList()
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
-                val targets = psiFile.getTargetsAtPosition(params.position, targetKinds)
+                val (targets, originRange) = psiFile.getTargetsAndOriginAtPosition(params.position, targetKinds)
+                val origin = originRange?.toLspRange(psiFile.fileDocument)
 
                 targets.filterIsInstance<PsiPackage>().flatMap { pkg ->
                     // A hackish replacement for PsiPackage.directories which is not working because of the missing logic in FakePackageIndexImpl.
@@ -44,7 +47,7 @@ internal object LSKotlinPackageDefinitionProvider : LSDefinitionProvider {
                         .getContainingFilesIterator(KotlinExactPackagesIndex.NAME, pkg.qualifiedName, project, EverythingGlobalScope())
                         .asSequence()
                         .filterNot { it.isFromLibrary() }
-                        .mapNotNull { it.parent?.uri?.let { Location(DocumentUri(it), Range.BEGINNING) } }
+                        .mapNotNull { file -> file.parent?.uri?.let { LSDefinitionLocation(Location(DocumentUri(it), Range.BEGINNING), origin) } }
                         .toList()
                 }
             }
