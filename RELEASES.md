@@ -3,6 +3,63 @@
 This file contains TeamCity auto-generated download links that are updated on a weekly basis.
 These are pre-alpha builds that are built directly from `master` branch after the initial acceptance.
 
+### v263.6379.0
+- :test_tube: "Kotlin by JetBrains" extension v0.0.13 for VS Code
+
+  Includes Kotlin Language Server bundled for use with Visual Studio Code.
+
+  The extension is also available on the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=JetBrains.kotlin-server) and [OpenVSX Registry](https://open-vsx.org/extension/JetBrains/kotlin-server).
+    * [Download for macOS-x64](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-0.0.13-mac-amd64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-0.0.13-mac-amd64.vsix.sha256)
+    * [Download for macOS-arm64](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-0.0.13-mac-aarch64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-0.0.13-mac-aarch64.vsix.sha256)
+    * [Download for Linux-x64](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-0.0.13-linux-amd64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-0.0.13-linux-amd64.vsix.sha256)
+    * [Download for Linux-arm64](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-0.0.13-linux-aarch64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-0.0.13-linux-aarch64.vsix.sha256)
+    * [Download for Windows-x64](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-0.0.13-win-amd64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-0.0.13-win-amd64.vsix.sha256)
+    * [Download for Windows-arm64](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-0.0.13-win-aarch64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-0.0.13-win-aarch64.vsix.sha256)
+
+
+- :card_index_dividers: **Standalone Kotlin LSP Archive**
+
+  Standalone Kotlin Language Server version for editors other than VS Code.
+
+    * [Download for macOS-x64](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-263.6379.0.sit)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-263.6379.0.sit.sha256)
+    * [Download for macOS-arm64](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-263.6379.0-aarch64.sit)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-263.6379.0-aarch64.sit.sha256)
+    * [Download for Linux-x64](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-263.6379.0.tar.gz)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-263.6379.0.tar.gz.sha256)
+    * [Download for Linux-arm64](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-263.6379.0-aarch64.tar.gz)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-263.6379.0-aarch64.tar.gz.sha256)
+    * [Download for Windows-x64](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-263.6379.0.win.zip)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-263.6379.0.win.zip.sha256)
+    * [Download for Windows-arm64](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-263.6379.0-aarch64.win.zip)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.6379.0/kotlin-server-263.6379.0-aarch64.win.zip.sha256)
+
+##### Changelog
+
+#### 🛠 LSP capabilities
+
+* New refactorings available for Kotlin: "Extract variable" and "Inline local variable". <!-- LSP-566, LSP-845 -->
+* Moving Kotlin files is improved. You can now move packages, several files, and several packages
+  at once. The refactoring shows an error message
+  when a step fails. <!-- LSP-1835, LSP-1832, LSP-1833, LSP-1846, LSP-1298, LSP-1852 -->
+* Hover on a bounded type parameter now shows the upper bound (for example `T : Any`). <!-- LSP-759 -->
+
+#### 🐞 Run & Debug
+
+* The debugger supports the "Dump threads" request. <!-- LSP-1750 -->
+* Hidden frames from libraries are now visible in the call stack. <!-- LSP-1792 -->
+* The debugger no longer offers "Set value" for final variables. <!-- LSP-1182 -->
+* The Gradle launch init script now compiles on Gradle 6. <!-- LSP-1871 -->
+
+#### 📦 Import & build systems
+
+* Gradle import detects the correct Java language version. <!-- LSP-1732 -->
+* Maven import reads the credentials from `settings.xml`. <!-- LSP-1814 -->
+
+#### 🚀 Performance
+
+* Indexing of library and SDK sources starts later, and the diagnostics are faster for large files. <!-- LSP-1056, LSP-1749, LSP-1905 -->
+- Computing inspections is now done on a separate thread pool, which prevents other requests from stalling . <!-- LSP-1858 --> 
+
+#### 🐛 Bug fixes
+
+* Fixed a `NullPointerException` in the package directory cache. <!-- LSP-1811 -->
+* Many other small improvements and bug fixes.
+
 ### v263.4702.0
 - :test_tube: "Kotlin by JetBrains" extension v0.0.12 for VS Code
 
