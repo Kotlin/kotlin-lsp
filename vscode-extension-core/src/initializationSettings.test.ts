@@ -138,11 +138,24 @@ describe('sanitizeConfiguredProjects', () => {
       { ...validProject, profiles: ['dev', 1] },
       { ...validProject, offline: 'yes' },
       { ...validProject, downloadAdditionalArtifacts: 1 },
-      { ...validProject, profiles: ['dev'], offline: true, downloadAdditionalArtifacts: false },
+      { ...validProject, skipGenerateSources: 'yes' },
+      {
+        ...validProject,
+        profiles: ['dev'],
+        offline: true,
+        downloadAdditionalArtifacts: false,
+        skipGenerateSources: true,
+      },
     ]);
 
     assert.deepEqual(value, [
-      { ...validProject, profiles: ['dev'], offline: true, downloadAdditionalArtifacts: false },
+      {
+        ...validProject,
+        profiles: ['dev'],
+        offline: true,
+        downloadAdditionalArtifacts: false,
+        skipGenerateSources: true,
+      },
     ]);
     assert.deepEqual(problems, [
       problem(PROJECTS, '`intellij.projects` entry #0 "profiles" must be an array of strings'),
@@ -152,6 +165,7 @@ describe('sanitizeConfiguredProjects', () => {
         PROJECTS,
         '`intellij.projects` entry #3 "downloadAdditionalArtifacts" must be a boolean',
       ),
+      problem(PROJECTS, '`intellij.projects` entry #4 "skipGenerateSources" must be a boolean'),
     ]);
   });
 

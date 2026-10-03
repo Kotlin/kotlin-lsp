@@ -80,17 +80,6 @@ class MavenTool(
         const val LSP_MAVEN_PROJECT_MAVEN_OPTS_PROPERTY: String = "com.jetbrains.ls.imports.maven.opts"
         const val LSP_MAVEN_PROJECT_PATH_PREPEND_PROPERTY: String = "com.jetbrains.ls.imports.maven.path.prepend"
 
-        /**
-         * Skips the `model-process-sources` goal, whose forked `generate-sources` lifecycle actually runs the project's
-         * code generators. The import gets faster and nothing is written to `target/`, at the cost of the source roots
-         * that only become visible after the generating plugins have run.
-         *
-         * The environment variable is for clients that launch the server but do not control its command line
-         * (the property wins when both are set).
-         */
-        const val LSP_MAVEN_PROJECT_SKIP_GENERATE_SOURCES_PROPERTY: String = "com.jetbrains.ls.imports.maven.skipGenerateSources"
-        const val LSP_MAVEN_PROJECT_SKIP_GENERATE_SOURCES_ENV: String = "INTELLIJ_MAVEN_SKIP_GENERATE_SOURCES"
-
         fun useMavenAndJava(mavenHome: Path, javaHome: Path) {
             System.setProperty(JB_MAVEN_HOME_PROPERTY, mavenHome.toString())
             System.setProperty(JB_MAVEN_JAVA_HOME_PROPERTY, javaHome.toString())
@@ -228,8 +217,8 @@ class MavenTool(
         send(ImportEvent.ProgressStatus("Maven model collected, commiting..."))
         send(ImportEvent.UpdateWorkspaceModel(toStorage(modelWithDeps, null, pomFile, virtualFileUrlManager, channel, mavenJavaHome)))
 
-        if (skipGenerateSources()) {
-            LOG.info("Skipping source generation: $LSP_MAVEN_PROJECT_SKIP_GENERATE_SOURCES_PROPERTY is set")
+        if (skipGenerateSources(options)) {
+            LOG.info("Skipping source generation: skipGenerateSources is set for the project or the session")
             return@channelFlow
         }
         send(ImportEvent.ProgressStatus("Generating sources..."))
@@ -290,9 +279,13 @@ class MavenTool(
         }
     }
 
-    private fun skipGenerateSources(): Boolean =
-        (System.getProperty(LSP_MAVEN_PROJECT_SKIP_GENERATE_SOURCES_PROPERTY)
-         ?: System.getenv(LSP_MAVEN_PROJECT_SKIP_GENERATE_SOURCES_ENV)).toBoolean()
+    /**
+     * Whether the code generators stay unrun: the option of the project, else of the session
+     * ([WorkspaceImportOptions.skipGenerateSources], which the import cycle fills in). There is no switch of the
+     * server process: one server serves every client of a workspace, and a setting of its process would be the
+     * choice of whichever client started it.
+     */
+    private fun skipGenerateSources(options: WorkspaceImportOptions): Boolean = options.skipGenerateSources == true
 
     private suspend fun runMavenPluginGoal(
         execPath: Path?,

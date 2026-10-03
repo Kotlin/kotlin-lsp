@@ -819,6 +819,10 @@
                         "items": {
                           "type": "string"
                         }
+                      },
+                      "skipGenerateSources": {
+                        "type": "boolean",
+                        "description": "Maven only: whether project import leaves out the run of the code generators, which writes into the project's target directories. Off by default: the generators run."
                       }
                     }
                   },
@@ -827,7 +831,8 @@
                       "env": false,
                       "system-properties": false,
                       "java-home": false,
-                      "profiles": false
+                      "profiles": false,
+                      "skipGenerateSources": false
                     }
                   }
                 },

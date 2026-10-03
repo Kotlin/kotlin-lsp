@@ -33,6 +33,11 @@ export interface ConfiguredProject {
   downloadAdditionalArtifacts?: boolean;
   /** Whether the import uses only the already downloaded artifacts. Default: false. */
   offline?: boolean;
+  /**
+   * Maven only: whether the import leaves out the run of the code generators, which writes into the project's
+   * `target/` directories. Default: false, the generators run.
+   */
+  skipGenerateSources?: boolean;
 }
 
 export interface BuiltinInitializationOptions {
@@ -139,7 +144,11 @@ const PROJECT_TYPES = new Set([
 ]);
 const OPTIONAL_STRING_FIELDS = ['java-home', 'project-path'] as const;
 const OPTIONAL_STRING_MAP_FIELDS = ['env', 'system-properties'] as const;
-const OPTIONAL_BOOLEAN_FIELDS = ['downloadAdditionalArtifacts', 'offline'] as const;
+const OPTIONAL_BOOLEAN_FIELDS = [
+  'downloadAdditionalArtifacts',
+  'offline',
+  'skipGenerateSources',
+] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
