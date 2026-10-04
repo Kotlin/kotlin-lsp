@@ -154,7 +154,7 @@
                 "items": {
                   "type": "string"
                 },
-                "description": "Class path to run with. If empty, the LSP server resolves it from the project model."
+                "description": "Class path to run with instead of the one of the main class's module. Lets a class the project does not know run."
               },
               "modulePaths": {
                 "type": "array",
@@ -169,7 +169,7 @@
               },
               "javaExec": {
                 "type": "string",
-                "description": "Path to the java executable. If empty, the project SDK is used."
+                "description": "Path to the java executable. If empty, the JDK of the module is used."
               },
               "cwd": {
                 "type": "string",
@@ -191,9 +191,9 @@
                   "externalTerminal"
                 ],
                 "enumDescriptions": [
-                  "Run in the Debug Console (the language server launches the process).",
-                  "Run in the integrated terminal (the editor launches the process and the debugger attaches).",
-                  "Run in an external terminal (the debugger attaches)."
+                  "Show the output in the Debug Console.",
+                  "Show the output in the integrated terminal. The language server runs the process.",
+                  "Show the output in an external terminal. The language server runs the process."
                 ],
                 "default": "integratedTerminal",
                 "description": "Where to run the program."
@@ -319,13 +319,12 @@
         "configurationSnippets": [
           {
             "label": "IntelliJ: Launch main class (JVM)",
-            "description": "Compile a JVM main class's module with the project's build tool, then run it as a plain java process. Remove \"preLaunchTask\" to launch whatever is already compiled.",
+            "description": "Run a JVM main class as a plain java process. The language server compiles its module with the project's build tool first.",
             "body": {
               "name": "${2:Run main}",
               "type": "intellij_jvm",
               "request": "launch",
               "mainClass": "${1:com.example.Main}",
-              "preLaunchTask": "intellij: build",
               "cwd": "^\"\\${workspaceFolder}\""
             }
           },
@@ -378,7 +377,7 @@
                 "items": {
                   "type": "string"
                 },
-                "description": "Class path to run with. If empty, the LSP server resolves it from the project model."
+                "description": "Class path to run with instead of the one of the main class's module. Lets a class the project does not know run."
               },
               "modulePaths": {
                 "type": "array",
@@ -393,7 +392,7 @@
               },
               "javaExec": {
                 "type": "string",
-                "description": "Path to the java executable. If empty, the project SDK is used."
+                "description": "Path to the java executable. If empty, the JDK of the module is used."
               },
               "cwd": {
                 "type": "string",
@@ -415,9 +414,9 @@
                   "externalTerminal"
                 ],
                 "enumDescriptions": [
-                  "Run in the Debug Console (the language server launches the process).",
-                  "Run in the integrated terminal (the editor launches the process and the debugger attaches).",
-                  "Run in an external terminal (the debugger attaches)."
+                  "Show the output in the Debug Console.",
+                  "Show the output in the integrated terminal. The language server runs the process.",
+                  "Show the output in an external terminal. The language server runs the process."
                 ],
                 "default": "integratedTerminal",
                 "description": "Where to run the program."
@@ -610,9 +609,9 @@
                   "externalTerminal"
                 ],
                 "enumDescriptions": [
-                  "Run in the Debug Console (the language server launches the process).",
-                  "Run in the integrated terminal (the editor launches the process and the debugger attaches).",
-                  "Run in an external terminal (the debugger attaches)."
+                  "Show the output in the Debug Console.",
+                  "Show the output in the integrated terminal. The language server runs the process.",
+                  "Show the output in an external terminal. The language server runs the process."
                 ],
                 "default": "integratedTerminal",
                 "description": "Where to run the program."

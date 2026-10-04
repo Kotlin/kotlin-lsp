@@ -1,6 +1,9 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.gradle
 
+import com.intellij.platform.workspace.jps.entities.ModuleEntity
+import com.intellij.platform.workspace.jps.entities.exModuleOptions
+import com.jetbrains.ls.api.run.BuildUnit
 import com.jetbrains.ls.imports.api.BuildTool
 import com.jetbrains.ls.imports.api.BuildToolDriver
 import com.jetbrains.ls.imports.api.BuildToolDriverContext
@@ -13,6 +16,11 @@ import kotlin.io.path.exists
 
 object GradleDriver : BuildToolDriver {
     override val type: String = "gradle"
+    override val externalSystemId: String = "GRADLE"
+
+    /** The project identity path the importer recorded, and the source set of a source-set module. */
+    override fun unitOf(module: ModuleEntity): BuildUnit =
+        BuildUnit(projectPath = module.exModuleOptions?.linkedProjectId, sourceSet = gradleSourceSetName(module))
 
     override fun canImportWorkspace(projectFileOrDirectory: Path): Boolean {
         return listOf(

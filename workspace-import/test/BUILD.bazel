@@ -86,6 +86,8 @@ jvm_library(
         "//language-server/main:main_test_lib",
         "@community//libraries/kotlinx/coroutines/core",
         "@community//libraries/kotlinx/coroutines/core:core_test_lib",
+        "@community//fleet/util/core",
+        "@community//fleet/util/core:core_test_lib",
         "@community//plugins/kotlin/base/facet",
         "@community//plugins/kotlin/base/facet:facet_test_lib",
         "@community//libraries/kotlinx/serialization/json",

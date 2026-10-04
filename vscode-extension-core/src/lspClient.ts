@@ -63,6 +63,7 @@ import {
 } from './serverBundleDownload';
 import { type ClientFeatureFactory, startClientWithFeatures } from './clientFeatureFactories';
 import { routerArgs, routerPath } from './lspRouter';
+import { subscribeBuildOutput } from './buildTask';
 import { isDataSharingChoice, isRegion } from './consentValues';
 import type { ServerRestartState } from './serverRestartState';
 import {
@@ -503,6 +504,7 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
       pendingLaunchChange = launchSettingsSnapshot() !== launchSettings;
       markInitializationOptionsApplied(initializationOptions);
       registerImportLogHandler(runClient);
+      getContext().subscriptions.push(subscribeBuildOutput(runClient));
       registerCopyToClipboardHandler(runClient);
       registerChooseActionMenuHandler(runClient);
       registerRunEditorCommandHandler(runClient);

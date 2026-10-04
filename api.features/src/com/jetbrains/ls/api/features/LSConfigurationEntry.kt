@@ -2,7 +2,6 @@
 package com.jetbrains.ls.api.features
 
 import com.intellij.ide.plugins.PluginMainDescriptor
-import com.jetbrains.ls.api.core.launch.BuildToolLaunchContributor
 import com.jetbrains.ls.api.core.launch.CheckoutBuildContributor
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.imports.api.BuildToolDriver
@@ -27,11 +26,6 @@ interface LSLanguageSpecificConfigurationEntry : LSConfigurationEntry {
 class BuildToolDriverEntry(
     val driver: BuildToolDriver,
     val order: String = "",
-) : LSConfigurationEntry
-
-/** Registers a build tool's build and launch support (see [BuildToolLaunchContributor]). */
-class BuildToolLaunchEntry(
-    val contributor: BuildToolLaunchContributor,
 ) : LSConfigurationEntry
 
 /** Registers a build tool that compiles modules it did not import (see [CheckoutBuildContributor]). */

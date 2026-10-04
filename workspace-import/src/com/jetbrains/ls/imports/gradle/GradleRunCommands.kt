@@ -4,6 +4,17 @@ package com.jetbrains.ls.imports.gradle
 import com.jetbrains.ls.api.run.BuildUnit
 import com.jetbrains.ls.api.run.RunOptions
 import com.jetbrains.ls.api.run.RunTask
+import com.intellij.openapi.vfs.VfsUtilCore
+import com.intellij.platform.workspace.jps.entities.LibraryDependency
+import com.intellij.platform.workspace.jps.entities.ModuleEntity
+import com.intellij.platform.workspace.jps.entities.exModuleOptions
+import com.intellij.platform.workspace.storage.EntityStorage
+import com.intellij.util.system.LowLevelLocalMachineAccess
+import com.intellij.util.system.OS
+import com.jetbrains.ls.imports.api.importRoot
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.writeText
 import org.jetbrains.annotations.VisibleForTesting
 
 // ponytail: a copy of the pure half of `com.jetbrains.dap.jvm.launch.GradleLaunchContributor`. That copy serves the
@@ -225,3 +236,96 @@ private fun groovyString(value: String): String {
 }
 
 private fun groovyList(items: List<String>): String = items.joinToString(prefix = "[", postfix = "]") { groovyString(it) }
+
+// ----- the whole root: the compile task of every source set the model records -----
+
+/**
+ * The compile task of every source-set module of the Gradle root at [root] in [storage], as absolute task paths:
+ * `:app:classes`, `:app:testClasses`, `:lib:integrationTestClasses`, `:android:compileDebugSources` for an
+ * Android variant. Distinct and sorted, so one workspace always gives one command.
+ *
+ * Only a source-set module contributes: a project's holder module has no source set and nothing of its own to
+ * compile. A source-set module whose project the importer could not name (an included build on a Gradle older
+ * than 9.2.0) has no task path from the main build and is left out.
+ */
+@VisibleForTesting
+fun gradleWorkspaceTasks(storage: EntityStorage, root: Path): List<String> {
+    val tasks = sortedSetOf<String>()
+    storage.entities(ModuleEntity::class.java)
+        .filter { it.exModuleOptions?.externalSystem == "GRADLE" && it.importRoot == root }
+        .forEach { module ->
+            val sourceSet = gradleSourceSetName(module) ?: return@forEach
+            val projectPath = gradleProjectPath(module.exModuleOptions?.linkedProjectId) ?: return@forEach
+            tasks += gradleTaskPath(projectPath, gradleCompileTask(sourceSet, module.isAndroidSourceSet))
+        }
+    return tasks.toList()
+}
+
+/**
+ * The arguments after `gradle` that compile [tasks] in one invocation, with `--continue` so one project's error
+ * does not hide another's. An empty list falls back to the bare `classes testClasses`: a build whose modules the
+ * importer split no source sets off. A list too long for the command line goes into an init script that sets
+ * `startParameter.taskNames`; see [gradleTaskListInitScript].
+ */
+@VisibleForTesting
+fun gradleWorkspaceArgs(tasks: List<String>, options: RunOptions, initScriptOf: (String) -> Path = ::writeTaskListInitScript, windows: Boolean = isWindows): List<String> {
+    fun args(taskArgs: List<String>) = buildList {
+        addAll(taskArgs)
+        add("--continue")
+        if (options.toolArgs.none { it == "--console" || it.startsWith("--console=") || it.startsWith("-Dorg.gradle.console=") }) add("--console=plain")
+        addAll(options.toolArgs)
+    }
+    if (tasks.isEmpty()) return args(listOf("classes", "testClasses"))
+    val inline = args(tasks)
+    if (inline.sumOf { it.length + 1 } < if (windows) 8000 else 100_000) return inline
+    return args(listOf("--init-script=${initScriptOf(gradleTaskListInitScript(tasks))}"))
+}
+
+/**
+ * The init script that makes Gradle run exactly [tasks], as if they were on the command line. Only the root
+ * build's start parameter selects the tasks: init scripts run for included builds and `buildSrc` too, and there
+ * the assignment re-targets that nested build.
+ */
+@VisibleForTesting
+fun gradleTaskListInitScript(tasks: List<String>): String =
+    "if (gradle.parent == null) {\n    gradle.startParameter.taskNames = ${groovyList(tasks)}\n}\n"
+
+private fun writeTaskListInitScript(script: String): Path {
+    val file = Files.createTempFile("lsp-gradle-build-", ".init.gradle")
+    file.writeText(script)
+    return file
+}
+
+@OptIn(LowLevelLocalMachineAccess::class)
+private val isWindows: Boolean get() = OS.CURRENT == OS.Windows
+
+/** The task that compiles [sourceSet]: [gradleClassesTask], or AGP's `compile<Component>Sources` when [android]. */
+@VisibleForTesting
+fun gradleCompileTask(sourceSet: String, android: Boolean): String =
+    if (android) "compile${sourceSet.replaceFirstChar { it.uppercaseChar() }}Sources" else gradleClassesTask(sourceSet)
+
+/**
+ * The library the importer attaches to every source-set module of an Android variant: the SDK's boot classpath.
+ * The importer stamps no other Android marker, so this dependency is the test.
+ */
+private const val ANDROID_SDK_LIBRARY: String = "Gradle: android:android-sdk:null"
+
+private val ModuleEntity.isAndroidSourceSet: Boolean
+    get() = dependencies.any { it is LibraryDependency && it.library.name == ANDROID_SDK_LIBRARY }
+
+/**
+ * The Gradle source-set name of [module] (`main`, `test`, `integrationTest`), or `null` when it is not a
+ * source-set module. The importer names a source-set module `<project module>.<source set>`, so the last
+ * dot-segment is the name. A project may itself be named with dots (`:1.21.1`), so the content roots settle it:
+ * a project module's content root is its project directory, a source set's roots are directories under it.
+ */
+@VisibleForTesting
+fun gradleSourceSetName(module: ModuleEntity): String? {
+    val projectDir = module.exModuleOptions?.linkedProjectPath?.takeUnless { it.isBlank() }?.let { Path.of(it) } ?: return null
+    val sourceSetName = module.name.substringAfterLast('.', missingDelimiterValue = "")
+    if (sourceSetName.isEmpty()) return null
+    val normalizedProjectDir = projectDir.toAbsolutePath().normalize()
+    val contentRoots = module.contentRoots.map { Path.of(VfsUtilCore.urlToPath(it.url.url)) }
+    if (contentRoots.any { it.toAbsolutePath().normalize() == normalizedProjectDir }) return null
+    return sourceSetName
+}

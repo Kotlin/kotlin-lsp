@@ -19,8 +19,6 @@ import {
   JvmTestCommands,
   type JvmTestLaunch,
   type JvmTestLaunchRequest,
-  type JvmTestRunPaths,
-  RESOLVE_LAUNCH_COMMAND,
   RESOLVE_TEST_LAUNCH_COMMAND,
 } from './jvmTestProtocol';
 
@@ -34,23 +32,20 @@ export interface JvmTestLaunchConfig extends TestLaunchConfig {
   /** The adapter then sends the process output as telemetry, so the `##teamcity` lines stay out of the Debug Console. */
   readonly console: 'none';
   readonly mainClass: string;
+  /** The test file: the server runs the module that owns it, on its own test runtime plus the runner's jars. */
   readonly file: string;
   readonly args: string[];
-  readonly classPaths: string[];
-  readonly modulePaths: string[];
-  readonly vmArgs: string[];
+  /** The jars of the test runner, added to the class path of the module. */
+  readonly additionalClassPaths: string[];
+  /** The module path entries of the runner, added to the module path of a modular test module. */
+  readonly additionalModulePaths: string[];
 }
 
 export interface JvmTestLaunchServer {
-  paths(uri: Uri): Promise<JvmTestRunPaths>;
   launches(request: JvmTestLaunchRequest): Promise<JvmTestLaunch[]>;
 }
 
 const lspLaunchServer: JvmTestLaunchServer = {
-  paths: (uri) =>
-    sendLspCommand<JvmTestRunPaths>(runningClient(), RESOLVE_LAUNCH_COMMAND, [
-      { uri: uri.toString() },
-    ]),
   launches: (request) =>
     sendLspCommand<JvmTestLaunch[]>(runningClient(), RESOLVE_TEST_LAUNCH_COMMAND, [request]),
 };
@@ -88,11 +83,9 @@ export class JvmTestLanguage implements TestLanguage<JvmTestProfile> {
   }
 
   async resolveLaunches(group: TestRunGroup): Promise<JvmTestLaunchConfig[]> {
-    const [paths, launches] = await Promise.all([
-      this.server.paths(group.uri),
-      this.server.launches({ testIds: [...group.testIds], uniqueIds: [...group.uniqueIds] }),
-    ]);
-    const modular = (paths.modulePath ?? []).length > 0;
+    const launches = await this.server.launches({ testIds: [...group.testIds], uniqueIds: [...group.uniqueIds] });
+    // The module's own runtime comes from the server at launch time; only the runner's jars travel from here. The
+    // server puts the runner's module path entries on the class path of a module that is not modular.
     return launches.map((launch) => ({
       type: 'intellij_debugger',
       request: 'launch',
@@ -100,16 +93,8 @@ export class JvmTestLanguage implements TestLanguage<JvmTestProfile> {
       mainClass: launch.mainClass,
       file: group.uri.fsPath,
       args: launch.args,
-      classPaths: [
-        ...launch.runtimeClasspath,
-        ...(modular ? [] : (launch.runtimeModulePath ?? [])),
-        ...(paths.classpath ?? []),
-      ],
-      modulePaths: [
-        ...(paths.modulePath ?? []),
-        ...(modular ? (launch.runtimeModulePath ?? []) : []),
-      ],
-      vmArgs: paths.vmArgs ?? [],
+      additionalClassPaths: launch.runtimeClasspath,
+      additionalModulePaths: launch.runtimeModulePath ?? [],
     }));
   }
 

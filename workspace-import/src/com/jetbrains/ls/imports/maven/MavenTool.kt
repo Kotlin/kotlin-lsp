@@ -36,10 +36,10 @@ import com.jetbrains.ls.api.run.RunTask
 import com.jetbrains.ls.api.run.RunTaskEvent
 import com.jetbrains.ls.api.run.UnsupportedRunException
 import com.jetbrains.ls.api.run.failedRunHandle
-import com.jetbrains.ls.imports.utils.asResource
-import com.jetbrains.ls.imports.utils.freePort
-import com.jetbrains.ls.imports.utils.jdwpAgent
-import com.jetbrains.ls.imports.utils.toRunHandle
+import com.jetbrains.ls.api.run.asResource
+import com.jetbrains.ls.api.run.freePort
+import com.jetbrains.ls.api.run.jdwpAgent
+import com.jetbrains.ls.api.run.toRunHandle
 import com.jetbrains.ls.imports.json.WorkspaceData
 import com.jetbrains.ls.imports.json.importWorkspaceData
 import com.jetbrains.ls.imports.json.postProcessWorkspaceData
@@ -50,7 +50,9 @@ import com.jetbrains.ls.snapshot.api.impl.core.rocks.FileSystemChange
 import fleet.util.async.Resource
 import fleet.util.async.resourceOf
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
@@ -334,10 +336,11 @@ class MavenTool(
         }.directory(parameters.projectDirectory.toFile())
 
     /**
-     * [RunTask.Build] and [RunTask.Test] are one `mvn` process. [RunTask.Run] is two: `mvn` compiles the unit and
-     * writes its runtime classpath, then `java` runs the entry on it. Maven cannot run the main class of one
-     * module in the same invocation that builds the reactor (`exec:java` binds to every module `-am` builds), and
-     * a separate `mvn exec:java` without `-am` needs the siblings installed. The `java` is the JDK Maven runs under.
+     * [RunTask.Build] and [RunTask.Test] are one `mvn` process each. [RunTask.Run] is two: `mvn` compiles the unit and
+     * the modules it depends on and writes the runtime classpath of the unit, then `java` runs the entry on it. Maven
+     * cannot run the main class of one module in the invocation that builds the reactor (`exec:java` binds to every
+     * module `-am` builds), and a separate `mvn exec:java` without `-am` needs the siblings installed. The `java` is
+     * the JDK Maven runs under.
      *
      * [RunRequest.options] `env` goes to the process: the Surefire fork and `java` inherit it. `workingDirectory`
      * reaches `java` only; Surefire runs in the module directory and takes no other from the command line.
@@ -381,7 +384,7 @@ class MavenTool(
                         debuggerReady
                     })
                 object : RunHandle by handle {
-                    override val events: Flow<RunTaskEvent> = handle.events.onCompletion { classpathFile.delete() }
+                    override val events: Flow<RunTaskEvent> = handle.events.onCompletion { withContext(Dispatchers.IO) { classpathFile.delete() } }
                 }.asResource()
             }
         }

@@ -37,15 +37,6 @@ class MavenRunCommandsTest {
     }
 
     @Test
-    fun `test names the tests and does not fail a module without them`() {
-        val args = mavenArgs(RunTask.Test(app, listOf("com.acme.ATest", "com.acme.BTest#m")), RunOptions(), argLine = "-Xmx1g")
-        assertEquals(
-            listOf("-pl", "app", "-am", "test", "-Dtest=com.acme.ATest,com.acme.BTest#m", "-Dsurefire.failIfNoSpecifiedTests=false", "-DargLine=-Xmx1g"),
-            args,
-        )
-    }
-
-    @Test
     fun `java runs the entry on the module output and the written classpath`() {
         val root = Path.of("/work/project")
         val args = mavenJavaArgs(
@@ -59,6 +50,17 @@ class MavenRunCommandsTest {
         val classes = root.resolve("app").resolve("target").resolve("classes").toString()
         assertEquals(
             listOf("/jdk/bin/java", "-Xmx1g", "-cp", "$classes${File.pathSeparator}/m2/a.jar${File.pathSeparator}/m2/b.jar", "com.acme.Main", "--port", "8080"),
+            args,
+        )
+        val modular = mavenJavaArgs(Path.of("/jdk/bin/java"), root, RunTask.Run(app, "acme.app/com.acme.Main"), RunOptions(), emptyList(), "")
+        assertEquals(listOf("/jdk/bin/java", "--module-path", classes, "-m", "acme.app/com.acme.Main"), modular)
+    }
+
+    @Test
+    fun `test names the tests and does not fail a module without them`() {
+        val args = mavenArgs(RunTask.Test(app, listOf("com.acme.ATest", "com.acme.BTest#m")), RunOptions(), argLine = "-Xmx1g")
+        assertEquals(
+            listOf("-pl", "app", "-am", "test", "-Dtest=com.acme.ATest,com.acme.BTest#m", "-Dsurefire.failIfNoSpecifiedTests=false", "-DargLine=-Xmx1g"),
             args,
         )
     }

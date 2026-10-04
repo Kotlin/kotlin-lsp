@@ -6,6 +6,9 @@ import com.jetbrains.ls.api.run.RunOptions
 import com.jetbrains.ls.api.run.RunTask
 import com.jetbrains.ls.imports.gradle.GRADLE_DEBUG_AGENT_PROPERTY
 import com.jetbrains.ls.imports.gradle.gradleArgs
+import com.jetbrains.ls.imports.gradle.gradleCompileTask
+import com.jetbrains.ls.imports.gradle.gradleTaskListInitScript
+import com.jetbrains.ls.imports.gradle.gradleWorkspaceArgs
 import com.jetbrains.ls.imports.gradle.gradleInitScript
 import com.jetbrains.ls.imports.gradle.gradleProjectPath
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -13,6 +16,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import java.nio.file.Path
 
 class GradleRunCommandsTest {
     private val app = BuildUnit(projectPath = ":app")
@@ -37,8 +41,27 @@ class GradleRunCommandsTest {
     }
 
     @Test
-    fun `build of the whole root continues past a failed project`() {
-        assertEquals(listOf("classes", "testClasses", "--continue", "--console=plain"), gradleArgs(RunTask.Build(), RunOptions()))
+    fun `build of the whole root compiles every recorded source set and continues past a failed project`() {
+        assertEquals(
+            listOf("classes", "testClasses", "--continue", "--console=plain"),
+            gradleWorkspaceArgs(emptyList(), RunOptions()),
+        )
+        assertEquals(
+            listOf(":app:classes", ":app:testClasses", "--continue", "--console=plain", "--offline"),
+            gradleWorkspaceArgs(listOf(":app:classes", ":app:testClasses"), RunOptions(toolArgs = listOf("--offline"))),
+        )
+        // A list too long for the command line goes into an init script that sets the task names.
+        val tasks = (1..500).map { ":module$it:testClasses" }
+        val args = gradleWorkspaceArgs(tasks, RunOptions(), initScriptOf = { Path.of("/tmp/build.init.gradle") }, windows = true)
+        assertEquals(listOf("--init-script=${Path.of("/tmp/build.init.gradle")}", "--continue", "--console=plain"), args)
+        assertTrue("gradle.startParameter.taskNames = [':a:classes', ':b:classes']" in gradleTaskListInitScript(listOf(":a:classes", ":b:classes")))
+    }
+
+    @Test
+    fun `the compile task of an Android variant is AGP's`() {
+        assertEquals("classes", gradleCompileTask("main", android = false))
+        assertEquals("integrationTestClasses", gradleCompileTask("integrationTest", android = false))
+        assertEquals("compileDebugSources", gradleCompileTask("debug", android = true))
     }
 
     @Test

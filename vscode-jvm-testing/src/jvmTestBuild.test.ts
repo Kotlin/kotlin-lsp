@@ -2,16 +2,8 @@
 import assert from 'node:assert/strict';
 import { beforeEach, describe, test } from 'node:test';
 import type { CancellationToken, TestRun, Uri } from 'vscode';
-import type { ResolvedBuildCommand } from '@jetbrains/vscode-extension-core/build';
 import type { TestRunGroup, TestRunInput, TestRunReport } from '@jetbrains/vscode-testing';
 import { JvmTestBuilds } from './jvmTestBuild';
-
-const MAVEN_BUILD: ResolvedBuildCommand = {
-  supported: true,
-  tool: 'maven',
-  cwd: '/p',
-  command: ['mvn', '-pl', ':app', '-am', 'test-compile'],
-};
 
 function uriOf(path: string): Uri {
   return { toString: () => `file://${path}` } as unknown as Uri;
@@ -42,141 +34,58 @@ describe('JvmTestBuilds', () => {
     log = [];
   });
 
-  test('runs the build the server resolved and reports it built', async () => {
-    const spawned: string[][] = [];
+  test('builds the module of the test file on the server and streams the output', async () => {
+    const built: string[] = [];
     const builds = new JvmTestBuilds({
       log: (message) => log.push(message),
-      resolve: () => Promise.resolve(MAVEN_BUILD),
-      spawn: (build, line) => {
-        spawned.push(build.command);
-        line('BUILD SUCCESS');
-        return Promise.resolve(0);
+      build: (uri, line) => {
+        built.push(uri);
+        line({ buildId: 'b', category: 'stdout', line: 'BUILD SUCCESS' });
+        return Promise.resolve({ exitCode: 0 });
       },
     });
 
     assert.equal(await builds.ensureBuilt(inputOf('/p/app/AppTest.java')), 'built');
-    assert.deepEqual(spawned, [['mvn', '-pl', ':app', '-am', 'test-compile']]);
+    assert.deepEqual(built, ['file:///p/app/AppTest.java']);
     assert.deepEqual(output, ['BUILD SUCCESS\n']);
   });
 
-  // Regression: the test build spawned the wrapper with the host environment only, so a Gradle project whose
-  // import ran on a compatible JDK still built on the `java` from the PATH and failed on a JDK Gradle cannot run on.
-  test('spawns the build with the environment the server chose for the tool', async () => {
-    const environments: (Record<string, string> | undefined)[] = [];
-    const builds = new JvmTestBuilds({
-      log: (message) => log.push(message),
-      resolve: () =>
-        Promise.resolve({
-          supported: true,
-          tool: 'gradle',
-          cwd: '/p',
-          command: ['/p/gradlew', ':testClasses'],
-          env: { JAVA_HOME: '/jdks/jbr-25' },
-        }),
-      spawn: (build) => {
-        environments.push(build.env);
-        return Promise.resolve(0);
-      },
-    });
+  test('builds one module once per run', async () => {
+    let count = 0;
+    const builds = new JvmTestBuilds({ log: () => {}, build: () => Promise.resolve({ exitCode: ++count && 0 }) });
 
-    assert.equal(await builds.ensureBuilt(inputOf('/p/src/test/AppTest.kt')), 'built');
-    assert.deepEqual(environments, [{ JAVA_HOME: '/jdks/jbr-25' }]);
+    await builds.ensureBuilt(inputOf('/p/app/ATest.java'));
+    await builds.ensureBuilt(inputOf('/p/app/ATest.java'));
+    assert.equal(count, 1);
   });
 
-  // Two frameworks in one module are two launch groups, and both resolve the same command.
-  test('compiles once for two groups that resolve the same command', async () => {
-    let spawns = 0;
-    const builds = new JvmTestBuilds({
-      log: (message) => log.push(message),
-      resolve: () => Promise.resolve(MAVEN_BUILD),
-      spawn: () => {
-        spawns += 1;
-        return Promise.resolve(0);
-      },
-    });
-
-    await builds.ensureBuilt(inputOf('/p/app/JUnitTest.java'));
-    const second = await builds.ensureBuilt(inputOf('/p/app/TestNgTest.java'));
-
-    assert.equal(second, 'built');
-    assert.equal(spawns, 1);
-  });
-
-  test('a failed build is reported as failed, so the caller can refuse to launch', async () => {
-    const builds = new JvmTestBuilds({
-      log: (message) => log.push(message),
-      resolve: () => Promise.resolve(MAVEN_BUILD),
-      spawn: (_build, line) => {
-        line('AppTest.java:[7,5] cannot find symbol');
-        return Promise.resolve(1);
-      },
-    });
+  test('a failed build fails the run', async () => {
+    const builds = new JvmTestBuilds({ log: () => {}, build: () => Promise.resolve({ exitCode: 1 }) });
 
     assert.equal(await builds.ensureBuilt(inputOf('/p/app/AppTest.java')), 'failed');
-    assert.ok(output.join('').includes('cannot find symbol'), output.join(''));
   });
 
-  // A project no build tool can compile — JPS, or an imported workspace.json. The run still has to happen.
-  test('says why nothing was compiled, and lets the run go ahead', async () => {
-    let spawned = false;
+  test('a module nothing can build is skipped with the reason, and the tests still run', async () => {
     const builds = new JvmTestBuilds({
       log: (message) => log.push(message),
-      resolve: () =>
-        Promise.resolve({ supported: false, reason: 'No build tool can compile this module.' }),
-      spawn: () => {
-        spawned = true;
-        return Promise.resolve(0);
-      },
+      build: () => Promise.resolve({ reason: 'No build tool imported this module' }),
     });
 
     assert.equal(await builds.ensureBuilt(inputOf('/p/app/AppTest.java')), 'skipped');
-    assert.equal(spawned, false);
-    assert.ok(output.join('').includes('No build tool can compile this module.'), output.join(''));
-    assert.ok(output.join('').includes('already compiled'), output.join(''));
-    assert.equal(log.length, 1);
+    assert.deepEqual(output, ['No build tool imported this module Running the classes that are already compiled.\n']);
+    assert.deepEqual(log, ['[jvmTest] No build tool imported this module']);
   });
 
-  // Only a build that ran and failed stops a launch; a question we could not ask does not.
-  test('a resolve that throws skips the build instead of failing the run', async () => {
-    const builds = new JvmTestBuilds({
-      log: (message) => log.push(message),
-      resolve: () => Promise.reject(new Error('IntelliJ LSP is not running')),
-      spawn: () => Promise.resolve(0),
-    });
+  test('a build that cannot start is skipped, not failed', async () => {
+    const builds = new JvmTestBuilds({ log: () => {}, build: () => Promise.reject(new Error('server gone')) });
 
     assert.equal(await builds.ensureBuilt(inputOf('/p/app/AppTest.java')), 'skipped');
-    assert.ok(output.join('').includes('IntelliJ LSP is not running'), output.join(''));
+    assert.match(output[0], /server gone/);
   });
 
-  test('a cancelled run neither asks the server nor compiles', async () => {
-    let asked = false;
-    const builds = new JvmTestBuilds({
-      log: (message) => log.push(message),
-      resolve: () => {
-        asked = true;
-        return Promise.resolve(MAVEN_BUILD);
-      },
-      spawn: () => Promise.resolve(0),
-    });
+  test('a cancelled run skips the build', async () => {
+    const builds = new JvmTestBuilds({ log: () => {}, build: () => Promise.resolve({ exitCode: 0 }) });
 
-    assert.equal(
-      await builds.ensureBuilt(inputOf('/p/app/AppTest.java', tokenOf(true))),
-      'skipped',
-    );
-    assert.equal(asked, false);
-    assert.deepEqual(output, []);
-  });
-
-  test('a build the run stopped is skipped, not failed', async () => {
-    const builds = new JvmTestBuilds({
-      log: (message) => log.push(message),
-      resolve: () => Promise.resolve(MAVEN_BUILD),
-      spawn: (_build, _line, running) => {
-        running.cancelled = true;
-        return Promise.resolve(1);
-      },
-    });
-
-    assert.equal(await builds.ensureBuilt(inputOf('/p/app/AppTest.java')), 'skipped');
+    assert.equal(await builds.ensureBuilt(inputOf('/p/app/AppTest.java', tokenOf(true))), 'skipped');
   });
 });

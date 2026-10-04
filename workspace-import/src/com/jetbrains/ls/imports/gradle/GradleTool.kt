@@ -11,7 +11,8 @@ import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
-import com.intellij.util.io.delete
+import com.intellij.openapi.application.PathManager
+import com.intellij.util.io.DigestUtil
 import com.intellij.util.system.LowLevelLocalMachineAccess
 import com.intellij.util.system.OS
 import com.jetbrains.analyzer.api.FileUrl
@@ -31,10 +32,10 @@ import com.jetbrains.ls.api.run.RunTaskEvent
 import com.jetbrains.ls.api.run.UnsupportedRunException
 import com.jetbrains.ls.api.run.failedRunHandle
 import com.jetbrains.ls.imports.api.putEnvironment
-import com.jetbrains.ls.imports.utils.asResource
-import com.jetbrains.ls.imports.utils.freePort
-import com.jetbrains.ls.imports.utils.jdwpAgent
-import com.jetbrains.ls.imports.utils.toRunHandle
+import com.jetbrains.ls.api.run.asResource
+import com.jetbrains.ls.api.run.freePort
+import com.jetbrains.ls.api.run.jdwpAgent
+import com.jetbrains.ls.api.run.toRunHandle
 import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.addInitScripts
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.configureEnvironment
@@ -65,7 +66,6 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.IntermediateResultHandler
@@ -74,16 +74,18 @@ import org.jetbrains.annotations.ApiStatus
 import java.io.File
 import java.nio.file.InvalidPathException
 import java.nio.file.Path
-import kotlin.io.path.createTempDirectory
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import kotlin.io.path.div
 import kotlin.io.path.isRegularFile
-import kotlin.io.path.writeText
+import kotlin.io.path.readBytes
+import kotlin.io.path.writeBytes
 
 private val LOG = logger<GradleTool>()
 
 /** One folder's live Gradle build tool; [GradleDriver] starts it. */
 class GradleTool(
-    toolContext: BuildToolDriverContext,
+    private val toolContext: BuildToolDriverContext,
     private val parameters: WorkspaceImportParameters,
 ) : BuildTool {
 
@@ -183,6 +185,9 @@ class GradleTool(
      * daemon, so its arguments, environment and working directory go through the init script; see
      * [gradleInitScript]. With `debug` the JDWP agent travels as a system property, and the handle reports
      * [RunTaskEvent.DebuggerReady] first: the JVM waits for the debugger.
+     *
+     * A build of the whole root ([RunTask.Build] with an empty unit) names the compile task of every source set
+     * the model records, see [gradleWorkspaceTasks].
      */
     override fun run(request: RunRequest): Resource<RunHandle> {
         request.extensions.firstOrNull()?.let {
@@ -191,14 +196,17 @@ class GradleTool(
         val task = request.task
         val options = request.options
         val debugPort = if (request.debug && task !is RunTask.Build) freePort() else null
-        val launchDir = if (task is RunTask.Build) null else createTempDirectory("gradle-run").also {
-            (it / GRADLE_INIT_SCRIPT_NAME).writeText(gradleInitScript(task, options))
+        val initScript = if (task is RunTask.Build) null else gradleInitScript(task, options)
+        val launchDir = initScript?.let { writeInitScript(it) }
+        val args = if (task is RunTask.Build && task.unit.projectPath.isNullOrBlank()) {
+            gradleWorkspaceArgs(gradleWorkspaceTasks(toolContext.entityStorage(), parameters.projectDirectory), options)
+        } else {
+            gradleArgs(
+                task, options,
+                initScript = launchDir?.let { (it / GRADLE_INIT_SCRIPT_NAME).toString() },
+                debugAgent = listOfNotNull(debugPort?.let(::jdwpAgent)),
+            )
         }
-        val args = gradleArgs(
-            task, options,
-            initScript = launchDir?.let { (it / GRADLE_INIT_SCRIPT_NAME).toString() },
-            debugAgent = listOfNotNull(debugPort?.let(::jdwpAgent)),
-        )
         val process = ProcessBuilder(listOf(gradleExecutable()) + args).apply {
             syncJavaHome?.let { environment()["JAVA_HOME"] = it }
             environment().putEnvironment(parameters.options.environment)
@@ -207,8 +215,33 @@ class GradleTool(
         return object : RunHandle by handle {
             override val events: Flow<RunTaskEvent> = handle.events
                 .onStart { debugPort?.let { emit(RunTaskEvent.DebuggerReady("127.0.0.1", it)) } }
-                .onCompletion { launchDir?.delete() }
         }.asResource()
+    }
+
+    /**
+     * Writes [script] into a directory named by its content, under the IDE temp directory, and returns it.
+     *
+     * Gradle fingerprints the path and the content of an init script as a configuration input. A fresh directory
+     * per launch would discard the configuration cache on every Run and Debug; one directory per content keeps it
+     * valid, and Run and Debug of one configuration share it, because the debug agent stays out of the script.
+     * The directory is never deleted: nothing knows when the daemon has read it, and the content hash bounds
+     * how many there are. A file whose bytes already match is left alone, so a concurrent launch never sees a
+     * truncated script.
+     */
+    private fun writeInitScript(script: String): Path {
+        val bytes = script.encodeToByteArray()
+        val dir = Path.of(PathManager.getTempPath()) / ("lsp-gradle-run-" + DigestUtil.sha256Hex(bytes).take(16))
+        Files.createDirectories(dir)
+        val file = dir / GRADLE_INIT_SCRIPT_NAME
+        if (runCatching { file.readBytes() }.getOrNull().contentEquals(bytes)) return dir
+        val temp = Files.createTempFile(dir, "$GRADLE_INIT_SCRIPT_NAME.", ".tmp")
+        try {
+            temp.writeBytes(bytes)
+            Files.move(temp, file, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+        } finally {
+            Files.deleteIfExists(temp)
+        }
+        return dir
     }
 
     /** `gradlew` (`gradlew.bat`) in the project directory when the project ships one, else `gradle` (`gradle.bat`). */

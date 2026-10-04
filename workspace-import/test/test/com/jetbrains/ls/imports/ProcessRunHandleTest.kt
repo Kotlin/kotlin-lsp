@@ -2,7 +2,7 @@
 package com.jetbrains.ls.imports
 
 import com.jetbrains.ls.api.run.RunTaskEvent
-import com.jetbrains.ls.imports.utils.toRunHandle
+import com.jetbrains.ls.api.run.toRunHandle
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
@@ -63,5 +63,19 @@ class ProcessRunHandleTest {
             ProcessBuilder("sh", "-c", "echo started; exec sleep 60").toRunHandle().events.first()
         }
         assertEquals(RunTaskEvent.StdOutput("started"), first)
+    }
+
+    /** A stop asks the program to end and keeps its output: a JVM prints from its shutdown hooks. */
+    @Test
+    fun `stop ends the program gracefully and keeps the output it prints on the way out`() = runBlocking<Unit> {
+        val handle = ProcessBuilder("sh", "-c", "trap 'echo HOOK; exit 3' TERM; echo READY; while true; do sleep 1; done").toRunHandle()
+        val events = mutableListOf<RunTaskEvent>()
+        withTimeout(30.seconds) {
+            handle.events.collect { event ->
+                events += event
+                if (event == RunTaskEvent.StdOutput("READY")) handle.stop()
+            }
+        }
+        assertEquals(listOf(RunTaskEvent.StdOutput("READY"), RunTaskEvent.StdOutput("HOOK"), RunTaskEvent.Finished(3)), events)
     }
 }

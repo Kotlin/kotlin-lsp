@@ -20,8 +20,9 @@ import kotlin.io.path.div
  * `--fail-at-end`, so one module's compile error does not hide another's.
  *
  * [RunTask.Run] compiles and writes the runtime classpath of the unit into [classpathFile]: Maven cannot run the
- * main class of one module in the same invocation, see [mavenJavaArgs]. Every module writes the file; the unit
- * is last in the reactor order, so its classpath stays.
+ * main class of one module in the same invocation (`exec:java` binds to every module `-am` builds), so `java` runs
+ * it afterwards, see [mavenJavaArgs]. Every module writes the file; the unit is last in the reactor order, so its
+ * classpath stays.
  *
  * [RunTask.Test] runs [RunTask.Test.tests] through Surefire. `surefire.failIfNoSpecifiedTests=false` keeps a
  * dependency module without the named test from failing the build. [argLine] holds the JVM arguments of the
@@ -60,15 +61,21 @@ fun mavenArgs(task: RunTask, options: RunOptions, classpathFile: Path? = null, a
  * The `java` command that runs [RunTask.Run.entry] of its unit under [root]: [vmArgs], the classpath of
  * `<unit>/target/classes` plus the entries of [classpath], the entry, then [RunOptions.programArgs].
  * [classpath] is the content of the file [mavenArgs] wrote: one line, `File.pathSeparator` between entries.
+ * An entry of the form `module/Class` runs with `-m` on the same entries as the module path.
  */
 @VisibleForTesting
 fun mavenJavaArgs(java: Path, root: Path, task: RunTask.Run, options: RunOptions, vmArgs: List<String>, classpath: String): List<String> = buildList {
     add(java.toString())
     addAll(vmArgs)
     val classes = (task.unit.projectPath?.takeIf { it.isNotBlank() }?.let { root / it } ?: root) / "target" / "classes"
-    add("-cp")
-    add(listOf(classes.toString(), classpath.trim()).filter { it.isNotEmpty() }.joinToString(File.pathSeparator))
-    add(task.entry)
+    val entries = listOf(classes.toString(), classpath.trim()).filter { it.isNotEmpty() }.joinToString(File.pathSeparator)
+    if ('/' in task.entry) {
+        add("--module-path"); add(entries)
+        add("-m"); add(task.entry)
+    } else {
+        add("-cp"); add(entries)
+        add(task.entry)
+    }
     addAll(options.programArgs)
 }
 

@@ -1,86 +1,59 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 import { getLspClient, getOutputChannel } from '@jetbrains/vscode-extension-core';
 import {
-  type BuildToRun,
-  buildToRun,
+  type BuildOutput,
+  type BuildResponse,
   errorMessage,
-  resolveBuildCommand,
-  type ResolvedBuildCommand,
-  type RunningBuild,
-  runProcess,
+  runServerBuild,
 } from '@jetbrains/vscode-extension-core/build';
+import type { CancellationToken } from 'vscode';
 import type { TestRunInput, TestRunReport } from '@jetbrains/vscode-testing';
 
 export type TestBuildOutcome = 'built' | 'failed' | 'skipped';
 
-type SpawnBuild = (
-  build: BuildToRun,
-  line: (text: string) => void,
-  running: RunningBuild,
-) => Promise<number>;
+/** Builds the module of [uri] on the server and streams its lines to [line]; the server's answer is the result. */
+export type ServerBuild = (
+  uri: string,
+  line: (output: BuildOutput) => void,
+  token: CancellationToken,
+) => Promise<BuildResponse>;
 
 export interface JvmTestBuildsOptions {
-  /** Overridden in tests, where there is no server to ask and no build tool to spawn. */
-  resolve?: (targetUri: string) => Promise<ResolvedBuildCommand>;
-  spawn?: SpawnBuild;
+  /** Overridden in tests, where there is no server to ask. */
+  build?: ServerBuild;
   log?: (message: string) => void;
 }
 
+/**
+ * Builds the module of a test group before its tests run, once per module per test run. The server builds with
+ * the tool of the module and streams the output into the test results.
+ */
 export class JvmTestBuilds {
   private readonly outcomes = new Map<string, TestBuildOutcome>();
-  private readonly resolve: (targetUri: string) => Promise<ResolvedBuildCommand>;
-  private readonly spawn: SpawnBuild;
+  private readonly build: ServerBuild;
   private readonly log: (message: string) => void;
 
   constructor(options: JvmTestBuildsOptions = {}) {
-    this.resolve = options.resolve ?? defaultResolve;
-    this.spawn =
-      options.spawn ??
-      ((build, line, running) =>
-        new Promise<number>((resolve) => {
-          void runProcess({
-            tool: build.tool,
-            command: build.command,
-            cwd: build.cwd,
-            env: build.env,
-            line,
-            close: resolve,
-            running,
-          });
-        }));
+    this.build = options.build ?? defaultBuild;
     this.log = options.log ?? ((message) => getOutputChannel().appendLine(message));
   }
 
   async ensureBuilt({ group, report, token }: TestRunInput): Promise<TestBuildOutcome> {
     if (token.isCancellationRequested) return 'skipped';
-
-    let resolved: ResolvedBuildCommand;
-    try {
-      resolved = await this.resolve(group.uri.toString());
-    } catch (e) {
-      return this.skip(report, `Could not resolve the build command: ${errorMessage(e)}.`);
-    }
-
-    const build = buildToRun(resolved);
-    if (!build) return this.skip(report, resolved.reason ?? 'Nothing to build for this project.');
-
-    const key = [build.cwd ?? '', ...build.command].join(' ');
+    const key = group.uri.toString();
     const done = this.outcomes.get(key);
     if (done) return done;
 
-    const running: RunningBuild = { cancelled: token.isCancellationRequested };
-    const cancellation = token.onCancellationRequested(() => {
-      running.cancelled = true;
-      running.child?.kill();
-    });
-    let exitCode: number;
+    let response: BuildResponse;
     try {
-      exitCode = await this.spawn(build, (text) => line(report, text), running);
-    } finally {
-      cancellation.dispose();
+      response = await this.build(key, (output) => line(report, output.line), token);
+    } catch (e) {
+      if (token.isCancellationRequested) return 'skipped';
+      return this.skip(report, `The build could not start: ${errorMessage(e)}.`);
     }
-    if (running.cancelled) return 'skipped';
-    const outcome: TestBuildOutcome = exitCode === 0 ? 'built' : 'failed';
+    if (token.isCancellationRequested) return 'skipped';
+    if (response.exitCode === undefined) return this.skip(report, response.reason ?? 'Nothing to build for this project.');
+    const outcome: TestBuildOutcome = response.exitCode === 0 ? 'built' : 'failed';
     this.outcomes.set(key, outcome);
     return outcome;
   }
@@ -96,8 +69,8 @@ function line(report: TestRunReport, text: string): void {
   report.output({ text: `${text}\n` });
 }
 
-function defaultResolve(targetUri: string): Promise<ResolvedBuildCommand> {
+const defaultBuild: ServerBuild = (uri, line, token) => {
   const client = getLspClient();
   if (!client) throw new Error('IntelliJ LSP is not running');
-  return resolveBuildCommand(client, targetUri);
-}
+  return runServerBuild(client, { uri, testScope: true }, line, token);
+};
