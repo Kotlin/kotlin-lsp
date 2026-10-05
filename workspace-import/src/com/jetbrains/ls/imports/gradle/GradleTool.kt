@@ -3,6 +3,7 @@
 
 package com.jetbrains.ls.imports.gradle
 
+import com.intellij.diagnostic.rethrowControlFlowException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.platform.workspace.jps.entities.ModuleEntity
@@ -57,11 +58,11 @@ import com.jetbrains.ls.snapshot.api.impl.core.rocks.FileSystemChange
 import fleet.util.async.Resource
 import fleet.util.async.map
 import fleet.util.async.resourceOf
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -89,15 +90,14 @@ class GradleTool(
     private val parameters: WorkspaceImportParameters,
 ) : BuildTool {
 
-    override fun sync(context: BuildToolContext, request: ImportRequest): Flow<ImportEvent> = flow {
-        try {
-            emitAll(importWorkspace(context.project, context.virtualFileUrlManager))
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Throwable) {
-            emit(ImportEvent.Failed(e))
-        }
-    }
+    // The `catch` operator, not a try around `emitAll`: a try also catches what the collector threw through
+    // `emit`, and the `Failed` it then emits violates flow exception transparency. `catch` sees upstream only.
+    override fun sync(context: BuildToolContext, request: ImportRequest): Flow<ImportEvent> =
+        flow { emitAll(importWorkspace(context.project, context.virtualFileUrlManager)) }
+            .catch { e ->
+                rethrowControlFlowException(e)
+                emit(ImportEvent.Failed(e))
+            }
 
     /**
      * The fixed-location configuration of this target: the settings script, the root `gradle.properties`,
