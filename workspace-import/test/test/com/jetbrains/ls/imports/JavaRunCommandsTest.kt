@@ -25,13 +25,19 @@ import com.jetbrains.ls.imports.java.argFileContent
 import com.jetbrains.ls.imports.java.explicitJavaArgs
 import com.jetbrains.ls.imports.java.javaArgs
 import com.jetbrains.ls.imports.java.javaArgsOrArgFile
+import com.jetbrains.ls.imports.api.ModuleRuntime
 import com.jetbrains.ls.imports.api.moduleRuntime
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.io.File
+import java.nio.file.Files
 import java.nio.file.Path
+import javax.tools.ToolProvider
+import kotlin.io.path.createDirectories
+import kotlin.io.path.div
+import kotlin.io.path.writeText
 
 class JavaRunCommandsTest {
     private val source = object : EntitySource {}
@@ -120,6 +126,64 @@ class JavaRunCommandsTest {
         assertFalse(javaArgs(runtime, "com.acme.Main", listOf("--enable-preview"), emptyList()).count { it == "--enable-preview" } > 1)
     }
 
+    private fun jpmsRuntime(paths: List<Path>, ownOutputs: List<Path>, includeTests: Boolean = false): ModuleRuntime {
+        val storage = storage()
+        return ModuleRuntime(
+            module = storage.resolve(ModuleId("app"))!!,
+            includeTests = includeTests,
+            paths = paths.map { it.toString() },
+            ownOutputs = ownOutputs.map { it.toString() },
+            javaHome = null,
+            workingDirectory = null,
+            previewFeatures = false,
+        )
+    }
+
+    @Test
+    fun `a module descriptor splits the runtime between the module path and the class path`() {
+        val f = JpmsFixture
+        val runtime = jpmsRuntime(paths = listOf(f.app, f.lib, f.plain), ownOutputs = listOf(f.app))
+        assertEquals(
+            listOf("--module-path", "${f.app}$sep${f.lib}", "-cp", "${f.plain}", "-m", "acme.app/com.acme.Main"),
+            javaArgs(runtime, "com.acme.Main", emptyList(), emptyList()),
+        )
+    }
+
+    @Test
+    fun `the resources output is patched into the main module`() {
+        val f = JpmsFixture
+        val runtime = jpmsRuntime(paths = listOf(f.app, f.resources, f.lib), ownOutputs = listOf(f.app, f.resources))
+        assertEquals(
+            listOf(
+                "--module-path", "${f.app}$sep${f.lib}",
+                "-cp", "${f.resources}",
+                "--patch-module", "acme.app=${f.resources}",
+                "-m", "acme.app/com.acme.Main",
+            ),
+            javaArgs(runtime, "com.acme.Main", emptyList(), emptyList()),
+        )
+    }
+
+    @Test
+    fun `a modular test run has no main module and joins through add-modules`() {
+        val f = JpmsFixture
+        val runtime = jpmsRuntime(paths = listOf(f.app, f.lib), ownOutputs = listOf(f.app), includeTests = true)
+        assertEquals(
+            listOf("--module-path", "${f.app}$sep${f.lib}", "--add-modules=ALL-MODULE-PATH", "com.acme.MainTest"),
+            javaArgs(runtime, "com.acme.MainTest", emptyList(), emptyList()),
+        )
+    }
+
+    /** A provider is reached through `uses`, not `requires`: without it a ServiceLoader lookup finds nothing. */
+    @Test
+    fun `a service provider of the closure joins the module path`() {
+        val f = JpmsFixture
+        val runtime = jpmsRuntime(paths = listOf(f.app, f.lib, f.impl), ownOutputs = listOf(f.app))
+        val args = javaArgs(runtime, "com.acme.Main", emptyList(), emptyList())
+        assertEquals("${f.app}$sep${f.lib}$sep${f.impl}", args[args.indexOf("--module-path") + 1])
+        assertFalse("-cp" in args)
+    }
+
     @Test
     fun `short arguments stay inline and long ones go into one argfile`() {
         val short = listOf("-cp", "/x/a.jar", "com.acme.Main")
@@ -152,5 +216,50 @@ class JavaRunCommandsTest {
             listOf("-cp", "/x/a.jar", "-m", "acme.app/com.acme.Main"),
             explicitJavaArgs(JvmClasspath(classPath = listOf("/x/a.jar")), "acme.app/com.acme.Main", emptyList(), emptyList()),
         )
+    }
+}
+
+/**
+ * Compiled JPMS modules the split reads from disk: `acme.app` requires `acme.lib` and uses `com.acme.Spi`;
+ * `acme.impl` provides that service. `plain` and `resources` are directories without a descriptor. Compiled once
+ * for the whole class; the sandbox removes the temp directory.
+ */
+private object JpmsFixture {
+    private val dir: Path = Files.createTempDirectory("jpms")
+    val lib: Path = dir / "lib"
+    val app: Path = dir / "app"
+    val impl: Path = dir / "impl"
+    val plain: Path = (dir / "plain").createDirectories()
+    val resources: Path = (dir / "resources").createDirectories()
+
+    init {
+        compile(lib, mapOf("module-info.java" to "module acme.lib {}"))
+        compile(
+            app,
+            mapOf(
+                "module-info.java" to "module acme.app { requires acme.lib; exports com.acme; uses com.acme.Spi; }",
+                "com/acme/Spi.java" to "package com.acme; public interface Spi {}",
+            ),
+            modulePath = listOf(lib),
+        )
+        compile(
+            impl,
+            mapOf(
+                "module-info.java" to "module acme.impl { requires acme.app; provides com.acme.Spi with com.acme.impl.Impl; }",
+                "com/acme/impl/Impl.java" to "package com.acme.impl; public class Impl implements com.acme.Spi {}",
+            ),
+            modulePath = listOf(lib, app),
+        )
+    }
+
+    private fun compile(out: Path, sources: Map<String, String>, modulePath: List<Path> = emptyList()) {
+        val src = Files.createTempDirectory("jpms-src")
+        val files = sources.map { (relative, text) -> (src / relative).apply { parent.createDirectories(); writeText(text) } }
+        val args = buildList {
+            add("-d"); add(out.toString())
+            if (modulePath.isNotEmpty()) { add("--module-path"); add(modulePath.joinToString(File.pathSeparator)) }
+            files.forEach { add(it.toString()) }
+        }
+        check(ToolProvider.getSystemJavaCompiler().run(null, null, null, *args.toTypedArray()) == 0) { "javac failed for $out" }
     }
 }
