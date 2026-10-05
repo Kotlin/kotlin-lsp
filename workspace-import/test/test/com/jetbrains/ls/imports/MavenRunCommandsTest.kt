@@ -57,6 +57,24 @@ class MavenRunCommandsTest {
     }
 
     @Test
+    fun `run of the test source set compiles the tests and takes the test scope`() {
+        val testUnit = BuildUnit(projectPath = "app", sourceSet = "test")
+        val args = mavenArgs(RunTask.Run(testUnit, "com.acme.MainTest"), RunOptions(), classpathFile = Path.of("/tmp/cp.txt"))
+        assertEquals(
+            listOf("-pl", "app", "-am", "test-compile", "dependency:build-classpath", "-Dmdep.includeScope=test", "-Dmdep.outputFile=${Path.of("/tmp/cp.txt")}"),
+            args,
+        )
+        val root = Path.of("/work/project")
+        val javaArgs = mavenJavaArgs(Path.of("/jdk/bin/java"), root, RunTask.Run(testUnit, "com.acme.MainTest"), RunOptions(), emptyList(), "/m2/a.jar")
+        val testClasses = root.resolve("app").resolve("target").resolve("test-classes").toString()
+        val classes = root.resolve("app").resolve("target").resolve("classes").toString()
+        assertEquals(
+            listOf("/jdk/bin/java", "-cp", "$testClasses${File.pathSeparator}$classes${File.pathSeparator}/m2/a.jar", "com.acme.MainTest"),
+            javaArgs,
+        )
+    }
+
+    @Test
     fun `test names the tests and does not fail a module without them`() {
         val args = mavenArgs(RunTask.Test(app, listOf("com.acme.ATest", "com.acme.BTest#m")), RunOptions(), argLine = "-Xmx1g")
         assertEquals(

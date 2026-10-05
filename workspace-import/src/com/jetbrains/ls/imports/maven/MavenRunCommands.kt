@@ -37,7 +37,7 @@ object MavenModuleMapper : WorkspaceModuleMapper {
  * [RunTask.Run] compiles and writes the runtime classpath of the unit into [classpathFile]: Maven cannot run the
  * main class of one module in the same invocation (`exec:java` binds to every module `-am` builds), so `java` runs
  * it afterwards, see [mavenJavaArgs]. Every module writes the file; the unit is last in the reactor order, so its
- * classpath stays.
+ * classpath stays. A run of the `test` source set compiles the tests and takes the `test` scope dependencies.
  *
  * [RunTask.Test] runs [RunTask.Test.tests] through Surefire. `surefire.failIfNoSpecifiedTests=false` keeps a
  * dependency module without the named test from failing the build. [argLine] holds the JVM arguments of the
@@ -57,9 +57,10 @@ fun mavenArgs(task: RunTask, options: RunOptions, classpathFile: Path? = null, a
             add(if (task.testScope || projectPath == null) "test-compile" else "compile")
         }
         is RunTask.Run -> {
-            add("compile")
+            val test = task.unit.sourceSet == "test"
+            add(if (test) "test-compile" else "compile")
             add("dependency:build-classpath")
-            add("-Dmdep.includeScope=runtime")
+            add("-Dmdep.includeScope=${if (test) "test" else "runtime"}")
             add("-Dmdep.outputFile=${requireNotNull(classpathFile) { "A Run needs a classpath file" }}")
         }
         is RunTask.Test -> {
@@ -74,16 +75,23 @@ fun mavenArgs(task: RunTask, options: RunOptions, classpathFile: Path? = null, a
 
 /**
  * The `java` command that runs [RunTask.Run.entry] of its unit under [root]: [vmArgs], the classpath of
- * `<unit>/target/classes` plus the entries of [classpath], the entry, then [RunOptions.programArgs].
- * [classpath] is the content of the file [mavenArgs] wrote: one line, `File.pathSeparator` between entries.
- * An entry of the form `module/Class` runs with `-m` on the same entries as the module path.
+ * `<unit>/target/classes` (for the `test` source set, `target/test-classes` before it) plus the entries of
+ * [classpath], the entry, then [RunOptions.programArgs]. [classpath] is the content of the file [mavenArgs]
+ * wrote: one line, `File.pathSeparator` between entries. An entry of the form `module/Class` runs with `-m`
+ * on the same entries as the module path.
  */
 @VisibleForTesting
 fun mavenJavaArgs(java: Path, root: Path, task: RunTask.Run, options: RunOptions, vmArgs: List<String>, classpath: String): List<String> = buildList {
     add(java.toString())
     addAll(vmArgs)
-    val classes = (task.unit.projectPath?.takeIf { it.isNotBlank() }?.let { root / it } ?: root) / "target" / "classes"
-    val entries = listOf(classes.toString(), classpath.trim()).filter { it.isNotEmpty() }.joinToString(File.pathSeparator)
+    // ponytail: the default layout only; a configured build.outputDirectory needs the Maven model,
+    // which this command never reads. Read it from the model if a real project hits this.
+    val moduleDir = task.unit.projectPath?.takeIf { it.isNotBlank() }?.let { root / it } ?: root
+    val outputs = buildList {
+        if (task.unit.sourceSet == "test") add(moduleDir / "target" / "test-classes")
+        add(moduleDir / "target" / "classes")
+    }
+    val entries = (outputs.map(Path::toString) + classpath.trim()).filter { it.isNotEmpty() }.joinToString(File.pathSeparator)
     if ('/' in task.entry) {
         add("--module-path"); add(entries)
         add("-m"); add(task.entry)
