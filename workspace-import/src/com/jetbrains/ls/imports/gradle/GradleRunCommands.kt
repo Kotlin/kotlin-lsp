@@ -1,6 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.gradle
 
+import com.jetbrains.ls.api.core.launch.WorkspaceModuleMapper
 import com.jetbrains.ls.api.run.BuildUnit
 import com.jetbrains.ls.api.run.RunOptions
 import com.jetbrains.ls.api.run.RunTask
@@ -19,6 +20,14 @@ import org.jetbrains.annotations.VisibleForTesting
 
 // ponytail: a copy of the pure half of `com.jetbrains.dap.jvm.launch.GradleLaunchContributor`. That copy serves the
 // DAP adapter until it moves to `BuildTool.run`; then it goes.
+
+/** Maps a Gradle module to its unit: the project identity path the importer recorded, and the source set of a source-set module. */
+object GradleModuleMapper : WorkspaceModuleMapper {
+    override val externalSystemId: String = "GRADLE"
+
+    override fun unitOf(module: ModuleEntity): BuildUnit =
+        BuildUnit(projectPath = module.exModuleOptions?.linkedProjectId, sourceSet = gradleSourceSetName(module))
+}
 
 /** The task the init script registers to run a main class. */
 @VisibleForTesting

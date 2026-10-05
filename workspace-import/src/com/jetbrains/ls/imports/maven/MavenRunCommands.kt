@@ -3,13 +3,28 @@
 
 package com.jetbrains.ls.imports.maven
 
+import com.intellij.platform.workspace.jps.entities.ModuleEntity
+import com.intellij.platform.workspace.jps.entities.exModuleOptions
+import com.jetbrains.ls.api.core.launch.WorkspaceModuleMapper
 import com.jetbrains.ls.api.run.BuildUnit
 import com.jetbrains.ls.api.run.RunOptions
 import com.jetbrains.ls.api.run.RunTask
+import com.jetbrains.ls.imports.api.importRoot
 import org.jetbrains.annotations.VisibleForTesting
 import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.div
+
+/** Maps a Maven module to its unit: the module directory relative to the reactor root, as `-pl` takes it; the root module is the whole reactor. */
+object MavenModuleMapper : WorkspaceModuleMapper {
+    override val externalSystemId: String = "MAVEN"
+
+    override fun unitOf(module: ModuleEntity): BuildUnit {
+        val root = module.importRoot ?: return BuildUnit()
+        val dir = module.exModuleOptions?.linkedProjectPath?.takeUnless { it.isBlank() }?.let(Path::of) ?: return BuildUnit()
+        return BuildUnit(projectPath = root.relativize(dir).toString().ifEmpty { null })
+    }
+}
 
 /**
  * The arguments after `mvn` for [task] in its [RunTask.unit]. [BuildUnit.projectPath] is the module directory relative to
