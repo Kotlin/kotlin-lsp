@@ -108,18 +108,13 @@ class RunState {
   }
 
   outputOwner(): TestItem | undefined {
-    let tests = 0;
-    let test: TestItem | undefined;
-    let suite: TestItem | undefined;
+    let test: TestItem | undefined = undefined;
     for (const [item, node] of this.open) {
-      if (node.kind === 'test') {
-        tests++;
-        test = item;
-      } else if (node.kind === 'suite') {
-        suite = item;
-      }
+      if (node.kind !== 'test') continue;
+      if (test !== undefined) return undefined;
+      test = item;
     }
-    return tests === 1 ? test : suite;
+    return test;
   }
 
   note(line: string): void {

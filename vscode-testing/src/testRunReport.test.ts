@@ -224,7 +224,7 @@ describe('who printed a line', () => {
     assert.deepEqual(calls, [`started ${A_ID}`, `output ${A_ID} "hello from the test\\r\\n"`]);
   });
 
-  test('tests running at once leave the line to the suite around them', () => {
+  test('tests running at once leave the line to the run', () => {
     const { report, calls } = makeReport();
     report.suiteStarted(at(report, FOO));
     report.testStarted(at(report, A));
@@ -232,7 +232,18 @@ describe('who printed a line', () => {
 
     report.processOutput('printed by one of them');
 
-    assert.equal(calls.at(-1), `output ${FOO_ID} "printed by one of them\\r\\n"`);
+    assert.equal(calls.at(-1), 'output (run) "printed by one of them\\r\\n"');
+  });
+
+  test('a line printed while only the suite runs belongs to the run', () => {
+    // An output message puts the item in the Test Results list, so a suite that owns a line shows
+    // as an empty node of its own.
+    const { report, calls } = makeReport();
+    report.suiteStarted(at(report, FOO));
+
+    report.processOutput('printed by @BeforeClass');
+
+    assert.deepEqual(calls, ['output (run) "printed by @BeforeClass\\r\\n"']);
   });
 
   test('a line printed before any test starts belongs to the run itself', () => {

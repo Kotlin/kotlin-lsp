@@ -277,6 +277,25 @@ describe('which node a runner message is about', () => {
     ]);
   });
 
+  test('a line a configuration method prints goes to the run, not to the class', () => {
+    const { feed, calls } = readerFor();
+
+    feed(
+      teamcity('testSuiteStarted', { nodeId: 'com.example.Foo', locationHint: CLASS_HINT }),
+      teamcity('testStarted', SET_UP),
+      'Setting up',
+      teamcity('testFinished', { name: 'Foo.setUp', nodeId: SET_UP.nodeId }),
+      teamcity('testStarted', { nodeId: 'com.example.Foo/test', locationHint: METHOD_HINT }),
+      teamcity('testFinished', { nodeId: 'com.example.Foo/test' }),
+    );
+
+    assert.deepEqual(calls, [
+      'output (run) "Setting up\\r\\n"',
+      'started moduleA/com.example.Foo#test',
+      'passed moduleA/com.example.Foo#test',
+    ]);
+  });
+
   test('a configuration method that passes says nothing about the one test the run is about', () => {
     const { report, calls } = makeReport({ launched: ['com.example.Foo#a'] });
     const reader = new TeamCityReader(report);
