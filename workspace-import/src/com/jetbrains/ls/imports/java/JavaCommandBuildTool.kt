@@ -79,7 +79,9 @@ class JavaCommandBuildTool(private val toolContext: BuildToolDriverContext) : Bu
             return unsupported("A JVM run names the module to run in, or spells its class path (${task.unit.projectPath ?: "no module"})")
         }
         val runtime = module?.let { moduleRuntime(storage, it, includeTests = task.unit.sourceSet == "test") }
-        val java = explicit?.javaExecutable
+        // The executable rides either form of the extension: a `javaExec`-only configuration changes the JVM
+        // and keeps the module's runtime.
+        val java = classpath?.javaExecutable
             ?: runtime?.javaHome?.let { it / "bin" / if (OS.CURRENT == OS.Windows) "java.exe" else "java" }
             ?: return unsupported("No JDK to run with: the configuration names none, and ${module?.let { "module '${it.name}' has none" } ?: "the run names no module"}")
 
