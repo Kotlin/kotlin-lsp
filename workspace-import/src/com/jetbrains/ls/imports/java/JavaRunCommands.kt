@@ -3,6 +3,8 @@
 
 package com.jetbrains.ls.imports.java
 
+import com.intellij.util.system.LowLevelLocalMachineAccess
+import com.intellij.util.system.OS
 import com.jetbrains.ls.api.core.launch.JvmClasspath
 import com.jetbrains.ls.imports.api.ModuleRuntime
 
@@ -10,10 +12,12 @@ import org.jetbrains.annotations.VisibleForTesting
 import java.io.File
 import java.lang.module.ModuleDescriptor
 import java.lang.module.ModuleFinder
+import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.div
 import kotlin.io.path.isDirectory
 import kotlin.io.path.isRegularFile
+import kotlin.io.path.writeText
 
 /**
  * The `java` arguments after the executable that run [entry] on [runtime]: [vmArgs], the module path and the
@@ -86,6 +90,39 @@ fun explicitJavaArgs(classpath: JvmClasspath, entry: String, vmArgs: List<String
     } else add(entry)
     addAll(programArgs)
 }
+
+/**
+ * [args] as the `java` command line takes them: inline while they fit, one `@argfile` beyond that. A workspace
+ * class path can exceed the command-line limit, Windows's low one first. The launcher expands the file before it
+ * parses, so every argument may live there, the entry and the program arguments included.
+ */
+@VisibleForTesting
+fun javaArgsOrArgFile(args: List<String>, argFileOf: (String) -> Path = ::writeArgFile, windows: Boolean = isWindows): List<String> =
+    if (args.sumOf { it.length + 1 } < if (windows) 8000 else 100_000) args
+    else listOf("@${argFileOf(argFileContent(args))}")
+
+/** The `@argfile` content for [args]: one argument per line, quoted by the launcher's argfile rules. */
+@VisibleForTesting
+fun argFileContent(args: List<String>): String = args.joinToString("\n") { quoteForArgFile(it) } + "\n"
+
+/** A token the argfile reads as itself: no whitespace, quote, comment `#`, or escape `\`. */
+private val PLAIN_ARG = Regex("[^\\s\"'#\\\\]+")
+
+private fun quoteForArgFile(arg: String): String =
+    if (PLAIN_ARG.matches(arg)) arg
+    else "\"" + arg.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t") + "\""
+
+private fun writeArgFile(content: String): Path {
+    val file = Files.createTempFile("lsp-java-run-", ".args")
+    file.writeText(content)
+    return file
+}
+
+/** The argfile of a wrapped command, or `null` for an inline one; the caller deletes it when the run ends. */
+fun argFileOf(args: List<String>): Path? = args.singleOrNull()?.takeIf { it.startsWith("@") }?.removePrefix("@")?.let(Path::of)
+
+@OptIn(LowLevelLocalMachineAccess::class)
+private val isWindows: Boolean get() = OS.CURRENT == OS.Windows
 
 private class JpmsSplit(val mainModule: String?, val modulePath: List<String>, val classPath: List<String>, val patch: List<String>)
 

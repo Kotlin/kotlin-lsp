@@ -31,9 +31,13 @@ import fleet.util.async.Resource
 import fleet.util.async.map
 import fleet.util.async.resource
 import fleet.util.async.resourceOf
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.withContext
+import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.div
 
@@ -89,7 +93,9 @@ class JavaCommandBuildTool(private val toolContext: BuildToolDriverContext) : Bu
         val vmArgs = request.options.vmArgs + listOfNotNull(debugPort?.let(::jdwpAgent))
         val args = if (explicit != null) explicitJavaArgs(explicit, task.entry, vmArgs, request.options.programArgs)
                    else javaArgs(runtime!!, task.entry, vmArgs, request.options.programArgs, additional)
-        val process = ProcessBuilder(listOf(java.toString()) + args).apply {
+        val commandArgs = javaArgsOrArgFile(args)
+        val argFile = argFileOf(commandArgs)
+        val process = ProcessBuilder(listOf(java.toString()) + commandArgs).apply {
             environment().putEnvironment(request.options.env)
             (request.options.workingDirectory ?: runtime?.workingDirectory)?.let { directory(Path.of(it).toFile()) }
         }
@@ -97,6 +103,7 @@ class JavaCommandBuildTool(private val toolContext: BuildToolDriverContext) : Bu
             object : RunHandle by handle {
                 override val events: Flow<RunTaskEvent> = handle.events
                     .onStart { debugPort?.let { emit(RunTaskEvent.DebuggerReady("127.0.0.1", it)) } }
+                    .onCompletion { argFile?.let { file -> withContext(Dispatchers.IO) { Files.deleteIfExists(file) } } }
             }
         }
     }

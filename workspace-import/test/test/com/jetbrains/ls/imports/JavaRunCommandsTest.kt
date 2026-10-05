@@ -21,8 +21,10 @@ import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.impl.url.VirtualFileUrlManagerImpl
 import com.jetbrains.ls.api.core.launch.JvmClasspath
+import com.jetbrains.ls.imports.java.argFileContent
 import com.jetbrains.ls.imports.java.explicitJavaArgs
 import com.jetbrains.ls.imports.java.javaArgs
+import com.jetbrains.ls.imports.java.javaArgsOrArgFile
 import com.jetbrains.ls.imports.api.moduleRuntime
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -97,6 +99,27 @@ class JavaRunCommandsTest {
         // An entry that names a module falls back to the class too when the outputs hold no descriptor.
         assertTrue("com.acme.Main" in javaArgs(runtime, "acme.app/com.acme.Main", emptyList(), emptyList()))
         assertFalse(javaArgs(runtime, "com.acme.Main", listOf("--enable-preview"), emptyList()).count { it == "--enable-preview" } > 1)
+    }
+
+    @Test
+    fun `short arguments stay inline and long ones go into one argfile`() {
+        val short = listOf("-cp", "/x/a.jar", "com.acme.Main")
+        assertEquals(short, javaArgsOrArgFile(short, argFileOf = { error("not expected") }, windows = false))
+
+        val long = listOf("-cp", (1..5000).joinToString(sep) { "/jars/library-$it.jar" }, "com.acme.Main", "--port")
+        var written: String? = null
+        val args = javaArgsOrArgFile(long, argFileOf = { written = it; Path.of("/tmp/run.args") }, windows = false)
+        assertEquals(listOf("@${Path.of("/tmp/run.args")}"), args)
+        assertEquals(argFileContent(long), written)
+    }
+
+    @Test
+    fun `the argfile quotes what its syntax would misread`() {
+        val content = argFileContent(listOf("-cp", "/x/plain.jar", "/with space/a.jar", "C:\\win\\b.jar", "say \"hi\""))
+        assertEquals(
+            "-cp\n/x/plain.jar\n\"/with space/a.jar\"\n\"C:\\\\win\\\\b.jar\"\n\"say \\\"hi\\\"\"\n",
+            content,
+        )
     }
 
     @Test
