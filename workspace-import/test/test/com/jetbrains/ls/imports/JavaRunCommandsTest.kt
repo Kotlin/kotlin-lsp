@@ -40,9 +40,9 @@ class JavaRunCommandsTest {
 
     /**
      * `app` depends on `lib` and on `junit` (TEST); `lib` depends on `guava`. Every module has an output and a
-     * test output; `app` has the JDK.
+     * test output; `app` has the JDK. [previewOn] names the module that compiles at a preview language level.
      */
-    private fun storage(): MutableEntityStorage {
+    private fun storage(previewOn: String? = "app"): MutableEntityStorage {
         val storage = MutableEntityStorage.create()
         storage.addEntity(SdkEntity("17", "JavaSDK", emptyList(), "", source) { homePath = urls.storeAndGet("file:///jdk") })
         fun library(name: String, jar: String) = storage.addEntity(
@@ -57,7 +57,11 @@ class JavaRunCommandsTest {
                 languageLevelId = level
             }
         })
-        module("lib", listOf(LibraryDependency(LibraryId("guava", LibraryTableId.ProjectLibraryTableId), false, DependencyScope.COMPILE)))
+        module(
+            "lib",
+            listOf(LibraryDependency(LibraryId("guava", LibraryTableId.ProjectLibraryTableId), false, DependencyScope.COMPILE)),
+            level = "JDK_21_PREVIEW".takeIf { previewOn == "lib" },
+        )
         module(
             "app",
             listOf(
@@ -65,7 +69,7 @@ class JavaRunCommandsTest {
                 ModuleDependency(ModuleId("lib"), false, DependencyScope.COMPILE, false),
                 LibraryDependency(LibraryId("junit", LibraryTableId.ProjectLibraryTableId), false, DependencyScope.TEST),
             ),
-            level = "JDK_21_PREVIEW",
+            level = "JDK_21_PREVIEW".takeIf { previewOn == "app" },
         )
         return storage
     }
@@ -78,6 +82,21 @@ class JavaRunCommandsTest {
         assertEquals(listOf("/out/app"), runtime.ownOutputs)
         assertEquals(Path.of("/jdk"), runtime.javaHome)
         assertTrue(runtime.previewFeatures)
+    }
+
+    @Test
+    fun `a preview dependency enables preview for the launch`() {
+        val storage = storage(previewOn = "lib")
+        val runtime = moduleRuntime(storage, storage.resolve(ModuleId("app"))!!, includeTests = false)
+        assertTrue(runtime.previewFeatures) { "the JVM loads lib's classes, so the launch needs --enable-preview" }
+    }
+
+    @Test
+    fun `no preview code means no preview flag`() {
+        val storage = storage(previewOn = null)
+        val runtime = moduleRuntime(storage, storage.resolve(ModuleId("app"))!!, includeTests = false)
+        assertFalse(runtime.previewFeatures)
+        assertFalse("--enable-preview" in javaArgs(runtime, "com.acme.Main", emptyList(), emptyList()))
     }
 
     @Test
