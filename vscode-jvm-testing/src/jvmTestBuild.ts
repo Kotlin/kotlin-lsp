@@ -40,19 +40,25 @@ export class JvmTestBuilds {
 
   async ensureBuilt({ group, report, token }: TestRunInput): Promise<TestBuildOutcome> {
     if (token.isCancellationRequested) return 'skipped';
-    const key = group.uri.toString();
+    // The run plan groups tests by module, so the module key matches its planning; the URI covers an unnamed module.
+    const key = group.moduleName ?? group.uri.toString();
     const done = this.outcomes.get(key);
     if (done) return done;
 
     let response: BuildResponse;
     try {
-      response = await this.build(key, (output) => line(report, output.line), token);
+      response = await this.build(
+        group.uri.toString(),
+        (output) => line(report, output.line),
+        token,
+      );
     } catch (e) {
       if (token.isCancellationRequested) return 'skipped';
       return this.skip(report, `The build could not start: ${errorMessage(e)}.`);
     }
     if (token.isCancellationRequested) return 'skipped';
-    if (response.exitCode === undefined) return this.skip(report, response.reason ?? 'Nothing to build for this project.');
+    if (response.exitCode === undefined)
+      return this.skip(report, response.reason ?? 'Nothing to build for this project.');
     const outcome: TestBuildOutcome = response.exitCode === 0 ? 'built' : 'failed';
     this.outcomes.set(key, outcome);
     return outcome;

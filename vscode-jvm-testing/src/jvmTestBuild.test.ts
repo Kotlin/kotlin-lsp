@@ -18,8 +18,8 @@ function tokenOf(cancelled = false): CancellationToken {
 
 let output: string[];
 
-function inputOf(path: string, token = tokenOf()): TestRunInput {
-  const group = { uri: uriOf(path) } as TestRunGroup;
+function inputOf(path: string, token = tokenOf(), moduleName: string | null = null): TestRunInput {
+  const group = { uri: uriOf(path), moduleName } as TestRunGroup;
   const report = {
     output: ({ text }: { text: string }) => output.push(text),
   } as unknown as TestRunReport;
@@ -50,17 +50,35 @@ describe('JvmTestBuilds', () => {
     assert.deepEqual(output, ['BUILD SUCCESS\n']);
   });
 
-  test('builds one module once per run', async () => {
+  test('builds one module once per run, even for two test files of that module', async () => {
     let count = 0;
-    const builds = new JvmTestBuilds({ log: () => {}, build: () => Promise.resolve({ exitCode: ++count && 0 }) });
+    const builds = new JvmTestBuilds({
+      log: () => {},
+      build: () => Promise.resolve({ exitCode: ++count && 0 }),
+    });
 
-    await builds.ensureBuilt(inputOf('/p/app/ATest.java'));
-    await builds.ensureBuilt(inputOf('/p/app/ATest.java'));
+    await builds.ensureBuilt(inputOf('/p/app/ATest.java', tokenOf(), 'app'));
+    await builds.ensureBuilt(inputOf('/p/app/BTest.java', tokenOf(), 'app'));
     assert.equal(count, 1);
   });
 
+  test('two unnamed modules fall back to the file and build apart', async () => {
+    let count = 0;
+    const builds = new JvmTestBuilds({
+      log: () => {},
+      build: () => Promise.resolve({ exitCode: ++count && 0 }),
+    });
+
+    await builds.ensureBuilt(inputOf('/p/app/ATest.java'));
+    await builds.ensureBuilt(inputOf('/p/lib/BTest.java'));
+    assert.equal(count, 2);
+  });
+
   test('a failed build fails the run', async () => {
-    const builds = new JvmTestBuilds({ log: () => {}, build: () => Promise.resolve({ exitCode: 1 }) });
+    const builds = new JvmTestBuilds({
+      log: () => {},
+      build: () => Promise.resolve({ exitCode: 1 }),
+    });
 
     assert.equal(await builds.ensureBuilt(inputOf('/p/app/AppTest.java')), 'failed');
   });
@@ -72,20 +90,31 @@ describe('JvmTestBuilds', () => {
     });
 
     assert.equal(await builds.ensureBuilt(inputOf('/p/app/AppTest.java')), 'skipped');
-    assert.deepEqual(output, ['No build tool imported this module Running the classes that are already compiled.\n']);
+    assert.deepEqual(output, [
+      'No build tool imported this module Running the classes that are already compiled.\n',
+    ]);
     assert.deepEqual(log, ['[jvmTest] No build tool imported this module']);
   });
 
   test('a build that cannot start is skipped, not failed', async () => {
-    const builds = new JvmTestBuilds({ log: () => {}, build: () => Promise.reject(new Error('server gone')) });
+    const builds = new JvmTestBuilds({
+      log: () => {},
+      build: () => Promise.reject(new Error('server gone')),
+    });
 
     assert.equal(await builds.ensureBuilt(inputOf('/p/app/AppTest.java')), 'skipped');
     assert.match(output[0], /server gone/);
   });
 
   test('a cancelled run skips the build', async () => {
-    const builds = new JvmTestBuilds({ log: () => {}, build: () => Promise.resolve({ exitCode: 0 }) });
+    const builds = new JvmTestBuilds({
+      log: () => {},
+      build: () => Promise.resolve({ exitCode: 0 }),
+    });
 
-    assert.equal(await builds.ensureBuilt(inputOf('/p/app/AppTest.java', tokenOf(true))), 'skipped');
+    assert.equal(
+      await builds.ensureBuilt(inputOf('/p/app/AppTest.java', tokenOf(true))),
+      'skipped',
+    );
   });
 });
