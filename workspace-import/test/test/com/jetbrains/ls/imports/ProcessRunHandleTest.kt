@@ -77,6 +77,57 @@ class ProcessRunHandleTest {
         }
     }
 
+    @Test
+    fun `cancelling the scope kills the descendants of the process too`() = runBlocking<Unit> {
+        withTimeout(20.seconds) {
+            val childPid = CompletableDeferred<Long>()
+            val job = launch {
+                // The shell prints the pid of its child and waits on it; the cancel must kill both.
+                ProcessBuilder("sh", "-c", "sleep 60 & echo PID $!; wait").toRunHandle().use { handle ->
+                    handle.events.collect { event ->
+                        if (event is RunTaskEvent.StdOutput && event.line.startsWith("PID ")) {
+                            childPid.complete(event.line.removePrefix("PID ").trim().toLong())
+                        }
+                    }
+                }
+            }
+            val pid = childPid.await()
+            job.cancelAndJoin()
+            awaitDeath(pid)
+        }
+    }
+
+    /**
+     * The child inherits the stdout pipe and ignores the stop of its parent. The readers see no EOF from it,
+     * so the drain kills it, and the handle completes instead of waiting out `sleep 60`.
+     */
+    @Test
+    fun `a soft stop kills a child that survives it and holds the output open`() = runBlocking<Unit> {
+        withTimeout(30.seconds) {
+            val childPid = CompletableDeferred<Long>()
+            val ready = CompletableDeferred<RunHandle>()
+            val reader = launch {
+                ready.await().events.collect { event ->
+                    if (event is RunTaskEvent.StdOutput && event.line.startsWith("PID ")) {
+                        childPid.complete(event.line.removePrefix("PID ").trim().toLong())
+                    }
+                }
+            }
+            ProcessBuilder("sh", "-c", "sleep 60 & echo PID $!; exec sleep 60").toRunHandle().use { handle ->
+                ready.complete(handle)
+                childPid.await()
+                // Leaving the `use` body is the soft stop; SIGTERM ends the root `sleep`, the child stays.
+            }
+            reader.join()
+            awaitDeath(childPid.await())
+        }
+    }
+
+    /** Waits for [pid] to die: a kill is asynchronous. The caller bounds the wait with its own timeout. */
+    private suspend fun awaitDeath(pid: Long) {
+        while (ProcessHandle.of(pid).filter { it.isAlive }.isPresent) delay(50.milliseconds)
+    }
+
     /** The end of the `use` body asks the program to end and keeps its output: a JVM prints from its shutdown hooks. */
     @Test
     fun `a soft stop ends the program gracefully and keeps the output it prints on the way out`() = runBlocking<Unit> {
