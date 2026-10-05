@@ -32,7 +32,6 @@ import com.jetbrains.ls.api.run.RunTaskEvent
 import com.jetbrains.ls.api.run.UnsupportedRunException
 import com.jetbrains.ls.api.run.failedRunHandle
 import com.jetbrains.ls.imports.api.putEnvironment
-import com.jetbrains.ls.api.run.asResource
 import com.jetbrains.ls.api.run.freePort
 import com.jetbrains.ls.api.run.jdwpAgent
 import com.jetbrains.ls.api.run.toRunHandle
@@ -56,6 +55,7 @@ import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
 import com.jetbrains.ls.imports.utils.stampBuildToolJavaHome
 import com.jetbrains.ls.snapshot.api.impl.core.rocks.FileSystemChange
 import fleet.util.async.Resource
+import fleet.util.async.map
 import fleet.util.async.resourceOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
@@ -211,11 +211,12 @@ class GradleTool(
             syncJavaHome?.let { environment()["JAVA_HOME"] = it }
             environment().putEnvironment(parameters.options.environment)
         }.directory(parameters.projectDirectory.toFile())
-        val handle = process.toRunHandle()
-        return object : RunHandle by handle {
-            override val events: Flow<RunTaskEvent> = handle.events
-                .onStart { debugPort?.let { emit(RunTaskEvent.DebuggerReady("127.0.0.1", it)) } }
-        }.asResource()
+        return process.toRunHandle().map { handle ->
+            object : RunHandle by handle {
+                override val events: Flow<RunTaskEvent> = handle.events
+                    .onStart { debugPort?.let { emit(RunTaskEvent.DebuggerReady("127.0.0.1", it)) } }
+            }
+        }
     }
 
     /**

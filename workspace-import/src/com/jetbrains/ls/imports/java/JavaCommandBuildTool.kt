@@ -15,7 +15,6 @@ import com.jetbrains.ls.api.run.RunRequest
 import com.jetbrains.ls.api.run.RunTask
 import com.jetbrains.ls.api.run.RunTaskEvent
 import com.jetbrains.ls.api.run.UnsupportedRunException
-import com.jetbrains.ls.api.run.asResource
 import com.jetbrains.ls.api.run.failedRunHandle
 import com.jetbrains.ls.api.run.freePort
 import com.jetbrains.ls.api.run.jdwpAgent
@@ -29,6 +28,7 @@ import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
 import com.jetbrains.ls.imports.api.putEnvironment
 import fleet.util.async.Resource
+import fleet.util.async.map
 import fleet.util.async.resource
 import fleet.util.async.resourceOf
 import kotlinx.coroutines.flow.Flow
@@ -91,11 +91,12 @@ class JavaCommandBuildTool(private val toolContext: BuildToolDriverContext) : Bu
             environment().putEnvironment(request.options.env)
             (request.options.workingDirectory ?: runtime?.workingDirectory)?.let { directory(Path.of(it).toFile()) }
         }
-        val handle = process.toRunHandle()
-        return object : RunHandle by handle {
-            override val events: Flow<RunTaskEvent> = handle.events
-                .onStart { debugPort?.let { emit(RunTaskEvent.DebuggerReady("127.0.0.1", it)) } }
-        }.asResource()
+        return process.toRunHandle().map { handle ->
+            object : RunHandle by handle {
+                override val events: Flow<RunTaskEvent> = handle.events
+                    .onStart { debugPort?.let { emit(RunTaskEvent.DebuggerReady("127.0.0.1", it)) } }
+            }
+        }
     }
 
     private fun unsupported(message: String): Resource<RunHandle> = resourceOf(failedRunHandle(UnsupportedRunException(message)))

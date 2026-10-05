@@ -36,7 +36,6 @@ import com.jetbrains.ls.api.run.RunTask
 import com.jetbrains.ls.api.run.RunTaskEvent
 import com.jetbrains.ls.api.run.UnsupportedRunException
 import com.jetbrains.ls.api.run.failedRunHandle
-import com.jetbrains.ls.api.run.asResource
 import com.jetbrains.ls.api.run.freePort
 import com.jetbrains.ls.api.run.jdwpAgent
 import com.jetbrains.ls.api.run.toRunHandle
@@ -48,6 +47,7 @@ import com.jetbrains.ls.imports.utils.runWithErrorReporting
 import com.jetbrains.ls.imports.utils.stampBuildToolJavaHome
 import com.jetbrains.ls.snapshot.api.impl.core.rocks.FileSystemChange
 import fleet.util.async.Resource
+import fleet.util.async.map
 import fleet.util.async.resourceOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -355,20 +355,22 @@ class MavenTool(
         val vmArgs = options.vmArgs + listOfNotNull(debugPort?.let(::jdwpAgent))
         val debuggerReady = listOfNotNull(debugPort?.let { RunTaskEvent.DebuggerReady("127.0.0.1", it) })
         return when (val task = request.task) {
-            is RunTask.Build -> mavenProcess(mavenArgs(task, options)).toRunHandle().asResource()
+            is RunTask.Build -> mavenProcess(mavenArgs(task, options)).toRunHandle()
             is RunTask.Test -> {
                 val warning = options.workingDirectory?.let {
                     RunTaskEvent.SystemOutput("Maven ignores the working directory '$it': the tests run in the module directory")
                 }
-                val handle = listOf(mavenProcess(mavenArgs(task, options, argLine = surefireArgLine(vmArgs)), extraEnvironment = options.env))
+                listOf(mavenProcess(mavenArgs(task, options, argLine = surefireArgLine(vmArgs)), extraEnvironment = options.env))
                     .toRunHandle()
-                object : RunHandle by handle {
-                    override val events: Flow<RunTaskEvent> = flow {
-                        warning?.let { emit(it) }
-                        debuggerReady.forEach { emit(it) }
-                        emitAll(handle.events)
+                    .map { handle ->
+                        object : RunHandle by handle {
+                            override val events: Flow<RunTaskEvent> = flow {
+                                warning?.let { emit(it) }
+                                debuggerReady.forEach { emit(it) }
+                                emitAll(handle.events)
+                            }
+                        }
                     }
-                }.asResource()
             }
             is RunTask.Run -> {
                 val classpathFile = createTempFile("maven-classpath", ".txt")
@@ -378,14 +380,16 @@ class MavenTool(
                     environment().putEnvironment(options.env)
                     directory((options.workingDirectory?.let(Path::of) ?: parameters.projectDirectory).toFile())
                 }
-                val handle = listOf(mavenProcess(mavenArgs(task, options, classpathFile = classpathFile)), javaProcess)
+                listOf(mavenProcess(mavenArgs(task, options, classpathFile = classpathFile)), javaProcess)
                     .toRunHandle(between = { _ ->
                         javaProcess.command(mavenJavaArgs(java, parameters.projectDirectory, task, options, vmArgs, classpathFile.readText()))
                         debuggerReady
                     })
-                object : RunHandle by handle {
-                    override val events: Flow<RunTaskEvent> = handle.events.onCompletion { withContext(Dispatchers.IO) { classpathFile.delete() } }
-                }.asResource()
+                    .map { handle ->
+                        object : RunHandle by handle {
+                            override val events: Flow<RunTaskEvent> = handle.events.onCompletion { withContext(Dispatchers.IO) { classpathFile.delete() } }
+                        }
+                    }
             }
         }
     }

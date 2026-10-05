@@ -39,7 +39,6 @@ class RunStepsTest {
         override fun run(request: RunRequest): Resource<RunHandle> = resourceOf(object : RunHandle {
             override val input: SendChannel<String> = this@FakeTool.input
             override val events: Flow<RunTaskEvent> = flow { this@FakeTool.events.forEach { emit(it) } }
-            override fun stop() = Unit
         })
     }
 
