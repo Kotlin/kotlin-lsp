@@ -1075,6 +1075,11 @@
         "command": "jetbrains.dev.removeDownloadedLsp",
         "category": "IntelliJ (Developer)",
         "title": "Remove Downloaded Language Server"
+      },
+      {
+        "command": "jetbrains.goToTest",
+        "title": "Go to Test",
+        "icon": "$(go-to-file)"
       }
     ],
     "menus": {
@@ -1082,6 +1087,17 @@
         {
           "command": "jetbrains.dev.removeDownloadedLsp",
           "when": "config.intellij.dev.commands"
+        },
+        {
+          "command": "jetbrains.goToTest",
+          "when": "false"
+        }
+      ],
+      "testing/item/result": [
+        {
+          "command": "jetbrains.goToTest",
+          "group": "inline",
+          "when": "jetbrains.goToTestMissing && testing.testItemHasUri"
         }
       ]
     }
