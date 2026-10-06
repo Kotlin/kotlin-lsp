@@ -452,7 +452,7 @@ sealed class ModCommandData {
                 val num = if (isMirror) sourceNum else map.computeIfAbsent(field.varName) { ++i }
                 vars.add(SnippetVar(start, end, num))
             }
-            return Snippet(cmd.file.url, vars)
+            return Snippet(cmd.file.url.toFileUrl(), vars)
         }
     }
 }
