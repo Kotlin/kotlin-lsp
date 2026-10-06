@@ -8,6 +8,7 @@ import com.intellij.codeInspection.QuickFix
 import com.intellij.modcommand.ActionContext
 import com.intellij.modcommand.LocalQuickFixWithModCommandFallback
 import com.intellij.modcommand.ModCommandQuickFix
+import com.intellij.modcommand.ModCommandService
 import com.intellij.openapi.diagnostic.ReportingClassSubstitutor
 import com.intellij.openapi.diagnostic.logger
 import com.jetbrains.ls.api.core.LSServer
@@ -61,7 +62,8 @@ internal class LSInspectionManager(
                 return null
             }
 
-            return LazyFix.OfQuickFix(fix.name.maybeStripHtml(), fix, problemDescriptor, context)
+            return ModCommandService.getInstance().unwrap(fix)?.toLazyFix(context)
+                ?: LazyFix.OfQuickFix(fix.name.maybeStripHtml(), fix, problemDescriptor, context)
         }
 
         if (fix is IntentionAction) {
