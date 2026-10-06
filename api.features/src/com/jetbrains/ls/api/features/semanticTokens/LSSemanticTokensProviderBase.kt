@@ -25,6 +25,16 @@ abstract class LSSemanticTokensProviderBase : LSSemanticTokensProvider {
     context(server: LSServer)
     protected abstract fun getSemanticTokens(psiFile: PsiFile, document: Document, documentRange: Range?): List<LSSemanticTokenWithRange>
 
+    /**
+     * The tokens of [psiFile], with ranges in [document] coordinates. For an injected file pass its
+     * [com.intellij.injected.editor.DocumentWindow]; the ranges are then in injected coordinates. Requires read access.
+     *
+     * @param documentRange `null` means tokens from the whole file
+     */
+    context(server: LSServer)
+    fun tokensFor(psiFile: PsiFile, document: Document, documentRange: Range?): List<LSSemanticTokenWithRange> =
+        getSemanticTokens(psiFile, document, documentRange)
+
     override fun createRegistry(): LSSemanticTokenRegistry {
         return LSSemanticTokenRegistry(supportedTokenTypes, supportedTokenModifiers)
     }

@@ -12,6 +12,7 @@ import com.jetbrains.ls.api.features.impl.common.location.LSResolveLocationComma
 import com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.move.LSCommonMoveProvider
 import com.jetbrains.ls.api.features.impl.common.qualifiedName.LSCommonQualifiedNameProvider
+import com.jetbrains.ls.api.features.impl.common.semanticTokens.LSHighlightingSemanticTokens
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.api.features.lsApiPlugin
 import com.jetbrains.ls.api.features.nativeIoPlugin
@@ -30,6 +31,7 @@ val LSCommonConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSResolveLocationCommandDescriptorProvider,
         LSCommonMoveProvider,
         LSCommonQualifiedNameProvider,
+        LSHighlightingSemanticTokens,
         ExtraPluginsProvider(
             plugins = listOf(nativeIoPlugin)
         ),

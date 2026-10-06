@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features
 
 import com.intellij.ide.plugins.PluginMainDescriptor
+import com.intellij.lang.Language
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
@@ -99,6 +100,12 @@ class LSConfiguration(
 
     fun languageFor(uri: URI): LSLanguage? {
         return languages.firstOrNull { it.matches(uri) }
+    }
+
+    /** The configured language of [language]: an exact match first, then the first one [language] is a dialect of. */
+    fun languageFor(language: Language): LSLanguage? {
+        return languages.firstOrNull { it.intellijLanguage == language }
+            ?: languages.firstOrNull { language.isKindOf(it.intellijLanguage) }
     }
 }
 
