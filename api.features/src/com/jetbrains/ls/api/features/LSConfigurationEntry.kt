@@ -2,7 +2,6 @@
 package com.jetbrains.ls.api.features
 
 import com.intellij.ide.plugins.PluginMainDescriptor
-import com.jetbrains.ls.api.core.launch.CheckoutBuildContributor
 import com.jetbrains.ls.api.core.launch.WorkspaceModuleMapper
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.imports.api.BuildToolDriver
@@ -23,17 +22,13 @@ interface LSLanguageSpecificConfigurationEntry : LSConfigurationEntry {
 /**
  * Registers a build tool. Its id is [BuildToolDriver.type]; [order] is a `LoadingOrder` string
  * (`first`, `last`, `after <id>`, ...). [moduleMapper] maps a workspace module back to this tool;
- * a tool whose importer writes no workspace modules registers none.
+ * a tool whose importer writes no workspace modules registers none. A driver that is a
+ * `CheckoutBuildDriver` registers here too and starts once per workspace instead of per import folder.
  */
 class BuildToolDriverEntry(
     val driver: BuildToolDriver,
     val order: String = "",
     val moduleMapper: WorkspaceModuleMapper? = null,
-) : LSConfigurationEntry
-
-/** Registers a build tool that compiles modules it did not import (see [CheckoutBuildContributor]). */
-class CheckoutBuildEntry(
-    val contributor: CheckoutBuildContributor,
 ) : LSConfigurationEntry
 
 /** Registers a [WorkspaceComponent]: state shared by every session of the workspace. */
