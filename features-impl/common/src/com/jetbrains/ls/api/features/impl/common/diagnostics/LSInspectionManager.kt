@@ -70,7 +70,7 @@ internal class LSInspectionManager(
                 return null
             }
 
-            fix.asModCommandAction()?.toLazyFix(context, fix.name)?.let { return it }
+            fix.asModCommandAction()?.toLazyFix(context)?.let { return it }
         }
 
         if (fix is LocalQuickFix) {
@@ -81,7 +81,7 @@ internal class LSInspectionManager(
 
 
             LocalQuickFixWithModCommandFallback.getFallbackModCommandActionFor(fix)
-                ?.toLazyFix(context, fix.name)
+                ?.toLazyFix(context)
                 ?.let { return it }
         }
 
