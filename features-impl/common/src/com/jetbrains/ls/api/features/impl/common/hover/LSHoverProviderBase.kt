@@ -4,7 +4,6 @@ package com.jetbrains.ls.api.features.impl.common.hover
 import com.intellij.lang.Language
 import com.intellij.lang.LanguageExtension
 import com.intellij.openapi.application.readAction
-import com.intellij.openapi.editor.Document
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
@@ -16,14 +15,12 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.features.hover.LSHoverProvider
-import com.jetbrains.ls.api.core.util.getDocumentationTargetAtPosition
+import com.jetbrains.ls.api.core.util.getDocumentationTargetsAndOriginAtPosition
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.Hover
 import com.jetbrains.lsp.protocol.HoverParams
 import com.jetbrains.lsp.protocol.MarkupContent
 import com.jetbrains.lsp.protocol.MarkupKindType
-import com.jetbrains.lsp.protocol.Position
-import com.jetbrains.lsp.protocol.Range
 import com.jetbrains.lsp.protocol.StringOrMarkupContent
 
 abstract class LSHoverProviderBase : LSHoverProvider {
@@ -37,29 +34,24 @@ abstract class LSHoverProviderBase : LSHoverProvider {
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction null
                 val document = virtualFile.findDocument() ?: return@readAction null
                 val offset = document.offsetByPosition(params.position)
-                val targets = psiFile
-                    .getDocumentationTargetAtPosition(offset)
-                    .filter { psiElement -> acceptTarget(psiElement) }
+                val (allTargets, originRange, injectedFile) = psiFile.getDocumentationTargetsAndOriginAtPosition(offset)
+                val targets = allTargets.filter { psiElement -> acceptTarget(psiElement) }
                 if (targets.isEmpty()) return@readAction null
 
+                // the targets of an injection are rendered from the injected file, where they were found
+                val from = injectedFile?.psiFile ?: psiFile
+                val fromOffset = injectedFile?.documentWindow?.hostToInjected(offset) ?: offset
                 val markdown = targets.mapNotNull { psiElement ->
-                    generateMarkdownForPsiElementTarget(psiElement, psiFile, offset)
+                    generateMarkdownForPsiElementTarget(psiElement, from, fromOffset)
                 }.joinToString("\n---\n")
                 if (markdown.isEmpty()) return@readAction null
 
                 Hover(
                     contents = Hover.Content.Markup(MarkupContent(MarkupKindType.Markdown, markdown)),
-                    range = findRange(psiFile, document, params.position),
+                    range = originRange?.toLspRange(document),
                 )
             }
         }
-    }
-
-    private fun findRange(psiFile: PsiFile, document: Document, position: Position): Range? {
-        val offset = document.offsetByPosition(position)
-        psiFile.findReferenceAt(offset)?.let { return it.element.textRange.toLspRange(document) }
-        psiFile.findElementAt(offset)?.let { return it.textRange.toLspRange(document) }
-        return null
     }
 
     context(server: LSServer, analysisContext: LSAnalysisContext)
