@@ -18,6 +18,7 @@ import { getOutputChannel } from './extension';
 import { internalConsoleOptionsFor } from './consoleOptions';
 import { errorMessage } from './buildTaskModel';
 import { lensLaunchConfig } from './lensLaunchModel';
+import { createRunOutputTerminalFactory } from './runTerminal';
 
 /**
  * The launch configuration types, one per way of running a program: a plain JVM, or one type per build tool.
@@ -167,11 +168,15 @@ export function registerDapServer(context: ExtensionContext) {
   // for a debugger it contributes, and throws otherwise; a product without a Bazel import (the Kotlin server)
   // declares no `intellij_bazel`, and that throw would end activation before the language client starts.
   const declared = declaredDebugTypes(context);
+  // The server runs every program itself and streams the output as `output` events; for a terminal `console` the
+  // tracker renders that stream in an integrated terminal, since nothing runs on the client to put there.
+  const runOutputTerminals = createRunOutputTerminalFactory();
   for (const type of [JVM_DEBUG_TYPE, LEGACY_JVM_DEBUG_TYPE, ...Object.values(DEBUG_TYPE_BY_TOOL)]) {
     if (!declared.has(type)) continue;
     context.subscriptions.push(
       debug.registerDebugAdapterDescriptorFactory(type, dapServerFactory),
       debug.registerDebugConfigurationProvider(type, debugConfigProvider),
+      debug.registerDebugAdapterTrackerFactory(type, runOutputTerminals),
     );
   }
 

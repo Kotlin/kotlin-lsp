@@ -9,10 +9,12 @@ export type InternalConsoleOptions = 'neverOpen' | 'openOnSessionStart' | 'openO
  *
  *  - `internalConsole`    → `openOnSessionStart`: program output is streamed to the Debug Console,
  *                           so open and focus it on every launch.
- *  - `integratedTerminal` → `neverOpen`: leave the Debug Console closed so it does not steal focus
- *                           from the integrated terminal VSCode focuses for the program.
- *  - `externalTerminal`   → `neverOpen`: the program runs in a separate OS window, so keep the
- *                           Debug Console closed and leave focus where it was.
+ *  - `integratedTerminal` → `neverOpen`: the streamed output is rendered in an integrated terminal
+ *                           (`runTerminal.ts`), so keep the Debug Console closed — it would show a
+ *                           copy of the same events on top of the terminal the user launched into.
+ *  - `externalTerminal`   → `neverOpen`: rendered in the integrated terminal too (the server runs
+ *                           the program, so there is no process to put in an OS window), so the
+ *                           Debug Console stays closed the same way.
  *  - `none`               → `neverOpen`: the adapter reports the output as `telemetry`, so the Debug
  *                           Console stays empty and there is nothing to open it for.
  *
