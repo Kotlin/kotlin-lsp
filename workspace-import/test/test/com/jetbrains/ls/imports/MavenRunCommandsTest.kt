@@ -15,6 +15,7 @@ import java.nio.file.Path
 
 class MavenRunCommandsTest {
     private val app = BuildUnit(projectPath = "app")
+    private val java = Path.of("/jdk/bin/java")
 
     @Test
     fun `build of one module compiles it and the modules it depends on`() {
@@ -40,7 +41,7 @@ class MavenRunCommandsTest {
     fun `java runs the entry on the module output and the written classpath`() {
         val root = Path.of("/work/project")
         val args = mavenJavaArgs(
-            java = Path.of("/jdk/bin/java"),
+            java = java,
             root = root,
             task = RunTask.Run(app, "com.acme.Main"),
             options = RunOptions(programArgs = listOf("--port", "8080")),
@@ -49,11 +50,11 @@ class MavenRunCommandsTest {
         )
         val classes = root.resolve("app").resolve("target").resolve("classes").toString()
         assertEquals(
-            listOf("/jdk/bin/java", "-Xmx1g", "-cp", "$classes${File.pathSeparator}/m2/a.jar${File.pathSeparator}/m2/b.jar", "com.acme.Main", "--port", "8080"),
+            listOf(java.toString(), "-Xmx1g", "-cp", "$classes${File.pathSeparator}/m2/a.jar${File.pathSeparator}/m2/b.jar", "com.acme.Main", "--port", "8080"),
             args,
         )
-        val modular = mavenJavaArgs(Path.of("/jdk/bin/java"), root, RunTask.Run(app, "acme.app/com.acme.Main"), RunOptions(), emptyList(), "")
-        assertEquals(listOf("/jdk/bin/java", "--module-path", classes, "-m", "acme.app/com.acme.Main"), modular)
+        val modular = mavenJavaArgs(java, root, RunTask.Run(app, "acme.app/com.acme.Main"), RunOptions(), emptyList(), "")
+        assertEquals(listOf(java.toString(), "--module-path", classes, "-m", "acme.app/com.acme.Main"), modular)
     }
 
     @Test
@@ -65,11 +66,11 @@ class MavenRunCommandsTest {
             args,
         )
         val root = Path.of("/work/project")
-        val javaArgs = mavenJavaArgs(Path.of("/jdk/bin/java"), root, RunTask.Run(testUnit, "com.acme.MainTest"), RunOptions(), emptyList(), "/m2/a.jar")
+        val javaArgs = mavenJavaArgs(java, root, RunTask.Run(testUnit, "com.acme.MainTest"), RunOptions(), emptyList(), "/m2/a.jar")
         val testClasses = root.resolve("app").resolve("target").resolve("test-classes").toString()
         val classes = root.resolve("app").resolve("target").resolve("classes").toString()
         assertEquals(
-            listOf("/jdk/bin/java", "-cp", "$testClasses${File.pathSeparator}$classes${File.pathSeparator}/m2/a.jar", "com.acme.MainTest"),
+            listOf(java.toString(), "-cp", "$testClasses${File.pathSeparator}$classes${File.pathSeparator}/m2/a.jar", "com.acme.MainTest"),
             javaArgs,
         )
     }
