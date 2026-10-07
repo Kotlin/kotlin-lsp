@@ -2,7 +2,6 @@
 package com.jetbrains.ls.imports
 
 import com.intellij.ide.starter.sdk.JdkDownloaderFacade
-import com.intellij.util.io.Decompressor
 import com.jetbrains.ls.api.run.RunOptions
 import com.jetbrains.ls.api.run.RunRequest
 import com.jetbrains.ls.api.run.RunTask
@@ -15,16 +14,8 @@ import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.LSP_GRADLE_JAVA_HO
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.DisabledOnOs
-import org.junit.jupiter.api.condition.OS
-import java.nio.file.Path
-import kotlin.io.path.createTempDirectory
 import kotlin.io.path.div
 import kotlin.io.path.exists
-import kotlin.io.path.writeText
-
-/** The Gradle version the fixture's wrapper properties pin; the run side gets the same one. */
-private const val FIXTURE_GRADLE_VERSION = "8.14"
 
 /**
  * Builds and runs an imported Gradle project through the live tool, end to end: a real import, then
@@ -37,16 +28,14 @@ private const val FIXTURE_GRADLE_VERSION = "8.14"
  * `intellij.build` command and a DAP build-tool launch drive.
  *
  * The fixture is an import test project, copied to a temporary directory because a build writes into the
- * project. Windows is excluded: the generated wrapper script is POSIX, and the unit layers cover the Windows
- * argv shapes.
+ * project. It has no wrapper script, and a test machine has no `gradle` on the `PATH`, so the run must start the
+ * Gradle the sync ran.
  */
-@DisabledOnOs(OS.WINDOWS)
 class GradleRunE2eTest {
 
     @Test
     fun `an imported gradle project builds and runs through the tool`() {
         val projectDir = copyRunFixture("gradle/IdeaPluginCustomSourceSets")
-        writeGradleWrapper(projectDir)
         withSystemProperties(
             LSP_GRADLE_JAVA_HOME_PROPERTY to JdkDownloaderFacade.jdk17.home.toString(),
             LSP_GRADLE_DAEMON_NO_IDLE_TIMEOUT to "true",
@@ -74,23 +63,5 @@ class GradleRunE2eTest {
                 }
             }
         }
-    }
-
-    /**
-     * A `gradlew` that execs the downloaded distribution of the version the wrapper properties pin, so
-     * [com.jetbrains.ls.imports.gradle.GradleTool.run] launches the same Gradle the sync used. The fixture has the
-     * properties but not the script, and `gradle` is not on the `PATH` of a test machine.
-     */
-    private fun writeGradleWrapper(projectDir: Path) {
-        val zip = downloadGradleDistributionZip(FIXTURE_GRADLE_VERSION)
-        val distDir = createTempDirectory("gradle-dist-")
-        Decompressor.Zip(zip).extract(distDir)
-        val gradle = distDir / "gradle-$FIXTURE_GRADLE_VERSION" / "bin" / "gradle"
-        @Suppress("IO_FILE_USAGE")
-        gradle.toFile().setExecutable(true)
-        val wrapper = projectDir / "gradlew"
-        wrapper.writeText($$"#!/bin/sh\nexec \"$$gradle\" \"$@\"\n")
-        @Suppress("IO_FILE_USAGE")
-        wrapper.toFile().setExecutable(true)
     }
 }

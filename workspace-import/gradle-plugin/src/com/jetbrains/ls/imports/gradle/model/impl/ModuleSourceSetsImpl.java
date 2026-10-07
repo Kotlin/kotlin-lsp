@@ -12,10 +12,12 @@ public final class ModuleSourceSetsImpl implements ModuleSourceSets {
 
     private final @NotNull Set<@NotNull ModuleSourceSet> sourceSets;
     private final @Nullable String moduleCoordinate;
+    private final @Nullable String gradleHome;
 
-    public ModuleSourceSetsImpl(@NotNull Set<@NotNull ModuleSourceSet> sourceSets, @Nullable String moduleCoordinate) {
+    public ModuleSourceSetsImpl(@NotNull Set<@NotNull ModuleSourceSet> sourceSets, @Nullable String moduleCoordinate, @Nullable String gradleHome) {
         this.sourceSets = sourceSets;
         this.moduleCoordinate = moduleCoordinate;
+        this.gradleHome = gradleHome;
     }
 
     @Override
@@ -26,5 +28,10 @@ public final class ModuleSourceSetsImpl implements ModuleSourceSets {
     @Override
     public @Nullable String getModuleCoordinate() {
         return moduleCoordinate;
+    }
+
+    @Override
+    public @Nullable String getGradleHome() {
+        return gradleHome;
     }
 }

@@ -179,8 +179,12 @@ class GradleTool(
     @Volatile
     private var syncJavaHome: String? = parameters.options.javaHome?.toString()
 
+    /** The Gradle the last sync ran. Without a wrapper, the Tooling API downloads it, so it is not on the `PATH`. */
+    @Volatile
+    private var syncGradleHome: String? = null
+
     /**
-     * One `gradle` process per request: the wrapper of the project, or `gradle` on the `PATH`. `JAVA_HOME` is the
+     * One `gradle` process per request, see [gradleExecutable]. `JAVA_HOME` is the
      * JDK of the import, so the wrapper starts a JVM the Gradle version supports. The program is forked by the
      * daemon, so its arguments, environment and working directory go through the init script; see
      * [gradleInitScript]. With `debug` the JDWP agent travels as a system property, and the handle reports
@@ -245,12 +249,18 @@ class GradleTool(
         return dir
     }
 
-    /** `gradlew` (`gradlew.bat`) in the project directory when the project ships one, else `gradle` (`gradle.bat`). */
+    /**
+     * `gradlew` (`gradlew.bat`) in the project directory when the project ships one, else the `gradle` (`gradle.bat`)
+     * of the last sync, else `gradle` (`gradle.bat`) on the `PATH`.
+     */
     @OptIn(LowLevelLocalMachineAccess::class)
     private fun gradleExecutable(): String {
         val windows = OS.CURRENT == OS.Windows
         val wrapper = parameters.projectDirectory / if (windows) "gradlew.bat" else "gradlew"
-        return if (wrapper.isRegularFile()) wrapper.toString() else if (windows) "gradle.bat" else "gradle"
+        if (wrapper.isRegularFile()) return wrapper.toString()
+        val name = if (windows) "gradle.bat" else "gradle"
+        val synced = syncGradleHome?.let { Path.of(it, "bin", name) }
+        return if (synced != null && synced.isRegularFile()) synced.toString() else name
     }
 
     /**
@@ -280,6 +290,7 @@ class GradleTool(
             connection.use { projectConnection ->
                 withDaemonInitScripts { daemonInitScripts ->
                     val metadata = executeGradleSync(projectConnection, channel, daemonInitScripts, jdkToUse)
+                    syncGradleHome = metadata.gradleHome
                     channel.trySend(
                         ImportEvent.UpdateWorkspaceModel(
                             toStorage(

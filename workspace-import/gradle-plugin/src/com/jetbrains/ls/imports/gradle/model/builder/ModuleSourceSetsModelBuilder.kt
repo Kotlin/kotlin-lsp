@@ -47,7 +47,7 @@ class ModuleSourceSetsModelBuilder : ToolingModelBuilder {
             result.addAll(androidSourceSets)
         }
         if (!result.isEmpty()) {
-            return ModuleSourceSetsImpl(result, project.moduleCoordinate())
+            return ModuleSourceSetsImpl(result, project.moduleCoordinate(), project.gradle.gradleHomeDir?.path)
         }
         return null
     }
