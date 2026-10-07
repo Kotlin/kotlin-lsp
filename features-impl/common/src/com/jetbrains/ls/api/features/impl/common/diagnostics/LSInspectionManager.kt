@@ -31,7 +31,8 @@ private val LOG = logger<LSInspectionManager>()
 private const val MAX_FLATTENED_INSPECTION_FIXES = 5
 
 internal class LSInspectionManager(
-    private val quickFixBlacklist: Blacklist = Blacklist()) {
+    private val quickFixBlacklist: Blacklist = Blacklist()
+) {
 
     context(server: LSServer)
     internal fun createDiagnosticData(descriptor: ProblemDescriptor): SimpleDiagnosticData {
