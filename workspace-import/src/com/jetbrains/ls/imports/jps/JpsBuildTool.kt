@@ -157,7 +157,7 @@ class JpsBuildTool(
     override fun sync(context: BuildToolContext, request: SyncRequest): Flow<ImportEvent> = channelFlow {
         try {
             val startedAt = System.currentTimeMillis()
-            if (!request.force && request.toolRequest == null && !inputsChangedSince(lastSyncStartedAt)) {
+            if (request.verifiesInputs && !inputsChangedSince(lastSyncStartedAt)) {
                 send(ImportEvent.WorkspaceModelNotChanged(request.targetWatermark))
                 return@channelFlow
             }

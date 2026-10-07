@@ -10,6 +10,7 @@ import com.jetbrains.ls.imports.api.BuildTool
 import com.jetbrains.ls.imports.api.BuildToolContext
 import com.jetbrains.ls.imports.api.BuildToolDriverContext
 import com.jetbrains.ls.imports.api.ImportRequest
+import com.jetbrains.ls.imports.api.LostChangesRequest
 import com.jetbrains.ls.imports.api.SyncRequest
 import com.jetbrains.ls.imports.api.ToolFileListener
 import com.jetbrains.ls.imports.api.modifiedSince
@@ -82,8 +83,8 @@ class JsonTool(
         }
 
         override fun lost() {
-            LOG.info("The file watcher lost changes, so $workspaceJson may have changed too")
-            reimportRequestsFlow.tryEmit(JsonReimport)
+            LOG.info("The file watcher lost changes, so $workspaceJson may have changed too; the sync verifies it on disk")
+            reimportRequestsFlow.tryEmit(LostChangesRequest)
         }
     }
 
@@ -100,7 +101,7 @@ class JsonTool(
 
     override fun sync(context: BuildToolContext, request: SyncRequest): Flow<ImportEvent> = channelFlow {
         val startedAt = System.currentTimeMillis()
-        if (!request.force && request.toolRequest == null && !inputChangedSince(lastSyncStartedAt)) {
+        if (request.verifiesInputs && !inputChangedSince(lastSyncStartedAt)) {
             send(ImportEvent.WorkspaceModelNotChanged(request.targetWatermark))
             return@channelFlow
         }

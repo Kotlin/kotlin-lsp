@@ -20,6 +20,7 @@ import com.jetbrains.ls.imports.api.BuildTool
 import com.jetbrains.ls.imports.api.BuildToolContext
 import com.jetbrains.ls.imports.api.BuildToolDriverContext
 import com.jetbrains.ls.imports.api.ImportRequest
+import com.jetbrains.ls.imports.api.LostChangesRequest
 import com.jetbrains.ls.imports.api.SyncRequest
 import com.jetbrains.ls.imports.api.ToolFileListener
 import com.jetbrains.ls.imports.api.modifiedSince
@@ -97,7 +98,7 @@ class GradleTool(
     override fun sync(context: BuildToolContext, request: SyncRequest): Flow<ImportEvent> =
         channelFlow {
             val startedAt = System.currentTimeMillis()
-            if (!request.force && request.toolRequest == null && !inputsChangedSince(lastSyncStartedAt, toolContext.entityStorage())) {
+            if (request.verifiesInputs && !inputsChangedSince(lastSyncStartedAt, toolContext.entityStorage())) {
                 send(ImportEvent.WorkspaceModelNotChanged(request.targetWatermark))
                 return@channelFlow
             }
@@ -135,8 +136,8 @@ class GradleTool(
         }
 
         override fun lost() {
-            LOG.info("The file watcher lost changes, so a Gradle settings file may have changed too")
-            reimportRequestsFlow.tryEmit(GradleReimport)
+            LOG.info("The file watcher lost changes, so a Gradle settings file may have changed too; the sync verifies it on disk")
+            reimportRequestsFlow.tryEmit(LostChangesRequest)
         }
     }
 
