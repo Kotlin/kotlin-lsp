@@ -157,7 +157,6 @@ export class TestTree {
     const item =
       this.entries.get(id)?.item ??
       this.controller.createTestItem(id, dto.displayName, Uri.parse(dto.uri));
-    item.label = dto.displayName;
     item.range = new Range(
       new Position(dto.range.start.line, dto.range.start.character),
       new Position(dto.range.end.line, dto.range.end.character),

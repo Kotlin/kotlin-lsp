@@ -357,6 +357,35 @@ describe('the tree', () => {
   });
 });
 
+describe('the name a run gave a discovered node', () => {
+  const METHOD_ID = 'moduleA/com.example.SampleTest#testOne';
+  const dtos = [
+    classDto('moduleA', 'com.example.SampleTest', URI_A),
+    methodDto('moduleA', 'com.example.SampleTest', 'testOne', URI_A),
+  ];
+
+  test('outlives a discovery of its file, which knows the method name only', () => {
+    const { tree } = makeTree();
+    tree.sync(fileScope(URI_A), dtos);
+    tree.get(METHOD_ID)!.item.label = 'Addition returns correct result';
+
+    tree.sync(fileScope(URI_A), dtos);
+
+    assert.equal(tree.get(METHOD_ID)?.item.label, 'Addition returns correct result');
+  });
+
+  test('goes with the node, so a test that comes back has the name discovery gives it', () => {
+    const { tree } = makeTree();
+    tree.sync(fileScope(URI_A), dtos);
+    tree.get(METHOD_ID)!.item.label = 'Addition returns correct result';
+
+    tree.sync(fileScope(URI_A), [dtos[0]]);
+    tree.sync(fileScope(URI_A), dtos);
+
+    assert.equal(tree.get(METHOD_ID)?.item.label, 'testOne');
+  });
+});
+
 describe('a node the runner reported but discovery never did', () => {
   const CLASS_ID = 'com.example.SampleTest';
   const TEST_ID = idOfMethod(CLASS_ID, 'testOne');

@@ -7,7 +7,7 @@ import type { TestLaunchGroup } from './testPlan';
 import type { TestTree } from './testTree';
 
 export interface TestRunNode {
-  readonly label: string;
+  label: string;
   readonly uri: Uri | undefined;
 }
 

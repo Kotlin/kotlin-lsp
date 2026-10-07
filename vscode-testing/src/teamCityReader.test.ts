@@ -362,6 +362,76 @@ describe('which node a runner message is about', () => {
   });
 });
 
+describe('what a node is called', () => {
+  const METHOD_ID = 'moduleA/com.example.Foo#test';
+
+  test('a discovered method takes the name the runner started it with', () => {
+    // JUnit 5 reports the @DisplayName value, and discovery knows the method name only.
+    const { feed, tree } = readerFor();
+
+    feed(
+      teamcity('testStarted', {
+        nodeId: 'n-1',
+        locationHint: METHOD_HINT,
+        name: 'Addition returns correct result',
+      }),
+    );
+
+    assert.equal(tree.get(METHOD_ID)?.item.label, 'Addition returns correct result');
+  });
+
+  test('a discovered class takes the name the runner started it with', () => {
+    const { feed, tree } = readerFor();
+
+    feed(
+      teamcity('testSuiteStarted', { nodeId: 's-1', locationHint: CLASS_HINT, name: 'Calculator' }),
+    );
+
+    assert.equal(tree.get('moduleA/com.example.Foo')?.item.label, 'Calculator');
+  });
+
+  test('a name is the label as the runner wrote it, with the class in front of it too', () => {
+    // TestNG names a test `Foo.test`, and the IDE shows it so.
+    const { feed, tree } = readerFor();
+
+    feed(
+      teamcity('testSuiteStarted', {
+        nodeId: 'com.example.Foo',
+        locationHint: CLASS_HINT,
+        name: 'Foo',
+      }),
+      teamcity('testStarted', {
+        nodeId: 'com.example.Foo/test',
+        parentNodeId: 'com.example.Foo',
+        locationHint: METHOD_HINT,
+        name: 'Foo.test',
+      }),
+    );
+
+    assert.equal(tree.get(METHOD_ID)?.item.label, 'Foo.test');
+  });
+
+  test('the spaces around a name are trimmed', () => {
+    const { feed, tree } = readerFor();
+
+    feed(teamcity('testStarted', { locationHint: METHOD_HINT, name: '  adds numbers \n' }));
+
+    assert.equal(tree.get(METHOD_ID)?.item.label, 'adds numbers');
+  });
+
+  test('a node the runner names with nothing keeps the name discovery gave it', () => {
+    const { feed, tree } = readerFor();
+
+    feed(
+      teamcity('testStarted', { locationHint: METHOD_HINT }),
+      teamcity('testStarted', { locationHint: PARAM_HINT, name: '  ' }),
+    );
+
+    assert.equal(tree.get(METHOD_ID)?.item.label, 'test');
+    assert.equal(tree.get('moduleA/com.example.Foo#paramTest')?.item.label, 'paramTest');
+  });
+});
+
 describe('what a runner message reports', () => {
   test('an assertion failure fails the test, with the stacktrace kept in its text', () => {
     const { feed, calls, messages } = readerFor();

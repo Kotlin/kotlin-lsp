@@ -117,6 +117,8 @@ export class TeamCityReader {
   private started(attributes: MessageAttributes): TestRunNode | undefined {
     const node = this.named(attributes);
     if (node && attributes.name) this.nodesByName.set(attributes.name, node);
+    const label = attributes.name?.trim();
+    if (node && label) node.label = label;
     return node;
   }
 
