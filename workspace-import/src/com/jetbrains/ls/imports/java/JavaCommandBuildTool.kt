@@ -25,7 +25,7 @@ import com.jetbrains.ls.imports.api.BuildToolDriver
 import com.jetbrains.ls.imports.api.BuildToolDriverContext
 import com.jetbrains.ls.imports.api.SyncRequest
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
-import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
+import com.jetbrains.ls.imports.api.ImportEvent
 import com.jetbrains.ls.imports.api.putEnvironment
 import fleet.util.async.Resource
 import fleet.util.async.map

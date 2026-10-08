@@ -3,7 +3,7 @@ package com.jetbrains.ls.imports
 
 import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
-import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
+import com.jetbrains.ls.imports.api.ImportEvent
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.bufferPhases
 import kotlinx.coroutines.flow.flow

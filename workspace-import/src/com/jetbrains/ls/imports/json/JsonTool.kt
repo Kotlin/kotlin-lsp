@@ -17,7 +17,7 @@ import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
-import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
+import com.jetbrains.ls.imports.api.ImportEvent
 import com.jetbrains.ls.imports.utils.LsImportBundle
 import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
 import com.intellij.openapi.diagnostic.logger

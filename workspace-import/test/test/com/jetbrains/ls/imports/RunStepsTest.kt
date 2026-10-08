@@ -12,7 +12,7 @@ import com.jetbrains.ls.api.run.run
 import com.jetbrains.ls.imports.api.BuildTool
 import com.jetbrains.ls.imports.api.BuildToolContext
 import com.jetbrains.ls.imports.api.SyncRequest
-import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
+import com.jetbrains.ls.imports.api.ImportEvent
 import fleet.util.async.Resource
 import fleet.util.async.resourceOf
 import kotlinx.coroutines.channels.Channel

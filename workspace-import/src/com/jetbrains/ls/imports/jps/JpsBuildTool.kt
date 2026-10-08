@@ -52,6 +52,7 @@ import com.intellij.util.lang.JavaVersion
 import com.jetbrains.ls.imports.api.BuildTool
 import com.jetbrains.ls.imports.api.BuildToolContext
 import com.jetbrains.ls.imports.api.BuildToolDriverContext
+import com.jetbrains.ls.imports.api.ImportEvent
 import com.jetbrains.ls.imports.api.ImportRequest
 import com.jetbrains.ls.imports.api.SyncRequest
 import com.jetbrains.ls.imports.api.ToolFileWatcher
@@ -150,11 +151,11 @@ class JpsBuildTool(
     private val parameters: WorkspaceImportParameters,
 ) : BuildTool {
 
-    override fun sync(context: BuildToolContext, request: SyncRequest): Flow<WorkspaceImporter.ImportEvent> = channelFlow {
+    override fun sync(context: BuildToolContext, request: SyncRequest): Flow<ImportEvent> = channelFlow {
         try {
             val startedAt = System.currentTimeMillis()
             if (!request.force && request.toolRequest == null && !inputsChangedSince(lastSyncStartedAt)) {
-                send(WorkspaceImporter.ImportEvent.WorkspaceModelNotChanged(request.targetWatermark))
+                send(ImportEvent.WorkspaceModelNotChanged(request.targetWatermark))
                 return@channelFlow
             }
             // The baseline is taken before the import reads its inputs, so a change landing while it runs
@@ -170,7 +171,7 @@ class JpsBuildTool(
             }
         } catch (e: Throwable) {
             rethrowControlFlowException(e)
-            send(WorkspaceImporter.ImportEvent.Failed(e))
+            send(ImportEvent.Failed(e))
         }
     }.onCompletion { cause -> if (cause != null) lastSyncStartedAt = null }
 
@@ -216,7 +217,7 @@ class JpsBuildTool(
      * Publishes the `.idea` model as soon as it is read, then republishes it after each linked Maven/Gradle project
      * is imported into it, so the analyzer can start indexing the JPS modules without waiting for the builds.
      */
-    private fun importWorkspace(context: BuildToolContext, request: SyncRequest): Flow<WorkspaceImporter.ImportEvent> = channelFlow {
+    private fun importWorkspace(context: BuildToolContext, request: SyncRequest): Flow<ImportEvent> = channelFlow {
         val virtualFileUrlManager = context.virtualFileUrlManager
         val projectDirectory = parameters.projectDirectory
         if (!JpsDriver.canImportWorkspace(projectDirectory)) return@channelFlow
@@ -231,9 +232,9 @@ class JpsBuildTool(
             importJpsModel(
                 storage, projectDirectory, virtualFileUrlManager, model, macroExpandMap, parameters,
             ) { depName ->
-                trySend(WorkspaceImporter.ImportEvent.UnresolvedDependency(depName))
+                trySend(ImportEvent.UnresolvedDependency(depName))
             }
-            send(WorkspaceImporter.ImportEvent.UpdateWorkspaceModel(storage.toSnapshot(), request.targetWatermark))
+            send(ImportEvent.UpdateWorkspaceModel(storage.toSnapshot(), request.targetWatermark))
 
             val linkedProjects = findLinkedProjects(projectDirectory, macroExpandMap, toolContext)
                 .map { (path, toolFactory) -> path to toolFactory(parameters.copy(projectFileOrDirectory = path)) }
@@ -245,9 +246,9 @@ class JpsBuildTool(
                 // The same request: a linked project is part of this sync, so its answer covers the same watermark.
                 linkedTool.sync(context, request).collect { event ->
                     when (event) {
-                        is WorkspaceImporter.ImportEvent.UpdateWorkspaceModel -> {
+                        is ImportEvent.UpdateWorkspaceModel -> {
                             storage.applyChangesWithDeduplication(event.storage)
-                            send(WorkspaceImporter.ImportEvent.UpdateWorkspaceModel(storage.toSnapshot(), request.targetWatermark))
+                            send(ImportEvent.UpdateWorkspaceModel(storage.toSnapshot(), request.targetWatermark))
                         }
                         // Includes Failed: a linked project that cannot be built is reported, but does not take back
                         // the `.idea` model already published (and neither the other linked projects).

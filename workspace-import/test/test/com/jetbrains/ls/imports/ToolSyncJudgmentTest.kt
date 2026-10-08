@@ -20,7 +20,7 @@ import com.jetbrains.ls.imports.api.BuildToolDriverContext
 import com.jetbrains.ls.imports.api.SyncRequest
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
-import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
+import com.jetbrains.ls.imports.api.ImportEvent
 import com.jetbrains.ls.imports.gradle.GradleTool
 import com.jetbrains.ls.imports.json.JsonTool
 import com.jetbrains.ls.imports.jps.JpsBuildTool

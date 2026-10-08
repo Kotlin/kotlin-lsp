@@ -19,7 +19,7 @@ import com.jetbrains.ls.imports.api.BuildToolDriver
 import com.jetbrains.ls.imports.api.BuildToolDriverContext
 import com.jetbrains.ls.imports.api.SyncRequest
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
-import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
+import com.jetbrains.ls.imports.api.ImportEvent
 import com.jetbrains.ls.test.api.utils.testPluginSet
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.fail

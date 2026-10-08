@@ -36,7 +36,7 @@ import com.jetbrains.ls.imports.api.putEnvironment
 import com.jetbrains.ls.api.run.freePort
 import com.jetbrains.ls.api.run.jdwpAgent
 import com.jetbrains.ls.api.run.toRunHandle
-import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
+import com.jetbrains.ls.imports.api.ImportEvent
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.addInitScripts
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.configureEnvironment
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.configureLogging

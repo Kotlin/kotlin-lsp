@@ -2,8 +2,8 @@
 package com.jetbrains.ls.imports.utils
 
 import com.intellij.util.io.awaitExit
+import com.jetbrains.ls.imports.api.ImportEvent
 import com.jetbrains.ls.imports.api.WorkspaceImportException
-import com.jetbrains.ls.imports.api.WorkspaceImporter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.Dispatchers
@@ -11,7 +11,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-internal suspend fun ProcessBuilder.runWithErrorReporting(toolName: String, events: SendChannel<WorkspaceImporter.ImportEvent>) {
+internal suspend fun ProcessBuilder.runWithErrorReporting(toolName: String, events: SendChannel<ImportEvent>) {
     val exitValue = withContext(Dispatchers.IO) {
         val process = try {
             start()
@@ -35,19 +35,19 @@ internal suspend fun ProcessBuilder.runWithErrorReporting(toolName: String, even
     }
 }
 
-internal fun CoroutineScope.logOutput(process: Process, events: SendChannel<WorkspaceImporter.ImportEvent>): Job {
+internal fun CoroutineScope.logOutput(process: Process, events: SendChannel<ImportEvent>): Job {
 
     return launch {
         launch(Dispatchers.IO) {
             process.inputStream.bufferedReader().use { reader ->
                 reader.forEachLine {
-                    events.trySend(WorkspaceImporter.ImportEvent.StdOutput(it))
+                    events.trySend(ImportEvent.StdOutput(it))
                 }
             }
         }
         launch(Dispatchers.IO) {
             process.errorStream.bufferedReader().forEachLine { it ->
-                events.trySend(WorkspaceImporter.ImportEvent.ErrorOutput(it))
+                events.trySend(ImportEvent.ErrorOutput(it))
             }
         }
     }
