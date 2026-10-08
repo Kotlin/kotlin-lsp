@@ -17,7 +17,7 @@ import com.jetbrains.ls.imports.api.BuildTool
 import com.jetbrains.ls.imports.api.BuildToolContext
 import com.jetbrains.ls.imports.api.BuildToolDriver
 import com.jetbrains.ls.imports.api.BuildToolDriverContext
-import com.jetbrains.ls.imports.api.FullImportRequest
+import com.jetbrains.ls.imports.api.SyncRequest
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
 import com.jetbrains.ls.test.api.utils.testPluginSet
@@ -62,7 +62,7 @@ internal fun withLiveTool(
             driver.start(toolContext, parameters).use { tool ->
                 val reporter = LoggingWorkspaceProgressReporter()
                 var storage: EntityStorage? = null
-                tool.sync(BuildToolContext(handle.project, urlManager), FullImportRequest).collect { event ->
+                tool.sync(BuildToolContext(handle.project, urlManager), SyncRequest(targetWatermark = 0, changes = null, toolRequest = null)).collect { event ->
                     when (event) {
                         is ImportEvent.UpdateWorkspaceModel -> storage = event.storage
                         is ImportEvent.Failed -> throw AssertionError(

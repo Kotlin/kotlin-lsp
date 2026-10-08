@@ -23,6 +23,7 @@ import com.jetbrains.ls.imports.api.BuildToolContext
 import com.jetbrains.ls.imports.api.BuildToolDriverContext
 import com.jetbrains.ls.imports.api.FullImportRequest
 import com.jetbrains.ls.imports.api.ImportRequest
+import com.jetbrains.ls.imports.api.SyncRequest
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceException
 import com.jetbrains.ls.imports.api.WorkspaceImportException
@@ -107,8 +108,8 @@ class MavenTool(
 
     // The `catch` operator, not a try around `emitAll`: a try also catches what the collector threw through
     // `emit`, and the `Failed` it then emits violates flow exception transparency. `catch` sees upstream only.
-    override fun sync(context: BuildToolContext, request: ImportRequest): Flow<ImportEvent> =
-        flow { emitAll(importWorkspace(context.virtualFileUrlManager)) }
+    override fun sync(context: BuildToolContext, request: SyncRequest): Flow<ImportEvent> =
+        flow { emitAll(importWorkspace(context.virtualFileUrlManager, request.targetWatermark)) }
             // A sync may list poms the last model did not; their directories must be watched from now on.
             .onEach { event -> if (event is ImportEvent.UpdateWorkspaceModel) registerWatchedDirectories(event.storage) }
             .catch { e ->
@@ -207,7 +208,7 @@ class MavenTool(
      * roots that only exist once the code generators have run (`model-process-sources`), so the analyzer does not wait
      * for the generating plugins before it can resolve the project's dependencies.
      */
-    private fun importWorkspace(virtualFileUrlManager: VirtualFileUrlManager): Flow<ImportEvent> = channelFlow {
+    private fun importWorkspace(virtualFileUrlManager: VirtualFileUrlManager, watermark: Long): Flow<ImportEvent> = channelFlow {
         val projectDirectory = parameters.projectDirectory
         val options = parameters.options
         val pomFile = rootPomFile
@@ -235,7 +236,7 @@ class MavenTool(
             is SuccessResult -> result
         }
         send(ImportEvent.ProgressStatus("Maven model collected, commiting..."))
-        send(ImportEvent.UpdateWorkspaceModel(toStorage(modelWithDeps, null, pomFile, virtualFileUrlManager, channel, mavenJavaHome)))
+        send(ImportEvent.UpdateWorkspaceModel(toStorage(modelWithDeps, null, pomFile, virtualFileUrlManager, channel, mavenJavaHome), watermark))
 
         if (skipGenerateSources(options)) {
             LOG.info("Skipping source generation: skipGenerateSources is set for the project or the session")
@@ -257,7 +258,8 @@ class MavenTool(
         send(ImportEvent.ProgressStatus("Maven model collected, commiting..."))
         send(
             ImportEvent.UpdateWorkspaceModel(
-                toStorage(modelWithDeps, modelWithGeneratedSources, pomFile, virtualFileUrlManager, channel, mavenJavaHome)
+                toStorage(modelWithDeps, modelWithGeneratedSources, pomFile, virtualFileUrlManager, channel, mavenJavaHome),
+                watermark,
             )
         )
     }.buffer(Channel.UNLIMITED)

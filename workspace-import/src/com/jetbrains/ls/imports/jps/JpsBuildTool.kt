@@ -51,8 +51,8 @@ import com.intellij.util.lang.JavaVersion
 import com.jetbrains.ls.imports.api.BuildTool
 import com.jetbrains.ls.imports.api.BuildToolContext
 import com.jetbrains.ls.imports.api.BuildToolDriverContext
-import com.jetbrains.ls.imports.api.FullImportRequest
 import com.jetbrains.ls.imports.api.ImportRequest
+import com.jetbrains.ls.imports.api.SyncRequest
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceException
 import com.jetbrains.ls.imports.api.WorkspaceImportException
@@ -149,9 +149,9 @@ class JpsBuildTool(
     private val parameters: WorkspaceImportParameters,
 ) : BuildTool {
 
-    override fun sync(context: BuildToolContext, request: ImportRequest): Flow<WorkspaceImporter.ImportEvent> = flow {
+    override fun sync(context: BuildToolContext, request: SyncRequest): Flow<WorkspaceImporter.ImportEvent> = flow {
         try {
-            emitAll(importWorkspace(context))
+            emitAll(importWorkspace(context, request))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
@@ -174,7 +174,7 @@ class JpsBuildTool(
      * Publishes the `.idea` model as soon as it is read, then republishes it after each linked Maven/Gradle project
      * is imported into it, so the analyzer can start indexing the JPS modules without waiting for the builds.
      */
-    private fun importWorkspace(context: BuildToolContext): Flow<WorkspaceImporter.ImportEvent> = channelFlow {
+    private fun importWorkspace(context: BuildToolContext, request: SyncRequest): Flow<WorkspaceImporter.ImportEvent> = channelFlow {
         val virtualFileUrlManager = context.virtualFileUrlManager
         val projectDirectory = parameters.projectDirectory
         if (!JpsDriver.canImportWorkspace(projectDirectory)) return@channelFlow
@@ -205,7 +205,7 @@ class JpsBuildTool(
             ) { depName ->
                 trySend(WorkspaceImporter.ImportEvent.UnresolvedDependency(depName))
             }
-            send(WorkspaceImporter.ImportEvent.UpdateWorkspaceModel(storage.toSnapshot()))
+            send(WorkspaceImporter.ImportEvent.UpdateWorkspaceModel(storage.toSnapshot(), request.targetWatermark))
 
             val linkedProjects = findLinkedProjects(projectDirectory, macroExpandMap, toolContext)
                 .map { (path, toolFactory) -> path to toolFactory(parameters.copy(projectFileOrDirectory = path)) }
@@ -214,11 +214,12 @@ class JpsBuildTool(
             linkedTools.value = linkedProjects.map { it.second }
             linkedProjects.forEach { (path, linkedTool) ->
                 LOG.info("Importing linked project: $path")
-                linkedTool.sync(context, FullImportRequest).collect { event ->
+                // The same request: a linked project is part of this sync, so its answer covers the same watermark.
+                linkedTool.sync(context, request).collect { event ->
                     when (event) {
                         is WorkspaceImporter.ImportEvent.UpdateWorkspaceModel -> {
                             storage.applyChangesWithDeduplication(event.storage)
-                            send(WorkspaceImporter.ImportEvent.UpdateWorkspaceModel(storage.toSnapshot()))
+                            send(WorkspaceImporter.ImportEvent.UpdateWorkspaceModel(storage.toSnapshot(), request.targetWatermark))
                         }
                         // Includes Failed: a linked project that cannot be built is reported, but does not take back
                         // the `.idea` model already published (and neither the other linked projects).

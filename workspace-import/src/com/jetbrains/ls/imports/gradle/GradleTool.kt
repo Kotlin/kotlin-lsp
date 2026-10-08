@@ -23,6 +23,7 @@ import com.jetbrains.ls.imports.api.BuildToolContext
 import com.jetbrains.ls.imports.api.BuildToolDriverContext
 import com.jetbrains.ls.imports.api.FullImportRequest
 import com.jetbrains.ls.imports.api.ImportRequest
+import com.jetbrains.ls.imports.api.SyncRequest
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
@@ -93,8 +94,8 @@ class GradleTool(
 
     // The `catch` operator, not a try around `emitAll`: a try also catches what the collector threw through
     // `emit`, and the `Failed` it then emits violates flow exception transparency. `catch` sees upstream only.
-    override fun sync(context: BuildToolContext, request: ImportRequest): Flow<ImportEvent> =
-        flow { emitAll(importWorkspace(context.project, context.virtualFileUrlManager)) }
+    override fun sync(context: BuildToolContext, request: SyncRequest): Flow<ImportEvent> =
+        flow { emitAll(importWorkspace(context.project, context.virtualFileUrlManager, request.targetWatermark)) }
             // A sync may list build scripts the last model did not; their directories must be watched from now on.
             .onEach { event -> if (event is ImportEvent.UpdateWorkspaceModel) registerWatchedDirectories(event.storage) }
             .catch { e ->
@@ -289,6 +290,7 @@ class GradleTool(
     private fun importWorkspace(
         project: Project,
         virtualFileUrlManager: VirtualFileUrlManager,
+        watermark: Long,
     ): Flow<ImportEvent> = channelFlow {
         val projectDirectory = parameters.projectDirectory
         if (!GradleDriver.canImportWorkspace(projectDirectory)) return@channelFlow
@@ -317,7 +319,8 @@ class GradleTool(
                                 virtualFileUrlManager,
                                 channel,
                                 jdkToUse
-                            )
+                            ),
+                            watermark,
                         )
                     )
                     channel.trySend(ImportEvent.StdOutput("Gradle execution complete"))

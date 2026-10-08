@@ -8,7 +8,7 @@ import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.jetbrains.ls.imports.api.BuildTool
 import com.jetbrains.ls.imports.api.BuildToolContext
 import com.jetbrains.ls.imports.api.BuildToolDriverContext
-import com.jetbrains.ls.imports.api.ImportRequest
+import com.jetbrains.ls.imports.api.SyncRequest
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportProgressReporter
@@ -21,7 +21,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -51,7 +50,7 @@ class JsonTool(
         toolContext.watcher.watch(parameters.projectDirectory)
     }
 
-    override fun sync(context: BuildToolContext, request: ImportRequest): Flow<ImportEvent> = channelFlow {
+    override fun sync(context: BuildToolContext, request: SyncRequest): Flow<ImportEvent> = channelFlow {
         val progress = object : WorkspaceImportProgressReporter {
             override fun onUnresolvedDependency(depName: String) { trySend(ImportEvent.UnresolvedDependency(depName)) }
             override fun onStdOutput(line: String) { trySend(ImportEvent.StdOutput(line)) }
@@ -60,7 +59,7 @@ class JsonTool(
         }
         try {
             importWorkspace(context.virtualFileUrlManager, progress)
-                ?.let { send(ImportEvent.UpdateWorkspaceModel(it)) }
+                ?.let { send(ImportEvent.UpdateWorkspaceModel(it, request.targetWatermark)) }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
@@ -68,8 +67,7 @@ class JsonTool(
         }
     }.buffer(Channel.UNLIMITED)
 
-    /** The JSON importer declares no settings files and never asked for a re-import on file changes. */
-    override val reimportRequests: Flow<ImportRequest> = emptyFlow()
+
 
     private fun importWorkspace(
         virtualFileUrlManager: VirtualFileUrlManager,

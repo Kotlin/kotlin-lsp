@@ -23,7 +23,7 @@ import com.jetbrains.ls.imports.api.BuildTool
 import com.jetbrains.ls.imports.api.BuildToolContext
 import com.jetbrains.ls.imports.api.BuildToolDriver
 import com.jetbrains.ls.imports.api.BuildToolDriverContext
-import com.jetbrains.ls.imports.api.ImportRequest
+import com.jetbrains.ls.imports.api.SyncRequest
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
 import com.jetbrains.ls.imports.api.putEnvironment
@@ -64,9 +64,7 @@ object JavaCommandDriver : BuildToolDriver {
  * [JvmClasspath] extension replaces all of that with what the configuration spells; see [explicitJavaArgs].
  */
 class JavaCommandBuildTool(private val toolContext: BuildToolDriverContext) : BuildTool {
-    override fun sync(context: BuildToolContext, request: ImportRequest): Flow<ImportEvent> = emptyFlow()
-
-    override val reimportRequests: Flow<ImportRequest> = emptyFlow()
+    override fun sync(context: BuildToolContext, request: SyncRequest): Flow<ImportEvent> = emptyFlow()
 
     @OptIn(LowLevelLocalMachineAccess::class)
     override fun run(request: RunRequest): Resource<RunHandle> {

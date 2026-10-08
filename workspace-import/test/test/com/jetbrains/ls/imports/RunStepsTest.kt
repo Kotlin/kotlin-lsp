@@ -11,7 +11,7 @@ import com.jetbrains.ls.api.run.failedRunHandle
 import com.jetbrains.ls.api.run.run
 import com.jetbrains.ls.imports.api.BuildTool
 import com.jetbrains.ls.imports.api.BuildToolContext
-import com.jetbrains.ls.imports.api.ImportRequest
+import com.jetbrains.ls.imports.api.SyncRequest
 import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
 import fleet.util.async.Resource
 import fleet.util.async.resourceOf
@@ -34,8 +34,7 @@ class RunStepsTest {
     /** A tool whose run emits [events] and records what it reads from the input. */
     private class FakeTool(private val events: List<RunTaskEvent>) : BuildTool {
         val input = Channel<String>(Channel.UNLIMITED)
-        override fun sync(context: BuildToolContext, request: ImportRequest): Flow<ImportEvent> = emptyFlow()
-        override val reimportRequests: Flow<ImportRequest> = emptyFlow()
+        override fun sync(context: BuildToolContext, request: SyncRequest): Flow<ImportEvent> = emptyFlow()
         override fun run(request: RunRequest): Resource<RunHandle> = resourceOf(object : RunHandle {
             override val input: SendChannel<String> = this@FakeTool.input
             override val events: Flow<RunTaskEvent> = flow { this@FakeTool.events.forEach { emit(it) } }
