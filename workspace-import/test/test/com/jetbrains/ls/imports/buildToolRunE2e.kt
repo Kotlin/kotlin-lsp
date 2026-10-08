@@ -21,7 +21,6 @@ import com.jetbrains.ls.imports.api.SyncRequest
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
 import com.jetbrains.ls.test.api.utils.testPluginSet
-import kotlinx.coroutines.flow.MutableSharedFlow
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.fail
 import java.nio.file.Path
@@ -56,13 +55,12 @@ internal fun withLiveTool(
             )
         ) { handle ->
             val toolContext = BuildToolDriverContext(
-                fileChanges = MutableSharedFlow(),
                 entityStorage = { MutableEntityStorage.create() },
             )
             driver.start(toolContext, parameters).use { tool ->
                 val reporter = LoggingWorkspaceProgressReporter()
                 var storage: EntityStorage? = null
-                tool.sync(BuildToolContext(handle.project, urlManager), SyncRequest(targetWatermark = 0, changes = null, toolRequest = null)).collect { event ->
+                tool.sync(BuildToolContext(handle.project, urlManager), SyncRequest(targetWatermark = 0, force = true, toolRequest = null)).collect { event ->
                     when (event) {
                         is ImportEvent.UpdateWorkspaceModel -> storage = event.storage
                         is ImportEvent.Failed -> throw AssertionError(
@@ -73,6 +71,8 @@ internal fun withLiveTool(
                         is ImportEvent.ErrorOutput -> reporter.onErrorOutput(event.line)
                         is ImportEvent.ProgressStatus -> reporter.progressStatus(event.text)
                         is ImportEvent.UnresolvedDependency -> reporter.onUnresolvedDependency(event.depName)
+                        // A forced sync imports unconditionally, so a tool never answers "not changed" here.
+                        is ImportEvent.WorkspaceModelNotChanged -> throw AssertionError("The forced import answered 'not changed'")
                     }
                 }
                 body(tool, storage ?: fail("The import published no model:\n${reporter.capturedOutput}"))

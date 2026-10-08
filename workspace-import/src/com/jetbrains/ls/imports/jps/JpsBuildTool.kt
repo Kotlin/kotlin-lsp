@@ -53,6 +53,7 @@ import com.jetbrains.ls.imports.api.BuildToolContext
 import com.jetbrains.ls.imports.api.BuildToolDriverContext
 import com.jetbrains.ls.imports.api.ImportRequest
 import com.jetbrains.ls.imports.api.SyncRequest
+import com.jetbrains.ls.imports.api.ToolFileWatcher
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceException
 import com.jetbrains.ls.imports.api.WorkspaceImportException
@@ -68,9 +69,9 @@ import com.jetbrains.ls.imports.utils.toIntellijUri
 import com.jetbrains.ls.snapshot.api.impl.core.toFileUrl
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.buffer
@@ -151,6 +152,14 @@ class JpsBuildTool(
 
     override fun sync(context: BuildToolContext, request: SyncRequest): Flow<WorkspaceImporter.ImportEvent> = flow {
         try {
+            val startedAt = System.currentTimeMillis()
+            if (!request.force && request.toolRequest == null && !inputsChangedSince(lastSyncStartedAt)) {
+                emit(WorkspaceImporter.ImportEvent.WorkspaceModelNotChanged(request.targetWatermark))
+                return@flow
+            }
+            // The baseline is taken before the import reads its inputs, so a change landing while it runs
+            // reads as changed at the next judgment, and the next cycle serves it.
+            lastSyncStartedAt = startedAt
             emitAll(importWorkspace(context, request))
         } catch (e: CancellationException) {
             throw e
@@ -159,16 +168,43 @@ class JpsBuildTool(
         }
     }
 
+    /** The wall-clock start of the last sync that imported; the baseline [inputsChangedSince] verifies against. */
+    @Volatile
+    private var lastSyncStartedAt: Long? = null
+
     /** The linked Maven and Gradle tools of the last sync; each sync replaces the whole set. */
     private val linkedTools = MutableStateFlow<List<BuildTool>>(emptyList())
 
     /**
-     * The re-import requests of the linked tools. A request from a linked tool re-runs the whole JPS
-     * import, because the linked models merge into the `.idea` model this tool publishes.
+     * The re-import requests of the linked tools: they watch their own files, and a request from one re-runs
+     * the whole JPS import, because the linked models merge into the `.idea` model this tool publishes.
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     override val reimportRequests: Flow<ImportRequest> =
         linkedTools.flatMapLatest { tools -> tools.map { it.reimportRequests }.merge() }
+
+    /**
+     * Whether an input of a linked Maven or Gradle project changed on disk after [since]: their models merge
+     * into the `.idea` model this tool publishes, so any of them re-runs the whole import. The `.idea` files
+     * themselves do not re-import (parity with the triggers). The judging tool instances are throwaways with a
+     * [ToolFileWatcher.Noop]: only the live ones of the last sync watch files.
+     */
+    private fun inputsChangedSince(since: Long?): Boolean {
+        if (since == null) return true
+        val projectDirectory = parameters.projectDirectory
+        if (!JpsDriver.canImportWorkspace(projectDirectory)) return false
+        val judgingContext = toolContext.copy(watcher = ToolFileWatcher.Noop)
+        val storage = toolContext.entityStorage()
+        return findLinkedProjects(projectDirectory, linkedProjectMacros(projectDirectory), judgingContext)
+            .any { (path, toolFactory) ->
+                when (val tool = toolFactory(parameters.copy(projectFileOrDirectory = path))) {
+                    is MavenTool -> tool.inputsChangedSince(since, storage)
+                    is GradleTool -> tool.inputsChangedSince(since, storage)
+                    // An unknown linked tool cannot be judged; better one import too many than a stale model.
+                    else -> true
+                }
+            }
+    }
 
     /**
      * Publishes the `.idea` model as soon as it is read, then republishes it after each linked Maven/Gradle project
@@ -180,24 +216,10 @@ class JpsBuildTool(
         if (!JpsDriver.canImportWorkspace(projectDirectory)) return@channelFlow
         try {
             val model = JpsElementFactory.getInstance().createModel()
-            val macroExpandMap = ExpandMacroToPathMap()
-
             initGlobalJpsOptions(model)
-            JpsModelSerializationDataService.computeAllPathVariables(model.global).let { pathVariables ->
-                JpsProjectLoader.loadProject(model.getProject(), pathVariables, model.getGlobal().getPathMapper(), projectDirectory, true, null)
-
-                getAllMacros(
-                    (projectDirectory / ".idea" / "modules.xml").absolutePathString()
-                ).forEach { (name, value) ->
-                    macroExpandMap.addMacroExpand(name, value)
-                }
-                pathVariables.forEach { (name, value) ->
-                    macroExpandMap.addMacroExpand(name, value)
-                }
-                macroExpandMap.addMacroExpand(
-                    PathMacroUtil.PROJECT_DIR_MACRO_NAME, projectDirectory.absolutePathString()
-                )
-            }
+            val pathVariables = JpsModelSerializationDataService.computeAllPathVariables(model.global)
+            JpsProjectLoader.loadProject(model.getProject(), pathVariables, model.getGlobal().getPathMapper(), projectDirectory, true, null)
+            val macroExpandMap = linkedProjectMacros(pathVariables, projectDirectory)
 
             val storage = MutableEntityStorage.create()
             importJpsModel(
@@ -511,6 +533,24 @@ class JpsBuildTool(
             }
         }
     }
+}
+
+/** [linkedProjectMacros] without a loaded project: enough for the linked-project paths of `.idea`. */
+private fun linkedProjectMacros(projectDirectory: Path): ExpandMacroToPathMap {
+    val model = JpsElementFactory.getInstance().createModel()
+    initGlobalJpsOptions(model)
+    return linkedProjectMacros(JpsModelSerializationDataService.computeAllPathVariables(model.global), projectDirectory)
+}
+
+/** The macro expansions a linked-project path may use: the path variables, the macros of `modules.xml`, `$PROJECT_DIR$`. */
+private fun linkedProjectMacros(pathVariables: Map<String, String>, projectDirectory: Path): ExpandMacroToPathMap {
+    val macroExpandMap = ExpandMacroToPathMap()
+    getAllMacros((projectDirectory / ".idea" / "modules.xml").absolutePathString()).forEach { (name, value) ->
+        macroExpandMap.addMacroExpand(name, value)
+    }
+    pathVariables.forEach { (name, value) -> macroExpandMap.addMacroExpand(name, value) }
+    macroExpandMap.addMacroExpand(PathMacroUtil.PROJECT_DIR_MACRO_NAME, projectDirectory.absolutePathString())
+    return macroExpandMap
 }
 
 private fun initGlobalJpsOptions(model: JpsModel) {

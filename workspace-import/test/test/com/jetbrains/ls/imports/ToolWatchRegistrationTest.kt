@@ -7,30 +7,34 @@ import com.intellij.platform.workspace.jps.entities.exModuleOptions
 import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.workspaceModel.ide.impl.IdeVirtualFileUrlManagerImpl
+import com.jetbrains.analyzer.api.FileUrl
+import com.jetbrains.analyzer.filesystem.FileUrlList
 import com.jetbrains.ls.imports.api.BuildToolDriverContext
-import com.jetbrains.ls.imports.api.LateBoundToolFileWatcher
+import com.jetbrains.ls.imports.api.ToolFileListener
+import com.jetbrains.ls.imports.api.ToolFileWatchDispatcher
 import com.jetbrains.ls.imports.api.ToolFileWatcher
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.gradle.GradleTool
 import com.jetbrains.ls.imports.json.JsonTool
 import com.jetbrains.ls.imports.maven.MavenTool
-import kotlinx.coroutines.flow.MutableSharedFlow
+import com.jetbrains.ls.snapshot.api.impl.core.rocks.FileSystemChange
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.nio.file.Path
 
 /**
- * The directories a build tool registers with the workspace file watcher ([ToolFileWatcher]): the indexing
- * roots are the source roots, a build file sits beside them, so each tool names the directories of its inputs
- * itself — at start, from the committed model.
+ * The directories a build tool watches ([ToolFileWatcher]): the indexing roots are the source roots,
+ * a build file sits beside them, so each tool names the directories of its inputs itself — at start,
+ * from the committed model. The workspace side ([ToolFileWatchDispatcher]) registers them with the
+ * real watcher and routes the events back to the tool.
  */
 class ToolWatchRegistrationTest {
     private val urlManager = IdeVirtualFileUrlManagerImpl()
 
     private class RecordingWatcher : ToolFileWatcher {
         val directories = linkedSetOf<Path>()
-        override fun watch(directory: Path) {
+        override fun watch(directory: Path, listener: ToolFileListener) {
             directories.add(directory)
         }
     }
@@ -65,24 +69,57 @@ class ToolWatchRegistrationTest {
     }
 
     @Test
-    fun `registrations before the bind are replayed, duplicates are forwarded once`() {
-        val watcher = LateBoundToolFileWatcher()
-        watcher.watch(Path.of("/w/a"))
-        watcher.watch(Path.of("/w/a"))
-        watcher.watch(Path.of("/w/b"))
+    fun `registrations before the bind are replayed, a directory is registered once`() {
+        val dispatcher = ToolFileWatchDispatcher()
+        val listener = recordingListener()
+        dispatcher.watch(Path.of("/w/a"), listener)
+        dispatcher.watch(Path.of("/w/a"), recordingListener())
+        dispatcher.watch(Path.of("/w/b"), listener)
 
-        val target = RecordingWatcher()
-        val forwarded = mutableListOf<Path>()
-        watcher.bind { directory ->
-            forwarded.add(directory)
-            target.watch(directory)
-        }
-        watcher.watch(Path.of("/w/b"))
-        watcher.watch(Path.of("/w/c"))
+        val registered = mutableListOf<Path>()
+        dispatcher.bind { registered.add(it) }
+        dispatcher.watch(Path.of("/w/b"), recordingListener())
+        dispatcher.watch(Path.of("/w/c"), listener)
 
-        assertEquals(paths("/w/a", "/w/b", "/w/c"), target.directories)
-        assertEquals(listOf(Path.of("/w/a"), Path.of("/w/b"), Path.of("/w/c")), forwarded)
+        assertEquals(listOf(Path.of("/w/a"), Path.of("/w/b"), Path.of("/w/c")), registered)
     }
+
+    @Test
+    fun `a change is routed to the listeners of its directory, lost changes to everyone`() {
+        val dispatcher = ToolFileWatchDispatcher()
+        dispatcher.bind { }
+        val ofA = recordingListener()
+        val ofB = recordingListener()
+        dispatcher.watch(Path.of("/w/a"), ofA)
+        dispatcher.watch(Path.of("/w/b"), ofB)
+
+        dispatcher.dispatch(invalidate("/w/a/pom.xml"))
+        dispatcher.dispatch(invalidate("/w/a"))
+        dispatcher.dispatch(invalidate("/w/elsewhere/pom.xml"))
+        assertEquals(listOf(Path.of("/w/a/pom.xml"), Path.of("/w/a")), ofA.changedPaths)
+        assertEquals(emptyList<Path>(), ofB.changedPaths)
+
+        dispatcher.dispatch(FileSystemChange.Rescan)
+        assertEquals(1, ofA.lostCount)
+        assertEquals(1, ofB.lostCount)
+    }
+
+    private class RecordingListener : ToolFileListener {
+        val changedPaths = mutableListOf<Path>()
+        var lostCount = 0
+        override fun changed(path: Path) {
+            changedPaths.add(path)
+        }
+
+        override fun lost() {
+            lostCount++
+        }
+    }
+
+    private fun recordingListener() = RecordingListener()
+
+    private fun invalidate(path: String): FileSystemChange =
+        FileSystemChange.Invalidate(FileUrlList.of(FileUrl.fromPath("file", path)))
 
     private fun paths(vararg paths: String): Set<Path> = paths.mapTo(linkedSetOf(), Path::of)
 
@@ -96,7 +133,6 @@ class ToolWatchRegistrationTest {
         watcher: ToolFileWatcher,
         storage: EntityStorage = MutableEntityStorage.create().toSnapshot(),
     ) = BuildToolDriverContext(
-        fileChanges = MutableSharedFlow(),
         entityStorage = { storage },
         watcher = watcher,
     )
