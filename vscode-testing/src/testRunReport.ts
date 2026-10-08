@@ -27,6 +27,7 @@ export interface TestRunReport {
     readonly uniqueId: string;
     readonly label: string;
   }): TestRunNode | undefined;
+  testQueued(node: TestRunNode | undefined): void;
   suiteStarted(node: TestRunNode | undefined): void;
   testStarted(node: TestRunNode | undefined): void;
   passed(result: TestResult): void;
@@ -173,6 +174,11 @@ export class GroupReport implements TestRunReport {
         displayName: child.label,
       }),
     );
+  }
+
+  testQueued(node: TestRunNode | undefined): void {
+    const item = node && this.items.get(node);
+    if (item) this.options.run.enqueued(item);
   }
 
   suiteStarted(node: TestRunNode | undefined): void {

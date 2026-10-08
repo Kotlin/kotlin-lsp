@@ -52,6 +52,7 @@ export function recordRun(): RecordedRun {
       durations.set(item.id, duration);
     };
   const run = {
+    enqueued: (item: TestItem) => calls.push(`enqueued ${item.id}`),
     started: (item: TestItem) => calls.push(`started ${item.id}`),
     passed: (item: TestItem, duration?: number) => {
       calls.push(`passed ${item.id}`);

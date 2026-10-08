@@ -47,6 +47,9 @@ export class TeamCityReader {
   private handle(message: ServiceMessage): void {
     const { attributes } = message;
     switch (message.name) {
+      case 'suiteTreeNode':
+        this.report.testQueued(this.named(attributes));
+        break;
       case 'testStarted':
         if (this.holdsConfiguration(attributes)) break;
         this.report.testStarted(this.started(attributes));

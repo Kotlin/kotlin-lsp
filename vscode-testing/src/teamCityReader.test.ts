@@ -103,6 +103,36 @@ describe('which node a runner message is about', () => {
     });
   }
 
+  test('a test the runner lists in its plan is queued in the order of the plan, not of the source', () => {
+    const { feed, calls } = readerFor();
+
+    feed(
+      teamcity('suiteTreeStarted', { nodeId: 'class', locationHint: CLASS_HINT }),
+      teamcity('suiteTreeNode', {
+        nodeId: 'param',
+        parentNodeId: 'class',
+        locationHint: PARAM_HINT,
+      }),
+      teamcity('suiteTreeNode', {
+        nodeId: 'test',
+        parentNodeId: 'class',
+        locationHint: METHOD_HINT,
+      }),
+      teamcity('suiteTreeNode', {
+        nodeId: 'other',
+        locationHint: 'java:test://com.example.Unknown/x',
+      }),
+      '##teamcity[treeEnded]',
+      teamcity('testStarted', { nodeId: 'param' }),
+    );
+
+    assert.deepEqual(calls, [
+      'enqueued moduleA/com.example.Foo#paramTest',
+      'enqueued moduleA/com.example.Foo#test',
+      'started moduleA/com.example.Foo#paramTest',
+    ]);
+  });
+
   test('a node id the run already explained is that node again, hint or no hint', () => {
     const { feed, calls } = readerFor();
 

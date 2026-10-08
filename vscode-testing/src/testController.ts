@@ -15,7 +15,6 @@ import { subscribeToClientEvent } from '@jetbrains/vscode-extension-core';
 import { type LanguageClient, State } from 'vscode-languageclient/node';
 import { LanguageFileCoverage } from './testCoverage';
 import { lspDiscoveryServer, TestTreeDiscovery } from './testDiscovery';
-import { leafTests } from './testItems';
 import type { TestLanguage, TestProfile } from './testLanguage';
 import { TestProfileTags } from './testProfileTags';
 import { GroupReport } from './testRunReport';
@@ -47,11 +46,6 @@ export function registerTestController<Profile extends string>(
       const run = controller.createTestRun(request);
       try {
         const runner = language.startRun(profile.id);
-        for (const group of groups) {
-          for (const item of group.items) {
-            for (const test of leafTests(item)) run.enqueued(test);
-          }
-        }
         for (const group of groups) {
           if (token.isCancellationRequested) break;
           const report = new GroupReport({ run, tree, group });

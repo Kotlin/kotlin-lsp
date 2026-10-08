@@ -35,6 +35,7 @@ function recordingReport(): { readonly report: TestRunReport; readonly calls: st
   const report: TestRunReport = {
     atLocation: () => undefined,
     runtimeChild: () => undefined,
+    testQueued: () => {},
     suiteStarted: () => {},
     testStarted: () => {},
     passed: () => {},
