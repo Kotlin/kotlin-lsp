@@ -85,6 +85,20 @@ class ToolWatchRegistrationTest {
     }
 
     @Test
+    fun `repeating the same listener registers its directory once before and after bind`() {
+        val dispatcher = ToolFileWatchDispatcher()
+        val listener = recordingListener()
+        val directory = Path.of("/w")
+        dispatcher.watch(directory, listener)
+        dispatcher.watch(directory, listener)
+        val registered = mutableListOf<Path>()
+        dispatcher.bind { registered.add(it) }
+        dispatcher.watch(directory, listener)
+        dispatcher.watch(directory, listener)
+        assertEquals(listOf(directory), registered)
+    }
+
+    @Test
     fun `a change is routed to the listeners of its directory, lost changes to everyone`() {
         val dispatcher = ToolFileWatchDispatcher()
         dispatcher.bind { }

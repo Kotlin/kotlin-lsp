@@ -114,6 +114,7 @@ class MavenTool(
             // The baseline is taken before the import reads its inputs, so a change landing while it runs
             // reads as changed at the next judgment, and the next cycle serves it.
             lastSyncStartedAt = startedAt
+            presentSettings = settingsFiles.filterTo(hashSetOf()) { it.exists() }
             context.withProject {
                 importWorkspace(context.virtualFileUrlManager, request.targetWatermark).collect { send(it) }
             }
@@ -124,6 +125,7 @@ class MavenTool(
                 rethrowControlFlowException(e)
                 emit(ImportEvent.Failed(e))
             }
+            .onCompletion { cause -> if (cause != null) lastSyncStartedAt = null }
 
     /** The wall-clock start of the last sync that imported; the baseline [inputsChangedSince] verifies against. */
     @Volatile
@@ -171,6 +173,8 @@ class MavenTool(
         )
     }
 
+    private var presentSettings = settingsFiles.filterTo(hashSetOf()) { it.exists() }
+
     init {
         registerWatchedDirectories(toolContext.entityStorage())
     }
@@ -195,7 +199,7 @@ class MavenTool(
     internal fun inputsChangedSince(since: Long?, storage: EntityStorage): Boolean {
         if (since == null) return true
         if (importedPomFiles(storage).any { !it.isRegularFile() || it.modifiedSince(since) }) return true
-        return settingsFiles.any { it.modifiedSince(since) }
+        return settingsFiles.any { it.modifiedSince(since) || (it in presentSettings) != it.exists() }
     }
 
     /**

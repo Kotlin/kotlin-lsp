@@ -7,6 +7,13 @@ import com.intellij.platform.workspace.jps.entities.exModuleOptions
 import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.workspaceModel.ide.impl.IdeVirtualFileUrlManagerImpl
+import com.intellij.testFramework.common.timeoutRunBlocking
+import com.jetbrains.analyzer.api.withAnalyzer
+import com.jetbrains.analyzer.api.withProject
+import com.jetbrains.analyzer.bootstrap.AnalyzerProjectId
+import com.jetbrains.analyzer.bootstrap.WorkspaceModelSnapshot
+import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
+import com.jetbrains.ls.test.api.utils.testPluginSet
 import com.jetbrains.ls.imports.api.BuildTool
 import com.jetbrains.ls.imports.api.BuildToolContext
 import com.jetbrains.ls.imports.api.BuildToolDriverContext
@@ -16,10 +23,13 @@ import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
 import com.jetbrains.ls.imports.gradle.GradleTool
 import com.jetbrains.ls.imports.json.JsonTool
+import com.jetbrains.ls.imports.jps.JpsBuildTool
 import com.jetbrains.ls.imports.maven.MavenTool
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -40,8 +50,106 @@ import kotlin.io.path.writeText
 class ToolSyncJudgmentTest {
     private val urlManager = IdeVirtualFileUrlManagerImpl()
 
-    // In the Maven cases the baseline-setting forced sync always runs over an absent pom, so it never
-    // starts a real Maven process; the pom is created afterwards, aged to before the baseline.
+    @Test
+    fun `a cancelled sync cannot vouch for the old model`(@TempDir workspace: Path) = timeoutRunBlocking {
+        val script = workspace / "build.gradle"
+        script.writeText("plugins {}")
+        agedByAnHour(script)
+        val storage = model("GRADLE", workspace.toString(), workspace.toString())
+        (workspace / ".idea").createDirectories().resolve("modules.xml").writeText("<project/>")
+        val tools = listOf(
+            GradleTool(toolContext(storage), parameters(workspace)),
+            MavenTool(toolContext(), parameters(workspace)),
+            JsonTool(toolContext(), parameters(workspace)),
+            JpsBuildTool(toolContext(), parameters(workspace)),
+        )
+        for (tool in tools) {
+            val request = SyncRequest(targetWatermark = 1, force = true, toolRequest = null)
+            tool.sync(BuildToolContext({ error("Import started") }, urlManager), request).toList()
+            val cancelledContext = BuildToolContext({ throw CancellationException("Import cancelled") }, urlManager)
+            val cancelled = runCatching { tool.sync(cancelledContext, request).toList() }
+            assertInstanceOf(CancellationException::class.java, cancelled.exceptionOrNull(), "${tool.javaClass.simpleName}: ${cancelled.getOrNull()}")
+            val events = tool.sync(BuildToolContext({ error("Import retried") }, urlManager), request.copy(force = false)).toList()
+            assertFalse(events.any { it is ImportEvent.WorkspaceModelNotChanged }, tool.javaClass.simpleName)
+        }
+    }
+
+    @Test
+    fun `Gradle detects a deleted script without importing for absent alternatives`(@TempDir workspace: Path) {
+        val script = workspace / "build.gradle"
+        script.writeText("plugins {}")
+        agedByAnHour(script)
+        val tool = GradleTool(toolContext(model("GRADLE", workspace.toString(), workspace.toString())), parameters(workspace))
+        assertTrue(syncRuns(tool, force = true))
+        assertFalse(syncRuns(tool, force = false))
+        Files.delete(script)
+        assertTrue(syncRuns(tool, force = false), "the imported script was deleted")
+        assertFalse(syncRuns(tool, force = false), "the failed attempt covered the deletion")
+    }
+
+    @Test
+    fun `Gradle detects a script deleted while the import runs`(@TempDir workspace: Path) = timeoutRunBlocking {
+        val script = workspace / "build.gradle"
+        script.writeText("plugins {}")
+        agedByAnHour(script)
+        val tool = GradleTool(toolContext(model("GRADLE", workspace.toString(), workspace.toString())), parameters(workspace))
+        val context = BuildToolContext({
+            Files.delete(script)
+            error("Import failed after the script was deleted")
+        }, urlManager)
+        tool.sync(context, SyncRequest(1, force = true, toolRequest = null)).toList()
+        assertTrue(syncRuns(tool, force = false), "the next sync must cover the deletion")
+    }
+
+    @Test
+    fun `Maven detects a deleted settings file`(@TempDir workspace: Path) {
+        val pom = workspace / "pom.xml"
+        pom.writeText("<project/>")
+        agedByAnHour(pom)
+        val settings = (workspace / ".mvn").createDirectories() / "maven.config"
+        settings.writeText("-T4")
+        agedByAnHour(settings)
+        val tool = MavenTool(toolContext(), parameters(workspace))
+        assertTrue(syncRuns(tool, force = true))
+        assertFalse(syncRuns(tool, force = false))
+        Files.delete(settings)
+        assertTrue(syncRuns(tool, force = false))
+        assertFalse(syncRuns(tool, force = false), "absent optional settings do not cause repeated imports")
+    }
+
+    @Test
+    fun `JPS detects deleted inputs of a linked Gradle project`(@TempDir workspace: Path) = timeoutRunBlocking {
+        val linked = (workspace / "linked").createDirectories()
+        val module = (linked / "sub").createDirectories()
+        val script = module / "build.gradle"
+        script.writeText("plugins {}")
+        agedByAnHour(script)
+        (workspace / ".idea").createDirectories().resolve("gradle.xml").writeText(
+            """<project><component name="GradleSettings"><option name="linkedExternalProjectsSettings">
+                <GradleProjectSettings><option name="externalProjectPath" value="$linked"/></GradleProjectSettings>
+                </option></component></project>""",
+        )
+        (workspace / ".idea" / "modules.xml").writeText("<project/>")
+        val tool = JpsBuildTool(
+            toolContext(model("GRADLE", linked.toString(), module.toString())),
+            parameters(workspace).copy(defaultSdkPath = Path.of(System.getProperty("java.home"))),
+        )
+        withAnalyzer(isUnitTestMode = true) { analyzer ->
+            val snapshot = WorkspaceModelSnapshot.empty()
+            analyzer.withProject(analyzerProjectConfigForImport(
+                projectId = AnalyzerProjectId(),
+                entities = snapshot.entityStore,
+                urlManager = snapshot.virtualFileUrlManager,
+                pluginSet = testPluginSet,
+            )) { context ->
+                val events = tool.sync(BuildToolContext(context.project, urlManager), SyncRequest(1, force = true, toolRequest = null)).toList()
+                assertTrue(events.any { it is ImportEvent.UpdateWorkspaceModel }, events.toString())
+            }
+        }
+        assertFalse(syncRuns(tool, force = false))
+        Files.delete(script)
+        assertTrue(syncRuns(tool, force = false))
+    }
 
     @Test
     fun `Maven re-imports when a pom of the model is touched, missing, or the tool never synced`(@TempDir workspace: Path) {
@@ -117,8 +225,8 @@ class ToolSyncJudgmentTest {
             project = { error("the sync started the import") },
             virtualFileUrlManager = urlManager,
         )
-        val first = tool.sync(context, SyncRequest(targetWatermark = 1, force = force, toolRequest = null)).firstOrNull()
-        first !is ImportEvent.WorkspaceModelNotChanged
+        val events = tool.sync(context, SyncRequest(targetWatermark = 1, force = force, toolRequest = null)).toList()
+        events.none { it is ImportEvent.WorkspaceModelNotChanged }
     }
 
     private fun parameters(projectDirectory: Path) = WorkspaceImportParameters(

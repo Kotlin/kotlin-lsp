@@ -1,6 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.json
 
+import com.intellij.diagnostic.rethrowControlFlowException
 import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
@@ -20,13 +21,13 @@ import com.jetbrains.ls.imports.api.WorkspaceImporter.ImportEvent
 import com.jetbrains.ls.imports.utils.LsImportBundle
 import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
 import com.intellij.openapi.diagnostic.logger
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -118,12 +119,11 @@ class JsonTool(
                 importWorkspace(context.virtualFileUrlManager, progress)
                     ?.let { send(ImportEvent.UpdateWorkspaceModel(it, request.targetWatermark)) }
             }
-        } catch (e: CancellationException) {
-            throw e
         } catch (e: Throwable) {
+            rethrowControlFlowException(e)
             send(ImportEvent.Failed(e))
         }
-    }.buffer(Channel.UNLIMITED)
+    }.buffer(Channel.UNLIMITED).onCompletion { cause -> if (cause != null) lastSyncStartedAt = null }
 
 
 

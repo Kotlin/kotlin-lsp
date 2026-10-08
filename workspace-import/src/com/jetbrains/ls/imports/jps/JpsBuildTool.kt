@@ -1,6 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.jps
 
+import com.intellij.diagnostic.rethrowControlFlowException
 import com.intellij.java.workspace.entities.JavaModuleSettingsEntity
 import com.intellij.java.workspace.entities.JavaResourceRootPropertiesEntity
 import com.intellij.java.workspace.entities.JavaSourceRootPropertiesEntity
@@ -78,6 +79,7 @@ import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
@@ -159,18 +161,24 @@ class JpsBuildTool(
             // reads as changed at the next judgment, and the next cycle serves it.
             lastSyncStartedAt = startedAt
             context.withProject {
+                judgingTools = findLinkedProjects(
+                    parameters.projectDirectory,
+                    linkedProjectMacros(parameters.projectDirectory),
+                    toolContext.copy(watcher = ToolFileWatcher.Noop),
+                ).map { (path, factory) -> factory(parameters.copy(projectFileOrDirectory = path)) }.toList()
                 importWorkspace(context, request).collect { send(it) }
             }
-        } catch (e: CancellationException) {
-            throw e
         } catch (e: Throwable) {
+            rethrowControlFlowException(e)
             send(WorkspaceImporter.ImportEvent.Failed(e))
         }
-    }
+    }.onCompletion { cause -> if (cause != null) lastSyncStartedAt = null }
 
     /** The wall-clock start of the last sync that imported; the baseline [inputsChangedSince] verifies against. */
     @Volatile
     private var lastSyncStartedAt: Long? = null
+
+    private var judgingTools: List<BuildTool> = emptyList()
 
     /** The linked Maven and Gradle tools of the last sync; each sync replaces the whole set. */
     private val linkedTools = MutableStateFlow<List<BuildTool>>(emptyList())
@@ -186,24 +194,22 @@ class JpsBuildTool(
     /**
      * Whether an input of a linked Maven or Gradle project changed on disk after [since]: their models merge
      * into the `.idea` model this tool publishes, so any of them re-runs the whole import. The `.idea` files
-     * themselves do not re-import (parity with the triggers). The judging tool instances are throwaways with a
-     * [ToolFileWatcher.Noop]: only the live ones of the last sync watch files.
+     * themselves do not re-import. The judging tools retain input existence from the start of the last sync.
+     * They use [ToolFileWatcher.Noop]; the live linked tools watch files.
      */
     private fun inputsChangedSince(since: Long?): Boolean {
         if (since == null) return true
         val projectDirectory = parameters.projectDirectory
         if (!JpsDriver.canImportWorkspace(projectDirectory)) return false
-        val judgingContext = toolContext.copy(watcher = ToolFileWatcher.Noop)
         val storage = toolContext.entityStorage()
-        return findLinkedProjects(projectDirectory, linkedProjectMacros(projectDirectory), judgingContext)
-            .any { (path, toolFactory) ->
-                when (val tool = toolFactory(parameters.copy(projectFileOrDirectory = path))) {
-                    is MavenTool -> tool.inputsChangedSince(since, storage)
-                    is GradleTool -> tool.inputsChangedSince(since, storage)
-                    // An unknown linked tool cannot be judged; better one import too many than a stale model.
-                    else -> true
-                }
+        return judgingTools.any { tool ->
+            when (tool) {
+                is MavenTool -> tool.inputsChangedSince(since, storage)
+                is GradleTool -> tool.inputsChangedSince(since, storage)
+                // An unknown linked tool cannot be judged; better one import too many than a stale model.
+                else -> true
             }
+        }
     }
 
     /**

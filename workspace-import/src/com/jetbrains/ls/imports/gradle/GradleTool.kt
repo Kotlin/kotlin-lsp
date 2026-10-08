@@ -66,6 +66,7 @@ import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.IntermediateResultHandler
@@ -77,6 +78,7 @@ import java.nio.file.Path
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import kotlin.io.path.div
+import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.readBytes
 import kotlin.io.path.writeBytes
@@ -102,6 +104,7 @@ class GradleTool(
             // The baseline is taken before the import reads its inputs, so a change landing while it runs
             // reads as changed at the next judgment, and the next cycle serves it.
             lastSyncStartedAt = startedAt
+            presentInputs = (settingsFiles + importedBuildFiles(toolContext.entityStorage())).filterTo(hashSetOf()) { it.exists() }
             context.withProject { project ->
                 importWorkspace(project, context.virtualFileUrlManager, request.targetWatermark).collect { send(it) }
             }
@@ -112,6 +115,7 @@ class GradleTool(
                 rethrowControlFlowException(e)
                 emit(ImportEvent.Failed(e))
             }
+            .onCompletion { cause -> if (cause != null) lastSyncStartedAt = null }
 
     /** The wall-clock start of the last sync that imported; the baseline [inputsChangedSince] verifies against. */
     @Volatile
@@ -151,6 +155,8 @@ class GradleTool(
         )
     }
 
+    private var presentInputs = (settingsFiles + importedBuildFiles(toolContext.entityStorage())).filterTo(hashSetOf()) { it.exists() }
+
     init {
         registerWatchedDirectories(toolContext.entityStorage())
     }
@@ -175,7 +181,7 @@ class GradleTool(
      */
     internal fun inputsChangedSince(since: Long?, storage: EntityStorage): Boolean {
         if (since == null) return true
-        return (settingsFiles + importedBuildFiles(storage)).any { it.modifiedSince(since) }
+        return (settingsFiles + importedBuildFiles(storage)).any { it.modifiedSince(since) || (it in presentInputs) != it.exists() }
     }
 
     /**
@@ -340,6 +346,7 @@ class GradleTool(
                 }
             }
         } catch (e: Exception) {
+            rethrowControlFlowException(e)
             @Suppress("HardCodedStringLiteral")
             throw WorkspaceImportException("Gradle sync failed", "Unable to import a Gradle project: ${e.message}", e)
         }
