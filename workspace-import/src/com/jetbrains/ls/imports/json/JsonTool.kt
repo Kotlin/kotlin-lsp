@@ -42,9 +42,14 @@ const val JSON_EXTERNAL_SYSTEM_ID: String = "JSON"
 
 /** One folder's live JSON build tool; [JsonDriver] starts it. */
 class JsonTool(
-    @Suppress("unused") private val toolContext: BuildToolDriverContext,
+    toolContext: BuildToolDriverContext,
     private val parameters: WorkspaceImportParameters,
 ) : BuildTool {
+
+    init {
+        // `workspace.json` is a direct child of the project directory, which indexing does not watch on its own.
+        toolContext.watcher.watch(parameters.projectDirectory)
+    }
 
     override fun sync(context: BuildToolContext, request: ImportRequest): Flow<ImportEvent> = channelFlow {
         val progress = object : WorkspaceImportProgressReporter {

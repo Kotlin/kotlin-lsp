@@ -67,6 +67,7 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.IntermediateResultHandler
@@ -94,6 +95,8 @@ class GradleTool(
     // `emit`, and the `Failed` it then emits violates flow exception transparency. `catch` sees upstream only.
     override fun sync(context: BuildToolContext, request: ImportRequest): Flow<ImportEvent> =
         flow { emitAll(importWorkspace(context.project, context.virtualFileUrlManager)) }
+            // A sync may list build scripts the last model did not; their directories must be watched from now on.
+            .onEach { event -> if (event is ImportEvent.UpdateWorkspaceModel) registerWatchedDirectories(event.storage) }
             .catch { e ->
                 rethrowControlFlowException(e)
                 emit(ImportEvent.Failed(e))
@@ -112,6 +115,22 @@ class GradleTool(
             this / "gradlew.bat",
             this / "gradle" / "wrapper" / "gradle-wrapper.properties",
         )
+    }
+
+    init {
+        registerWatchedDirectories(toolContext.entityStorage())
+    }
+
+    /**
+     * Registers the directories of this target's inputs with the workspace file watcher: the settings files'
+     * fixed locations, the `gradle` directory (the version catalogs), and the directory of every build script
+     * [storage] lists. Indexing watches the source roots only, and the scripts sit beside them. Called at
+     * start with the committed model and after every sync result.
+     */
+    private fun registerWatchedDirectories(storage: EntityStorage) {
+        val directories = (settingsFiles + importedBuildFiles(storage)).mapNotNullTo(linkedSetOf()) { it.parent }
+        directories.add(parameters.projectDirectory / "gradle")
+        directories.forEach(toolContext.watcher::watch)
     }
 
     /** A change to a build script the last import read, or to a settings file of this target, asks for a re-import. */

@@ -62,6 +62,7 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -83,7 +84,7 @@ private val LOG = logger<MavenTool>()
 
 /** One folder's live Maven build tool; [MavenDriver] starts it. */
 class MavenTool(
-    toolContext: BuildToolDriverContext,
+    private val toolContext: BuildToolDriverContext,
     private val parameters: WorkspaceImportParameters,
 ) : BuildTool {
     companion object {
@@ -108,6 +109,8 @@ class MavenTool(
     // `emit`, and the `Failed` it then emits violates flow exception transparency. `catch` sees upstream only.
     override fun sync(context: BuildToolContext, request: ImportRequest): Flow<ImportEvent> =
         flow { emitAll(importWorkspace(context.virtualFileUrlManager)) }
+            // A sync may list poms the last model did not; their directories must be watched from now on.
+            .onEach { event -> if (event is ImportEvent.UpdateWorkspaceModel) registerWatchedDirectories(event.storage) }
             .catch { e ->
                 rethrowControlFlowException(e)
                 emit(ImportEvent.Failed(e))
@@ -134,6 +137,19 @@ class MavenTool(
             this / "mvnw.cmd",
             this / ".mvn" / "wrapper" / "maven-wrapper.properties",
         )
+    }
+
+    init {
+        registerWatchedDirectories(toolContext.entityStorage())
+    }
+
+    /**
+     * Registers the directories of this target's inputs with the workspace file watcher: the settings files'
+     * fixed locations and the directory of every pom [storage] lists. Indexing watches the source roots only,
+     * and the poms sit beside them. Called at start with the committed model and after every sync result.
+     */
+    private fun registerWatchedDirectories(storage: EntityStorage) {
+        (settingsFiles + importedPomFiles(storage)).mapNotNullTo(linkedSetOf()) { it.parent }.forEach(toolContext.watcher::watch)
     }
 
     /** A change to a pom the last import read, or to a settings file of this target, asks for a re-import. */
