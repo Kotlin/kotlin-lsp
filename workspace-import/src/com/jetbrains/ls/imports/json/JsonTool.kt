@@ -114,8 +114,10 @@ class JsonTool(
             override fun progressStatus(text: String) { trySend(ImportEvent.ProgressStatus(text)) }
         }
         try {
-            importWorkspace(context.virtualFileUrlManager, progress)
-                ?.let { send(ImportEvent.UpdateWorkspaceModel(it, request.targetWatermark)) }
+            context.withProject {
+                importWorkspace(context.virtualFileUrlManager, progress)
+                    ?.let { send(ImportEvent.UpdateWorkspaceModel(it, request.targetWatermark)) }
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {

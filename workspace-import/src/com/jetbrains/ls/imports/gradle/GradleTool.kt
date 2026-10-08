@@ -65,8 +65,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import org.gradle.tooling.GradleConnector
@@ -94,19 +92,19 @@ class GradleTool(
     private val parameters: WorkspaceImportParameters,
 ) : BuildTool {
 
-    // The `catch` operator, not a try around `emitAll`: a try also catches what the collector threw through
-    // `emit`, and the `Failed` it then emits violates flow exception transparency. `catch` sees upstream only.
     override fun sync(context: BuildToolContext, request: SyncRequest): Flow<ImportEvent> =
-        flow {
+        channelFlow {
             val startedAt = System.currentTimeMillis()
             if (!request.force && request.toolRequest == null && !inputsChangedSince(lastSyncStartedAt, toolContext.entityStorage())) {
-                emit(ImportEvent.WorkspaceModelNotChanged(request.targetWatermark))
-                return@flow
+                send(ImportEvent.WorkspaceModelNotChanged(request.targetWatermark))
+                return@channelFlow
             }
             // The baseline is taken before the import reads its inputs, so a change landing while it runs
             // reads as changed at the next judgment, and the next cycle serves it.
             lastSyncStartedAt = startedAt
-            emitAll(importWorkspace(context.project, context.virtualFileUrlManager, request.targetWatermark))
+            context.withProject { project ->
+                importWorkspace(project, context.virtualFileUrlManager, request.targetWatermark).collect { send(it) }
+            }
         }
             // A sync may list build scripts the last model did not; their directories must be watched from now on.
             .onEach { event -> if (event is ImportEvent.UpdateWorkspaceModel) registerWatchedDirectories(event.storage) }
