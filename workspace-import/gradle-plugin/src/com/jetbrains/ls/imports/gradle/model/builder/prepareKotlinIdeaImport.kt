@@ -34,12 +34,17 @@ fun Gradle.setupPrepareKotlinIdeaImport() {
                 Setup Android:
                 Getting source directories from Android might require calling source-gen tasks first.
                 We ensure that the 'prepareKotlinIdeaImport' task defines those sources as input, guaranteeing the
-                underlying providers to be accessible during model building
+                underlying providers to be accessible during model building.
+                Nested components (androidTest/unitTest) are included as well: plugins like KSP register
+                generated source directories on them too, and querying those providers during model building
+                fails unless the producing tasks (e.g. 'kspDebugAndroidTestKotlin') ran first.
                  */
                 project.androidVariants.orEmpty().forEach { variant ->
-                    variant.sources?.kotlin?.let { sources -> task.inputs.file(sources) }
-                    variant.sources?.java?.let { sources -> task.inputs.file(sources) }
-                    variant.sources?.resources?.let { sources -> task.inputs.file(sources) }
+                    (listOf(variant) + variant.nestedComponents.orEmpty()).forEach { component ->
+                        component.sources?.kotlin?.let { sources -> task.inputs.file(sources) }
+                        component.sources?.java?.let { sources -> task.inputs.file(sources) }
+                        component.sources?.resources?.let { sources -> task.inputs.file(sources) }
+                    }
                 }
             }
         }
