@@ -4,6 +4,7 @@ package com.jetbrains.ls.imports.gradle.action;
 import com.jetbrains.ls.imports.gradle.model.AndroidProject;
 import com.jetbrains.ls.imports.gradle.model.ExternalModuleDependency;
 import com.jetbrains.ls.imports.gradle.model.KotlinModule;
+import com.jetbrains.ls.imports.gradle.model.KotlinMultiplatformModel;
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet;
 import org.gradle.tooling.model.idea.IdeaProject;
 import org.jetbrains.annotations.NotNull;
@@ -23,6 +24,7 @@ public final class ProjectMetadata implements Serializable {
     private final @NotNull Map<@NotNull String, @NotNull AndroidProject> androidProjects;
     private final @NotNull Map<@NotNull String, @NotNull String> moduleCoordinates;
     private final @Nullable String gradleHome;
+    private final @NotNull Map<@NotNull String, @NotNull KotlinMultiplatformModel> kotlinMultiplatformModels;
 
     public ProjectMetadata(
             @NotNull List<? extends IdeaProject> includedProjects,
@@ -31,7 +33,8 @@ public final class ProjectMetadata implements Serializable {
             @NotNull Map<String, @NotNull Set<ExternalModuleDependency>> moduleDependencies,
             @NotNull Map<@NotNull String, @NotNull AndroidProject> androidProjects,
             @NotNull Map<@NotNull String, @NotNull String> moduleCoordinates,
-            @Nullable String gradleHome
+            @Nullable String gradleHome,
+            @NotNull Map<@NotNull String, @NotNull KotlinMultiplatformModel> kotlinMultiplatformModels
     ) {
         this.includedProjects = includedProjects;
         this.kotlinModules = kotlinModules;
@@ -40,6 +43,7 @@ public final class ProjectMetadata implements Serializable {
         this.androidProjects = androidProjects;
         this.moduleCoordinates = moduleCoordinates;
         this.gradleHome = gradleHome;
+        this.kotlinMultiplatformModels = kotlinMultiplatformModels;
     }
 
     public @NotNull List<? extends IdeaProject> getIncludedProjects() {
@@ -72,5 +76,13 @@ public final class ProjectMetadata implements Serializable {
 
     public @Nullable String getGradleHome() {
         return gradleHome;
+    }
+
+    /**
+     * Module FQN to its Kotlin Multiplatform model. Only contains entries for projects with the multiplatform
+     * {@code kotlin} extension.
+     */
+    public @NotNull Map<@NotNull String, @NotNull KotlinMultiplatformModel> getKotlinMultiplatformModels() {
+        return kotlinMultiplatformModels;
     }
 }

@@ -5,6 +5,7 @@ import com.jetbrains.ls.imports.gradle.model.builder.PrepareKotlinIdeaImport;
 import com.jetbrains.ls.imports.gradle.model.builder.android.AndroidProjectModelBuilder;
 import com.jetbrains.ls.imports.gradle.model.builder.ExternalModuleDependencySetModuleBuilder;
 import com.jetbrains.ls.imports.gradle.model.builder.KotlinMetadataModelBuilder;
+import com.jetbrains.ls.imports.gradle.model.builder.KotlinMultiplatformModelBuilder;
 import com.jetbrains.ls.imports.gradle.model.builder.ModuleSourceSetsModelBuilder;
 import com.jetbrains.ls.imports.gradle.model.builder.PrepareKotlinIdeaImportTasksModelBuilder;
 import com.jetbrains.ls.imports.gradle.model.builder.android.AndroidVariants;
@@ -29,6 +30,7 @@ public final class IdeaGradleLspPlugin implements Plugin<Gradle> {
         registry.register(new PrepareKotlinIdeaImportTasksModelBuilder());
 
         registry.register(new KotlinMetadataModelBuilder());
+        registry.register(new KotlinMultiplatformModelBuilder());
         registry.register(new ModuleSourceSetsModelBuilder());
         registry.register(new ExternalModuleDependencySetModuleBuilder());
         registry.register(new AndroidProjectModelBuilder());
