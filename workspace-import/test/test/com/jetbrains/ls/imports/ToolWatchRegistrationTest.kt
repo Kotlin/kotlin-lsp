@@ -42,7 +42,7 @@ class ToolWatchRegistrationTest {
     @Test
     fun `the Maven tool watches its settings directories and the pom directories of the model`() {
         val watcher = RecordingWatcher()
-        val storage = model(externalSystem = "MAVEN", rootProjectPath = "/w/pom.xml")
+        val storage = model(externalSystem = "MAVEN", rootProjectPath = Path.of("/w/pom.xml").toString())
         MavenTool(toolContext(watcher, storage), parameters())
         assertEquals(
             paths("/w", "/w/.mvn", "/w/.mvn/wrapper", "/w/sub"),
