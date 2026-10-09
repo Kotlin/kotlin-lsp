@@ -25,7 +25,6 @@ import kotlin.io.path.Path
 import kotlin.io.path.copyToRecursively
 import kotlin.io.path.createDirectories
 import kotlin.io.path.createTempDirectory
-import kotlin.io.path.createTempFile
 import kotlin.io.path.div
 import kotlin.io.path.exists
 import kotlin.io.path.writeText
@@ -92,32 +91,27 @@ abstract class GradleProjectImportTestCase : AbstractProjectImportTestCase() {
         jdkToUse: JdkDownloadItem,
         reporter: LoggingWorkspaceProgressReporter = LoggingWorkspaceProgressReporter(),
         comparator: WorkspaceComparator = WorkspaceComparator(),
+        goldenFileName: String = "workspace.json",
         importParametersCustomizer: (WorkspaceImportParameters) -> WorkspaceImportParameters = { it },
-        entityStorageVerifier: (EntityStorage) -> Unit,
+        entityStorageVerifier: (EntityStorage) -> Unit = { },
     ) {
         downloadGradleBinaries()
         withGradleUserHomeIsolation {
-            withConditionalScopedSystemProperty(
-                // The cache redirector is reachable from a developer machine and from a CI agent, so the redirect runs
-                // everywhere and no build reaches Maven Central directly (a 429). Android keeps its own repositories.
-                condition = { !project.contains("android", true) },
-                key = LSP_GRADLE_PROJECT_INIT_SCRIPTS,
-                value = getCacheRedirectorInitScriptPath().toString()
+            withScopedSystemProperties(
+                LSP_GRADLE_PROJECT_INIT_SCRIPTS to createCacheRedirectorInitScript().toString(),
+                LSP_GRADLE_JAVA_HOME_PROPERTY to jdkToUse.home.toString(),
+                LSP_GRADLE_DAEMON_NO_IDLE_TIMEOUT to "true"
             ) {
-                withScopedSystemProperties(
-                    LSP_GRADLE_JAVA_HOME_PROPERTY to jdkToUse.home.toString(),
-                    LSP_GRADLE_DAEMON_NO_IDLE_TIMEOUT to "true"
-                ) {
-                    doTest(
-                        project = project,
-                        driver = GradleDriver,
-                        testDataDir = testDataDir / "gradle",
-                        reporter = reporter,
-                        comparator = comparator,
-                        entityStorageVerifier = entityStorageVerifier,
-                        importParametersCustomizer = importParametersCustomizer
-                    )
-                }
+                doTest(
+                    project = project,
+                    driver = GradleDriver,
+                    testDataDir = testDataDir / "gradle",
+                    reporter = reporter,
+                    comparator = comparator,
+                    entityStorageVerifier = entityStorageVerifier,
+                    goldenFileName = goldenFileName,
+                    importParametersCustomizer = importParametersCustomizer
+                )
             }
         }
     }
@@ -212,46 +206,5 @@ abstract class GradleProjectImportTestCase : AbstractProjectImportTestCase() {
         }
         val userHome = SystemProperties.getUserHome()
         return Path.of(userHome).resolve(".gradle")
-    }
-
-    private fun getCacheRedirectorInitScriptPath(): Path {
-        return createTempFile("lsp-test-cache-redirector-patch", ".gradle").also {
-            it.writeText(
-                """
-                def replaceMavenCentral(repositories) {
-                    def redirected = 'https://cache-redirector.jetbrains.com/repo.maven.apache.org/maven2'
-                    def obsolete = repositories.findAll { repo ->
-                        repo instanceof MavenArtifactRepository &&
-                        (repo.url.toString().startsWith('https://repo.maven.apache.org/maven2') ||
-                         repo.url.toString().startsWith('https://repo1.maven.org/maven2'))
-                    }
-                    repositories.removeAll(obsolete)
-                    if (repositories.findAll { it instanceof MavenArtifactRepository && it.url.toString() == redirected }.isEmpty()) {
-                        repositories.maven { url = redirected }
-                    }
-                }
-
-                allprojects {
-                    buildscript {
-                        replaceMavenCentral(repositories)
-                    }
-                    replaceMavenCentral(repositories)
-                }
-
-                settingsEvaluated { settings ->
-                    def pluginRepos = settings.pluginManagement.repositories
-                    replaceMavenCentral(pluginRepos)
-                    // Adding any repository to pluginManagement drops the implicit gradlePluginPortal default, so a
-                    // plugin marker (a Kotlin DSL, a Spring plugin) no longer resolves. Re-add the portal to keep it.
-                    if (pluginRepos.findAll { it.name == 'Gradle Central Plugin Repository' }.isEmpty()) {
-                        pluginRepos.gradlePluginPortal()
-                    }
-                    if (settings.hasProperty('dependencyResolutionManagement')) {
-                        replaceMavenCentral(settings.dependencyResolutionManagement.repositories)
-                    }
-                }
-            """.trimIndent()
-            )
-        }
     }
 }

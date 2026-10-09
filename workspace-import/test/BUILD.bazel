@@ -2,6 +2,21 @@ load("@community//build:compiler-options.bzl", "create_kotlinc_options")
 load("@community//build:tests-options.bzl", "jps_test")
 load("@rules_jvm//:jvm.bzl", "jvm_library")
 
+# The KMP fixture of `KotlinMultiplatformGradleProjectImportTest`, for `KmpWizardGradleProject` in
+# `//language-server/integration-tests/kotlin-standalone`. The build outputs of a local import are left out.
+filegroup(
+    name = "gradleKotlinKmpProject",
+    srcs = glob(
+        ["testData/gradle/GradleKotlinKmpProject/**"],
+        exclude = [
+            "**/.gradle/**",
+            "**/.kotlin/**",
+            "**/build/**",
+        ],
+    ),
+    visibility = ["//language-server/integration-tests/kotlin-standalone:__pkg__"],
+)
+
 jps_test(
     name = "test_test",
     jvm_flags = [
