@@ -4,6 +4,7 @@
 package com.jetbrains.ls.imports.gradle
 
 import com.jetbrains.ls.imports.gradle.action.ProjectMetadata
+import com.jetbrains.ls.imports.gradle.kmp.KotlinMultiplatformMapper
 import com.jetbrains.ls.imports.gradle.model.AndroidDependency
 import com.jetbrains.ls.imports.gradle.model.AndroidProject
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet
@@ -23,6 +24,7 @@ import java.io.File
 
 internal class SourceSetDependencyResolver(
     private val project: ProjectMetadata,
+    private val kotlinMultiplatformMapper: KotlinMultiplatformMapper,
 ) {
 
     private val allIdeaModules = project.includedProjects.flatMap { it.modules }
@@ -33,9 +35,12 @@ internal class SourceSetDependencyResolver(
         .associateBy { androidProject -> androidProject.buildTreePath }
 
     private val projectLibraryIndex: ProjectLibraryIndex = ProjectLibraryIndex()
-    private val dependencyFileIndex: DependencyFileIndex = DependencyFileIndex()
+    /** Maps a classpath file to the dependencies it stands for. The KMP mapper reads it to resolve project artifacts. */
+    val dependencyFileIndex: DependencyFileIndex = DependencyFileIndex()
 
     init {
+        // KMP outputs go first, so a consumer of a KMP jar depends on the most specific source set first.
+        kotlinMultiplatformMapper.registerCompilationArtifacts(dependencyFileIndex)
         populateDependenciesFromSourceSetOutputs()
         allIdeaModules.forEach { module ->
             populateDependenciesFromIdeaModule(module)
@@ -189,6 +194,14 @@ internal class SourceSetDependencyResolver(
             }
 
             if (dependency is AndroidDependency.ProjectArtifact) {
+                // An Android-KMP library (`com.android.kotlin.multiplatform.library`) is no AGP project here: its
+                // artifact maps to the source sets of its Android compilation.
+                if (dependency.projectPath !in androidProjectsByBuildTreePath &&
+                    kotlinMultiplatformMapper.registerAndroidArtifacts(dependencyFileIndex, dependency.projectPath, dependency.classpath)
+                ) {
+                    artifacts += dependency.classpath
+                    return@forEach
+                }
                 dependency.classpath.forEach { artifactFile ->
                     val targetProject = androidProjectsByBuildTreePath[dependency.projectPath] ?: return@forEach
                     val targetProjectFqn = project.androidProjects.entries.firstOrNull { it.value == targetProject }?.key ?: return@forEach

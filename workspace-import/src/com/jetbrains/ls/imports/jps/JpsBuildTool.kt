@@ -67,6 +67,7 @@ import com.jetbrains.ls.imports.gradle.GradleTool
 import com.jetbrains.ls.imports.json.flattenExportedDependencies
 import com.jetbrains.ls.imports.maven.MavenTool
 import com.jetbrains.ls.imports.utils.LsImportBundle
+import com.jetbrains.ls.imports.utils.serializeNonDefaultCompilerArguments
 import com.jetbrains.ls.imports.utils.toIntellijUri
 import com.jetbrains.ls.snapshot.api.impl.core.toFileUrl
 import kotlinx.coroutines.CancellationException
@@ -87,10 +88,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonObject
 import org.eclipse.aether.repository.RemoteRepository
 import org.jdom.Element
 import org.jetbrains.idea.maven.aether.ArtifactKind
@@ -124,7 +121,6 @@ import org.jetbrains.jps.model.serialization.JpsProjectLoader
 import org.jetbrains.jps.model.serialization.PathMacroUtil
 import org.jetbrains.jps.model.serialization.impl.JpsPathVariablesConfigurationImpl
 import org.jetbrains.jps.util.JpsPathUtil
-import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.copyCommonCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.copyOf
@@ -133,7 +129,6 @@ import org.jetbrains.kotlin.config.KotlinFacetSettings
 import org.jetbrains.kotlin.config.createArguments
 import org.jetbrains.kotlin.config.isHmpp
 import org.jetbrains.kotlin.idea.facet.KotlinFacetType
-import org.jetbrains.kotlin.idea.workspaceModel.CompilerArgumentsSerializer
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
 import org.jetbrains.kotlin.idea.workspaceModel.toCompilerSettingsData
 import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
@@ -921,27 +916,6 @@ private fun resolveKotlinFacetSettings(module: JpsModule, projectSettings: JpsKo
         settings.targetPlatform = jvmTarget?.let { JvmPlatforms.jvmPlatformByTargetVersion(it) } ?: JvmPlatforms.defaultJvmPlatform
     }
     return settings
-}
-
-/**
- * Serializes only the arguments that differ from the defaults of the arguments class, so workspace JSON dumps
- * do not churn whenever the Kotlin compiler gains new flags. [CompilerArgumentsSerializer.deserializeFromString]
- * restores omitted fields to defaults, as it already does for the compact strings produced by the Gradle and
- * Maven importers.
- */
-private fun serializeNonDefaultCompilerArguments(arguments: CommonCompilerArguments): String {
-    val serialized = CompilerArgumentsSerializer.serializeToString(arguments)!!
-    val defaultArguments = arguments.javaClass.getDeclaredConstructor().newInstance()
-    val serializedDefaults = CompilerArgumentsSerializer.serializeToString(defaultArguments)!!
-    val allFields = Json.parseToJsonElement(serialized.drop(1)).jsonObject
-    val defaultFields = Json.parseToJsonElement(serializedDefaults.drop(1)).jsonObject
-    val nonDefaultFields = buildJsonObject {
-        (allFields.keys + defaultFields.keys).forEach { key ->
-            val value = allFields[key]
-            if (value != defaultFields[key]) put(key, value ?: JsonNull)
-        }
-    }
-    return serialized.take(1) + nonDefaultFields
 }
 
 private fun findJdks(projectPath: Path, defaultSdkHome: Path?): Collection<JavaHomeFinder.JdkEntry> {
