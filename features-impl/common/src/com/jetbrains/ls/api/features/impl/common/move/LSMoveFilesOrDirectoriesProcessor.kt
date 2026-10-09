@@ -20,6 +20,7 @@ import com.intellij.refactoring.util.NonCodeUsageInfo
 import com.intellij.usageView.UsageInfo
 import com.intellij.util.containers.MultiMap
 import com.jetbrains.ls.api.core.processors.LSRefactoringProcessor
+import com.jetbrains.ls.api.core.processors.runReadActionInBgt
 
 /**
  * @see com.intellij.refactoring.move.moveFilesOrDirectories.MoveFilesOrDirectoriesProcessor
@@ -37,7 +38,7 @@ open class LSMoveFilesOrDirectoriesProcessor(
     override fun collectConflicts(
         refUsages: Ref<Array<UsageInfo>>,
         conflicts: MultiMap<PsiElement, String>
-    ) {
+    ) = runReadActionInBgt(project) {
         MoveFileHandler.detectConflicts(elementsToMove, refUsages.get(), targetDirectory, conflicts)
     }
 

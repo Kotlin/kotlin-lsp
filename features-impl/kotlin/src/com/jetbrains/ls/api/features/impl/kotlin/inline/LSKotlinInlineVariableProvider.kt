@@ -19,6 +19,7 @@ import com.intellij.util.containers.MultiMap
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.processors.LSRefactoringProcessor
+import com.jetbrains.ls.api.core.processors.runReadActionInBgt
 import com.jetbrains.ls.api.core.util.findPsiFile
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.toTextRange
@@ -253,14 +254,15 @@ private class LSKotlinInlineVariableProcessor(
     override fun findUsages(): Array<UsageInfo> =
         ReferencesSearchScopeHelper.search(declaration).findAll().map { UsageInfo(it) }.toTypedArray()
 
-    override fun collectConflicts(refUsages: Ref<Array<UsageInfo>>, conflicts: MultiMap<PsiElement, String>) {
-        val usages = refUsages.get()
-        processor.additionalPreprocessUsages(usages, conflicts)
-        usages.forEach { usage ->
-            val element = usage.element ?: return@forEach
-            findCallableConflictForUsage(element)?.let { conflicts.putValue(element, it) }
+    override fun collectConflicts(refUsages: Ref<Array<UsageInfo>>, conflicts: MultiMap<PsiElement, String>) =
+        runReadActionInBgt(declaration.project) {
+            val usages = refUsages.get()
+            processor.additionalPreprocessUsages(usages, conflicts)
+            usages.forEach { usage ->
+                val element = usage.element ?: return@forEach
+                findCallableConflictForUsage(element)?.let { conflicts.putValue(element, it) }
+            }
         }
-    }
 
     override fun processUsages(initialUsages: Array<UsageInfo>): Array<UsageInfo> = initialUsages
 
