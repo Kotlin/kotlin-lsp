@@ -38,7 +38,10 @@ export class JvmTestBuilds {
     this.log = options.log ?? ((message) => getOutputChannel().appendLine(message));
   }
 
-  async ensureBuilt({ group, report, token }: TestRunInput): Promise<TestBuildOutcome> {
+  async ensureBuilt(
+    { group, report, token }: TestRunInput,
+    { moduleFile = group.uri.toString() }: { readonly moduleFile?: string } = {},
+  ): Promise<TestBuildOutcome> {
     if (token.isCancellationRequested) return 'skipped';
     // The run plan groups tests by module, so the module key matches its planning; the URI covers an unnamed module.
     const key = group.moduleName ?? group.uri.toString();
@@ -47,11 +50,7 @@ export class JvmTestBuilds {
 
     let response: BuildResponse;
     try {
-      response = await this.build(
-        group.uri.toString(),
-        (output) => line(report, output.line),
-        token,
-      );
+      response = await this.build(moduleFile, (output) => line(report, output.line), token);
     } catch (e) {
       if (token.isCancellationRequested) return 'skipped';
       return this.skip(report, `The build could not start: ${errorMessage(e)}.`);

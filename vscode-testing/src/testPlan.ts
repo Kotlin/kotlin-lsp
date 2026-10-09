@@ -1,8 +1,8 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 import type { TestItem, TestItemCollection, TestRunRequest, TestTag, Uri } from 'vscode';
 import type { TestRunGroup } from './testLanguage';
-import type { TestNodeId, UniqueTestNode } from './testProtocol';
-import { ownerOf, type TestTree } from './testTree';
+import type { TestItemDto, TestNodeId, UniqueTestNode } from './testProtocol';
+import { ownerOf, runsOwnTree, type TestTree, treeId } from './testTree';
 
 export interface TestLaunchGroup extends TestRunGroup {
   readonly items: readonly TestItem[];
@@ -30,6 +30,7 @@ export function planTestRun(
 ): TestRunPlan {
   const excluded = new Set((request.exclude ?? []).map((item) => item.id));
   const groups = new Map<string, GroupBuilder>();
+  const ownTrees = new Map<string, GroupBuilder>();
   const unresolved: TestItem[] = [];
 
   const holdsExcluded = (item: TestItem): boolean => {
@@ -44,6 +45,19 @@ export function planTestRun(
     item.children.forEach(visit);
   };
 
+  const planOwnTree = (owner: TestItemDto): void => {
+    const item = tree.get(treeId(owner.moduleName, owner.id))?.item;
+    if (!item?.uri || ownTrees.has(item.id)) return;
+    const { moduleName = null } = owner;
+    ownTrees.set(item.id, {
+      moduleName,
+      items: [item],
+      testIds: [owner.id],
+      uniqueIds: [],
+      uri: item.uri,
+    });
+  };
+
   const visit = (item: TestItem): void => {
     if (excluded.has(item.id)) return;
     const entry = tree.get(item.id);
@@ -52,11 +66,17 @@ export function planTestRun(
       return;
     }
     if (!item.uri) return;
-    const { moduleName } = ownerOf(entry);
+    const owner = ownerOf(entry);
     if (!item.tags.some((carried) => carried.id === tag.id)) {
       descend(item);
       return;
     }
+
+    if (runsOwnTree(owner)) {
+      planOwnTree(owner);
+      return;
+    }
+    const { moduleName } = owner;
     const key = moduleName ?? '';
     const group = groups.get(key) ?? {
       moduleName: moduleName ?? null,
@@ -82,7 +102,10 @@ export function planTestRun(
   else roots.forEach(visit);
 
   return {
-    groups: [...groups.values()].map((group) => ({ ...group, name: launchName(group) })),
+    groups: [...groups.values(), ...ownTrees.values()].map((group) => ({
+      ...group,
+      name: launchName(group),
+    })),
     unresolved,
   };
 }

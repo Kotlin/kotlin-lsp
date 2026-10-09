@@ -15,6 +15,8 @@ import { type DiscoveryScope, scopeKeysOf } from './testScope';
 export const treeId = (moduleName: string | null | undefined, testId: string): string =>
   `${moduleName ?? ''}/${testId}`;
 
+export const runsOwnTree = (dto: TestItemDto): boolean => dto.kind === 'TEST' && !dto.parentId;
+
 export interface DiscoveredTestEntry {
   readonly origin: 'discovered';
   readonly item: TestItem;
@@ -79,7 +81,9 @@ export class TestTree {
     const parent = this.entries.get(options.parent.id);
     if (!parent) return undefined;
     const owner = ownerOf(parent);
-    const id = treeId(owner.moduleName, nodeId);
+    const id = runsOwnTree(owner)
+      ? `${treeId(owner.moduleName, owner.id)}/${nodeId}`
+      : treeId(owner.moduleName, nodeId);
     const existing = this.entries.get(id);
     if (existing) return existing.item;
 
@@ -147,10 +151,9 @@ export class TestTree {
 
   private mergeOne(dto: TestItemDto): string | undefined {
     const id = treeId(dto.moduleName, dto.id);
-    const container =
-      dto.kind === 'SUITE' && !dto.parentId
-        ? this.ensureGroupPath(groupPath(dto))
-        : this.entries.get(treeId(dto.moduleName, dto.parentId ?? ''))?.item.children;
+    const container = !dto.parentId
+      ? this.ensureGroupPath(groupPath(dto))
+      : this.entries.get(treeId(dto.moduleName, dto.parentId))?.item.children;
     // A test or a nested suite whose parent isn't in this batch (and isn't already known) has nowhere to go.
     if (!container) return undefined;
 

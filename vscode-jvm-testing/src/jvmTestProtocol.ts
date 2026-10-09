@@ -24,4 +24,5 @@ export interface JvmTestLaunch {
   args: string[];
   runtimeClasspath: string[];
   runtimeModulePath?: string[];
+  file?: string | null;
 }

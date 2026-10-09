@@ -316,3 +316,44 @@ describe('the tests a run marks queued', () => {
     assert.deepEqual(leafTests(classItem(tree)), [classItem(tree)]);
   });
 });
+
+describe('planning a run of a test without a parent, as a suite file is', () => {
+  const SUITE_URI = 'file:///p/moduleA/testng.xml';
+  const SUITE_ID = `file:${SUITE_URI}`;
+
+  function treeWithSuiteFile() {
+    const made = makeTree();
+    made.tree.sync(moduleScope('moduleA'), [
+      dto({ id: 'com.example.OneTest', uri: URI_A }),
+      dto({ id: SUITE_ID, kind: 'TEST', uri: SUITE_URI, groups: [] }),
+    ]);
+    return { ...made, suiteItem: made.tree.get(treeId('moduleA', SUITE_ID))!.item };
+  }
+
+  test('runs it in a launch of its own, also in a run of the whole tree', () => {
+    // Its runner reports a tree of its own, and nothing else may report into that tree.
+    const { controller, tree, suiteItem } = treeWithSuiteFile();
+
+    const plan = planTestRun(request(), controller.items, tree, RUN);
+
+    assert.deepEqual(summarize(plan), ['moduleA → com.example.OneTest', `moduleA → ${SUITE_ID}`]);
+    assert.deepEqual(plan.groups[1]!.items, [suiteItem]);
+    assert.equal(plan.groups[1]!.uri.toString(), SUITE_URI);
+  });
+
+  test('runs it whole for a node of its tree, which only a run of it sets up', () => {
+    const { controller, tree, suiteItem } = treeWithSuiteFile();
+    const runtime = tree.ensureRuntimeItem({
+      parent: suiteItem,
+      nodeId: 'com.example.OneTest',
+      displayName: 'OneTest',
+    })!;
+
+    const plan = planTestRun(request({ include: [runtime] }), controller.items, tree, RUN);
+
+    // The runner names the node as discovery names the class, and still the two stay apart.
+    assert.notEqual(runtime.id, treeId('moduleA', 'com.example.OneTest'));
+    assert.deepEqual(summarize(plan), [`moduleA → ${SUITE_ID}`]);
+    assert.deepEqual(plan.groups[0]!.items, [suiteItem]);
+  });
+});

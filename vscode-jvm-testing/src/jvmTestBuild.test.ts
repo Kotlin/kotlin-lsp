@@ -50,6 +50,21 @@ describe('JvmTestBuilds', () => {
     assert.deepEqual(output, ['BUILD SUCCESS\n']);
   });
 
+  test('builds the module of the file the server names, which a suite file outside the sources cannot select', async () => {
+    const built: string[] = [];
+    const builds = new JvmTestBuilds({
+      log: () => {},
+      build: (uri) => {
+        built.push(uri);
+        return Promise.resolve({ exitCode: 0 });
+      },
+    });
+
+    await builds.ensureBuilt(inputOf('/p/app/testng.xml'), { moduleFile: 'file:///p/app/test' });
+
+    assert.deepEqual(built, ['file:///p/app/test']);
+  });
+
   test('builds one module once per run, even for two test files of that module', async () => {
     let count = 0;
     const builds = new JvmTestBuilds({

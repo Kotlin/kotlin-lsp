@@ -149,7 +149,6 @@ export class TeamCityReader {
     if (nodeId === undefined) return undefined;
     const parentNodeId = attributes.parentNodeId;
     const parent = parentNodeId === undefined ? undefined : this.nodesById.get(parentNodeId);
-    if (!parent) return undefined;
     const node = this.report.runtimeChild({
       parent,
       uniqueId: nodeId,

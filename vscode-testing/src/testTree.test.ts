@@ -122,6 +122,22 @@ describe('the tree', () => {
     assert.equal(dto?.uri, URI_A);
   });
 
+  test('a test without a parent sits under its module, as a suite file does', () => {
+    const { controller, tree } = makeTree();
+    const suiteFile = 'file:///p/moduleA/testng.xml';
+
+    tree.sync(fileScope(suiteFile), [
+      { ...classDto('moduleA', 'suiteFile', suiteFile), kind: 'TEST', groups: [] },
+    ]);
+
+    assert.deepEqual(paths(controller.items), [
+      'module:moduleA',
+      'module:moduleA > moduleA/suiteFile',
+    ]);
+    // Its tests sit elsewhere in the tree, so no discovery owes it any.
+    assert.equal(tree.testsUnknown(tree.get('moduleA/suiteFile')!.item), false);
+  });
+
   test('a class the server sent without a parentId is a root', () => {
     // `explicitNulls = false`: the server drops a null field, so no parentId reaches the client.
     const { controller, tree } = makeTree();

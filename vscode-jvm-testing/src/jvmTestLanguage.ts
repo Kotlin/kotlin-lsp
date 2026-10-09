@@ -69,33 +69,24 @@ export class JvmTestLanguage implements TestLanguage<JvmTestProfile> {
     return debugAdapterRunner({
       mode: profile,
       launches: async (input) => {
-        const [launches, built] = await Promise.all([
-          this.resolveLaunches(input.group),
-          builds.ensureBuilt(input),
-        ]);
+        const launches = await this.serverLaunches(input.group);
+        const moduleFile = launches.find((launch) => launch.file)?.file ?? undefined;
+        const built = await builds.ensureBuilt(input, { moduleFile });
         if (built === 'failed') {
           throw new Error('Compilation failed. See the build output in Test Results.');
         }
-        return launches;
+        return launches.map((launch) => configOf(launch, input.group));
       },
       stackFrames: this.stackFrames,
     });
   }
 
   async resolveLaunches(group: TestRunGroup): Promise<JvmTestLaunchConfig[]> {
-    const launches = await this.server.launches({ testIds: [...group.testIds], uniqueIds: [...group.uniqueIds] });
-    // The module's own runtime comes from the server at launch time; only the runner's jars travel from here. The
-    // server puts the runner's module path entries on the class path of a module that is not modular.
-    return launches.map((launch) => ({
-      type: 'intellij_debugger',
-      request: 'launch',
-      console: 'none',
-      mainClass: launch.mainClass,
-      file: group.uri.fsPath,
-      args: launch.args,
-      additionalClassPaths: launch.runtimeClasspath,
-      additionalModulePaths: launch.runtimeModulePath ?? [],
-    }));
+    return (await this.serverLaunches(group)).map((launch) => configOf(launch, group));
+  }
+
+  private serverLaunches(group: TestRunGroup): Promise<JvmTestLaunch[]> {
+    return this.server.launches({ testIds: [...group.testIds], uniqueIds: [...group.uniqueIds] });
   }
 
   private readonly stackFrames: StackFrameParser = (stacktrace, report) => {
@@ -119,13 +110,26 @@ export class JvmTestLanguage implements TestLanguage<JvmTestProfile> {
       const method = qualifiedMethod.lastIndexOf('.');
       let className = method > 0 ? qualifiedMethod.slice(0, method) : undefined;
       while (className) {
-        const uri = report.atLocation(jvmSuiteLocation(className))?.uri;
+        const uri = report.sourceOf(jvmSuiteLocation(className));
         if (uri) return uri;
         const nested = className.lastIndexOf('$');
         className = nested > 0 ? className.slice(0, nested) : undefined;
       }
       return undefined;
     }
+  };
+}
+
+function configOf(launch: JvmTestLaunch, group: TestRunGroup): JvmTestLaunchConfig {
+  return {
+    type: 'intellij_debugger',
+    request: 'launch',
+    console: 'none',
+    mainClass: launch.mainClass,
+    file: launch.file ?? group.uri.fsPath,
+    args: launch.args,
+    additionalClassPaths: launch.runtimeClasspath,
+    additionalModulePaths: launch.runtimeModulePath ?? [],
   };
 }
 

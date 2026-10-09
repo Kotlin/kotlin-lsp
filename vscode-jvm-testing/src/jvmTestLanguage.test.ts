@@ -45,9 +45,18 @@ describe('JvmTestLanguage.resolveLaunches', () => {
   });
 
   test('passes the runner module path entries on for the server to place', async () => {
-    const [config] = await launchedConfigs({ ...junitLaunch, runtimeModulePath: ['/idea/lib/junit-platform-launcher.jar'] });
+    const [config] = await launchedConfigs({
+      ...junitLaunch,
+      runtimeModulePath: ['/idea/lib/junit-platform-launcher.jar'],
+    });
 
     assert.deepEqual(config.additionalModulePaths, ['/idea/lib/junit-platform-launcher.jar']);
+  });
+
+  test('names the file the server picked, when the launched file is outside the test sources', async () => {
+    const [config] = await launchedConfigs({ ...junitLaunch, file: 'file:///project/app/testSrc' });
+
+    assert.equal(config.file, 'file:///project/app/testSrc');
   });
 
   test('keeps the output of the test process out of the Debug Console', async () => {

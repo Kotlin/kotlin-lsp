@@ -2,7 +2,14 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { type StackFrameParser, TeamCityReader } from './teamCityReader';
-import { classDto, FOO_FILE, makeReport, methodDto } from './testRunFixture';
+import {
+  classDto,
+  FOO_FILE,
+  makeReport,
+  methodDto,
+  SUITE_FILE,
+  suiteFileDto,
+} from './testRunFixture';
 
 const escape = (value: string): string =>
   value
@@ -373,6 +380,66 @@ describe('which node a runner message is about', () => {
     ]);
   });
 
+  test('a run of a suite file builds the tree the runner reports under the suite file', () => {
+    // The classes of the suite are in the tree too, and still their results here belong to the suite.
+    const suite = suiteFileDto();
+    const { report, tree, calls } = makeReport({
+      dtos: [classDto('com.example.Foo'), methodDto('com.example.Foo', 'test'), suite],
+      launched: [suite.id],
+    });
+
+    new TeamCityReader(report).feed(
+      [
+        teamcity('testSuiteStarted', {
+          name: 'test 1',
+          nodeId: 'test 1',
+          parentNodeId: '0',
+          locationHint: SUITE_FILE,
+        }),
+        teamcity('testSuiteStarted', {
+          name: 'Foo',
+          nodeId: 'com.example.Foo',
+          parentNodeId: 'test 1',
+          locationHint: CLASS_HINT,
+        }),
+        teamcity('testStarted', {
+          name: 'Foo.test',
+          nodeId: 'com.example.Foo/test',
+          parentNodeId: 'com.example.Foo',
+          locationHint: METHOD_HINT,
+        }),
+        teamcity('testFailed', { nodeId: 'com.example.Foo/test', message: 'boom' }),
+        teamcity('testSuiteFinished', { nodeId: 'com.example.Foo' }),
+        teamcity('testSuiteFinished', { nodeId: 'test 1' }),
+        // The second suite of the file repeats the location of the first one.
+        teamcity('testSuiteStarted', {
+          name: 'test 2',
+          nodeId: 'test 2',
+          parentNodeId: '0',
+          locationHint: SUITE_FILE,
+        }),
+        teamcity('testSuiteFinished', { nodeId: 'test 2' }),
+      ].join('\n') + '\n',
+    );
+
+    const suiteItem = tree.get(`moduleA/${suite.id}`)!.item;
+    const method = `moduleA/${suite.id}/com.example.Foo/test`;
+    assert.deepEqual(calls, [
+      `started ${method}`,
+      `failed ${method}`,
+      `passed moduleA/${suite.id}/test 2`,
+    ]);
+    assert.equal(suiteItem.label, 'testng.xml');
+    assert.deepEqual(
+      [...suiteItem.children].map(([, child]) => child.label),
+      ['test 1', 'test 2'],
+    );
+    assert.equal(tree.get(method)!.item.parent?.parent?.label, 'test 1');
+    // A stack frame of the class still links to its source.
+    assert.equal(report.atLocation(CLASS_HINT), undefined);
+    assert.equal(report.sourceOf(CLASS_HINT)?.toString(), FOO_FILE);
+  });
+
   test('a node whose parent the run never explained has nowhere to go', () => {
     const { feed, calls } = readerFor();
 
@@ -504,7 +571,7 @@ describe('what a runner message reports', () => {
   test('the language reads the frames of the stacktrace, and the first in a known file is marked', () => {
     const { feed, messages } = readerFor((stacktrace, report) => [
       { label: 'org.junit.Assert.fail', line: 3 },
-      { label: stacktrace, uri: report.atLocation(CLASS_HINT)?.uri, line: 7 },
+      { label: stacktrace, uri: report.sourceOf(CLASS_HINT), line: 7 },
     ]);
 
     feed(
