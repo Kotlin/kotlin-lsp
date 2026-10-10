@@ -34,6 +34,7 @@ import com.jetbrains.ls.api.features.impl.common.inspectCode.LSCommonBatchInspec
 import com.jetbrains.ls.api.features.impl.common.references.LSCommonReferencesProvider
 import com.jetbrains.ls.api.features.impl.common.relatedTests.LSCommonRelatedTestsProvider
 import com.jetbrains.ls.api.features.impl.common.surroundWith.LSSurroundWithCodeActionProvider
+import com.jetbrains.ls.api.features.impl.common.safeDelete.LSCommonSafeDeleteProvider
 import com.jetbrains.ls.api.features.impl.common.typeDefinition.LSCommonTypeDefinitionProvider
 import com.jetbrains.ls.api.features.impl.javaBase.LSJavaPackageDefinitionProvider
 import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.KotlinFirCacheImpl
@@ -111,6 +112,7 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSKotlinInlineVariableProvider,
         LSKotlinExtractVariableProvider,
         LSSurroundWithCodeActionProvider(setOf(LSKotlinLanguage)),
+        LSCommonSafeDeleteProvider(setOf(LSKotlinLanguage)),
         LSJvmRenameDirectoryProvider,
         LSCommonFormattingProvider(setOf(LSKotlinLanguage)),
         LSCommonImplementationProvider(setOf(LSKotlinLanguage)),

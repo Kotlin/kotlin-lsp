@@ -390,7 +390,12 @@ sealed class ModCommandData {
             }
             is ModShowConflicts -> when {
                 command.isEmpty -> Nothing
-                server?.config?.clientSupportsConflictView != true -> null
+                // The client cannot ask the user, so the fix goes on, and the user is told that it can break the code.
+                server?.config?.clientSupportsConflictView != true -> DisplayMessage(
+                    (listOf(LspServerBundle.message("conflicts.title")) +
+                     command.conflicts.values.flatMap { it.messages }.map { StringUtil.removeHtmlTags(it, true) }).joinToString("\n"),
+                    ModDisplayMessage.MessageKind.INFORMATION,
+                )
                 else -> ShowConflicts(
                     command.conflicts.map { (element, conflict) ->
                         ShowConflicts.Conflict(
