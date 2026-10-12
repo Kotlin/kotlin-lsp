@@ -1,7 +1,7 @@
 const RESUME_DOWNLOAD = 'Resume Download';
 const RESUME_SETUP = 'Resume Setup';
 const DELETE_DOWNLOADED_FILES = 'Delete Downloaded Files';
-const REDOWNLOAD_SERVER = 'Redownload Server';
+const REDOWNLOAD_SERVER = 'Redownload Language Server';
 const CANCELLATION_PHASE_COPY: Record<ServerBundlePhase, { label: string; resumeAction: string }> =
   {
     waiting: { label: 'setup', resumeAction: RESUME_SETUP },
