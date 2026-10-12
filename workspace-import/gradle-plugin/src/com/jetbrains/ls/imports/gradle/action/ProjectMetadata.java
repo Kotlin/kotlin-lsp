@@ -1,12 +1,13 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.gradle.action;
 
-import com.jetbrains.ls.imports.gradle.model.ExternalModuleDependency;
 import com.jetbrains.ls.imports.gradle.model.AndroidProject;
+import com.jetbrains.ls.imports.gradle.model.ExternalModuleDependency;
 import com.jetbrains.ls.imports.gradle.model.KotlinModule;
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet;
 import org.gradle.tooling.model.idea.IdeaProject;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
 import java.util.List;
@@ -21,6 +22,7 @@ public final class ProjectMetadata implements Serializable {
     private final @NotNull Map<String, @NotNull Set<ExternalModuleDependency>> moduleDependencies;
     private final @NotNull Map<@NotNull String, @NotNull AndroidProject> androidProjects;
     private final @NotNull Map<@NotNull String, @NotNull String> moduleCoordinates;
+    private final @Nullable String gradleHome;
 
     public ProjectMetadata(
             @NotNull List<? extends IdeaProject> includedProjects,
@@ -28,7 +30,8 @@ public final class ProjectMetadata implements Serializable {
             @NotNull Map<@NotNull String, @NotNull Set<@NotNull ModuleSourceSet>> sourceSets,
             @NotNull Map<String, @NotNull Set<ExternalModuleDependency>> moduleDependencies,
             @NotNull Map<@NotNull String, @NotNull AndroidProject> androidProjects,
-            @NotNull Map<@NotNull String, @NotNull String> moduleCoordinates
+            @NotNull Map<@NotNull String, @NotNull String> moduleCoordinates,
+            @Nullable String gradleHome
     ) {
         this.includedProjects = includedProjects;
         this.kotlinModules = kotlinModules;
@@ -36,6 +39,7 @@ public final class ProjectMetadata implements Serializable {
         this.moduleDependencies = moduleDependencies;
         this.androidProjects = androidProjects;
         this.moduleCoordinates = moduleCoordinates;
+        this.gradleHome = gradleHome;
     }
 
     public @NotNull List<? extends IdeaProject> getIncludedProjects() {
@@ -64,5 +68,9 @@ public final class ProjectMetadata implements Serializable {
      */
     public @NotNull Map<@NotNull String, @NotNull String> getModuleCoordinates() {
         return moduleCoordinates;
+    }
+
+    public @Nullable String getGradleHome() {
+        return gradleHome;
     }
 }

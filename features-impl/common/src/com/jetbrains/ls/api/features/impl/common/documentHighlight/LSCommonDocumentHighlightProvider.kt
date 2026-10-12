@@ -1,18 +1,23 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.documentHighlight
 
-import com.intellij.codeInsight.highlighting.HighlightUsagesHandler
 import com.intellij.codeInsight.highlighting.ReadWriteAccessDetector
 import com.intellij.find.findUsages.FindUsagesManager
+import com.intellij.injected.editor.DocumentWindow
+import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.findPsiFile
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.PsiReference
+import com.intellij.psi.ReferenceRange
 import com.intellij.psi.search.LocalSearchScope
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.features.LSInjectedFile
+import com.jetbrains.ls.api.core.features.hostRanges
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.TargetKind
 import com.jetbrains.ls.api.core.util.findVirtualFile
@@ -40,17 +45,17 @@ class LSCommonDocumentHighlightProvider(
                 val handler = FindUsagesManager(project).getFindUsagesHandler(target, true/*forbid showing dialogs*/) ?: return@readAction null
 
                 val kindsByRange = LinkedHashMap<TextRange, DocumentHighlightKind>()
-                declarationNameRange(target, psiFile)?.let { range ->
-                    kindsByRange[range] = when {
-                        detector?.isDeclarationWriteAccess(target) == true -> DocumentHighlightKind.Write
-                        else -> DocumentHighlightKind.Text
-                    }
+                val declarationKind = when {
+                    detector?.isDeclarationWriteAccess(target) == true -> DocumentHighlightKind.Write
+                    else -> DocumentHighlightKind.Text
                 }
+                declarationNameHostRanges(target, psiFile).forEach { kindsByRange[it] = declarationKind }
+                // The host file scope also covers its injections, so a target in the host or in any injection gets every usage.
                 handler.findReferencesToHighlight(target, LocalSearchScope(psiFile)).forEach { reference ->
                     val kind = referenceKind(detector, target, reference)
-                    val ranges = ArrayList<TextRange>()
-                    HighlightUsagesHandler.collectHighlightRanges(reference, ranges)
-                    ranges.forEach { kindsByRange.putIfAbsent(it, kind) }
+                    ReferenceRange.getAbsoluteRanges(reference).forEach { range ->
+                        hostRanges(reference.element, range, psiFile).forEach { kindsByRange.putIfAbsent(it, kind) }
+                    }
                 }
 
                 val document = psiFile.fileDocument
@@ -61,10 +66,24 @@ class LSCommonDocumentHighlightProvider(
         }
     }
 
-    private fun declarationNameRange(target: PsiElement, psiFile: PsiFile): TextRange? {
-        val nameIdentifier = (target as? PsiNameIdentifierOwner)?.nameIdentifier ?: return null
-        if (nameIdentifier.containingFile != psiFile) return null
-        return nameIdentifier.textRange?.takeIf { !it.isEmpty }
+    /** The host ranges of the declaration name of [target] when it lies in [hostFile] or in one of its injections. */
+    private fun declarationNameHostRanges(target: PsiElement, hostFile: PsiFile): List<TextRange> {
+        val nameIdentifier = (target as? PsiNameIdentifierOwner)?.nameIdentifier ?: return emptyList()
+        return hostRanges(nameIdentifier, nameIdentifier.textRange ?: return emptyList(), hostFile)
+    }
+
+    /**
+     * The host ranges of [range] in the file of [element] when that is [hostFile] or one of its injections:
+     * one range per editable fragment, so the host text between the fragments (quotes, `+`) stays out.
+     */
+    private fun hostRanges(element: PsiElement, range: TextRange, hostFile: PsiFile): List<TextRange> {
+        if (range.isEmpty) return emptyList()
+        val file = element.containingFile ?: return emptyList()
+        if (file == hostFile) return listOf(range)
+        val injectedLanguageManager = InjectedLanguageManager.getInstance(hostFile.project)
+        if (!injectedLanguageManager.isInjectedFragment(file) || injectedLanguageManager.getTopLevelFile(file) != hostFile) return emptyList()
+        val window = PsiDocumentManager.getInstance(hostFile.project).getCachedDocument(file) as? DocumentWindow ?: return emptyList()
+        return LSInjectedFile(file, window).hostRanges(range)
     }
 
     private fun referenceKind(detector: ReadWriteAccessDetector?, target: PsiElement, reference: PsiReference): DocumentHighlightKind {

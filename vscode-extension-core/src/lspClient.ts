@@ -63,6 +63,7 @@ import {
 } from './serverBundleDownload';
 import { type ClientFeatureFactory, startClientWithFeatures } from './clientFeatureFactories';
 import { routerArgs, routerPath } from './lspRouter';
+import { subscribeBuildOutput } from './buildTask';
 import { isDataSharingChoice, isRegion } from './consentValues';
 import type { ServerRestartState } from './serverRestartState';
 import {
@@ -83,6 +84,7 @@ import {
 } from './serverDownloadRecovery';
 import { proxyJvmOptions } from './proxySettings';
 import { wslJvmOptions } from './wslJvmOptions';
+import { WorkspaceImportStateNotification } from './workspaceImport';
 import {
   buildToolConflictState,
   createLatestSnapshotTracker,
@@ -155,6 +157,11 @@ const workspaceImportStatusRequest = new RequestType<
   void
 >('intellij/workspaceImportStatus');
 const CHOOSE_BUILD_TOOL_ACTION = 'Choose Build Tool…';
+
+const didFinishWorkspaceImport = new vscode.EventEmitter<void>();
+
+/** Fires after a successful import cycle, once the workspace model is updated. */
+export const onDidFinishWorkspaceImport: vscode.Event<void> = didFinishWorkspaceImport.event;
 
 const clientSubscriptions: ((client: LanguageClient, stateChange: StateChangeEvent) => void)[] = [];
 
@@ -496,6 +503,7 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
     // The process is spawned as the client starts, so this is what it will be launched with.
     const launchSettings = launchSettingsSnapshot();
     const workspaceImportStatus = registerWorkspaceImportStatusHandler(runClient);
+    registerWorkspaceImportStateHandler(runClient);
     try {
       await startClientWithFeatures(runClient, configuredClientFeatureFactories);
       // A new process read the launch settings too, which a reload cannot. Edits made while it was
@@ -503,6 +511,7 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
       pendingLaunchChange = launchSettingsSnapshot() !== launchSettings;
       markInitializationOptionsApplied(initializationOptions);
       registerImportLogHandler(runClient);
+      getContext().subscriptions.push(subscribeBuildOutput(runClient));
       registerCopyToClipboardHandler(runClient);
       registerChooseActionMenuHandler(runClient);
       registerRunEditorCommandHandler(runClient);
@@ -602,6 +611,14 @@ function registerImportLogHandler(client: LanguageClient): void {
     } else if (p.succeeded) {
       clearBuildError();
     }
+  });
+  getContext().subscriptions.push(subscription);
+}
+
+/** Registers before the client starts, so a fast initial import cannot finish unobserved. */
+function registerWorkspaceImportStateHandler(client: LanguageClient): void {
+  const subscription = client.onNotification(WorkspaceImportStateNotification, (params) => {
+    if (params.phase === 'FINISHED') didFinishWorkspaceImport.fire();
   });
   getContext().subscriptions.push(subscription);
 }

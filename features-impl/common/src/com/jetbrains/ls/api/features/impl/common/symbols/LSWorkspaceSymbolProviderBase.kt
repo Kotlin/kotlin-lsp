@@ -1,7 +1,6 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.symbols
 
-import com.intellij.navigation.NavigationItem
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.logger
 import com.jetbrains.ls.api.core.LSServer
@@ -9,13 +8,14 @@ import com.jetbrains.ls.api.core.features.LSWorkspaceSymbolCustomizer
 import com.jetbrains.ls.api.core.features.TYPE_SYMBOL_KINDS
 import com.jetbrains.ls.api.core.features.WORKSPACE_SYMBOL_DATA_CONTRIBUTOR
 import com.jetbrains.ls.api.core.features.WORKSPACE_SYMBOL_DATA_EXCLUDE_LIBRARIES
-import com.jetbrains.ls.api.core.features.WORKSPACE_SYMBOL_DATA_INDEX
 import com.jetbrains.ls.api.core.features.WORKSPACE_SYMBOL_DATA_NAME
 import com.jetbrains.ls.api.core.features.WORKSPACE_SYMBOL_DATA_QUERY
+import com.jetbrains.ls.api.core.features.WORKSPACE_SYMBOL_DATA_STUB_ID
 import com.jetbrains.ls.api.core.features.lsContributeWorkspaceSymbols
 import com.jetbrains.ls.api.core.features.requestedKinds
 import com.jetbrains.ls.api.core.features.workspaceSymbolElement
 import com.jetbrains.ls.api.core.features.workspaceSymbolItemsByName
+import com.jetbrains.ls.api.core.features.workspaceSymbolStubId
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.features.symbols.LSWorkspaceSymbolProvider
@@ -62,8 +62,8 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
     }
 
     /**
-     * Finds the item again by [WorkspaceSymbol.data] (contributor class, query, name, ordinal in the file, scope, see [lsContributeWorkspaceSymbols])
-     * and gives the symbol its full location. Falls back to the first item of the same kind in the file.
+     * Finds the item again by [WorkspaceSymbol.data] (contributor class, query, name, stub id in the file, scope, see [lsContributeWorkspaceSymbols])
+     * and gives the symbol its full location. `null` when the item is gone, e.g. the file changed: the client keeps the URI.
      */
     context(server: LSServer, handlerContext: LspHandlerContext)
     final override suspend fun resolveWorkspaceSymbol(symbol: WorkspaceSymbol): WorkspaceSymbol? {
@@ -72,7 +72,7 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
         val contributorClass = data[WORKSPACE_SYMBOL_DATA_CONTRIBUTOR]?.jsonPrimitive?.contentOrNull ?: return null
         val name = data[WORKSPACE_SYMBOL_DATA_NAME]?.jsonPrimitive?.contentOrNull ?: return null
         val query = data[WORKSPACE_SYMBOL_DATA_QUERY]?.jsonPrimitive?.contentOrNull ?: return null
-        val index = data[WORKSPACE_SYMBOL_DATA_INDEX]?.jsonPrimitive?.intOrNull ?: return null
+        val stubId = data[WORKSPACE_SYMBOL_DATA_STUB_ID]?.jsonPrimitive?.intOrNull ?: return null
         val excludeLibraries = data[WORKSPACE_SYMBOL_DATA_EXCLUDE_LIBRARIES]?.jsonPrimitive?.booleanOrNull == true
         val customizer = createCustomizer()
         // The class-kind contributors may be outside the default list (Go).
@@ -80,14 +80,11 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
             .firstOrNull { it.javaClass.name == contributorClass } ?: return null
         return server.withAnalysisContext {
             readAction {
-                // Count as lsContributeWorkspaceSymbols does: every item of the name in its file, before any filter.
-                val itemsInFile = workspaceSymbolItemsByName(project, contributor, name, query, excludeLibraries).filter { item ->
-                    item.workspaceSymbolElement()?.containingFile?.virtualFile?.let { DocumentUri(it.uri) } == uri
+                val item = workspaceSymbolItemsByName(project, contributor, name, query, excludeLibraries).firstOrNull { item ->
+                    item.workspaceSymbolElement()?.containingFile?.virtualFile?.let { DocumentUri(it.uri) } == uri &&
+                    item.workspaceSymbolStubId() == stubId
                 }
-                fun symbolOfSameKind(item: NavigationItem): WorkspaceSymbol? =
-                    customizer.createWorkspaceSymbol(item, contributor)?.takeIf { it.kind == symbol.kind }
-                val fresh = itemsInFile.getOrNull(index)?.let(::symbolOfSameKind)
-                            ?: itemsInFile.firstNotNullOfOrNull(::symbolOfSameKind)
+                val fresh = item?.let { customizer.createWorkspaceSymbol(it, contributor) }?.takeIf { it.kind == symbol.kind }
                 fresh?.let { symbol.copy(location = it.location) }
             }
         }

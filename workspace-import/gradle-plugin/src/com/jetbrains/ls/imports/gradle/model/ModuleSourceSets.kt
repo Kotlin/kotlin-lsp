@@ -11,4 +11,6 @@ interface ModuleSourceSets : Serializable {
      * substitution; mirrors the Maven importer's module coordinate.
      */
     val moduleCoordinate: String?
+    /** The home of the Gradle distribution that runs the sync. */
+    val gradleHome: String?
 }

@@ -22,6 +22,17 @@ export const classDto = (fqn: string): TestItemDto => ({
   groups: [],
 });
 
+export const SUITE_FILE = 'file:///p/moduleA/testng.xml';
+
+/** A suite file, such as a TestNG `testng.xml`: a test without a parent, which runs tests that sit elsewhere in the tree. */
+export const suiteFileDto = (): TestItemDto => ({
+  ...classDto(`file:${SUITE_FILE}`),
+  displayName: 'testng.xml',
+  uri: SUITE_FILE,
+  kind: 'TEST',
+  location: SUITE_FILE,
+});
+
 export const methodDto = (fqn: string, method: string): TestItemDto => ({
   ...classDto(fqn),
   id: `${fqn}#${method}` as TestNodeId,
@@ -52,6 +63,7 @@ export function recordRun(): RecordedRun {
       durations.set(item.id, duration);
     };
   const run = {
+    enqueued: (item: TestItem) => calls.push(`enqueued ${item.id}`),
     started: (item: TestItem) => calls.push(`started ${item.id}`),
     passed: (item: TestItem, duration?: number) => {
       calls.push(`passed ${item.id}`);

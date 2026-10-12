@@ -60,18 +60,19 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
         Map<String, AndroidProject> androidProjects = new HashMap<>();
         Map<String, String> moduleCoordinates = new HashMap<>();
         List<InternalIdeaProject> ideaProjects = findProjects(controller);
-        resolveModels(ideaProjects, controller, syncSettings, kotlinModules, sourceSets, externalModuleDependencySet, androidProjects, moduleCoordinates);
+        String gradleHome = resolveModels(ideaProjects, controller, syncSettings, kotlinModules, sourceSets, externalModuleDependencySet, androidProjects, moduleCoordinates);
         return new ProjectMetadata(
                 ideaProjects,
                 kotlinModules,
                 sourceSets,
                 externalModuleDependencySet,
                 androidProjects,
-                moduleCoordinates
+                moduleCoordinates,
+                gradleHome
         );
     }
 
-    private static void resolveModels(
+    private static @Nullable String resolveModels(
             @NotNull List<@NotNull InternalIdeaProject> ideaProjects,
             @NotNull BuildController controller,
             @NotNull GradleSyncSettings syncSettings,
@@ -81,6 +82,7 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
             @NotNull Map<@NotNull String, @NotNull AndroidProject> androidProjects,
             @NotNull Map<@NotNull String, @NotNull String> moduleCoordinates
     ) {
+        String gradleHome = null;
         for (InternalIdeaProject project : ideaProjects) {
             for (InternalIdeaModule module : project.getModules()) {
                 String moduleFqn = BUILD_SRC_MODULE_NAME.equals(module.getName())
@@ -98,6 +100,9 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
                 if (moduleSourceSets != null && moduleSourceSets.getModuleCoordinate() != null) {
                     moduleCoordinates.put(moduleFqn, moduleSourceSets.getModuleCoordinate());
                 }
+                if (gradleHome == null && moduleSourceSets != null) {
+                    gradleHome = moduleSourceSets.getGradleHome();
+                }
 
                 Class<? extends ExternalModuleDependencySet> dependencyModel = syncSettings.getDownloadLibrarySources()
                                                                                        ? ExternalModuleFullDependencySet.class
@@ -114,6 +119,7 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
                 }
             }
         }
+        return gradleHome;
     }
 
     private static @NotNull String getModuleFqn(@NotNull IdeaModule module) {

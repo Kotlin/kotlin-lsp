@@ -19,8 +19,6 @@ import {
   JvmTestCommands,
   type JvmTestLaunch,
   type JvmTestLaunchRequest,
-  type JvmTestRunPaths,
-  RESOLVE_LAUNCH_COMMAND,
   RESOLVE_TEST_LAUNCH_COMMAND,
 } from './jvmTestProtocol';
 
@@ -34,23 +32,20 @@ export interface JvmTestLaunchConfig extends TestLaunchConfig {
   /** The adapter then sends the process output as telemetry, so the `##teamcity` lines stay out of the Debug Console. */
   readonly console: 'none';
   readonly mainClass: string;
+  /** The test file: the server runs the module that owns it, on its own test runtime plus the runner's jars. */
   readonly file: string;
   readonly args: string[];
-  readonly classPaths: string[];
-  readonly modulePaths: string[];
-  readonly vmArgs: string[];
+  /** The jars of the test runner, added to the class path of the module. */
+  readonly additionalClassPaths: string[];
+  /** The module path entries of the runner, added to the module path of a modular test module. */
+  readonly additionalModulePaths: string[];
 }
 
 export interface JvmTestLaunchServer {
-  paths(uri: Uri): Promise<JvmTestRunPaths>;
   launches(request: JvmTestLaunchRequest): Promise<JvmTestLaunch[]>;
 }
 
 const lspLaunchServer: JvmTestLaunchServer = {
-  paths: (uri) =>
-    sendLspCommand<JvmTestRunPaths>(runningClient(), RESOLVE_LAUNCH_COMMAND, [
-      { uri: uri.toString() },
-    ]),
   launches: (request) =>
     sendLspCommand<JvmTestLaunch[]>(runningClient(), RESOLVE_TEST_LAUNCH_COMMAND, [request]),
 };
@@ -74,43 +69,24 @@ export class JvmTestLanguage implements TestLanguage<JvmTestProfile> {
     return debugAdapterRunner({
       mode: profile,
       launches: async (input) => {
-        const [launches, built] = await Promise.all([
-          this.resolveLaunches(input.group),
-          builds.ensureBuilt(input),
-        ]);
+        const launches = await this.serverLaunches(input.group);
+        const moduleFile = launches.find((launch) => launch.file)?.file ?? undefined;
+        const built = await builds.ensureBuilt(input, { moduleFile });
         if (built === 'failed') {
           throw new Error('Compilation failed. See the build output in Test Results.');
         }
-        return launches;
+        return launches.map((launch) => configOf(launch, input.group));
       },
       stackFrames: this.stackFrames,
     });
   }
 
   async resolveLaunches(group: TestRunGroup): Promise<JvmTestLaunchConfig[]> {
-    const [paths, launches] = await Promise.all([
-      this.server.paths(group.uri),
-      this.server.launches({ testIds: [...group.testIds], uniqueIds: [...group.uniqueIds] }),
-    ]);
-    const modular = (paths.modulePath ?? []).length > 0;
-    return launches.map((launch) => ({
-      type: 'intellij_debugger',
-      request: 'launch',
-      console: 'none',
-      mainClass: launch.mainClass,
-      file: group.uri.fsPath,
-      args: launch.args,
-      classPaths: [
-        ...launch.runtimeClasspath,
-        ...(modular ? [] : (launch.runtimeModulePath ?? [])),
-        ...(paths.classpath ?? []),
-      ],
-      modulePaths: [
-        ...(paths.modulePath ?? []),
-        ...(modular ? (launch.runtimeModulePath ?? []) : []),
-      ],
-      vmArgs: paths.vmArgs ?? [],
-    }));
+    return (await this.serverLaunches(group)).map((launch) => configOf(launch, group));
+  }
+
+  private serverLaunches(group: TestRunGroup): Promise<JvmTestLaunch[]> {
+    return this.server.launches({ testIds: [...group.testIds], uniqueIds: [...group.uniqueIds] });
   }
 
   private readonly stackFrames: StackFrameParser = (stacktrace, report) => {
@@ -134,13 +110,26 @@ export class JvmTestLanguage implements TestLanguage<JvmTestProfile> {
       const method = qualifiedMethod.lastIndexOf('.');
       let className = method > 0 ? qualifiedMethod.slice(0, method) : undefined;
       while (className) {
-        const uri = report.atLocation(jvmSuiteLocation(className))?.uri;
+        const uri = report.sourceOf(jvmSuiteLocation(className));
         if (uri) return uri;
         const nested = className.lastIndexOf('$');
         className = nested > 0 ? className.slice(0, nested) : undefined;
       }
       return undefined;
     }
+  };
+}
+
+function configOf(launch: JvmTestLaunch, group: TestRunGroup): JvmTestLaunchConfig {
+  return {
+    type: 'intellij_debugger',
+    request: 'launch',
+    console: 'none',
+    mainClass: launch.mainClass,
+    file: launch.file ?? group.uri.fsPath,
+    args: launch.args,
+    additionalClassPaths: launch.runtimeClasspath,
+    additionalModulePaths: launch.runtimeModulePath ?? [],
   };
 }
 

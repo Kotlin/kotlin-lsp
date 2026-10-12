@@ -2,7 +2,14 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { type StackFrameParser, TeamCityReader } from './teamCityReader';
-import { classDto, FOO_FILE, makeReport, methodDto } from './testRunFixture';
+import {
+  classDto,
+  FOO_FILE,
+  makeReport,
+  methodDto,
+  SUITE_FILE,
+  suiteFileDto,
+} from './testRunFixture';
 
 const escape = (value: string): string =>
   value
@@ -102,6 +109,36 @@ describe('which node a runner message is about', () => {
       assert.deepEqual(calls, lands === undefined ? [] : [`started ${lands}`]);
     });
   }
+
+  test('a test the runner lists in its plan is queued in the order of the plan, not of the source', () => {
+    const { feed, calls } = readerFor();
+
+    feed(
+      teamcity('suiteTreeStarted', { nodeId: 'class', locationHint: CLASS_HINT }),
+      teamcity('suiteTreeNode', {
+        nodeId: 'param',
+        parentNodeId: 'class',
+        locationHint: PARAM_HINT,
+      }),
+      teamcity('suiteTreeNode', {
+        nodeId: 'test',
+        parentNodeId: 'class',
+        locationHint: METHOD_HINT,
+      }),
+      teamcity('suiteTreeNode', {
+        nodeId: 'other',
+        locationHint: 'java:test://com.example.Unknown/x',
+      }),
+      '##teamcity[treeEnded]',
+      teamcity('testStarted', { nodeId: 'param' }),
+    );
+
+    assert.deepEqual(calls, [
+      'enqueued moduleA/com.example.Foo#paramTest',
+      'enqueued moduleA/com.example.Foo#test',
+      'started moduleA/com.example.Foo#paramTest',
+    ]);
+  });
 
   test('a node id the run already explained is that node again, hint or no hint', () => {
     const { feed, calls } = readerFor();
@@ -343,6 +380,66 @@ describe('which node a runner message is about', () => {
     ]);
   });
 
+  test('a run of a suite file builds the tree the runner reports under the suite file', () => {
+    // The classes of the suite are in the tree too, and still their results here belong to the suite.
+    const suite = suiteFileDto();
+    const { report, tree, calls } = makeReport({
+      dtos: [classDto('com.example.Foo'), methodDto('com.example.Foo', 'test'), suite],
+      launched: [suite.id],
+    });
+
+    new TeamCityReader(report).feed(
+      [
+        teamcity('testSuiteStarted', {
+          name: 'test 1',
+          nodeId: 'test 1',
+          parentNodeId: '0',
+          locationHint: SUITE_FILE,
+        }),
+        teamcity('testSuiteStarted', {
+          name: 'Foo',
+          nodeId: 'com.example.Foo',
+          parentNodeId: 'test 1',
+          locationHint: CLASS_HINT,
+        }),
+        teamcity('testStarted', {
+          name: 'Foo.test',
+          nodeId: 'com.example.Foo/test',
+          parentNodeId: 'com.example.Foo',
+          locationHint: METHOD_HINT,
+        }),
+        teamcity('testFailed', { nodeId: 'com.example.Foo/test', message: 'boom' }),
+        teamcity('testSuiteFinished', { nodeId: 'com.example.Foo' }),
+        teamcity('testSuiteFinished', { nodeId: 'test 1' }),
+        // The second suite of the file repeats the location of the first one.
+        teamcity('testSuiteStarted', {
+          name: 'test 2',
+          nodeId: 'test 2',
+          parentNodeId: '0',
+          locationHint: SUITE_FILE,
+        }),
+        teamcity('testSuiteFinished', { nodeId: 'test 2' }),
+      ].join('\n') + '\n',
+    );
+
+    const suiteItem = tree.get(`moduleA/${suite.id}`)!.item;
+    const method = `moduleA/${suite.id}/com.example.Foo/test`;
+    assert.deepEqual(calls, [
+      `started ${method}`,
+      `failed ${method}`,
+      `passed moduleA/${suite.id}/test 2`,
+    ]);
+    assert.equal(suiteItem.label, 'testng.xml');
+    assert.deepEqual(
+      [...suiteItem.children].map(([, child]) => child.label),
+      ['test 1', 'test 2'],
+    );
+    assert.equal(tree.get(method)!.item.parent?.parent?.label, 'test 1');
+    // A stack frame of the class still links to its source.
+    assert.equal(report.atLocation(CLASS_HINT), undefined);
+    assert.equal(report.sourceOf(CLASS_HINT)?.toString(), FOO_FILE);
+  });
+
   test('a node whose parent the run never explained has nowhere to go', () => {
     const { feed, calls } = readerFor();
 
@@ -359,6 +456,76 @@ describe('which node a runner message is about', () => {
     other.feed(`${teamcity('testFinished', { nodeId: 'n-1' })}\n`);
 
     assert.deepEqual(calls, ['started moduleA/com.example.Foo#test']);
+  });
+});
+
+describe('what a node is called', () => {
+  const METHOD_ID = 'moduleA/com.example.Foo#test';
+
+  test('a discovered method takes the name the runner started it with', () => {
+    // JUnit 5 reports the @DisplayName value, and discovery knows the method name only.
+    const { feed, tree } = readerFor();
+
+    feed(
+      teamcity('testStarted', {
+        nodeId: 'n-1',
+        locationHint: METHOD_HINT,
+        name: 'Addition returns correct result',
+      }),
+    );
+
+    assert.equal(tree.get(METHOD_ID)?.item.label, 'Addition returns correct result');
+  });
+
+  test('a discovered class takes the name the runner started it with', () => {
+    const { feed, tree } = readerFor();
+
+    feed(
+      teamcity('testSuiteStarted', { nodeId: 's-1', locationHint: CLASS_HINT, name: 'Calculator' }),
+    );
+
+    assert.equal(tree.get('moduleA/com.example.Foo')?.item.label, 'Calculator');
+  });
+
+  test('a name is the label as the runner wrote it, with the class in front of it too', () => {
+    // TestNG names a test `Foo.test`, and the IDE shows it so.
+    const { feed, tree } = readerFor();
+
+    feed(
+      teamcity('testSuiteStarted', {
+        nodeId: 'com.example.Foo',
+        locationHint: CLASS_HINT,
+        name: 'Foo',
+      }),
+      teamcity('testStarted', {
+        nodeId: 'com.example.Foo/test',
+        parentNodeId: 'com.example.Foo',
+        locationHint: METHOD_HINT,
+        name: 'Foo.test',
+      }),
+    );
+
+    assert.equal(tree.get(METHOD_ID)?.item.label, 'Foo.test');
+  });
+
+  test('the spaces around a name are trimmed', () => {
+    const { feed, tree } = readerFor();
+
+    feed(teamcity('testStarted', { locationHint: METHOD_HINT, name: '  adds numbers \n' }));
+
+    assert.equal(tree.get(METHOD_ID)?.item.label, 'adds numbers');
+  });
+
+  test('a node the runner names with nothing keeps the name discovery gave it', () => {
+    const { feed, tree } = readerFor();
+
+    feed(
+      teamcity('testStarted', { locationHint: METHOD_HINT }),
+      teamcity('testStarted', { locationHint: PARAM_HINT, name: '  ' }),
+    );
+
+    assert.equal(tree.get(METHOD_ID)?.item.label, 'test');
+    assert.equal(tree.get('moduleA/com.example.Foo#paramTest')?.item.label, 'paramTest');
   });
 });
 
@@ -404,7 +571,7 @@ describe('what a runner message reports', () => {
   test('the language reads the frames of the stacktrace, and the first in a known file is marked', () => {
     const { feed, messages } = readerFor((stacktrace, report) => [
       { label: 'org.junit.Assert.fail', line: 3 },
-      { label: stacktrace, uri: report.atLocation(CLASS_HINT)?.uri, line: 7 },
+      { label: stacktrace, uri: report.sourceOf(CLASS_HINT), line: 7 },
     ]);
 
     feed(

@@ -88,8 +88,8 @@ describe('server download recovery', () => {
     const result = await handleServerDownloadChecksumMismatch({
       showErrorMessage: async (message, ...actions) => {
         assert.equal(message, 'Could not verify the language server download');
-        assert.deepEqual(actions, ['Redownload Server']);
-        return 'Redownload Server';
+        assert.deepEqual(actions, ['Redownload Language Server']);
+        return 'Redownload Language Server';
       },
       redownloadServer: async () => '/server/bin/intellij-server',
     });

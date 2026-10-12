@@ -1,3 +1,4 @@
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 import * as path from 'node:path';
 import {
   commands,
@@ -24,10 +25,22 @@ import {
   stopLspClient,
   withLspClientStartPending,
 } from './lspClient';
+import { LSPErrorCodes, RequestType, ResponseError } from 'vscode-languageclient/node';
+import { registerStatusBarItem } from './statusBar';
+import { registerGoToTestCommand } from './goToTest';
+import { registerDapServer } from './dap';
+import { registerBuildTaskProvider } from './buildTask';
+import { registerFileTemplates } from './fileTemplates';
+import { promptReloadWindow } from './reloadWindow';
+import { registerAutoReloadWorkspace } from './autoReloadWorkspace';
+import { SERVER_BUNDLE_METADATA_FILE } from './serverBundleDownload';
+import type { ServerRestartState } from './serverRestartState';
+
 export {
   createLspClientProvider,
   getLspClient,
   isExternalServerConfigured,
+  onDidFinishWorkspaceImport,
   prepareBundledServerLauncher,
   reportActivationFailure,
   registerInitializationOptionsContributor,
@@ -40,23 +53,20 @@ export {
   withLspClientStartPending,
 } from './lspClient';
 export { removeDownloadedServerBundle, serverBundleStoragePath } from './serverBundleDownload';
+export {
+  type WorkspaceImportPhase,
+  type WorkspaceImportState,
+  WorkspaceImportStateNotification,
+  WorkspaceImportStateRequest,
+} from './workspaceImport';
 export { checkGeoRestricted } from './geoRestriction';
 export { registerKotlinExtensionConflictHandler } from './kotlinExtensionConflict';
-import { LSPErrorCodes, RequestType, ResponseError } from 'vscode-languageclient/node';
-import { registerStatusBarItem } from './statusBar';
 export {
   registerStatusBarContribution,
   type StatusBarContribution,
   type StatusBarContributionPresentation,
   type StatusBarContributionRegistration,
 } from './statusBar';
-import { registerDapServer } from './dap';
-import { registerBuildTaskProvider } from './buildTask';
-import { registerFileTemplates } from './fileTemplates';
-import { promptReloadWindow } from './reloadWindow';
-import { registerAutoReloadWorkspace } from './autoReloadWorkspace';
-import { SERVER_BUNDLE_METADATA_FILE } from './serverBundleDownload';
-import type { ServerRestartState } from './serverRestartState';
 
 export { disconnectedServerStartupPhase } from './serverRestartState';
 export type { ServerRestartState } from './serverRestartState';
@@ -273,6 +283,7 @@ async function activateAcceptedExtension(
     });
     registerShowBuildLogCommand(context);
     registerFileTemplates(context);
+    registerGoToTestCommand(context);
 
     for (const module of options.modules) {
       await module(context);

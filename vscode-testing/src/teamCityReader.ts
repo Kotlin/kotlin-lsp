@@ -47,6 +47,9 @@ export class TeamCityReader {
   private handle(message: ServiceMessage): void {
     const { attributes } = message;
     switch (message.name) {
+      case 'suiteTreeNode':
+        this.report.testQueued(this.named(attributes));
+        break;
       case 'testStarted':
         if (this.holdsConfiguration(attributes)) break;
         this.report.testStarted(this.started(attributes));
@@ -117,6 +120,8 @@ export class TeamCityReader {
   private started(attributes: MessageAttributes): TestRunNode | undefined {
     const node = this.named(attributes);
     if (node && attributes.name) this.nodesByName.set(attributes.name, node);
+    const label = attributes.name?.trim();
+    if (node && label) node.label = label;
     return node;
   }
 
@@ -144,7 +149,6 @@ export class TeamCityReader {
     if (nodeId === undefined) return undefined;
     const parentNodeId = attributes.parentNodeId;
     const parent = parentNodeId === undefined ? undefined : this.nodesById.get(parentNodeId);
-    if (!parent) return undefined;
     const node = this.report.runtimeChild({
       parent,
       uniqueId: nodeId,

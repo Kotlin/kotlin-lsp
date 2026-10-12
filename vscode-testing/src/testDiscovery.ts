@@ -7,13 +7,12 @@ import {
   type TextDocument,
   Uri,
 } from 'vscode';
-import { getLspClient } from '@jetbrains/vscode-extension-core';
+import { getLspClient, WorkspaceImportStateRequest } from '@jetbrains/vscode-extension-core';
 import { moduleNameOf } from './testGrouping';
 import type { TestDiscovery } from './testLanguage';
 import { planTestRun, type TestLaunchGroup } from './testPlan';
 import { fileScope, moduleScope } from './testScope';
 import type { TestTree } from './testTree';
-import { WorkspaceImportStateRequest } from './workspaceImport';
 
 const DISCOVERY_CONCURRENCY = 4;
 

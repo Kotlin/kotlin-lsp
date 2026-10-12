@@ -11,14 +11,15 @@ import com.intellij.psi.util.PsiUtilCore
 import com.intellij.refactoring.rename.HeadlessRenameProcessor
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.processors.LSRenameCustomizer
+import com.jetbrains.ls.api.core.processors.LSRenameProcessor
 import com.jetbrains.ls.api.core.processors.RenameContext
-import com.jetbrains.ls.api.core.processors.createProcessor
 import com.jetbrains.ls.api.core.processors.prepareRenameProcessor
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.features.impl.common.processors.doRefactoring
+import com.jetbrains.ls.api.features.impl.common.processors.failRenameIfRefused
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.rename.LSRenameProvider
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.DiffGranularity
@@ -44,6 +45,7 @@ abstract class LSRenameProviderBase(
             val processor = context(project) { prepareRenameProcessor(params, renameCustomizer) }
                 ?: return@withWriteAnalysisContext emptyList()
             doRefactoring(processor, DiffGranularity.CHARACTER, null, showNotificationWithError = false)
+                .also { (processor as? LSRenameProcessor)?.let { failRenameIfRefused(it, showNotificationWithError = false) } }
         }
 
         return WorkspaceEdit(documentChanges = changes)
@@ -90,10 +92,11 @@ abstract class LSRenameProviderBase(
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction null
                 val target = getTargetClass(psiFile, nameChange.oldName.fileName) ?: psiFile
                 val newName = if (target is PsiFile) nameChange.newName.fullName() else nameChange.newName.fileName
-                createProcessor(RenameContext(target, newName))
+                LSRenameProcessor.create(RenameContext(target, newName))
             } ?: return@withWriteAnalysisContext null
 
             doRefactoring(processor, DiffGranularity.WORD, params.oldUri, true)
+                .also { failRenameIfRefused(processor, showNotificationWithError = true) }
         }
 
         return WorkspaceEdit(documentChanges = edits)

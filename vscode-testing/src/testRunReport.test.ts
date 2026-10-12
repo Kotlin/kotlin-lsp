@@ -61,6 +61,14 @@ describe('what a runner reports on a test', () => {
     assert.equal(typeof durations.get(A_ID), 'number');
   });
 
+  test('a queued node nobody names queues nothing, not even the class the user asked for', () => {
+    const { report, calls } = makeReport({ launched: ['com.example.Foo'] });
+
+    report.testQueued(undefined);
+
+    assert.deepEqual(calls, []);
+  });
+
   test('a test the user asked for starts when the runner starts it, and only once', () => {
     const { report, calls } = makeReport({ launched: ['com.example.Foo#a'] });
     const a = at(report, A);

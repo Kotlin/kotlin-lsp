@@ -1,35 +1,45 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 /**
- * The Run/Debug lens with the editor taken out: which configuration type a lens launch uses, from the server's
- * `intellij.java.resolveBuildToolLaunch` answer. It stays out of `dap.ts` so a test can use it without `vscode`.
+ * The Run/Debug lens with the editor taken out: the launch configuration a lens starts, from the arguments the
+ * server put on the lens. It stays out of `dap.ts` so a test can use it without `vscode`.
  */
 
-/** The part of the server's answer the lens reads; `BuildToolLaunchResponse` in `dap.ts` carries the rest. */
-export interface LensBuildToolAnswer {
+/** The arguments of the server's lens that the configuration is made of. */
+export interface LensArgs {
+  mainClass: string;
+  uri?: string;
+  /** The build tool of the module of [uri], as the server names it, or absent for a module without one. */
   tool?: string;
-  /** Why the owning tool refused the launch, when `tool` is absent because it refused rather than never launches. */
-  reason?: string;
 }
 
-/** The configuration type to start, or the reason the launch stops here. */
-export type LensLaunchDecision = { type: string } | { refused: string };
+/** A launch configuration, as `debug.startDebugging` takes it. */
+export interface LensLaunchConfig {
+  type: string;
+  request: 'launch';
+  name: string;
+  mainClass: string;
+  file?: string;
+  tool?: string;
+}
 
 /**
- * The decision of the lens for [answer], with [typeByTool] mapping a tool id to its configuration type and [jvmType]
- * the plain JVM type.
- *
- * A named tool launches through its own type; a tool without one falls back to the JVM. A tool that refused the
- * launch and said why stops the lens: the JVM fallback would run the class outside the tool, and the reason is what
- * the user needs to see. No tool and no reason means no tool launches this module, so the JVM does. A failure to ask
- * (`undefined`) keeps the JVM fallback too: that path resolves everything again and reports properly.
+ * The configuration of a lens launch for [args]: the type of the tool in [typeByTool], else [jvmType]; the file
+ * of the lens as a path through [toPath]; the tool as the server named it, so the server knows the lens asked for
+ * nothing else. Nothing is asked of the server: the launch request carries everything it needs.
  */
-export function lensLaunchDecision(
-  answer: LensBuildToolAnswer | undefined,
+export function lensLaunchConfig(
+  args: LensArgs,
   typeByTool: Record<string, string>,
   jvmType: string,
-): LensLaunchDecision {
-  if (answer === undefined) return { type: jvmType };
-  if (answer.tool !== undefined) return { type: typeByTool[answer.tool] ?? jvmType };
-  if (answer.reason !== undefined) return { refused: answer.reason };
-  return { type: jvmType };
+  toPath: (uri: string) => string,
+): LensLaunchConfig {
+  const config: LensLaunchConfig = {
+    type: (args.tool !== undefined ? typeByTool[args.tool] : undefined) ?? jvmType,
+    request: 'launch',
+    name: args.mainClass.split('.').pop() ?? 'Run main',
+    mainClass: args.mainClass,
+  };
+  if (args.uri) config.file = toPath(args.uri);
+  if (args.tool !== undefined) config.tool = args.tool;
+  return config;
 }

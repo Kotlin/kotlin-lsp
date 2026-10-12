@@ -122,6 +122,22 @@ describe('the tree', () => {
     assert.equal(dto?.uri, URI_A);
   });
 
+  test('a test without a parent sits under its module, as a suite file does', () => {
+    const { controller, tree } = makeTree();
+    const suiteFile = 'file:///p/moduleA/testng.xml';
+
+    tree.sync(fileScope(suiteFile), [
+      { ...classDto('moduleA', 'suiteFile', suiteFile), kind: 'TEST', groups: [] },
+    ]);
+
+    assert.deepEqual(paths(controller.items), [
+      'module:moduleA',
+      'module:moduleA > moduleA/suiteFile',
+    ]);
+    // Its tests sit elsewhere in the tree, so no discovery owes it any.
+    assert.equal(tree.testsUnknown(tree.get('moduleA/suiteFile')!.item), false);
+  });
+
   test('a class the server sent without a parentId is a root', () => {
     // `explicitNulls = false`: the server drops a null field, so no parentId reaches the client.
     const { controller, tree } = makeTree();
@@ -354,6 +370,35 @@ describe('the tree', () => {
 
     assert.equal(tree.get('moduleA/com.example.SampleTest'), undefined);
     assert.equal(discovered(tree, '/SampleTest')?.id, 'SampleTest');
+  });
+});
+
+describe('the name a run gave a discovered node', () => {
+  const METHOD_ID = 'moduleA/com.example.SampleTest#testOne';
+  const dtos = [
+    classDto('moduleA', 'com.example.SampleTest', URI_A),
+    methodDto('moduleA', 'com.example.SampleTest', 'testOne', URI_A),
+  ];
+
+  test('outlives a discovery of its file, which knows the method name only', () => {
+    const { tree } = makeTree();
+    tree.sync(fileScope(URI_A), dtos);
+    tree.get(METHOD_ID)!.item.label = 'Addition returns correct result';
+
+    tree.sync(fileScope(URI_A), dtos);
+
+    assert.equal(tree.get(METHOD_ID)?.item.label, 'Addition returns correct result');
+  });
+
+  test('goes with the node, so a test that comes back has the name discovery gives it', () => {
+    const { tree } = makeTree();
+    tree.sync(fileScope(URI_A), dtos);
+    tree.get(METHOD_ID)!.item.label = 'Addition returns correct result';
+
+    tree.sync(fileScope(URI_A), [dtos[0]]);
+    tree.sync(fileScope(URI_A), dtos);
+
+    assert.equal(tree.get(METHOD_ID)?.item.label, 'testOne');
   });
 });
 

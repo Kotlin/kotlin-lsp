@@ -305,6 +305,7 @@ The runner emits one TeamCity message per line:
 ##teamcity[testSuiteFinished name='Math' nodeId='s1']
 ```
 
+- Label: the trimmed `name` of `testStarted` or `testSuiteStarted` becomes the label of the node.
 - Pass: omit `testFailed`. Skip: use `testIgnored`. Execution error: add `error='true'` to `testFailed`.
 - Output: use `testStdOut` or `testStdErr` with `nodeId` and `out`. Durations use milliseconds.
 - Escape attribute values: `|` → `||`, `'` → `|'`, newline → `|n`, carriage return → `|r`, brackets → `|[`/`|]`.

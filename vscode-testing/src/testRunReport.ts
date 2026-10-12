@@ -4,10 +4,10 @@ import { LanguageFileCoverage, type TestFileCoverage } from './testCoverage';
 import { type TestFailure, testFailureMessage } from './testFailure';
 import { leafTests } from './testItems';
 import type { TestLaunchGroup } from './testPlan';
-import type { TestTree } from './testTree';
+import { runsOwnTree, type TestTree } from './testTree';
 
 export interface TestRunNode {
-  readonly label: string;
+  label: string;
   readonly uri: Uri | undefined;
 }
 
@@ -22,11 +22,13 @@ export interface TestFailureResult extends TestResult {
 
 export interface TestRunReport {
   atLocation(location: string): TestRunNode | undefined;
+  sourceOf(location: string): Uri | undefined;
   runtimeChild(child: {
-    readonly parent: TestRunNode;
+    readonly parent: TestRunNode | undefined;
     readonly uniqueId: string;
     readonly label: string;
   }): TestRunNode | undefined;
+  testQueued(node: TestRunNode | undefined): void;
   suiteStarted(node: TestRunNode | undefined): void;
   testStarted(node: TestRunNode | undefined): void;
   passed(result: TestResult): void;
@@ -154,17 +156,21 @@ export class GroupReport implements TestRunReport {
   }
 
   atLocation(location: string): TestRunNode | undefined {
-    const { tree, group } = this.options;
-    return this.handOut(tree.itemAtLocation({ moduleName: group.moduleName, location }));
+    if (this.ownTreeRoot()) return undefined;
+    return this.handOut(this.itemAt(location));
+  }
+
+  sourceOf(location: string): Uri | undefined {
+    return this.itemAt(location)?.uri;
   }
 
   runtimeChild(child: {
-    readonly parent: TestRunNode;
+    readonly parent: TestRunNode | undefined;
     readonly uniqueId: string;
     readonly label: string;
   }): TestRunNode | undefined {
     this.begin();
-    const parent = this.items.get(child.parent);
+    const parent = child.parent ? this.items.get(child.parent) : this.ownTreeRoot();
     if (!parent) return undefined;
     return this.handOut(
       this.options.tree.ensureRuntimeItem({
@@ -173,6 +179,11 @@ export class GroupReport implements TestRunReport {
         displayName: child.label,
       }),
     );
+  }
+
+  testQueued(node: TestRunNode | undefined): void {
+    const item = node && this.items.get(node);
+    if (item) this.options.run.enqueued(item);
   }
 
   suiteStarted(node: TestRunNode | undefined): void {
@@ -257,6 +268,16 @@ export class GroupReport implements TestRunReport {
       this.state.conclude(item, 'errored');
       this.options.run.errored(item, this.exitFailure());
     }
+  }
+
+  private itemAt(location: string): TestItem | undefined {
+    const { tree, group } = this.options;
+    return tree.itemAtLocation({ moduleName: group.moduleName, location });
+  }
+
+  private ownTreeRoot(): TestItem | undefined {
+    const entry = this.fallback && this.options.tree.get(this.fallback.id);
+    return entry?.origin === 'discovered' && runsOwnTree(entry.dto) ? entry.item : undefined;
   }
 
   private exitFailure(): TestMessage {
