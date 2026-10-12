@@ -35,6 +35,7 @@ import org.jetbrains.kotlin.platform.konan.NativePlatforms
 import org.jetbrains.kotlin.platform.wasm.WasmPlatform
 import org.jetbrains.kotlin.platform.wasm.WasmPlatforms
 import java.io.File
+import java.util.Locale
 
 /**
  * The `org.jetbrains.kotlin.idea.projectModel.KotlinPlatform` ids of the IntelliJ Kotlin plugin, as the Gradle-side
@@ -186,8 +187,53 @@ internal fun facetCompilerArguments(arguments: CommonCompilerArguments, kotlinGr
         autoAdvanceLanguageVersion = false
         autoAdvanceApiVersion = false
     }
+    settings.removeScriptingAndKaptPlugins()
     return FacetCompilerArguments(
         compilerArguments = serializeNonDefaultCompilerArguments(settings.compilerArguments!!),
         additionalArguments = settings.compilerSettings?.additionalArguments?.takeIf { it.isNotBlank() },
     )
+}
+
+/** `org.jetbrains.kotlin.scripting.KOTLIN_SCRIPTING_PLUGIN_ID`, which is not on the classpath of this module. */
+private const val SCRIPTING_PLUGIN_ID = "kotlin.scripting"
+
+/** The kapt plugin id. The IDE does not have kapt either, so it also uses the literal. */
+private const val KAPT_PLUGIN_ID = "org.jetbrains.kotlin.kapt3"
+
+private val SCRIPTING_PLUGIN_JAR_REGEXES: List<Regex> = listOf(
+    "scripting-gradle", // obsolete artifact name, only for compatibility with 1.2.5x, where it was introduced (and immediately dropped afterwards)
+    "scripting-compiler",
+    "scripting-compiler-embeddable",
+).map { "(kotlin-)?(maven-)?$it-.*\\.jar".toRegex() }
+
+private val KAPT_PLUGIN_JAR_REGEX: Regex = "kotlin-annotation-processing(-gradle|-embeddable)?-[0-9].*\\.jar".toRegex()
+
+/**
+ * Removes the jars and the options of the Kotlin scripting plugin and of kapt from the compiler arguments of the facet.
+ *
+ * The other import handlers of the IDE only replace a plugin jar with the bundled one, and only when the Gradle
+ * delegated build is off. They are not ported.
+ *
+ * LSP port of IDE code: `org.jetbrains.kotlin.idea.compilerPlugin.scripting.gradleJava.ScriptingGradleProjectImportHandler`,
+ * `org.jetbrains.kotlin.idea.compilerPlugin.kapt.gradleJava.KaptGradleProjectImportHandler` as
+ * `org.jetbrains.kotlin.idea.gradleJava.configuration.KotlinSourceSetDataService.postProcess` calls them on each facet
+ */
+private fun KotlinFacetSettings.removeScriptingAndKaptPlugins() {
+    updateCompilerArguments {
+        pluginOptions = pluginOptions
+            .filter { !it.startsWith("plugin:$SCRIPTING_PLUGIN_ID:") && !it.startsWith("plugin:$KAPT_PLUGIN_ID:") }
+            .toTypedArray()
+        pluginClasspaths = pluginClasspaths
+            .filter { path ->
+                val fileName = jarFileName(path) ?: return@filter true
+                SCRIPTING_PLUGIN_JAR_REGEXES.none { fileName.matches(it) } && !fileName.lowercase(Locale.US).matches(KAPT_PLUGIN_JAR_REGEX)
+            }
+            .toTypedArray()
+    }
+}
+
+/** The file name of a jar path, or `null` for a path without a directory, which the IDE handlers keep. */
+private fun jarFileName(path: String): String? {
+    val lastIndexOfFile = path.lastIndexOfAny(charArrayOf('/', File.separatorChar)).takeIf { it >= 0 } ?: return null
+    return path.drop(lastIndexOfFile + 1)
 }
