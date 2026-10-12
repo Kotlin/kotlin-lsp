@@ -91,12 +91,6 @@ jvm_library(
         "@community//libraries/kotlinx/serialization/core",
         "@community//libraries/kotlinx/serialization/core:core_test_lib",
         "@ultimate_lib//:slf4j-api-provided",
-        "@lib//:slf4j-jdk14",
-        "@community//libraries/junit6",
-        "@community//libraries/junit6:junit6_test_lib",
-        "@community//libraries/kotlin/test:libraries-kotlinTest",
-        "@community//libraries/kotlin/test:libraries-kotlinTest_test_lib",
-        "@lib//:kotlin-test-junit5",
     ],
 )
 ### auto-generated section `build language-server.workspace-import.gradle-plugin` end
