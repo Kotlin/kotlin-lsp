@@ -5,14 +5,18 @@ import * as path from 'node:path';
 import { test } from 'node:test';
 import { computePortFilePath, readPortFile } from './portFile';
 
-// This vector must match the Kotlin side (WorkspacePortFileTest). Both hash the same string with SHA-256 and
-// keep the first 16 hex characters. If one recipe changes, the client and server stop finding each other.
 const WORKSPACE_ROOT = '/home/user/my-workspace';
 const EXPECTED_FILE = 'e22d7af6977edd2e.port';
 
-test('computePortFilePath names the file by the workspace-root hash', () => {
-  const expected = path.join(os.tmpdir(), 'intellij-lsp-servers', EXPECTED_FILE);
-  assert.equal(computePortFilePath(WORKSPACE_ROOT), expected);
+test('computePortFilePath names the file by the workspace-root hash under the version', () => {
+  const expected = path.join(os.tmpdir(), 'intellij-lsp-servers', '0.3.1', EXPECTED_FILE);
+  assert.equal(computePortFilePath({ workspaceRoot: WORKSPACE_ROOT, version: '0.3.1' }), expected);
+});
+
+test('computePortFilePath separates extension versions', () => {
+  const previous = computePortFilePath({ workspaceRoot: WORKSPACE_ROOT, version: '0.3.0' });
+  const current = computePortFilePath({ workspaceRoot: WORKSPACE_ROOT, version: '0.3.1' });
+  assert.notEqual(previous, current);
 });
 
 test('readPortFile returns the published port', () => {

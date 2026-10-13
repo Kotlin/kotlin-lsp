@@ -10,14 +10,20 @@ const HASH_LENGTH = 16;
  * The discovery file that maps a workspace to the TCP port of the server that serves it.
  *
  * The client finds a running server without asking anyone: it hashes the workspace root and reads the port
- * from a fixed per-user location. The server writes the same file after it binds; the Kotlin side computes
- * the identical path in `language-server/main/src/com/intellij/ls/server/portFile.kt`. Keep the two recipes
- * in step: the same SHA-256 of the workspace root, the same 16-hex-character prefix, and the same directory
- * under the OS temp dir.
+ * from a fixed per-user location, and it passes that same path to the server it starts (`--port-file`), so
+ * only this side knows the recipe. The file lives in a directory named by the extension version: a server
+ * started by another version of the extension publishes elsewhere, so an update never connects to a daemon
+ * the previous version left running.
  */
-export function computePortFilePath(workspaceRoot: string): string {
+export function computePortFilePath({
+  workspaceRoot,
+  version,
+}: {
+  workspaceRoot: string;
+  version: string;
+}): string {
   const hash = createHash('sha256').update(workspaceRoot).digest('hex').slice(0, HASH_LENGTH);
-  return path.join(os.tmpdir(), DIRECTORY_NAME, `${hash}.port`);
+  return path.join(os.tmpdir(), DIRECTORY_NAME, version, `${hash}.port`);
 }
 
 /** Reads the published port, or `undefined` when the file is absent, empty, or not a valid port. */

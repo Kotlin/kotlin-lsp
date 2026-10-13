@@ -19,6 +19,7 @@ import { chmodSync } from 'fs';
 import { rm } from 'node:fs/promises';
 import * as net from 'node:net';
 import * as os from 'node:os';
+import * as path from 'node:path';
 import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import {
   type AcceptedEulaHashProvider,
@@ -94,6 +95,7 @@ import {
 interface ExtensionPackageJson {
   name?: string;
   displayName?: string;
+  version?: string;
   contributes?: {
     languages?: Array<{ id: string }>;
   };
@@ -694,6 +696,20 @@ function extensionDisplayName(): string {
   return packageJson()?.displayName ?? 'IntelliJ Language Server (fallback)';
 }
 
+/**
+ * The extension version names everything a server started by this extension owns: its port file and its data
+ * directory. A server another version started is never found and never shares caches, so an update never
+ * reconnects to the daemon the previous version left running, nor reuses its indexes.
+ */
+function extensionVersion(): string {
+  return packageJson()?.version ?? 'unversioned';
+}
+
+/** The server's data directory: the workspace storage, one subdirectory per extension version. */
+function serverSystemPath(storageUri: vscode.Uri): string {
+  return path.join(storageUri.fsPath, extensionVersion());
+}
+
 function configOption<T>(name: string, scope?: vscode.ConfigurationScope): T | undefined {
   return (
     workspace.getConfiguration(undefined, scope).get(name) ??
@@ -912,7 +928,7 @@ async function startServer({
   args.push('--stdio');
   const storageUri = configuredStorageUri ?? context.storageUri;
   if (storageUri) {
-    args.push('--system-path', storageUri.fsPath);
+    args.push('--system-path', serverSystemPath(storageUri));
   }
   // The launcher owns the accepted-EULA hash: we start the process, so we pass it on the command line.
   // Clients that only connect to an already-running server cannot, which is why this is not in `initialize`.
@@ -977,11 +993,13 @@ async function startServer({
 /**
  * Connects to the server that serves [workspaceRoot], starting one if none is running.
  *
- * The server publishes its TCP port to a discovery file named by the workspace hash (see [computePortFilePath]).
- * We read that file and connect. When it is absent or names a dead port, we spawn one daemonized server and
- * keep polling until it binds, publishes its port, and accepts a connection, or the deadline passes. A stale
- * file left by a crashed server resolves itself: the connect fails, the new server overwrites the file. A live
- * server another editor started is reused: several editors on one workspace share one server.
+ * The server publishes its TCP port to the discovery file we tell it to use, named by the workspace hash and
+ * this extension's version (see [computePortFilePath]). We read that file and connect. When it is absent or
+ * names a dead port, we spawn one daemonized server and keep polling until it binds, publishes its port, and
+ * accepts a connection, or the deadline passes. A stale file left by a crashed server resolves itself: the
+ * connect fails, the new server overwrites the file. A live server another editor started is reused: several
+ * editors on one workspace share one server. A server of another extension version is not: it publishes to a
+ * different file, so an updated extension starts its own server instead of connecting to the old one.
  */
 async function getStreamInfoForDaemonServer({
   workspaceRoot,
@@ -992,7 +1010,7 @@ async function getStreamInfoForDaemonServer({
   launcherPath?: string;
   getAcceptedEulaHash: AcceptedEulaHashProvider;
 }): Promise<StreamInfo> {
-  const portFilePath = computePortFilePath(workspaceRoot);
+  const portFilePath = computePortFilePath({ workspaceRoot, version: extensionVersion() });
   const deadline = Date.now() + DAEMON_START_TIMEOUT_MS;
   let spawned = false;
   let lastError: unknown;
@@ -1009,7 +1027,7 @@ async function getStreamInfoForDaemonServer({
       }
     }
     if (!spawned) {
-      await startDaemonServer({ workspaceRoot, launcherPath, getAcceptedEulaHash });
+      await startDaemonServer({ portFilePath, launcherPath, getAcceptedEulaHash });
       spawned = true;
     }
     await new Promise((resolve) => setTimeout(resolve, CONNECTION_RETRY_DELAY_MS));
@@ -1021,17 +1039,17 @@ async function getStreamInfoForDaemonServer({
 }
 
 /**
- * Spawns a daemonized language server in TCP mode with an ephemeral port. The server publishes its port to the
- * discovery file for [workspaceRoot]. The process is detached and unref'd, so it outlives this editor; it is
- * not killed on stop. The server counts its clients and shuts itself down once none is left for a while. Its
- * stdio is ignored, since it writes to its own log directory rather than to a pipe this editor owns.
+ * Spawns a daemonized language server in TCP mode with an ephemeral port. The server publishes its port to
+ * [portFilePath]. The process is detached and unref'd, so it outlives this editor; it is not killed on stop.
+ * The server counts its clients and shuts itself down once none is left for a while. Its stdio is ignored,
+ * since it writes to its own log directory rather than to a pipe this editor owns.
  */
 async function startDaemonServer({
-  workspaceRoot,
+  portFilePath,
   launcherPath: configuredLauncherPath,
   getAcceptedEulaHash,
 }: {
-  workspaceRoot: string;
+  portFilePath: string;
   launcherPath?: string;
   getAcceptedEulaHash: AcceptedEulaHashProvider;
 }): Promise<void> {
@@ -1041,15 +1059,15 @@ async function startDaemonServer({
   const args: string[] = [
     '--socket=127.0.0.1:0',
     '--multi-client',
-    '--workspace-root',
-    workspaceRoot,
+    '--port-file',
+    portFilePath,
     // The daemon outlives this editor; make it stop on its own once every editor has disconnected.
     '--idle-timeout',
     DAEMON_IDLE_TIMEOUT,
   ];
   const storageUri = configuredStorageUri ?? context.storageUri;
   if (storageUri) {
-    args.push('--system-path', storageUri.fsPath);
+    args.push('--system-path', serverSystemPath(storageUri));
   }
   const eulaHash = getAcceptedEulaHash(context);
   if (eulaHash !== undefined) {
