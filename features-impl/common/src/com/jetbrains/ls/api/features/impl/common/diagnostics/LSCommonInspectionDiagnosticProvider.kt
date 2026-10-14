@@ -10,6 +10,8 @@ import com.jetbrains.ls.api.features.diagnostics.LSDiagnosticProvider
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.Diagnostic
+import com.jetbrains.lsp.protocol.DiagnosticSeverity
+import com.jetbrains.lsp.protocol.DiagnosticTag
 import com.jetbrains.lsp.protocol.DocumentDiagnosticParams
 import com.jetbrains.lsp.protocol.LSP
 import kotlinx.coroutines.flow.Flow
@@ -21,6 +23,7 @@ class LSCommonInspectionDiagnosticProvider(
     override val supportedLanguages: Set<LSLanguage>,
     private val inspectionProfilePatcher: InspectionProfilePatcher = InspectionProfilePatcher(),
     quickFixBlacklist: Blacklist = Blacklist(),
+    private val unnecessaryAsHint: Boolean = false,
 ) : LSDiagnosticProvider {
     private val lsInspectionManager = LSInspectionManager(quickFixBlacklist)
     
@@ -36,6 +39,9 @@ class LSCommonInspectionDiagnosticProvider(
                 LSP.json.encodeToJsonElement(lsInspectionManager.createDiagnosticData(problemDescriptor))
             }
         }
-        diagnostics.forEach { diagnostic -> emit(diagnostic) }
+        diagnostics.forEach { diagnostic ->
+            val isUnnecessary = diagnostic.tags?.contains(DiagnosticTag.Unnecessary) == true
+            emit(if (unnecessaryAsHint && isUnnecessary) diagnostic.copy(severity = DiagnosticSeverity.Hint) else diagnostic)
+        }
     }
 }

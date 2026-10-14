@@ -5,6 +5,8 @@ import com.jetbrains.ls.imports.api.BuildTool
 import com.jetbrains.ls.imports.api.BuildToolDriver
 import com.jetbrains.ls.imports.api.BuildToolDriverContext
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
+import com.jetbrains.ls.imports.gradle.GradleDriver
+import com.jetbrains.ls.imports.maven.MavenDriver
 import fleet.util.async.Resource
 import fleet.util.async.resource
 import java.nio.file.Path
@@ -24,5 +26,5 @@ object JpsDriver : BuildToolDriver {
     override fun start(
         toolContext: BuildToolDriverContext,
         parameters: WorkspaceImportParameters,
-    ): Resource<BuildTool> = resource { cc -> cc(JpsBuildTool(toolContext, parameters)) }
+    ): Resource<BuildTool> = resource { cc -> cc(JpsBuildTool(this, toolContext, parameters, MavenDriver, GradleDriver)) }
 }

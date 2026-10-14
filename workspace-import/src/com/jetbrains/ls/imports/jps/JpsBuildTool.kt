@@ -51,11 +51,11 @@ import com.intellij.util.containers.nullize
 import com.intellij.util.lang.JavaVersion
 import com.jetbrains.ls.imports.api.BuildTool
 import com.jetbrains.ls.imports.api.BuildToolContext
+import com.jetbrains.ls.imports.api.BuildToolDriver
 import com.jetbrains.ls.imports.api.BuildToolDriverContext
 import com.jetbrains.ls.imports.api.ImportEvent
 import com.jetbrains.ls.imports.api.ImportRequest
 import com.jetbrains.ls.imports.api.SyncRequest
-import com.jetbrains.ls.imports.api.ToolFileWatcher
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceException
 import com.jetbrains.ls.imports.api.WorkspaceImportException
@@ -70,8 +70,13 @@ import com.jetbrains.ls.imports.utils.LsImportBundle
 import com.jetbrains.ls.imports.utils.toIntellijUri
 import com.jetbrains.ls.snapshot.api.impl.core.toFileUrl
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -147,8 +152,11 @@ private const val DOWNLOAD_PARALLELISM = 16
 
 /** One folder's live JPS build tool; [JpsDriver] starts it. */
 class JpsBuildTool(
+    private val lifetimeScope: CoroutineScope,
     private val toolContext: BuildToolDriverContext,
     private val parameters: WorkspaceImportParameters,
+    private val mavenDriver: BuildToolDriver,
+    private val gradleDriver: BuildToolDriver,
 ) : BuildTool {
 
     override fun sync(context: BuildToolContext, request: SyncRequest): Flow<ImportEvent> = channelFlow {
@@ -162,11 +170,6 @@ class JpsBuildTool(
             // reads as changed at the next judgment, and the next cycle serves it.
             lastSyncStartedAt = startedAt
             context.withProject {
-                judgingTools = findLinkedProjects(
-                    parameters.projectDirectory,
-                    linkedProjectMacros(parameters.projectDirectory),
-                    toolContext.copy(watcher = ToolFileWatcher.Noop),
-                ).map { (path, factory) -> factory(parameters.copy(projectFileOrDirectory = path)) }.toList()
                 importWorkspace(context, request).collect { send(it) }
             }
         } catch (e: Throwable) {
@@ -179,10 +182,18 @@ class JpsBuildTool(
     @Volatile
     private var lastSyncStartedAt: Long? = null
 
-    private var judgingTools: List<BuildTool> = emptyList()
+    /** Keeps [linkedTools] alive; cancelled when their set changes and a new one opens. */
+    private var linkedToolsGeneration: Job? = null
 
-    /** The linked Maven and Gradle tools of the last sync; each sync replaces the whole set. */
-    private val linkedTools = MutableStateFlow<List<BuildTool>>(emptyList())
+    /** The linked projects [linkedTools] were opened for; an unchanged set reuses the running instances. */
+    private var linkedToolsSignature: List<Pair<Path, String>>? = null
+
+    /**
+     * The live linked Maven and Gradle tools, paired with their project paths. Started once per linked-project
+     * set and kept alive across syncs, so they watch their files, answer [inputsChangedSince] from their own
+     * input baseline, and feed [reimportRequests]. A sync that finds the set changed replaces the whole set.
+     */
+    private val linkedTools = MutableStateFlow<List<Pair<Path, BuildTool>>>(emptyList())
 
     /**
      * The re-import requests of the linked tools: they watch their own files, and a request from one re-runs
@@ -190,20 +201,18 @@ class JpsBuildTool(
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     override val reimportRequests: Flow<ImportRequest> =
-        linkedTools.flatMapLatest { tools -> tools.map { it.reimportRequests }.merge() }
+        linkedTools.flatMapLatest { tools -> tools.map { it.second.reimportRequests }.merge() }
 
     /**
-     * Whether an input of a linked Maven or Gradle project changed on disk after [since]: their models merge
+     * Whether an input of a live linked Maven or Gradle tool changed on disk after [since]: their models merge
      * into the `.idea` model this tool publishes, so any of them re-runs the whole import. The `.idea` files
-     * themselves do not re-import. The judging tools retain input existence from the start of the last sync.
-     * They use [ToolFileWatcher.Noop]; the live linked tools watch files.
+     * themselves do not re-import. Each linked tool keeps its own input baseline from its last sync.
      */
     private fun inputsChangedSince(since: Long?): Boolean {
         if (since == null) return true
-        val projectDirectory = parameters.projectDirectory
-        if (!JpsDriver.canImportWorkspace(projectDirectory)) return false
+        if (!JpsDriver.canImportWorkspace(parameters.projectDirectory)) return false
         val storage = toolContext.entityStorage()
-        return judgingTools.any { tool ->
+        return linkedTools.value.any { (_, tool) ->
             when (tool) {
                 is MavenTool -> tool.inputsChangedSince(since, storage)
                 is GradleTool -> tool.inputsChangedSince(since, storage)
@@ -236,12 +245,18 @@ class JpsBuildTool(
             }
             send(ImportEvent.UpdateWorkspaceModel(storage.toSnapshot(), request.targetWatermark))
 
-            val linkedProjects = findLinkedProjects(projectDirectory, macroExpandMap, toolContext)
-                .map { (path, toolFactory) -> path to toolFactory(parameters.copy(projectFileOrDirectory = path)) }
-                .toList()
-            // Published before the imports run, so the linked tools' re-import requests flow during them too.
-            linkedTools.value = linkedProjects.map { it.second }
-            linkedProjects.forEach { (path, linkedTool) ->
+            // The linked tools live across syncs; open a fresh set only when the linked-project set changed,
+            // so an unchanged set keeps its instances and their input baselines.
+            val linkedProjects = findLinkedProjects(projectDirectory, macroExpandMap, mavenDriver, gradleDriver).toList()
+            val signature = linkedProjects.map { (path, driver) -> path to driver.type }
+            if (signature != linkedToolsSignature) {
+                val (job, opened) = openLinkedTools(linkedProjects, toolContext)
+                linkedToolsGeneration?.cancel()
+                linkedToolsGeneration = job
+                linkedToolsSignature = signature
+                linkedTools.value = opened
+            }
+            linkedTools.value.forEach { (path, linkedTool) ->
                 LOG.info("Importing linked project: $path")
                 // The same request: a linked project is part of this sync, so its answer covers the same watermark.
                 linkedTool.sync(context, request).collect { event ->
@@ -264,6 +279,36 @@ class JpsBuildTool(
             )
         }
     }.buffer(Channel.UNLIMITED)
+
+    /**
+     * Builds each linked tool only through its driver's [BuildToolDriver.start] and keeps it alive on
+     * [lifetimeScope] until the returned job is cancelled, so the tools live until the next sync replaces them.
+     * The job is a child of [lifetimeScope], so the tools also stop when this tool stops.
+     * ponytail: syncs of one tool do not overlap, so the caller's job swap needs no lock.
+     */
+    private suspend fun openLinkedTools(
+        projects: List<Pair<Path, BuildToolDriver>>,
+        toolContext: BuildToolDriverContext,
+    ): Pair<Job, List<Pair<Path, BuildTool>>> {
+        val started = projects.map { (path, driver) -> Triple(path, driver, CompletableDeferred<BuildTool>()) }
+        val job = lifetimeScope.launch(CoroutineName("Linked build tools of a JPS sync")) {
+            started.forEach { (path, driver, opened) ->
+                launch(CoroutineName("Linked build tool ${driver.type} at $path")) {
+                    driver.start(toolContext, parameters.copy(projectFileOrDirectory = path)).use { tool ->
+                        opened.complete(tool)
+                        awaitCancellation()
+                    }
+                }
+            }
+        }
+        // A tool whose start fails leaves its value uncompleted; the job failure completes it, so await never hangs.
+        job.invokeOnCompletion { cause ->
+            started.forEach { (_, _, opened) ->
+                if (!opened.isCompleted) opened.completeExceptionally(cause ?: CancellationException("The linked tool did not start"))
+            }
+        }
+        return job to started.map { (path, _, opened) -> path to opened.await() }
+    }
 
     private suspend fun importJpsModel(
         storage: MutableEntityStorage,
@@ -542,13 +587,6 @@ class JpsBuildTool(
     }
 }
 
-/** [linkedProjectMacros] without a loaded project: enough for the linked-project paths of `.idea`. */
-private fun linkedProjectMacros(projectDirectory: Path): ExpandMacroToPathMap {
-    val model = JpsElementFactory.getInstance().createModel()
-    initGlobalJpsOptions(model)
-    return linkedProjectMacros(JpsModelSerializationDataService.computeAllPathVariables(model.global), projectDirectory)
-}
-
 /** The macro expansions a linked-project path may use: the path variables, the macros of `modules.xml`, `$PROJECT_DIR$`. */
 private fun linkedProjectMacros(pathVariables: Map<String, String>, projectDirectory: Path): ExpandMacroToPathMap {
     val macroExpandMap = ExpandMacroToPathMap()
@@ -788,14 +826,11 @@ private fun readRemoteRepositories(projectDirectory: Path): List<RemoteRepositor
 private fun findLinkedProjects(
     projectDirectory: Path,
     macroExpandMap: ExpandMacroToPathMap,
-    toolContext: BuildToolDriverContext,
-): Sequence<Pair<Path, (WorkspaceImportParameters) -> BuildTool>> = sequence {
-    yieldAll(findLinkedMavenProjects(projectDirectory, macroExpandMap).map { path ->
-        path to { params: WorkspaceImportParameters -> MavenTool(toolContext, params) }
-    })
-    yieldAll(findLinkedGradleProjects(projectDirectory, macroExpandMap).map { path ->
-        path to { params: WorkspaceImportParameters -> GradleTool(toolContext, params) }
-    })
+    mavenDriver: BuildToolDriver,
+    gradleDriver: BuildToolDriver,
+): Sequence<Pair<Path, BuildToolDriver>> = sequence {
+    yieldAll(findLinkedMavenProjects(projectDirectory, macroExpandMap).map { path -> path to mavenDriver })
+    yieldAll(findLinkedGradleProjects(projectDirectory, macroExpandMap).map { path -> path to gradleDriver })
 }
 
 private fun findLinkedMavenProjects(

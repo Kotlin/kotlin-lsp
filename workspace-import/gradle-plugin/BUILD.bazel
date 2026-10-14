@@ -33,11 +33,6 @@ jvm_provided_library(
     lib = "@community//libraries/kotlinx/serialization/core",
 )
 
-jvm_provided_library(
-    name = "community_libraries_kotlinx_serialization_json_provided",
-    lib = "@community//libraries/kotlinx/serialization/json",
-)
-
 jvm_library(
     name = "gradle-plugin",
     srcs = glob(
@@ -67,7 +62,6 @@ jvm_library(
         ":community_libraries_gradle_provided",
         ":community_libraries_jspecify_provided",
         ":community_libraries_kotlinx_serialization_core_provided",
-        ":community_libraries_kotlinx_serialization_json_provided",
     ],
 )
 
@@ -96,8 +90,6 @@ jvm_library(
         "@community//libraries/jspecify:jspecify_test_lib",
         "@community//libraries/kotlinx/serialization/core",
         "@community//libraries/kotlinx/serialization/core:core_test_lib",
-        "@community//libraries/kotlinx/serialization/json",
-        "@community//libraries/kotlinx/serialization/json:json_test_lib",
         "@ultimate_lib//:slf4j-api-provided",
         "@lib//:slf4j-jdk14",
         "@community//libraries/junit6",

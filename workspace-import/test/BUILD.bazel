@@ -68,6 +68,8 @@ jvm_library(
         "@community//platform/testFramework/common:common_test_lib",
         "@community//platform/util",
         "@community//platform/util:util_test_lib",
+        "@community//platform/util/coroutines",
+        "@community//platform/util/coroutines:coroutines_test_lib",
         "//language-server/community/workspace-import",
         "//language-server/community/workspace-import:workspace-import_test_lib",
         "//libraries/gradle-tooling",
