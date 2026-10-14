@@ -29,6 +29,15 @@ class LSCommonInspectionDiagnosticProvider(
     
     companion object {
         val diagnosticSource: DiagnosticSource = DiagnosticSource("inspection")
+
+        /**
+         * The source of a problem of a batch run (`intellij/inspectCode`). Such a problem carries no fixes: the inspection
+         * fixes provider runs its inspection on the file again when the client asks for its code actions.
+         */
+        val batchDiagnosticSource: DiagnosticSource = DiagnosticSource("batchInspection")
+
+        /** Whether [source] is an inspection problem, of the editor or of a batch run. */
+        fun isInspectionSource(source: DiagnosticSource): Boolean = source == diagnosticSource || source == batchDiagnosticSource
     }
 
     context(server: LSServer, handlerContext: LspHandlerContext)
