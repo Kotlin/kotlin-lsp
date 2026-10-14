@@ -115,10 +115,11 @@ export function registerTestController<Profile extends string>(
   let importStateSubscription: Disposable | undefined;
   const watchWorkspaceImports = (client: LanguageClient): void => {
     importStateSubscription?.dispose();
-    importStateSubscription = client.onNotification(
-      WorkspaceImportStateNotification,
-      () => void discovery.refreshWorkspace(),
-    );
+    importStateSubscription = client.onNotification(WorkspaceImportStateNotification, () => {
+      void discovery.refreshWorkspace();
+      // A file scanned before the import knew no module yet, so the server may have found no test in it.
+      refreshVisibleEditors();
+    });
     void discovery.refreshWorkspace();
   };
   watchWorkspaceImports(client);
