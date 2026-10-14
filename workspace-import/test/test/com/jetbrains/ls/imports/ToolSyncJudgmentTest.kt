@@ -21,11 +21,15 @@ import com.jetbrains.ls.imports.api.SyncRequest
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.ImportEvent
+import com.jetbrains.ls.imports.gradle.GradleDriver
 import com.jetbrains.ls.imports.gradle.GradleTool
 import com.jetbrains.ls.imports.json.JsonTool
 import com.jetbrains.ls.imports.jps.JpsBuildTool
+import com.jetbrains.ls.imports.maven.MavenDriver
 import com.jetbrains.ls.imports.maven.MavenTool
+import com.intellij.platform.util.coroutines.childScope
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -61,7 +65,7 @@ class ToolSyncJudgmentTest {
             GradleTool(toolContext(storage), parameters(workspace)),
             MavenTool(toolContext(), parameters(workspace)),
             JsonTool(toolContext(), parameters(workspace)),
-            JpsBuildTool(toolContext(), parameters(workspace)),
+            JpsBuildTool(this, toolContext(), parameters(workspace), MavenDriver, GradleDriver),
         )
         for (tool in tools) {
             val request = SyncRequest(targetWatermark = 1, force = true, toolRequest = null)
@@ -130,25 +134,35 @@ class ToolSyncJudgmentTest {
                 </option></component></project>""",
         )
         (workspace / ".idea" / "modules.xml").writeText("<project/>")
-        val tool = JpsBuildTool(
-            toolContext(model("GRADLE", linked.toString(), module.toString())),
-            parameters(workspace).copy(defaultSdkPath = Path.of(System.getProperty("java.home"))),
-        )
-        withAnalyzer(isUnitTestMode = true) { analyzer ->
-            val snapshot = WorkspaceModelSnapshot.empty()
-            analyzer.withProject(analyzerProjectConfigForImport(
-                projectId = AnalyzerProjectId(),
-                entities = snapshot.entityStore,
-                urlManager = snapshot.virtualFileUrlManager,
-                pluginSet = testPluginSet,
-            )) { context ->
-                val events = tool.sync(BuildToolContext(context.project, urlManager), SyncRequest(1, force = true, toolRequest = null)).toList()
-                assertTrue(events.any { it is ImportEvent.UpdateWorkspaceModel }, events.toString())
+        // The tool keeps its live linked tools alive on this scope, so the test cancels it instead of the
+        // whole run; otherwise the live tools would hold the run open past the end.
+        val toolScope = childScope("JpsBuildTool linked tools")
+        try {
+            val tool = JpsBuildTool(
+                toolScope,
+                toolContext(model("GRADLE", linked.toString(), module.toString())),
+                parameters(workspace).copy(defaultSdkPath = Path.of(System.getProperty("java.home"))),
+                MavenDriver,
+                GradleDriver,
+            )
+            withAnalyzer(isUnitTestMode = true) { analyzer ->
+                val snapshot = WorkspaceModelSnapshot.empty()
+                analyzer.withProject(analyzerProjectConfigForImport(
+                    projectId = AnalyzerProjectId(),
+                    entities = snapshot.entityStore,
+                    urlManager = snapshot.virtualFileUrlManager,
+                    pluginSet = testPluginSet,
+                )) { context ->
+                    val events = tool.sync(BuildToolContext(context.project, urlManager), SyncRequest(1, force = true, toolRequest = null)).toList()
+                    assertTrue(events.any { it is ImportEvent.UpdateWorkspaceModel }, events.toString())
+                }
             }
+            assertFalse(syncRuns(tool, force = false))
+            Files.delete(script)
+            assertTrue(syncRuns(tool, force = false))
+        } finally {
+            toolScope.cancel()
         }
-        assertFalse(syncRuns(tool, force = false))
-        Files.delete(script)
-        assertTrue(syncRuns(tool, force = false))
     }
 
     @Test
