@@ -28,6 +28,7 @@ import com.jetbrains.ls.api.features.impl.common.documentHighlight.LSCommonDocum
 import com.jetbrains.ls.api.features.impl.common.foldingRange.LSCommonFoldingRangeProvider
 import com.jetbrains.ls.api.features.impl.common.formatting.LSCommonFormattingProvider
 import com.jetbrains.ls.api.features.impl.common.implementation.LSCommonImplementationProvider
+import com.jetbrains.ls.api.features.impl.common.relatedTests.LSCommonRelatedTestsProvider
 import com.jetbrains.ls.api.features.impl.common.references.LSCommonReferencesProvider
 import com.jetbrains.ls.api.features.impl.common.typeDefinition.LSCommonTypeDefinitionProvider
 import com.jetbrains.ls.api.core.util.TargetKind
@@ -120,6 +121,7 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         },
         LSKotlinTypeHierarchyProvider,
         LSKotlinSuperDeclarationsProvider,
+        LSCommonRelatedTestsProvider(setOf(LSKotlinLanguage)),
         LSKotlinCallHierarchyProvider,
         LSKotlinCallHierarchyRenderer
     ),
