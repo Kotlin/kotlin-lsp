@@ -28,6 +28,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.encodeToJsonElement
+import java.util.WeakHashMap
 
 /**
  * The batch run of the local inspections of [supportedLanguages]: the same tools as [LSCommonInspectionDiagnosticProvider]
@@ -53,8 +54,8 @@ class LSCommonBatchInspectionProvider(
 
     private val inspectionsLock = Mutex()
 
-    @Volatile
-    private var inspections: List<LSBatchInspection>? = null
+    /** By server: a configuration is one object per JVM, and the servers of a JVM (tests) may load other plugins. */
+    private val inspectionsByServer = WeakHashMap<LSServer, List<LSBatchInspection>>()
 
     context(server: LSServer)
     override suspend fun inspectFile(uri: URI, inspectionIds: Set<String>?): LSBatchFileResult =
@@ -78,19 +79,17 @@ class LSCommonBatchInspectionProvider(
             LSBatchFileResult(diagnostics)
         }
 
-    /** Computed once: it instantiates every tool of the languages. */
+    /** Computed once per server: it instantiates every tool of the languages. */
     context(server: LSServer)
-    override suspend fun inspections(): List<LSBatchInspection> {
-        inspections?.let { return it }
-        return inspectionsLock.withLock {
-            inspections ?: server.withAnalysisContext {
+    override suspend fun inspections(): List<LSBatchInspection> =
+        inspectionsLock.withLock {
+            inspectionsByServer[server] ?: server.withAnalysisContext {
                 supportedLanguages
                     .flatMap { language -> lsInspectionMetadata(language.intellijLanguage, inspectionProfilePatcher).map { language to it } }
                     .groupBy { (_, metadata) -> metadata.id }
                     .map { (_, byLanguage) -> byLanguage.first().second.toBatchInspection(byLanguage.mapTo(HashSet()) { it.first }) }
-            }.also { inspections = it }
+            }.also { inspectionsByServer[server] = it }
         }
-    }
 }
 
 private fun LSInspectionMetadata.toBatchInspection(languages: Set<LSLanguage>): LSBatchInspection = LSBatchInspection(
