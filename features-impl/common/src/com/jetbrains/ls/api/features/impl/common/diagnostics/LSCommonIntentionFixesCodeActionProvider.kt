@@ -65,14 +65,16 @@ class LSCommonIntentionFixesCodeActionProvider(
                 val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
                 val document = virtualFile.findDocument() ?: return@readAction emptyList()
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
-                val offset = params.range.toTextRange(document).startOffset
+                val range = params.range.toTextRange(document)
+                val offset = range.startOffset
                 val psiElement = psiFile.findElementAt(offset)
 
                 // TODO(bartekpacia): centralize common logging so it's not repeated N times across all LS*Providers
                 LOG.debug("request textDocument/diagnostic for ${virtualFile.name}")
 
+                val selection = selectionOf(params, range)
                 val codeActions =
-                    (infoInspections(psiFile, offset, psiElement) + intentions(psiFile, offset))
+                    (infoInspections(psiFile, offset, psiElement) + intentions(psiFile, offset, selection))
                     .toList()
 
                 return@readAction codeActions
@@ -125,12 +127,21 @@ class LSCommonIntentionFixesCodeActionProvider(
         return result.asSequence()
     }
 
+    /**
+     * The editor selection the intentions see: the request [range], unless it is empty or is the range of one of the
+     * diagnostics of the request. A client (VS Code, Draft) asks for the range of a diagnostic when the caret is inside it
+     * with no selection, so such a range is a caret, not a selection, whatever the trigger kind; otherwise the client
+     * sends its selection. The caret stays at the range start in any case: LSP does not send it, and the start is
+     * where it is for an empty range.
+     */
+    private fun selectionOf(params: CodeActionParams, range: TextRange): TextRange {
+        val isDiagnosticRange = params.context.diagnostics.any { diagnostic -> diagnostic.range == params.range }
+        return if (range.isEmpty || isDiagnosticRange) TextRange(range.startOffset, range.startOffset) else range
+    }
+
     context(server: LSServer)
-    private fun intentions(psiFile: PsiFile, offset: Int): Sequence<CodeAction> {
-        val actionContext = run {
-            val selection = TextRange(offset, offset) // empty selection
-            ActionContext(psiFile.project, psiFile, offset, selection, null)
-        }
+    private fun intentions(psiFile: PsiFile, offset: Int, selection: TextRange): Sequence<CodeAction> {
+        val actionContext = ActionContext(psiFile.project, psiFile, offset, selection, null)
 
         return IntentionManager.getInstance()
             .getAvailableIntentions(languageIds)
