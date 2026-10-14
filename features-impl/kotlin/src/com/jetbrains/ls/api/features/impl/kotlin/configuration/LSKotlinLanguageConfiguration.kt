@@ -55,6 +55,7 @@ import com.jetbrains.ls.api.features.impl.kotlin.semanticTokens.LSKotlinSemantic
 import com.jetbrains.ls.api.features.impl.kotlin.signatureHelp.LSKotlinSignatureHelpProvider
 import com.jetbrains.ls.api.features.impl.kotlin.symbols.LSKotlinDocumentSymbolProvider
 import com.jetbrains.ls.api.features.impl.kotlin.symbols.LSKotlinWorkspaceSymbolProvider
+import com.jetbrains.ls.api.features.impl.kotlin.superDeclarations.LSKotlinSuperDeclarationsProvider
 import com.jetbrains.ls.api.features.impl.kotlin.typeHierarchy.LSKotlinTypeHierarchyProvider
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.analyzer.api.AnalyzerContextKind
@@ -118,6 +119,7 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
             }
         },
         LSKotlinTypeHierarchyProvider,
+        LSKotlinSuperDeclarationsProvider,
         LSKotlinCallHierarchyProvider,
         LSKotlinCallHierarchyRenderer
     ),
