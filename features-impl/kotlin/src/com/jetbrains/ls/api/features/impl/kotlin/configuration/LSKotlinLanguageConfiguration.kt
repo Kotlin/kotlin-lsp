@@ -47,6 +47,7 @@ import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.kotlinIntentionBlac
 import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.kotlinQuickFixBlacklist
 import com.jetbrains.ls.api.features.impl.kotlin.extract.LSKotlinExtractVariableProvider
 import com.jetbrains.ls.api.features.impl.kotlin.hover.LSKotlinHoverProvider
+import com.jetbrains.ls.api.features.impl.kotlin.inheritedMembers.LSKotlinInheritedMembersProvider
 import com.jetbrains.ls.api.features.impl.kotlin.inlayHints.LSKotlinInlayHintsProvider
 import com.jetbrains.ls.api.features.impl.kotlin.inline.LSKotlinInlineVariableProvider
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
@@ -123,6 +124,7 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         },
         LSKotlinTypeHierarchyProvider,
         LSKotlinSuperDeclarationsProvider,
+        LSKotlinInheritedMembersProvider,
         LSCommonRelatedTestsProvider(setOf(LSKotlinLanguage)),
         LSKotlinCallHierarchyProvider,
         LSKotlinCallHierarchyRenderer
