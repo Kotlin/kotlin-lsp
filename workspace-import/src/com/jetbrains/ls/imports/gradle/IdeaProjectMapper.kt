@@ -42,7 +42,7 @@ internal class IdeaProjectMapper {
         val javaSettings: MutableList<JavaSettingsData> = mutableListOf()
 
         fillProjectJdkCache(metadata.includedProjects)
-        val kotlinMultiplatformMapper = KotlinMultiplatformMapper(metadata.kotlinMultiplatformModels)
+        val kotlinMultiplatformMapper = KotlinMultiplatformMapper(metadata.kotlinMultiplatformModels, metadata.androidProjects)
         val dependencyResolver = SourceSetDependencyResolver(metadata, kotlinMultiplatformMapper)
         val contentRootResolver = GradleContentRootResolver(metadata)
 

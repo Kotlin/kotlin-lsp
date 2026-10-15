@@ -32,9 +32,6 @@ private val TARGET_MODEL_NAME: String = KotlinMultiplatformModel::class.java.nam
  * `org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType` names of KGP.
  */
 private val KNOWN_PLATFORMS = setOf("common", "jvm", "androidJvm", "js", "wasm", "native")
-private const val COMMON_PLATFORM = "common"
-private const val COMMON_MAIN = "commonMain"
-private const val COMMON_TEST = "commonTest"
 
 /**
  * Builds [com.jetbrains.ls.imports.gradle.model.KotlinMultiplatformModel] for a project with the `kotlin` multiplatform
@@ -79,7 +76,6 @@ class KotlinMultiplatformModelBuilder : ToolingModelBuilder {
         val compilations = targets.flatMap { target ->
             target.compilations.mapNotNull { compilation -> buildCompilation(project, target, compilation, sourceSetsByName, argumentsResolver) }
         }
-        val coerceRootSourceSetsToCommon = project.readBooleanProperty("kotlin.mpp.coerceRootSourceSetsToCommon") ?: true
         val projectPlatforms = targets.mapNotNull { it.platformType }.toSet()
         val allTargetsManagedByAndroidPlugin = targets.all { it.isKotlinAndroidTarget }
 
@@ -101,11 +97,6 @@ class KotlinMultiplatformModelBuilder : ToolingModelBuilder {
                     // Orphan source sets get the platforms that the project uses, as in
                     // `org.jetbrains.kotlin.idea.gradleTooling.KotlinMPPGradleModelBuilder.computeSourceSetPlatforms`.
                     participatedCompilations == null -> projectPlatforms
-                    // Only the root source sets are coerced to common.
-                    // `org.jetbrains.kotlin.idea.gradleTooling.KotlinMPPGradleModelBuilder.shouldCoerceToCommon` runs
-                    // before the platforms are set, so its single-platform shortcut never applies.
-                    coerceRootSourceSetsToCommon && sourceSet.name in setOf(COMMON_MAIN, COMMON_TEST) ->
-                        setOf(COMMON_PLATFORM)
                     else -> participatedCompilations.map { it.platform }.toSet()
                 },
                 isManagedByAndroidPlugin = participatedCompilations?.all { it.isManagedByAndroidPlugin } ?: allTargetsManagedByAndroidPlugin,
@@ -243,23 +234,6 @@ class KotlinMultiplatformModelBuilder : ToolingModelBuilder {
      */
     private fun compilationFullName(name: String, classifier: String?): String =
         if (classifier == null) name else classifier + name.replaceFirstChar { it.uppercaseChar() }
-
-    /**
-     * Reads a Boolean Gradle property: extra first, then gradle.properties.
-     *
-     * LSP port of IDE code: `org.jetbrains.kotlin.idea.gradleTooling.readProperty`
-     */
-    private fun Project.readBooleanProperty(name: String): Boolean? {
-        return try {
-            val extra = extensions.extraProperties
-            (if (extra.has(name)) extra.get(name)?.toString() else null)?.toBoolean()
-            ?: providers.gradleProperty(name).orNull?.toBoolean()
-        }
-        catch (e: Exception) {
-            logger.error("[LSP Kotlin Multiplatform import] Failed to read property $name of $path", e)
-            null
-        }
-    }
 
     /**
      * The identity path of the project in the build tree. [org.gradle.api.Project.getBuildTreePath] is public since

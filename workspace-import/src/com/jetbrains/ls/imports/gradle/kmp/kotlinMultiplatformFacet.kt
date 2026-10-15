@@ -13,7 +13,7 @@ import org.jetbrains.kotlin.config.CompilerSettings
 import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.config.KotlinFacetSettings
 import org.jetbrains.kotlin.config.LanguageFeature
-import org.jetbrains.kotlin.config.serializeComponentPlatforms
+import org.jetbrains.kotlin.config.createArguments
 import org.jetbrains.kotlin.idea.compiler.configuration.IdeKotlinVersion
 import org.jetbrains.kotlin.idea.facet.applyCompilerArgumentsToFacetSettings
 import org.jetbrains.kotlin.idea.facet.coerceAtMostVersion
@@ -66,25 +66,22 @@ internal fun idePlatformKind(platformId: String): IdePlatformKind? = when (platf
 }
 
 /**
- * The target platform of a module in the `org.jetbrains.kotlin.config.serializeComponentPlatforms` form that
- * `org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity.targetPlatform` stores (`"JVM [11]"`,
- * `"Native []/Native [ios_arm64]"`):
+ * The target platform of a module:
  * - JVM uses the lowest JVM target of the module and of the modules that depend on it ([jvmTarget]).
  * - Native and Wasm use the concrete targets of the compilations.
  * - JS and common use the default platform of their kind. The kind keeps only the platforms that the project has
- *   ([projectPlatforms]). So `commonMain` of a project with JVM and Wasm targets also lists `JVM [1.8]` and
- *   `wasm-wasi [WASI]`, as in the IDE.
+ *   ([projectPlatforms]).
  *
  * LSP port of IDE code: `org.jetbrains.kotlin.idea.gradleJava.configuration.KotlinSourceSetDataService.configureFacet`,
  * `org.jetbrains.kotlin.idea.gradleJava.configuration.KotlinSourceSetDataService.toSimplePlatforms`
  */
-internal fun serializedTargetPlatform(
+internal fun targetPlatform(
     platformIds: Set<String>,
     konanTargets: Set<String>,
     wasmTargets: Set<String>,
     jvmTarget: JvmTarget,
     projectPlatforms: Set<String>,
-): String {
+): TargetPlatform {
     val simplePlatforms = platformIds.mapNotNull(::idePlatformKind).flatMap { kind ->
         when (kind) {
             is JvmIdePlatformKind -> JvmPlatforms.jvmPlatformByTargetVersion(jvmTarget).componentPlatforms
@@ -93,7 +90,7 @@ internal fun serializedTargetPlatform(
             else -> kind.defaultPlatform.filter { it.isRelevantFor(projectPlatforms) }
         }
     }.toSet()
-    return TargetPlatform(simplePlatforms).serializeComponentPlatforms()
+    return TargetPlatform(simplePlatforms)
 }
 
 /**
@@ -161,19 +158,23 @@ internal data class FacetCompilerArguments(val compilerArguments: String, val ad
  * Applies [arguments] to a Kotlin facet with `org.jetbrains.kotlin.idea.facet.applyCompilerArgumentsToFacetSettings`,
  * and serializes the result for `org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity`.
  *
- * First, the facet gets the language version of [kotlinGradlePluginVersion], and the API version of the same value,
- * coerced to that version. [arguments] that set a version override them. The facet keeps only the arguments that it
- * exposes. The rest goes to the additional arguments string. Then the automatic version advance is switched off.
+ * First, the facet gets the arguments class of [targetPlatform], and the language version of [kotlinGradlePluginVersion].
+ * The API version gets the same value, coerced to that version. [arguments] of the same class override them. Arguments of
+ * a different class give only their plugin options. The facet keeps only the arguments that it exposes. The rest goes to
+ * the additional arguments string. Then the automatic version advance is switched off.
  *
  * LSP port of IDE code: `org.jetbrains.kotlin.idea.facet.initializeIfNeeded`,
  * `org.jetbrains.kotlin.idea.facet.noVersionAutoAdvance` as
  * `org.jetbrains.kotlin.idea.gradleJava.configuration.KotlinSourceSetDataService` calls it
  */
-internal fun facetCompilerArguments(arguments: CommonCompilerArguments, kotlinGradlePluginVersion: String?): FacetCompilerArguments {
+internal fun facetCompilerArguments(
+    arguments: CommonCompilerArguments,
+    targetPlatform: TargetPlatform,
+    kotlinGradlePluginVersion: String?,
+): FacetCompilerArguments {
     val settings = KotlinFacetSettings().apply {
-        // `org.jetbrains.kotlin.idea.facet.initializeIfNeeded` creates this bean in the IDE. The arguments are copied
-        // into it only if the classes match.
-        compilerArguments = arguments.javaClass.getDeclaredConstructor().newInstance()
+        // The language server has no project-level arguments to copy into the bean.
+        compilerArguments = targetPlatform.createArguments()
         compilerSettings = CompilerSettings()
         // The IDE falls back to its bundled compiler version. Here the facet then has no version, and the analyzer uses its default.
         val compilerVersion = kotlinGradlePluginVersion?.let(IdeKotlinVersion::opt)

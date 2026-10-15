@@ -32,11 +32,13 @@ class GradleContentRootResolver(metadata: ProjectMetadata) {
     }
 
     fun getContentRoots(module: IdeaModule, sourceSet: ModuleSourceSet): List<ContentRootData> =
-        getContentRoots(module, sourceSet.sources, sourceSet.resources, sourceSet.excludes, sourceSet.isTest())
+        getContentRoots(module, sourceSet.sources, sourceSet.resources, sourceSet.excludes, sourceSet.isTest(), includeMissing = false)
 
     /**
-     * The content roots of a module with the given source and resource directories. Only existing directories become
-     * source roots.
+     * The content roots of a module with the given source and resource directories. With [includeMissing], a missing
+     * directory also becomes a source root.
+     *
+     * LSP port of IDE code, for [includeMissing]: `org.jetbrains.kotlin.idea.gradleJava.configuration.mpp.createContentRootData`
      */
     fun getContentRoots(
         module: IdeaModule,
@@ -44,13 +46,18 @@ class GradleContentRootResolver(metadata: ProjectMetadata) {
         resources: Set<File>,
         excludes: Set<String>,
         isTest: Boolean,
+        includeMissing: Boolean,
     ): List<ContentRootData> {
         val contentRoots = resolveContentRoots(module, sources.map { it.toPath() } + resources.map { it.toPath() })
         // A root under the build directory holds files a task wrote, e.g. the annotation-processor output.
         val buildRootPath = module.gradleProject.buildDirectory.toPath()
         val sourceRoots = mutableMapOf<File, SourceRootData>()
+        // A KMP source set can list a folder that does not exist yet. A Gradle task writes some of these folders later,
+        // e.g. the output of `kotlin.srcDir(task)` or the Compose resource accessors. Others are conventional folders
+        // that the project does not create, e.g. `src/iosMain/resources`.
+        fun isSourceRoot(folder: File): Boolean = !sourceRoots.containsKey(folder) && (includeMissing && !folder.exists() || folder.isDirectory)
         for (sourceRootFolder in sources) {
-            if (!sourceRoots.containsKey(sourceRootFolder) && sourceRootFolder.exists() && sourceRootFolder.isDirectory) {
+            if (isSourceRoot(sourceRootFolder)) {
                 sourceRoots[sourceRootFolder] = SourceRootData(
                     sourceRootFolder.path,
                     if (isTest) "java-test" else "java-source",
@@ -59,7 +66,7 @@ class GradleContentRootResolver(metadata: ProjectMetadata) {
             }
         }
         for (sourceRootFolder in resources) {
-            if (!sourceRoots.containsKey(sourceRootFolder) && sourceRootFolder.exists() && sourceRootFolder.isDirectory) {
+            if (isSourceRoot(sourceRootFolder)) {
                 sourceRoots[sourceRootFolder] = SourceRootData(
                     sourceRootFolder.path,
                     if (isTest) "java-test-resource" else "java-resource",

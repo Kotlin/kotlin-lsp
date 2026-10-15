@@ -6,6 +6,7 @@ package com.jetbrains.ls.imports.gradle.kmp
 import com.intellij.openapi.diagnostic.logger
 import com.jetbrains.ls.imports.gradle.GradleContentRootResolver
 import com.jetbrains.ls.imports.gradle.withKotlinRootTypes
+import com.jetbrains.ls.imports.gradle.model.AndroidProject
 import com.jetbrains.ls.imports.gradle.model.KotlinMultiplatformCompilation
 import com.jetbrains.ls.imports.gradle.model.KotlinMultiplatformModel
 import com.jetbrains.ls.imports.gradle.model.KotlinMultiplatformSourceSet
@@ -19,6 +20,7 @@ import com.jetbrains.ls.imports.json.ModuleData
 import org.gradle.tooling.model.idea.IdeaModule
 import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
 import org.jetbrains.kotlin.config.JvmTarget
+import org.jetbrains.kotlin.config.serializeComponentPlatforms
 import org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinBinaryDependency
 import org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinDependency
 import org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinProjectArtifactDependency
@@ -71,12 +73,19 @@ internal class KotlinMultiplatformModules(
 internal class KotlinMultiplatformMapper(
     /** Project module FQN to the KMP model of the project. */
     private val models: Map<String, KotlinMultiplatformModel>,
+    /** Project module FQN to the AGP model of the project. */
+    androidProjects: Map<String, AndroidProject>,
 ) {
     /**
      * Gradle identity path to the project module FQN, to resolve
      * `org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinProjectCoordinates`.
      */
     private val moduleFqnByIdentityPath: Map<String, String> = models.entries.associate { (fqn, model) -> model.projectIdentityPath to fqn }
+
+    /** Gradle build tree path to the module of the active variant of an AGP project. */
+    private val androidModuleByBuildTreePath: Map<String, String> = androidProjects.entries.associate { (fqn, project) ->
+        project.buildTreePath to "$fqn.${project.activeVariant}"
+    }
 
     /**
      * The platforms of all KMP modules in the build.
@@ -199,6 +208,7 @@ internal class KotlinMultiplatformMapper(
                 resources = sourceSet?.resourceDirs.orEmpty(),
                 excludes = emptySet(),
                 isTest = component.isTest,
+                includeMissing = true,
             ).let { roots -> if (component.usesKotlinRootTypes()) roots.map { it.withKotlinRootTypes() } else roots }
 
             modules += ModuleData(
@@ -219,8 +229,16 @@ internal class KotlinMultiplatformMapper(
                 compilerOutputs[moduleName] = component.compilation.outputDirs.map { it.path }.sorted()
             }
 
-            val arguments = compilerArguments.getValue(component)?.let { facetCompilerArguments(it, model.kotlinGradlePluginVersion) }
-            val jvmTarget = inferJvmTarget(moduleName, component, components, componentResults, compilerArguments)
+            val targetPlatform = targetPlatform(
+                platformIds = component.platforms,
+                konanTargets = component.konanTargets(),
+                wasmTargets = component.wasmTargets(),
+                jvmTarget = inferJvmTarget(moduleName, component, components, componentResults, compilerArguments),
+                projectPlatforms = projectPlatforms,
+            )
+            val arguments = compilerArguments.getValue(component)?.let {
+                facetCompilerArguments(it, targetPlatform, model.kotlinGradlePluginVersion)
+            }
             kotlinSettings += KotlinSettingsData(
                 name = "Kotlin",
                 sourceRoots = contentRoots.flatMap { it.sourceRoots }.map { it.path },
@@ -248,13 +266,7 @@ internal class KotlinMultiplatformMapper(
                 scriptTemplatesClasspath = null,
                 copyJsLibraryFiles = false,
                 outputDirectoryForJsLibraryFiles = null,
-                targetPlatform = serializedTargetPlatform(
-                    platformIds = component.platforms,
-                    konanTargets = component.konanTargets(),
-                    wasmTargets = component.wasmTargets(),
-                    jvmTarget = jvmTarget,
-                    projectPlatforms = projectPlatforms,
-                ),
+                targetPlatform = targetPlatform.serializeComponentPlatforms(),
                 externalSystemRunTasks = emptyList(),
                 version = 5,
                 flushNeeded = false,
@@ -311,9 +323,16 @@ internal class KotlinMultiplatformMapper(
                 }
                 // Substituted with the modules that build the artifact
                 // (`org.jetbrains.kotlin.idea.gradleJava.configuration.mpp.KotlinProjectArtifactDependencyResolver`).
-                is IdeaKotlinProjectArtifactDependency -> dependency.artifactsClasspath.forEach { file ->
-                    dependencyIndex.get(file).filterIsInstance<DependencyData.Module>().forEach { module ->
-                        dependencies += DependencyData.Module(module.name, DependencyDataScope.COMPILE)
+                is IdeaKotlinProjectArtifactDependency -> {
+                    dependency.artifactsClasspath.forEach { file ->
+                        dependencyIndex.get(file).filterIsInstance<DependencyData.Module>().forEach { module ->
+                            dependencies += DependencyData.Module(module.name, DependencyDataScope.COMPILE)
+                        }
+                    }
+                    if (component.platforms == setOf(KotlinPlatformId.ANDROID_JVM)) {
+                        androidProjectArtifactModules(fqn, component, dependency.coordinates).forEach { module ->
+                            dependencies += DependencyData.Module(module, DependencyDataScope.COMPILE)
+                        }
                     }
                 }
                 is IdeaKotlinBinaryDependency -> dependencies += binaryDependency(fqn, dependency) ?: continue
@@ -382,19 +401,43 @@ internal class KotlinMultiplatformMapper(
         }
     }
 
+    /** The project module of [coordinates]. */
+    private fun moduleFqn(coordinates: IdeaKotlinProjectCoordinates): String? = moduleFqnByIdentityPath[identityPath(coordinates)]
+
     /**
-     * The project module of [coordinates]. The identity path follows the rules of the IDE, except that the root project
-     * of the build is `":"` instead of its name.
+     * The identity path of [coordinates]. It follows the rules of the IDE, except that the root project of the build is
+     * `":"` instead of its name.
      *
      * LSP port of IDE code: `org.jetbrains.kotlin.idea.gradleJava.configuration.mpp.KotlinProjectModuleId`
      */
-    private fun moduleFqn(coordinates: IdeaKotlinProjectCoordinates): String? {
-        val identityPath = when {
-            coordinates.buildPath == ":" -> coordinates.projectPath
-            coordinates.projectPath == ":" -> coordinates.buildPath
-            else -> coordinates.buildPath + coordinates.projectPath
+    private fun identityPath(coordinates: IdeaKotlinProjectCoordinates): String = when {
+        coordinates.buildPath == ":" -> coordinates.projectPath
+        coordinates.projectPath == ":" -> coordinates.buildPath
+        else -> coordinates.buildPath + coordinates.projectPath
+    }
+
+    /**
+     * The modules of a project dependency that AGP resolved for the Android source set [component]:
+     * - An AGP project gives the module of its active variant.
+     * - An Android-KMP library gives its main Android source set and the source sets that it depends on.
+     *
+     * The AGP and KMP models of the build tell the two apart. A dependency on test fixtures gives the main variant.
+     *
+     * LSP port of IDE code: `org.jetbrains.kotlin.android.extensions.KotlinAndroidProjectArtifactDependencyResolver`
+     */
+    private fun androidProjectArtifactModules(fqn: String, component: Component, coordinates: IdeaKotlinProjectCoordinates): List<String> {
+        val identityPath = identityPath(coordinates)
+        androidModuleByBuildTreePath[identityPath]?.let { return listOf(it) }
+        val targetFqn = moduleFqnByIdentityPath[identityPath] ?: return emptyList()
+        val targetModel = models.getValue(targetFqn)
+        val mainCompilation = targetModel.compilations.firstOrNull {
+            it.platform == KotlinPlatformId.ANDROID_JVM && !it.isTest && !it.isManagedByAndroidPlugin
+        } ?: run {
+            LOG.warn("$fqn.${component.name}: no main Android source set in the Kotlin Multiplatform project $identityPath")
+            return emptyList()
         }
-        return moduleFqnByIdentityPath[identityPath]
+        val dependsOn = (mainCompilation.allSourceSets - mainCompilation.declaredSourceSets).sortedWith(dependsOnOrder(targetModel))
+        return (dependsOn + mainCompilation.fullName).map { "$targetFqn.$it" }
     }
 
     /**
