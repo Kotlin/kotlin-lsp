@@ -153,12 +153,24 @@ internal class KotlinMultiplatformMapper(
     /**
      * The modules of the KMP project [module], or null if it is not a KMP project.
      *
-     * The Kotlin plugin creates a module for each compilation first (pass 1). Then it creates a module for each source
-     * set that is not the default source set of a compilation (pass 2). A compilation module takes the content roots
-     * and the dependencies of its default source set, because both have the same module id.
+     * - Pass 1 creates a module for each compilation. Pass 2 creates a module for each source set that has no module yet.
+     * - A compilation has the module id of its default source set: the full name of a compilation is the name of that
+     *   source set. So pass 2 skips the default source set.
+     * - The compilation module gets the content roots and the KGP dependencies of its default source set. Both are
+     *   looked up by the module id of the source set.
+     * - The dependencies come from KGP's `org.jetbrains.kotlin.gradle.plugin.ide.IdeMultiplatformImport`. Without it,
+     *   this code emits no dependencies. The IDE fallback for that case is not ported.
      *
-     * The dependencies come from `org.jetbrains.kotlin.gradle.plugin.ide.IdeMultiplatformImport`, which KGP before 1.8.20
-     * does not have. For such a KGP this code emits no dependencies.
+     * LSP port of IDE code:
+     * - `org.jetbrains.kotlin.idea.gradleJava.configuration.mpp.createMppGradleSourceSetDataNodes`: the loop over the
+     *   compilations of the targets (pass 1), then the loop over `sourceSetsByName` (pass 2)
+     * - `org.jetbrains.kotlin.idea.gradleJava.configuration.utils.KotlinModuleUtils.getKotlinModuleId`: the module id
+     *   from `fullName`
+     * - `org.jetbrains.kotlin.idea.gradleJava.configuration.mpp.populateContentRoots`: the content roots by the module id
+     * - `org.jetbrains.kotlin.idea.gradleJava.configuration.mpp.populateModuleDependenciesWithDependenciesContainer`:
+     *   the dependencies by the module id
+     * - `org.jetbrains.kotlin.idea.gradleTooling.builders.buildIdeaKotlinDependenciesContainer`: the KGP dependencies.
+     *   The fallback is `org.jetbrains.kotlin.idea.gradleJava.configuration.mpp.populateModuleDependenciesWithoutDependenciesContainer`.
      */
     fun map(
         module: IdeaModule,
