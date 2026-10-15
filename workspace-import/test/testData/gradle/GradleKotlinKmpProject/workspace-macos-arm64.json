@@ -2604,6 +2604,16 @@
                     "scope": "test"
                 },
                 {
+                    "type": "module",
+                    "name": "GradleKotlinKmpProject.core.commonMain",
+                    "scope": "test"
+                },
+                {
+                    "type": "module",
+                    "name": "GradleKotlinKmpProject.core.androidMain",
+                    "scope": "test"
+                },
+                {
                     "type": "library",
                     "name": "Gradle: android:android-sdk:null",
                     "scope": "test"
@@ -2619,10 +2629,27 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/shared/src/androidDeviceTest"
+                    "path": "<WORKSPACE>/app/shared/src/androidDeviceTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/androidDeviceTest/kotlin",
+                            "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/androidDeviceTest/resources",
+                            "type": "java-test-resource"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/androidDeviceTestResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/androidDeviceTestResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/androidDeviceTestResourceAccessors",
+                            "type": "java-test",
+                            "generated": true
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/shared"
@@ -3131,6 +3158,16 @@
                     "scope": "test"
                 },
                 {
+                    "type": "module",
+                    "name": "GradleKotlinKmpProject.core.commonMain",
+                    "scope": "test"
+                },
+                {
+                    "type": "module",
+                    "name": "GradleKotlinKmpProject.core.androidMain",
+                    "scope": "test"
+                },
+                {
                     "type": "library",
                     "name": "Gradle: android:android-sdk:null",
                     "scope": "test"
@@ -3151,11 +3188,22 @@
                         {
                             "path": "<WORKSPACE>/app/shared/src/androidHostTest/kotlin",
                             "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/androidHostTest/resources",
+                            "type": "java-test-resource"
                         }
                     ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/androidHostTestResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/androidHostTestResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/androidHostTestResourceAccessors",
+                            "type": "java-test",
+                            "generated": true
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/shared"
@@ -3634,6 +3682,16 @@
                     "scope": "compile"
                 },
                 {
+                    "type": "module",
+                    "name": "GradleKotlinKmpProject.core.commonMain",
+                    "scope": "compile"
+                },
+                {
+                    "type": "module",
+                    "name": "GradleKotlinKmpProject.core.androidMain",
+                    "scope": "compile"
+                },
+                {
                     "type": "library",
                     "name": "Gradle: android:android-sdk:null",
                     "scope": "compile"
@@ -3654,11 +3712,22 @@
                         {
                             "path": "<WORKSPACE>/app/shared/src/androidMain/kotlin",
                             "type": "java-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/androidMain/resources",
+                            "type": "java-resource"
                         }
                     ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/androidMainResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/androidMainResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/androidMainResourceAccessors",
+                            "type": "java-source",
+                            "generated": true
+                        }
+                    ]
                 },
                 {
                     "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/androidMainResourceCollectors",
@@ -5257,10 +5326,26 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/shared/src/appleMain"
+                    "path": "<WORKSPACE>/app/shared/src/appleMain",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/appleMain/kotlin",
+                            "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/appleMain/resources",
+                            "type": "kotlin-resource"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/appleMainResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/appleMainResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/appleMainResourceAccessors",
+                            "type": "kotlin-source"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/shared"
@@ -6879,10 +6964,26 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/shared/src/appleTest"
+                    "path": "<WORKSPACE>/app/shared/src/appleTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/appleTest/kotlin",
+                            "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/appleTest/resources",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/appleTestResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/appleTestResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/appleTestResourceAccessors",
+                            "type": "kotlin-test"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/shared"
@@ -7166,6 +7267,10 @@
                         {
                             "path": "<WORKSPACE>/app/shared/src/commonMain/kotlin",
                             "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/commonMain/resources",
+                            "type": "kotlin-resource"
                         }
                     ]
                 },
@@ -7493,11 +7598,21 @@
                         {
                             "path": "<WORKSPACE>/app/shared/src/commonTest/kotlin",
                             "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/commonTest/resources",
+                            "type": "kotlin-test-resource"
                         }
                     ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/commonTestResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/commonTestResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/commonTestResourceAccessors",
+                            "type": "kotlin-test"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/shared"
@@ -8691,13 +8806,35 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/shared/src/iosArm64Main"
+                    "path": "<WORKSPACE>/app/shared/src/iosArm64Main",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/iosArm64Main/kotlin",
+                            "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/iosArm64Main/resources",
+                            "type": "kotlin-resource"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/kotlin-multiplatform-resources/aggregated-resources/iosArm64"
+                    "path": "<WORKSPACE>/app/shared/build/kotlin-multiplatform-resources/aggregated-resources/iosArm64",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/kotlin-multiplatform-resources/aggregated-resources/iosArm64",
+                            "type": "kotlin-resource"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosArm64MainResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosArm64MainResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosArm64MainResourceAccessors",
+                            "type": "kotlin-source"
+                        }
+                    ]
                 },
                 {
                     "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosArm64MainResourceCollectors",
@@ -9925,13 +10062,35 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/shared/src/iosArm64Test"
+                    "path": "<WORKSPACE>/app/shared/src/iosArm64Test",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/iosArm64Test/kotlin",
+                            "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/iosArm64Test/resources",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosArm64TestResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosArm64TestResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosArm64TestResourceAccessors",
+                            "type": "kotlin-test"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/iosArm64Test"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/iosArm64Test",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/iosArm64Test",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/shared"
@@ -11530,11 +11689,21 @@
                         {
                             "path": "<WORKSPACE>/app/shared/src/iosMain/kotlin",
                             "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/iosMain/resources",
+                            "type": "kotlin-resource"
                         }
                     ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosMainResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosMainResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosMainResourceAccessors",
+                            "type": "kotlin-source"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/shared"
@@ -12728,13 +12897,35 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/shared/src/iosSimulatorArm64Main"
+                    "path": "<WORKSPACE>/app/shared/src/iosSimulatorArm64Main",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/iosSimulatorArm64Main/kotlin",
+                            "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/iosSimulatorArm64Main/resources",
+                            "type": "kotlin-resource"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/kotlin-multiplatform-resources/aggregated-resources/iosSimulatorArm64"
+                    "path": "<WORKSPACE>/app/shared/build/kotlin-multiplatform-resources/aggregated-resources/iosSimulatorArm64",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/kotlin-multiplatform-resources/aggregated-resources/iosSimulatorArm64",
+                            "type": "kotlin-resource"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosSimulatorArm64MainResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosSimulatorArm64MainResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosSimulatorArm64MainResourceAccessors",
+                            "type": "kotlin-source"
+                        }
+                    ]
                 },
                 {
                     "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosSimulatorArm64MainResourceCollectors",
@@ -13962,13 +14153,35 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/shared/src/iosSimulatorArm64Test"
+                    "path": "<WORKSPACE>/app/shared/src/iosSimulatorArm64Test",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/iosSimulatorArm64Test/kotlin",
+                            "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/iosSimulatorArm64Test/resources",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosSimulatorArm64TestResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosSimulatorArm64TestResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosSimulatorArm64TestResourceAccessors",
+                            "type": "kotlin-test"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/iosSimulatorArm64Test"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/iosSimulatorArm64Test",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/iosSimulatorArm64Test",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/shared"
@@ -15597,11 +15810,21 @@
                         {
                             "path": "<WORKSPACE>/app/shared/src/iosTest/kotlin",
                             "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/iosTest/resources",
+                            "type": "kotlin-test-resource"
                         }
                     ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosTestResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosTestResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosTestResourceAccessors",
+                            "type": "kotlin-test"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/shared"
@@ -15905,14 +16128,30 @@
                         {
                             "path": "<WORKSPACE>/app/shared/src/jsMain/kotlin",
                             "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/jsMain/resources",
+                            "type": "kotlin-resource"
                         }
                     ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/kotlin-multiplatform-resources/aggregated-resources/js"
+                    "path": "<WORKSPACE>/app/shared/build/kotlin-multiplatform-resources/aggregated-resources/js",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/kotlin-multiplatform-resources/aggregated-resources/js",
+                            "type": "kotlin-resource"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jsMainResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jsMainResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jsMainResourceAccessors",
+                            "type": "kotlin-source"
+                        }
+                    ]
                 },
                 {
                     "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jsMainResourceCollectors",
@@ -16240,13 +16479,35 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/shared/src/jsTest"
+                    "path": "<WORKSPACE>/app/shared/src/jsTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/jsTest/kotlin",
+                            "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/jsTest/resources",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jsTestResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jsTestResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jsTestResourceAccessors",
+                            "type": "kotlin-test"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/jsTest"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/jsTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/jsTest",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/shared"
@@ -16530,13 +16791,41 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/shared/src/jvmDev"
+                    "path": "<WORKSPACE>/app/shared/src/jvmDev",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/jvmDev/kotlin",
+                            "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/jvmDev/java",
+                            "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/jvmDev/resources",
+                            "type": "java-test-resource"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jvmDevResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jvmDevResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jvmDevResourceAccessors",
+                            "type": "java-test",
+                            "generated": true
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/jvmDev"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/jvmDev",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/jvmDev",
+                            "type": "java-test-resource",
+                            "generated": true
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/shared",
@@ -16801,11 +17090,26 @@
                         {
                             "path": "<WORKSPACE>/app/shared/src/jvmMain/kotlin",
                             "type": "java-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/jvmMain/java",
+                            "type": "java-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/jvmMain/resources",
+                            "type": "java-resource"
                         }
                     ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jvmMainResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jvmMainResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jvmMainResourceAccessors",
+                            "type": "java-source",
+                            "generated": true
+                        }
+                    ]
                 },
                 {
                     "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jvmMainResourceCollectors",
@@ -16818,7 +17122,14 @@
                     ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/jvmMain"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/jvmMain",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/jvmMain",
+                            "type": "java-resource",
+                            "generated": true
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/shared",
@@ -17113,14 +17424,36 @@
                         {
                             "path": "<WORKSPACE>/app/shared/src/jvmTest/kotlin",
                             "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/jvmTest/java",
+                            "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/jvmTest/resources",
+                            "type": "java-test-resource"
                         }
                     ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jvmTestResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jvmTestResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jvmTestResourceAccessors",
+                            "type": "java-test",
+                            "generated": true
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/jvmTest"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/jvmTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/jvmTest",
+                            "type": "java-test-resource",
+                            "generated": true
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/shared",
@@ -18705,10 +19038,26 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/shared/src/nativeMain"
+                    "path": "<WORKSPACE>/app/shared/src/nativeMain",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/nativeMain/kotlin",
+                            "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/nativeMain/resources",
+                            "type": "kotlin-resource"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/nativeMainResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/nativeMainResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/nativeMainResourceAccessors",
+                            "type": "kotlin-source"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/shared"
@@ -20322,10 +20671,26 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/shared/src/nativeTest"
+                    "path": "<WORKSPACE>/app/shared/src/nativeTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/nativeTest/kotlin",
+                            "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/nativeTest/resources",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/nativeTestResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/nativeTestResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/nativeTestResourceAccessors",
+                            "type": "kotlin-test"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/shared"
@@ -20599,14 +20964,30 @@
                         {
                             "path": "<WORKSPACE>/app/shared/src/wasmJsMain/kotlin",
                             "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/wasmJsMain/resources",
+                            "type": "kotlin-resource"
                         }
                     ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/kotlin-multiplatform-resources/aggregated-resources/wasmJs"
+                    "path": "<WORKSPACE>/app/shared/build/kotlin-multiplatform-resources/aggregated-resources/wasmJs",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/kotlin-multiplatform-resources/aggregated-resources/wasmJs",
+                            "type": "kotlin-resource"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/wasmJsMainResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/wasmJsMainResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/wasmJsMainResourceAccessors",
+                            "type": "kotlin-source"
+                        }
+                    ]
                 },
                 {
                     "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/wasmJsMainResourceCollectors",
@@ -20904,13 +21285,35 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/shared/src/wasmJsTest"
+                    "path": "<WORKSPACE>/app/shared/src/wasmJsTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/wasmJsTest/kotlin",
+                            "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/wasmJsTest/resources",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/wasmJsTestResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/wasmJsTestResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/wasmJsTestResourceAccessors",
+                            "type": "kotlin-test"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/wasmJsTest"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/wasmJsTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/wasmJsTest",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/shared"
@@ -21429,10 +21832,26 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/shared/src/webMain"
+                    "path": "<WORKSPACE>/app/shared/src/webMain",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/webMain/kotlin",
+                            "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/webMain/resources",
+                            "type": "kotlin-resource"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/webMainResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/webMainResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/webMainResourceAccessors",
+                            "type": "kotlin-source"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/shared"
@@ -21976,11 +22395,21 @@
                         {
                             "path": "<WORKSPACE>/app/shared/src/webTest/kotlin",
                             "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/shared/src/webTest/resources",
+                            "type": "kotlin-test-resource"
                         }
                     ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/webTestResourceAccessors"
+                    "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/webTestResourceAccessors",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/webTestResourceAccessors",
+                            "type": "kotlin-test"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/shared"
@@ -22324,7 +22753,17 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/webApp/src/commonMain"
+                    "path": "<WORKSPACE>/app/webApp/src/commonMain",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/webApp/src/commonMain/kotlin",
+                            "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/webApp/src/commonMain/resources",
+                            "type": "kotlin-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/webApp"
@@ -22658,7 +23097,17 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/webApp/src/commonTest"
+                    "path": "<WORKSPACE>/app/webApp/src/commonTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/webApp/src/commonTest/kotlin",
+                            "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/webApp/src/commonTest/resources",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/webApp"
@@ -22867,10 +23316,26 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/webApp/src/jsMain"
+                    "path": "<WORKSPACE>/app/webApp/src/jsMain",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/webApp/src/jsMain/kotlin",
+                            "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/webApp/src/jsMain/resources",
+                            "type": "kotlin-resource"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/webApp/build/kotlin-multiplatform-resources/aggregated-resources/js"
+                    "path": "<WORKSPACE>/app/webApp/build/kotlin-multiplatform-resources/aggregated-resources/js",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/webApp/build/kotlin-multiplatform-resources/aggregated-resources/js",
+                            "type": "kotlin-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/webApp"
@@ -23094,10 +23559,26 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/webApp/src/jsTest"
+                    "path": "<WORKSPACE>/app/webApp/src/jsTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/webApp/src/jsTest/kotlin",
+                            "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/webApp/src/jsTest/resources",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/webApp/build/generated/compose/resourceGenerator/assembledResources/jsTest"
+                    "path": "<WORKSPACE>/app/webApp/build/generated/compose/resourceGenerator/assembledResources/jsTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/webApp/build/generated/compose/resourceGenerator/assembledResources/jsTest",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/webApp"
@@ -23301,10 +23782,26 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/webApp/src/wasmJsMain"
+                    "path": "<WORKSPACE>/app/webApp/src/wasmJsMain",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/webApp/src/wasmJsMain/kotlin",
+                            "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/webApp/src/wasmJsMain/resources",
+                            "type": "kotlin-resource"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/webApp/build/kotlin-multiplatform-resources/aggregated-resources/wasmJs"
+                    "path": "<WORKSPACE>/app/webApp/build/kotlin-multiplatform-resources/aggregated-resources/wasmJs",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/webApp/build/kotlin-multiplatform-resources/aggregated-resources/wasmJs",
+                            "type": "kotlin-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/webApp"
@@ -23523,10 +24020,26 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/webApp/src/wasmJsTest"
+                    "path": "<WORKSPACE>/app/webApp/src/wasmJsTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/webApp/src/wasmJsTest/kotlin",
+                            "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/webApp/src/wasmJsTest/resources",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 },
                 {
-                    "path": "<WORKSPACE>/app/webApp/build/generated/compose/resourceGenerator/assembledResources/wasmJsTest"
+                    "path": "<WORKSPACE>/app/webApp/build/generated/compose/resourceGenerator/assembledResources/wasmJsTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/webApp/build/generated/compose/resourceGenerator/assembledResources/wasmJsTest",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/webApp"
@@ -24204,7 +24717,17 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/app/webApp/src/webTest"
+                    "path": "<WORKSPACE>/app/webApp/src/webTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/app/webApp/src/webTest/kotlin",
+                            "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/app/webApp/src/webTest/resources",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/app/webApp"
@@ -24293,7 +24816,17 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core/src/androidHostTest"
+                    "path": "<WORKSPACE>/core/src/androidHostTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/core/src/androidHostTest/kotlin",
+                            "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/androidHostTest/resources",
+                            "type": "java-test-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/core"
@@ -24332,7 +24865,17 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core/src/androidMain"
+                    "path": "<WORKSPACE>/core/src/androidMain",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/core/src/androidMain/kotlin",
+                            "type": "java-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/androidMain/resources",
+                            "type": "java-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/core"
@@ -25251,7 +25794,17 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core/src/appleMain"
+                    "path": "<WORKSPACE>/core/src/appleMain",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/core/src/appleMain/kotlin",
+                            "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/appleMain/resources",
+                            "type": "kotlin-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/core"
@@ -26200,7 +26753,17 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core/src/appleTest"
+                    "path": "<WORKSPACE>/core/src/appleTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/core/src/appleTest/kotlin",
+                            "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/appleTest/resources",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/core"
@@ -26229,6 +26792,10 @@
                         {
                             "path": "<WORKSPACE>/core/src/commonMain/kotlin",
                             "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/commonMain/resources",
+                            "type": "kotlin-resource"
                         }
                     ]
                 }
@@ -26269,7 +26836,17 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core/src/commonTest"
+                    "path": "<WORKSPACE>/core/src/commonTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/core/src/commonTest/kotlin",
+                            "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/commonTest/resources",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/core"
@@ -27198,7 +27775,17 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core/src/iosArm64Main"
+                    "path": "<WORKSPACE>/core/src/iosArm64Main",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/core/src/iosArm64Main/kotlin",
+                            "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/iosArm64Main/resources",
+                            "type": "kotlin-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/core"
@@ -28152,7 +28739,17 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core/src/iosArm64Test"
+                    "path": "<WORKSPACE>/core/src/iosArm64Test",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/core/src/iosArm64Test/kotlin",
+                            "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/iosArm64Test/resources",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/core"
@@ -29076,7 +29673,17 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core/src/iosMain"
+                    "path": "<WORKSPACE>/core/src/iosMain",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/core/src/iosMain/kotlin",
+                            "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/iosMain/resources",
+                            "type": "kotlin-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/core"
@@ -30005,7 +30612,17 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core/src/iosSimulatorArm64Main"
+                    "path": "<WORKSPACE>/core/src/iosSimulatorArm64Main",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/core/src/iosSimulatorArm64Main/kotlin",
+                            "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/iosSimulatorArm64Main/resources",
+                            "type": "kotlin-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/core"
@@ -30959,7 +31576,17 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core/src/iosSimulatorArm64Test"
+                    "path": "<WORKSPACE>/core/src/iosSimulatorArm64Test",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/core/src/iosSimulatorArm64Test/kotlin",
+                            "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/iosSimulatorArm64Test/resources",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/core"
@@ -31913,7 +32540,17 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core/src/iosTest"
+                    "path": "<WORKSPACE>/core/src/iosTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/core/src/iosTest/kotlin",
+                            "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/iosTest/resources",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/core"
@@ -31952,7 +32589,17 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core/src/jsMain"
+                    "path": "<WORKSPACE>/core/src/jsMain",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/core/src/jsMain/kotlin",
+                            "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/jsMain/resources",
+                            "type": "kotlin-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/core"
@@ -32011,7 +32658,17 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core/src/jsTest"
+                    "path": "<WORKSPACE>/core/src/jsTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/core/src/jsTest/kotlin",
+                            "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/jsTest/resources",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/core"
@@ -32045,7 +32702,21 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core/src/jvmMain"
+                    "path": "<WORKSPACE>/core/src/jvmMain",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/core/src/jvmMain/kotlin",
+                            "type": "java-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/jvmMain/java",
+                            "type": "java-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/jvmMain/resources",
+                            "type": "java-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/core",
@@ -32110,7 +32781,21 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core/src/jvmTest"
+                    "path": "<WORKSPACE>/core/src/jvmTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/core/src/jvmTest/kotlin",
+                            "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/jvmTest/java",
+                            "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/jvmTest/resources",
+                            "type": "java-test-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/core",
@@ -33025,7 +33710,17 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core/src/nativeMain"
+                    "path": "<WORKSPACE>/core/src/nativeMain",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/core/src/nativeMain/kotlin",
+                            "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/nativeMain/resources",
+                            "type": "kotlin-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/core"
@@ -33969,7 +34664,17 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core/src/nativeTest"
+                    "path": "<WORKSPACE>/core/src/nativeTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/core/src/nativeTest/kotlin",
+                            "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/nativeTest/resources",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/core"
@@ -34003,7 +34708,17 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core/src/wasmJsMain"
+                    "path": "<WORKSPACE>/core/src/wasmJsMain",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/core/src/wasmJsMain/kotlin",
+                            "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/wasmJsMain/resources",
+                            "type": "kotlin-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/core"
@@ -34057,7 +34772,17 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core/src/wasmJsTest"
+                    "path": "<WORKSPACE>/core/src/wasmJsTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/core/src/wasmJsTest/kotlin",
+                            "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/wasmJsTest/resources",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/core"
@@ -34096,7 +34821,17 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core/src/webMain"
+                    "path": "<WORKSPACE>/core/src/webMain",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/core/src/webMain/kotlin",
+                            "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/webMain/resources",
+                            "type": "kotlin-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/core"
@@ -34155,10 +34890,364 @@
             ],
             "contentRoots": [
                 {
-                    "path": "<WORKSPACE>/core/src/webTest"
+                    "path": "<WORKSPACE>/core/src/webTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/core/src/webTest/kotlin",
+                            "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/core/src/webTest/resources",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
                 }
             ],
             "externalProjectPath": "<WORKSPACE>/core"
+        },
+        {
+            "name": "GradleKotlinKmpProject.jvmAndAndroid",
+            "dependencies": [
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "17",
+                    "kind": "JavaSDK"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/jvmAndAndroid"
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/jvmAndAndroid",
+            "externalProjectId": ":jvmAndAndroid"
+        },
+        {
+            "name": "GradleKotlinKmpProject.jvmAndAndroid.androidMain",
+            "dependencies": [
+                {
+                    "type": "module",
+                    "name": "GradleKotlinKmpProject.jvmAndAndroid.commonMain",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.11.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.4.20",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains:annotations:23.0.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "module",
+                    "name": "GradleKotlinKmpProject.core.commonMain",
+                    "scope": "compile"
+                },
+                {
+                    "type": "module",
+                    "name": "GradleKotlinKmpProject.core.androidMain",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: android:android-sdk:null",
+                    "scope": "compile"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "17",
+                    "kind": "JavaSDK"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/jvmAndAndroid/src/androidMain",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/jvmAndAndroid/src/androidMain/kotlin",
+                            "type": "java-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/jvmAndAndroid/src/androidMain/resources",
+                            "type": "java-resource"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/jvmAndAndroid"
+        },
+        {
+            "name": "GradleKotlinKmpProject.jvmAndAndroid.commonMain",
+            "dependencies": [
+                {
+                    "type": "module",
+                    "name": "GradleKotlinKmpProject.core.commonMain",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.11.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.4.20",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains:annotations:23.0.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "17",
+                    "kind": "JavaSDK"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/jvmAndAndroid/src/commonMain",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/jvmAndAndroid/src/commonMain/kotlin",
+                            "type": "kotlin-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/jvmAndAndroid/src/commonMain/resources",
+                            "type": "kotlin-resource"
+                        }
+                    ]
+                },
+                {
+                    "path": "<WORKSPACE>/jvmAndAndroid/build/generated/buildInfo/kotlin",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/jvmAndAndroid/build/generated/buildInfo/kotlin",
+                            "type": "kotlin-source"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/jvmAndAndroid"
+        },
+        {
+            "name": "GradleKotlinKmpProject.jvmAndAndroid.commonTest",
+            "dependencies": [
+                {
+                    "type": "module",
+                    "name": "GradleKotlinKmpProject.jvmAndAndroid.jvmMain",
+                    "scope": "test"
+                },
+                {
+                    "type": "module",
+                    "name": "GradleKotlinKmpProject.jvmAndAndroid.commonMain",
+                    "scope": "test"
+                },
+                {
+                    "type": "module",
+                    "name": "GradleKotlinKmpProject.core.jvmMain",
+                    "scope": "test"
+                },
+                {
+                    "type": "module",
+                    "name": "GradleKotlinKmpProject.core.commonMain",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.11.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.4.20",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains:annotations:23.0.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "17",
+                    "kind": "JavaSDK"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/jvmAndAndroid/src/commonTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/jvmAndAndroid/src/commonTest/kotlin",
+                            "type": "kotlin-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/jvmAndAndroid/src/commonTest/resources",
+                            "type": "kotlin-test-resource"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/jvmAndAndroid"
+        },
+        {
+            "name": "GradleKotlinKmpProject.jvmAndAndroid.jvmMain",
+            "dependencies": [
+                {
+                    "type": "module",
+                    "name": "GradleKotlinKmpProject.jvmAndAndroid.commonMain",
+                    "scope": "compile"
+                },
+                {
+                    "type": "module",
+                    "name": "GradleKotlinKmpProject.core.jvmMain",
+                    "scope": "compile"
+                },
+                {
+                    "type": "module",
+                    "name": "GradleKotlinKmpProject.core.commonMain",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.11.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.4.20",
+                    "scope": "compile"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains:annotations:23.0.0",
+                    "scope": "compile"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "17",
+                    "kind": "JavaSDK"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/jvmAndAndroid/src/jvmMain",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/jvmAndAndroid/src/jvmMain/kotlin",
+                            "type": "java-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/jvmAndAndroid/src/jvmMain/java",
+                            "type": "java-source"
+                        },
+                        {
+                            "path": "<WORKSPACE>/jvmAndAndroid/src/jvmMain/resources",
+                            "type": "java-resource"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/jvmAndAndroid",
+            "externalProjectId": ":jvmAndAndroid"
+        },
+        {
+            "name": "GradleKotlinKmpProject.jvmAndAndroid.jvmTest",
+            "dependencies": [
+                {
+                    "type": "module",
+                    "name": "GradleKotlinKmpProject.jvmAndAndroid.commonTest",
+                    "scope": "test"
+                },
+                {
+                    "type": "module",
+                    "name": "GradleKotlinKmpProject.jvmAndAndroid.jvmMain",
+                    "scope": "test"
+                },
+                {
+                    "type": "module",
+                    "name": "GradleKotlinKmpProject.jvmAndAndroid.commonMain",
+                    "scope": "test"
+                },
+                {
+                    "type": "module",
+                    "name": "GradleKotlinKmpProject.core.jvmMain",
+                    "scope": "test"
+                },
+                {
+                    "type": "module",
+                    "name": "GradleKotlinKmpProject.core.commonMain",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.11.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains.kotlin:kotlin-stdlib:2.4.20",
+                    "scope": "test"
+                },
+                {
+                    "type": "library",
+                    "name": "Gradle: org.jetbrains:annotations:23.0.0",
+                    "scope": "test"
+                },
+                {
+                    "type": "moduleSource"
+                },
+                {
+                    "type": "sdk",
+                    "name": "17",
+                    "kind": "JavaSDK"
+                }
+            ],
+            "contentRoots": [
+                {
+                    "path": "<WORKSPACE>/jvmAndAndroid/src/jvmTest",
+                    "sourceRoots": [
+                        {
+                            "path": "<WORKSPACE>/jvmAndAndroid/src/jvmTest/kotlin",
+                            "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/jvmAndAndroid/src/jvmTest/java",
+                            "type": "java-test"
+                        },
+                        {
+                            "path": "<WORKSPACE>/jvmAndAndroid/src/jvmTest/resources",
+                            "type": "java-test-resource"
+                        }
+                    ]
+                }
+            ],
+            "externalProjectPath": "<WORKSPACE>/jvmAndAndroid",
+            "externalProjectId": ":jvmAndAndroid"
         },
         {
             "name": "GradleKotlinKmpProject.server",
@@ -34835,7 +35924,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/cf57bb9df93f1f68c9ba4f0acb271a96/transformed/activity-compose-1.13.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/5a8a0746959c38884e71e53d9bd390e8/transformed/activity-compose-1.13.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -34862,7 +35951,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/736608b452472e6ad149629eb228135c/transformed/activity-1.13.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/2762c8760d893ab7efe0b8fd5efed3f2/transformed/activity-1.13.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -34884,7 +35973,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/0bffb0f50c9ff2d7df1fc8460a63b90f/transformed/annotation-experimental-1.4.1/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/1d8a4c99cd16d9da82859cdfe7d155d6/transformed/annotation-experimental-1.4.1/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -35204,7 +36293,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/22e2b3a71e029daccd27a95326e8ad9a/#####/animation-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/4d13f4127172a8b4b1ff7f3eb78c00c6/#####/animation-api.jar"
                 }
             ]
         },
@@ -35213,7 +36302,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/4d2dd343e9dfd875a77ebce8f68a2839/#####/animation-core-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/cce21a5082a44b177ea60d57ce023b93/#####/animation-core-api.jar"
                 }
             ]
         },
@@ -35222,7 +36311,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/2e25d7e95beb68e4679126371d84f2da/#####/foundation-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/4a37b5a883a374d1fddafbf2fec2a7c4/#####/foundation-api.jar"
                 }
             ]
         },
@@ -35231,7 +36320,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/fe072af746f5ff4788c71aa3eb75d0ed/#####/foundation-layout-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/2292f07920153efa7ffb4320e18c3b21/#####/foundation-layout-api.jar"
                 }
             ]
         },
@@ -35240,7 +36329,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/70fe1c52e739ef8483e5185fef623425/#####/material3-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/70f193560645d973b4d0807afea68a68/#####/material3-api.jar"
                 }
             ]
         },
@@ -35249,7 +36338,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/f1cdf16e6f25b67c3d1310e0b035fc7b/#####/material-ripple-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/3556c2f1889239ce74b2a5ca79f36e23/#####/material-ripple-api.jar"
                 }
             ]
         },
@@ -35258,7 +36347,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/bc3cb04f249075f390f524c2934678a6/transformed/runtime/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/b41188f8aa43f56a854668e0e1e0f858/transformed/runtime/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -35275,7 +36364,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/3650ab3d5ab297952d5910d0f646eac7/transformed/runtime-annotation/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/ac8e06845593b363fa61190976910e3e/transformed/runtime-annotation/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -35438,7 +36527,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/5ff64771bc38f3b1596b13b2b2c432ee/transformed/runtime-retain/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/10cd60be6e51284886aa83decd57bc24/transformed/runtime-retain/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -35554,7 +36643,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/fdb73b3412a9cdb05fcfbf2937df87dc/transformed/runtime-saveable/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/628d642b10421ae41a5b590f74541e3c/transformed/runtime-saveable/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -35735,7 +36824,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/45d46ac2d812d0fe9cc63f5c5732d590/transformed/ui/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/7448c667c2846e07aeb0e5455021b269/transformed/ui/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -35752,7 +36841,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/008a2a3386e2221c49a38bc49da14f65/transformed/ui-geometry/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/0103ca62a9d82752d3adeec44fef7e44/transformed/ui-geometry/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -35769,7 +36858,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/adc826c0c893073a88b32a70b22d5eb6/transformed/ui-graphics/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/506d7c8c053d17cd0b09725a602ecb2f/transformed/ui-graphics/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -35786,7 +36875,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/020916d8b3fe723e2db3f77ae4fa2c49/transformed/ui-text/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/f796047436fef8401aca3c4eb38b04d8/transformed/ui-text/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -35803,7 +36892,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/999530edf85fac9115e1066d86789620/transformed/ui-tooling/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/c4562f0b61243cc5aa66528e9538e9ae/transformed/ui-tooling/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -35820,7 +36909,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/ddc4f4bf544c03ef71adab105661fac2/transformed/ui-tooling-data/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/948cea5daa39254d1c21d38a472d4184/transformed/ui-tooling-data/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -35837,7 +36926,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/1af10b0709ad41c9bbc73a2a0c6074cf/transformed/ui-tooling-preview/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/5aef86b34c2206c3eb03ebb283c1bec0/transformed/ui-tooling-preview/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -35854,7 +36943,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/3a3e3b24ac6de1e63e75655b58daf0ac/transformed/ui-unit/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/a7c8a39e0280d9f474acdc82e765f8b3/transformed/ui-unit/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -35871,7 +36960,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/b273343c34691f76fd5497d8c2993ff4/transformed/ui-util/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/c2f61c6219ab5eb529ae4a0c3db37584/transformed/ui-util/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -35898,7 +36987,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/1ba67d1ad2b676660aba0844b652dda0/transformed/core-ktx-1.18.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/fb8ce153c7527cf95e571293e8fddb8c/transformed/core-ktx-1.18.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -35915,7 +37004,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/6bcecd52e3dd038a26c1c6abb9654f43/#####/core-ktx-1.2.0-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/deb8d94da7448d098c4b90240256a8a7/#####/core-ktx-1.2.0-api.jar"
                 }
             ]
         },
@@ -35924,7 +37013,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/8a9f51607d820a865ef8e13db495366b/transformed/core-viewtree-1.0.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/1bd8d6e7f8cbb4ca9dfc269c5f0eebd4/transformed/core-viewtree-1.0.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -35946,7 +37035,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/78d63ed793c116c38b4fea74b97db2e8/transformed/core-1.18.0/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/649cd617f62786f7c6d403ab9afa1468/transformed/core-1.18.0/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -35963,7 +37052,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/7e7fef810dca5009eff179d8a8bf71f5/#####/core-1.2.0-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/78ea85e0efef663e43644ea8833e24dd/#####/core-1.2.0-api.jar"
                 }
             ]
         },
@@ -35987,7 +37076,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/93088c498fc644feaf0328b8e1c2ad52/#####/graphics-shapes-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/24f640b777a58fb0edba324c978e4eef/#####/graphics-shapes-api.jar"
                 }
             ]
         },
@@ -36251,7 +37340,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/72cac7b4b07ac428e7cf42a203a99b9a/#####/lifecycle-livedata-core-2.11.0-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/a7a40988148bdb2a7789af83f26470a9/#####/lifecycle-livedata-core-2.11.0-api.jar"
                 }
             ]
         },
@@ -36260,7 +37349,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/16a8be51fd3e677fd37899e5bed7ded4/transformed/lifecycle-livedata-core-2.9.4/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/2ab71c0a6eba4494bd869d862a002c3c/transformed/lifecycle-livedata-core-2.9.4/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -36282,7 +37371,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/53c71929978cc5b4c29a3684bee61586/#####/lifecycle-runtime-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/b2ec6318f146d024bd6b0a91e47e7e0f/#####/lifecycle-runtime-api.jar"
                 }
             ]
         },
@@ -36291,7 +37380,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/b7a81bb62bba44f6c6503fcf32becd6d/transformed/lifecycle-runtime-release/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/f7d1bd723f1fe22d3f0b5ec07d2ec2b8/transformed/lifecycle-runtime-release/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -36308,7 +37397,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/5b15d69c9140ba8e04e98d844e169900/#####/lifecycle-runtime-compose-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/3ecb5fa117763add99c039a8cac42ab8/#####/lifecycle-runtime-compose-api.jar"
                 }
             ]
         },
@@ -36317,7 +37406,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/3a5b6efe8993b3bcd9230c0dab5fe77a/transformed/lifecycle-runtime-compose-release/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/8fff8cdfdb91903f055c14b002507cb0/transformed/lifecycle-runtime-compose-release/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -36561,7 +37650,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/e6236491f8f9ebe75aaaccaa2772ce76/#####/lifecycle-runtime-ktx-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/e914ed75ee3ee90064304080afaf84a4/#####/lifecycle-runtime-ktx-api.jar"
                 }
             ]
         },
@@ -36570,7 +37659,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/7253caff7f997f0bc34da4193d5a801e/transformed/lifecycle-runtime-ktx/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/be28f87f874ac846554909068be64192/transformed/lifecycle-runtime-ktx/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -36613,7 +37702,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/5f5c24e0f927bbe2523f0fff42d9b79b/#####/lifecycle-runtime-2.11.0-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/891070ee369dc8f4c0890d7ec053e71d/#####/lifecycle-runtime-2.11.0-api.jar"
                 }
             ]
         },
@@ -36661,7 +37750,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/d8c7b210f4057415125ce9fb82166906/#####/lifecycle-viewmodel-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/1c8874cfb627e5bbc9b8346039709eb0/#####/lifecycle-viewmodel-api.jar"
                 }
             ]
         },
@@ -36670,7 +37759,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/656c54d52e41723e8d21dcb20bc09ae6/transformed/lifecycle-viewmodel-release/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/0d6a8a18cf579071520c762fa933565e/transformed/lifecycle-viewmodel-release/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -36687,7 +37776,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/d4a74cb5fc38d52df8b79aef5eb999a9/#####/lifecycle-viewmodel-compose-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/a2e820acefbef03a47dbda17468d331a/#####/lifecycle-viewmodel-compose-api.jar"
                 }
             ]
         },
@@ -36860,7 +37949,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/499cadf32d3043637c9ca4bef1c878ca/#####/lifecycle-viewmodel-savedstate-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/e3fa6d862164f3b3f38691d020591e6b/#####/lifecycle-viewmodel-savedstate-api.jar"
                 }
             ]
         },
@@ -36869,7 +37958,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/4d9b6fea3de7d202db9a55b77af95094/transformed/lifecycle-viewmodel-savedstate-release/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/d471239101f813a03bb2b9c3923102c6/transformed/lifecycle-viewmodel-savedstate-release/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -37076,7 +38165,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/78f01ac717d3c78ee61e9115a774ad35/transformed/navigationevent/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/600bf16ae2c35fc7493bc22f1425fa02/transformed/navigationevent/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -37093,7 +38182,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/9e11cfc3d6f6cf4812026debcb0a345b/transformed/navigationevent-compose/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/11124bf8d7f80aadf4ab3ced95b2e5d4/transformed/navigationevent-compose/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -37253,7 +38342,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/f93b36abcc9a7733241397a78a22e858/transformed/savedstate/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/c22f3e7ce9da755d6ad47dda9a058182/transformed/savedstate/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -37270,7 +38359,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/d9a57f0f5e5da0103d2ec49c5fb52703/transformed/savedstate-compose/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/21b816077d3f741f129f96fadb61e5cf/transformed/savedstate-compose/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -37552,7 +38641,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/85acd536aae5954979d934e54fe9a905/#####/versionedparcelable-1.1.0-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/746be5b3527c5d66c0ce9f1414ecf2c6/#####/versionedparcelable-1.1.0-api.jar"
                 }
             ]
         },
@@ -37561,7 +38650,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/86657c8f7f0e8323ab2cc020fec98e99/transformed/versionedparcelable-1.1.1/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/ade1bd46b16feec262a48685d6f835cf/transformed/versionedparcelable-1.1.1/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -38789,7 +39878,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/6267cf19fe51b5e29b9d165ff601410e/#####/lifecycle-runtime-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/983b3809542ac589c3e411856307d449/#####/lifecycle-runtime-api.jar"
                 }
             ]
         },
@@ -38798,7 +39887,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/b562e4e676b0877080296d717bb4a014/#####/lifecycle-runtime-compose-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/d587857c1d9d910b603f8a781b387834/#####/lifecycle-runtime-compose-api.jar"
                 }
             ]
         },
@@ -39052,7 +40141,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/772d764abe0196a51d83b6ea93e6cb1c/#####/lifecycle-viewmodel-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/21c394e4cde7dd7131231d292e17b375/#####/lifecycle-viewmodel-api.jar"
                 }
             ]
         },
@@ -39061,7 +40150,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/aa26645a4cdedabd6a13aa89228fa153/#####/lifecycle-viewmodel-compose-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/d39a398eb068a81a21b9fe3264e3f0ae/#####/lifecycle-viewmodel-compose-api.jar"
                 }
             ]
         },
@@ -39216,7 +40305,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/6bc02f68b2d9ce79626db988c8835742/#####/lifecycle-viewmodel-savedstate-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/588d962903b9c746e46e24d18e1ab0dc/#####/lifecycle-viewmodel-savedstate-api.jar"
                 }
             ]
         },
@@ -39518,7 +40607,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/f714a486c3818b483b575dd82c2c0112/#####/animation-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/ab6658c47cf9d03587f9c6c4e653db6a/#####/animation-api.jar"
                 }
             ]
         },
@@ -39527,7 +40616,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/fe459df6a1b355605500deed6fdc1010/#####/animation-core-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/a52a869e4ea627582cc92ff25fc413d8/#####/animation-core-api.jar"
                 }
             ]
         },
@@ -39799,7 +40888,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/3b38d7917fcc4363f023a9a08bc38fae/#####/library-release-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/ec8549a8b2708c46f8f776fe851c98fd/#####/library-release-api.jar"
                 }
             ]
         },
@@ -39980,7 +41069,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/ff2ee2a2a775692fb0dc20b1e36bd111/#####/foundation-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/f7bfa1965066eb277e5d207565d40fb0/#####/foundation-api.jar"
                 }
             ]
         },
@@ -40049,7 +41138,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/ad13dc1df0e2ad3fa06df1ac7f914fb1/#####/foundation-layout-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/ef471393134982827e98fb74f8919628/#####/foundation-layout-api.jar"
                 }
             ]
         },
@@ -40287,7 +41376,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/00bd8efb0e5ac23ac6833c0f1e52aa3c/#####/material3-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/e7094e10028bc5261701e499c7912b8e/#####/material3-api.jar"
                 }
             ]
         },
@@ -40468,7 +41557,7 @@
             "type": null,
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/8d039a0286280df79184245c923121dd/#####/material-ripple-api.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/935ef9d27c40274e911273721da0fb01/#####/material-ripple-api.jar"
                 }
             ]
         },
@@ -40589,7 +41678,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/40dbb091a474d45f1c12b816840c1906/transformed/runtime/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/9b4166c9a4dc3dd705c80bcac6eb53bf/transformed/runtime/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -40666,7 +41755,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/00ff9b819e6bbb235866d5352c5b5ef2/transformed/runtime-saveable/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/371e6ebba0dd83e8e68bcbf5844b83e0/transformed/runtime-saveable/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -40795,7 +41884,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/28099c34409932e4d56c8135cefc91ff/transformed/ui/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/b92991dcfe10a89580af41ac778c8b2f/transformed/ui/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -40902,7 +41991,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/4cafa7dbd383ca05b23efd5180c55bc4/transformed/ui-geometry/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/3db18cca98c2fdcbb03e04b4f95aea29/transformed/ui-geometry/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -41005,7 +42094,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/0a7889db249831580dd9e0d1348ac632/transformed/ui-graphics/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/7bfbdba672cf881acb9d7e14c72819f5/transformed/ui-graphics/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -41212,7 +42301,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/a5fe56fa50f1003932755c5849b0e724/transformed/ui-text/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/15661d70c2ed31939eae2e0ba701fd6b/transformed/ui-text/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -41393,7 +42482,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/274e8bf148bacabb57c63f14f5e8b513/transformed/ui-tooling/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/fee5872a9e315ce40accaefb944d7515/transformed/ui-tooling/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -41410,7 +42499,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/e01ab85c837fd00300795e70425a9bf6/transformed/ui-tooling-data/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/df53d797e0292ebe7601f9510031ca4f/transformed/ui-tooling-data/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -41427,7 +42516,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/f72ce67bf9facdeaae27014fa791b99e/transformed/ui-tooling-preview/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/e603623f6c1c90967419c8f2909f14da/transformed/ui-tooling-preview/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -41588,7 +42677,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/64270f5d3a9bca08737b2aaf2240057c/transformed/ui-unit/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/188d609ee97936f8fb48ae3d92f0cf33/transformed/ui-unit/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -41717,7 +42806,7 @@
             "type": "COMPILE",
             "roots": [
                 {
-                    "path": "<GRADLE_REPO>/9.5.1/transforms/c0809b1b585043ac04c8395c53e684b5/transformed/ui-util/#####/classes.jar"
+                    "path": "<GRADLE_REPO>/9.5.1/transforms/f14ee91b51456831a9d0f349cb43092d/transformed/ui-util/#####/classes.jar"
                 }
             ],
             "properties": {
@@ -48069,7 +49158,11 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/app/shared/src/androidDeviceTest/kotlin",
+                "<WORKSPACE>/app/shared/src/androidDeviceTest/resources",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/androidDeviceTestResourceAccessors"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.shared.androidDeviceTest",
             "useProjectSettings": false,
@@ -48104,7 +49197,9 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/app/shared/src/androidHostTest/kotlin"
+                "<WORKSPACE>/app/shared/src/androidHostTest/kotlin",
+                "<WORKSPACE>/app/shared/src/androidHostTest/resources",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/androidHostTestResourceAccessors"
             ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.shared.androidHostTest",
@@ -48141,6 +49236,8 @@
             "name": "Kotlin",
             "sourceRoots": [
                 "<WORKSPACE>/app/shared/src/androidMain/kotlin",
+                "<WORKSPACE>/app/shared/src/androidMain/resources",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/androidMainResourceAccessors",
                 "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/androidMainResourceCollectors"
             ],
             "configFileItems": [],
@@ -48173,7 +49270,11 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/app/shared/src/appleMain/kotlin",
+                "<WORKSPACE>/app/shared/src/appleMain/resources",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/appleMainResourceAccessors"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.shared.appleMain",
             "useProjectSettings": false,
@@ -48203,7 +49304,11 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/app/shared/src/appleTest/kotlin",
+                "<WORKSPACE>/app/shared/src/appleTest/resources",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/appleTestResourceAccessors"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.shared.appleTest",
             "useProjectSettings": false,
@@ -48240,6 +49345,7 @@
             "name": "Kotlin",
             "sourceRoots": [
                 "<WORKSPACE>/app/shared/src/commonMain/kotlin",
+                "<WORKSPACE>/app/shared/src/commonMain/resources",
                 "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/commonResClass",
                 "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/commonMainResourceAccessors",
                 "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/commonMainResourceCollectors"
@@ -48263,7 +49369,7 @@
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
             "outputDirectoryForJsLibraryFiles": null,
-            "targetPlatform": "JS []/JVM [1.8]/Native []/Native [general]/Wasm [JS]/Wasm [WASI]",
+            "targetPlatform": "JS []/JVM [11]/Native []/Native [general]/Wasm [JS]",
             "externalSystemRunTasks": [],
             "version": 5,
             "flushNeeded": false
@@ -48271,7 +49377,9 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/app/shared/src/commonTest/kotlin"
+                "<WORKSPACE>/app/shared/src/commonTest/kotlin",
+                "<WORKSPACE>/app/shared/src/commonTest/resources",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/commonTestResourceAccessors"
             ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.shared.commonTest",
@@ -48294,7 +49402,7 @@
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
             "outputDirectoryForJsLibraryFiles": null,
-            "targetPlatform": "JS []/JVM [1.8]/Native []/Native [general]/Wasm [JS]/Wasm [WASI]",
+            "targetPlatform": "JS []/JVM [11]/Native []/Native [general]/Wasm [JS]",
             "externalSystemRunTasks": [],
             "version": 5,
             "flushNeeded": false
@@ -48302,6 +49410,10 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
+                "<WORKSPACE>/app/shared/src/iosArm64Main/kotlin",
+                "<WORKSPACE>/app/shared/src/iosArm64Main/resources",
+                "<WORKSPACE>/app/shared/build/kotlin-multiplatform-resources/aggregated-resources/iosArm64",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosArm64MainResourceAccessors",
                 "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosArm64MainResourceCollectors"
             ],
             "configFileItems": [],
@@ -48340,7 +49452,12 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/app/shared/src/iosArm64Test/kotlin",
+                "<WORKSPACE>/app/shared/src/iosArm64Test/resources",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosArm64TestResourceAccessors",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/iosArm64Test"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.shared.iosArm64Test",
             "useProjectSettings": false,
@@ -48384,7 +49501,9 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/app/shared/src/iosMain/kotlin"
+                "<WORKSPACE>/app/shared/src/iosMain/kotlin",
+                "<WORKSPACE>/app/shared/src/iosMain/resources",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosMainResourceAccessors"
             ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.shared.iosMain",
@@ -48417,6 +49536,10 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
+                "<WORKSPACE>/app/shared/src/iosSimulatorArm64Main/kotlin",
+                "<WORKSPACE>/app/shared/src/iosSimulatorArm64Main/resources",
+                "<WORKSPACE>/app/shared/build/kotlin-multiplatform-resources/aggregated-resources/iosSimulatorArm64",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosSimulatorArm64MainResourceAccessors",
                 "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosSimulatorArm64MainResourceCollectors"
             ],
             "configFileItems": [],
@@ -48455,7 +49578,12 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/app/shared/src/iosSimulatorArm64Test/kotlin",
+                "<WORKSPACE>/app/shared/src/iosSimulatorArm64Test/resources",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosSimulatorArm64TestResourceAccessors",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/iosSimulatorArm64Test"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.shared.iosSimulatorArm64Test",
             "useProjectSettings": false,
@@ -48499,7 +49627,9 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/app/shared/src/iosTest/kotlin"
+                "<WORKSPACE>/app/shared/src/iosTest/kotlin",
+                "<WORKSPACE>/app/shared/src/iosTest/resources",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/iosTestResourceAccessors"
             ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.shared.iosTest",
@@ -48538,6 +49668,9 @@
             "name": "Kotlin",
             "sourceRoots": [
                 "<WORKSPACE>/app/shared/src/jsMain/kotlin",
+                "<WORKSPACE>/app/shared/src/jsMain/resources",
+                "<WORKSPACE>/app/shared/build/kotlin-multiplatform-resources/aggregated-resources/js",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jsMainResourceAccessors",
                 "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jsMainResourceCollectors"
             ],
             "configFileItems": [],
@@ -48572,7 +49705,12 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/app/shared/src/jsTest/kotlin",
+                "<WORKSPACE>/app/shared/src/jsTest/resources",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jsTestResourceAccessors",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/jsTest"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.shared.jsTest",
             "useProjectSettings": false,
@@ -48609,7 +49747,13 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/app/shared/src/jvmDev/kotlin",
+                "<WORKSPACE>/app/shared/src/jvmDev/java",
+                "<WORKSPACE>/app/shared/src/jvmDev/resources",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jvmDevResourceAccessors",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/jvmDev"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.shared.jvmDev",
             "useProjectSettings": false,
@@ -48641,7 +49785,11 @@
             "name": "Kotlin",
             "sourceRoots": [
                 "<WORKSPACE>/app/shared/src/jvmMain/kotlin",
-                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jvmMainResourceCollectors"
+                "<WORKSPACE>/app/shared/src/jvmMain/java",
+                "<WORKSPACE>/app/shared/src/jvmMain/resources",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jvmMainResourceAccessors",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jvmMainResourceCollectors",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/jvmMain"
             ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.shared.jvmMain",
@@ -48674,7 +49822,11 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/app/shared/src/jvmTest/kotlin"
+                "<WORKSPACE>/app/shared/src/jvmTest/kotlin",
+                "<WORKSPACE>/app/shared/src/jvmTest/java",
+                "<WORKSPACE>/app/shared/src/jvmTest/resources",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/jvmTestResourceAccessors",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/jvmTest"
             ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.shared.jvmTest",
@@ -48709,7 +49861,11 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/app/shared/src/nativeMain/kotlin",
+                "<WORKSPACE>/app/shared/src/nativeMain/resources",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/nativeMainResourceAccessors"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.shared.nativeMain",
             "useProjectSettings": false,
@@ -48738,7 +49894,11 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/app/shared/src/nativeTest/kotlin",
+                "<WORKSPACE>/app/shared/src/nativeTest/resources",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/nativeTestResourceAccessors"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.shared.nativeTest",
             "useProjectSettings": false,
@@ -48774,6 +49934,9 @@
             "name": "Kotlin",
             "sourceRoots": [
                 "<WORKSPACE>/app/shared/src/wasmJsMain/kotlin",
+                "<WORKSPACE>/app/shared/src/wasmJsMain/resources",
+                "<WORKSPACE>/app/shared/build/kotlin-multiplatform-resources/aggregated-resources/wasmJs",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/wasmJsMainResourceAccessors",
                 "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/wasmJsMainResourceCollectors"
             ],
             "configFileItems": [],
@@ -48808,7 +49971,12 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/app/shared/src/wasmJsTest/kotlin",
+                "<WORKSPACE>/app/shared/src/wasmJsTest/resources",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/wasmJsTestResourceAccessors",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/assembledResources/wasmJsTest"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.shared.wasmJsTest",
             "useProjectSettings": false,
@@ -48845,7 +50013,11 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/app/shared/src/webMain/kotlin",
+                "<WORKSPACE>/app/shared/src/webMain/resources",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/webMainResourceAccessors"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.shared.webMain",
             "useProjectSettings": false,
@@ -48875,7 +50047,9 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/app/shared/src/webTest/kotlin"
+                "<WORKSPACE>/app/shared/src/webTest/kotlin",
+                "<WORKSPACE>/app/shared/src/webTest/resources",
+                "<WORKSPACE>/app/shared/build/generated/compose/resourceGenerator/kotlin/webTestResourceAccessors"
             ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.shared.webTest",
@@ -48908,7 +50082,10 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/app/webApp/src/commonMain/kotlin",
+                "<WORKSPACE>/app/webApp/src/commonMain/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.webApp.commonMain",
             "useProjectSettings": false,
@@ -48928,14 +50105,17 @@
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
             "outputDirectoryForJsLibraryFiles": null,
-            "targetPlatform": "JS []/JVM [1.8]/Native []/Native [general]/Wasm [JS]/Wasm [WASI]",
+            "targetPlatform": "JS []/Wasm [JS]",
             "externalSystemRunTasks": [],
             "version": 5,
             "flushNeeded": false
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/app/webApp/src/commonTest/kotlin",
+                "<WORKSPACE>/app/webApp/src/commonTest/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.webApp.commonTest",
             "useProjectSettings": false,
@@ -48958,14 +50138,18 @@
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
             "outputDirectoryForJsLibraryFiles": null,
-            "targetPlatform": "JS []/JVM [1.8]/Native []/Native [general]/Wasm [JS]/Wasm [WASI]",
+            "targetPlatform": "JS []/Wasm [JS]",
             "externalSystemRunTasks": [],
             "version": 5,
             "flushNeeded": false
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/app/webApp/src/jsMain/kotlin",
+                "<WORKSPACE>/app/webApp/src/jsMain/resources",
+                "<WORKSPACE>/app/webApp/build/kotlin-multiplatform-resources/aggregated-resources/js"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.webApp.jsMain",
             "useProjectSettings": false,
@@ -48998,7 +50182,11 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/app/webApp/src/jsTest/kotlin",
+                "<WORKSPACE>/app/webApp/src/jsTest/resources",
+                "<WORKSPACE>/app/webApp/build/generated/compose/resourceGenerator/assembledResources/jsTest"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.webApp.jsTest",
             "useProjectSettings": false,
@@ -49035,7 +50223,11 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/app/webApp/src/wasmJsMain/kotlin",
+                "<WORKSPACE>/app/webApp/src/wasmJsMain/resources",
+                "<WORKSPACE>/app/webApp/build/kotlin-multiplatform-resources/aggregated-resources/wasmJs"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.webApp.wasmJsMain",
             "useProjectSettings": false,
@@ -49068,7 +50260,11 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/app/webApp/src/wasmJsTest/kotlin",
+                "<WORKSPACE>/app/webApp/src/wasmJsTest/resources",
+                "<WORKSPACE>/app/webApp/build/generated/compose/resourceGenerator/assembledResources/wasmJsTest"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.webApp.wasmJsTest",
             "useProjectSettings": false,
@@ -49137,7 +50333,10 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/app/webApp/src/webTest/kotlin",
+                "<WORKSPACE>/app/webApp/src/webTest/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.app.webApp.webTest",
             "useProjectSettings": false,
@@ -49169,7 +50368,10 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/androidHostTest/kotlin",
+                "<WORKSPACE>/core/src/androidHostTest/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.core.androidHostTest",
             "useProjectSettings": false,
@@ -49203,7 +50405,10 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/androidMain/kotlin",
+                "<WORKSPACE>/core/src/androidMain/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.core.androidMain",
             "useProjectSettings": false,
@@ -49234,7 +50439,10 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/appleMain/kotlin",
+                "<WORKSPACE>/core/src/appleMain/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.core.appleMain",
             "useProjectSettings": false,
@@ -49264,7 +50472,10 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/appleTest/kotlin",
+                "<WORKSPACE>/core/src/appleTest/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.core.appleTest",
             "useProjectSettings": false,
@@ -49300,7 +50511,8 @@
         {
             "name": "Kotlin",
             "sourceRoots": [
-                "<WORKSPACE>/core/src/commonMain/kotlin"
+                "<WORKSPACE>/core/src/commonMain/kotlin",
+                "<WORKSPACE>/core/src/commonMain/resources"
             ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.core.commonMain",
@@ -49321,14 +50533,17 @@
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
             "outputDirectoryForJsLibraryFiles": null,
-            "targetPlatform": "JS []/JVM [1.8]/Native []/Native [general]/Wasm [JS]/Wasm [WASI]",
+            "targetPlatform": "JS []/JVM [11]/Native []/Native [general]/Wasm [JS]",
             "externalSystemRunTasks": [],
             "version": 5,
             "flushNeeded": false
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/commonTest/kotlin",
+                "<WORKSPACE>/core/src/commonTest/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.core.commonTest",
             "useProjectSettings": false,
@@ -49350,14 +50565,17 @@
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
             "outputDirectoryForJsLibraryFiles": null,
-            "targetPlatform": "JS []/JVM [1.8]/Native []/Native [general]/Wasm [JS]/Wasm [WASI]",
+            "targetPlatform": "JS []/JVM [11]/Native []/Native [general]/Wasm [JS]",
             "externalSystemRunTasks": [],
             "version": 5,
             "flushNeeded": false
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/iosArm64Main/kotlin",
+                "<WORKSPACE>/core/src/iosArm64Main/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.core.iosArm64Main",
             "useProjectSettings": false,
@@ -49394,7 +50612,10 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/iosArm64Test/kotlin",
+                "<WORKSPACE>/core/src/iosArm64Test/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.core.iosArm64Test",
             "useProjectSettings": false,
@@ -49437,7 +50658,10 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/iosMain/kotlin",
+                "<WORKSPACE>/core/src/iosMain/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.core.iosMain",
             "useProjectSettings": false,
@@ -49468,7 +50692,10 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/iosSimulatorArm64Main/kotlin",
+                "<WORKSPACE>/core/src/iosSimulatorArm64Main/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.core.iosSimulatorArm64Main",
             "useProjectSettings": false,
@@ -49505,7 +50732,10 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/iosSimulatorArm64Test/kotlin",
+                "<WORKSPACE>/core/src/iosSimulatorArm64Test/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.core.iosSimulatorArm64Test",
             "useProjectSettings": false,
@@ -49548,7 +50778,10 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/iosTest/kotlin",
+                "<WORKSPACE>/core/src/iosTest/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.core.iosTest",
             "useProjectSettings": false,
@@ -49584,7 +50817,10 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/jsMain/kotlin",
+                "<WORKSPACE>/core/src/jsMain/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.core.jsMain",
             "useProjectSettings": false,
@@ -49617,7 +50853,10 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/jsTest/kotlin",
+                "<WORKSPACE>/core/src/jsTest/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.core.jsTest",
             "useProjectSettings": false,
@@ -49654,7 +50893,11 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/jvmMain/kotlin",
+                "<WORKSPACE>/core/src/jvmMain/java",
+                "<WORKSPACE>/core/src/jvmMain/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.core.jvmMain",
             "useProjectSettings": false,
@@ -49685,7 +50928,11 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/jvmTest/kotlin",
+                "<WORKSPACE>/core/src/jvmTest/java",
+                "<WORKSPACE>/core/src/jvmTest/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.core.jvmTest",
             "useProjectSettings": false,
@@ -49719,7 +50966,10 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/nativeMain/kotlin",
+                "<WORKSPACE>/core/src/nativeMain/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.core.nativeMain",
             "useProjectSettings": false,
@@ -49748,7 +50998,10 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/nativeTest/kotlin",
+                "<WORKSPACE>/core/src/nativeTest/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.core.nativeTest",
             "useProjectSettings": false,
@@ -49782,7 +51035,10 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/wasmJsMain/kotlin",
+                "<WORKSPACE>/core/src/wasmJsMain/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.core.wasmJsMain",
             "useProjectSettings": false,
@@ -49815,7 +51071,10 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/wasmJsTest/kotlin",
+                "<WORKSPACE>/core/src/wasmJsTest/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.core.wasmJsTest",
             "useProjectSettings": false,
@@ -49852,7 +51111,10 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/webMain/kotlin",
+                "<WORKSPACE>/core/src/webMain/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.core.webMain",
             "useProjectSettings": false,
@@ -49881,7 +51143,10 @@
         },
         {
             "name": "Kotlin",
-            "sourceRoots": [],
+            "sourceRoots": [
+                "<WORKSPACE>/core/src/webTest/kotlin",
+                "<WORKSPACE>/core/src/webTest/resources"
+            ],
             "configFileItems": [],
             "module": "GradleKotlinKmpProject.core.webTest",
             "useProjectSettings": false,
@@ -49907,6 +51172,177 @@
             "scriptTemplatesClasspath": null,
             "outputDirectoryForJsLibraryFiles": null,
             "targetPlatform": "JS []/Wasm [JS]",
+            "externalSystemRunTasks": [],
+            "version": 5,
+            "flushNeeded": false
+        },
+        {
+            "name": "Kotlin",
+            "sourceRoots": [
+                "<WORKSPACE>/jvmAndAndroid/src/androidMain/kotlin",
+                "<WORKSPACE>/jvmAndAndroid/src/androidMain/resources"
+            ],
+            "configFileItems": [],
+            "module": "GradleKotlinKmpProject.jvmAndAndroid.androidMain",
+            "useProjectSettings": false,
+            "implementedModuleNames": [],
+            "dependsOnModuleNames": [
+                "GradleKotlinKmpProject.jvmAndAndroid.commonMain"
+            ],
+            "additionalVisibleModuleNames": [],
+            "productionOutputPath": null,
+            "testOutputPath": null,
+            "sourceSetNames": [
+                "GradleKotlinKmpProject.jvmAndAndroid.commonMain"
+            ],
+            "isTestModule": false,
+            "externalProjectId": "GradleKotlinKmpProject.jvmAndAndroid.androidMain",
+            "isHmppEnabled": true,
+            "pureKotlinSourceFolders": [],
+            "kind": "compilation_and_source_set_holder",
+            "compilerArguments": "J{\"allowNoSourceFiles\":true,\"destination\":\"<WORKSPACE>/jvmAndAndroid/build/classes/kotlin/android/main\",\"jvmTarget\":\"11\",\"moduleName\":\"GradleKotlinKmpProject:jvmAndAndroid\",\"noReflect\":true,\"noStdlib\":true,\"autoAdvanceLanguageVersion\":false,\"autoAdvanceApiVersion\":false,\"fragmentRefines\":[\"androidMain:commonMain\"],\"fragments\":[\"androidMain\",\"commonMain\"],\"multiPlatform\":true,\"pluginClasspaths\":[\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-jvm/2.4.20/#####/kotlin-scripting-jvm-2.4.20.jar\",\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-common/2.4.20/#####/kotlin-scripting-common-2.4.20.jar\",\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.4.20/#####/kotlin-stdlib-2.4.20.jar\",\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-script-runtime/2.4.20/#####/kotlin-script-runtime-2.4.20.jar\",\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0.jar\"],\"apiVersion\":\"2.4\",\"languageVersion\":\"2.4\"}",
+            "additionalArguments": null,
+            "scriptTemplates": null,
+            "scriptTemplatesClasspath": null,
+            "outputDirectoryForJsLibraryFiles": null,
+            "targetPlatform": "JVM [11]",
+            "externalSystemRunTasks": [],
+            "version": 5,
+            "flushNeeded": false
+        },
+        {
+            "name": "Kotlin",
+            "sourceRoots": [
+                "<WORKSPACE>/jvmAndAndroid/src/commonMain/kotlin",
+                "<WORKSPACE>/jvmAndAndroid/src/commonMain/resources",
+                "<WORKSPACE>/jvmAndAndroid/build/generated/buildInfo/kotlin"
+            ],
+            "configFileItems": [],
+            "module": "GradleKotlinKmpProject.jvmAndAndroid.commonMain",
+            "useProjectSettings": false,
+            "implementedModuleNames": [],
+            "dependsOnModuleNames": [],
+            "additionalVisibleModuleNames": [],
+            "productionOutputPath": null,
+            "testOutputPath": null,
+            "sourceSetNames": [],
+            "isTestModule": false,
+            "externalProjectId": "GradleKotlinKmpProject.jvmAndAndroid.commonMain",
+            "isHmppEnabled": true,
+            "pureKotlinSourceFolders": [],
+            "kind": "source_set_holder",
+            "compilerArguments": "J{\"jvmTarget\":\"11\",\"autoAdvanceLanguageVersion\":false,\"autoAdvanceApiVersion\":false,\"multiPlatform\":true,\"pluginClasspaths\":[\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-jvm/2.4.20/#####/kotlin-scripting-jvm-2.4.20.jar\",\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-common/2.4.20/#####/kotlin-scripting-common-2.4.20.jar\",\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.4.20/#####/kotlin-stdlib-2.4.20.jar\",\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-script-runtime/2.4.20/#####/kotlin-script-runtime-2.4.20.jar\",\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0.jar\"],\"apiVersion\":\"2.4\",\"languageVersion\":\"2.4\"}",
+            "additionalArguments": null,
+            "scriptTemplates": null,
+            "scriptTemplatesClasspath": null,
+            "outputDirectoryForJsLibraryFiles": null,
+            "targetPlatform": "JVM [11]",
+            "externalSystemRunTasks": [],
+            "version": 5,
+            "flushNeeded": false
+        },
+        {
+            "name": "Kotlin",
+            "sourceRoots": [
+                "<WORKSPACE>/jvmAndAndroid/src/commonTest/kotlin",
+                "<WORKSPACE>/jvmAndAndroid/src/commonTest/resources"
+            ],
+            "configFileItems": [],
+            "module": "GradleKotlinKmpProject.jvmAndAndroid.commonTest",
+            "useProjectSettings": false,
+            "implementedModuleNames": [],
+            "dependsOnModuleNames": [],
+            "additionalVisibleModuleNames": [
+                "GradleKotlinKmpProject.jvmAndAndroid.jvmMain",
+                "GradleKotlinKmpProject.jvmAndAndroid.commonMain"
+            ],
+            "productionOutputPath": null,
+            "testOutputPath": null,
+            "sourceSetNames": [],
+            "isTestModule": true,
+            "externalProjectId": "GradleKotlinKmpProject.jvmAndAndroid.commonTest",
+            "isHmppEnabled": true,
+            "pureKotlinSourceFolders": [],
+            "kind": "source_set_holder",
+            "compilerArguments": "J{\"jvmTarget\":\"17\",\"autoAdvanceLanguageVersion\":false,\"autoAdvanceApiVersion\":false,\"multiPlatform\":true,\"pluginClasspaths\":[\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-jvm/2.4.20/#####/kotlin-scripting-jvm-2.4.20.jar\",\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-common/2.4.20/#####/kotlin-scripting-common-2.4.20.jar\",\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.4.20/#####/kotlin-stdlib-2.4.20.jar\",\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-script-runtime/2.4.20/#####/kotlin-script-runtime-2.4.20.jar\",\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0.jar\"],\"apiVersion\":\"2.4\",\"languageVersion\":\"2.4\"}",
+            "additionalArguments": null,
+            "scriptTemplates": null,
+            "scriptTemplatesClasspath": null,
+            "outputDirectoryForJsLibraryFiles": null,
+            "targetPlatform": "JVM [17]",
+            "externalSystemRunTasks": [],
+            "version": 5,
+            "flushNeeded": false
+        },
+        {
+            "name": "Kotlin",
+            "sourceRoots": [
+                "<WORKSPACE>/jvmAndAndroid/src/jvmMain/kotlin",
+                "<WORKSPACE>/jvmAndAndroid/src/jvmMain/java",
+                "<WORKSPACE>/jvmAndAndroid/src/jvmMain/resources"
+            ],
+            "configFileItems": [],
+            "module": "GradleKotlinKmpProject.jvmAndAndroid.jvmMain",
+            "useProjectSettings": false,
+            "implementedModuleNames": [],
+            "dependsOnModuleNames": [
+                "GradleKotlinKmpProject.jvmAndAndroid.commonMain"
+            ],
+            "additionalVisibleModuleNames": [],
+            "productionOutputPath": null,
+            "testOutputPath": null,
+            "sourceSetNames": [
+                "GradleKotlinKmpProject.jvmAndAndroid.commonMain"
+            ],
+            "isTestModule": false,
+            "externalProjectId": "GradleKotlinKmpProject.jvmAndAndroid.jvmMain",
+            "isHmppEnabled": true,
+            "pureKotlinSourceFolders": [],
+            "kind": "compilation_and_source_set_holder",
+            "compilerArguments": "J{\"allowNoSourceFiles\":true,\"destination\":\"<WORKSPACE>/jvmAndAndroid/build/classes/kotlin/jvm/main\",\"jvmTarget\":\"17\",\"moduleName\":\"GradleKotlinKmpProject:jvmAndAndroid\",\"noReflect\":true,\"noStdlib\":true,\"autoAdvanceLanguageVersion\":false,\"autoAdvanceApiVersion\":false,\"fragmentRefines\":[\"jvmMain:commonMain\"],\"fragments\":[\"jvmMain\",\"commonMain\"],\"multiPlatform\":true,\"pluginClasspaths\":[\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-jvm/2.4.20/#####/kotlin-scripting-jvm-2.4.20.jar\",\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-common/2.4.20/#####/kotlin-scripting-common-2.4.20.jar\",\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.4.20/#####/kotlin-stdlib-2.4.20.jar\",\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-script-runtime/2.4.20/#####/kotlin-script-runtime-2.4.20.jar\",\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0.jar\"],\"apiVersion\":\"2.4\",\"languageVersion\":\"2.4\"}",
+            "additionalArguments": null,
+            "scriptTemplates": null,
+            "scriptTemplatesClasspath": null,
+            "outputDirectoryForJsLibraryFiles": null,
+            "targetPlatform": "JVM [17]",
+            "externalSystemRunTasks": [],
+            "version": 5,
+            "flushNeeded": false
+        },
+        {
+            "name": "Kotlin",
+            "sourceRoots": [
+                "<WORKSPACE>/jvmAndAndroid/src/jvmTest/kotlin",
+                "<WORKSPACE>/jvmAndAndroid/src/jvmTest/java",
+                "<WORKSPACE>/jvmAndAndroid/src/jvmTest/resources"
+            ],
+            "configFileItems": [],
+            "module": "GradleKotlinKmpProject.jvmAndAndroid.jvmTest",
+            "useProjectSettings": false,
+            "implementedModuleNames": [],
+            "dependsOnModuleNames": [
+                "GradleKotlinKmpProject.jvmAndAndroid.commonTest"
+            ],
+            "additionalVisibleModuleNames": [
+                "GradleKotlinKmpProject.jvmAndAndroid.jvmMain",
+                "GradleKotlinKmpProject.jvmAndAndroid.commonMain"
+            ],
+            "productionOutputPath": null,
+            "testOutputPath": null,
+            "sourceSetNames": [
+                "GradleKotlinKmpProject.jvmAndAndroid.commonTest"
+            ],
+            "isTestModule": true,
+            "externalProjectId": "GradleKotlinKmpProject.jvmAndAndroid.jvmTest",
+            "isHmppEnabled": true,
+            "pureKotlinSourceFolders": [],
+            "kind": "compilation_and_source_set_holder",
+            "compilerArguments": "J{\"allowNoSourceFiles\":true,\"destination\":\"<WORKSPACE>/jvmAndAndroid/build/classes/kotlin/jvm/test\",\"jvmTarget\":\"17\",\"moduleName\":\"GradleKotlinKmpProject:jvmAndAndroid_test\",\"noReflect\":true,\"noStdlib\":true,\"autoAdvanceLanguageVersion\":false,\"autoAdvanceApiVersion\":false,\"fragmentRefines\":[\"jvmTest:commonTest\"],\"fragments\":[\"jvmTest\",\"commonTest\"],\"multiPlatform\":true,\"pluginClasspaths\":[\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-jvm/2.4.20/#####/kotlin-scripting-jvm-2.4.20.jar\",\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-common/2.4.20/#####/kotlin-scripting-common-2.4.20.jar\",\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.4.20/#####/kotlin-stdlib-2.4.20.jar\",\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-script-runtime/2.4.20/#####/kotlin-script-runtime-2.4.20.jar\",\"<GRADLE_REPO>/modules-2/files-2.1/org.jetbrains/annotations/13.0/#####/annotations-13.0.jar\"],\"apiVersion\":\"2.4\",\"languageVersion\":\"2.4\"}",
+            "additionalArguments": null,
+            "scriptTemplates": null,
+            "scriptTemplatesClasspath": null,
+            "outputDirectoryForJsLibraryFiles": null,
+            "targetPlatform": "JVM [17]",
             "externalSystemRunTasks": [],
             "version": 5,
             "flushNeeded": false
@@ -50574,6 +52010,62 @@
             "module": "GradleKotlinKmpProject.core.webTest",
             "inheritedCompilerOutput": false,
             "excludeOutput": false,
+            "languageLevelId": "JDK_17",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "GradleKotlinKmpProject.jvmAndAndroid",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "languageLevelId": "JDK_17",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "GradleKotlinKmpProject.jvmAndAndroid.androidMain",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/jvmAndAndroid/build/classes/kotlin/android/main",
+                "<WORKSPACE>/jvmAndAndroid/build/processedResources/android/main"
+            ],
+            "languageLevelId": "JDK_17",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "GradleKotlinKmpProject.jvmAndAndroid.commonMain",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "languageLevelId": "JDK_17",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "GradleKotlinKmpProject.jvmAndAndroid.commonTest",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "languageLevelId": "JDK_17",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "GradleKotlinKmpProject.jvmAndAndroid.jvmMain",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/jvmAndAndroid/build/classes/java/jvmMain",
+                "<WORKSPACE>/jvmAndAndroid/build/classes/kotlin/jvm/main",
+                "<WORKSPACE>/jvmAndAndroid/build/processedResources/jvm/main"
+            ],
+            "languageLevelId": "JDK_17",
+            "manifestAttributes": {}
+        },
+        {
+            "module": "GradleKotlinKmpProject.jvmAndAndroid.jvmTest",
+            "inheritedCompilerOutput": false,
+            "excludeOutput": false,
+            "compilerOutputs": [
+                "<WORKSPACE>/jvmAndAndroid/build/classes/java/jvmTest",
+                "<WORKSPACE>/jvmAndAndroid/build/classes/kotlin/jvm/test",
+                "<WORKSPACE>/jvmAndAndroid/build/processedResources/jvm/test"
+            ],
             "languageLevelId": "JDK_17",
             "manifestAttributes": {}
         },
