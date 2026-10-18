@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features.symbols
 
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.features.workspaceSymbolNameRank
 import com.jetbrains.ls.api.features.LSConfigurationEntry
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.WorkspaceSymbol
@@ -18,4 +19,7 @@ interface LSWorkspaceSymbolProvider : LSConfigurationEntry {
      */
     context(server: LSServer, handlerContext: LspHandlerContext)
     suspend fun resolveWorkspaceSymbol(symbol: WorkspaceSymbol): WorkspaceSymbol? = null
+
+    /** Ranks the names of the symbols that this provider gives for [query], see [workspaceSymbolNameRank]. */
+    fun workspaceSymbolRank(query: String): (String) -> Int = workspaceSymbolNameRank(query)
 }

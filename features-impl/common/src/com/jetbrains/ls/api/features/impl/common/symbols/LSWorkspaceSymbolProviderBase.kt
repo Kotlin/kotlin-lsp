@@ -15,6 +15,7 @@ import com.jetbrains.ls.api.core.features.lsContributeWorkspaceSymbols
 import com.jetbrains.ls.api.core.features.requestedKinds
 import com.jetbrains.ls.api.core.features.workspaceSymbolElement
 import com.jetbrains.ls.api.core.features.workspaceSymbolItemsByName
+import com.jetbrains.ls.api.core.features.workspaceSymbolNameRank
 import com.jetbrains.ls.api.core.features.workspaceSymbolStubId
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.uri
@@ -61,6 +62,8 @@ abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider, LSWork
             }
         }
     }
+
+    final override fun workspaceSymbolRank(query: String): (String) -> Int = workspaceSymbolNameRank(query, createCustomizer())
 
     /**
      * Finds the item again by [WorkspaceSymbol.data] (contributor class, query, name, stub id in the file, scope, see [lsContributeWorkspaceSymbols])
