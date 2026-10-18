@@ -175,6 +175,19 @@ fun importWorkspaceJson(
     }
 }
 
+/**
+ * Reports the dependencies the import could not resolve: a library a module depends on that the workspace does not
+ * define, and a library a module depends on whose root is not on disk. The report is the "Couldn't resolve some
+ * dependencies" warning the client shows, and a client such as IDE CLI treats it as a model that resolves less than
+ * the build does, refusing diagnostics for the whole project until a complete import is established.
+ *
+ * Only libraries some module depends on count. The Gradle mapper also records libraries no module references (an
+ * Android app's `classes.jar` of its own main variant, a library project's `full.jar`), and their roots are outputs
+ * of a build that has not run yet; a missing file nothing depends on resolves nothing less, so it is logged and not
+ * reported. A missing root is named next to the library when the library name does not already spell it: the R class
+ * jar of an Android variant is the library `android:r:null`, and the reader of the warning could not tell which file
+ * was missing or that a build would produce it.
+ */
 fun postProcessWorkspaceData(
     workspaceData: WorkspaceData,
     projectDirectory: Path,
@@ -183,17 +196,31 @@ fun postProcessWorkspaceData(
     val reportUnresolvedName: (String) -> Unit = { name ->
         onUnresolvedDependency(name.removeSuffix("Gradle: ").removeSuffix("Maven: "))
     }
+    val dependedOn = hashSetOf<String>()
     workspaceData.modules.forEach { module ->
         module.dependencies
             .filterIsInstance<DependencyData.Library>()
             .filter { it.name != "JDK" }
-            .filter { dependency -> workspaceData.libraries.none { it.name == dependency.name } }
-            .forEach { reportUnresolvedName(it.name) }
+            .forEach { dependency ->
+                dependedOn += dependency.name
+                if (workspaceData.libraries.none { it.name == dependency.name }) {
+                    reportUnresolvedName(dependency.name)
+                }
+            }
     }
     workspaceData.libraries.forEach { library ->
-        if (library.roots.any { toAbsolutePath(it.path, projectDirectory).notExists() }) {
-            reportUnresolvedName(library.name)
+        val missingRoots = library.roots
+            .map { toAbsolutePath(it.path, projectDirectory) }
+            .filter { it.notExists() }
+        if (missingRoots.isEmpty()) return@forEach
+        if (library.name !in dependedOn) {
+            LOG.info("The library '${library.name}' has no module depending on it, so its missing roots are not reported: $missingRoots")
+            return@forEach
         }
+        val unnamed = missingRoots.filter { it.toString() !in library.name }
+        reportUnresolvedName(
+            if (unnamed.isEmpty()) library.name else "${library.name} (${unnamed.joinToString(", ")})"
+        )
     }
     return workspaceData
 }

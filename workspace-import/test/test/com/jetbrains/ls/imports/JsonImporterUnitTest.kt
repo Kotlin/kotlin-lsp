@@ -24,12 +24,14 @@ import com.jetbrains.ls.imports.json.WorkspaceData
 import com.jetbrains.ls.imports.json.XmlElement
 import com.jetbrains.ls.imports.json.flattenExportedDependencies
 import com.jetbrains.ls.imports.json.importWorkspaceData
+import com.jetbrains.ls.imports.json.postProcessWorkspaceData
 import com.jetbrains.ls.imports.json.workspaceData
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import java.nio.file.Files
 import java.nio.file.Path
 
 class JsonImporterUnitTest {
@@ -398,5 +400,68 @@ class JsonImporterUnitTest {
 
         assertEquals(setOf("lib"), moduleDeps, "consumer's library dep on com.example:lib:1.0 should become a module dep on lib")
         assertEquals(setOf("Maven: com.other:other:2.0"), libraryDeps, "unmatched library dep must be left untouched")
+    }
+
+    // An Android project on a fresh checkout: the R class jar of the app variant is a dependency of the variant
+    // module and does not exist before a build, so it is reported, with the file the library name hides. The
+    // classes jar of the same variant is a library nothing depends on; a missing file nothing depends on resolves
+    // nothing less, and reporting it made IDE CLI refuse diagnostics for the whole project until a build ran.
+    @Test
+    fun missingRootsAreReportedForLibrariesSomeModuleDependsOn(@TempDir workspacePath: Path) {
+        val data = WorkspaceData(
+            modules = listOf(
+                ModuleData(
+                    name = "app.debug",
+                    dependencies = listOf(DependencyData.Library("Gradle: android:r:null", DependencyDataScope.PROVIDED)),
+                ),
+            ),
+            libraries = listOf(
+                LibraryData(
+                    name = "Gradle: android:r:null", type = "COMPILE",
+                    roots = listOf(LibraryRootData("<WORKSPACE>/app/build/intermediates/R.jar")),
+                ),
+                LibraryData(
+                    name = "Gradle: <WORKSPACE>/app/build/intermediates/classes.jar", type = "COMPILE",
+                    roots = listOf(LibraryRootData("<WORKSPACE>/app/build/intermediates/classes.jar")),
+                ),
+            ),
+        )
+
+        val unresolved = mutableListOf<String>()
+        postProcessWorkspaceData(data, workspacePath) { unresolved += it }
+
+        val rJar = workspacePath.resolve("app/build/intermediates/R.jar")
+        assertEquals(listOf("Gradle: android:r:null ($rJar)"), unresolved)
+    }
+
+    // A library whose name is its path is reported by name alone, a root that exists is not reported, and a
+    // dependency on a library the workspace does not define is reported as before.
+    @Test
+    fun unresolvedReportNamesMissingLibrariesAndMissingRootsOnce(@TempDir workspacePath: Path) {
+        val present = workspacePath.resolve("lib/present.jar")
+        Files.createDirectories(present.parent)
+        Files.write(present, byteArrayOf())
+        val missingPath = workspacePath.resolve("lib/missing.jar").toString()
+        val data = WorkspaceData(
+            modules = listOf(
+                ModuleData(
+                    name = "main",
+                    dependencies = listOf(
+                        DependencyData.Library("Gradle: $missingPath", DependencyDataScope.COMPILE),
+                        DependencyData.Library("Gradle: ${present}", DependencyDataScope.COMPILE),
+                        DependencyData.Library("Gradle: org.example:undefined:1.0", DependencyDataScope.COMPILE),
+                    ),
+                ),
+            ),
+            libraries = listOf(
+                LibraryData(name = "Gradle: $missingPath", type = "COMPILE", roots = listOf(LibraryRootData(missingPath))),
+                LibraryData(name = "Gradle: ${present}", type = "COMPILE", roots = listOf(LibraryRootData(present.toString()))),
+            ),
+        )
+
+        val unresolved = mutableListOf<String>()
+        postProcessWorkspaceData(data, workspacePath) { unresolved += it }
+
+        assertEquals(listOf("Gradle: org.example:undefined:1.0", "Gradle: $missingPath"), unresolved)
     }
 }

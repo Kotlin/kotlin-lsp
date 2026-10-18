@@ -58,11 +58,22 @@ private fun AndroidComponentReflection.resolveToModuleSourceSet(): ModuleSourceS
         }.files.files
     }
 
-    val compileOptions = try {
-        javaCompileTask?.options?.allCompilerArgs?.toSet() ?: emptySet()
-    } catch (e: Exception) {
-        project.logger.error("Unable to resolve all compiler arguments for module $name", e)
-        emptySet()
+    // The plain arguments and each argument provider on its own. A provider is code of the Android plugin, and the
+    // Room one reads the annotation processor list that `javaPreCompile<Variant>` writes; on a checkout nothing has
+    // built, that is a FileNotFoundException, and reading `allCompilerArgs` turned it into a stack trace per variant
+    // in the import log. The arguments such a provider holds exist only after a build, so it contributes nothing and
+    // the import log says so in one line.
+    val compileOptions = buildSet {
+        javaCompileTask?.options?.compilerArgs?.let(::addAll)
+        javaCompileTask?.options?.compilerArgumentProviders.orEmpty().forEach { provider ->
+            try {
+                addAll(provider.asArguments())
+            } catch (e: Exception) {
+                project.logger.info(
+                    "Compiler arguments of ${provider.javaClass.name} for module $name are not available before a build: ${e.message}"
+                )
+            }
+        }
     }
     val javaSettings = ModuleJavaSettingsImpl(
         compileOptions = compileOptions,
