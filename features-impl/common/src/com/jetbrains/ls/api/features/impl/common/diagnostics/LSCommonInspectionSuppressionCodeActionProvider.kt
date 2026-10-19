@@ -77,6 +77,7 @@ class LSCommonInspectionSuppressionCodeActionProvider(
         // A batch run may run a tool that is not enabled by default (Run Inspection by Name), so its tools are found by name.
         val (batch, live) = withData.partition { it.data.diagnosticSource == LSCommonInspectionDiagnosticProvider.batchDiagnosticSource }
         val batchIds = batch.mapNotNullTo(mutableSetOf()) { it.diagnostic.code?.value?.content }
+        val importInspectionProfile = server.config.importInspectionProfile
 
         server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
             readAction {
@@ -85,9 +86,13 @@ class LSCommonInspectionSuppressionCodeActionProvider(
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
                 // The same tools the diagnostic provider runs, by the id it reports as the diagnostic code.
                 val liveTools = if (live.isEmpty()) emptyList() else
-                    LSInspections.getLocalInspections(psiFile, inspectionProfilePatcher) +
-                    LSInspections.getSharedLocalInspectionsFromGlobalTools(psiFile.project, psiFile.language, inspectionProfilePatcher)
-                val tools = (liveTools.map { it.tool } + batchTools(psiFile, batchIds)).associateBy { it.id }
+                    LSInspections.getLocalInspections(
+                        psiFile, inspectionProfilePatcher, importInspectionProfile = importInspectionProfile,
+                    ) +
+                    LSInspections.getSharedLocalInspectionsFromGlobalTools(
+                        psiFile.project, psiFile.language, inspectionProfilePatcher, importInspectionProfile = importInspectionProfile,
+                    )
+                val tools = (liveTools.map { it.tool } + batchTools(psiFile, batchIds, importInspectionProfile)).associateBy { it.id }
                 diagnostics.flatMap { diagnostic ->
                     val tool = tools[diagnostic.code?.value?.content] ?: return@flatMap emptyList()
                     val offset = document.offsetByPosition(diagnostic.range.start)
@@ -100,11 +105,14 @@ class LSCommonInspectionSuppressionCodeActionProvider(
     }
 
     /** The tools named by [inspectionIds], the codes of batch diagnostics; none without codes. */
-    private fun batchTools(psiFile: PsiFile, inspectionIds: Set<String>): List<LocalInspectionTool> {
+    private fun batchTools(psiFile: PsiFile, inspectionIds: Set<String>, importInspectionProfile: Boolean): List<LocalInspectionTool> {
         if (inspectionIds.isEmpty()) return emptyList()
-        return (LSInspections.getLocalInspections(psiFile, inspectionProfilePatcher, inspectionIds = inspectionIds) +
+        return (LSInspections.getLocalInspections(
+                    psiFile, inspectionProfilePatcher, inspectionIds = inspectionIds, importInspectionProfile = importInspectionProfile,
+                ) +
                 LSInspections.getSharedLocalInspectionsFromGlobalTools(
                     psiFile.project, psiFile.language, inspectionProfilePatcher, inspectionIds = inspectionIds,
+                    importInspectionProfile = importInspectionProfile,
                 ))
             .map { it.tool }
     }

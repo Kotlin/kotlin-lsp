@@ -58,6 +58,7 @@ class LSCommonIntentionFixesCodeActionProvider(
     context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         if (!params.textDocument.isSource()) return@flow
+        val importInspectionProfile = server.config.importInspectionProfile
 
         server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
             readAction {
@@ -73,7 +74,7 @@ class LSCommonIntentionFixesCodeActionProvider(
 
                 val selection = selectionOf(params, range)
                 val codeActions =
-                    (infoInspections(psiFile, offset, psiElement) + intentions(psiFile, offset, selection))
+                    (infoInspections(psiFile, offset, psiElement, importInspectionProfile) + intentions(psiFile, offset, selection))
                     .toList()
 
                 return@readAction codeActions
@@ -82,15 +83,26 @@ class LSCommonIntentionFixesCodeActionProvider(
     }
 
     context(server: LSServer)
-    private fun infoInspections(psiFile: PsiFile, offset: Int, psiElement: PsiElement?): Sequence<CodeAction> {
+    private fun infoInspections(
+        psiFile: PsiFile,
+        offset: Int,
+        psiElement: PsiElement?,
+        importInspectionProfile: Boolean,
+    ): Sequence<CodeAction> {
         if (psiElement == null) return emptySequence()
         val project = psiFile.project
         val inspectionManager = InspectionManagerEx(project)
         val problemsHolder = ProblemsHolder(inspectionManager, psiFile, true)
-        val infoInspections = LSInspections.getLocalInspections(psiFile, inspectionProfilePatcher, true) +
-                LSInspections.getSharedLocalInspectionsFromGlobalTools(psiFile.project, psiFile.language, inspectionProfilePatcher, true)
-        val normalInspections = LSInspections.getLocalInspections(psiFile, inspectionProfilePatcher, false) +
-                LSInspections.getSharedLocalInspectionsFromGlobalTools(psiFile.project, psiFile.language, inspectionProfilePatcher, false)
+        val infoInspections = LSInspections.getLocalInspections(
+            psiFile, inspectionProfilePatcher, true, importInspectionProfile = importInspectionProfile,
+        ) + LSInspections.getSharedLocalInspectionsFromGlobalTools(
+            psiFile.project, psiFile.language, inspectionProfilePatcher, true, importInspectionProfile = importInspectionProfile,
+        )
+        val normalInspections = LSInspections.getLocalInspections(
+            psiFile, inspectionProfilePatcher, false, importInspectionProfile = importInspectionProfile,
+        ) + LSInspections.getSharedLocalInspectionsFromGlobalTools(
+            psiFile.project, psiFile.language, inspectionProfilePatcher, false, importInspectionProfile = importInspectionProfile,
+        )
         val fileRange = psiFile.textRange
         val session = LocalInspectionToolSession(psiFile, fileRange, fileRange, null)
         val result = mutableListOf<CodeAction>()

@@ -42,6 +42,7 @@ class LSCommonInjectionInspectionDiagnosticProvider(
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
         if (!params.textDocument.isSource()) return@flow
         val job = currentCoroutineContext().job
+        val importInspectionProfile = server.config.importInspectionProfile
         val diagnostics = server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
             val injectedFiles = readAction {
                 val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction null
@@ -53,7 +54,9 @@ class LSCommonInjectionInspectionDiagnosticProvider(
                 InjectedFiles(hostDocument, lsCollectInjectedFiles(hostFile, job))
             } ?: return@withAnalysisContextAndFileSettings emptyList()
             val injectedLanguageManager = InjectedLanguageManager.getInstance(project)
-            injectedFiles.files.flatMap { injected -> runInspections(injected, injectedFiles.hostDocument, injectedLanguageManager) }
+            injectedFiles.files.flatMap { injected ->
+                runInspections(injected, injectedFiles.hostDocument, injectedLanguageManager, importInspectionProfile)
+            }
         }
         diagnostics.forEach { diagnostic -> emit(diagnostic) }
     }
@@ -62,6 +65,7 @@ class LSCommonInjectionInspectionDiagnosticProvider(
         injected: LSInjectedFile,
         hostDocument: Document,
         injectedLanguageManager: InjectedLanguageManager,
+        importInspectionProfile: Boolean,
     ): List<Diagnostic> {
         val psiFile = injected.psiFile
         val lenient = readAction {
@@ -74,6 +78,7 @@ class LSCommonInjectionInspectionDiagnosticProvider(
             toLspRange = { injected.toHostLspRange(it, hostDocument) },
             onTheFly = true,
             inspectionProfilePatcher = inspectionProfilePatcher,
+            importInspectionProfile = importInspectionProfile,
             diagnosticDataFactory = { _, _ -> null },
         )
         // A lenient or Frankenstein injection has unknown text in or between its fragments, so only an error is trustworthy.

@@ -60,13 +60,18 @@ class LSCommonInspectionFixesCodeActionProvider(
             .filter { it.data.diagnosticSource == LSCommonInspectionDiagnosticProvider.batchDiagnosticSource }
             .map { it.diagnostic }
         if (batchDiagnostics.isNotEmpty() && params.textDocument.isSource()) {
-            batchFixes(params, batchDiagnostics).forEach { codeAction -> emit(codeAction) }
+            val importInspectionProfile = server.config.importInspectionProfile
+            batchFixes(params, batchDiagnostics, importInspectionProfile).forEach { codeAction -> emit(codeAction) }
         }
     }
 
     /** Runs the inspections of [diagnostics] on the file again and gives the fixes of the problems that match them. */
     context(server: LSServer)
-    private suspend fun batchFixes(params: CodeActionParams, diagnostics: List<Diagnostic>): List<CodeAction> {
+    private suspend fun batchFixes(
+        params: CodeActionParams,
+        diagnostics: List<Diagnostic>,
+        importInspectionProfile: Boolean,
+    ): List<CodeAction> {
         val inspectionIds = diagnostics.mapNotNullTo(mutableSetOf()) { it.code?.value?.content }
         if (inspectionIds.isEmpty()) return emptyList()
         val problems = server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
@@ -80,6 +85,7 @@ class LSCommonInspectionFixesCodeActionProvider(
                 toLspRange = { it.toLspRange(document) },
                 onTheFly = false,
                 inspectionProfilePatcher = inspectionProfilePatcher,
+                importInspectionProfile = importInspectionProfile,
                 diagnosticDataFactory = { _, problemDescriptor ->
                     LSP.json.encodeToJsonElement(lsInspectionManager.createDiagnosticData(problemDescriptor))
                 },

@@ -43,9 +43,11 @@ class LSCommonInspectionDiagnosticProvider(
     context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
         val onTheFly = true
+        val importInspectionProfile = server.config.importInspectionProfile
         val diagnostics = server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
             return@withAnalysisContextAndFileSettings LSInspections.runInspections(
                 params, project, onTheFly, inspectionProfilePatcher,
+                importInspectionProfile = importInspectionProfile,
             ) { _, problemDescriptor ->
                 LSP.json.encodeToJsonElement(lsInspectionManager.createDiagnosticData(problemDescriptor))
             }

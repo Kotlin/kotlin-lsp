@@ -56,8 +56,9 @@ class LSCommonBatchInspectionProvider(
     private val inspectionsByServer = WeakHashMap<LSServer, List<LSBatchInspection>>()
 
     context(server: LSServer)
-    override suspend fun inspectFile(uri: URI, inspectionIds: Set<String>?): LSBatchFileResult =
-        server.withAnalysisContextAndFileSettings(uri) {
+    override suspend fun inspectFile(uri: URI, inspectionIds: Set<String>?): LSBatchFileResult {
+        val importInspectionProfile = server.config.importInspectionProfile
+        return server.withAnalysisContextAndFileSettings(uri) {
             val psiFile = readAction {
                 val virtualFile = uri.findVirtualFile() ?: return@readAction null
                 if (virtualFile.isDirectory || SingleRootFileViewProvider.isTooLargeForIntelligence(virtualFile)) return@readAction null
@@ -70,12 +71,14 @@ class LSCommonBatchInspectionProvider(
                 toLspRange = { it.toLspRange(document) },
                 onTheFly = false,
                 inspectionProfilePatcher = inspectionProfilePatcher,
+                importInspectionProfile = importInspectionProfile,
                 diagnosticDataFactory = { _, _ -> batchData },
                 inspectionIds = inspectionIds,
                 dispatcher = LSInspections.batchInspectionsDispatcher,
             )
             LSBatchFileResult(diagnostics)
         }
+    }
 
     /** Computed once per server: it instantiates every tool of the languages. */
     context(server: LSServer)
