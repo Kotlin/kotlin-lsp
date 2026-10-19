@@ -8,9 +8,11 @@ import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
+import com.intellij.psi.PsiReference
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
@@ -67,11 +69,7 @@ abstract class LSCallHierarchyProviderBase<Element : PsiElement> : LSCallHierarc
                     val references = descriptor.references
                     val callerDocument = callerMember.containingFile.fileDocument
 
-                    val fromRanges = references.mapNotNull { ref ->
-                        val refElement = ref.element
-                        val callElement = if (refElement is PsiNameIdentifierOwner) refElement.nameIdentifier else refElement.parent
-                        callElement?.textRange?.toLspRange(callerDocument)
-                    }
+                    val fromRanges = references.mapNotNull { ref -> getIncomingCallRange(ref)?.toLspRange(callerDocument) }
 
                     CallHierarchyIncomingCall(from = callerItem, fromRanges = fromRanges)
                 }
@@ -94,15 +92,30 @@ abstract class LSCallHierarchyProviderBase<Element : PsiElement> : LSCallHierarc
                     val descriptor = child as? ReferenceAwareNodeDescriptor ?: return@mapNotNull null
                     val calleeItem = LSCallHierarchyRenderer.createCallHierarchyItemFor(descriptor) ?: return@mapNotNull null
 
-                    val fromRanges = descriptor.references.map { ref ->
-                        ref.absoluteRange.toLspRange(document)
-                    }
+                    val fromRanges = getOutgoingCallRanges(descriptor).map { it.toLspRange(document) }
 
                     CallHierarchyOutgoingCall(to = calleeItem, fromRanges = fromRanges)
                 }
             }
         }
     }
+
+    /**
+     * The range of the call that [reference] belongs to, for the `fromRanges` of an incoming call.
+     * By default, it is the name identifier of the reference element, or the parent of the reference element, such as a call expression.
+     */
+    protected open fun getIncomingCallRange(reference: PsiReference): TextRange? {
+        val refElement = reference.element
+        val callElement = if (refElement is PsiNameIdentifierOwner) refElement.nameIdentifier else refElement.parent
+        return callElement?.textRange
+    }
+
+    /**
+     * The ranges of the calls to [descriptor] in the requested element, for the `fromRanges` of an outgoing call.
+     * By default, they are the ranges of the descriptor references.
+     */
+    protected open fun getOutgoingCallRanges(descriptor: ReferenceAwareNodeDescriptor): List<TextRange> =
+        descriptor.references.map { it.absoluteRange }
 
     protected abstract fun getIncomingCallsTreeStructure(project: Project, restoredElement: Element, scope: String): HierarchyTreeStructure
 
