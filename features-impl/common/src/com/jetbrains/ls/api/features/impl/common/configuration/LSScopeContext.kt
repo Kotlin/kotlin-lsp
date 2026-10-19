@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features.impl.common.configuration
 
 import com.intellij.openapi.diagnostic.fileLogger
+import com.jetbrains.analyzer.codeServer.ScopeStorage
 import com.jetbrains.ls.api.features.impl.common.utils.loadXml
 import java.io.IOException
 import java.nio.file.Files
@@ -9,9 +10,9 @@ import java.nio.file.Path
 
 private val LOG = fileLogger()
 
-internal class LSScopeContext private constructor(val storage: LSScopeStorage) {
+internal class LSScopeContext private constructor(val storage: ScopeStorage) {
     companion object {
-        fun empty(): LSScopeContext = LSScopeContext(LSScopeStorage(emptyMap()))
+        fun empty(): LSScopeContext = LSScopeContext(ScopeStorage(emptyMap()))
 
         fun new(settingsDirectory: Path): LSScopeContext {
             val scopeDirectory = settingsDirectory.resolve("scopes")
@@ -36,7 +37,7 @@ internal class LSScopeContext private constructor(val storage: LSScopeStorage) {
                     patterns.putIfAbsent(name, pattern)
                 }
             }
-            return LSScopeContext(LSScopeStorage(patterns))
+            return LSScopeContext(ScopeStorage(patterns))
         }
     }
 }

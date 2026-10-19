@@ -7,6 +7,7 @@ import com.intellij.profile.codeInspection.InspectionProfileManager
 import com.intellij.profile.codeInspection.InspectionProjectProfileManager
 import com.jetbrains.analyzer.api.AnalyzerContextKind
 import com.jetbrains.analyzer.bootstrap.AnalyzerContainerBuilder
+import com.jetbrains.analyzer.codeServer.ScopeStorage
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.RootUriKey
 import com.jetbrains.ls.api.core.util.toPath
@@ -73,7 +74,7 @@ fun AnalyzerContainerBuilder.registerApplicationLSSettings() {
 
 private fun AnalyzerContainerBuilder.registerApplicationLSSettings(state: State) {
     serviceDoNotDispose(InspectionProfileManager::class.java, state.inspectionContext.manager)
-    serviceDoNotDispose(LSScopeStorage::class.java, state.scopeContext.storage)
+    serviceDoNotDispose(ScopeStorage::class.java, state.scopeContext.storage)
 }
 
 context(server: LSServer)
