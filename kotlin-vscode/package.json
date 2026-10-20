@@ -931,6 +931,115 @@
         }
       },
       {
+        "title": "Tests",
+        "properties": {
+          "java.test.config": {
+            "type": [
+              "object",
+              "array"
+            ],
+            "scope": "resource",
+            "default": [],
+            "properties": {
+              "name": {
+                "type": "string",
+                "default": "",
+                "description": "The name of the configuration. The java.test.defaultConfig setting refers to it."
+              },
+              "vmArgs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "default": [],
+                "description": "The VM options and system properties for the test JVM."
+              },
+              "env": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "default": {},
+                "description": "The environment variables for the test JVM."
+              },
+              "workingDirectory": {
+                "type": "string",
+                "default": "${workspaceFolder}",
+                "description": "The working directory of the test JVM. A relative path starts at the workspace folder. Without it, the tests run in the directory of their project."
+              },
+              "filters": {
+                "type": "object",
+                "default": {},
+                "properties": {
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": [],
+                    "markdownDescription": "The JUnit tags or tag expressions to run. A tag with the `!` prefix is excluded. Only JUnit 5 and 6 use this filter."
+                  }
+                },
+                "description": "The filters of the tests to run."
+              }
+            },
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "default": "",
+                  "description": "The name of the configuration. The java.test.defaultConfig setting refers to it."
+                },
+                "vmArgs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "default": [],
+                  "description": "The VM options and system properties for the test JVM."
+                },
+                "env": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "default": {},
+                  "description": "The environment variables for the test JVM."
+                },
+                "workingDirectory": {
+                  "type": "string",
+                  "default": "${workspaceFolder}",
+                  "description": "The working directory of the test JVM. A relative path starts at the workspace folder. Without it, the tests run in the directory of their project."
+                },
+                "filters": {
+                  "type": "object",
+                  "default": {},
+                  "properties": {
+                    "tags": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "default": [],
+                      "markdownDescription": "The JUnit tags or tag expressions to run. A tag with the `!` prefix is excluded. Only JUnit 5 and 6 use this filter."
+                    }
+                  },
+                  "description": "The filters of the tests to run."
+                }
+              }
+            },
+            "markdownDescription": "The configurations of a JVM test run: one configuration or an array of them. This is the setting of the Test Runner for Java. The other fields of that extension, such as `when` or `envFile`, have no effect here. With several configurations, set `#java.test.defaultConfig#` or select one when the tests start."
+          },
+          "java.test.defaultConfig": {
+            "type": "string",
+            "scope": "resource",
+            "default": "",
+            "markdownDescription": "The `name` of the configuration in `#java.test.config#` that the JVM tests use. The name `default` selects the built-in configuration, which runs the tests in the workspace folder."
+          }
+        }
+      },
+      {
         "title": "Inlay Hints",
         "properties": {
           "jetbrains.kotlin.hints.settings.types.property": {

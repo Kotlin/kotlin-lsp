@@ -13,6 +13,7 @@ import {
   workspace,
   WorkspaceFolder,
 } from 'vscode';
+import * as path from 'node:path';
 import { registerInitializationOptionsContributor } from './lspClient';
 import { getOutputChannel } from './extension';
 import { internalConsoleOptionsFor } from './consoleOptions';
@@ -108,17 +109,6 @@ export interface StepFilters {
   skipClassLoaders?: boolean;
 }
 
-/**
- * A launch that runs the program as a plain `java` process. The class path, the module path and the `java` binary
- * come from the workspace model; a configuration that spells them runs on what it spells, module or no module.
- */
-interface JvmLaunchConfig extends CommonLaunchConfig {
-  classPaths?: string[];
-  modulePaths?: string[];
-  moduleName?: string;
-  javaExec?: string;
-}
-
 /** A Gradle launch names a project and a source set, and passes Gradle its own arguments. */
 interface GradleLaunchConfig extends CommonLaunchConfig {
   projectPath?: string;
@@ -148,10 +138,11 @@ export function registerDapServer(context: ExtensionContext) {
   const debugConfigProvider: DebugConfigurationProvider = {
     /**
      * Puts the configuration into the vocabulary the adapter reads, and asks the server nothing: the server finds
-     * the module, its tool and its class path from the launch itself, in the one `launch` request.
+     * the module, its tool and its class path from the launch itself, in the one `launch` request. The variables
+     * are substituted at this point, so a relative `cwd` is resolved here.
      */
     async resolveDebugConfigurationWithSubstitutedVariables(
-      _folder: WorkspaceFolder | undefined,
+      folder: WorkspaceFolder | undefined,
       debugConfiguration: DebugConfiguration,
     ) {
       if (debugConfiguration.request !== 'launch') return debugConfiguration;
@@ -159,6 +150,15 @@ export function registerDapServer(context: ExtensionContext) {
       if (!config.mainClass) {
         void window.showErrorMessage(`The "${config.type}" configuration requires "mainClass"`);
         return undefined;
+      }
+      if (config.cwd && !path.isAbsolute(config.cwd)) {
+        if (!folder) {
+          void window.showErrorMessage(
+            `The "cwd" of the "${config.type}" configuration is the relative path "${config.cwd}", and the launch has no workspace folder`,
+          );
+          return undefined;
+        }
+        config.cwd = path.resolve(folder.uri.fsPath, config.cwd);
       }
       return withConsoleDefaults(toLaunchArguments(config));
     },
@@ -171,7 +171,11 @@ export function registerDapServer(context: ExtensionContext) {
   // The server runs every program itself and streams the output as `output` events; for a terminal `console` the
   // tracker renders that stream in an integrated terminal, since nothing runs on the client to put there.
   const runOutputTerminals = createRunOutputTerminalFactory();
-  for (const type of [JVM_DEBUG_TYPE, LEGACY_JVM_DEBUG_TYPE, ...Object.values(DEBUG_TYPE_BY_TOOL)]) {
+  for (const type of [
+    JVM_DEBUG_TYPE,
+    LEGACY_JVM_DEBUG_TYPE,
+    ...Object.values(DEBUG_TYPE_BY_TOOL),
+  ]) {
     if (!declared.has(type)) continue;
     context.subscriptions.push(
       debug.registerDebugAdapterDescriptorFactory(type, dapServerFactory),
@@ -203,7 +207,12 @@ async function runMainFromLens(arg: RunMainArgs): Promise<void> {
   const folder = window.activeTextEditor
     ? workspace.getWorkspaceFolder(window.activeTextEditor.document.uri)
     : workspace.workspaceFolders?.[0];
-  const config = lensLaunchConfig(arg, DEBUG_TYPE_BY_TOOL, JVM_DEBUG_TYPE, (uri) => Uri.parse(uri).fsPath);
+  const config = lensLaunchConfig(
+    arg,
+    DEBUG_TYPE_BY_TOOL,
+    JVM_DEBUG_TYPE,
+    (uri) => Uri.parse(uri).fsPath,
+  );
   try {
     await debug.startDebugging(folder, config, { noDebug: arg.noDebug ?? false });
   } catch (e) {
