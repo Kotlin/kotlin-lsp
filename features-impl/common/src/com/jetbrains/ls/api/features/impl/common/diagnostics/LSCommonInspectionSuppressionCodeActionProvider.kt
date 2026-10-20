@@ -90,7 +90,7 @@ class LSCommonInspectionSuppressionCodeActionProvider(
                         psiFile, inspectionProfilePatcher, importInspectionProfile = importInspectionProfile,
                     ) +
                     LSInspections.getSharedLocalInspectionsFromGlobalTools(
-                        psiFile.project, psiFile.language, inspectionProfilePatcher, importInspectionProfile = importInspectionProfile,
+                        psiFile, psiFile.language, inspectionProfilePatcher, importInspectionProfile = importInspectionProfile,
                     )
                 val tools = (liveTools.map { it.tool } + batchTools(psiFile, batchIds, importInspectionProfile)).associateBy { it.id }
                 diagnostics.flatMap { diagnostic ->
@@ -111,7 +111,7 @@ class LSCommonInspectionSuppressionCodeActionProvider(
                     psiFile, inspectionProfilePatcher, inspectionIds = inspectionIds, importInspectionProfile = importInspectionProfile,
                 ) +
                 LSInspections.getSharedLocalInspectionsFromGlobalTools(
-                    psiFile.project, psiFile.language, inspectionProfilePatcher, inspectionIds = inspectionIds,
+                    psiFile, psiFile.language, inspectionProfilePatcher, inspectionIds = inspectionIds,
                     importInspectionProfile = importInspectionProfile,
                 ))
             .map { it.tool }

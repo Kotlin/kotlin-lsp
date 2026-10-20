@@ -91,12 +91,12 @@ class LSCommonIntentionFixesCodeActionProvider(
         val infoInspections = LSInspections.getLocalInspections(
             psiFile, inspectionProfilePatcher, true, importInspectionProfile = importInspectionProfile,
         ) + LSInspections.getSharedLocalInspectionsFromGlobalTools(
-            psiFile.project, psiFile.language, inspectionProfilePatcher, true, importInspectionProfile = importInspectionProfile,
+            psiFile, psiFile.language, inspectionProfilePatcher, true, importInspectionProfile = importInspectionProfile,
         )
         val normalInspections = LSInspections.getLocalInspections(
             psiFile, inspectionProfilePatcher, false, importInspectionProfile = importInspectionProfile,
         ) + LSInspections.getSharedLocalInspectionsFromGlobalTools(
-            psiFile.project, psiFile.language, inspectionProfilePatcher, false, importInspectionProfile = importInspectionProfile,
+            psiFile, psiFile.language, inspectionProfilePatcher, false, importInspectionProfile = importInspectionProfile,
         )
         val fileRange = psiFile.textRange
         val session = LocalInspectionToolSession(psiFile, fileRange, fileRange, null)
