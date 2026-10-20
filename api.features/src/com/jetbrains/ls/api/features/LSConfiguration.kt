@@ -13,6 +13,8 @@ import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.language.matches
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 import com.jetbrains.lsp.protocol.URI
+import kotlin.coroutines.AbstractCoroutineContextElement
+import kotlin.coroutines.CoroutineContext
 
 data class TextDocumentIdentifierWithLspLanguage(val document: TextDocumentIdentifier, val lspLanguage: String?)
 
@@ -22,7 +24,7 @@ class LSConfiguration(
     val dapPlugins: List<PluginMainDescriptor>,
     val languages: List<LSLanguage>,
     val intellijPlugins: List<PluginMainDescriptor> = emptyList(),
-) {
+) : AbstractCoroutineContextElement(Key) {
     val allCommandDescriptors: List<LSCommandDescriptor> = entries<LSCommandDescriptorProvider>().flatMap { it.commandDescriptors }
 
     init {
@@ -107,6 +109,8 @@ class LSConfiguration(
         return languages.firstOrNull { it.intellijLanguage == language }
             ?: languages.firstOrNull { language.isKindOf(it.intellijLanguage) }
     }
+
+    companion object Key : CoroutineContext.Key<LSConfiguration>
 }
 
 fun LSConfiguration(

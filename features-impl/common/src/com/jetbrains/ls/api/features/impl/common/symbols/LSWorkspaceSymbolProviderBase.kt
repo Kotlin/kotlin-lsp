@@ -18,6 +18,7 @@ import com.jetbrains.ls.api.core.features.workspaceSymbolItemsByName
 import com.jetbrains.ls.api.core.features.workspaceSymbolStubId
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.uri
+import com.jetbrains.ls.api.features.symbols.LSWorkspaceSymbolCustomizerProvider
 import com.jetbrains.ls.api.features.symbols.LSWorkspaceSymbolProvider
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.DocumentUri
@@ -36,8 +37,8 @@ import kotlin.coroutines.cancellation.CancellationException
 
 private val LOG = logger<LSWorkspaceSymbolProviderBase>()
 
-abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider {
-    abstract fun createCustomizer(): LSWorkspaceSymbolCustomizer
+abstract class LSWorkspaceSymbolProviderBase : LSWorkspaceSymbolProvider, LSWorkspaceSymbolCustomizerProvider {
+    abstract override fun createCustomizer(): LSWorkspaceSymbolCustomizer
 
     context(server: LSServer, handlerContext: LspHandlerContext)
     final override fun getWorkspaceSymbols(params: WorkspaceSymbolParams): Flow<WorkspaceSymbol> = channelFlow {
