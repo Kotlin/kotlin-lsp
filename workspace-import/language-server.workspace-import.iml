@@ -56,6 +56,7 @@
     <orderEntry type="module" module-name="intellij.libraries.kotlinc.kotlin.jps.common" />
     <orderEntry type="module" module-name="intellij.libraries.kotlinc.kotlin.compiler.common" />
     <orderEntry type="module" module-name="intellij.platform.externalSystem.impl" />
+    <orderEntry type="module" module-name="intellij.platform.externalSystem" />
     <orderEntry type="module" module-name="intellij.platform.core" />
     <orderEntry type="module" module-name="intellij.kotlin.base.plugin" />
     <orderEntry type="module" module-name="intellij.libraries.jspecify" />
@@ -63,6 +64,8 @@
     <orderEntry type="module" module-name="language-server.workspace-import.maven-plugin" />
     <orderEntry type="module" module-name="intellij.libraries.gradle.tooling" />
     <orderEntry type="module" module-name="intellij.libraries.kotlin.tooling.core" />
+    <orderEntry type="module" module-name="intellij.libraries.kotlin.gradle.plugin.idea" />
+    <orderEntry type="module" module-name="intellij.libraries.kotlin.gradle.plugin.idea.proto" />
     <orderEntry type="module" module-name="language-server.analyzer.kotlin" />
     <orderEntry type="module" module-name="language-server.api.impl.analyzer" />
     <orderEntry type="module" module-name="language-server.api.core.util" />

@@ -1,5 +1,5 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
-import type { Uri } from 'vscode';
+import type { CancellationToken, Uri } from 'vscode';
 import { getLspClient, sendLspCommand } from '@jetbrains/vscode-extension-core';
 import {
   debugAdapterRunner,
@@ -13,6 +13,14 @@ import {
   type TestRunner,
 } from '@jetbrains/vscode-testing';
 import { JvmTestBuilds } from './jvmTestBuild';
+import {
+  type JvmTestConfig,
+  type JvmTestConfigPrompt,
+  JvmTestRunConfigs,
+  type JvmTestSettingsReader,
+  windowPrompt,
+  workspaceTestSettings,
+} from './jvmTestConfig';
 import {
   JVM_LANGUAGE_IDS,
   jvmSuiteLocation,
@@ -39,6 +47,10 @@ export interface JvmTestLaunchConfig extends TestLaunchConfig {
   readonly additionalClassPaths: string[];
   /** The module path entries of the runner, added to the module path of a modular test module. */
   readonly additionalModulePaths: string[];
+  /** The `vmArgs`, `env` and `workingDirectory` of the test configuration, when it sets them. */
+  readonly vmArgs?: string[];
+  readonly env?: Record<string, string>;
+  readonly cwd?: string;
 }
 
 export interface JvmTestLaunchServer {
@@ -49,6 +61,12 @@ const lspLaunchServer: JvmTestLaunchServer = {
   launches: (request) =>
     sendLspCommand<JvmTestLaunch[]>(runningClient(), RESOLVE_TEST_LAUNCH_COMMAND, [request]),
 };
+
+export interface JvmTestLanguageOptions {
+  readonly server?: JvmTestLaunchServer;
+  readonly settings?: JvmTestSettingsReader;
+  readonly prompt?: JvmTestConfigPrompt;
+}
 
 export class JvmTestLanguage implements TestLanguage<JvmTestProfile> {
   readonly controller = { id: 'intellijJvmTest', label: 'JVM Tests' };
@@ -62,31 +80,59 @@ export class JvmTestLanguage implements TestLanguage<JvmTestProfile> {
     sourceGlob: '**/*.{java,kt}',
   });
 
-  constructor(private readonly server: JvmTestLaunchServer = lspLaunchServer) {}
+  private readonly server: JvmTestLaunchServer;
+  private readonly settings: JvmTestSettingsReader;
+  private readonly prompt: JvmTestConfigPrompt;
+
+  constructor(options: JvmTestLanguageOptions = {}) {
+    this.server = options.server ?? lspLaunchServer;
+    this.settings = options.settings ?? workspaceTestSettings;
+    this.prompt = options.prompt ?? windowPrompt;
+  }
 
   startRun(profile: JvmTestProfile): TestRunner {
     const builds = new JvmTestBuilds();
+    const configs = this.runConfigs();
     return debugAdapterRunner({
       mode: profile,
       launches: async (input) => {
-        const launches = await this.serverLaunches(input.group);
+        const config = await configs.configFor(input.group.uri, input.token);
+        if (input.token.isCancellationRequested) return [];
+        const launches = await this.serverLaunches(input.group, config);
         const moduleFile = launches.find((launch) => launch.file)?.file ?? undefined;
         const built = await builds.ensureBuilt(input, { moduleFile });
         if (built === 'failed') {
           throw new Error('Compilation failed. See the build output in Test Results.');
         }
-        return launches.map((launch) => configOf(launch, input.group));
+        return launches.map((launch) => configOf(launch, input.group, config));
       },
       stackFrames: this.stackFrames,
     });
   }
 
-  async resolveLaunches(group: TestRunGroup): Promise<JvmTestLaunchConfig[]> {
-    return (await this.serverLaunches(group)).map((launch) => configOf(launch, group));
+  async resolveLaunches(
+    group: TestRunGroup,
+    token: CancellationToken,
+  ): Promise<JvmTestLaunchConfig[]> {
+    const config = await this.runConfigs().configFor(group.uri, token);
+    return (await this.serverLaunches(group, config)).map((launch) =>
+      configOf(launch, group, config),
+    );
   }
 
-  private serverLaunches(group: TestRunGroup): Promise<JvmTestLaunch[]> {
-    return this.server.launches({ testIds: [...group.testIds], uniqueIds: [...group.uniqueIds] });
+  private runConfigs(): JvmTestRunConfigs {
+    return new JvmTestRunConfigs({ settings: this.settings, prompt: this.prompt });
+  }
+
+  private serverLaunches(
+    group: TestRunGroup,
+    config: JvmTestConfig | undefined,
+  ): Promise<JvmTestLaunch[]> {
+    return this.server.launches({
+      testIds: [...group.testIds],
+      uniqueIds: [...group.uniqueIds],
+      tags: config?.tags ?? [],
+    });
   }
 
   private readonly stackFrames: StackFrameParser = (stacktrace, report) => {
@@ -120,7 +166,11 @@ export class JvmTestLanguage implements TestLanguage<JvmTestProfile> {
   };
 }
 
-function configOf(launch: JvmTestLaunch, group: TestRunGroup): JvmTestLaunchConfig {
+function configOf(
+  launch: JvmTestLaunch,
+  group: TestRunGroup,
+  config: JvmTestConfig | undefined,
+): JvmTestLaunchConfig {
   return {
     type: 'intellij_debugger',
     request: 'launch',
@@ -130,6 +180,9 @@ function configOf(launch: JvmTestLaunch, group: TestRunGroup): JvmTestLaunchConf
     args: launch.args,
     additionalClassPaths: launch.runtimeClasspath,
     additionalModulePaths: launch.runtimeModulePath ?? [],
+    ...(config?.vmArgs.length ? { vmArgs: config.vmArgs } : {}),
+    ...(config && Object.keys(config.env).length > 0 ? { env: config.env } : {}),
+    ...(config?.workingDirectory ? { cwd: config.workingDirectory } : {}),
   };
 }
 

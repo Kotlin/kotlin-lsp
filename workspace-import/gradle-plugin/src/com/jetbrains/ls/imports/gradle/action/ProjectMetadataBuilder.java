@@ -8,6 +8,7 @@ import com.jetbrains.ls.imports.gradle.model.ExternalModuleFullDependencySet;
 import com.jetbrains.ls.imports.gradle.model.InternalIdeaModule;
 import com.jetbrains.ls.imports.gradle.model.InternalIdeaProject;
 import com.jetbrains.ls.imports.gradle.model.KotlinModule;
+import com.jetbrains.ls.imports.gradle.model.KotlinMultiplatformModel;
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet;
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSets;
 import com.jetbrains.ls.imports.gradle.utils.ProxyUtil;
@@ -59,8 +60,19 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
         Map<String, Set<ExternalModuleDependency>> externalModuleDependencySet = new HashMap<>();
         Map<String, AndroidProject> androidProjects = new HashMap<>();
         Map<String, String> moduleCoordinates = new HashMap<>();
+        Map<String, KotlinMultiplatformModel> kotlinMultiplatformModels = new HashMap<>();
         List<InternalIdeaProject> ideaProjects = findProjects(controller);
-        String gradleHome = resolveModels(ideaProjects, controller, syncSettings, kotlinModules, sourceSets, externalModuleDependencySet, androidProjects, moduleCoordinates);
+        String gradleHome = resolveModels(
+                ideaProjects,
+                controller,
+                syncSettings,
+                kotlinModules,
+                sourceSets,
+                externalModuleDependencySet,
+                androidProjects,
+                moduleCoordinates,
+                kotlinMultiplatformModels
+        );
         return new ProjectMetadata(
                 ideaProjects,
                 kotlinModules,
@@ -68,7 +80,8 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
                 externalModuleDependencySet,
                 androidProjects,
                 moduleCoordinates,
-                gradleHome
+                gradleHome,
+                kotlinMultiplatformModels
         );
     }
 
@@ -80,7 +93,8 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
             @NotNull Map<@NotNull String, @NotNull Set<ModuleSourceSet>> sourceSets,
             @NotNull Map<@NotNull String, @NotNull Set<ExternalModuleDependency>> externalModuleDependencySet,
             @NotNull Map<@NotNull String, @NotNull AndroidProject> androidProjects,
-            @NotNull Map<@NotNull String, @NotNull String> moduleCoordinates
+            @NotNull Map<@NotNull String, @NotNull String> moduleCoordinates,
+            @NotNull Map<@NotNull String, @NotNull KotlinMultiplatformModel> kotlinMultiplatformModels
     ) {
         String gradleHome = null;
         for (InternalIdeaProject project : ideaProjects) {
@@ -94,6 +108,10 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
                 KotlinModule kotlinModule = controller.findModel(delegate, KotlinModule.class);
                 if (kotlinModule != null) {
                     kotlinModules.put(moduleFqn, kotlinModule);
+                }
+                KotlinMultiplatformModel kotlinMultiplatformModel = controller.findModel(delegate, KotlinMultiplatformModel.class);
+                if (kotlinMultiplatformModel != null) {
+                    kotlinMultiplatformModels.put(moduleFqn, kotlinMultiplatformModel);
                 }
                 ModuleSourceSets moduleSourceSets = controller.findModel(delegate, ModuleSourceSets.class);
                 sourceSets.put(moduleFqn, moduleSourceSets == null ? Collections.emptySet() : moduleSourceSets.getSourceSets());

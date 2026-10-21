@@ -5,12 +5,14 @@
 // package sources -- no bundled server), creates an isolated VS Code profile
 // preconfigured with `intellij.dev.serverPort`, builds `lsp-router`, and opens it.
 //
-// Usage: node launch-vscode.mjs --bundle-type=<kotlin-server|intellij-server|intellij-server-experimental|goland-server> [--port=9999] [workspace-folder]
+// Usage: node launch-vscode.mjs --bundle-type=<kotlin-server|intellij-server|intellij-server-experimental|goland-server> [--port=9999] [--user-data-dir=<dir>] [workspace-folder]
 //
 // Cross-platform (macOS/Linux/Windows): no shell-specific behavior.
 
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import net from 'node:net';
@@ -108,9 +110,12 @@ function resolveCodeBin() {
 let bundleType = '';
 let serverPort = Number(process.env.SERVER_PORT) || 9999;
 let workspace = '';
+let userDataDirOption = '';
 for (const arg of process.argv.slice(2)) {
   if (arg.startsWith('--bundle-type=')) bundleType = arg.slice('--bundle-type='.length);
   else if (arg.startsWith('--port=')) serverPort = Number(arg.slice('--port='.length));
+  else if (arg.startsWith('--user-data-dir='))
+    userDataDirOption = path.resolve(arg.slice('--user-data-dir='.length));
   else if (arg.startsWith('-')) fail(`Unknown option: ${arg}`);
   else workspace = arg;
 }
@@ -121,21 +126,30 @@ const bundleRelDir = BUNDLE_PACKAGE_DIRS[bundleType];
 if (!bundleRelDir) fail(`Unknown --bundle-type '${bundleType}'. Expected one of: ${bundleKeys}`);
 
 const extensionDir = path.join(WORKSPACE_ROOT, bundleRelDir);
-// Keep this path SHORT: VS Code creates its main IPC socket (e.g. "1.10-main.sock", ~15 chars)
-// directly inside --user-data-dir. macOS caps a Unix socket path at 103 usable chars
-// (sockaddr_un.sun_path is 104 incl. NUL), so a long user-data-dir makes VS Code exit on launch.
 const isoDir = path.join(REPO_ROOT, 'out', 'ls-vsc', bundleType);
-const userDataDir = isoDir; // socket lives directly here; keep it short
 const extensionsDir = path.join(isoDir, 'extensions');
 
-// Guard: VS Code's main IPC socket lives inside --user-data-dir; macOS caps the socket path
-// at 103 chars. Reserve room for the longest socket name VS Code appends (e.g. "/1.10-main.sock").
+// VS Code creates its main IPC socket (e.g. "1.10-main.sock") directly inside --user-data-dir.
+// macOS caps a Unix socket path at 103 usable chars (sockaddr_un.sun_path is 104 incl. NUL),
+// so a long user-data-dir makes VS Code exit on launch. Reserve room for the longest socket name.
 const SOCKET_NAME_RESERVE = '/9.999.9-shared.sock'.length; // generous upper bound
-if (process.platform === 'darwin' && userDataDir.length + SOCKET_NAME_RESERVE > 103) {
+const fitsSocketLimit = (dir) =>
+  process.platform !== 'darwin' || dir.length + SOCKET_NAME_RESERVE <= 103;
+
+// `--user-data-dir` wins. Otherwise, a deep checkout (e.g. a worktree) gets a short per-checkout
+// profile under the home directory.
+function resolveUserDataDir() {
+  if (userDataDirOption) return userDataDirOption;
+  if (fitsSocketLimit(isoDir)) return isoDir;
+  const checkoutId = createHash('sha256').update(REPO_ROOT).digest('hex').slice(0, 8);
+  return path.join(os.homedir(), '.ls-vsc', checkoutId, bundleType);
+}
+const userDataDir = resolveUserDataDir();
+if (!fitsSocketLimit(userDataDir)) {
   fail(
     'Error: --user-data-dir is too long for the macOS Unix-socket limit (103 chars):\n' +
       `  ${userDataDir} (${userDataDir.length} chars)\n` +
-      'VS Code would exit immediately. Clone the repo to a shorter path.',
+      'VS Code would exit immediately. Pass a shorter --user-data-dir=<dir>.',
   );
 }
 
@@ -274,7 +288,7 @@ function waitForPort() {
 await waitForPort();
 
 console.log(
-  green(`Launching VS Code (port ${serverPort}, profile ${isoDir}, router ${routerPath})`),
+  green(`Launching VS Code (port ${serverPort}, profile ${userDataDir}, router ${routerPath})`),
 );
 const codeArgs = [
   `--extensionDevelopmentPath=${extensionDir}`,

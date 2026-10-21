@@ -17,9 +17,11 @@ import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.nio.file.attribute.FileTime
 import java.time.Instant
+import kotlin.io.path.createTempFile
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 import kotlin.io.path.name
+import kotlin.io.path.writeText
 
 // keep in sync with MAVEN_VERSION in language-server/integration-tests/workspace-importer-tests/test/selfContainedMaven.kt
 // and with the download_file entry in language-server/test-api/language_server_test_api_dependencies.bzl
@@ -47,6 +49,44 @@ fun downloadMavenBinaries(): Path {
 
 private fun gradleDistributionUrl(version: String): String =
     "https://cache-redirector.jetbrains.com/services.gradle.org/distributions/gradle-$version-bin.zip"
+
+/**
+ * A Gradle init script that downloads all dependencies through the JetBrains cache redirector, instead of Maven Central,
+ * Google Maven and the Gradle plugin portal.
+ */
+fun createCacheRedirectorInitScript(): Path =
+    createTempFile("lsp-test-cache-redirector-patch", ".gradle").also {
+        it.writeText(
+            """
+            // Rewrites the URL of a public repository in place. Adding a repository to a project would hide the
+            // repositories of the settings, so the lists keep their entries, order and content filters.
+            def redirect(repositories) {
+                def redirects = [
+                    'https://repo.maven.apache.org/maven2': 'https://cache-redirector.jetbrains.com/repo.maven.apache.org/maven2',
+                    'https://repo1.maven.org/maven2': 'https://cache-redirector.jetbrains.com/repo.maven.apache.org/maven2',
+                    'https://dl.google.com/dl/android/maven2': 'https://cache-redirector.jetbrains.com/dl.google.com.android.maven2',
+                    'https://plugins.gradle.org/m2': 'https://cache-redirector.jetbrains.com/plugins.gradle.org/m2',
+                ]
+                repositories.withType(MavenArtifactRepository).configureEach { repo ->
+                    def redirected = redirects[repo.url.toString().replaceAll('/+$', '')]
+                    if (redirected != null) repo.url = redirected
+                }
+            }
+
+            beforeSettings { settings ->
+                redirect(settings.pluginManagement.repositories)
+                if (settings.hasProperty('dependencyResolutionManagement')) {
+                    redirect(settings.dependencyResolutionManagement.repositories)
+                }
+            }
+
+            allprojects {
+                redirect(buildscript.repositories)
+                redirect(repositories)
+            }
+            """.trimIndent()
+        )
+    }
 
 fun downloadGradleBinaries(): Path {
     val targetDir = downloadAndUnzip(gradleDistributionUrl(GRADLE_VERSION), gradleUnzipMutex)

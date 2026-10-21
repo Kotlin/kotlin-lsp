@@ -316,7 +316,7 @@ class LSCompletionProviderHelper(
                     insertCompletion(project, fileForModification, completion.lookup, completionProcess.parameters!!, completionChar)
                     val edits = TextEditsComputer.computeTextEdits(initialText, fileForModification.text)
                     val caretAfter = if (restoreTabOutScopeCaret) {
-                        takeCaretInsideTabOutScope(completionProcess.parameters!!.editor) ?: completionProcess.caret.offset
+                        takeCaretInsideTabOutScope(completionProcess.editor) ?: completionProcess.caret.offset
                     } else {
                         completionProcess.caret.offset
                     }

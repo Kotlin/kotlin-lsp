@@ -20,18 +20,17 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.util.parents
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.features.InspectionProfilePatcher
-import com.jetbrains.ls.api.core.features.lsGetLocalInspections
-import com.jetbrains.ls.api.core.features.lsGetSharedLocalInspectionsFromGlobalTools
-import com.jetbrains.ls.api.core.features.lsIsSuppressed
+import com.jetbrains.ls.api.core.features.LSInspections
+import com.jetbrains.ls.api.core.features.LSInspections.range
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
+import com.jetbrains.ls.api.core.util.isSource
 import com.jetbrains.ls.api.core.util.toTextRange
 import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCodeAction
 import com.jetbrains.ls.api.features.impl.common.modcommands.toModCommandFixes
 import com.jetbrains.ls.api.features.language.LSLanguage
-import com.jetbrains.ls.api.core.util.isSource
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.CodeAction
 import com.jetbrains.lsp.protocol.CodeActionKind
@@ -59,20 +58,23 @@ class LSCommonIntentionFixesCodeActionProvider(
     context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         if (!params.textDocument.isSource()) return@flow
+        val importInspectionProfile = server.config.importInspectionProfile
 
         server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
             readAction {
                 val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
                 val document = virtualFile.findDocument() ?: return@readAction emptyList()
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
-                val offset = params.range.toTextRange(document).startOffset
+                val range = params.range.toTextRange(document)
+                val offset = range.startOffset
                 val psiElement = psiFile.findElementAt(offset)
 
                 // TODO(bartekpacia): centralize common logging so it's not repeated N times across all LS*Providers
                 LOG.debug("request textDocument/diagnostic for ${virtualFile.name}")
 
+                val selection = selectionOf(params, range)
                 val codeActions =
-                    (infoInspections(psiFile, offset, psiElement) + intentions(psiFile, offset))
+                    (infoInspections(psiFile, offset, psiElement, importInspectionProfile) + intentions(psiFile, offset, selection))
                     .toList()
 
                 return@readAction codeActions
@@ -81,20 +83,32 @@ class LSCommonIntentionFixesCodeActionProvider(
     }
 
     context(server: LSServer)
-    private fun infoInspections(psiFile: PsiFile, offset: Int, psiElement: PsiElement?): Sequence<CodeAction> {
+    private fun infoInspections(
+        psiFile: PsiFile,
+        offset: Int,
+        psiElement: PsiElement?,
+        importInspectionProfile: Boolean,
+    ): Sequence<CodeAction> {
         if (psiElement == null) return emptySequence()
         val project = psiFile.project
         val inspectionManager = InspectionManagerEx(project)
         val problemsHolder = ProblemsHolder(inspectionManager, psiFile, true)
-        val infoInspections = lsGetLocalInspections(psiFile, inspectionProfilePatcher, true) +
-                lsGetSharedLocalInspectionsFromGlobalTools(psiFile.language, inspectionProfilePatcher, true)
-        val normalInspections = lsGetLocalInspections(psiFile, inspectionProfilePatcher, false) +
-                lsGetSharedLocalInspectionsFromGlobalTools(psiFile.language, inspectionProfilePatcher,false)
+        val infoInspections = LSInspections.getLocalInspections(
+            psiFile, inspectionProfilePatcher, true, importInspectionProfile = importInspectionProfile,
+        ) + LSInspections.getSharedLocalInspectionsFromGlobalTools(
+            psiFile.project, psiFile.language, inspectionProfilePatcher, true, importInspectionProfile = importInspectionProfile,
+        )
+        val normalInspections = LSInspections.getLocalInspections(
+            psiFile, inspectionProfilePatcher, false, importInspectionProfile = importInspectionProfile,
+        ) + LSInspections.getSharedLocalInspectionsFromGlobalTools(
+            psiFile.project, psiFile.language, inspectionProfilePatcher, false, importInspectionProfile = importInspectionProfile,
+        )
         val fileRange = psiFile.textRange
         val session = LocalInspectionToolSession(psiFile, fileRange, fileRange, null)
         val result = mutableListOf<CodeAction>()
         for ((isInfo, list) in listOf(false to normalInspections, true to infoInspections)) {
-            for (localInspection in list) {
+            for (configuredInspection in list) {
+                val localInspection = configuredInspection.tool
                 val visitor = localInspection.buildVisitor(problemsHolder, true, session)
                 if (visitor == PsiElementVisitor.EMPTY_VISITOR) continue
                 // Same lifecycle as InspectionEngine: some inspections set up state in inspectionStarted
@@ -108,11 +122,9 @@ class LSCommonIntentionFixesCodeActionProvider(
                 }
                 for (descriptor in problemsHolder.results) {
                     if ((isInfo || descriptor.highlightType == ProblemHighlightType.INFORMATION) &&
-                        !lsIsSuppressed(localInspection, descriptor)
+                        !LSInspections.isSuppressed(localInspection, descriptor)
                     ) {
-                        val elementRange = (descriptor.psiElement ?: descriptor.startElement)?.textRange ?: continue
-                        val range = descriptor.textRangeInElement?.shiftRight(elementRange.startOffset)
-                            ?: elementRange
+                        val range = descriptor.range() ?: continue
                         if (!range.containsOffset(offset)) continue
                         for ((name, modCommandData) in lsInspectionManager.createDiagnosticData(descriptor).fixes) {
                             result.add(applyFixCodeAction(name, codeActionKind, modCommandData))
@@ -125,12 +137,21 @@ class LSCommonIntentionFixesCodeActionProvider(
         return result.asSequence()
     }
 
+    /**
+     * The editor selection the intentions see: the request [range], unless it is empty or is the range of one of the
+     * diagnostics of the request. A client (VS Code, Draft) asks for the range of a diagnostic when the caret is inside it
+     * with no selection, so such a range is a caret, not a selection, whatever the trigger kind; otherwise the client
+     * sends its selection. The caret stays at the range start in any case: LSP does not send it, and the start is
+     * where it is for an empty range.
+     */
+    private fun selectionOf(params: CodeActionParams, range: TextRange): TextRange {
+        val isDiagnosticRange = params.context.diagnostics.any { diagnostic -> diagnostic.range == params.range }
+        return if (range.isEmpty || isDiagnosticRange) TextRange(range.startOffset, range.startOffset) else range
+    }
+
     context(server: LSServer)
-    private fun intentions(psiFile: PsiFile, offset: Int): Sequence<CodeAction> {
-        val actionContext = run {
-            val selection = TextRange(offset, offset) // empty selection
-            ActionContext(psiFile.project, psiFile, offset, selection, null)
-        }
+    private fun intentions(psiFile: PsiFile, offset: Int, selection: TextRange): Sequence<CodeAction> {
+        val actionContext = ActionContext(psiFile.project, psiFile, offset, selection, null)
 
         return IntentionManager.getInstance()
             .getAvailableIntentions(languageIds)

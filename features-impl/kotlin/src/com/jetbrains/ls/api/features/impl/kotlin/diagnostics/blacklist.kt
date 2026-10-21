@@ -21,8 +21,4 @@ internal val kotlinQuickFixBlacklist = Blacklist(
         fqcn = "org.jetbrains.kotlin.idea.highlighting.SafeDeleteFix",
         reason = "LSP-970",
     ),
-    BlacklistEntry.Class(
-        fqcn = "org.jetbrains.kotlin.idea.codeInsight.inspections.RemoveAnnotationArgumentOrEntireEntry",
-        reason = "LSP-1956",
-    )
 )

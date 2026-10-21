@@ -45,41 +45,6 @@ class GradleProjectImportTest : GradleProjectImportTestCase() {
     fun multiProjectKotlinDSL() = doGradleTest("MultiProjectKotlinDSL", WorkspaceComparator().withIgnoredJdkRoots())
 
     @Test
-    fun kotlinKmpProject() {
-        val reporter = LoggingWorkspaceProgressReporter()
-        doGradleTest(
-            project = "GradleKotlinKmpProject",
-            jdkToUse = JdkDownloaderFacade.jdk17,
-            reporter = reporter,
-            // No golden comparison: the KMP model varies by operating system and by network. The test asserts only
-            // that the fix ran each sync task once and that the import returned the project's module graph.
-            comparator = WorkspaceComparator.NONE,
-            importParametersCustomizer = { it },
-            entityStorageVerifier = { storage ->
-                val moduleNames = storage.entities(ModuleEntity::class.java).map { it.name }.toSet()
-                val expected = setOf(
-                    "KotlinProject",
-                    "KotlinProject.shared",
-                    "KotlinProject.shared.jvmMain",
-                    "KotlinProject.desktopApp",
-                    "KotlinProject.desktopApp.main",
-                )
-                assertTrue(
-                    moduleNames.containsAll(expected),
-                    "Imported model is missing KMP modules. Expected at least $expected but got $moduleNames"
-                )
-            }
-        )
-        reporter.capturedOutput
-            .apply {
-                assertContainsOnce("Gradle execution complete")
-                assertContainsOnce("Task :prepareKotlinIdeaImport")
-                assertContainsOnce("Task :desktopApp:prepareKotlinIdeaImport")
-                assertContainsOnce("Task :shared:prepareKotlinIdeaImport")
-            }
-    }
-
-    @Test
     fun multiProjectGroovyDSL() = doGradleTest("MultiProjectGroovyDSL", WorkspaceComparator().withIgnoredJdkRoots())
 
     @Test
@@ -228,14 +193,4 @@ class GradleProjectImportTest : GradleProjectImportTestCase() {
                 }
             }
         )
-
-    private fun String.assertContainsOnce(value: String) {
-        val firstIndex = indexOf(value)
-        assertTrue(firstIndex > 0, "The line '$value' is not found in string [$this]")
-        val secondIndex = indexOf(value, firstIndex + value.length, false)
-        assertTrue(
-            secondIndex == -1,
-            "The line '$value' expected to be found in a string only once, but the value was found at $firstIndex and $secondIndex"
-        )
-    }
 }

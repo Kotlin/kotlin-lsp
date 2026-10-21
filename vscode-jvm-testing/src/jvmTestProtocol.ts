@@ -16,6 +16,8 @@ export const jvmSuiteLocation = (binaryClassName: string): string =>
 export interface JvmTestLaunchRequest {
   testIds: TestNodeId[];
   uniqueIds: UniqueTestNode[];
+  /** The tag filters of the run. A `!` prefix excludes. Only the JUnit Platform runners use them. */
+  tags: string[];
 }
 
 /** Mirrors the server's `TestLaunch`: one process to start. */

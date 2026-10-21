@@ -28,6 +28,8 @@ import com.jetbrains.ls.api.features.impl.common.documentHighlight.LSCommonDocum
 import com.jetbrains.ls.api.features.impl.common.foldingRange.LSCommonFoldingRangeProvider
 import com.jetbrains.ls.api.features.impl.common.formatting.LSCommonFormattingProvider
 import com.jetbrains.ls.api.features.impl.common.implementation.LSCommonImplementationProvider
+import com.jetbrains.ls.api.features.impl.common.inspectCode.LSCommonBatchInspectionProvider
+import com.jetbrains.ls.api.features.impl.common.relatedTests.LSCommonRelatedTestsProvider
 import com.jetbrains.ls.api.features.impl.common.references.LSCommonReferencesProvider
 import com.jetbrains.ls.api.features.impl.common.typeDefinition.LSCommonTypeDefinitionProvider
 import com.jetbrains.ls.api.core.util.TargetKind
@@ -45,6 +47,7 @@ import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.kotlinIntentionBlac
 import com.jetbrains.ls.api.features.impl.kotlin.diagnostics.kotlinQuickFixBlacklist
 import com.jetbrains.ls.api.features.impl.kotlin.extract.LSKotlinExtractVariableProvider
 import com.jetbrains.ls.api.features.impl.kotlin.hover.LSKotlinHoverProvider
+import com.jetbrains.ls.api.features.impl.kotlin.inheritedMembers.LSKotlinInheritedMembersProvider
 import com.jetbrains.ls.api.features.impl.kotlin.inlayHints.LSKotlinInlayHintsProvider
 import com.jetbrains.ls.api.features.impl.kotlin.inline.LSKotlinInlineVariableProvider
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
@@ -55,6 +58,7 @@ import com.jetbrains.ls.api.features.impl.kotlin.semanticTokens.LSKotlinSemantic
 import com.jetbrains.ls.api.features.impl.kotlin.signatureHelp.LSKotlinSignatureHelpProvider
 import com.jetbrains.ls.api.features.impl.kotlin.symbols.LSKotlinDocumentSymbolProvider
 import com.jetbrains.ls.api.features.impl.kotlin.symbols.LSKotlinWorkspaceSymbolProvider
+import com.jetbrains.ls.api.features.impl.kotlin.superDeclarations.LSKotlinSuperDeclarationsProvider
 import com.jetbrains.ls.api.features.impl.kotlin.typeHierarchy.LSKotlinTypeHierarchyProvider
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.analyzer.api.AnalyzerContextKind
@@ -85,7 +89,8 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
             supportedLanguages = setOf(LSKotlinLanguage),
             inspectionProfilePatcher = kotlinInspectionPatcher,
         ),
-        LSCommonInspectionFixesCodeActionProvider(setOf(LSKotlinLanguage)),
+        LSCommonInspectionFixesCodeActionProvider(setOf(LSKotlinLanguage), kotlinInspectionPatcher, kotlinQuickFixBlacklist),
+        LSCommonBatchInspectionProvider(setOf(LSKotlinLanguage), kotlinInspectionPatcher),
         LSCommonInspectionSuppressionCodeActionProvider(setOf(LSKotlinLanguage), kotlinInspectionPatcher),
         LSCommonIntentionFixesCodeActionProvider(
             supportedLanguages = setOf(LSKotlinLanguage),
@@ -118,6 +123,9 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
             }
         },
         LSKotlinTypeHierarchyProvider,
+        LSKotlinSuperDeclarationsProvider,
+        LSKotlinInheritedMembersProvider,
+        LSCommonRelatedTestsProvider(setOf(LSKotlinLanguage)),
         LSKotlinCallHierarchyProvider,
         LSKotlinCallHierarchyRenderer
     ),

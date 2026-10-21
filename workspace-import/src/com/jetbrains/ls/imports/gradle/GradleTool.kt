@@ -401,6 +401,10 @@ class GradleTool(
             .configureEnvironment(parameters.options.environment)
             .configureSystemProperties(parameters.options.systemProperties)
             .addInitScripts(initScripts)
+            // The importer supports the intransitive metadata configuration, in which KGP puts the dependencies that
+            // must not reach dependsOn source sets. The Kotlin plugin passes the same argument in
+            // `org.jetbrains.kotlin.idea.gradleJava.configuration.KotlinMppGradleProjectResolver.getExtraCommandLineArgs`.
+            .addArguments("-Pkotlin.mpp.enableIntransitiveMetadataConfiguration=true")
             .forTasks(emptyList())
 
         if (parameters.options.offline) {

@@ -8,6 +8,7 @@ import com.jetbrains.lsp.implementation.throwLspError
 import com.jetbrains.lsp.protocol.Commands.ExecuteCommand
 import com.jetbrains.lsp.protocol.ErrorCodes
 import com.jetbrains.lsp.protocol.ExecuteCommandParams
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonElement
 
 object LSCommand {
@@ -20,6 +21,8 @@ object LSCommand {
             code = ErrorCodes.InvalidRequest,
             cause = null,
         )
-        return descriptor.executor.execute(params.arguments ?: emptyList())
+        return withContext(configuration) {
+            descriptor.executor.execute(params.arguments ?: emptyList())
+        }
     }
 }

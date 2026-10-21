@@ -623,9 +623,11 @@ private fun addFacetRecursive(
         this.module = moduleEntity
     }
 
+// A compiler argument can contain the real workspace path, with the symbolic links resolved, instead of the given path.
 private fun toRelativeKotlinCompilerArguments(json: String, workspacePath: Path): String =
     json.replaceAbsolutePathWithPrefix(m2Repo, MAVEN_PREFIX)
         .replaceAbsolutePathWithPrefix(workspacePath, WORKSPACE_PREFIX)
+        .replaceAbsolutePathWithPrefix(workspacePath.toRealPath(), WORKSPACE_PREFIX)
 
 private fun toAbsoluteKotlinCompilerArguments(json: String, workspacePath: Path): String =
     json.replacePrefixWithAbsolutePath(MAVEN_PREFIX, m2Repo)

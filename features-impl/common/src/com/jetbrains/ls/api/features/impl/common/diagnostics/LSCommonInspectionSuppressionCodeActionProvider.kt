@@ -3,6 +3,7 @@ package com.jetbrains.ls.api.features.impl.common.diagnostics
 
 import com.intellij.codeInspection.InspectionManager
 import com.intellij.codeInspection.InspectionProfileEntry
+import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.SuppressIntentionActionFromFix
 import com.intellij.codeInspection.SuppressQuickFix
@@ -20,8 +21,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.features.InspectionProfilePatcher
-import com.jetbrains.ls.api.core.features.lsGetLocalInspections
-import com.jetbrains.ls.api.core.features.lsGetSharedLocalInspectionsFromGlobalTools
+import com.jetbrains.ls.api.core.features.LSInspections
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.isSource
@@ -70,10 +70,14 @@ class LSCommonInspectionSuppressionCodeActionProvider(
     context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         if (!params.textDocument.isSource()) return@flow
-        val diagnostics = params.diagnosticData<SimpleDiagnosticData>()
-            .filter { it.data.diagnosticSource == LSCommonInspectionDiagnosticProvider.diagnosticSource }
-            .map { it.diagnostic }
-        if (diagnostics.isEmpty()) return@flow
+        val withData = params.diagnosticData<SimpleDiagnosticData>()
+            .filter { LSCommonInspectionDiagnosticProvider.isInspectionSource(it.data.diagnosticSource) }
+        if (withData.isEmpty()) return@flow
+        val diagnostics = withData.map { it.diagnostic }
+        // A batch run may run a tool that is not enabled by default (Run Inspection by Name), so its tools are found by name.
+        val (batch, live) = withData.partition { it.data.diagnosticSource == LSCommonInspectionDiagnosticProvider.batchDiagnosticSource }
+        val batchIds = batch.mapNotNullTo(mutableSetOf()) { it.diagnostic.code?.value?.content }
+        val importInspectionProfile = server.config.importInspectionProfile
 
         server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
             readAction {
@@ -81,9 +85,14 @@ class LSCommonInspectionSuppressionCodeActionProvider(
                 val document = virtualFile.findDocument() ?: return@readAction emptyList()
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
                 // The same tools the diagnostic provider runs, by the id it reports as the diagnostic code.
-                val tools = (lsGetLocalInspections(psiFile, inspectionProfilePatcher) +
-                             lsGetSharedLocalInspectionsFromGlobalTools(psiFile.language, inspectionProfilePatcher))
-                    .associateBy { it.id }
+                val liveTools = if (live.isEmpty()) emptyList() else
+                    LSInspections.getLocalInspections(
+                        psiFile, inspectionProfilePatcher, importInspectionProfile = importInspectionProfile,
+                    ) +
+                    LSInspections.getSharedLocalInspectionsFromGlobalTools(
+                        psiFile.project, psiFile.language, inspectionProfilePatcher, importInspectionProfile = importInspectionProfile,
+                    )
+                val tools = (liveTools.map { it.tool } + batchTools(psiFile, batchIds, importInspectionProfile)).associateBy { it.id }
                 diagnostics.flatMap { diagnostic ->
                     val tool = tools[diagnostic.code?.value?.content] ?: return@flatMap emptyList()
                     val offset = document.offsetByPosition(diagnostic.range.start)
@@ -93,6 +102,19 @@ class LSCommonInspectionSuppressionCodeActionProvider(
                 }
             }
         }.forEach { codeAction -> emit(codeAction) }
+    }
+
+    /** The tools named by [inspectionIds], the codes of batch diagnostics; none without codes. */
+    private fun batchTools(psiFile: PsiFile, inspectionIds: Set<String>, importInspectionProfile: Boolean): List<LocalInspectionTool> {
+        if (inspectionIds.isEmpty()) return emptyList()
+        return (LSInspections.getLocalInspections(
+                    psiFile, inspectionProfilePatcher, inspectionIds = inspectionIds, importInspectionProfile = importInspectionProfile,
+                ) +
+                LSInspections.getSharedLocalInspectionsFromGlobalTools(
+                    psiFile.project, psiFile.language, inspectionProfilePatcher, inspectionIds = inspectionIds,
+                    importInspectionProfile = importInspectionProfile,
+                ))
+            .map { it.tool }
     }
 
     /** The suppression actions of [tool] at [offset], in the order the IDE shows them. */

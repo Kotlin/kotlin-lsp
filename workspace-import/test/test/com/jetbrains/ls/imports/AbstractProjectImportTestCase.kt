@@ -103,6 +103,7 @@ abstract class AbstractProjectImportTestCase {
         comparator: WorkspaceComparator = WorkspaceComparator(),
         entityStorageVerifier: (EntityStorage) -> Unit = { },
         projectFile: String? = null,
+        goldenFileName: String = "workspace.json",
         importParametersCustomizer: (WorkspaceImportParameters) -> WorkspaceImportParameters = { it }
     ) {
         val projectDir = testDataDir / project
@@ -144,13 +145,13 @@ abstract class AbstractProjectImportTestCase {
         }
 
         if (storage == null) {
-            assertFalse((projectDir / "workspace.json").exists(), "Workspace import failed")
+            assertFalse((projectDir / goldenFileName).exists(), "Workspace import failed")
             return
         }
 
         entityStorageVerifier(storage)
 
-        comparator.compare(projectDir / "workspace.json", workspaceData(storage, projectDir), ::cropJarPaths)
+        comparator.compare(projectDir / goldenFileName, workspaceData(storage, projectDir), ::cropJarPaths)
     }
 
     // 1. ~/.gradle/ paths contain random hashes
@@ -160,7 +161,7 @@ abstract class AbstractProjectImportTestCase {
     protected fun cropJarPaths(jsonString: String): String {
         var result = jsonString
         result = result.replace("\\\\\\\\", "/").replace("\\\\", "/")
-        result = """[^"]*gradle/caches/([^"]*?)/[^/.]*/([^/"]*\.jar[\\"])""".toRegex()
+        result = """[^"]*gradle/caches/([^"]*?)/[^/.]*/([^/"]*\.(?:jar|klib)[\\"])""".toRegex()
             .replace(result) {
                 "<GRADLE_REPO>/${it.groupValues[1]}/#####/${it.groupValues[2]}"
             }
@@ -193,14 +194,6 @@ abstract class AbstractProjectImportTestCase {
             return this.name.compareTo(other.name)
         }
         return 0
-    }
-
-    protected fun withConditionalScopedSystemProperty(condition: () -> Boolean, key: String, value: String, action: () -> Unit) {
-        if (condition()) {
-            withScopedSystemProperties(key to value, action = action)
-        } else {
-            action()
-        }
     }
 
     protected fun withScopedSystemProperties(vararg properties: Pair<String, String>, action: () -> Unit) {

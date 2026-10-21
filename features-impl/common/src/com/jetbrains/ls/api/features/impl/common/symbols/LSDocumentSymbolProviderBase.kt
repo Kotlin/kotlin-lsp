@@ -16,7 +16,7 @@ abstract class LSDocumentSymbolProviderBase<T> : LSDocumentSymbolProvider {
     context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getDocumentSymbols(params: DocumentSymbolParams): Flow<DocumentSymbol> = flow {
         server.withAnalysisContext {
-            lsDocumentSymbols(project, params, createCustomizer())
+            lsDocumentSymbols(project, params, createCustomizer(), withOrigin = server.config.clientSupportsDocumentSymbolOrigin)
         }.forEach { documentSymbol -> emit(documentSymbol) }
     }
 

@@ -12,8 +12,8 @@ import com.intellij.util.InjectionUtils
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.features.InspectionProfilePatcher
 import com.jetbrains.ls.api.core.features.LSInjectedFile
+import com.jetbrains.ls.api.core.features.LSInspections
 import com.jetbrains.ls.api.core.features.lsCollectInjectedFiles
-import com.jetbrains.ls.api.core.features.lsRunInspectionsOn
 import com.jetbrains.ls.api.core.features.toHostLspRange
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
@@ -42,6 +42,7 @@ class LSCommonInjectionInspectionDiagnosticProvider(
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
         if (!params.textDocument.isSource()) return@flow
         val job = currentCoroutineContext().job
+        val importInspectionProfile = server.config.importInspectionProfile
         val diagnostics = server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
             val injectedFiles = readAction {
                 val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction null
@@ -53,7 +54,9 @@ class LSCommonInjectionInspectionDiagnosticProvider(
                 InjectedFiles(hostDocument, lsCollectInjectedFiles(hostFile, job))
             } ?: return@withAnalysisContextAndFileSettings emptyList()
             val injectedLanguageManager = InjectedLanguageManager.getInstance(project)
-            injectedFiles.files.flatMap { injected -> runInspections(injected, injectedFiles.hostDocument, injectedLanguageManager) }
+            injectedFiles.files.flatMap { injected ->
+                runInspections(injected, injectedFiles.hostDocument, injectedLanguageManager, importInspectionProfile)
+            }
         }
         diagnostics.forEach { diagnostic -> emit(diagnostic) }
     }
@@ -62,18 +65,20 @@ class LSCommonInjectionInspectionDiagnosticProvider(
         injected: LSInjectedFile,
         hostDocument: Document,
         injectedLanguageManager: InjectedLanguageManager,
+        importInspectionProfile: Boolean,
     ): List<Diagnostic> {
         val psiFile = injected.psiFile
         val lenient = readAction {
             if (!psiFile.isValid) return@readAction null
             injectedLanguageManager.shouldInspectionsBeLenient(psiFile) || injectedLanguageManager.isFrankensteinInjection(psiFile)
         } ?: return emptyList()
-        val diagnostics = lsRunInspectionsOn(
+        val diagnostics = LSInspections.runInspectionsOn(
             psiFile = psiFile,
             language = psiFile.language,
             toLspRange = { injected.toHostLspRange(it, hostDocument) },
             onTheFly = true,
             inspectionProfilePatcher = inspectionProfilePatcher,
+            importInspectionProfile = importInspectionProfile,
             diagnosticDataFactory = { _, _ -> null },
         )
         // A lenient or Frankenstein injection has unknown text in or between its fragments, so only an error is trustworthy.

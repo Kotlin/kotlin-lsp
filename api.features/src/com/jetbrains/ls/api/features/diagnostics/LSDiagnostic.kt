@@ -53,8 +53,8 @@ object LSDiagnostic {
 
         val diagnostics = LSConcurrentResponseHandler.respondDirectlyWithResultsCollectedConcurrently(
             providers = configuration.entriesFor<LSCompilationDiagnosticProvider>(params.textDocument),
-            getResults = { diagnosticProvider -> diagnosticProvider.getDiagnostics(params) },
-        ).map { it.copy(data = null) }
+            getResults = { diagnosticProvider -> diagnosticProvider.getCompilationErrors(params) },
+        )
 
         return DocumentDiagnosticReport(
             kind = DocumentDiagnosticReportKind.Full,

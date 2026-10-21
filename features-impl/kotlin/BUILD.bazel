@@ -1,6 +1,6 @@
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
 load("@community//platform/build-scripts/bazel-rules:content_module_jar.bzl", "content_module_jar")
-load("@rules_jvm//:jvm.bzl", "jvm_library", "jvm_provided_library")
+load("@rules_jvm//:jvm.bzl", "jvm_library")
 
 ### auto-generated section `dev language-server.api.features.impl.kotlin` start
 content_module_jar(module = ":kotlin")
@@ -18,11 +18,6 @@ create_kotlinc_options(
     ],
     x_context_parameters = True,
     x_when_guards = True,
-)
-
-jvm_provided_library(
-    name = "community_plugins_kotlin_code-insight_kotlin-codeInsight-inspections_provided",
-    lib = "@community//plugins/kotlin/code-insight/inspections-k2:kotlin-codeInsight-inspections",
 )
 
 jvm_library(
@@ -102,7 +97,6 @@ jvm_library(
         "@community//plugins/kotlin/refactorings/kotlin.refactorings.common:kotlin-refactorings-base",
         "@community//platform/refactoring",
         "//language-server/community/features-impl/kotlin/psi",
-        ":community_plugins_kotlin_code-insight_kotlin-codeInsight-inspections_provided",
     ],
 )
 
@@ -144,8 +138,6 @@ jvm_library(
         "@community//platform/indexing-api:indexing_test_lib",
         "@community//plugins/kotlin/base/indices:indices_test_lib",
         "@community//plugins/kotlin/base/project-structure:project-structure_test_lib",
-        "@community//plugins/kotlin/code-insight/inspections-k2:kotlin-codeInsight-inspections",
-        "@community//plugins/kotlin/code-insight/inspections-k2:kotlin-codeInsight-inspections_test_lib",
         "@community//plugins/kotlin/code-insight/intentions-k2:kotlin-codeInsight-intentions_test_lib",
         "@community//plugins/kotlin/formatter/minimal:minimal_test_lib",
         "@community//platform/editor-ui-ex:editor-ex_test_lib",

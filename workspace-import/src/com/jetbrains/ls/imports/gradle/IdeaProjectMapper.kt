@@ -6,6 +6,7 @@ package com.jetbrains.ls.imports.gradle
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.util.containers.addIfNotNull
 import com.jetbrains.ls.imports.gradle.action.ProjectMetadata
+import com.jetbrains.ls.imports.gradle.kmp.KotlinMultiplatformMapper
 import com.jetbrains.ls.imports.gradle.model.KotlinModule
 import com.jetbrains.ls.imports.gradle.model.ModuleSourceSet
 import com.jetbrains.ls.imports.json.ContentRootData
@@ -41,10 +42,12 @@ internal class IdeaProjectMapper {
         val javaSettings: MutableList<JavaSettingsData> = mutableListOf()
 
         fillProjectJdkCache(metadata.includedProjects)
-        val dependencyResolver = SourceSetDependencyResolver(metadata)
+        val kotlinMultiplatformMapper = KotlinMultiplatformMapper(metadata.kotlinMultiplatformModels, metadata.androidProjects)
+        val dependencyResolver = SourceSetDependencyResolver(metadata, kotlinMultiplatformMapper)
         val contentRootResolver = GradleContentRootResolver(metadata)
 
         val modules = mutableMapOf<String, ModuleData>()
+        val kotlinMultiplatformSettings = mutableListOf<KotlinSettingsData>()
         metadata.includedProjects.flatMap { it.modules }
             .map { module ->
                 splitModulePerSourceSet(
@@ -53,7 +56,9 @@ internal class IdeaProjectMapper {
                     buildRoot = buildRoot,
                     dependencyResolver = dependencyResolver,
                     contentRootResolver = contentRootResolver,
+                    kotlinMultiplatformMapper = kotlinMultiplatformMapper,
                     javaSettingsConsumer = { moduleJavaSettings -> javaSettings.add(moduleJavaSettings) },
+                    kotlinSettingsConsumer = { settings -> kotlinMultiplatformSettings.add(settings) },
                     sdkConsumer = { sdk -> sdks.add(sdk) }
                 )
             }
@@ -63,12 +68,18 @@ internal class IdeaProjectMapper {
             .filterNotNull()
         sdks.addAll(projectJdks)
 
+        val kotlinMultiplatformModuleNames = kotlinMultiplatformSettings.map { it.module }.toSet()
         return WorkspaceData(
             modules = modules.values.toList(),
-            libraries = dependencyResolver.getProjectLibraries(),
+            libraries = dependencyResolver.getProjectLibraries() + kotlinMultiplatformMapper.libraries,
             sdks = sdks,
             javaSettings = javaSettings,
-            kotlinSettings = calculateKotlinSettings(modules, metadata.kotlinModules, metadata.sourceSets)
+            // The KMP mapper wrote the Kotlin settings of its modules; the JVM path would add a second, JVM-only facet.
+            kotlinSettings = calculateKotlinSettings(
+                modules.filterKeys { it !in kotlinMultiplatformModuleNames },
+                metadata.kotlinModules,
+                metadata.sourceSets
+            ) + kotlinMultiplatformSettings
         )
     }
 
@@ -163,7 +174,9 @@ internal class IdeaProjectMapper {
         buildRoot: Path,
         dependencyResolver: SourceSetDependencyResolver,
         contentRootResolver: GradleContentRootResolver,
+        kotlinMultiplatformMapper: KotlinMultiplatformMapper,
         javaSettingsConsumer: (JavaSettingsData) -> Unit,
+        kotlinSettingsConsumer: (KotlinSettingsData) -> Unit,
         sdkConsumer: (SdkData) -> Unit
     ): Map<String, ModuleData> {
         val modules = mutableMapOf<String, ModuleData>()
@@ -190,14 +203,39 @@ internal class IdeaProjectMapper {
             externalProjectPath = projectDirectory,
             externalProjectId = projectId,
         )
-        val associatedSourceSets = metadata.sourceSets[module.name]
-        if (associatedSourceSets.isNullOrEmpty()) {
-            LOG.info("${module.name} has an empty set of source sets")
-            return modules
-        }
-        val moduleJavaSettings: MutableList<JavaSettingsData> = mutableListOf()
         val projectJavaLevel = projectJavaLanguageLevel.computeIfAbsent(module.project.name) {
             module.project.getJavaLanguageLevel(metadata)
+        }
+        val moduleJavaSettings: MutableList<JavaSettingsData> = mutableListOf()
+        val kotlinMultiplatformModules = kotlinMultiplatformMapper.map(
+            module = module,
+            contentRootResolver = contentRootResolver,
+            dependencyIndex = dependencyResolver.dependencyFileIndex,
+            commonDependencies = listOf(DependencyData.ModuleSource, sdkDependencyData),
+            gradleProjectId = projectId,
+            javaSourceSetNames = metadata.sourceSets[module.name].orEmpty().mapTo(HashSet()) { it.name },
+        )
+        if (kotlinMultiplatformModules != null) {
+            kotlinMultiplatformModules.modules.forEach { modules[it.name] = it }
+            kotlinMultiplatformModules.kotlinSettings.forEach(kotlinSettingsConsumer)
+            // Every KMP module gets the project's Java level, as `com.intellij.externalSystem.JavaModuleData` in the
+            // IDE. The compiler outputs of a compilation module are its run classpath.
+            kotlinMultiplatformModules.modules.forEach { kotlinModule ->
+                moduleJavaSettings += getJavaSettingsData(
+                    moduleName = kotlinModule.name,
+                    module = module,
+                    targetJavaVersion = projectJavaLevel,
+                    compilerOutputs = kotlinMultiplatformModules.compilerOutputs[kotlinModule.name].orEmpty(),
+                )
+            }
+        }
+        // A KMP module replaces the Java source set of the same name: KGP registers `jvmMain` and `jvmTest` as Java
+        // source sets, and the Kotlin plugin reuses their module for the JVM compilations.
+        val associatedSourceSets = metadata.sourceSets[module.name].orEmpty()
+            .filter { kotlinMultiplatformModules == null || it.name !in kotlinMultiplatformModules.sourceSetNames }
+        if (associatedSourceSets.isEmpty() && kotlinMultiplatformModules == null) {
+            LOG.info("${module.name} has an empty set of source sets")
+            return modules
         }
         associatedSourceSets.forEach { sourceSet ->
             val sourceSetDependencies = mutableListOf<DependencyData>()

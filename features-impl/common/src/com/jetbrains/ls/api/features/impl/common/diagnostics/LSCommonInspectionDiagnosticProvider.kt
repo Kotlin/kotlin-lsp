@@ -3,7 +3,7 @@ package com.jetbrains.ls.api.features.impl.common.diagnostics
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.features.InspectionProfilePatcher
-import com.jetbrains.ls.api.core.features.lsRunInspections
+import com.jetbrains.ls.api.core.features.LSInspections
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.features.diagnostics.LSDiagnosticProvider
@@ -29,13 +29,26 @@ class LSCommonInspectionDiagnosticProvider(
     
     companion object {
         val diagnosticSource: DiagnosticSource = DiagnosticSource("inspection")
+
+        /**
+         * The source of a problem of a batch run (`intellij/inspectCode`). Such a problem carries no fixes: the inspection
+         * fixes provider runs its inspection on the file again when the client asks for its code actions.
+         */
+        val batchDiagnosticSource: DiagnosticSource = DiagnosticSource("batchInspection")
+
+        /** Whether [source] is an inspection problem, of the editor or of a batch run. */
+        fun isInspectionSource(source: DiagnosticSource): Boolean = source == diagnosticSource || source == batchDiagnosticSource
     }
 
     context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getDiagnostics(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
         val onTheFly = true
+        val importInspectionProfile = server.config.importInspectionProfile
         val diagnostics = server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
-            return@withAnalysisContextAndFileSettings lsRunInspections(params, project, onTheFly, inspectionProfilePatcher) { _, problemDescriptor ->
+            return@withAnalysisContextAndFileSettings LSInspections.runInspections(
+                params, project, onTheFly, inspectionProfilePatcher,
+                importInspectionProfile = importInspectionProfile,
+            ) { _, problemDescriptor ->
                 LSP.json.encodeToJsonElement(lsInspectionManager.createDiagnosticData(problemDescriptor))
             }
         }

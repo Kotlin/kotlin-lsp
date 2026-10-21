@@ -182,6 +182,12 @@ export function registerInitializationOptionsContributor(
   contributedSettings.push(...settings);
 }
 
+function registerIntellijSettingsContributor(): void {
+  registerInitializationOptionsContributor(() => ({
+    importInspectionProfile: false,
+  }));
+}
+
 interface LspClientPolicyOptions {
   getAcceptedEulaHash: AcceptedEulaHashProvider;
   checkEulaAccepted: () => Promise<boolean>;
@@ -198,6 +204,7 @@ export function initLspClient({
   setLspActionsAvailable(true);
   configuredClientFeatureFactories = [...clientFeatureFactories];
   registerIntellijExtensionsInitOption();
+  registerIntellijSettingsContributor();
   const restartServer = (): Promise<boolean> =>
     runWithEulaGate({
       checkEulaAccepted,
