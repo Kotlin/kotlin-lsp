@@ -1,7 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.callHierarchy
 
-import com.intellij.ide.hierarchy.HierarchyBrowserScopes.SCOPE_PROJECT
+import com.intellij.ide.hierarchy.HierarchyBrowserBaseEx.SCOPE_ALL
 import com.intellij.ide.hierarchy.HierarchyTreeStructure
 import com.intellij.ide.hierarchy.ReferenceAwareNodeDescriptor
 import com.intellij.openapi.application.readAction
@@ -56,7 +56,7 @@ abstract class LSCallHierarchyProviderBase<Element : PsiElement> : LSCallHierarc
             readAction {
                 val member = resolvePsiMember(itemData, project) ?: return@readAction null
 
-                val treeStructure = getIncomingCallsTreeStructure(project, member, SCOPE_PROJECT)
+                val treeStructure = getIncomingCallsTreeStructure(project, member, SCOPE_ALL)
                 val children = treeStructure.getChildElements(treeStructure.rootElement)
 
                 children.mapNotNull { child ->
@@ -86,7 +86,7 @@ abstract class LSCallHierarchyProviderBase<Element : PsiElement> : LSCallHierarc
             readAction {
                 val member = resolvePsiMember(itemData, project) ?: return@readAction null
 
-                val treeStructure = getOutgoingCallsTreeStructure(project, member, SCOPE_PROJECT)
+                val treeStructure = getOutgoingCallsTreeStructure(project, member, SCOPE_ALL)
                 val children = treeStructure.getChildElements(treeStructure.rootElement)
                 val document = member.containingFile.fileDocument
 

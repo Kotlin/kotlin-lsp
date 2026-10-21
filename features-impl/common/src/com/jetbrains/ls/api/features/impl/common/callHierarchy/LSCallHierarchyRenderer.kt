@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features.impl.common.callHierarchy
 
 import com.intellij.ide.hierarchy.ReferenceAwareNodeDescriptor
+import com.intellij.psi.PsiCompiledElement
 import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.LSLanguageSpecificConfigurationEntry
@@ -16,7 +17,10 @@ interface LSCallHierarchyRenderer: LSLanguageSpecificConfigurationEntry {
     companion object {
         context(configuration: LSConfiguration)
         fun createCallHierarchyItemFor(descriptor: ReferenceAwareNodeDescriptor): CallHierarchyItem? {
-            val uri = descriptor.enclosingElement?.containingFile?.virtualFile?.uri ?: return null
+            val element = descriptor.enclosingElement ?: return null
+            if (element is PsiCompiledElement) return null
+
+            val uri = element.containingFile.virtualFile?.uri ?: return null
             return configuration.entriesFor<LSCallHierarchyRenderer>(uri).map { it.createCallHierarchyItem(descriptor) }.singleOrNull()
         }
     }
