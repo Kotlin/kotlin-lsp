@@ -38,15 +38,24 @@ export function launchAndCollectOutput({
 }: TestProcessLaunch): Promise<number | undefined> {
   return new Promise((resolve, reject) => {
     let exitCode: number | undefined;
+    let ended = false;
     const subscriptions: Disposable[] = [];
     // Single exit path: the session can end in three ways, and each has to unsubscribe.
     const settle = (outcome: () => void): void => {
+      ended = true;
       for (const subscription of subscriptions) subscription.dispose();
       subscriptions.length = 0;
       outcome();
     };
     const isOurs = (session: DebugSession): boolean =>
       (session.configuration as TrackedDebugConfiguration).testRunToken === config.testRunToken;
+    // VS Code stops a session of a test run in two steps: while the run goes on, the first stop only
+    // cancels the run. A cancel in the Testing view cancels the run already, so only the second stop
+    // ends the process.
+    const stop = async (session: DebugSession): Promise<void> => {
+      await debug.stopDebugging(session);
+      if (!ended) await debug.stopDebugging(session);
+    };
 
     subscriptions.push(
       debug.registerDebugAdapterTrackerFactory(config.type, {
@@ -71,11 +80,8 @@ export function launchAndCollectOutput({
       // on termination, and the session outlives the extension's interest in it either way.
       debug.onDidStartDebugSession((session) => {
         if (!isOurs(session)) return;
-        if (token.isCancellationRequested) void debug.stopDebugging(session);
-        else
-          subscriptions.push(
-            token.onCancellationRequested(() => void debug.stopDebugging(session)),
-          );
+        if (token.isCancellationRequested) void stop(session);
+        else subscriptions.push(token.onCancellationRequested(() => void stop(session)));
       }),
     );
 
