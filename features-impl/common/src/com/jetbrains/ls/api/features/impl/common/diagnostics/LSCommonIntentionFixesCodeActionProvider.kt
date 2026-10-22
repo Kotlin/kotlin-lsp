@@ -58,7 +58,6 @@ class LSCommonIntentionFixesCodeActionProvider(
     context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         if (!params.textDocument.isSource()) return@flow
-        val importInspectionProfile = server.config.importInspectionProfile
 
         server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
             readAction {
@@ -74,7 +73,7 @@ class LSCommonIntentionFixesCodeActionProvider(
 
                 val selection = selectionOf(params, range)
                 val codeActions =
-                    (infoInspections(psiFile, offset, psiElement, importInspectionProfile) + intentions(psiFile, offset, selection))
+                    (infoInspections(psiFile, offset, psiElement) + intentions(psiFile, offset, selection))
                     .toList()
 
                 return@readAction codeActions
@@ -83,13 +82,9 @@ class LSCommonIntentionFixesCodeActionProvider(
     }
 
     context(server: LSServer)
-    private fun infoInspections(
-        psiFile: PsiFile,
-        offset: Int,
-        psiElement: PsiElement?,
-        importInspectionProfile: Boolean,
-    ): Sequence<CodeAction> {
+    private fun infoInspections(psiFile: PsiFile, offset: Int, psiElement: PsiElement?): Sequence<CodeAction> {
         if (psiElement == null) return emptySequence()
+        val importInspectionProfile = server.config.importInspectionProfile
         val project = psiFile.project
         val inspectionManager = InspectionManagerEx(project)
         val problemsHolder = ProblemsHolder(inspectionManager, psiFile, true)
