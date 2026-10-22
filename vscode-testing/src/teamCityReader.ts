@@ -47,8 +47,11 @@ export class TeamCityReader {
   private handle(message: ServiceMessage): void {
     const { attributes } = message;
     switch (message.name) {
+      case 'suiteTreeStarted':
+        this.started(attributes);
+        break;
       case 'suiteTreeNode':
-        this.report.testQueued(this.named(attributes));
+        this.report.testQueued(this.started(attributes));
         break;
       case 'testStarted':
         if (this.holdsConfiguration(attributes)) break;
@@ -116,7 +119,7 @@ export class TeamCityReader {
     };
   }
 
-  /** A runner may name a node only when it starts it, and by its name alone after that. */
+  /** A runner may name a node only when it lists it in its plan or starts it, and by its name alone after that. */
   private started(attributes: MessageAttributes): TestRunNode | undefined {
     const node = this.named(attributes);
     if (node && attributes.name) this.nodesByName.set(attributes.name, node);

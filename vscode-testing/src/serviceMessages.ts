@@ -72,12 +72,17 @@ export interface TestSuiteFinished extends MessageWithAttributes {
   readonly testDuration?: number;
 }
 
+export interface SuiteTreeStarted extends MessageWithAttributes {
+  readonly name: 'suiteTreeStarted';
+  readonly suiteName: string;
+}
+
 export interface SuiteTreeNode extends MessageWithAttributes {
   readonly name: 'suiteTreeNode';
   readonly testName: string;
 }
 
-// `MessageWithAttributes` is deliberately NOT a member here (only the 9 known variants are): a
+// `MessageWithAttributes` is deliberately NOT a member here (only the 10 known variants are): a
 // member with a plain `string` name would make every other member's `name` compatible with it too,
 // which defeats `switch (message.name)` narrowing for all of them, everywhere this type is consumed
 // (TS has no way to type "any string except these literals" — confirmed, not a guess). Any other/
@@ -92,6 +97,7 @@ export type ServiceMessage =
   | TestStdErr
   | TestSuiteStarted
   | TestSuiteFinished
+  | SuiteTreeStarted
   | SuiteTreeNode;
 
 const MESSAGE_START = '##teamcity[';
@@ -162,6 +168,8 @@ function toServiceMessage(name: string, attributes: Record<string, string>): Ser
         suiteName: attributes.name,
         testDuration: parseDuration(attributes.duration),
       };
+    case 'suiteTreeStarted':
+      return { name, attributes, suiteName: attributes.name };
     case 'suiteTreeNode':
       return { name, attributes, testName: attributes.name };
     default:
@@ -192,7 +200,7 @@ class ServiceMessageParser {
     if (this.text[this.pos] === "'") {
       const argument = this.value();
       // The quoted-argument form is used by generic/other messages (e.g. `buildStatus 'SUCCESS'`),
-      // never by any of our 9 known variants — see the comment on `ServiceMessage`.
+      // never by any of our 10 known variants — see the comment on `ServiceMessage`.
       return (
         argument === undefined ? { name, attributes: {} } : { name, attributes: {}, argument }
       ) as ServiceMessage;

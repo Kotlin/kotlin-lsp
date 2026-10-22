@@ -527,6 +527,61 @@ describe('what a node is called', () => {
     assert.equal(tree.get(METHOD_ID)?.item.label, 'test');
     assert.equal(tree.get('moduleA/com.example.Foo#paramTest')?.item.label, 'paramTest');
   });
+
+  // VS Code keeps the label a node has when a run first reports it, and a plan reports it first.
+  test('a node the runner lists in its plan has its name before it is queued', () => {
+    const { feed, calls, tree } = readerFor();
+
+    feed(
+      teamcity('suiteTreeStarted', {
+        nodeId: 'class',
+        locationHint: CLASS_HINT,
+        name: 'Calculator',
+      }),
+      teamcity('suiteTreeNode', {
+        nodeId: 'test',
+        parentNodeId: 'class',
+        locationHint: METHOD_HINT,
+        name: 'Addition returns correct result',
+      }),
+    );
+
+    assert.deepEqual(calls, [`enqueued ${METHOD_ID}`]);
+    assert.equal(tree.get(METHOD_ID)?.item.label, 'Addition returns correct result');
+    assert.equal(tree.get('moduleA/com.example.Foo')?.item.label, 'Calculator');
+  });
+
+  test('an invocation the runner lists in its plan is the node it runs later', () => {
+    const { feed, calls, tree } = readerFor();
+
+    feed(
+      teamcity('suiteTreeStarted', { nodeId: 'class', locationHint: CLASS_HINT }),
+      teamcity('suiteTreeStarted', {
+        nodeId: 'method',
+        parentNodeId: 'class',
+        locationHint: PARAM_HINT,
+        name: 'Adds numbers',
+      }),
+      teamcity('suiteTreeNode', {
+        nodeId: 'invocation-1',
+        parentNodeId: 'method',
+        locationHint: PARAM_HINT,
+        name: '[1] one',
+      }),
+      '##teamcity[treeEnded]',
+      teamcity('testSuiteStarted', { nodeId: 'method', locationHint: PARAM_HINT }),
+      teamcity('testStarted', {
+        nodeId: 'invocation-1',
+        parentNodeId: 'method',
+        locationHint: PARAM_HINT,
+        name: '[1] one',
+      }),
+    );
+
+    assert.deepEqual(calls, ['enqueued moduleA/invocation-1', 'started moduleA/invocation-1']);
+    assert.equal(tree.get('moduleA/com.example.Foo#paramTest')?.item.label, 'Adds numbers');
+    assert.equal(tree.get('moduleA/invocation-1')?.item.label, '[1] one');
+  });
 });
 
 describe('what a runner message reports', () => {
