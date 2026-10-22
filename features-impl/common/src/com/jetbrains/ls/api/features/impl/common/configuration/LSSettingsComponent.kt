@@ -12,12 +12,12 @@ import com.jetbrains.ls.api.core.RootUriKey
 import com.jetbrains.ls.api.core.util.toPath
 import com.jetbrains.ls.snapshot.api.impl.core.LSConfigurationData
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceComponent
-import java.nio.file.Files
 import java.nio.file.Path
 
 
 internal class State(
     val inspectionContext: LSInspectionContext,
+    val scopeContext: LSScopeContext,
     val settingsRoot: Path? = null
 )
 
@@ -26,13 +26,13 @@ internal class State(
  */
 internal object LSSettingsComponent : WorkspaceComponent<State> {
     override fun init(configData: LSConfigurationData): State {
-        val root = configData[RootUriKey]?.toPath() ?: return State(LSInspectionContext.empty())
+        val root = configData[RootUriKey]?.toPath()
+            ?: return State(LSInspectionContext.empty(), LSScopeContext.empty())
 
         val settingsRoot = root.resolve(Project.DIRECTORY_STORE_FOLDER)
-        if (!Files.isDirectory(settingsRoot)) return State(inspectionContext = LSInspectionContext.empty())
-
         return State(
             inspectionContext = LSInspectionContext.new(settingsRoot),
+            scopeContext = LSScopeContext.new(settingsRoot),
             settingsRoot = settingsRoot,
         )
     }
@@ -41,8 +41,9 @@ internal object LSSettingsComponent : WorkspaceComponent<State> {
         if (state.settingsRoot == null) return state
 
         return State(
-            LSInspectionContext.new(state.settingsRoot),
-            state.settingsRoot,
+            inspectionContext = LSInspectionContext.new(state.settingsRoot),
+            scopeContext = LSScopeContext.new(state.settingsRoot),
+            settingsRoot = state.settingsRoot,
         )
     }
 
@@ -72,6 +73,7 @@ fun AnalyzerContainerBuilder.registerApplicationLSSettings() {
 
 private fun AnalyzerContainerBuilder.registerApplicationLSSettings(state: State) {
     serviceDoNotDispose(InspectionProfileManager::class.java, state.inspectionContext.manager)
+    serviceDoNotDispose(LSScopeStorage::class.java, state.scopeContext.storage)
 }
 
 context(server: LSServer)
