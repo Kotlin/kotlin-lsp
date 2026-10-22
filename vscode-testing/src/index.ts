@@ -16,6 +16,7 @@ export type {
   TestRunGroup,
   TestRunInput,
   TestRunner,
+  UnreportedNodes,
 } from './testLanguage';
 export type {
   TestDiscoveryCommands,

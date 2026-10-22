@@ -1,6 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 import type { CancellationToken, TestRun, Uri } from 'vscode';
 import type { ServerCapabilities } from 'vscode-languageclient/node';
+import type { TestFailure } from './testFailure';
 import type { TestItemDto, TestNodeId, UniqueTestNode } from './testProtocol';
 import type { TestRunReport } from './testRunReport';
 
@@ -28,7 +29,20 @@ export interface TestDiscovery {
 }
 
 export interface TestRunner {
-  run(input: TestRunInput): Promise<void>;
+  /** Runs a group. A runner that knows more than the exit code can say what the run did with the nodes it skipped. */
+  run(input: TestRunInput): Promise<UnreportedNodes | void>;
+}
+
+/**
+ * What a node of a group gets when its run reported nothing for it. Without it, a test is skipped, and a requested
+ * node is skipped after a clean exit and errored after a failed one.
+ */
+export interface UnreportedNodes {
+  /**
+   * The failure that kept [node] from running, `'none'` for a node the run left out, which keeps no state, or
+   * undefined for the default.
+   */
+  outcomeOf(node: TestItemDto): TestFailure | 'none' | undefined;
 }
 
 export interface TestRunInput {

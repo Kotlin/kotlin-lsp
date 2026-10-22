@@ -10,6 +10,8 @@ import {
   Uri,
 } from 'vscode';
 import type { TestFileCoverage } from './testCoverage';
+import type { TestFailure } from './testFailure';
+import type { UnreportedNodes } from './testLanguage';
 import { GroupReport, type TestRunNode, type TestRunReport } from './testRunReport';
 import {
   classDto,
@@ -217,6 +219,51 @@ describe('what a suite ends up showing', () => {
     report.processExited(0);
 
     report.conclude();
+
+    assert.deepEqual(calls, [`passed ${A_ID}`, `skipped ${B_ID}`]);
+  });
+});
+
+describe('what a runner says about the nodes its run reported nothing for', () => {
+  const policy = (outcomes: Record<string, TestFailure | 'none'>): UnreportedNodes => ({
+    outcomeOf: (node) => outcomes[node.id],
+  });
+
+  test('a node the run left out keeps no state, and neither does its class', () => {
+    const { report, calls } = makeReport({ launched: ['com.example.Foo'] });
+    report.processExited(1);
+
+    withErrorLog(() =>
+      report.conclude(
+        policy({
+          'com.example.Foo': 'none',
+          'com.example.Foo#a': 'none',
+          'com.example.Foo#b': 'none',
+        }),
+      ),
+    );
+
+    assert.deepEqual(calls, []);
+  });
+
+  test('a node that a failure kept from running errors with that failure, not with the exit code', () => {
+    const { report, calls, messages } = makeReport({ launched: ['com.example.Foo'] });
+    report.processExited(1);
+
+    report.conclude(
+      policy({ 'com.example.Foo': boom, 'com.example.Foo#a': boom, 'com.example.Foo#b': boom }),
+    );
+
+    assert.deepEqual(calls, [`errored ${FOO_ID}`, `errored ${A_ID}`, `errored ${B_ID}`]);
+    assert.equal(text(messages.get(A_ID)), 'boom');
+  });
+
+  test('a node the runner has no word for gets the default verdict', () => {
+    const { report, calls } = makeReport({ launched: ['com.example.Foo'] });
+    report.passed({ node: at(report, A) });
+    report.processExited(0);
+
+    report.conclude(policy({}));
 
     assert.deepEqual(calls, [`passed ${A_ID}`, `skipped ${B_ID}`]);
   });

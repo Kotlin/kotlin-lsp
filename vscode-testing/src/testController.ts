@@ -52,8 +52,8 @@ export function registerTestController<Profile extends string>(
           if (token.isCancellationRequested) break;
           const report = new GroupReport({ run, tree, group });
           try {
-            await runner.run({ group, report, token, run });
-            if (!token.isCancellationRequested) report.conclude();
+            const unreported = await runner.run({ group, report, token, run });
+            if (!token.isCancellationRequested) report.conclude(unreported ?? undefined);
           } catch (e) {
             const message = new TestMessage(e instanceof Error ? e.message : String(e));
             for (const item of group.items) run.errored(item, message);

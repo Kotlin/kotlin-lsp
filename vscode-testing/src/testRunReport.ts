@@ -3,6 +3,7 @@ import { type TestItem, TestMessage, type TestRun, type Uri } from 'vscode';
 import { LanguageFileCoverage, type TestFileCoverage } from './testCoverage';
 import { type TestFailure, testFailureMessage } from './testFailure';
 import { leafTests } from './testItems';
+import type { UnreportedNodes } from './testLanguage';
 import type { TestLaunchGroup } from './testPlan';
 import { runsOwnTree, type TestTree } from './testTree';
 
@@ -241,23 +242,38 @@ export class GroupReport implements TestRunReport {
     this.options.run.addCoverage(new LanguageFileCoverage(file));
   }
 
-  conclude(): void {
+  /** Gives a verdict to each node of the group that has none. [unreported] can tell what the run did with it. */
+  conclude(unreported?: UnreportedNodes): void {
     const { run } = this.options;
     for (const item of this.launched) {
-      this.concludeLaunched(item);
+      this.concludeLaunched(item, unreported);
       for (const test of leafTests(item)) {
         if (test === item || this.state.outcomeOf(test) !== undefined) continue;
+        const outcome = this.unreportedOutcome(test, unreported);
+        if (outcome === 'none') continue;
+        if (outcome) {
+          this.state.conclude(test, 'errored');
+          run.errored(test, testFailureMessage(outcome));
+          continue;
+        }
         this.state.conclude(test, 'skipped');
         run.skipped(test);
       }
     }
   }
 
-  private concludeLaunched(item: TestItem): void {
+  private concludeLaunched(item: TestItem, unreported: UnreportedNodes | undefined): void {
     if (this.state.outcomeOf(item) !== undefined) return;
     const rolled = this.state.rollUp(item);
     if (rolled !== undefined) {
       this.state.conclude(item, rolled);
+      return;
+    }
+    const outcome = this.unreportedOutcome(item, unreported);
+    if (outcome === 'none') return;
+    if (outcome) {
+      this.state.conclude(item, 'errored');
+      this.options.run.errored(item, testFailureMessage(outcome));
       return;
     }
     console.error(`[test] No result for '${item.id}'.`);
@@ -268,6 +284,14 @@ export class GroupReport implements TestRunReport {
       this.state.conclude(item, 'errored');
       this.options.run.errored(item, this.exitFailure());
     }
+  }
+
+  private unreportedOutcome(
+    item: TestItem,
+    unreported: UnreportedNodes | undefined,
+  ): TestFailure | 'none' | undefined {
+    const entry = unreported && this.options.tree.get(item.id);
+    return entry?.origin === 'discovered' ? unreported?.outcomeOf(entry.dto) : undefined;
   }
 
   private itemAt(location: string): TestItem | undefined {
