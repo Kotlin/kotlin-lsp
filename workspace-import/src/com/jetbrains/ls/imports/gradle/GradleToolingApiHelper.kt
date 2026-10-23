@@ -3,11 +3,11 @@ package com.jetbrains.ls.imports.gradle
 
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.logger
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.JdkUtil
 import com.intellij.openapi.projectRoots.SimpleJavaSdkType
 import com.intellij.openapi.projectRoots.impl.JavaHomeFinder
 import com.intellij.openapi.util.io.toNioPathOrNull
+import com.intellij.platform.eel.provider.getEelDescriptor
 import com.intellij.util.PathUtil
 import com.intellij.util.SystemProperties
 import com.intellij.util.containers.addIfNotNull
@@ -75,7 +75,7 @@ object GradleToolingApiHelper {
      * `null` when `JAVA_HOME` does not help, and the Tooling API runs on the server's own JVM. A wrapper whose
      * distribution is not a known Gradle release gives `null` right away: no JDK can be checked against it.
      */
-    fun findTheMostCompatibleJdk(project: Project, projectDirectory: Path, environment: Map<String, String> = emptyMap()): String? {
+    fun findTheMostCompatibleJdk(projectDirectory: Path, environment: Map<String, String> = emptyMap()): String? {
         val explicitJavaHomeValue = getProperty(LSP_GRADLE_JAVA_HOME_PROPERTY)
         if (explicitJavaHomeValue != null) {
             return explicitJavaHomeValue
@@ -90,7 +90,7 @@ object GradleToolingApiHelper {
         val ambientJavaHome = environment.environmentVariable("JAVA_HOME") ?: System.getenv("JAVA_HOME")
         javaHomeForGradle(ambientJavaHome, gradleVersion, ::javaVersionOf)?.let { return it }
         if (wrapperVersion == null) return null
-        val suggestedJavaPath = suggestJavaPath(project, gradleVersion) ?: tryServerJvm(gradleVersion)
+        val suggestedJavaPath = suggestJavaPath(projectDirectory, gradleVersion) ?: tryServerJvm(gradleVersion)
 
         if (suggestedJavaPath == null) {
             throw WorkspaceImportException(
@@ -98,7 +98,7 @@ object GradleToolingApiHelper {
                 """
                     |There are no compatible JDKs found on the machine. Unable to run Gradle.
                     |Gradle version: $gradleVersion
-                    |Checked Java paths: ${JavaHomeFinder.suggestHomePaths(project)}
+                    |Checked Java paths: ${installedJavaHomes(projectDirectory)}
                 """.trimMargin()
             )
         }
@@ -305,9 +305,16 @@ object GradleToolingApiHelper {
         }
     }
 
-    private fun suggestJavaPath(project: Project, gradleVersion: GradleVersion): String? {
+    /**
+     * The installed JDKs of the machine the project lives on. The directory gives the machine, so a project on a
+     * remote machine is still asked there; see [getEelDescriptor].
+     */
+    private fun installedJavaHomes(projectDirectory: Path): List<String> =
+        JavaHomeFinder.suggestHomePaths(projectDirectory.getEelDescriptor(), false)
+
+    private fun suggestJavaPath(projectDirectory: Path, gradleVersion: GradleVersion): String? {
         val javaSdkType = SimpleJavaSdkType.getInstance()
-        return JavaHomeFinder.suggestHomePaths(project)
+        return installedJavaHomes(projectDirectory)
             .map { Pair(JavaVersion.tryParse(javaSdkType.getVersionString(it)), it) }
             .filter { it.first != null }
             .sortedByDescending { it.first }

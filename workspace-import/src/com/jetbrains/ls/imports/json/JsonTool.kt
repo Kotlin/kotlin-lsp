@@ -58,7 +58,7 @@ class JsonTool(
             override fun progressStatus(text: String) { trySend(ImportEvent.ProgressStatus(text)) }
         }
         try {
-            context.withProject {
+            context.withAnalyzerContext {
                 importWorkspace(context.virtualFileUrlManager, progress)
                     ?.let { send(ImportEvent.UpdateWorkspaceModel(it, listOf(BuildScriptToWatch.FileToWatch(workspaceJson)))) }
             }

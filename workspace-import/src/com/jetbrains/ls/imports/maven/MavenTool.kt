@@ -99,7 +99,7 @@ class MavenTool(
 
     override fun sync(context: BuildToolContext, request: SyncRequest): Flow<ImportEvent> =
         channelFlow {
-            context.withProject {
+            context.withAnalyzerContext {
                 importWorkspace(context.virtualFileUrlManager).collect { send(it) }
             }
         }

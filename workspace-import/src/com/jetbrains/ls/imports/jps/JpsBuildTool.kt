@@ -148,7 +148,7 @@ class JpsBuildTool(
 
     override fun sync(context: BuildToolContext, request: SyncRequest): Flow<ImportEvent> = channelFlow {
         try {
-            context.withProject {
+            context.withAnalyzerContext {
                 importWorkspace(context, request).collect { send(it) }
             }
         } catch (e: Throwable) {

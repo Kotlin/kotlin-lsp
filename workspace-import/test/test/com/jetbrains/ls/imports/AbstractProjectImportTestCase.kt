@@ -84,7 +84,7 @@ abstract class AbstractProjectImportTestCase {
                     )
                 ) {
                     val result = runCatching {
-                        driver.importWorkspaceFully(it.project, WorkspaceImportParameters(projectDir, null), virtualFileUrlManager, reporter)
+                        driver.importWorkspaceFully(WorkspaceImportParameters(projectDir, null), virtualFileUrlManager, reporter)
                     }
                     assertTrue(result.isFailure)
                     val actualFailure = result.exceptionOrNull()!!
@@ -124,7 +124,7 @@ abstract class AbstractProjectImportTestCase {
                     try {
                         val importPath = projectFile?.let { name -> projectDir / name } ?: projectDir
                         val importParameters = importParametersCustomizer(WorkspaceImportParameters(importPath, null))
-                        driver.importWorkspaceFully(it.project, importParameters, virtualFileUrlManager, reporter)
+                        driver.importWorkspaceFully(importParameters, virtualFileUrlManager, reporter)
                     } catch (e: WorkspaceImportException) {
                         throw AssertionError(
                             "Import of '$project' failed: ${e.message}\n" +

@@ -5,7 +5,6 @@ package com.jetbrains.ls.imports.gradle
 
 import com.intellij.diagnostic.rethrowControlFlowException
 import com.intellij.openapi.diagnostic.logger
-import com.intellij.openapi.project.Project
 import com.intellij.platform.workspace.jps.entities.ModuleEntity
 import com.intellij.platform.workspace.jps.entities.exModuleOptions
 import com.intellij.platform.workspace.storage.EntityStorage
@@ -86,8 +85,8 @@ class GradleTool(
 
     override fun sync(context: BuildToolContext, request: SyncRequest): Flow<ImportEvent> =
         channelFlow {
-            context.withProject { project ->
-                importWorkspace(project, context.virtualFileUrlManager).collect { send(it) }
+            context.withAnalyzerContext {
+                importWorkspace(context.virtualFileUrlManager).collect { send(it) }
             }
         }
             .catch { e ->
@@ -239,7 +238,6 @@ class GradleTool(
      * sources, so the analyzer does not wait for code generation before it can resolve the project's dependencies.
      */
     private fun importWorkspace(
-        project: Project,
         virtualFileUrlManager: VirtualFileUrlManager,
     ): Flow<ImportEvent> = channelFlow {
         val projectDirectory = parameters.projectDirectory
@@ -252,7 +250,7 @@ class GradleTool(
 
         // A `java-home` configured for this project wins over `JAVA_HOME` and auto-detection.
         val jdkToUse = parameters.options.javaHome?.toString()
-            ?: findTheMostCompatibleJdk(project, projectDirectory, parameters.options.environment)
+            ?: findTheMostCompatibleJdk(projectDirectory, parameters.options.environment)
         syncJavaHome = jdkToUse
 
         // The models are handed over with `trySend` (the channel is unbounded): the Tooling API calls below are
