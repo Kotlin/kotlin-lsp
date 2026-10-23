@@ -16,14 +16,11 @@ import com.intellij.openapi.application.PathManager
 import com.intellij.util.io.DigestUtil
 import com.intellij.util.system.LowLevelLocalMachineAccess
 import com.intellij.util.system.OS
+import com.jetbrains.ls.imports.api.BuildScriptToWatch
 import com.jetbrains.ls.imports.api.BuildTool
 import com.jetbrains.ls.imports.api.BuildToolContext
 import com.jetbrains.ls.imports.api.BuildToolDriverContext
-import com.jetbrains.ls.imports.api.ImportRequest
-import com.jetbrains.ls.imports.api.LostChangesRequest
 import com.jetbrains.ls.imports.api.SyncRequest
-import com.jetbrains.ls.imports.api.ToolFileListener
-import com.jetbrains.ls.imports.api.modifiedSince
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
@@ -60,14 +57,10 @@ import fleet.util.async.map
 import fleet.util.async.resourceOf
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.SendChannel
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.IntermediateResultHandler
@@ -79,15 +72,11 @@ import java.nio.file.Path
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import kotlin.io.path.div
-import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.readBytes
 import kotlin.io.path.writeBytes
 
 private val LOG = logger<GradleTool>()
-
-/** The tool's own ask; it carries no data, a Gradle re-import is always full. */
-private object GradleReimport : ImportRequest
 
 /** One folder's live Gradle build tool; [GradleDriver] starts it. */
 class GradleTool(
@@ -97,49 +86,14 @@ class GradleTool(
 
     override fun sync(context: BuildToolContext, request: SyncRequest): Flow<ImportEvent> =
         channelFlow {
-            val startedAt = System.currentTimeMillis()
-            if (request.verifiesInputs && !inputsChangedSince(lastSyncStartedAt, toolContext.entityStorage())) {
-                send(ImportEvent.WorkspaceModelNotChanged(request.targetWatermark))
-                return@channelFlow
-            }
-            // The baseline is taken before the import reads its inputs, so a change landing while it runs
-            // reads as changed at the next judgment, and the next cycle serves it.
-            lastSyncStartedAt = startedAt
-            presentInputs = (settingsFiles + importedBuildFiles(toolContext.entityStorage())).filterTo(hashSetOf()) { it.exists() }
             context.withProject { project ->
-                importWorkspace(project, context.virtualFileUrlManager, request.targetWatermark).collect { send(it) }
+                importWorkspace(project, context.virtualFileUrlManager).collect { send(it) }
             }
         }
-            // A sync may list build scripts the last model did not; their directories must be watched from now on.
-            .onEach { event -> if (event is ImportEvent.UpdateWorkspaceModel) registerWatchedDirectories(event.storage) }
             .catch { e ->
                 rethrowControlFlowException(e)
                 emit(ImportEvent.Failed(e))
             }
-            .onCompletion { cause -> if (cause != null) lastSyncStartedAt = null }
-
-    /** The wall-clock start of the last sync that imported; the baseline [inputsChangedSince] verifies against. */
-    @Volatile
-    private var lastSyncStartedAt: Long? = null
-
-    private val reimportRequestsFlow = MutableSharedFlow<ImportRequest>(replay = 1, extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
-
-    /** This tool's own asks; the platform debounces them into reload cycles. */
-    override val reimportRequests: Flow<ImportRequest> get() = reimportRequestsFlow
-
-    /** The tool's own watching: a change to a build script the model lists, or to a settings file, asks for a re-import. */
-    private val watchListener = object : ToolFileListener {
-        override fun changed(path: Path) {
-            if (path !in settingsFiles + importedBuildFiles(toolContext.entityStorage())) return
-            LOG.info("Gradle settings files changed: $path")
-            reimportRequestsFlow.tryEmit(GradleReimport)
-        }
-
-        override fun lost() {
-            LOG.info("The file watcher lost changes, so a Gradle settings file may have changed too; the sync verifies it on disk")
-            reimportRequestsFlow.tryEmit(LostChangesRequest)
-        }
-    }
 
     /**
      * The fixed-location configuration of this target: the settings script, the root `gradle.properties`,
@@ -156,42 +110,19 @@ class GradleTool(
         )
     }
 
-    private var presentInputs = (settingsFiles + importedBuildFiles(toolContext.entityStorage())).filterTo(hashSetOf()) { it.exists() }
-
-    init {
-        registerWatchedDirectories(toolContext.entityStorage())
-    }
-
     /**
-     * Registers the directories of this target's inputs with the workspace file watcher: the settings files'
-     * fixed locations, the `gradle` directory (the version catalogs), and the directory of every build script
-     * [storage] lists. Indexing watches the source roots only, and the scripts sit beside them. Called at
-     * start with the committed model and after every sync result.
+     * The files a change re-imports this target for: the settings files above, the build scripts of the model,
+     * and the version catalogs of the `gradle` directory. The platform watches them; see `BuildScriptWatch`.
      */
-    private fun registerWatchedDirectories(storage: EntityStorage) {
-        val directories = (settingsFiles + importedBuildFiles(storage)).mapNotNullTo(linkedSetOf()) { it.parent }
-        directories.add(parameters.projectDirectory / "gradle")
-        directories.forEach { directory -> toolContext.watcher.watch(directory, watchListener) }
-    }
+    private fun buildScriptsOf(storage: EntityStorage): List<BuildScriptToWatch> =
+        (settingsFiles + importedBuildFiles(storage)).map { BuildScriptToWatch.FileToWatch(it) } +
+        BuildScriptToWatch.PatternToWatch(parameters.projectDirectory / "gradle", "*.versions.toml")
 
     /**
-     * Whether an input of the last import changed on disk after [since]: a build script or a settings file of
-     * this target is modified. A null [since] means no sync of this tool has imported yet, so nothing vouches
-     * for the model. Disk is the source, not the tool's own event queue: the sync runs after the client's
-     * barrier, so the files already hold every change the answer must cover.
-     */
-    internal fun inputsChangedSince(since: Long?, storage: EntityStorage): Boolean {
-        if (since == null) return true
-        return (settingsFiles + importedBuildFiles(storage)).any { it.modifiedSince(since) || (it in presentInputs) != it.exists() }
-    }
-
-    /**
-     * The build scripts the last import read, derived from the committed model: every Gradle module of this
-     * target carries its project directory, and each directory may hold `build.gradle`, `build.gradle.kts`,
-     * or its own `gradle.properties`. Both script spellings are watched because only one exists on disk, so
-     * the absent one never fires. Scoped to this target's directory: the workspace watcher reports every
-     * target's files. Read from the model rather than remembered, so it stays correct across a restart that
-     * restores the model from cache without running an import.
+     * The build scripts of the model in [storage]: every Gradle module of this target carries its project
+     * directory, and each directory may hold `build.gradle`, `build.gradle.kts`, or its own `gradle.properties`.
+     * Both script spellings are named because only one exists on disk, so the absent one never fires. Scoped to
+     * this target's directory: the workspace watcher reports every target's files.
      */
     private fun importedBuildFiles(storage: EntityStorage): Set<Path> {
         val projectDirectory = parameters.projectDirectory
@@ -310,7 +241,6 @@ class GradleTool(
     private fun importWorkspace(
         project: Project,
         virtualFileUrlManager: VirtualFileUrlManager,
-        watermark: Long,
     ): Flow<ImportEvent> = channelFlow {
         val projectDirectory = parameters.projectDirectory
         if (!GradleDriver.canImportWorkspace(projectDirectory)) return@channelFlow
@@ -332,17 +262,8 @@ class GradleTool(
                 withDaemonInitScripts { daemonInitScripts ->
                     val metadata = executeGradleSync(projectConnection, channel, daemonInitScripts, jdkToUse)
                     syncGradleHome = metadata.gradleHome
-                    channel.trySend(
-                        ImportEvent.UpdateWorkspaceModel(
-                            toStorage(
-                                metadata,
-                                virtualFileUrlManager,
-                                channel,
-                                jdkToUse
-                            ),
-                            watermark,
-                        )
-                    )
+                    val storage = toStorage(metadata, virtualFileUrlManager, channel, jdkToUse)
+                    channel.trySend(ImportEvent.UpdateWorkspaceModel(storage, buildScriptsOf(storage)))
                     channel.trySend(ImportEvent.StdOutput("Gradle execution complete"))
                 }
             }

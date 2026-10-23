@@ -29,5 +29,5 @@ object MavenDriver : BuildToolDriver {
     override fun start(
         toolContext: BuildToolDriverContext,
         parameters: WorkspaceImportParameters,
-    ): Resource<BuildTool> = resource { cc -> cc(MavenTool(toolContext, parameters)) }
+    ): Resource<BuildTool> = resource { cc -> cc(MavenTool(parameters)) }
 }

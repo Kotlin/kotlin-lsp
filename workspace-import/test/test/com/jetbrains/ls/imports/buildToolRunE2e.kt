@@ -71,8 +71,6 @@ internal fun withLiveTool(
                         is ImportEvent.ErrorOutput -> reporter.onErrorOutput(event.line)
                         is ImportEvent.ProgressStatus -> reporter.progressStatus(event.text)
                         is ImportEvent.UnresolvedDependency -> reporter.onUnresolvedDependency(event.depName)
-                        // A forced sync imports unconditionally, so a tool never answers "not changed" here.
-                        is ImportEvent.WorkspaceModelNotChanged -> throw AssertionError("The forced import answered 'not changed'")
                     }
                 }
                 body(tool, storage ?: fail("The import published no model:\n${reporter.capturedOutput}"))

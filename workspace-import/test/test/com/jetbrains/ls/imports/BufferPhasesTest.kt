@@ -23,13 +23,13 @@ class BufferPhasesTest {
     fun `only the last phase is published, the other events pass through`() {
         val events = runBlocking {
             flow {
-                emit(ImportEvent.UpdateWorkspaceModel(firstPhase, watermark = 1))
+                emit(ImportEvent.UpdateWorkspaceModel(firstPhase, buildScripts = emptyList()))
                 emit(ImportEvent.StdOutput("building"))
-                emit(ImportEvent.UpdateWorkspaceModel(lastPhase, watermark = 1))
+                emit(ImportEvent.UpdateWorkspaceModel(lastPhase, buildScripts = emptyList()))
             }.bufferPhases(keepModelOnFailure = false).toList()
         }
 
-        assertEquals(listOf(ImportEvent.StdOutput("building"), ImportEvent.UpdateWorkspaceModel(lastPhase, watermark = 1)), events)
+        assertEquals(listOf(ImportEvent.StdOutput("building"), ImportEvent.UpdateWorkspaceModel(lastPhase, buildScripts = emptyList())), events)
     }
 
     @Test
@@ -60,7 +60,7 @@ class BufferPhasesTest {
     @Test
     fun `a reported failure follows the same rule as a thrown one`() {
         fun reportedFailure() = flow {
-            emit(ImportEvent.UpdateWorkspaceModel(firstPhase, watermark = 1))
+            emit(ImportEvent.UpdateWorkspaceModel(firstPhase, buildScripts = emptyList()))
             emit(ImportEvent.Failed(WorkspaceImportException("failed", null)))
         }
 
@@ -73,7 +73,7 @@ class BufferPhasesTest {
     }
 
     private fun failingImport() = flow<ImportEvent> {
-        emit(ImportEvent.UpdateWorkspaceModel(firstPhase, watermark = 1))
+        emit(ImportEvent.UpdateWorkspaceModel(firstPhase, buildScripts = emptyList()))
         throw WorkspaceImportException("failed", null)
     }
 }

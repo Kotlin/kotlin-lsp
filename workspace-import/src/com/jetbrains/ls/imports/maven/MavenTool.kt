@@ -16,14 +16,10 @@ import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.io.delete
 import com.intellij.util.system.LowLevelLocalMachineAccess
 import com.intellij.util.system.OS
+import com.jetbrains.ls.imports.api.BuildScriptToWatch
 import com.jetbrains.ls.imports.api.BuildTool
 import com.jetbrains.ls.imports.api.BuildToolContext
-import com.jetbrains.ls.imports.api.BuildToolDriverContext
-import com.jetbrains.ls.imports.api.ImportRequest
-import com.jetbrains.ls.imports.api.LostChangesRequest
 import com.jetbrains.ls.imports.api.SyncRequest
-import com.jetbrains.ls.imports.api.ToolFileListener
-import com.jetbrains.ls.imports.api.modifiedSince
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceException
 import com.jetbrains.ls.imports.api.WorkspaceImportException
@@ -54,16 +50,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.channels.SendChannel
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -84,7 +77,6 @@ private val LOG = logger<MavenTool>()
 
 /** One folder's live Maven build tool; [MavenDriver] starts it. */
 class MavenTool(
-    private val toolContext: BuildToolDriverContext,
     private val parameters: WorkspaceImportParameters,
 ) : BuildTool {
     companion object {
@@ -107,49 +99,14 @@ class MavenTool(
 
     override fun sync(context: BuildToolContext, request: SyncRequest): Flow<ImportEvent> =
         channelFlow {
-            val startedAt = System.currentTimeMillis()
-            if (request.verifiesInputs && !inputsChangedSince(lastSyncStartedAt, toolContext.entityStorage())) {
-                send(ImportEvent.WorkspaceModelNotChanged(request.targetWatermark))
-                return@channelFlow
-            }
-            // The baseline is taken before the import reads its inputs, so a change landing while it runs
-            // reads as changed at the next judgment, and the next cycle serves it.
-            lastSyncStartedAt = startedAt
-            presentSettings = settingsFiles.filterTo(hashSetOf()) { it.exists() }
             context.withProject {
-                importWorkspace(context.virtualFileUrlManager, request.targetWatermark).collect { send(it) }
+                importWorkspace(context.virtualFileUrlManager).collect { send(it) }
             }
         }
-            // A sync may list poms the last model did not; their directories must be watched from now on.
-            .onEach { event -> if (event is ImportEvent.UpdateWorkspaceModel) registerWatchedDirectories(event.storage) }
             .catch { e ->
                 rethrowControlFlowException(e)
                 emit(ImportEvent.Failed(e))
             }
-            .onCompletion { cause -> if (cause != null) lastSyncStartedAt = null }
-
-    /** The wall-clock start of the last sync that imported; the baseline [inputsChangedSince] verifies against. */
-    @Volatile
-    private var lastSyncStartedAt: Long? = null
-
-    private val reimportRequestsFlow = MutableSharedFlow<ImportRequest>(replay = 1, extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
-
-    /** This tool's own asks; the platform debounces them into reload cycles. */
-    override val reimportRequests: Flow<ImportRequest> get() = reimportRequestsFlow
-
-    /** The tool's own watching: a change to a pom the model lists, or to a settings file, asks for a re-import. */
-    private val watchListener = object : ToolFileListener {
-        override fun changed(path: Path) {
-            if (path !in settingsFiles + importedPomFiles(toolContext.entityStorage())) return
-            LOG.info("Maven settings files changed: $path")
-            reimportRequestsFlow.tryEmit(MavenReimport)
-        }
-
-        override fun lost() {
-            LOG.info("The file watcher lost changes, so a Maven settings file may have changed too; the sync verifies it on disk")
-            reimportRequestsFlow.tryEmit(LostChangesRequest)
-        }
-    }
 
     /**
      * The build file of this target: the configured file, or the conventional pom in the project directory.
@@ -174,41 +131,17 @@ class MavenTool(
         )
     }
 
-    private var presentSettings = settingsFiles.filterTo(hashSetOf()) { it.exists() }
-
-    init {
-        registerWatchedDirectories(toolContext.entityStorage())
-    }
-
     /**
-     * Registers the directories of this target's inputs with the workspace file watcher: the settings files'
-     * fixed locations and the directory of every pom [storage] lists. Indexing watches the source roots only,
-     * and the poms sit beside them. Called at start with the committed model and after every sync result.
+     * The files a change re-imports this target for: the settings files above, whether or not they exist yet,
+     * and the poms [storage] lists. The platform watches them; see `BuildScriptWatch`.
      */
-    private fun registerWatchedDirectories(storage: EntityStorage) {
-        (settingsFiles + importedPomFiles(storage)).mapNotNullTo(linkedSetOf()) { it.parent }
-            .forEach { directory -> toolContext.watcher.watch(directory, watchListener) }
-    }
+    private fun buildScriptsOf(storage: EntityStorage): List<BuildScriptToWatch> =
+        (settingsFiles + importedPomFiles(storage)).map { BuildScriptToWatch.FileToWatch(it) }
 
     /**
-     * Whether an input of the last import changed on disk after [since]: a pom the committed model lists is
-     * missing or modified, or a settings file of this target is modified. A null [since] means no sync of this
-     * tool has imported yet, so nothing vouches for the model. Disk is the source, not the tool's own event
-     * queue: the sync runs after the client's barrier, so the files already hold every change the answer must
-     * cover, while a queued event may still be in flight.
-     */
-    internal fun inputsChangedSince(since: Long?, storage: EntityStorage): Boolean {
-        if (since == null) return true
-        if (importedPomFiles(storage).any { !it.isRegularFile() || it.modifiedSince(since) }) return true
-        return settingsFiles.any { it.modifiedSince(since) || (it in presentSettings) != it.exists() }
-    }
-
-    /**
-     * The poms the last import read, as recorded in the committed model: every module of this target
-     * carries its Maven project directory, and the import stamps the build file it ran with as the root
-     * project path, which also tells this target's modules from another target's. Read from the model
-     * rather than remembered, so it stays correct across a restart that restores the model from cache
-     * without running an import.
+     * The poms of the model in [storage]: every module of this target carries its Maven project directory,
+     * and the import stamps the build file it ran with as the root project path, which also tells this
+     * target's modules from another target's.
      *
      * ponytail: a submodule's pom is taken as `<module directory>/pom.xml`; a reactor that names a module
      * pom differently (a file path in `<module>`) re-imports only on a root pom change.
@@ -227,7 +160,7 @@ class MavenTool(
      * roots that only exist once the code generators have run (`model-process-sources`), so the analyzer does not wait
      * for the generating plugins before it can resolve the project's dependencies.
      */
-    private fun importWorkspace(virtualFileUrlManager: VirtualFileUrlManager, watermark: Long): Flow<ImportEvent> = channelFlow {
+    private fun importWorkspace(virtualFileUrlManager: VirtualFileUrlManager): Flow<ImportEvent> = channelFlow {
         val projectDirectory = parameters.projectDirectory
         val options = parameters.options
         val pomFile = rootPomFile
@@ -255,7 +188,7 @@ class MavenTool(
             is SuccessResult -> result
         }
         send(ImportEvent.ProgressStatus("Maven model collected, commiting..."))
-        send(ImportEvent.UpdateWorkspaceModel(toStorage(modelWithDeps, null, pomFile, virtualFileUrlManager, channel, mavenJavaHome), watermark))
+        send(updateEvent(toStorage(modelWithDeps, null, pomFile, virtualFileUrlManager, channel, mavenJavaHome)))
 
         if (skipGenerateSources(options)) {
             LOG.info("Skipping source generation: skipGenerateSources is set for the project or the session")
@@ -275,13 +208,12 @@ class MavenTool(
             is SuccessResult -> result
         }
         send(ImportEvent.ProgressStatus("Maven model collected, commiting..."))
-        send(
-            ImportEvent.UpdateWorkspaceModel(
-                toStorage(modelWithDeps, modelWithGeneratedSources, pomFile, virtualFileUrlManager, channel, mavenJavaHome),
-                watermark,
-            )
-        )
+        send(updateEvent(toStorage(modelWithDeps, modelWithGeneratedSources, pomFile, virtualFileUrlManager, channel, mavenJavaHome)))
     }.buffer(Channel.UNLIMITED)
+
+    /** One published model, with the build scripts the next import of this target must be triggered by. */
+    private fun updateEvent(storage: EntityStorage): ImportEvent.UpdateWorkspaceModel =
+        ImportEvent.UpdateWorkspaceModel(storage, buildScriptsOf(storage))
 
     /**
      * Merges the two goal results into one workspace model; [resultGenSources] is `null` before it has been built.
@@ -622,9 +554,6 @@ class MavenTool(
         environment[pathKey] = if (currentPath.isNullOrEmpty()) path else "$path${File.pathSeparator}$currentPath"
     }
 }
-
-/** The tool's own ask; it carries no data, a Maven re-import is always full. */
-private object MavenReimport : ImportRequest
 
 private const val MAVEN_EXTERNAL_SYSTEM_ID = "MAVEN"
 

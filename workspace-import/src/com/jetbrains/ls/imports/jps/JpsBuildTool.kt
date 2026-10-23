@@ -49,23 +49,20 @@ import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.util.PathUtil
 import com.intellij.util.containers.nullize
 import com.intellij.util.lang.JavaVersion
+import com.jetbrains.ls.imports.api.BuildScriptToWatch
 import com.jetbrains.ls.imports.api.BuildTool
 import com.jetbrains.ls.imports.api.BuildToolContext
 import com.jetbrains.ls.imports.api.BuildToolDriver
 import com.jetbrains.ls.imports.api.BuildToolDriverContext
 import com.jetbrains.ls.imports.api.ImportEvent
-import com.jetbrains.ls.imports.api.ImportRequest
 import com.jetbrains.ls.imports.api.SyncRequest
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import com.jetbrains.ls.imports.api.WorkspaceException
 import com.jetbrains.ls.imports.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.WorkspaceImportOptions
 import com.jetbrains.ls.imports.api.WorkspaceImportParameters
-import com.jetbrains.ls.imports.api.WorkspaceImporter
 import com.jetbrains.ls.imports.api.applyChangesWithDeduplication
-import com.jetbrains.ls.imports.gradle.GradleTool
 import com.jetbrains.ls.imports.json.flattenExportedDependencies
-import com.jetbrains.ls.imports.maven.MavenTool
 import com.jetbrains.ls.imports.utils.LsImportBundle
 import com.jetbrains.ls.imports.utils.serializeNonDefaultCompilerArguments
 import com.jetbrains.ls.imports.utils.toIntellijUri
@@ -75,18 +72,13 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
 import org.eclipse.aether.repository.RemoteRepository
 import org.jdom.Element
@@ -156,14 +148,6 @@ class JpsBuildTool(
 
     override fun sync(context: BuildToolContext, request: SyncRequest): Flow<ImportEvent> = channelFlow {
         try {
-            val startedAt = System.currentTimeMillis()
-            if (request.verifiesInputs && !inputsChangedSince(lastSyncStartedAt)) {
-                send(ImportEvent.WorkspaceModelNotChanged(request.targetWatermark))
-                return@channelFlow
-            }
-            // The baseline is taken before the import reads its inputs, so a change landing while it runs
-            // reads as changed at the next judgment, and the next cycle serves it.
-            lastSyncStartedAt = startedAt
             context.withProject {
                 importWorkspace(context, request).collect { send(it) }
             }
@@ -171,11 +155,7 @@ class JpsBuildTool(
             rethrowControlFlowException(e)
             send(ImportEvent.Failed(e))
         }
-    }.onCompletion { cause -> if (cause != null) lastSyncStartedAt = null }
-
-    /** The wall-clock start of the last sync that imported; the baseline [inputsChangedSince] verifies against. */
-    @Volatile
-    private var lastSyncStartedAt: Long? = null
+    }
 
     /** Keeps [linkedTools] alive; cancelled when their set changes and a new one opens. */
     private var linkedToolsGeneration: Job? = null
@@ -185,37 +165,10 @@ class JpsBuildTool(
 
     /**
      * The live linked Maven and Gradle tools, paired with their project paths. Started once per linked-project
-     * set and kept alive across syncs, so they watch their files, answer [inputsChangedSince] from their own
-     * input baseline, and feed [reimportRequests]. A sync that finds the set changed replaces the whole set.
+     * set and kept alive across syncs, so a build-tool daemon outlives one import. A sync that finds the set
+     * changed replaces the whole set.
      */
-    private val linkedTools = MutableStateFlow<List<Pair<Path, BuildTool>>>(emptyList())
-
-    /**
-     * The re-import requests of the linked tools: they watch their own files, and a request from one re-runs
-     * the whole JPS import, because the linked models merge into the `.idea` model this tool publishes.
-     */
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override val reimportRequests: Flow<ImportRequest> =
-        linkedTools.flatMapLatest { tools -> tools.map { it.second.reimportRequests }.merge() }
-
-    /**
-     * Whether an input of a live linked Maven or Gradle tool changed on disk after [since]: their models merge
-     * into the `.idea` model this tool publishes, so any of them re-runs the whole import. The `.idea` files
-     * themselves do not re-import. Each linked tool keeps its own input baseline from its last sync.
-     */
-    private fun inputsChangedSince(since: Long?): Boolean {
-        if (since == null) return true
-        if (!JpsDriver.canImportWorkspace(parameters.projectDirectory)) return false
-        val storage = toolContext.entityStorage()
-        return linkedTools.value.any { (_, tool) ->
-            when (tool) {
-                is MavenTool -> tool.inputsChangedSince(since, storage)
-                is GradleTool -> tool.inputsChangedSince(since, storage)
-                // An unknown linked tool cannot be judged; better one import too many than a stale model.
-                else -> true
-            }
-        }
-    }
+    private var linkedTools: List<Pair<Path, BuildTool>> = emptyList()
 
     /**
      * Publishes the `.idea` model as soon as it is read, then republishes it after each linked Maven/Gradle project
@@ -225,6 +178,11 @@ class JpsBuildTool(
         val virtualFileUrlManager = context.virtualFileUrlManager
         val projectDirectory = parameters.projectDirectory
         if (!JpsDriver.canImportWorkspace(projectDirectory)) return@channelFlow
+        // The build scripts of the linked projects, accumulated as they publish their models: the linked models
+        // merge into the `.idea` model this tool publishes, so a change to any of them re-runs the whole import.
+        // The `.idea` files themselves are not watched, as before.
+        val linkedBuildScripts = linkedMapOf<Path, List<BuildScriptToWatch>>()
+        fun buildScripts(): List<BuildScriptToWatch> = linkedBuildScripts.values.flatten()
         try {
             val model = JpsElementFactory.getInstance().createModel()
             initGlobalJpsOptions(model)
@@ -238,10 +196,10 @@ class JpsBuildTool(
             ) { depName ->
                 trySend(ImportEvent.UnresolvedDependency(depName))
             }
-            send(ImportEvent.UpdateWorkspaceModel(storage.toSnapshot(), request.targetWatermark))
+            send(ImportEvent.UpdateWorkspaceModel(storage.toSnapshot(), buildScripts()))
 
             // The linked tools live across syncs; open a fresh set only when the linked-project set changed,
-            // so an unchanged set keeps its instances and their input baselines.
+            // so an unchanged set keeps its instances.
             val linkedProjects = findLinkedProjects(projectDirectory, macroExpandMap, mavenDriver, gradleDriver).toList()
             val signature = linkedProjects.map { (path, driver) -> path to driver.type }
             if (signature != linkedToolsSignature) {
@@ -249,16 +207,18 @@ class JpsBuildTool(
                 linkedToolsGeneration?.cancel()
                 linkedToolsGeneration = job
                 linkedToolsSignature = signature
-                linkedTools.value = opened
+                linkedTools = opened
             }
-            linkedTools.value.forEach { (path, linkedTool) ->
+            linkedTools.forEach { (path, linkedTool) ->
                 LOG.info("Importing linked project: $path")
                 // The same request: a linked project is part of this sync, so its answer covers the same watermark.
                 linkedTool.sync(context, request).collect { event ->
                     when (event) {
                         is ImportEvent.UpdateWorkspaceModel -> {
                             storage.applyChangesWithDeduplication(event.storage)
-                            send(ImportEvent.UpdateWorkspaceModel(storage.toSnapshot(), request.targetWatermark))
+                            // The whole set every time: a phase of one linked project must not drop another's.
+                            linkedBuildScripts[path] = event.buildScripts
+                            send(ImportEvent.UpdateWorkspaceModel(storage.toSnapshot(), buildScripts()))
                         }
                         // Includes Failed: a linked project that cannot be built is reported, but does not take back
                         // the `.idea` model already published (and neither the other linked projects).
