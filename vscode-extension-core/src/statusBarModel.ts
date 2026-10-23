@@ -92,8 +92,23 @@ export function statusActions(
   ];
 }
 
+export interface StatusBarSuffix {
+  text: string;
+  tooltip?: string;
+}
+
 export interface StatusBarState {
   workspaceImportBlocked?: boolean;
+  suffix?: StatusBarSuffix;
+}
+
+function visibleStatusBarSuffix(
+  contribution: StatusBarContribution | undefined,
+  state: StatusBarState,
+): StatusBarSuffix | undefined {
+  return contribution?.presentation?.isProblem || state.workspaceImportBlocked
+    ? undefined
+    : state.suffix;
 }
 
 export function computeStatusText(
@@ -103,14 +118,16 @@ export function computeStatusText(
   state: StatusBarState = {},
 ): string {
   const presentation = contribution?.presentation;
-  if (clientState === 'starting') return `$(loading~spin) ${title}`;
-  if (presentation?.isProblem === true) return `${presentation.text} ${title}`;
+  const suffix = visibleStatusBarSuffix(contribution, state);
+  const displayTitle = suffix ? `${title} · ${suffix.text}` : title;
+  if (clientState === 'starting') return `$(loading~spin) ${displayTitle}`;
+  if (presentation?.isProblem === true) return `${presentation.text} ${displayTitle}`;
   if (clientState === 'running' && state.workspaceImportBlocked === true) {
-    return `${contribution?.stoppedText ?? '$(circle-slash)'} ${title}`;
+    return `${contribution?.stoppedText ?? '$(circle-slash)'} ${displayTitle}`;
   }
   return clientState === 'running'
-    ? `${presentation?.text ?? contribution?.runningText ?? '$(check)'} ${title}`
-    : `${contribution?.stoppedText ?? '$(stop)'} ${title}`;
+    ? `${presentation?.text ?? contribution?.runningText ?? '$(check)'} ${displayTitle}`
+    : `${contribution?.stoppedText ?? '$(stop)'} ${displayTitle}`;
 }
 
 export function computeStatusTooltipContent(
@@ -132,6 +149,9 @@ export function computeStatusTooltipContent(
   } else if (showContributionDetail) {
     detail = presentation.tooltip;
   }
+  const suffixTooltip =
+    clientState !== 'stopped' ? visibleStatusBarSuffix(contribution, state)?.tooltip : undefined;
+  if (suffixTooltip) detail = detail ? `${detail}\n\n${suffixTooltip}` : suffixTooltip;
   let statusHeading = statusStateText(clientState);
   if (workspaceImportBlocked) {
     statusHeading = '$(circle-slash) Build tool required';

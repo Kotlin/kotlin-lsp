@@ -19,12 +19,14 @@ import {
   type LspStatus,
   type StatusBarAction,
   type StatusBarContribution,
+  type StatusBarSuffix,
 } from './statusBarModel';
 
 export type {
   StatusBarAction,
   StatusBarContribution,
   StatusBarContributionPresentation,
+  StatusBarSuffix,
 } from './statusBarModel';
 
 const STATUS_MENU_COMMAND = 'jetbrains.kotlin.showLspStatusMenu';
@@ -60,8 +62,15 @@ function productTitle(): string {
 let statusBarItem: vscode.StatusBarItem | undefined;
 let buildStatusBarItem: vscode.StatusBarItem | undefined;
 let contribution: StatusBarContribution | undefined;
+let suffix: StatusBarSuffix | undefined;
 let lspActionsAvailable = false;
 let buildToolConflict: BuildToolConflictState = { blocked: false, promptDismissed: false };
+
+/** Intended for one source, which must clear the suffix on disposal. */
+export function setStatusBarSuffix(value: StatusBarSuffix | undefined): void {
+  suffix = value;
+  updateLspStatusBar();
+}
 
 export function setBuildToolConflict(state: BuildToolConflictState): void {
   buildToolConflict = state;
@@ -150,6 +159,7 @@ function computeTooltip(actions: readonly StatusBarAction[]): vscode.MarkdownStr
 
   const content = computeStatusTooltipContent(lspStatus(), productTitle(), contribution, actions, {
     workspaceImportBlocked: buildToolConflict.blocked,
+    suffix,
   });
   text.isTrusted = { enabledCommands: content.enabledCommands };
   text.appendMarkdown(content.heading);
@@ -166,6 +176,7 @@ function computeTooltip(actions: readonly StatusBarAction[]): vscode.MarkdownStr
 function computeText(): string {
   return computeStatusText(lspStatus(), productTitle(), contribution, {
     workspaceImportBlocked: buildToolConflict.blocked,
+    suffix,
   });
 }
 

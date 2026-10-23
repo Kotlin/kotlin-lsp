@@ -12,6 +12,7 @@ import {
   statusActions,
   type StatusBarAction,
   type StatusBarContribution,
+  type StatusBarState,
 } from './statusBarModel';
 
 const restartActions: StatusBarAction[] = [
@@ -328,6 +329,119 @@ describe('status bar text', () => {
       '**Java and Kotlin**&nbsp;&nbsp;$(circle-slash) Build tool required',
     );
     assert.equal(content.detail, 'Choose a build tool to start project import.');
+  });
+});
+
+describe('status bar suffix', () => {
+  const state: StatusBarState = { suffix: { text: '1.27.3', tooltip: '/sdk/go1.27.3' } };
+  const licensed: StatusBarContribution = {
+    title: 'IntelliJ',
+    actions: [{ label: 'Manage License', command: 'license' }],
+    runningText: '$(jetbrains-ij)',
+    stoppedText: '$(jetbrains-ij-crossed)',
+    presentation: { text: '$(jetbrains-ij)', tooltip: 'License is active', isProblem: false },
+  };
+
+  it('adds the SDK to the displayed text while keeping the product heading and menu', async () => {
+    assert.equal(
+      computeStatusText('running', 'Go LSP', undefined, state),
+      '$(check) Go LSP · 1.27.3',
+    );
+    const tooltip = computeStatusTooltipContent(
+      'running',
+      'Go LSP',
+      undefined,
+      restartActions,
+      state,
+    );
+    assert.equal(tooltip.heading, '**Go LSP**&nbsp;&nbsp;$(check) Running');
+    assert.equal(tooltip.detail, '/sdk/go1.27.3');
+    assert.deepEqual(tooltip.actions, restartActions);
+
+    await pickStatusAction(tooltip.actions, 'Go LSP', async (_actions, options) => {
+      assert.equal(options.placeHolder, 'Go LSP actions');
+      return undefined;
+    });
+  });
+
+  it('keeps active licensing branding, details, and actions alongside the SDK', () => {
+    assert.equal(
+      computeStatusText('running', 'IntelliJ', licensed, state),
+      '$(jetbrains-ij) IntelliJ · 1.27.3',
+    );
+    const actions = statusActions(licensed, true, restartActions);
+    const tooltip = computeStatusTooltipContent('running', 'IntelliJ', licensed, actions, state);
+    assert.equal(tooltip.detail, 'License is active\n\n/sdk/go1.27.3');
+    assert.deepEqual(tooltip.actions, [...licensed.actions, ...restartActions]);
+  });
+
+  it('hides the SDK during licensing problems and restores it after recovery', () => {
+    const problem: StatusBarContribution = {
+      ...licensed,
+      presentation: { text: '$(warning)', tooltip: 'License required', isProblem: true },
+    };
+    for (const clientState of ['starting', 'running', 'stopped'] as const) {
+      assert.ok(!computeStatusText(clientState, 'IntelliJ', problem, state).includes('1.27.3'));
+      assert.equal(
+        computeStatusTooltipContent(clientState, 'IntelliJ', problem, restartActions, state).detail,
+        'License required',
+      );
+    }
+    assert.equal(
+      computeStatusText('running', 'IntelliJ', licensed, state),
+      '$(jetbrains-ij) IntelliJ · 1.27.3',
+    );
+  });
+
+  it('hides the SDK while a build tool is required', () => {
+    const blocked = { ...state, workspaceImportBlocked: true };
+    assert.equal(
+      computeStatusText('running', 'IntelliJ', licensed, blocked),
+      '$(jetbrains-ij-crossed) IntelliJ',
+    );
+    const tooltip = computeStatusTooltipContent('running', 'IntelliJ', licensed, [], blocked);
+    assert.equal(tooltip.heading, '**IntelliJ**&nbsp;&nbsp;$(circle-slash) Build tool required');
+    assert.equal(tooltip.detail, 'Choose a build tool to start project import.');
+  });
+
+  it('keeps the cached SDK during restart and hides its path after stopping', () => {
+    assert.equal(
+      computeStatusText('starting', 'Go LSP', undefined, state),
+      '$(loading~spin) Go LSP · 1.27.3',
+    );
+    assert.equal(
+      computeStatusTooltipContent('starting', 'Go LSP', undefined, [], state).detail,
+      '/sdk/go1.27.3',
+    );
+    assert.equal(
+      computeStatusText('stopped', 'Go LSP', undefined, state),
+      '$(stop) Go LSP · 1.27.3',
+    );
+    assert.equal(
+      computeStatusTooltipContent('stopped', 'Go LSP', undefined, [], state).detail,
+      undefined,
+    );
+  });
+
+  it('shows a version without an SDK path', () => {
+    const versionOnly = { suffix: { text: '1.27.3' } };
+    assert.equal(
+      computeStatusText('running', 'Go LSP', undefined, versionOnly),
+      '$(check) Go LSP · 1.27.3',
+    );
+    assert.equal(
+      computeStatusTooltipContent('running', 'Go LSP', undefined, [], versionOnly).detail,
+      undefined,
+    );
+  });
+
+  it('clears both the version and path when the source clears the suffix', () => {
+    const cleared = { ...state, suffix: undefined };
+    assert.equal(computeStatusText('running', 'Go LSP', undefined, cleared), '$(check) Go LSP');
+    assert.equal(
+      computeStatusTooltipContent('running', 'Go LSP', undefined, [], cleared).detail,
+      undefined,
+    );
   });
 });
 

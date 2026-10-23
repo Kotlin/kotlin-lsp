@@ -63,9 +63,11 @@ export { checkGeoRestricted } from './geoRestriction';
 export { registerKotlinExtensionConflictHandler } from './kotlinExtensionConflict';
 export {
   registerStatusBarContribution,
+  setStatusBarSuffix,
   type StatusBarContribution,
   type StatusBarContributionPresentation,
   type StatusBarContributionRegistration,
+  type StatusBarSuffix,
 } from './statusBar';
 
 export { disconnectedServerStartupPhase } from './serverRestartState';
