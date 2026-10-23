@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features.impl.kotlin.diagnostics.compiler
 
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.features.lsGetSyntaxErrors
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.features.diagnostics.LSCompilationDiagnosticProvider
@@ -26,6 +27,13 @@ internal object LSKotlinCompilerDiagnosticsProvider : LSCompilationDiagnosticPro
       lsKotlinCompilerDiagnostics(project, params) { diagnostic, virtualFile ->
         LSP.json.encodeToJsonElement(KotlinCompilerDiagnosticData.create(diagnostic, virtualFile))
       }
+    }.forEach { diagnostic -> emit(diagnostic) }
+  }
+
+  context(server: LSServer, handlerContext: LspHandlerContext)
+  override fun getCompilationErrors(params: DocumentDiagnosticParams): Flow<Diagnostic> = flow {
+    server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
+      lsGetSyntaxErrors(project, params) + lsKotlinCompilerDiagnostics(project, params)
     }.forEach { diagnostic -> emit(diagnostic) }
   }
 }
