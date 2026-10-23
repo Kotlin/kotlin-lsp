@@ -84,11 +84,7 @@ class GradleTool(
 ) : BuildTool {
 
     override fun sync(context: BuildToolContext, request: SyncRequest): Flow<ImportEvent> =
-        channelFlow {
-            context.withAnalyzerContext {
-                importWorkspace(context.virtualFileUrlManager).collect { send(it) }
-            }
-        }
+        importWorkspace(context.virtualFileUrlManager)
             .catch { e ->
                 rethrowControlFlowException(e)
                 emit(ImportEvent.Failed(e))
