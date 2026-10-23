@@ -708,7 +708,7 @@ function delay(ms: number, signal?: AbortSignal): Promise<void> {
   });
 }
 
-async function sha256(file: string): Promise<string> {
+export async function sha256(file: string): Promise<string> {
   const hash = createHash('sha256');
   const input = fs.createReadStream(file);
   for await (const chunk of input) {
