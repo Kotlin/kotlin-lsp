@@ -48,7 +48,7 @@ abstract class LSRenameProviderBase(
                 .also { (processor as? LSRenameProcessor)?.let { failRenameIfRefused(it, showNotificationWithError = false) } }
         }
 
-        return WorkspaceEdit(documentChanges = changes)
+        return WorkspaceEdit(documentChanges = renameCustomizer.clientChanges(changes))
     }
 
     context(server: LSServer, handlerContext: LspHandlerContext)
