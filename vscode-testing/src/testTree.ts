@@ -87,8 +87,8 @@ export class TestTree {
     const existing = this.entries.get(id);
     if (existing) return existing.item;
 
-    // No range: the runner reports what ran, not where it is written.
     const item = this.controller.createTestItem(id, displayName, Uri.parse(owner.uri));
+    item.range = parent.item.range;
     item.tags = this.tags.ofNode(owner);
     // The runner reports the invocations of a test in order, and a label sorts `[10]` before `[2]`.
     item.sortText = String(parent.item.children.size).padStart(6, '0');

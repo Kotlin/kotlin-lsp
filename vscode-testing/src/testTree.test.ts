@@ -473,6 +473,26 @@ describe('a node the runner reported but discovery never did', () => {
     assert.equal(entry?.origin === 'runtime' && entry.uniqueId, 'uid-2');
   });
 
+  test('is written where the node it hangs under is, so "Go to Test" lands there', () => {
+    const { tree } = treeWithCollapsedClass();
+    tree.sync(fileScope(URI_A), [
+      classDto('moduleA', CLASS_ID, URI_A),
+      methodDto('moduleA', CLASS_ID, 'testOne', URI_A),
+    ]);
+    const method = itemOf(tree, TEST_ID);
+
+    const invocation = runtimeItem(tree, TEST_ID, 'uid-1', 'repetition 1 of 3');
+    const nested = tree.ensureRuntimeItem({
+      parent: invocation!,
+      nodeId: 'uid-1-1',
+      displayName: 'nested',
+    });
+
+    assert.ok(method.range);
+    assert.equal(invocation?.range, method.range);
+    assert.equal(nested?.range, method.range);
+  });
+
   test('has nowhere to go when the node it hangs under is not in the tree', () => {
     const { tree } = makeTree();
 
