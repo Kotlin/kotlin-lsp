@@ -1,9 +1,9 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports
 
-import com.jetbrains.ls.api.run.BuildUnit
-import com.jetbrains.ls.api.run.RunOptions
-import com.jetbrains.ls.api.run.RunTask
+import com.jetbrains.ls.buildtool.api.run.BuildUnit
+import com.jetbrains.ls.buildtool.api.run.RunOptions
+import com.jetbrains.ls.buildtool.api.run.RunTask
 import com.jetbrains.ls.imports.gradle.GRADLE_DEBUG_AGENT_PROPERTY
 import com.jetbrains.ls.imports.gradle.gradleArgs
 import com.jetbrains.ls.imports.gradle.gradleCompileTask

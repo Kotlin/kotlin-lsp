@@ -7,7 +7,7 @@ import com.intellij.platform.workspace.jps.entities.LibraryRootTypeId
 import com.intellij.platform.workspace.jps.entities.ModuleEntity
 import com.intellij.platform.workspace.jps.entities.customImlData
 import com.jetbrains.ls.imports.api.IMPORT_JAVA_HOME_KEY
-import com.jetbrains.ls.imports.api.WorkspaceImportOptions
+import com.jetbrains.ls.buildtool.api.WorkspaceImportOptions
 import com.jetbrains.ls.imports.api.externalSystemId
 import com.jetbrains.ls.imports.core.provider.TestDataDirSource
 import com.jetbrains.ls.imports.gradle.GradleDriver

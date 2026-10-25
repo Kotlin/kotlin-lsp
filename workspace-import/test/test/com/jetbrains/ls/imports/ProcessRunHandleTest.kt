@@ -1,9 +1,9 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports
 
-import com.jetbrains.ls.api.run.RunHandle
-import com.jetbrains.ls.api.run.RunTaskEvent
-import com.jetbrains.ls.api.run.toRunHandle
+import com.jetbrains.ls.buildtool.api.run.RunHandle
+import com.jetbrains.ls.buildtool.api.run.RunTaskEvent
+import com.jetbrains.ls.buildtool.api.run.toRunHandle
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay

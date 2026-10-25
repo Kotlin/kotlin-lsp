@@ -1,18 +1,18 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports
 
-import com.jetbrains.ls.api.run.BuildUnit
-import com.jetbrains.ls.api.run.RunHandle
-import com.jetbrains.ls.api.run.RunRequest
-import com.jetbrains.ls.api.run.RunStep
-import com.jetbrains.ls.api.run.RunTask
-import com.jetbrains.ls.api.run.RunTaskEvent
-import com.jetbrains.ls.api.run.failedRunHandle
-import com.jetbrains.ls.api.run.run
-import com.jetbrains.ls.imports.api.BuildTool
-import com.jetbrains.ls.imports.api.BuildToolContext
-import com.jetbrains.ls.imports.api.SyncRequest
-import com.jetbrains.ls.imports.api.ImportEvent
+import com.jetbrains.ls.buildtool.api.run.BuildUnit
+import com.jetbrains.ls.buildtool.api.run.RunHandle
+import com.jetbrains.ls.buildtool.api.run.RunRequest
+import com.jetbrains.ls.buildtool.api.run.RunStep
+import com.jetbrains.ls.buildtool.api.run.RunTask
+import com.jetbrains.ls.buildtool.api.run.RunTaskEvent
+import com.jetbrains.ls.buildtool.api.run.failedRunHandle
+import com.jetbrains.ls.buildtool.api.run.run
+import com.jetbrains.ls.buildtool.api.BuildTool
+import com.jetbrains.ls.buildtool.api.BuildToolContext
+import com.jetbrains.ls.buildtool.api.SyncRequest
+import com.jetbrains.ls.buildtool.api.ImportEvent
 import fleet.util.async.Resource
 import fleet.util.async.resourceOf
 import kotlinx.coroutines.channels.Channel

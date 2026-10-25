@@ -1,0 +1,63 @@
+load("@community//build:compiler-options.bzl", "create_kotlinc_options")
+load("@rules_jvm//:jvm.bzl", "jvm_library")
+
+### auto-generated section `build language-server.buildtool.api` start
+create_kotlinc_options(
+    name = "custom_buildtool.api",
+    x_context_parameters = True,
+)
+
+jvm_library(
+    name = "buildtool.api",
+    srcs = glob(
+        [
+            "src/**/*.kt",
+            "src/**/*.java",
+            "src/**/*.form",
+        ],
+        allow_empty = True,
+    ),
+    kotlinc_opts = ":custom_buildtool.api",
+    module_name = "language-server.buildtool.api",
+    visibility = ["//visibility:public"],
+    deps = [
+        # do not sort,
+        "@lib//:kotlin-stdlib",
+        "@community//fleet/util/core",
+        "@community//libraries/kotlinx/coroutines/core",
+        "@community//platform/core-api:core",
+        "@community//platform/util",
+        "@community//platform/workspace/storage",
+    ],
+)
+
+jvm_library(
+    name = "buildtool.api_test_lib",
+    testonly = True,
+    srcs = glob(
+        [],
+        allow_empty = True,
+    ),
+    kotlinc_opts = ":custom_buildtool.api",
+    module_name = "language-server.buildtool.api",
+    visibility = ["//visibility:public"],
+    runtime_deps = [
+        # do not sort,
+        ":buildtool.api",
+        "@community//fleet/util/core:core_test_lib",
+        "@community//libraries/kotlinx/coroutines/core:core_test_lib",
+        "@community//platform/core-api:core_test_lib",
+        "@community//platform/util:util_test_lib",
+        "@community//platform/workspace/storage:storage_test_lib",
+    ],
+)
+### auto-generated section `build language-server.buildtool.api` end
+
+### auto-generated section `iml language-server.buildtool.api` start
+exports_files(
+    [
+        "language-server.buildtool.api.iml",
+    ],
+    visibility = ["//visibility:public"],
+)
+### auto-generated section `iml language-server.buildtool.api` end

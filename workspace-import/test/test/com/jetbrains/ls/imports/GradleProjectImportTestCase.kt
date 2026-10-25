@@ -9,7 +9,7 @@ import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.io.NioFiles
 import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.util.SystemProperties
-import com.jetbrains.ls.imports.api.WorkspaceImportParameters
+import com.jetbrains.ls.buildtool.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.LSP_GRADLE_DAEMON_NO_IDLE_TIMEOUT
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.LSP_GRADLE_JAVA_HOME_PROPERTY

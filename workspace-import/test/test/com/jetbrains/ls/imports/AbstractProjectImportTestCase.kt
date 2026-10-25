@@ -9,10 +9,10 @@ import com.jetbrains.analyzer.api.withProject
 import com.jetbrains.analyzer.bootstrap.AnalyzerProjectId
 import com.jetbrains.analyzer.bootstrap.WorkspaceModelSnapshot
 import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
-import com.jetbrains.ls.imports.api.WorkspaceException
-import com.jetbrains.ls.imports.api.WorkspaceImportException
+import com.jetbrains.ls.buildtool.api.WorkspaceException
+import com.jetbrains.ls.buildtool.api.WorkspaceImportException
 import com.jetbrains.ls.imports.api.BuildToolDriver
-import com.jetbrains.ls.imports.api.WorkspaceImportParameters
+import com.jetbrains.ls.buildtool.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.api.importWorkspaceFully
 import com.jetbrains.ls.imports.core.provider.TestDataDirProvider
 import com.jetbrains.ls.imports.core.provider.TestDataDirs

@@ -13,10 +13,10 @@ import com.intellij.util.SystemProperties
 import com.intellij.util.containers.addIfNotNull
 import com.intellij.util.io.delete
 import com.intellij.util.lang.JavaVersion
-import com.jetbrains.ls.imports.api.WorkspaceImportException
-import com.jetbrains.ls.imports.api.ImportEvent
-import com.jetbrains.ls.imports.api.environmentVariable
-import com.jetbrains.ls.imports.api.putEnvironment
+import com.jetbrains.ls.buildtool.api.WorkspaceImportException
+import com.jetbrains.ls.buildtool.api.ImportEvent
+import com.jetbrains.ls.buildtool.api.environmentVariable
+import com.jetbrains.ls.buildtool.api.putEnvironment
 import com.jetbrains.ls.imports.gradle.compatibility.GradleJvmCompatibilityChecker
 import com.jetbrains.ls.imports.gradle.util.GradleOutputStream
 import kotlinx.coroutines.channels.SendChannel

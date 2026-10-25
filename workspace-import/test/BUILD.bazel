@@ -123,6 +123,8 @@ jvm_library(
         "@community//tools/intellij.tools.ide.starter:ide-starter_test_lib",
         "@community//libraries/junit6-params",
         "@community//libraries/junit6-params:junit6-params_test_lib",
+        "//language-server/community/buildtool.api",
+        "//language-server/community/buildtool.api:buildtool.api_test_lib",
     ],
 )
 ### auto-generated section `build language-server.workspace-import.test` end

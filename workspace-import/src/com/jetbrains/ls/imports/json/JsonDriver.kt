@@ -1,10 +1,10 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports.json
 
-import com.jetbrains.ls.imports.api.BuildTool
+import com.jetbrains.ls.buildtool.api.BuildTool
 import com.jetbrains.ls.imports.api.BuildToolDriver
 import com.jetbrains.ls.imports.api.BuildToolDriverContext
-import com.jetbrains.ls.imports.api.WorkspaceImportParameters
+import com.jetbrains.ls.buildtool.api.WorkspaceImportParameters
 import fleet.util.async.Resource
 import fleet.util.async.resource
 import java.nio.file.Path

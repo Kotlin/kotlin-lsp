@@ -72,5 +72,6 @@
     <orderEntry type="module" module-name="intellij.java.aetherDependencyResolver" />
     <orderEntry type="module" module-name="intellij.libraries.maven.resolver.provider" />
     <orderEntry type="module" module-name="intellij.java.jdkAnnotations" />
+    <orderEntry type="module" module-name="language-server.buildtool.api" />
   </component>
 </module>

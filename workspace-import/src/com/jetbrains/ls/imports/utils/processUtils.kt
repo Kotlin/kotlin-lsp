@@ -2,8 +2,8 @@
 package com.jetbrains.ls.imports.utils
 
 import com.intellij.util.io.awaitExit
-import com.jetbrains.ls.imports.api.ImportEvent
-import com.jetbrains.ls.imports.api.WorkspaceImportException
+import com.jetbrains.ls.buildtool.api.ImportEvent
+import com.jetbrains.ls.buildtool.api.WorkspaceImportException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.Dispatchers

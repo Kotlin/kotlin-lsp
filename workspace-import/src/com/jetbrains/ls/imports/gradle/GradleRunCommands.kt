@@ -2,9 +2,9 @@
 package com.jetbrains.ls.imports.gradle
 
 import com.jetbrains.ls.api.core.launch.WorkspaceModuleMapper
-import com.jetbrains.ls.api.run.BuildUnit
-import com.jetbrains.ls.api.run.RunOptions
-import com.jetbrains.ls.api.run.RunTask
+import com.jetbrains.ls.buildtool.api.run.BuildUnit
+import com.jetbrains.ls.buildtool.api.run.RunOptions
+import com.jetbrains.ls.buildtool.api.run.RunTask
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.platform.workspace.jps.entities.LibraryDependency
 import com.intellij.platform.workspace.jps.entities.ModuleEntity

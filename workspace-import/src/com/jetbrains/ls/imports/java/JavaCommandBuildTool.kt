@@ -10,23 +10,23 @@ import com.intellij.util.system.OS
 import com.jetbrains.ls.api.core.launch.JAVA_TOOL_TYPE
 import com.jetbrains.ls.api.core.launch.JvmClasspath
 import com.jetbrains.ls.imports.api.moduleRuntime
-import com.jetbrains.ls.api.run.RunHandle
-import com.jetbrains.ls.api.run.RunRequest
-import com.jetbrains.ls.api.run.RunTask
-import com.jetbrains.ls.api.run.RunTaskEvent
-import com.jetbrains.ls.api.run.UnsupportedRunException
-import com.jetbrains.ls.api.run.failedRunHandle
-import com.jetbrains.ls.api.run.freePort
-import com.jetbrains.ls.api.run.jdwpAgent
-import com.jetbrains.ls.api.run.toRunHandle
-import com.jetbrains.ls.imports.api.BuildTool
-import com.jetbrains.ls.imports.api.BuildToolContext
+import com.jetbrains.ls.buildtool.api.run.RunHandle
+import com.jetbrains.ls.buildtool.api.run.RunRequest
+import com.jetbrains.ls.buildtool.api.run.RunTask
+import com.jetbrains.ls.buildtool.api.run.RunTaskEvent
+import com.jetbrains.ls.buildtool.api.run.UnsupportedRunException
+import com.jetbrains.ls.buildtool.api.run.failedRunHandle
+import com.jetbrains.ls.buildtool.api.run.freePort
+import com.jetbrains.ls.buildtool.api.run.jdwpAgent
+import com.jetbrains.ls.buildtool.api.run.toRunHandle
+import com.jetbrains.ls.buildtool.api.BuildTool
+import com.jetbrains.ls.buildtool.api.BuildToolContext
 import com.jetbrains.ls.imports.api.BuildToolDriver
 import com.jetbrains.ls.imports.api.BuildToolDriverContext
-import com.jetbrains.ls.imports.api.SyncRequest
-import com.jetbrains.ls.imports.api.WorkspaceImportParameters
-import com.jetbrains.ls.imports.api.ImportEvent
-import com.jetbrains.ls.imports.api.putEnvironment
+import com.jetbrains.ls.buildtool.api.SyncRequest
+import com.jetbrains.ls.buildtool.api.WorkspaceImportParameters
+import com.jetbrains.ls.buildtool.api.ImportEvent
+import com.jetbrains.ls.buildtool.api.putEnvironment
 import fleet.util.async.Resource
 import fleet.util.async.map
 import fleet.util.async.resource
@@ -58,7 +58,7 @@ object JavaCommandDriver : BuildToolDriver {
 }
 
 /**
- * Runs [RunTask.Run] only. [com.jetbrains.ls.api.run.BuildUnit.projectPath] is the module name;
+ * Runs [RunTask.Run] only. [com.jetbrains.ls.buildtool.api.run.BuildUnit.projectPath] is the module name;
  * `sourceSet = "test"` puts the test outputs and the `TEST` scope dependencies on the class path. The paths and
  * the JDK come from the workspace model, the JPMS layout from the compiled outputs; see [javaArgs]. A
  * [JvmClasspath] extension replaces all of that with what the configuration spells; see [explicitJavaArgs].

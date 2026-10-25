@@ -2,11 +2,11 @@
 package com.jetbrains.ls.imports
 
 import com.intellij.ide.starter.sdk.JdkDownloaderFacade
-import com.jetbrains.ls.api.run.RunOptions
-import com.jetbrains.ls.api.run.RunRequest
-import com.jetbrains.ls.api.run.RunTask
-import com.jetbrains.ls.api.run.RunTaskEvent
-import com.jetbrains.ls.imports.api.WorkspaceImportParameters
+import com.jetbrains.ls.buildtool.api.run.RunOptions
+import com.jetbrains.ls.buildtool.api.run.RunRequest
+import com.jetbrains.ls.buildtool.api.run.RunTask
+import com.jetbrains.ls.buildtool.api.run.RunTaskEvent
+import com.jetbrains.ls.buildtool.api.WorkspaceImportParameters
 import com.jetbrains.ls.imports.maven.MavenDriver
 import com.jetbrains.ls.imports.maven.MavenModuleMapper
 import com.jetbrains.ls.imports.maven.MavenTool
@@ -22,7 +22,7 @@ import kotlin.io.path.writeText
 
 /**
  * Builds and runs an imported Maven project through the live tool, end to end: a real import, then
- * [com.jetbrains.ls.imports.api.BuildTool.run] executes the real Maven, and the assertions read the
+ * [com.jetbrains.ls.buildtool.api.BuildTool.run] executes the real Maven, and the assertions read the
  * process events.
  *
  * The unit tests cover the argv builders as pure functions. What only an execution shows is that the derived

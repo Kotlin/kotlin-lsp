@@ -2,9 +2,9 @@
 package com.jetbrains.ls.imports
 
 import com.intellij.util.system.OS
-import com.jetbrains.ls.imports.api.WorkspaceImportOptions
-import com.jetbrains.ls.imports.api.environmentVariable
-import com.jetbrains.ls.imports.api.putEnvironment
+import com.jetbrains.ls.buildtool.api.WorkspaceImportOptions
+import com.jetbrains.ls.buildtool.api.environmentVariable
+import com.jetbrains.ls.buildtool.api.putEnvironment
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull

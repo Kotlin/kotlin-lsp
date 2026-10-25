@@ -6,9 +6,9 @@ package com.jetbrains.ls.imports.maven
 import com.intellij.platform.workspace.jps.entities.ModuleEntity
 import com.intellij.platform.workspace.jps.entities.exModuleOptions
 import com.jetbrains.ls.api.core.launch.WorkspaceModuleMapper
-import com.jetbrains.ls.api.run.BuildUnit
-import com.jetbrains.ls.api.run.RunOptions
-import com.jetbrains.ls.api.run.RunTask
+import com.jetbrains.ls.buildtool.api.run.BuildUnit
+import com.jetbrains.ls.buildtool.api.run.RunOptions
+import com.jetbrains.ls.buildtool.api.run.RunTask
 import com.jetbrains.ls.imports.api.importRoot
 import org.jetbrains.annotations.VisibleForTesting
 import java.io.File
