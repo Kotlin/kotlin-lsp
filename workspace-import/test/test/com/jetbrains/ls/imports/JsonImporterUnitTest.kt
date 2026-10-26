@@ -15,6 +15,7 @@ import com.jetbrains.ls.imports.json.DependencyData
 import com.jetbrains.ls.imports.json.DependencyDataScope
 import com.jetbrains.ls.imports.json.JSON_EXTERNAL_SYSTEM_ID
 import com.jetbrains.ls.imports.json.JavaSettingsData
+import com.jetbrains.ls.imports.json.KotlinSettingsData
 import com.jetbrains.ls.imports.json.LibraryData
 import com.jetbrains.ls.imports.json.LibraryRootData
 import com.jetbrains.ls.imports.json.ModuleData
@@ -26,6 +27,7 @@ import com.jetbrains.ls.imports.json.flattenExportedDependencies
 import com.jetbrains.ls.imports.json.importWorkspaceData
 import com.jetbrains.ls.imports.json.postProcessWorkspaceData
 import com.jetbrains.ls.imports.json.workspaceData
+import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -463,5 +465,47 @@ class JsonImporterUnitTest {
         postProcessWorkspaceData(data, workspacePath) { unresolved += it }
 
         assertEquals(listOf("Gradle: org.example:undefined:1.0", "Gradle: $missingPath"), unresolved)
+    }
+
+    // The Gradle and Maven importers write no platform for a JVM module, only the `jvmTarget` in the compiler arguments.
+    @Test
+    fun kotlinSettingsWithoutPlatformGetThePlatformOfTheJvmTarget(@TempDir workspacePath: Path) {
+        val data = WorkspaceData(
+            modules = listOf(ModuleData(name = "main")),
+            kotlinSettings = listOf(
+                KotlinSettingsData(
+                    name = "Kotlin",
+                    sourceRoots = emptyList(),
+                    configFileItems = emptyList(),
+                    module = "main",
+                    useProjectSettings = false,
+                    implementedModuleNames = emptyList(),
+                    dependsOnModuleNames = emptyList(),
+                    additionalVisibleModuleNames = emptySet(),
+                    productionOutputPath = null,
+                    testOutputPath = null,
+                    sourceSetNames = emptyList(),
+                    isTestModule = false,
+                    externalProjectId = "main",
+                    isHmppEnabled = true,
+                    pureKotlinSourceFolders = emptyList(),
+                    kind = KotlinSettingsData.KotlinModuleKind.DEFAULT,
+                    compilerArguments = """J{"jvmTarget":"17"}""",
+                    additionalArguments = null,
+                    scriptTemplates = null,
+                    scriptTemplatesClasspath = null,
+                    outputDirectoryForJsLibraryFiles = null,
+                    targetPlatform = null,
+                    externalSystemRunTasks = emptyList(),
+                    version = 5,
+                    flushNeeded = false,
+                ),
+            ),
+        )
+
+        val storage = MutableEntityStorage.create()
+        storage.importWorkspaceData(data, workspacePath, object : EntitySource {}, IdeVirtualFileUrlManagerImpl())
+
+        assertEquals("JVM [17]", storage.entities<KotlinSettingsEntity>().single().targetPlatform)
     }
 }

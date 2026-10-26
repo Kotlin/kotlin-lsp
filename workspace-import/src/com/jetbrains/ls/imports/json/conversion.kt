@@ -73,10 +73,15 @@ import org.jetbrains.jps.model.serialization.java.JpsJavaModelSerializerExtensio
 import org.jetbrains.jps.model.serialization.java.JpsJavaModelSerializerExtension.JAVA_TEST_RESOURCE_ROOT_ID
 import org.jetbrains.jps.model.serialization.module.JpsModuleRootModelSerializer.JAVA_SOURCE_ROOT_TYPE_ID
 import org.jetbrains.jps.model.serialization.module.JpsModuleRootModelSerializer.JAVA_TEST_ROOT_TYPE_ID
+import org.jetbrains.kotlin.cli.common.arguments.K2JVMCompilerArguments
+import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.config.KotlinModuleKind
+import org.jetbrains.kotlin.config.serializeComponentPlatforms
+import org.jetbrains.kotlin.idea.workspaceModel.CompilerArgumentsSerializer
 import org.jetbrains.kotlin.idea.workspaceModel.CompilerSettingsData
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntityBuilder
+import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
@@ -554,7 +559,7 @@ private fun toEntity(
     entitySource = entitySource,
 ) {
     this.module = module
-    this.targetPlatform = kotlinSettingsData.targetPlatform
+    this.targetPlatform = kotlinSettingsData.targetPlatform ?: jvmTargetPlatform(kotlinSettingsData.compilerArguments)
     this.compilerArguments = kotlinSettingsData.compilerArguments?.let {
         toAbsoluteKotlinCompilerArguments(it, workspacePath)
     }
@@ -567,6 +572,13 @@ private fun toEntity(
             outputDirectoryForJsLibraryFiles = outputDirectoryForJsLibraryFiles ?: "",
         )
     }
+}
+
+/** A JVM module without a platform gets the platform of its `jvmTarget`, as in the JPS import. */
+private fun jvmTargetPlatform(compilerArguments: String?): String? {
+    val arguments = CompilerArgumentsSerializer.deserializeFromString(compilerArguments) as? K2JVMCompilerArguments ?: return null
+    val jvmTarget = arguments.jvmTarget?.let(JvmTarget::fromString) ?: return null
+    return JvmPlatforms.jvmPlatformByTargetVersion(jvmTarget).serializeComponentPlatforms()
 }
 
 
