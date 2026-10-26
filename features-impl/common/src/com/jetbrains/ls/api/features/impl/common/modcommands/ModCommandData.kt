@@ -618,7 +618,19 @@ suspend fun executeCommand(
 
         is ModCommandData.Composite -> {
             val commands = command.commands
+            // The client starts a snippet only in the active editor, and a new file has no editor yet.
+            // The IDE opens the editor of a template itself, so a new file is shown before its first snippet.
+            val createdNotShownFiles = mutableSetOf<String>()
             for ((index, nested) in commands.withIndex()) {
+                when (nested) {
+                    is ModCommandData.CreateFile -> createdNotShownFiles += nested.fileUrl
+                    is ModCommandData.Navigate -> createdNotShownFiles -= nested.fileUrl
+                    is ModCommandData.Snippet -> if (createdNotShownFiles.remove(nested.fileUrl)) {
+                        val caret = nested.vars.minOfOrNull { it.start } ?: 0
+                        executeCommand(ModCommandData.Navigate(nested.fileUrl, caret, caret, caret), client, changedFiles)
+                    }
+                    else -> {}
+                }
                 val proceed = when (nested) {
                     // The commands after the conflicts are the edits of the fix. `executeComposite` in the IDE
                     // passes the same sublist as the tail, and it is what the change guard has to watch.
