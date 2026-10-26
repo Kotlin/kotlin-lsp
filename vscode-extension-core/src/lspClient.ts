@@ -62,6 +62,7 @@ import {
   serverLauncherPath,
 } from './serverBundleDownload';
 import { type ClientFeatureFactory, startClientWithFeatures } from './clientFeatureFactories';
+import { notifyServerLaunched, type ServerObservers } from './serverObservers';
 import { routerArgs, routerPath } from './lspRouter';
 import { subscribeBuildOutput } from './buildTask';
 import { isDataSharingChoice, isRegion } from './consentValues';
@@ -125,6 +126,7 @@ let restartRequestedDuringStart = false;
 let bundledServerLauncherCache: { key: string; promise: Promise<string> } | undefined;
 let bundledServerSetupPhase: ServerBundlePhase = 'downloading';
 let configuredClientFeatureFactories: ClientFeatureFactory[] = [];
+let configuredServerObservers: ServerObservers = {};
 /** The launched server outliving a single start, so a later stop can still terminate it. */
 let launchedServer: LaunchedServerStartup | undefined;
 /**
@@ -193,6 +195,7 @@ interface LspClientPolicyOptions {
   checkEulaAccepted: () => Promise<boolean>;
   clientFeatureFactories?: ClientFeatureFactory[];
   onServerRestartStateChanged?: (state: ServerRestartState) => void;
+  serverObservers?: ServerObservers;
 }
 
 export function initLspClient({
@@ -200,9 +203,11 @@ export function initLspClient({
   checkEulaAccepted,
   clientFeatureFactories = [],
   onServerRestartStateChanged,
+  serverObservers = {},
 }: LspClientPolicyOptions): void {
   setLspActionsAvailable(true);
   configuredClientFeatureFactories = [...clientFeatureFactories];
+  configuredServerObservers = serverObservers;
   registerIntellijExtensionsInitOption();
   registerIntellijSettingsContributor();
   const restartServer = (): Promise<boolean> =>
@@ -958,6 +963,11 @@ async function startServer({
   serverProcess.once('close', () => rlErr.close());
 
   await launchedServerAttempt.waitForSpawn();
+  notifyServerLaunched({
+    observers: configuredServerObservers,
+    facts: { throughRouter, launcherPath, devPort, command, args, env },
+    log: logInfo,
+  });
 
   // Every launch is guarded, including the client's own restarts: its crash budget only reacts to a
   // closed connection, so a server that spawns but never answers initialize is invisible to it.
