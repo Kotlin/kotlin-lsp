@@ -38,3 +38,24 @@ test('registers a fresh client feature before each helper-managed client start',
   assert.equal(features.length, 2);
   assert.notStrictEqual(features[0], features[1]);
 });
+
+test('a factory gets the client of its feature', async () => {
+  const seen: object[] = [];
+  const client = {
+    registerFeature(): void {},
+    async start(): Promise<void> {},
+  };
+  await startClientWithFeatures(client, [
+    (owner) => {
+      seen.push(owner);
+      return {
+        fillClientCapabilities: () => {},
+        initialize: () => {},
+        getState: (): FeatureState => ({ kind: 'static' }),
+        clear: () => {},
+      };
+    },
+  ]);
+  assert.deepEqual(seen, [client]);
+  assert.equal(seen[0], client);
+});

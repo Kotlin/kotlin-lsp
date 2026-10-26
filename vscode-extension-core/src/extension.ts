@@ -35,6 +35,7 @@ import { promptReloadWindow } from './reloadWindow';
 import { registerAutoReloadWorkspace } from './autoReloadWorkspace';
 import { SERVER_BUNDLE_METADATA_FILE } from './serverBundleDownload';
 import type { ServerRestartState } from './serverRestartState';
+import { notifyObserver, reloadAndNotify, type ServerObservers } from './serverObservers';
 
 export {
   createLspClientProvider,
@@ -71,6 +72,8 @@ export {
 } from './statusBar';
 
 export { disconnectedServerStartupPhase } from './serverRestartState';
+export type { ServerLaunch, ServerObservers } from './serverObservers';
+export { promptReloadWindow } from './reloadWindow';
 export type { ServerRestartState } from './serverRestartState';
 
 export type ExtensionModule = (context: ExtensionContext) => void | Promise<void>;
@@ -91,6 +94,8 @@ export interface ActivationOptions {
   checkEulaAccepted?: EulaAcceptanceCheck;
   getAcceptedEulaHash?: AcceptedEulaHashProvider;
   onServerRestartStateChanged?: (state: ServerRestartState) => void;
+  /** The observers of the launches and the reloads of the server of this window. */
+  serverObservers?: ServerObservers;
 }
 
 interface ExtensionPackageJson {
@@ -101,6 +106,7 @@ let _context: ExtensionContext | undefined;
 let _outputChannel: LogOutputChannel | undefined;
 let _buildOutputChannel: OutputChannel | undefined;
 let serverActivated = false;
+let configuredServerObservers: ServerObservers = {};
 const devCommandsRegistered = new WeakSet<ExtensionContext>();
 const initializedExtensions = new WeakSet<ExtensionContext>();
 const workspaceReloadedEmitter = new EventEmitter<void>();
@@ -166,8 +172,19 @@ export async function reloadWorkspace({
   try {
     // Re-read settings now so changes (e.g. `intellij.projects`) take effect on reload.
     const initializationOptions = buildInitializationOptions();
-    await client.sendRequest(ReloadWorkspaceRequest, { initializationOptions });
-    markInitializationOptionsApplied(initializationOptions);
+    const onWorkspaceReloaded = configuredServerObservers.onWorkspaceReloaded;
+    await reloadAndNotify({
+      send: () => client.sendRequest(ReloadWorkspaceRequest, { initializationOptions }),
+      apply: () => markInitializationOptionsApplied(initializationOptions),
+      notify: () => {
+        if (onWorkspaceReloaded === undefined) return;
+        notifyObserver({
+          name: 'onWorkspaceReloaded',
+          call: () => onWorkspaceReloaded(initializationOptions, client),
+          log: logInfo,
+        });
+      },
+    });
     workspaceReloadedEmitter.fire();
     if (showConfirmation) await window.showInformationMessage('Workspace reloaded');
   } catch (e) {
@@ -226,6 +243,8 @@ export async function registerDevCommands(context: ExtensionContext): Promise<vo
 
 export async function initializeExtension(context: ExtensionContext): Promise<void> {
   if (initializedExtensions.has(context)) return;
+  // The work of the activation before the server, such as an embedded tool, logs here too.
+  initOutputChannel(context);
   await registerDevCommands(context);
   registerStatusBarItem();
   initializedExtensions.add(context);
@@ -238,6 +257,7 @@ export async function activateExtension(
 ): Promise<void> {
   _context = context;
   await initializeExtension(context);
+  configuredServerObservers = options.serverObservers ?? {};
   const getAcceptedEulaHash: AcceptedEulaHashProvider =
     options.getAcceptedEulaHash ?? defaultGetAcceptedEulaHash;
   if (!serverActivated) {
@@ -296,6 +316,7 @@ async function activateAcceptedExtension(
       checkEulaAccepted: () => checkEulaAcceptedFn(context),
       clientFeatureFactories: options.clientFeatureFactories,
       onServerRestartStateChanged: options.onServerRestartStateChanged,
+      serverObservers: options.serverObservers,
     });
     serverActivated = true;
   }

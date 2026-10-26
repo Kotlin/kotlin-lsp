@@ -9,6 +9,8 @@
     "./consentValues": "./src/consentValues.ts",
     "./serverBundleDownload": "./src/serverBundleDownload.ts",
     "./serverRestartState": "./src/serverRestartState.ts",
+    "./serverObservers": "./src/serverObservers.ts",
+    "./clientFeatureFactories": "./src/clientFeatureFactories.ts",
     "./showDocumentResult": "./src/showDocumentResult.ts",
     "./handleKeyType": "./src/handleKeyType.ts",
     "./testing/keyHandlerTestUtils": "./src/keyHandlerTestUtils.ts",
