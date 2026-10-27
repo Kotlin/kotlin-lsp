@@ -23,6 +23,7 @@ import { errorMessage } from './buildTaskModel';
 import { createRunOutputTerminalFactory, stackTraceLinkProvider } from './runTerminal';
 import { navigateToTrace } from './stackTrace';
 import { NAVIGATE_TO_FRAME_COMMAND } from './stackTraceNavigation';
+import { registerHotSwap } from './hotSwap';
 
 /**
  * The launch configuration types, one per way of running a program: a plain JVM, or one type per build tool.
@@ -179,18 +180,19 @@ export function registerDapServer(context: ExtensionContext) {
   // The server runs every program itself and streams the output as `output` events; for a terminal `console` the
   // tracker renders that stream in an integrated terminal or in an OS window, since nothing runs on the client.
   const runOutputTerminals = createRunOutputTerminalFactory();
-  for (const type of [
+  const registered = [
     JVM_DEBUG_TYPE,
     LEGACY_JVM_DEBUG_TYPE,
     ...Object.values(DEBUG_TYPE_BY_TOOL),
-  ]) {
-    if (!declared.has(type)) continue;
+  ].filter((type) => declared.has(type));
+  for (const type of registered) {
     context.subscriptions.push(
       debug.registerDebugAdapterDescriptorFactory(type, dapServerFactory),
       debug.registerDebugConfigurationProvider(type, debugConfigProvider),
       debug.registerDebugAdapterTrackerFactory(type, runOutputTerminals),
     );
   }
+  registerHotSwap(context, registered);
 
   context.subscriptions.push(
     window.registerTerminalLinkProvider(stackTraceLinkProvider),

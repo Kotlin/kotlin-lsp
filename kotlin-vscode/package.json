@@ -1143,6 +1143,32 @@
         }
       },
       {
+        "title": "Debugger",
+        "properties": {
+          "intellij.debug.hotSwap": {
+            "type": "string",
+            "scope": "window",
+            "enum": [
+              "manual",
+              "onSave",
+              "never"
+            ],
+            "enumItemLabels": [
+              "Manual",
+              "On Save",
+              "Never"
+            ],
+            "enumDescriptions": [
+              "Reload changed classes with the Reload Changed Classes button of the debug toolbar.",
+              "Also build and reload changed classes after a Java or Kotlin file is saved.",
+              "Hide the Reload Changed Classes button."
+            ],
+            "default": "manual",
+            "description": "Controls when changed classes are built and reloaded into a running JVM debug session (HotSwap)."
+          }
+        }
+      },
+      {
         "title": "Inlay Hints",
         "properties": {
           "jetbrains.kotlin.hints.settings.types.property": {
@@ -1297,6 +1323,12 @@
         "command": "jetbrains.editor.goToTest",
         "category": "IntelliJ",
         "title": "Go to Test or Test Subject"
+      },
+      {
+        "command": "jetbrains.debug.reloadChangedClasses",
+        "category": "IntelliJ",
+        "title": "Reload Changed Classes",
+        "icon": "$(debug-restart-frame)"
       }
     ],
     "menus": {
@@ -1312,6 +1344,16 @@
         {
           "command": "jetbrains.editor.goToTest",
           "when": "editorLangId == kotlin"
+        },
+        {
+          "command": "jetbrains.debug.reloadChangedClasses",
+          "when": "inDebugMode && debugType =~ /^intellij_/"
+        }
+      ],
+      "debug/toolBar": [
+        {
+          "command": "jetbrains.debug.reloadChangedClasses",
+          "when": "debugType =~ /^intellij_/ && jetbrains.debug.hotSwapSupported"
         }
       ],
       "testing/item/result": [
