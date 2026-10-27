@@ -183,7 +183,7 @@ internal fun facetCompilerArguments(
             apiLevel = languageLevel?.coerceAtMostVersion(compilerVersion)
         }
     }
-    applyCompilerArgumentsToFacetSettings(arguments, settings, module = null, modelsProvider = null)
+    applyCompilerArgumentsToFacetSettings(arguments, settings)
     settings.updateCompilerArguments {
         autoAdvanceLanguageVersion = false
         autoAdvanceApiVersion = false
