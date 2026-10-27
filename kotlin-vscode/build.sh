@@ -218,7 +218,6 @@ build_extension() {
   local log_prefix="$6"
   local download_archive_name="$7"
   local download_version="$8"
-  local platform="$9"
 
   if [[ "$THIN_BUNDLE" != "true" && ! -f "$lsp_zip_path" ]]; then
     echo "Error: LSP archive not found: $lsp_zip_path" >&2
@@ -240,13 +239,6 @@ build_extension() {
   copy_dir_if_exists "$extension_dir" "resources"
   copy_dir_if_exists "$extension_dir" "out/dist"
   copy_dir_if_exists "$extension_dir" "syntaxes"
-
-  # A package can add a payload of its platform, such as the embedded IDE CLI of intellij-server.
-  if [[ -f "$PACKAGE_DIR/vsix-payload.mjs" ]]; then
-    echo "$log_prefix Adding the payload of the package..."
-    IDECLI_RELEASE_DIR="${IDECLI_RELEASE_DIR:-$OUT_DIR/language-server/idecli}" \
-      node "$PACKAGE_DIR/vsix-payload.mjs" "$extension_dir" "$platform"
-  fi
 
   pushd "$extension_dir" > /dev/null
 
@@ -365,7 +357,7 @@ for productInfo in "$ARTIFACT_DIR"/*.product-info.json; do
 
     EXTENSION_DIR="$BUILD_DIR/vscode-$platform"
 
-    build_extension "$EXTENSION_DIR" "$vsix_target_filename" "$vsce_version" "$vsce_target" "$bundle" "[$platform]" "$download_archive_name" "$download_version" "$platform" &
+    build_extension "$EXTENSION_DIR" "$vsix_target_filename" "$vsce_version" "$vsce_target" "$bundle" "[$platform]" "$download_archive_name" "$download_version" &
     pids+=($!)
 done
 
