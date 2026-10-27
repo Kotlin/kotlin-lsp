@@ -1229,5 +1229,6 @@
   "engines": {
     "node": ">=22.20.0",
     "vscode": "^1.105.1"
-  }
+  },
+  "pricing": "Free"
 }
