@@ -1780,7 +1780,7 @@
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
             "outputDirectoryForJsLibraryFiles": null,
-            "targetPlatform": null,
+            "targetPlatform": "JVM [17]",
             "externalSystemRunTasks": [],
             "version": 5,
             "flushNeeded": false
@@ -1812,7 +1812,7 @@
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
             "outputDirectoryForJsLibraryFiles": null,
-            "targetPlatform": null,
+            "targetPlatform": "JVM [17]",
             "externalSystemRunTasks": [],
             "version": 5,
             "flushNeeded": false
@@ -1842,7 +1842,7 @@
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
             "outputDirectoryForJsLibraryFiles": null,
-            "targetPlatform": null,
+            "targetPlatform": "JVM [17]",
             "externalSystemRunTasks": [],
             "version": 5,
             "flushNeeded": false
@@ -1874,7 +1874,7 @@
             "scriptTemplates": null,
             "scriptTemplatesClasspath": null,
             "outputDirectoryForJsLibraryFiles": null,
-            "targetPlatform": null,
+            "targetPlatform": "JVM [17]",
             "externalSystemRunTasks": [],
             "version": 5,
             "flushNeeded": false
