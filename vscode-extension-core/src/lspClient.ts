@@ -9,6 +9,7 @@ import {
   LanguageClientOptions,
   NotificationType,
   RequestType,
+  RequestType0,
   ResponseError,
   ServerOptions,
   State,
@@ -64,6 +65,7 @@ import {
 import { type ClientFeatureFactory, startClientWithFeatures } from './clientFeatureFactories';
 import { notifyServerLaunched, type ServerObservers } from './serverObservers';
 import { routerArgs, routerPath } from './lspRouter';
+import { waitForProcessExit } from './processExit';
 import { subscribeBuildOutput } from './buildTask';
 import { isDataSharingChoice, isRegion } from './consentValues';
 import type { ServerRestartState } from './serverRestartState';
@@ -216,6 +218,7 @@ export function initLspClient({
       action: async () => {
         onServerRestartStateChanged?.('restarting');
         try {
+          await stopSharedServer();
           await startLspClient({ getAcceptedEulaHash, restartIfStarting: true });
           onServerRestartStateChanged?.('finished');
         } catch (error) {
@@ -316,6 +319,7 @@ async function clearCachesAndRestart({
   onServerRestartStateChanged?.('restarting');
   let cleared = false;
   try {
+    await stopSharedServer();
     await stopLspClient();
     cleared = indexDir ? await deleteIndexDir(indexDir) : false;
     await startLspClient({ getAcceptedEulaHash, restartIfStarting: true });
@@ -569,6 +573,61 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
       launchedServerState.currentAttempt?.settle();
     }
   }
+}
+
+const STOP_SERVER_REQUEST = new RequestType0<{ pid?: unknown }, void>('intellij/stopServer');
+const SHARED_SERVER_EXIT_TIMEOUT_MS = 30_000;
+
+/**
+ * Stops this client and the shared server it uses, and waits until the server process exits.
+ *
+ * Stopping the client alone ends only its session: the shared server keeps running, and the next router
+ * attaches to it again. The `intellij/stopServer` request makes the end of the session stop the whole
+ * process, and its other clients lose it too. The new server needs the workspace database, which the old
+ * process holds until it exits, so this waits for that exit.
+ *
+ * It does nothing without a running client, while a client starts, and for a dev server, which the
+ * extension does not own. Without the router the client stops its own server child. A server without the
+ * request stays running, and the restart attaches to it as before.
+ */
+async function stopSharedServer(): Promise<void> {
+  const client = _client;
+  if (
+    client?.state !== State.Running ||
+    startLspClientPromise !== undefined ||
+    !usesRouter() ||
+    isExternalServerConfigured()
+  ) {
+    return;
+  }
+  const pid = await requestServerStop(client);
+  if (pid === undefined) return;
+  await stopLspClient();
+  logInfo(`Waiting for the language server process ${pid} to exit`);
+  if (!(await waitForProcessExit({ pid, timeoutMs: SHARED_SERVER_EXIT_TIMEOUT_MS }))) {
+    throw new Error(
+      `The language server (process ${pid}) did not stop within ${SHARED_SERVER_EXIT_TIMEOUT_MS / 1000} seconds. ` +
+        'Stop that process, then restart again.',
+    );
+  }
+}
+
+/** Sends `intellij/stopServer`, and returns the process id of the server, or `undefined` when it refused. */
+async function requestServerStop(client: LanguageClient): Promise<number | undefined> {
+  try {
+    const { pid } = await withTimeout(
+      client.sendRequest(STOP_SERVER_REQUEST),
+      LSP_REQUEST_TIMEOUT_MS,
+      STOP_SERVER_REQUEST.method,
+    );
+    if (typeof pid === 'number' && Number.isSafeInteger(pid) && pid > 0) return pid;
+    logInfo(`The language server answered ${STOP_SERVER_REQUEST.method} without a process id`);
+  } catch (error) {
+    logInfo(
+      `The language server did not accept ${STOP_SERVER_REQUEST.method}, so it keeps running: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+  return undefined;
 }
 
 export async function stopLspClient(): Promise<void> {
