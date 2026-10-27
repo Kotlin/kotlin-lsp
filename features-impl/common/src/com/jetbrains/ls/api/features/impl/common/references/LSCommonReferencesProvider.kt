@@ -2,13 +2,13 @@
 package com.jetbrains.ls.api.features.impl.common.references
 
 import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.core.features.lsReferences
+import com.jetbrains.ls.api.core.features.LSUsage
+import com.jetbrains.ls.api.core.features.lsUsages
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.TargetKind
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.references.LSReferencesProvider
 import com.jetbrains.lsp.implementation.LspHandlerContext
-import com.jetbrains.lsp.protocol.Location
 import com.jetbrains.lsp.protocol.ReferenceParams
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
@@ -18,9 +18,9 @@ class LSCommonReferencesProvider(
     private val targetKinds: Set<TargetKind>
 ) : LSReferencesProvider {
     context(server: LSServer, handlerContext: LspHandlerContext)
-    override fun getReferences(params: ReferenceParams): Flow<Location> = channelFlow {
+    override fun getReferences(params: ReferenceParams, classify: Boolean): Flow<LSUsage> = channelFlow {
         server.withAnalysisContext {
-            lsReferences(project, params, targetKinds).collect(::send)
+            lsUsages(project, params, targetKinds, classify).collect(::send)
         }
     }
 }

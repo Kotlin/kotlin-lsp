@@ -2,13 +2,14 @@
 package com.jetbrains.ls.api.features.references
 
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.features.LSUsage
 import com.jetbrains.ls.api.features.LSLanguageSpecificConfigurationEntry
 import com.jetbrains.lsp.implementation.LspHandlerContext
-import com.jetbrains.lsp.protocol.Location
 import com.jetbrains.lsp.protocol.ReferenceParams
 import kotlinx.coroutines.flow.Flow
 
 interface LSReferencesProvider : LSLanguageSpecificConfigurationEntry {
+    /** With [classify], each usage carries its access and import flag; without it, both stay unset. */
     context(server: LSServer, handlerContext: LspHandlerContext)
-    fun getReferences(params: ReferenceParams): Flow<Location>
+    fun getReferences(params: ReferenceParams, classify: Boolean): Flow<LSUsage>
 }

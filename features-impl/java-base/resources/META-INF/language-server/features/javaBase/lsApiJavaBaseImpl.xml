@@ -14,6 +14,8 @@
 
     <findUsagesHandlerFactory implementation="com.intellij.find.findUsages.JavaFindUsagesHandlerFactory" id="java"
                               order="last, before default"/>
+    <!-- from JavaPlugin.xml; Kotlin registers its own in intellij.kotlin.searching.base -->
+    <importFilteringRule implementation="com.intellij.usages.impl.rules.ImportFilteringRule"/>
   </extensions>
   <extensions defaultExtensionNs="ls">
     <markdownDocProvider language="JAVA"
