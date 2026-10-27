@@ -8,6 +8,7 @@ import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.SuppressIntentionActionFromFix
 import com.intellij.codeInspection.SuppressQuickFix
 import com.intellij.modcommand.ActionContext
+import com.intellij.modcommand.ModChooseAction
 import com.intellij.modcommand.ModCommand
 import com.intellij.modcommand.ModCommandAction
 import com.intellij.modcommand.Presentation
@@ -21,14 +22,16 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.features.InspectionProfilePatcher
+import com.jetbrains.ls.api.core.features.LSConfiguredInspection
 import com.jetbrains.ls.api.core.features.LSInspections
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.isSource
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
+import com.jetbrains.ls.api.features.LspServerBundle
+import com.jetbrains.ls.api.features.codeActions.LSCodeActionGroup
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
-import com.jetbrains.ls.api.features.impl.common.modcommands.ModCommandFix
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCodeAction
 import com.jetbrains.ls.api.features.impl.common.modcommands.toModCommandFixes
 import com.jetbrains.ls.api.features.language.LSLanguage
@@ -38,34 +41,33 @@ import com.jetbrains.lsp.protocol.CodeActionKind
 import com.jetbrains.lsp.protocol.CodeActionParams
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 
-private val LOG = logger<LSCommonInspectionSuppressionCodeActionProvider>()
+private val LOG = logger<LSCommonInspectionOptionsCodeActionProvider>()
 
 /**
- * Offers the "Suppress for statement / method / class / file" actions of an inspection diagnostic, which the IDE
- * lists after the fixes of the warning (see `HighlightInfo.IntentionActionDescriptor.getOptions`).
+ * Offers the `Inspection 'name'...` action of an inspection diagnostic. The action shows a chooser of the inspection
+ * options: the "Suppress for statement / method / class / file" actions. The IDE shows the same options after the
+ * fixes of the warning (see `HighlightInfo.IntentionActionDescriptor.getOptions`).
  *
- * The actions are found when the client asks for the code actions of a diagnostic, not when the diagnostic is
- * reported: every warning has several of them, and the client asks for the actions of a few warnings only.
+ * The action is offered for every inspection diagnostic, also for one without fixes. The options are found when the
+ * client asks for the code actions of a diagnostic, not when the diagnostic is reported: the client asks for the
+ * actions of a few warnings only.
  */
-class LSCommonInspectionSuppressionCodeActionProvider(
+class LSCommonInspectionOptionsCodeActionProvider(
     override val supportedLanguages: Set<LSLanguage>,
     private val inspectionProfilePatcher: InspectionProfilePatcher = InspectionProfilePatcher(),
 ) : LSCodeActionProvider {
 
     companion object {
-        /** The [CodeAction.data] of a suppression, which tells it from a fix of the same [CodeActionKind.QuickFix] kind. */
-        val suppressionData: JsonElement = buildJsonObject { put("suppression", true) }
+        /** The kind of the `Inspection 'name'...` actions, which a client can tell from the fixes of a diagnostic. */
+        val inspectionOptionsKind: CodeActionKind = CodeActionKind("${CodeActionKind.QuickFix.value}.inspection")
 
-        fun isSuppression(codeAction: CodeAction): Boolean = codeAction.data == suppressionData
+        fun isInspectionOptions(codeAction: CodeAction): Boolean = codeAction.kind == inspectionOptionsKind
     }
 
-    override val providesOnlyKinds: Set<CodeActionKind> = setOf(CodeActionKind.QuickFix)
+    override val providesOnlyKinds: Set<CodeActionKind> = setOf(inspectionOptionsKind)
 
-    override val listedLast: Boolean get() = true
+    override val group: LSCodeActionGroup get() = LSCodeActionGroup.InspectionOptions
 
     context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
@@ -92,12 +94,16 @@ class LSCommonInspectionSuppressionCodeActionProvider(
                     LSInspections.getSharedLocalInspectionsFromGlobalTools(
                         psiFile, psiFile.language, inspectionProfilePatcher, importInspectionProfile = importInspectionProfile,
                     )
-                val tools = (liveTools.map { it.tool } + batchTools(psiFile, batchIds, importInspectionProfile)).associateBy { it.id }
+                val tools = (liveTools + batchTools(psiFile, batchIds, importInspectionProfile)).associateBy { it.tool.id }
                 diagnostics.flatMap { diagnostic ->
                     val tool = tools[diagnostic.code?.value?.content] ?: return@flatMap emptyList()
                     val offset = document.offsetByPosition(diagnostic.range.start)
-                    suppressionFixes(tool, psiFile, offset).map { fix ->
-                        applyFixCodeAction(fix.name, CodeActionKind.QuickFix, fix.data, diagnostic).copy(data = suppressionData)
+                    val element = psiFile.findElementAt(offset) ?: return@flatMap emptyList()
+                    val context = ActionContext(psiFile.project, psiFile, offset, TextRange(offset, offset), element)
+                    val options = suppressionActions(tool.tool, element)
+                    val action = InspectionOptionsAction(displayName(tool.tool), options)
+                    action.toModCommandFixes(context).map { fix ->
+                        applyFixCodeAction(fix.name, inspectionOptionsKind, fix.data, diagnostic)
                     }
                 }
             }
@@ -105,23 +111,23 @@ class LSCommonInspectionSuppressionCodeActionProvider(
     }
 
     /** The tools named by [inspectionIds], the codes of batch diagnostics; none without codes. */
-    private fun batchTools(psiFile: PsiFile, inspectionIds: Set<String>, importInspectionProfile: Boolean): List<LocalInspectionTool> {
+    private fun batchTools(
+        psiFile: PsiFile,
+        inspectionIds: Set<String>,
+        importInspectionProfile: Boolean,
+    ): List<LSConfiguredInspection<LocalInspectionTool>> {
         if (inspectionIds.isEmpty()) return emptyList()
-        return (LSInspections.getLocalInspections(
-                    psiFile, inspectionProfilePatcher, inspectionIds = inspectionIds, importInspectionProfile = importInspectionProfile,
-                ) +
-                LSInspections.getSharedLocalInspectionsFromGlobalTools(
-                    psiFile, psiFile.language, inspectionProfilePatcher, inspectionIds = inspectionIds,
-                    importInspectionProfile = importInspectionProfile,
-                ))
-            .map { it.tool }
+        return LSInspections.getLocalInspections(
+                   psiFile, inspectionProfilePatcher, inspectionIds = inspectionIds, importInspectionProfile = importInspectionProfile,
+               ) +
+               LSInspections.getSharedLocalInspectionsFromGlobalTools(
+                   psiFile, psiFile.language, inspectionProfilePatcher, inspectionIds = inspectionIds,
+                   importInspectionProfile = importInspectionProfile,
+               )
     }
 
-    /** The suppression actions of [tool] at [offset], in the order the IDE shows them. */
-    context(server: LSServer)
-    private fun suppressionFixes(tool: InspectionProfileEntry, psiFile: PsiFile, offset: Int): List<ModCommandFix> {
-        val element = psiFile.findElementAt(offset) ?: return emptyList()
-        val context = ActionContext(psiFile.project, psiFile, offset, TextRange(offset, offset), element)
+    /** The suppression actions of [tool] at [element], in the order the IDE shows them. */
+    private fun suppressionActions(tool: InspectionProfileEntry, element: PsiElement): List<ModCommandAction> {
         val suppressFixes = runCatching {
             tool.getBatchSuppressActions(element)
         }.getOrHandleException {
@@ -130,11 +136,35 @@ class LSCommonInspectionSuppressionCodeActionProvider(
         return suppressFixes
             .map { fix -> fix to SuppressIntentionActionFromFix.convertBatchToSuppressIntentionAction(fix) as SuppressIntentionActionFromFix }
             .sortedWith { (_, a), (_, b) -> a.compareTo(b) }
-            .flatMap { (fix, intention) ->
-                val action = intention.asModCommandAction() ?: SuppressOnCopyAction(tool, fix.name, fix.familyName)
-                action.toModCommandFixes(context, name = fix.name)
-            }
+            .map { (fix, intention) -> intention.asModCommandAction() ?: SuppressOnCopyAction(tool, fix.name, fix.familyName) }
     }
+
+    private fun displayName(tool: InspectionProfileEntry): String =
+        runCatching { tool.displayName }.getOrHandleException { LOG.warn("Failed to get the name of ${tool.shortName}", it) }
+        ?: tool.shortName
+}
+
+/**
+ * The `Inspection 'name'...` action: a chooser of the [options] of the inspection named [inspectionName].
+ * It is available when one of the options is available.
+ */
+private class InspectionOptionsAction(
+    private val inspectionName: String,
+    private val options: List<ModCommandAction>,
+) : ModCommandAction {
+    override fun getFamilyName(): String = LspServerBundle.message("inspection.options.action.name", inspectionName)
+
+    override fun getPresentation(context: ActionContext): Presentation? {
+        val available = options.any { option ->
+            runCatching { option.getPresentation(context) }.getOrHandleException {
+                LOG.warn("Failed to get presentation from mod command action $option", it)
+            } != null
+        }
+        return if (available) Presentation.of(familyName) else null
+    }
+
+    override fun perform(context: ActionContext): ModCommand =
+        ModChooseAction(LspServerBundle.message("inspection.options.chooser.title", inspectionName), options)
 }
 
 /**

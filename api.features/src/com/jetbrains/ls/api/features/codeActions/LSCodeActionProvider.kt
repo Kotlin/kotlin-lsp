@@ -21,11 +21,27 @@ interface LSCodeActionProvider : LSLanguageSpecificConfigurationEntry {
     val providesOnlyKinds: Set<CodeActionKind>
 
     /**
-     * Whether the code actions of this provider go after those of the other providers, as the IDE lists
-     * the suppression of a warning after its fixes.
+     * The group of the code actions of this provider in a response. By default, a provider of quick fixes only
+     * is in [LSCodeActionGroup.QuickFixes], and another provider is in [LSCodeActionGroup.Other].
      */
-    val listedLast: Boolean get() = false
+    val group: LSCodeActionGroup
+        get() = if (providesOnlyKinds.all { it.isKindOf(CodeActionKind.QuickFix) }) LSCodeActionGroup.QuickFixes else LSCodeActionGroup.Other
 
     context(server: LSServer, handlerContext: LspHandlerContext)
     fun getCodeActions(params: CodeActionParams): Flow<CodeAction>
+}
+
+/**
+ * The groups of code actions in a response, in the order of the entries. The IDE lists the actions of a warning in the
+ * same order: its fixes, then its options, such as a suppression, then the intentions.
+ */
+enum class LSCodeActionGroup {
+    /** The quick fixes of the diagnostics. */
+    QuickFixes,
+
+    /** The actions that change how the inspection of a diagnostic reports it, such as a suppression. */
+    InspectionOptions,
+
+    /** The intentions, the refactorings, and the source actions. */
+    Other,
 }

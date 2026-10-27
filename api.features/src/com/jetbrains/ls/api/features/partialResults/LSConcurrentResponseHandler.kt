@@ -1,7 +1,6 @@
 // Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.partialResults
 
-import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.implementation.streamResultsIfPossibleOrRespondDirectly
@@ -21,7 +20,6 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.serialization.KSerializer
 
 internal object LSConcurrentResponseHandler {
-    context(_: LSServer)
     suspend fun <H, R> respondDirectlyWithResultsCollectedConcurrently(
         providers: List<H>,
         getResults: (H) -> Flow<R>
@@ -31,21 +29,24 @@ internal object LSConcurrentResponseHandler {
     }
 
 
-    /** @param arrange sorts or trims all the results before any is sent, so nothing streams before the providers finish. */
-    context(handlerContext: LspHandlerContext, _: LSServer)
+    /**
+     * @param listingOrder groups the providers: the results of a group with a lower order go first. The providers of one
+     *   group give their results concurrently, in any order.
+     * @param arrange sorts or trims all the results before any is sent, so nothing streams before the providers finish.
+     */
+    context(handlerContext: LspHandlerContext)
     suspend fun <H, R> streamResultsIfPossibleOrRespondDirectly(
         partialResultToken: ProgressToken?,
         resultSerializer: KSerializer<R>,
         providers: List<H>,
-        isListedLast: (H) -> Boolean = { false },
+        listingOrder: (H) -> Int = { 0 },
         arrange: ((List<R>) -> List<R>)? = null,
         getResults: (H) -> Flow<R>
     ): List<R> {
         if (providers.isEmpty()) return emptyList()
-        val (last, first) = providers.partition(isListedLast)
-        val results = first.map { getResults(it) }.concurrentMerge()
-        val lastResults = last.map { getResults(it) }.concurrentMerge()
-        val merged = if (last.isEmpty()) results else results.followedBy(lastResults)
+        val merged = providers.groupBy(listingOrder).toSortedMap().values
+            .map { group -> group.map { getResults(it) }.concurrentMerge() }
+            .reduce { results, laterResults -> results.followedBy(laterResults) }
         val arranged = if (arrange == null) merged else flow { emitAll(arrange(merged.toList()).asFlow()) }
         return arranged.streamResultsIfPossibleOrRespondDirectly(lspClient, partialResultToken, resultSerializer)
 

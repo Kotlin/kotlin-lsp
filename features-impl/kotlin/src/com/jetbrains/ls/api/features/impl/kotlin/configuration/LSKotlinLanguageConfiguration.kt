@@ -21,7 +21,7 @@ import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInjectionIn
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInjectionSyntaxErrorDiagnosticProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionDiagnosticProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionFixesCodeActionProvider
-import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionSuppressionCodeActionProvider
+import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionOptionsCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonIntentionFixesCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonSyntaxErrorDiagnosticProvider
 import com.jetbrains.ls.api.features.impl.common.documentHighlight.LSCommonDocumentHighlightProvider
@@ -91,7 +91,7 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         ),
         LSCommonInspectionFixesCodeActionProvider(setOf(LSKotlinLanguage), kotlinInspectionPatcher, kotlinQuickFixBlacklist),
         LSCommonBatchInspectionProvider(setOf(LSKotlinLanguage), kotlinInspectionPatcher),
-        LSCommonInspectionSuppressionCodeActionProvider(setOf(LSKotlinLanguage), kotlinInspectionPatcher),
+        LSCommonInspectionOptionsCodeActionProvider(setOf(LSKotlinLanguage), kotlinInspectionPatcher),
         LSCommonIntentionFixesCodeActionProvider(
             supportedLanguages = setOf(LSKotlinLanguage),
             inspectionProfilePatcher = kotlinInspectionPatcher,

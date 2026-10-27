@@ -23,7 +23,7 @@ object LSCodeActions {
             partialResultToken = params.partialResultToken,
             resultSerializer = CodeAction.serializer(),
             providers = getProviders(params),
-            isListedLast = { codeActionProvider -> codeActionProvider.listedLast },
+            listingOrder = { codeActionProvider -> codeActionProvider.group.ordinal },
             getResults ={ codeActionProvider ->
                 tracer.traceProvider(
                     spanName = "provider.codeAction",
