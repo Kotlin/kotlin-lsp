@@ -8,11 +8,14 @@ import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.lsp.implementation.throwLspError
 import com.jetbrains.lsp.protocol.Commands.ExecuteCommand
 import com.jetbrains.lsp.protocol.ErrorCodes
-import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.Json
 
 /**
  * The filesystem barrier a client runs before it believes an index-backed answer: once the command returns, every
  * filesystem change the client made before sending it is in the index (see [LSServer.waitForHighWatermark]).
+ *
+ * The result is an [LSServer.HighWatermarkStatus]. A client that reads `reimportNeeded` asks for one reload itself;
+ * the barrier starts no import of its own (LSP-1983).
  */
 object LSHighWatermarkCommandDescriptorProvider : LSCommandDescriptorProvider {
     override val commandDescriptors: List<LSCommandDescriptor> = listOf(
@@ -20,8 +23,8 @@ object LSHighWatermarkCommandDescriptorProvider : LSCommandDescriptorProvider {
             if (arguments.isNotEmpty()) {
                 throwLspError(ExecuteCommand, "Expected no arguments, got: ${arguments.size}", Unit, ErrorCodes.InvalidParams, null)
             }
-            contextOf<LSServer>().waitForHighWatermark()
-            JsonNull
+            val status = contextOf<LSServer>().waitForHighWatermark()
+            Json.encodeToJsonElement(LSServer.HighWatermarkStatus.serializer(), status)
         },
     )
 
