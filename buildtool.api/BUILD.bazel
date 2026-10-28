@@ -30,27 +30,6 @@ jvm_library(
         "@community//platform/workspace/storage",
     ],
 )
-
-jvm_library(
-    name = "buildtool.api_test_lib",
-    testonly = True,
-    srcs = glob(
-        [],
-        allow_empty = True,
-    ),
-    kotlinc_opts = ":custom_buildtool.api",
-    module_name = "language-server.buildtool.api",
-    visibility = ["//visibility:public"],
-    runtime_deps = [
-        # do not sort,
-        ":buildtool.api",
-        "@community//fleet/util/core:core_test_lib",
-        "@community//libraries/kotlinx/coroutines/core:core_test_lib",
-        "@community//platform/core-api:core_test_lib",
-        "@community//platform/util:util_test_lib",
-        "@community//platform/workspace/storage:storage_test_lib",
-    ],
-)
 ### auto-generated section `build language-server.buildtool.api` end
 
 ### auto-generated section `iml language-server.buildtool.api` start

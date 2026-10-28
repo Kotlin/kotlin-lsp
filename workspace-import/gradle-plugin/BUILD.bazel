@@ -60,33 +60,6 @@ jvm_library(
         ":community_libraries_jspecify_provided",
     ],
 )
-
-jvm_library(
-    name = "gradle-plugin_test_lib",
-    testonly = True,
-    srcs = glob(
-        [],
-        allow_empty = True,
-    ),
-    kotlinc_opts = ":custom_gradle-plugin",
-    module_name = "language-server.workspace-import.gradle-plugin",
-    visibility = ["//visibility:public"],
-    runtime_deps = [
-        # do not sort,
-        ":gradle-plugin",
-        "@ultimate_lib//:javax-inject-provided",
-        "@community//libraries/groovy",
-        "@community//libraries/groovy:groovy_test_lib",
-        "@community//libraries/gradle",
-        "@community//libraries/gradle:gradle_test_lib",
-        "//libraries/gradle-tooling:gradle-tooling_test_lib",
-        "@community//libraries/kotlin/tooling-core:libraries-kotlin-tooling-core_test_lib",
-        "@community//libraries/jetbrains/annotations:annotations_test_lib",
-        "@community//libraries/jspecify",
-        "@community//libraries/jspecify:jspecify_test_lib",
-        "@ultimate_lib//:slf4j-api-provided",
-    ],
-)
 ### auto-generated section `build language-server.workspace-import.gradle-plugin` end
 
 ### auto-generated section `iml language-server.workspace-import.gradle-plugin` start
