@@ -186,7 +186,7 @@ export function registerInitializationOptionsContributor(
 
 function registerIntellijSettingsContributor(): void {
   registerInitializationOptionsContributor(() => ({
-    importInspectionProfile: false,
+    importInspectionProfile: true,
   }));
 }
 
