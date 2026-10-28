@@ -1,6 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.configuration
 
+import com.intellij.codeInspection.ex.DisableInspectionToolModCommandAction
 import com.intellij.openapi.application.Application
 import com.intellij.openapi.project.Project
 import com.intellij.profile.codeInspection.InspectionProfileManager
@@ -30,6 +31,7 @@ internal object LSSettingsComponent : WorkspaceComponent<State> {
         val root = configData[RootUriKey]?.toPath()
             ?: return State(LSInspectionContext.empty(), LSScopeContext.empty())
 
+        // The settings directory is kept even when it is absent: a later change can create it, and the settings then reload.
         val settingsRoot = root.resolve(Project.DIRECTORY_STORE_FOLDER)
         return State(
             inspectionContext = LSInspectionContext.new(settingsRoot),
@@ -85,3 +87,10 @@ fun AnalyzerContainerBuilder.registerProjectLSSettings() {
 private fun AnalyzerContainerBuilder.registerProjectLSSettings(state: State) {
     serviceDoNotDispose(InspectionProjectProfileManager::class.java, state.inspectionContext.manager)
 }
+
+/**
+ * The file of the inspection profile the server reads, or the file to create for it. It is `null` when the project
+ * settings select a profile which the server does not read.
+ */
+context(server: LSServer)
+fun inspectionProfileFile(): DisableInspectionToolModCommandAction.ProfileFile? = server[LSSettingsComponent].inspectionContext.profileFile

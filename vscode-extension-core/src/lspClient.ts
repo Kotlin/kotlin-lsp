@@ -1068,6 +1068,9 @@ function buildDocumentSelector(): LanguageClientOptions['documentSelector'] {
       selector.push({ scheme, language: lang });
     }
   }
+  // The server changes an inspection profile with an edit that VS Code does not save. The server must see
+  // the unsaved text, so that the next edit of the profile applies to that text.
+  selector.push({ scheme: 'file', pattern: '**/.idea/inspectionProfiles/*.xml' });
   return selector;
 }
 

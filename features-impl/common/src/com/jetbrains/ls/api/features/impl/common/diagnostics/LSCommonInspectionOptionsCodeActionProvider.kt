@@ -7,6 +7,7 @@ import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.SuppressIntentionActionFromFix
 import com.intellij.codeInspection.SuppressQuickFix
+import com.intellij.codeInspection.ex.DisableInspectionToolModCommandAction
 import com.intellij.modcommand.ActionContext
 import com.intellij.modcommand.ModChooseAction
 import com.intellij.modcommand.ModCommand
@@ -32,6 +33,7 @@ import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionGroup
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
+import com.jetbrains.ls.api.features.impl.common.configuration.inspectionProfileFile
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCodeAction
 import com.jetbrains.ls.api.features.impl.common.modcommands.toModCommandFixes
 import com.jetbrains.ls.api.features.language.LSLanguage
@@ -46,12 +48,16 @@ private val LOG = logger<LSCommonInspectionOptionsCodeActionProvider>()
 
 /**
  * Offers the `Inspection 'name'...` action of an inspection diagnostic. The action shows a chooser of the inspection
- * options: the "Suppress for statement / method / class / file" actions. The IDE shows the same options after the
- * fixes of the warning (see `HighlightInfo.IntentionActionDescriptor.getOptions`).
+ * options: the "Suppress for statement / method / class / file" actions, and the action that disables the inspection
+ * in the inspection profile. The IDE shows the same options after the fixes of the warning (see
+ * `HighlightInfo.IntentionActionDescriptor.getOptions`).
  *
  * The action is offered for every inspection diagnostic, also for one without fixes. The options are found when the
  * client asks for the code actions of a diagnostic, not when the diagnostic is reported: the client asks for the
  * actions of a few warnings only.
+ *
+ * The disable option is offered only when the server imports the inspection profile of the project. It changes the
+ * profile file, and the server reloads the profile when the client saves the file.
  */
 class LSCommonInspectionOptionsCodeActionProvider(
     override val supportedLanguages: Set<LSLanguage>,
@@ -80,6 +86,7 @@ class LSCommonInspectionOptionsCodeActionProvider(
         val (batch, live) = withData.partition { it.data.diagnosticSource == LSCommonInspectionDiagnosticProvider.batchDiagnosticSource }
         val batchIds = batch.mapNotNullTo(mutableSetOf()) { it.diagnostic.code?.value?.content }
         val importInspectionProfile = server.config.importInspectionProfile
+        val profileFile = if (importInspectionProfile) inspectionProfileFile() else null
 
         server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
             readAction {
@@ -100,7 +107,7 @@ class LSCommonInspectionOptionsCodeActionProvider(
                     val offset = document.offsetByPosition(diagnostic.range.start)
                     val element = psiFile.findElementAt(offset) ?: return@flatMap emptyList()
                     val context = ActionContext(psiFile.project, psiFile, offset, TextRange(offset, offset), element)
-                    val options = suppressionActions(tool.tool, element)
+                    val options = suppressionActions(tool.tool, element) + disableAction(tool, profileFile)
                     val action = InspectionOptionsAction(displayName(tool.tool), options)
                     action.toModCommandFixes(context).map { fix ->
                         applyFixCodeAction(fix.name, inspectionOptionsKind, fix.data, diagnostic)
@@ -137,6 +144,18 @@ class LSCommonInspectionOptionsCodeActionProvider(
             .map { fix -> fix to SuppressIntentionActionFromFix.convertBatchToSuppressIntentionAction(fix) as SuppressIntentionActionFromFix }
             .sortedWith { (_, a), (_, b) -> a.compareTo(b) }
             .map { (fix, intention) -> intention.asModCommandAction() ?: SuppressOnCopyAction(tool, fix.name, fix.familyName) }
+    }
+
+    /**
+     * The action that disables [tool] in the profile of [profileFile], by the short name the profile knows it by.
+     * None when the server reads no profile file.
+     */
+    private fun disableAction(
+        tool: LSConfiguredInspection<LocalInspectionTool>,
+        profileFile: DisableInspectionToolModCommandAction.ProfileFile?,
+    ): List<ModCommandAction> {
+        if (profileFile == null) return emptyList()
+        return listOf(DisableInspectionToolModCommandAction(tool.profileShortName) { _, _ -> profileFile })
     }
 
     private fun displayName(tool: InspectionProfileEntry): String =

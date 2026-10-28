@@ -26,6 +26,8 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.impl.DocumentImpl
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.text.StringUtil
+import com.intellij.openapi.vfs.StandardFileSystems
+import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.findDocument
 import com.jetbrains.ls.api.core.LSAnalysisContext
@@ -66,6 +68,9 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.JsonElement
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Path
 import java.util.Base64
 
 private val LOG = logger<ModCommandData>()
@@ -318,7 +323,9 @@ sealed class ModCommandData {
 
             is ModDeleteFile -> DeleteFile(command.file.url)
             is ModMoveFile -> MoveFile(command.file.url, command.targetFile.url.toFileUrl())
-            is ModUpdateFileText -> UpdateFileText(command.file.url, command.toEdits())
+            // A file outside the index of the server is not in its virtual file system, so a command addresses it by a
+            // `mock` file of the same path.
+            is ModUpdateFileText -> UpdateFileText(command.file.url.toFileUrl(), command.toEdits())
             is ModDisplayMessage -> DisplayMessage(command.messageText, command.kind)
             // Relies on the custom `intellij/copyToClipboard` notification, so only clients,
             // which declare `intellijExtensions` can handle it; abort for the others.
@@ -489,7 +496,9 @@ suspend fun executeCommand(
     changedFiles: MutableMap<String, String> = mutableMapOf(),
 ): Boolean {
     fun findDocument(fileUrl: String): Document? =
-        changedFiles[fileUrl]?.let { DocumentImpl(it) } ?: VirtualFileManager.getInstance().findFileByUrl(fileUrl)?.findDocument()
+        changedFiles[fileUrl]?.let { DocumentImpl(it) }
+        ?: VirtualFileManager.getInstance().findFileByUrl(fileUrl)?.findDocument()
+        ?: readDocumentFromDisk(fileUrl)
     when (command) {
         is ModCommandData.Nothing -> {}
 
@@ -704,6 +713,23 @@ suspend fun executeCommand(
         is ModCommandData.LazyAction -> LOG.error("The lazy action $command was not resolved before execution")
     }
     return true
+}
+
+/**
+ * The document of a local file that the virtual file system of the server misses, such as a file outside the index.
+ * `null` when the file is not on the disk.
+ */
+private fun readDocumentFromDisk(fileUrl: String): Document? {
+    if (!fileUrl.startsWith(StandardFileSystems.FILE_PROTOCOL_PREFIX)) return null
+    val path = Path.of(VfsUtilCore.urlToPath(fileUrl))
+    if (!Files.isRegularFile(path)) return null
+    return try {
+        DocumentImpl(StringUtil.convertLineSeparators(Files.readString(path)))
+    }
+    catch (e: IOException) {
+        LOG.warn("Cannot read $path", e)
+        null
+    }
 }
 
 /**
