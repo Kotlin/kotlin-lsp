@@ -1,0 +1,141 @@
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+package com.jetbrains.ls.api.features.impl.common.modcommands
+
+import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.editor.Document
+import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.findDocument
+import com.jetbrains.ls.api.core.LSAnalysisContext
+import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.util.intellijUriToLspUri
+import com.jetbrains.ls.api.features.LspServerBundle
+import com.jetbrains.lsp.implementation.LspClient
+import com.jetbrains.lsp.implementation.LspHandlerContext
+import com.jetbrains.lsp.implementation.lspClient
+import com.jetbrains.lsp.implementation.throwLspError
+import com.jetbrains.lsp.protocol.ApplyEditRequests
+import com.jetbrains.lsp.protocol.ApplyWorkspaceEditParams
+import com.jetbrains.lsp.protocol.Commands.ExecuteCommand
+import com.jetbrains.lsp.protocol.DocumentUri
+import com.jetbrains.lsp.protocol.ErrorCodes
+import com.jetbrains.lsp.protocol.MessageType
+import com.jetbrains.lsp.protocol.ShowMessageNotificationType
+import com.jetbrains.lsp.protocol.ShowMessageParams
+import com.jetbrains.lsp.protocol.TextDocumentEdit
+import com.jetbrains.lsp.protocol.TextDocumentIdentifier
+import com.jetbrains.lsp.protocol.TextEdit
+import com.jetbrains.lsp.protocol.WorkspaceEdit
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import java.nio.ByteBuffer
+import java.security.MessageDigest
+
+private val LOG = logger<DocumentStamp>()
+
+/**
+ * A hash of the text of a document. A command carries it from the listing to the execution, and the execution
+ * refuses to run when the text changed in between.
+ *
+ * The hash is taken from an IntelliJ [Document], whose text always uses `\n` line separators, so the stamp is the
+ * same on every OS. It works for open and closed files alike. It is sent as a JSON string, because a JSON number
+ * keeps only 53 bits in a JavaScript client.
+ *
+ * The hash is the first 64 bits of the SHA-256 of the length and the UTF-16 chars of the text. A weak hash lets
+ * a real edit pass: `StringHash.buz`, used before, ignores 128 inserted copies of one char, and mixes only
+ * `ch ^ (ch >>> 8)` of a char, so `Š` (U+0160) hashes like `a`.
+ */
+@Serializable(with = DocumentStamp.Serializer::class)
+@JvmInline
+value class DocumentStamp(val value: Long) {
+    companion object {
+        fun of(document: Document): DocumentStamp = of(document.immutableCharSequence)
+
+        fun of(text: CharSequence): DocumentStamp {
+            val digest = MessageDigest.getInstance("SHA-256")
+            val buffer = ByteBuffer.allocate(8192)
+            buffer.putInt(text.length)
+            for (i in 0 until text.length) {
+                if (buffer.remaining() < Char.SIZE_BYTES) {
+                    digest.update(buffer.flip())
+                    buffer.clear()
+                }
+                buffer.putChar(text[i])
+            }
+            digest.update(buffer.flip())
+            return DocumentStamp(ByteBuffer.wrap(digest.digest()).getLong())
+        }
+    }
+
+    object Serializer : KSerializer<DocumentStamp> {
+        override val descriptor: SerialDescriptor =
+            PrimitiveSerialDescriptor("com.jetbrains.ls.api.features.impl.common.modcommands.DocumentStamp", PrimitiveKind.STRING)
+
+        override fun serialize(encoder: Encoder, value: DocumentStamp): Unit = encoder.encodeString(value.value.toString())
+
+        override fun deserialize(decoder: Decoder): DocumentStamp {
+            val text = decoder.decodeString()
+            // A SerializationException is a bad request (InvalidParams); a NumberFormatException would be an internal error.
+            return DocumentStamp(text.toLongOrNull() ?: throw SerializationException("Not a document stamp: '$text'"))
+        }
+    }
+}
+
+/** The stamps of some files, by IntelliJ file url. `null` means the file or its document was not found. */
+typealias DocumentStamps = Map<String, DocumentStamp?>
+
+/** The stamp of the document of [fileUrl] (an IntelliJ file url), or `null` when there is none. Must run in a read action. */
+context(_: LSAnalysisContext)
+fun stampOf(fileUrl: String): DocumentStamp? =
+    VirtualFileManager.getInstance().findFileByUrl(fileUrl)?.findDocument()?.let(DocumentStamp::of)
+
+/** The stamps of [fileUrls] (IntelliJ file urls). Must run in a read action. */
+context(_: LSAnalysisContext)
+fun stampsOf(fileUrls: Iterable<String>): DocumentStamps = fileUrls.associateWith { stampOf(it) }
+
+/**
+ * Whether every file still has the stamp it had when [this] was taken. A missing document on either side counts
+ * as a change. Must run in a read action.
+ */
+context(_: LSAnalysisContext)
+fun DocumentStamps.matchCurrent(): Boolean = all { (fileUrl, stamp) -> stamp != null && stamp == stampOf(fileUrl) }
+
+/**
+ * Stops a command because a document changed after the command was computed: tells the user, then fails the
+ * `workspace/executeCommand` request with [ErrorCodes.ContentModified].
+ */
+context(_: LspHandlerContext)
+suspend fun refuseStaleDocument(): Nothing = lspClient.refuseStaleDocument()
+
+/** Same as the context version of [refuseStaleDocument], for a caller that holds the client itself. */
+suspend fun LspClient.refuseStaleDocument(): Nothing {
+    notify(ShowMessageNotificationType, ShowMessageParams(MessageType.Warning, LspServerBundle.message("error.document.changed")))
+    throwLspError(ExecuteCommand, LspServerBundle.message("error.action.not.available"), Unit, ErrorCodes.ContentModified, null)
+}
+
+/**
+ * Sends [edit] with `workspace/applyEdit`. When the client does not apply it, which is what a client does with an
+ * edit of an older document version, the command is refused with [refuseStaleDocument].
+ */
+suspend fun LspClient.applyEditOrRefuse(label: String?, edit: WorkspaceEdit) {
+    val result = request(ApplyEditRequests.ApplyEdit, ApplyWorkspaceEditParams(label, edit))
+    if (!result.applied) {
+        LOG.info("The client did not apply the edit '$label': ${result.failureReason}, failed change: ${result.failedChanges}")
+        refuseStaleDocument()
+    }
+}
+
+/**
+ * An edit of [fileUrl] (an IntelliJ file url) that names the document version the client sent last. The version
+ * is `null` for a document the client does not keep open.
+ */
+context(server: LSServer)
+fun versionedEdit(fileUrl: String, edits: List<TextEdit>): TextDocumentEdit {
+    val uri = fileUrl.intellijUriToLspUri()
+    return TextDocumentEdit(TextDocumentIdentifier(DocumentUri(uri), server.documents.getVersion(uri)), edits)
+}

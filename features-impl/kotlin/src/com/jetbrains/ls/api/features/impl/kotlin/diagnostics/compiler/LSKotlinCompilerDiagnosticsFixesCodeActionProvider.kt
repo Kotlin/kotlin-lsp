@@ -6,11 +6,9 @@ import com.intellij.modcommand.ActionContext
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
-import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.impl.ImaginaryEditor
 import com.intellij.openapi.util.NlsSafe
-import com.intellij.openapi.util.text.StringHash
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.jetbrains.ls.api.core.LSAnalysisContext
@@ -25,8 +23,10 @@ import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.diagnostics.DiagnosticWithData
 import com.jetbrains.ls.api.features.impl.common.diagnostics.diagnosticData
+import com.jetbrains.ls.api.features.impl.common.modcommands.DocumentStamp
 import com.jetbrains.ls.api.features.impl.common.modcommands.LazyFix
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCodeAction
+import com.jetbrains.ls.api.features.impl.common.modcommands.refuseStaleDocument
 import com.jetbrains.ls.api.features.impl.common.modcommands.toLazyFix
 import com.jetbrains.ls.api.features.impl.common.modcommands.toModCommandFixes
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
@@ -64,10 +64,10 @@ private val LOG = logger<LSKotlinCompilerDiagnosticsFixesCodeActionProvider>()
  *
  * The listing runs in the shared analysis context and stays cheap: it computes the fix names only.
  * A client that declares `lazyIntentions` gets one command per fix. The command carries the document uri,
- * the diagnostic identity, the fix index and name, and a hash of the document text. A closed document has
- * no version to compare, so the hash is the staleness token. The edits are computed in
+ * the diagnostic identity, the fix index and name, and the [DocumentStamp] of the document. A closed document
+ * has no version to compare, so the stamp is the staleness token. The edits are computed in
  * `workspace/executeCommand` when the user picks the fix. The command re-computes the fix list in a write
- * analysis context and answers [ErrorCodes.ContentModified] when the document text or the fix list changed.
+ * analysis context and is refused with [refuseStaleDocument] when the document text or the fix list changed.
  * A client without `lazyIntentions` keeps the eager listing, because a choice tree can only be flattened
  * into separate fixes by performing it.
  */
@@ -100,14 +100,15 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
                     val diagnosticData = LSP.json.decodeFromJsonElement<KotlinCompilerDiagnosticData>(arguments[1])
                     val index = LSP.json.decodeFromJsonElement<Int>(arguments[2])
                     val name = LSP.json.decodeFromJsonElement<String>(arguments[3])
-                    val listedContentHash = LSP.json.decodeFromJsonElement<String>(arguments[4]).toLong()
+                    val listedStamp = LSP.json.decodeFromJsonElement<DocumentStamp>(arguments[4])
                     val data = server.withWriteAnalysisContextAndFileSettings(documentUri.uri) {
                         readAction {
-                            val fix = findFix(documentUri, diagnosticData, index, name, listedContentHash) ?: failStaleDocument()
-                            val performed = fix.perform() ?: failStaleDocument()
+                            // A missing fix means the same as a fix that does not apply anymore: the document changed.
+                            val performed = findFix(documentUri, diagnosticData, index, name, listedStamp)?.perform()
+                                            ?: return@readAction null
                             ModCommandData.from(performed.command, performed.context, server) ?: failFixNotSupported()
                         }
-                    }
+                    } ?: refuseStaleDocument()
                     server.withAnalysisContextAndFileSettings(documentUri.uri) {
                         executeCommand(data, lspClient)
                     }
@@ -124,7 +125,7 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
         val virtualFile = documentUri.findVirtualFile() ?: return emptyList()
         val ktFile = virtualFile.findPsiFile(project) as? KtFile ?: return emptyList()
         val document = virtualFile.findDocument() ?: return emptyList()
-        val contentHash = contentHash(document)
+        val stamp = DocumentStamp.of(document)
         return analyze(ktFile) {
             val kaDiagnostics = ktFile.collectDiagnostics(filter = KaDiagnosticCheckerFilter.ONLY_COMMON_CHECKERS)
             if (kaDiagnostics.isEmpty()) return@analyze emptyList()
@@ -137,7 +138,7 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
                 val fixes = quickFixesFor(ktFile, editor, kaDiagnostic)
                 result += when {
                     server.config.clientSupportsLazyIntentions -> fixes.mapIndexed { index, fix ->
-                        deferredFixAction(documentUri, data, index, fix.name, contentHash)
+                        deferredFixAction(documentUri, data, index, fix.name, stamp)
                     }
                     // Flattening a choice tree performs every fix, so this client keeps the eager listing.
                     else -> fixes.flatMap { it.toModCommandFixes() }
@@ -155,12 +156,12 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
         diagnosticData: KotlinCompilerDiagnosticData,
         index: Int,
         name: String,
-        listedContentHash: Long,
+        listedStamp: DocumentStamp,
     ): LazyFix? {
         val virtualFile = documentUri.findVirtualFile() ?: return null
         val ktFile = virtualFile.findPsiFile(project) as? KtFile ?: return null
         val document = virtualFile.findDocument() ?: return null
-        if (contentHash(document) != listedContentHash) return null
+        if (DocumentStamp.of(document) != listedStamp) return null
         return analyze(ktFile) {
             val kaDiagnostic = ktFile.collectDiagnostics(filter = KaDiagnosticCheckerFilter.ONLY_COMMON_CHECKERS)
                 .firstOrNull { diagnosticData.matches(it) } ?: return@analyze null
@@ -200,7 +201,7 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
         diagnostic: DiagnosticWithData<KotlinCompilerDiagnosticData>,
         index: Int,
         name: @NlsSafe String,
-        contentHash: Long,
+        stamp: DocumentStamp,
     ): CodeAction = CodeAction(
         title = name,
         kind = CodeActionKind.QuickFix,
@@ -213,18 +214,10 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
                 LSP.json.encodeToJsonElement(diagnostic.data),
                 JsonPrimitive(index),
                 JsonPrimitive(name),
-                // A string, because a JSON number round-trips through a JavaScript client with only 53 bits.
-                JsonPrimitive(contentHash.toString()),
+                LSP.json.encodeToJsonElement<DocumentStamp>(stamp),
             ),
         ),
     )
-
-    /** The staleness token of the listing: a closed document has no version, so the text itself is hashed. */
-    private fun contentHash(document: Document): Long = StringHash.buz(document.immutableCharSequence)
-
-    /** Reports a document that changed after the listing: the same fix may not exist anymore. */
-    private fun failStaleDocument(): Nothing =
-        throwLspError(ExecuteCommand, LspServerBundle.message("error.action.not.available"), Unit, ErrorCodes.ContentModified, null)
 
     /** Reports a fix whose command has no LSP representation for this client. */
     private fun failFixNotSupported(): Nothing =

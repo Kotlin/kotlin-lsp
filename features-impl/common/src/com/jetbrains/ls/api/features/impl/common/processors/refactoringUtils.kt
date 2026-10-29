@@ -226,7 +226,7 @@ private fun createConflictCommand(plan: RefactoringPlan): ShowConflictsCommand? 
         )
     }
     val data = ModCommandData.ShowConflicts(conflicts)
-    return { watchVersions -> confirmConflicts(data, lspClient, watchVersions) }
+    return { watchVersions -> confirmConflicts(data, lspClient) { watchVersions() } }
 }
 
 /** The URL and the text of each file to save, before the refactoring writes. */

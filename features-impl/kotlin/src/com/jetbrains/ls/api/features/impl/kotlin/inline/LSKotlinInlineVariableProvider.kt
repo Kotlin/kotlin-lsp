@@ -31,7 +31,10 @@ import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.commands.LSCommandExecutor
 import com.jetbrains.ls.api.features.impl.common.inline.InlineActionKind
+import com.jetbrains.ls.api.features.impl.common.modcommands.DocumentStamp
+import com.jetbrains.ls.api.features.impl.common.modcommands.applyEditOrRefuse
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCodeAction
+import com.jetbrains.ls.api.features.impl.common.modcommands.refuseStaleDocument
 import com.jetbrains.ls.api.features.impl.common.processors.doRefactoring
 import com.jetbrains.ls.api.features.impl.common.utils.findElementUnderCaret
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
@@ -41,8 +44,6 @@ import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.implementation.throwLspError
-import com.jetbrains.lsp.protocol.ApplyEditRequests
-import com.jetbrains.lsp.protocol.ApplyWorkspaceEditParams
 import com.jetbrains.lsp.protocol.CodeAction
 import com.jetbrains.lsp.protocol.CodeActionKind
 import com.jetbrains.lsp.protocol.CodeActionParams
@@ -96,7 +97,7 @@ internal object LSKotlinInlineVariableProvider : LSCodeActionProvider, LSCommand
                 val property = findProperty(documentUri, params.range) ?: return@readAction null
                 when (AbstractKotlinInlinePropertyProcessor.extractInitialization(property).initializerOrNull) {
                     null -> errorAction(cannotInlineMessage(property))
-                    else -> inlineAction(documentUri, params.range, server.documents.getVersion(documentUri.uri) ?: 0)
+                    else -> inlineAction(documentUri, params.range, stampOf(documentUri) ?: return@readAction null)
                 }
             }
         } ?: return@flow
@@ -114,9 +115,10 @@ internal object LSKotlinInlineVariableProvider : LSCodeActionProvider, LSCommand
                         require(arguments.size == 3) { "Expected 3 arguments, got: ${arguments.size}" }
                         val documentUri = LSP.json.decodeFromJsonElement<DocumentUri>(arguments[0])
                         val range = LSP.json.decodeFromJsonElement<Range>(arguments[1])
-                        val listedVersion = LSP.json.decodeFromJsonElement<Int>(arguments[2])
+                        val listedStamp = LSP.json.decodeFromJsonElement<DocumentStamp>(arguments[2])
                         val changes = server.withWriteAnalysisContextAndFileSettings(documentUri.uri) {
-                            if ((server.documents.getVersion(documentUri.uri) ?: 0) != listedVersion) failStaleDocument()
+                            // The range may point at another declaration in a changed document.
+                            if (readAction { stampOf(documentUri) } != listedStamp) refuseStaleDocument()
                             when (val prepared = readAction { prepare(documentUri, range) }) {
                                 null -> failInline(LspServerBundle.message("error.performing.refactoring"))
                                 is Prepared.CannotInline -> failInline(prepared.message)
@@ -130,20 +132,14 @@ internal object LSKotlinInlineVariableProvider : LSCodeActionProvider, LSCommand
                         }
                         val edits = changes.filterIsInstance<TextDocumentEdit>().filter { it.edits.isNotEmpty() }
                         if (edits.isEmpty()) return JsonPrimitive(true)
-                        lspClient.request(
-                            ApplyEditRequests.ApplyEdit,
-                            ApplyWorkspaceEditParams(
-                                label = title(),
-                                edit = WorkspaceEdit(documentChanges = edits),
-                            ),
-                        )
+                        lspClient.applyEditOrRefuse(title(), WorkspaceEdit(documentChanges = edits))
                         return JsonPrimitive(true)
                     }
                 },
             ),
         )
 
-    private fun inlineAction(documentUri: DocumentUri, range: Range, version: Int): CodeAction {
+    private fun inlineAction(documentUri: DocumentUri, range: Range, stamp: DocumentStamp): CodeAction {
         val title = title()
         return CodeAction(
             title = title,
@@ -154,7 +150,7 @@ internal object LSKotlinInlineVariableProvider : LSCodeActionProvider, LSCommand
                 arguments = listOf(
                     LSP.json.encodeToJsonElement<DocumentUri>(documentUri),
                     LSP.json.encodeToJsonElement<Range>(range),
-                    JsonPrimitive(version),
+                    LSP.json.encodeToJsonElement<DocumentStamp>(stamp),
                 ),
             ),
         )
@@ -164,9 +160,10 @@ internal object LSKotlinInlineVariableProvider : LSCodeActionProvider, LSCommand
     private fun failInline(message: @Nls String): Nothing =
         throwLspError(ExecuteCommand, message, Unit, ErrorCodes.InvalidParams, null)
 
-    /** Reports a document that changed after the action was listed: the range may point at another declaration now. */
-    private fun failStaleDocument(): Nothing =
-        throwLspError(ExecuteCommand, LspServerBundle.message("error.action.not.available"), Unit, ErrorCodes.ContentModified, null)
+    /** The stamp of the document of [documentUri]. Must run in a read action. */
+    context(_: LSAnalysisContext)
+    private fun stampOf(documentUri: DocumentUri): DocumentStamp? =
+        documentUri.findVirtualFile()?.findDocument()?.let(DocumentStamp::of)
 
     context(analysisContext: LSAnalysisContext)
     private fun prepare(documentUri: DocumentUri, range: Range): Prepared? {

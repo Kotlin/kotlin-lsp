@@ -21,6 +21,7 @@ import com.intellij.modcommand.ModShowConflicts
 import com.intellij.modcommand.ModStartRename
 import com.intellij.modcommand.ModStartTemplate
 import com.intellij.modcommand.ModUpdateFileText
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.impl.DocumentImpl
@@ -34,12 +35,16 @@ import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.getLspLocationForDefinition
 import com.jetbrains.ls.api.core.util.intellijUriToLspUri
+import com.jetbrains.ls.api.core.util.lspUriToIntellijUri
 import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.features.LspServerBundle
+import com.jetbrains.ls.api.features.impl.common.modcommands.DocumentStamp
+import com.jetbrains.ls.api.features.impl.common.modcommands.DocumentStamps
 import com.jetbrains.ls.api.features.impl.common.modcommands.LazyFix
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCommand
 import com.jetbrains.ls.api.features.impl.common.modcommands.registerLazyFixes
+import com.jetbrains.ls.api.features.impl.common.modcommands.stampsOf
 import com.jetbrains.ls.api.features.impl.common.utils.showDocumentIfSupported
 import com.jetbrains.lsp.implementation.LspClient
 import com.jetbrains.lsp.protocol.ApplyEditRequests.ApplyEdit
@@ -61,7 +66,6 @@ import com.jetbrains.lsp.protocol.ShowMessageRequestParams
 import com.jetbrains.lsp.protocol.TextDocumentEdit
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 import com.jetbrains.lsp.protocol.TextEdit
-import com.jetbrains.lsp.protocol.URI
 import com.jetbrains.lsp.protocol.Window
 import com.jetbrains.lsp.protocol.WorkspaceEdit
 import kotlinx.serialization.SerialName
@@ -734,8 +738,8 @@ private fun readDocumentFromDisk(fileUrl: String): Document? {
  * [tail] holds the commands after the conflicts, which are the edits of the fix. They were computed against the
  * text of that moment, and a [ModCommandData.UpdateFileText] travels as a diff of its `oldText` which the client
  * applies without a version. An edit the user makes while the question is open therefore makes the whole tail
- * stale, and applying it would put text at the wrong offset. So the version of every document the tail writes is
- * read before and after the question, and any difference stops the fix. A tail which holds a
+ * stale, and applying it would put text at the wrong offset. So the [DocumentStamp] of every file the tail writes
+ * is taken before and after the question, and any difference stops the fix. A tail which holds a
  * [ModCommandData.ChooseAction] names no file, and every open document is watched for it. The IDE guards the
  * same thing with `ActionContextPointer.restoreAndCheck`, and shows the same kind of message.
  *
@@ -746,37 +750,37 @@ private suspend fun confirmConflicts(
     command: ModCommandData.ShowConflicts,
     tail: List<ModCommandData>,
     client: LspClient,
-): Boolean = confirmConflicts(command, client) { tail.watchedDocumentVersions() }
+): Boolean = confirmConflicts(command, client) { tail.watchedDocumentStamps() }
 
 /**
  * Asks whether to continue despite the conflicts in [command].
- * Returns `true` when no conflicts exist, or the user chooses `Continue` and the watched document versions stay unchanged.
+ * Returns `true` when no conflicts exist, or the user chooses `Continue` and the watched documents stay unchanged.
  *
- * [watchedDocumentVersions] supplies the versions before and after the question.
+ * [watchedDocuments] takes a snapshot of the watched documents before and after the question.
  * Prepared edits can become stale if a watched document changes while the question is open.
  * In particular, [ModCommandData.UpdateFileText] carries a diff that the client applies without a document version.
- * Any version change stops the operation.
+ * Any difference between the snapshots stops the operation.
  *
- * Navigation stays free: `window/showDocument` and the reveal of a conflict change no text, so they bump no version.
+ * Navigation stays free: `window/showDocument` and the reveal of a conflict change no text, so they change no snapshot.
  */
-internal suspend fun confirmConflicts(
+internal suspend fun <T> confirmConflicts(
     command: ModCommandData.ShowConflicts?,
     client: LspClient,
-    watchedDocumentVersions: () -> Map<URI, Int?>,
+    watchedDocuments: suspend () -> T,
 ): Boolean {
     // `from` maps an empty command to `Nothing`, so this only guards a hand-built one.
     if (command == null || command.conflicts.isEmpty()) return true
-    val versionsBefore = watchedDocumentVersions()
+    val before = watchedDocuments()
     if (!client.askToContinue(command)) return false
 
-    val versionsAfter = watchedDocumentVersions()
-    if (versionsBefore != versionsAfter) {
-        LOG.info("The user confirmed the fix, but the documents changed: $versionsBefore -> $versionsAfter")
+    val after = watchedDocuments()
+    if (before != after) {
+        LOG.info("The user confirmed the fix, but the documents changed: $before -> $after")
         client.notify(
             notificationType = ShowMessageNotificationType,
             params = ShowMessageParams(
                 MessageType.Error,
-                LspServerBundle.message("conflicts.error.document.changed"),
+                LspServerBundle.message("error.document.changed"),
             ),
         )
         return false
@@ -799,7 +803,7 @@ private suspend fun LspClient.askToContinue(command: ModCommandData.ShowConflict
             continueLabel = LspServerBundle.message("conflicts.action.continue"),
             cancelLabel = LspServerBundle.message("conflicts.action.cancel"),
             revealLabel = LspServerBundle.message("conflicts.action.reveal"),
-            documentChangedLabel = LspServerBundle.message("conflicts.error.document.changed"),
+            documentChangedLabel = LspServerBundle.message("error.document.changed"),
         ),
     )
     // An exhaustive `when` keeps both answers named, so a third one cannot pass unnoticed.
@@ -810,25 +814,26 @@ private suspend fun LspClient.askToContinue(command: ModCommandData.ShowConflict
 }
 
 /**
- * The document version of each file this guard watches for these commands. A file the client never opened has
- * no version, and `null` stands for that.
+ * The [DocumentStamp] of each file this guard watches for these commands. A file that does not exist yet, such
+ * as the target of a [ModCommandData.CreateFile], has no stamp, and `null` stands for that.
  *
- * The server learns of an edit only from a `textDocument/didChange`, so an edit in a file the client keeps
- * closed stays invisible here. A `textDocument/didClose` drops the version, which counts as a change.
+ * The stamps are taken in a new analysis context, because the context of the caller is a snapshot that does not
+ * see a later `textDocument/didChange`. An open document is stamped with the text the client sent; a closed one
+ * with the text on disk, so a `textDocument/didClose` of unsaved edits counts as a change.
  */
 context(server: LSServer)
-private fun List<ModCommandData>.watchedDocumentVersions(): Map<URI, Int?> {
-    val written = asSequence()
-        .flatMap { it.writtenFileUrls() }
-        .map { it.intellijUriToLspUri() }
+private suspend fun List<ModCommandData>.watchedDocumentStamps(): DocumentStamps {
+    val written = asSequence().flatMap { it.writtenFileUrls() }
     // A ModCommandData.ChooseAction names no file, because it builds its edits only after the user picks one.
     // Every open document is watched instead. That is the only safe superset, and it does make an edit in an
     // unrelated open file stop the fix.
     val watched = when {
-        any { it.choosesLater() } -> written + server.documents.openDocuments()
+        any { it.choosesLater() } -> written + server.documents.openDocuments().asSequence().mapNotNull { it.lspUriToIntellijUri() }
         else -> written
     }
-    return watched.distinct().associateWith { server.documents.getVersion(it) }
+    val fileUrls = watched.distinct().toList()
+    if (fileUrls.isEmpty()) return emptyMap()
+    return server.withAnalysisContext { readAction { stampsOf(fileUrls) } }
 }
 
 /** Whether [this] holds a [ModCommandData.ChooseAction], whose files no caller can know yet. */

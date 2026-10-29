@@ -12,6 +12,7 @@ import com.intellij.openapi.diagnostic.getOrHandleException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.uri
@@ -128,7 +129,7 @@ sealed class LazyFix(
  */
 class LazyActionSession(
     override val fileUrl: String,
-    override val documentVersion: Long,
+    override val documentStamp: Long,
     val fileUri: URI,
     val fixes: List<LazyFix>,
 ) : LazyActionSessionInfo {
@@ -138,14 +139,15 @@ class LazyActionSession(
 /**
  * Stores [fixes] and returns the reference to each of them, in the same order.
  *
- * Must run in a read action, because it reads the version of [virtualFile].
+ * Must run in a read action, because it reads the document of [virtualFile].
  */
 fun registerLazyFixes(server: LSServer, virtualFile: VirtualFile, fixes: List<LazyFix>): List<ModCommandData.LazyAction> {
     if (fixes.isEmpty()) return emptyList()
     val uri = virtualFile.uri
     val session = LazyActionSession(
         fileUrl = virtualFile.url,
-        documentVersion = server.documents.getVersion(uri)?.toLong() ?: 0,
+        // A file without a document has no text to hash; its modification stamp still changes with the file.
+        documentStamp = virtualFile.findDocument()?.let(DocumentStamp::of)?.value ?: virtualFile.modificationStamp,
         fileUri = uri,
         fixes = fixes,
     )
