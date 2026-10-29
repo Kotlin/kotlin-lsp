@@ -127,7 +127,7 @@ internal object LSKotlinExtractVariableProvider :
             RefactoringResult(
                 listOf(
                     TextDocumentEdit(
-                        textDocument = TextDocumentIdentifier(uri = DocumentUri(uri), version = server.documents.getVersion(DocumentUri(uri).uri) ?: 0),
+                        textDocument = TextDocumentIdentifier(uri = DocumentUri(uri), version = server.documents.getVersion(DocumentUri(uri).uri)),
                         edits = computeTextEdits(oldText, fileDocument.text, granularity = DiffGranularity.WORD),
                     )
                 ),

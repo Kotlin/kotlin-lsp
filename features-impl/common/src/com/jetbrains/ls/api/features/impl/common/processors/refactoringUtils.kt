@@ -162,9 +162,7 @@ internal suspend fun computeRefactoringChanges(
             val (file, original) = fileToOriginalText
 
             val uri = DocumentUri(oldUrl.asURI())
-            val version = server.documents.getVersion(uri.uri)
-                ?: 0 // According to LSP spec, it should be null, but our serialization would drop it, causing an error on the LSP side. Zero seems to work.
-            val id = TextDocumentIdentifier(uri, version)
+            val id = TextDocumentIdentifier(uri, server.documents.getVersion(uri.uri))
             val textEdits = computeTextEdits(original, file.text, granularity)
             TextDocumentEdit(id, textEdits)
         }
