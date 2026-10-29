@@ -229,36 +229,44 @@ describe('which node a runner message is about', () => {
     assert.equal(tree.get('moduleA/generated-1')?.item.label, 'generated(String)');
   });
 
-  test('the invocations of a data provider are nodes beside the method, as the IDE shows them', () => {
+  test('the invocations of a data provider are nodes under the method, as the TestNG runner reports them', () => {
     const { feed, calls, tree } = readerFor();
 
     feed(
       teamcity('testSuiteStarted', { nodeId: 'com.example.Foo', locationHint: CLASS_HINT }),
-      teamcity('testStarted', {
+      teamcity('testSuiteStarted', {
         nodeId: 'com.example.Foo/paramTest',
         parentNodeId: 'com.example.Foo',
         locationHint: PARAM_HINT,
-        name: 'Foo.paramTest[1]',
+        name: 'paramTest',
+      }),
+      teamcity('testStarted', {
+        nodeId: 'com.example.Foo/paramTest[0]',
+        parentNodeId: 'com.example.Foo/paramTest',
+        locationHint: 'java:test://com.example.Foo/paramTest[0]',
+        name: '[2, true]',
       }),
       teamcity('testStarted', {
         nodeId: 'com.example.Foo/paramTest[1]',
-        parentNodeId: 'com.example.Foo',
+        parentNodeId: 'com.example.Foo/paramTest',
         locationHint: 'java:test://com.example.Foo/paramTest[1]',
-        name: 'Foo.paramTest[2] (1)',
+        name: '[6, false] (1)',
       }),
       // A rerun of that node sends the runner's own id back, so the server can run that row alone.
       teamcity('testFinished', { nodeId: 'com.example.Foo/paramTest[1]' }),
     );
 
     assert.deepEqual(calls, [
-      'started moduleA/com.example.Foo#paramTest',
+      'started moduleA/com.example.Foo/paramTest[0]',
       'started moduleA/com.example.Foo/paramTest[1]',
       'passed moduleA/com.example.Foo/paramTest[1]',
     ]);
-    assert.equal(
-      tree.get('moduleA/com.example.Foo/paramTest[1]')?.item.label,
-      'Foo.paramTest[2] (1)',
-    );
+    const method = tree.get('moduleA/com.example.Foo#paramTest')?.item;
+    const row = tree.get('moduleA/com.example.Foo/paramTest[1]')?.item;
+    assert.equal(row?.parent, method);
+    assert.equal(row?.label, '[6, false] (1)');
+    // "Go to Test" on a row lands on the method it runs.
+    assert.equal(row?.range, method?.range);
   });
 
   test('a failure the runner reports beside a class is a node of its own under the class', () => {
