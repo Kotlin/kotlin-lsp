@@ -9,6 +9,7 @@ import com.jetbrains.ls.api.features.impl.common.decompiler.LSDecompileCommandDe
 import com.jetbrains.ls.api.features.impl.common.expressionType.LSCommonExpressionTypeProvider
 import com.jetbrains.ls.api.features.impl.common.fileTemplates.LSInterpolateFileTemplateCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.highwatermark.LSHighWatermarkCommandDescriptorProvider
+import com.jetbrains.ls.api.features.impl.common.inlineDocumentation.LSCommonInlineDocumentationProvider
 import com.jetbrains.ls.api.features.impl.common.location.LSResolveLocationCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.move.LSCommonMoveProvider
@@ -33,6 +34,7 @@ val LSCommonConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSCommonMoveProvider,
         LSCommonQualifiedNameProvider,
         LSCommonExpressionTypeProvider,
+        LSCommonInlineDocumentationProvider,
         LSHighlightingSemanticTokens,
         ExtraPluginsProvider(
             plugins = listOf(nativeIoPlugin)

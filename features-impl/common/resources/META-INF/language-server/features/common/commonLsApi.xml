@@ -14,6 +14,11 @@
                     interface="com.intellij.platform.backend.documentation.SymbolDocumentationTargetProvider"/>
     <extensionPoint qualifiedName="com.intellij.platform.backend.documentation.psiTargetProvider" dynamic="true"
                     interface="com.intellij.platform.backend.documentation.PsiDocumentationTargetProvider"/>
+    <!-- copied from intellij.platform.lang.impl.xml -->
+    <extensionPoint qualifiedName="com.intellij.platform.backend.documentation.inlineDocumentationProvider" dynamic="true"
+                    interface="com.intellij.platform.backend.documentation.InlineDocumentationProvider"/>
+    <extensionPoint qualifiedName="com.intellij.platform.backend.documentation.linkHandler" dynamic="true"
+                    interface="com.intellij.platform.backend.documentation.DocumentationLinkHandler"/>
   </extensionPoints>
 
   <extensions defaultExtensionNs="com.intellij">
@@ -29,6 +34,7 @@
 
   <extensions defaultExtensionNs="com.intellij.platform.backend">
     <documentation.targetProvider implementation="com.intellij.lang.documentation.symbol.impl.DefaultTargetSymbolDocumentationTargetProvider"/>
+    <documentation.linkHandler implementation="com.intellij.lang.documentation.psi.PsiDocumentationLinkHandler"/>
   </extensions>
 
   <extensions defaultExtensionNs="ls">

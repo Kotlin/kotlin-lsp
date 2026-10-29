@@ -8,6 +8,12 @@
                                                    implementation="org.jetbrains.kotlin.idea.k2.codeinsight.quickDoc.KotlinDocumentationTargetProvider"/>
     <platform.backend.documentation.psiTargetProvider id="KotlinDocumentationTargetProvider"
                                                       implementation="org.jetbrains.kotlin.idea.k2.codeinsight.quickDoc.KotlinPsiDocumentationTargetProvider"/>
+    <!-- ========== community/plugins/kotlin/code-insight/kotlin.code-insight.k2/resources/intellij.kotlin.codeInsight.xml ========== -->
+    <platform.backend.documentation.linkHandler implementation="com.jetbrains.ls.api.features.impl.kotlin.documentation.LSKotlinDocumentationLinkHandler"
+                                                order="first"/>
+    <platform.backend.documentation.linkHandler implementation="org.jetbrains.kotlin.idea.k2.codeinsight.quickDoc.KotlinDocumentationLinkHandler"/>
+    <platform.backend.documentation.inlineDocumentationProvider
+            implementation="org.jetbrains.kotlin.idea.k2.codeinsight.quickDoc.KotlinInlineDocumentationProvider"/>
 
     <projectService serviceInterface="org.jetbrains.kotlin.psi.KtFileClassProvider"
                     serviceImplementation="org.jetbrains.kotlin.idea.caches.resolve.KtFileClassProviderImpl"/>
