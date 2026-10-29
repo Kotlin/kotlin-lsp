@@ -39,14 +39,15 @@ import com.jetbrains.ls.api.core.util.lspUriToIntellijUri
 import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.features.LspServerBundle
+import com.jetbrains.ls.api.features.commands.applyEditOrRefuse
+import com.jetbrains.ls.api.features.commands.refuseStaleDocument
+import com.jetbrains.ls.api.features.commands.versionedEdit
 import com.jetbrains.ls.api.features.impl.common.modcommands.DocumentStamp
 import com.jetbrains.ls.api.features.impl.common.modcommands.DocumentStamps
 import com.jetbrains.ls.api.features.impl.common.modcommands.LazyFix
-import com.jetbrains.ls.api.features.impl.common.modcommands.applyEditOrRefuse
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCommand
 import com.jetbrains.ls.api.features.impl.common.modcommands.registerLazyFixes
 import com.jetbrains.ls.api.features.impl.common.modcommands.stampsOf
-import com.jetbrains.ls.api.features.impl.common.modcommands.versionedEdit
 import com.jetbrains.ls.api.features.impl.common.utils.showDocumentIfSupported
 import com.jetbrains.lsp.implementation.LspClient
 import com.jetbrains.lsp.protocol.Command
@@ -60,8 +61,6 @@ import com.jetbrains.lsp.protocol.Range
 import com.jetbrains.lsp.protocol.RenameFile
 import com.jetbrains.lsp.protocol.RequestType
 import com.jetbrains.lsp.protocol.ShowDocumentParams
-import com.jetbrains.lsp.protocol.ShowMessageNotificationType
-import com.jetbrains.lsp.protocol.ShowMessageParams
 import com.jetbrains.lsp.protocol.ShowMessageRequestParams
 import com.jetbrains.lsp.protocol.TextEdit
 import com.jetbrains.lsp.protocol.Window
@@ -761,14 +760,7 @@ internal suspend fun <T> confirmConflicts(
     val after = watchedDocuments()
     if (before != after) {
         LOG.info("The user confirmed the fix, but the documents changed: $before -> $after")
-        client.notify(
-            notificationType = ShowMessageNotificationType,
-            params = ShowMessageParams(
-                MessageType.Error,
-                LspServerBundle.message("error.document.changed"),
-            ),
-        )
-        return false
+        client.refuseStaleDocument()
     }
     return true
 }

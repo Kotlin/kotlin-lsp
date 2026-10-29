@@ -21,12 +21,12 @@ import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
+import com.jetbrains.ls.api.features.commands.refuseStaleDocument
 import com.jetbrains.ls.api.features.impl.common.diagnostics.DiagnosticWithData
 import com.jetbrains.ls.api.features.impl.common.diagnostics.diagnosticData
 import com.jetbrains.ls.api.features.impl.common.modcommands.DocumentStamp
 import com.jetbrains.ls.api.features.impl.common.modcommands.LazyFix
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCodeAction
-import com.jetbrains.ls.api.features.impl.common.modcommands.refuseStaleDocument
 import com.jetbrains.ls.api.features.impl.common.modcommands.stamps
 import com.jetbrains.ls.api.features.impl.common.modcommands.toLazyFix
 import com.jetbrains.ls.api.features.impl.common.modcommands.toModCommandFixes

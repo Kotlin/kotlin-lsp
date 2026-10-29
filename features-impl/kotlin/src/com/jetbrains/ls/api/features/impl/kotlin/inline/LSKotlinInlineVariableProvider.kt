@@ -30,11 +30,11 @@ import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.commands.LSCommandExecutor
+import com.jetbrains.ls.api.features.commands.applyEditOrRefuse
+import com.jetbrains.ls.api.features.commands.refuseStaleDocument
 import com.jetbrains.ls.api.features.impl.common.inline.InlineActionKind
 import com.jetbrains.ls.api.features.impl.common.modcommands.DocumentStamp
-import com.jetbrains.ls.api.features.impl.common.modcommands.applyEditOrRefuse
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCodeAction
-import com.jetbrains.ls.api.features.impl.common.modcommands.refuseStaleDocument
 import com.jetbrains.ls.api.features.impl.common.modcommands.stamps
 import com.jetbrains.ls.api.features.impl.common.processors.doRefactoring
 import com.jetbrains.ls.api.features.impl.common.utils.findElementUnderCaret

@@ -7,6 +7,7 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
+import com.jetbrains.ls.api.features.commands.refuseStaleDocument
 import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
 import com.jetbrains.ls.kotlinLsp.requests.core.executeCommand
 import com.jetbrains.lsp.implementation.lspClient

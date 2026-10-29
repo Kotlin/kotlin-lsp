@@ -1,32 +1,12 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.modcommands
 
-import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.findDocument
 import com.jetbrains.ls.api.core.LSAnalysisContext
-import com.jetbrains.ls.api.core.LSServer
-import com.jetbrains.ls.api.core.util.intellijUriToLspUri
-import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
 import com.jetbrains.ls.kotlinLsp.requests.core.writtenFileUrls
-import com.jetbrains.lsp.implementation.LspClient
-import com.jetbrains.lsp.implementation.LspHandlerContext
-import com.jetbrains.lsp.implementation.lspClient
-import com.jetbrains.lsp.implementation.throwLspError
-import com.jetbrains.lsp.protocol.ApplyEditRequests
-import com.jetbrains.lsp.protocol.ApplyWorkspaceEditParams
-import com.jetbrains.lsp.protocol.Commands.ExecuteCommand
-import com.jetbrains.lsp.protocol.DocumentUri
-import com.jetbrains.lsp.protocol.ErrorCodes
-import com.jetbrains.lsp.protocol.MessageType
-import com.jetbrains.lsp.protocol.ShowMessageNotificationType
-import com.jetbrains.lsp.protocol.ShowMessageParams
-import com.jetbrains.lsp.protocol.TextDocumentEdit
-import com.jetbrains.lsp.protocol.TextDocumentIdentifier
-import com.jetbrains.lsp.protocol.TextEdit
-import com.jetbrains.lsp.protocol.WorkspaceEdit
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
@@ -37,8 +17,6 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import java.nio.ByteBuffer
 import java.security.MessageDigest
-
-private val LOG = logger<DocumentStamp>()
 
 /**
  * A hash of the text of a document. A command carries it from the listing to the execution, and the execution
@@ -121,38 +99,3 @@ fun ModCommandData.stamps(contextFileUrl: String?): DocumentStamps {
  */
 context(_: LSAnalysisContext)
 fun DocumentStamps.matchCurrent(): Boolean = all { (fileUrl, stamp) -> stamp != null && stamp == stampOf(fileUrl) }
-
-/**
- * Stops a command because a document changed after the command was computed: tells the user, then fails the
- * `workspace/executeCommand` request with [ErrorCodes.ContentModified].
- */
-context(_: LspHandlerContext)
-suspend fun refuseStaleDocument(): Nothing = lspClient.refuseStaleDocument()
-
-/** Same as the context version of [refuseStaleDocument], for a caller that holds the client itself. */
-suspend fun LspClient.refuseStaleDocument(): Nothing {
-    notify(ShowMessageNotificationType, ShowMessageParams(MessageType.Warning, LspServerBundle.message("error.document.changed")))
-    throwLspError(ExecuteCommand, LspServerBundle.message("error.action.not.available"), Unit, ErrorCodes.ContentModified, null)
-}
-
-/**
- * Sends [edit] with `workspace/applyEdit`. When the client does not apply it, which is what a client does with an
- * edit of an older document version, the command is refused with [refuseStaleDocument].
- */
-suspend fun LspClient.applyEditOrRefuse(label: String?, edit: WorkspaceEdit) {
-    val result = request(ApplyEditRequests.ApplyEdit, ApplyWorkspaceEditParams(label, edit))
-    if (!result.applied) {
-        LOG.info("The client did not apply the edit '$label': ${result.failureReason}, failed change: ${result.failedChanges}")
-        refuseStaleDocument()
-    }
-}
-
-/**
- * An edit of [fileUrl] (an IntelliJ file url) that names the document version the client sent last. The version
- * is `null` for a document the client does not keep open.
- */
-context(server: LSServer)
-fun versionedEdit(fileUrl: String, edits: List<TextEdit>): TextDocumentEdit {
-    val uri = fileUrl.intellijUriToLspUri()
-    return TextDocumentEdit(TextDocumentIdentifier(DocumentUri(uri), server.documents.getVersion(uri)), edits)
-}
