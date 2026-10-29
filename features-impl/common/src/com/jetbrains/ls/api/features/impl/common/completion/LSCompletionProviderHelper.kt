@@ -132,7 +132,11 @@ class LSCompletionProviderHelper(
                                 lspClient.applyEditOrRefuse(
                                     label = null,
                                     edit = WorkspaceEdit(
-                                        documentChanges = listOf(versionedEdit(completion.params.textDocument.uri, insertionResult.edits))
+                                        documentChanges = listOf(
+                                            lspClient.versionedEdit(
+                                                completion.params.textDocument.uri, insertionResult.sourceText, insertionResult.edits,
+                                            )
+                                        )
                                     ),
                                 )
                                 lspClient.showDocumentIfSupported(
@@ -317,7 +321,7 @@ class LSCompletionProviderHelper(
                     } else {
                         completionProcess.caret.offset
                     }
-                    CompletionInsertionResult(edits, document.positionByOffset(caretAfter), caretAfter)
+                    CompletionInsertionResult(initialText, edits, document.positionByOffset(caretAfter), caretAfter)
                 }
             }
         }
@@ -341,5 +345,11 @@ class LSCompletionProviderHelper(
         override val result: Any = lookup.psiElement ?: lookup.`object`
     }
 
-    private data class CompletionInsertionResult(val edits: List<TextEdit>, val caretPosition: Position, val caretOffset: Int)
+    /** [edits] refer to [sourceText], the text of the document before the insertion. */
+    private data class CompletionInsertionResult(
+        val sourceText: String,
+        val edits: List<TextEdit>,
+        val caretPosition: Position,
+        val caretOffset: Int,
+    )
 }

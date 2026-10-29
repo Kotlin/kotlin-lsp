@@ -62,6 +62,7 @@ import com.jetbrains.lsp.protocol.RenameFile
 import com.jetbrains.lsp.protocol.RequestType
 import com.jetbrains.lsp.protocol.ShowDocumentParams
 import com.jetbrains.lsp.protocol.ShowMessageRequestParams
+import com.jetbrains.lsp.protocol.TextDocumentEdit
 import com.jetbrains.lsp.protocol.TextEdit
 import com.jetbrains.lsp.protocol.Window
 import com.jetbrains.lsp.protocol.WorkspaceEdit
@@ -486,27 +487,35 @@ private fun ModUpdateFileText.toEdits(): List<ModCommandData.Edit> {
  * [executeComposite][com.intellij.lang.impl.modcommand.ModCommandExecutorImpl] in the IDE.
  *
  * [changedFiles] holds the new text of each file this call already changed, because the document on disk is
- * behind until the client applies the edit.
+ * behind until the client applies the edit. [sentVersions] holds the version the last edit of each file named.
  *
- * Every edit is sent with [applyEditOrRefuse], so an edit the client does not apply stops the command: the user
- * gets a message, the request fails with `ContentModified`, and a [ModCommandData.Composite] runs no further step.
- * Every [TextDocumentEdit][com.jetbrains.lsp.protocol.TextDocumentEdit] names the document version the client
- * sent last ([versionedEdit]), and the client rejects an edit of an older version.
+ * Every edit is sent with [applyEditOrRefuse], so an edit the client does not apply stops the command, and a
+ * [ModCommandData.Composite] runs no further step. When the edit names an old version, the user gets a message and
+ * the request fails with `ContentModified`; any other rejection fails it with `RequestFailed` and the client's
+ * reason. Every [TextDocumentEdit][com.jetbrains.lsp.protocol.TextDocumentEdit] names the client version of the
+ * text its offsets refer to ([versionedEdit]), and the client rejects an edit of another version.
  *
  * The steps of a [ModCommandData.Composite] are not checked again with stamps; the versions guard them. The
  * server handles a notification inline, as it reads it (`withLsp.kt` in `fleet/lsp.protocol`), and both clients send
- * `textDocument/didChange` before they answer `workspace/applyEdit`. So after the answer is awaited,
- * `documents.getVersion` already holds the new version of the client, and the next edit carries it. A client
- * that answers first makes the next edit name an old version, and the client rejects it. That is a safe stop,
- * never a wrong edit. [changedFiles] is still needed for a closed file: the server learns its new text only
- * from the file watcher, later.
+ * `textDocument/didChange` before they answer `workspace/applyEdit`. So after the answer is awaited, the
+ * server holds the new version and text of the client. The next edit takes that version only when that text is
+ * the one in [changedFiles], so a change the user typed in between refuses the command. A client that answers
+ * first still reports the version of the previous edit, so the next edit names it again, and the client rejects
+ * it. That is a safe stop, never a wrong edit. [changedFiles] is still needed for a closed file: the server learns
+ * its new text only from the file watcher, later.
  */
 context(_: LSServer, _: LSAnalysisContext)
 suspend fun executeCommand(
     command: ModCommandData,
     client: LspClient,
     changedFiles: MutableMap<String, String> = mutableMapOf(),
+    sentVersions: MutableMap<String, Int> = mutableMapOf(),
 ): Boolean {
+    suspend fun versionedEdit(fileUrl: String, sourceText: CharSequence, edits: List<TextEdit>): TextDocumentEdit =
+        client.versionedEdit(fileUrl, sourceText, edits, sentVersions[fileUrl]).also { edit ->
+            edit.textDocument.version?.let { sentVersions[fileUrl] = it }
+        }
+
     fun findDocument(fileUrl: String): Document? =
         changedFiles[fileUrl]?.let { DocumentImpl(it) }
         ?: VirtualFileManager.getInstance().findFileByUrl(fileUrl)?.findDocument()
@@ -522,8 +531,8 @@ suspend fun executeCommand(
                         edit = WorkspaceEdit(
                             documentChanges = listOf(
                                 CreateFile(DocumentUri(command.fileUrl.intellijUriToLspUri())),
-                                // The client has not opened a new file, so the edit names no version.
-                                versionedEdit(command.fileUrl, listOf(TextEdit(Range.BEGINNING, command.content.text))),
+                                // The client has not opened a new file, so the edit names no version. An open one must be empty.
+                                versionedEdit(command.fileUrl, "", listOf(TextEdit(Range.BEGINNING, command.content.text))),
                             ),
                         ),
                     )
@@ -565,7 +574,11 @@ suspend fun executeCommand(
             if (doc != null && command.vars.isNotEmpty()) {
                 client.applyEditOrRefuse(
                     label = "Run snippet in ${command.fileUrl}",
-                    edit = WorkspaceEdit(documentChanges = listOf(versionedEdit(command.fileUrl, listOf(command.toTextEdit(doc))))),
+                    edit = WorkspaceEdit(
+                        documentChanges = listOf(
+                            versionedEdit(command.fileUrl, doc.immutableCharSequence, listOf(command.toTextEdit(doc))),
+                        ),
+                    ),
                 )
             }
         }
@@ -579,7 +592,11 @@ suspend fun executeCommand(
             else {
                 client.applyEditOrRefuse(
                     label = "Update ${command.fileUrl}",
-                    edit = WorkspaceEdit(documentChanges = listOf(versionedEdit(command.fileUrl, command.edits.map { it.toTextEdit(doc) }))),
+                    edit = WorkspaceEdit(
+                        documentChanges = listOf(
+                            versionedEdit(command.fileUrl, doc.immutableCharSequence, command.edits.map { it.toTextEdit(doc) }),
+                        ),
+                    ),
                 )
                 changedFiles[command.fileUrl] = command.applyEdits(doc.text)
             }
@@ -620,7 +637,7 @@ suspend fun executeCommand(
                     is ModCommandData.Navigate -> createdNotShownFiles -= nested.fileUrl
                     is ModCommandData.Snippet -> if (createdNotShownFiles.remove(nested.fileUrl)) {
                         val caret = nested.vars.minOfOrNull { it.start } ?: 0
-                        executeCommand(ModCommandData.Navigate(nested.fileUrl, caret, caret, caret), client, changedFiles)
+                        executeCommand(ModCommandData.Navigate(nested.fileUrl, caret, caret, caret), client, changedFiles, sentVersions)
                     }
                     else -> {}
                 }
@@ -629,7 +646,7 @@ suspend fun executeCommand(
                     // passes the same sublist as the tail, and it is what the change guard has to watch.
                     is ModCommandData.ShowConflicts ->
                         confirmConflicts(nested, commands.subList(index + 1, commands.size), client)
-                    else -> executeCommand(nested, client, changedFiles)
+                    else -> executeCommand(nested, client, changedFiles, sentVersions)
                 }
                 if (!proceed) return false
             }
@@ -665,6 +682,7 @@ suspend fun executeCommand(
                 ),
                 client = client,
                 changedFiles = changedFiles,
+                sentVersions = sentVersions,
             )
             client.notify(
                 notificationType = RunEditorCommandNotification,
