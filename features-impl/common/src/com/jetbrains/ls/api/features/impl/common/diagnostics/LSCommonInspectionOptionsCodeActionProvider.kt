@@ -35,6 +35,7 @@ import com.jetbrains.ls.api.features.codeActions.LSCodeActionGroup
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.configuration.inspectionProfileFile
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCodeAction
+import com.jetbrains.ls.api.features.impl.common.modcommands.stamps
 import com.jetbrains.ls.api.features.impl.common.modcommands.toModCommandFixes
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.lsp.implementation.LspHandlerContext
@@ -110,7 +111,7 @@ class LSCommonInspectionOptionsCodeActionProvider(
                     val options = suppressionActions(tool.tool, element) + disableAction(tool, profileFile)
                     val action = InspectionOptionsAction(tool.displayName, options)
                     action.toModCommandFixes(context).map { fix ->
-                        applyFixCodeAction(fix.name, inspectionOptionsKind, fix.data, diagnostic)
+                        applyFixCodeAction(fix.name, inspectionOptionsKind, fix.data, fix.data.stamps(virtualFile.url), diagnostic)
                     }
                 }
             }

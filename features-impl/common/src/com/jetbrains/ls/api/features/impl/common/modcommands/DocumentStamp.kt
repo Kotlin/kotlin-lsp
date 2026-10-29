@@ -9,6 +9,8 @@ import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.intellijUriToLspUri
 import com.jetbrains.ls.api.features.LspServerBundle
+import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
+import com.jetbrains.ls.kotlinLsp.requests.core.writtenFileUrls
 import com.jetbrains.lsp.implementation.LspClient
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.lspClient
@@ -97,6 +99,21 @@ fun stampOf(fileUrl: String): DocumentStamp? =
 /** The stamps of [fileUrls] (IntelliJ file urls). Must run in a read action. */
 context(_: LSAnalysisContext)
 fun stampsOf(fileUrls: Iterable<String>): DocumentStamps = fileUrls.associateWith { stampOf(it) }
+
+/**
+ * The stamps that a command of [this] carries from the listing to the execution: the files it writes, and
+ * [contextFileUrl], the file the command was listed for (IntelliJ file urls). Must run in a read action.
+ *
+ * A file that has no document at the listing is not stamped. The target of a [ModCommandData.CreateFile] does
+ * not exist yet, so the command does not depend on its text, and a `null` stamp would never match. A
+ * [ModCommandData.LazyAction] gets no stamps, because it computes its edits only at the execution.
+ */
+context(_: LSAnalysisContext)
+fun ModCommandData.stamps(contextFileUrl: String?): DocumentStamps {
+    if (this is ModCommandData.LazyAction) return emptyMap()
+    val fileUrls = (writtenFileUrls() + listOfNotNull(contextFileUrl)).distinct().toList()
+    return stampsOf(fileUrls).filterValues { it != null }
+}
 
 /**
  * Whether every file still has the stamp it had when [this] was taken. A missing document on either side counts

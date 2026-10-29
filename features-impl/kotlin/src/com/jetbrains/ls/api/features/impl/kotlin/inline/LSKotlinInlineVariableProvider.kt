@@ -35,6 +35,7 @@ import com.jetbrains.ls.api.features.impl.common.modcommands.DocumentStamp
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyEditOrRefuse
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCodeAction
 import com.jetbrains.ls.api.features.impl.common.modcommands.refuseStaleDocument
+import com.jetbrains.ls.api.features.impl.common.modcommands.stamps
 import com.jetbrains.ls.api.features.impl.common.processors.doRefactoring
 import com.jetbrains.ls.api.features.impl.common.utils.findElementUnderCaret
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
@@ -96,7 +97,7 @@ internal object LSKotlinInlineVariableProvider : LSCodeActionProvider, LSCommand
             readAction {
                 val property = findProperty(documentUri, params.range) ?: return@readAction null
                 when (AbstractKotlinInlinePropertyProcessor.extractInitialization(property).initializerOrNull) {
-                    null -> errorAction(cannotInlineMessage(property))
+                    null -> errorAction(cannotInlineMessage(property), property.containingFile.virtualFile?.url)
                     else -> inlineAction(documentUri, params.range, stampOf(documentUri) ?: return@readAction null)
                 }
             }
@@ -222,11 +223,17 @@ internal object LSKotlinInlineVariableProvider : LSCodeActionProvider, LSCommand
         }
     }
 
-    private fun errorAction(message: @Nls String): CodeAction = applyFixCodeAction(
-        title = title(),
-        kind = InlineActionKind.RefactorInlineVariable,
-        modCommandData = ModCommandData.DisplayMessage(message, ModDisplayMessage.MessageKind.ERROR),
-    )
+    /** Must run in a read action. The message describes the text of [fileUrl], so the action is stamped with it. */
+    context(_: LSAnalysisContext)
+    private fun errorAction(message: @Nls String, fileUrl: String?): CodeAction {
+        val data = ModCommandData.DisplayMessage(message, ModDisplayMessage.MessageKind.ERROR)
+        return applyFixCodeAction(
+            title = title(),
+            kind = InlineActionKind.RefactorInlineVariable,
+            modCommandData = data,
+            stamps = data.stamps(fileUrl),
+        )
+    }
 
     private fun title(): @Nls String = LspServerBundle.message("command.inline.local.variable")
 

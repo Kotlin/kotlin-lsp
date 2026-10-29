@@ -18,6 +18,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.parents
+import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.features.InspectionProfilePatcher
 import com.jetbrains.ls.api.core.features.LSInspections
@@ -29,6 +30,7 @@ import com.jetbrains.ls.api.core.util.toTextRange
 import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCodeAction
+import com.jetbrains.ls.api.features.impl.common.modcommands.stamps
 import com.jetbrains.ls.api.features.impl.common.modcommands.toModCommandFixes
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.lsp.implementation.LspHandlerContext
@@ -81,7 +83,7 @@ class LSCommonIntentionFixesCodeActionProvider(
         }.forEach { codeAction -> emit(codeAction) }
     }
 
-    context(server: LSServer)
+    context(server: LSServer, _: LSAnalysisContext)
     private fun infoInspections(psiFile: PsiFile, offset: Int, psiElement: PsiElement?): Sequence<CodeAction> {
         if (psiElement == null) return emptySequence()
         val importInspectionProfile = server.config.importInspectionProfile
@@ -99,6 +101,7 @@ class LSCommonIntentionFixesCodeActionProvider(
             psiFile, psiFile.language, inspectionProfilePatcher, false, importInspectionProfile = importInspectionProfile,
         )
         val fileRange = psiFile.textRange
+        val fileUrl = psiFile.virtualFile?.url
         val session = LocalInspectionToolSession(psiFile, fileRange, fileRange, null)
         val result = mutableListOf<CodeAction>()
         for ((isInfo, list) in listOf(false to normalInspections, true to infoInspections)) {
@@ -122,7 +125,7 @@ class LSCommonIntentionFixesCodeActionProvider(
                         val range = descriptor.range() ?: continue
                         if (!range.containsOffset(offset)) continue
                         for ((name, modCommandData) in lsInspectionManager.createDiagnosticData(descriptor).fixes) {
-                            result.add(applyFixCodeAction(name, codeActionKind, modCommandData))
+                            result.add(applyFixCodeAction(name, codeActionKind, modCommandData, modCommandData.stamps(fileUrl)))
                         }
                     }
                 }
@@ -144,9 +147,10 @@ class LSCommonIntentionFixesCodeActionProvider(
         return if (range.isEmpty || isDiagnosticRange) TextRange(range.startOffset, range.startOffset) else range
     }
 
-    context(server: LSServer)
+    context(server: LSServer, _: LSAnalysisContext)
     private fun intentions(psiFile: PsiFile, offset: Int, selection: TextRange): Sequence<CodeAction> {
         val actionContext = ActionContext(psiFile.project, psiFile, offset, selection, null)
+        val fileUrl = psiFile.virtualFile?.url
 
         return IntentionManager.getInstance()
             .getAvailableIntentions(languageIds)
@@ -165,7 +169,7 @@ class LSCommonIntentionFixesCodeActionProvider(
             .filterNot { modCommandAction -> intentionBlacklist.containsImplementation(modCommandAction.javaClass.name) }
             .map(converter)
             .flatMap { modCommandAction -> modCommandAction.toModCommandFixes(actionContext) }
-            .map { fix -> applyFixCodeAction(fix.name, codeActionKind, fix.data) }
+            .map { fix -> applyFixCodeAction(fix.name, codeActionKind, fix.data, fix.data.stamps(fileUrl)) }
     }
 
     private val codeActionKind: CodeActionKind = CodeActionKind.Refactor

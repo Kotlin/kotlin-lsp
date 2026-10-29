@@ -15,6 +15,7 @@ import com.jetbrains.ls.api.core.util.toTextRange
 import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCodeAction
+import com.jetbrains.ls.api.features.impl.common.modcommands.stamps
 import com.jetbrains.ls.api.features.impl.common.modcommands.toModCommandFixes
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.CodeAction
@@ -56,7 +57,7 @@ abstract class LSExtractModCommandProviderBase : LSCodeActionProvider {
 
     context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
-        val fixes = server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
+        val codeActions = server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
             readAction {
                 val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
                 val document = virtualFile.findDocument() ?: return@readAction emptyList()
@@ -64,11 +65,11 @@ abstract class LSExtractModCommandProviderBase : LSCodeActionProvider {
                 val selection = params.range.toTextRange(document)
                 val actionContext = ActionContext(project, psiFile, selection.startOffset, selection, null)
                 val action = createAction(actionContext) ?: return@readAction emptyList()
-                action.toModCommandFixes(actionContext)
+                action.toModCommandFixes(actionContext).map { (name, data) ->
+                    applyFixCodeAction(name, extractActionKind, data, data.stamps(virtualFile.url))
+                }
             }
         }
-        for ((name, data) in fixes) {
-            emit(applyFixCodeAction(name, extractActionKind, data))
-        }
+        codeActions.forEach { emit(it) }
     }
 }

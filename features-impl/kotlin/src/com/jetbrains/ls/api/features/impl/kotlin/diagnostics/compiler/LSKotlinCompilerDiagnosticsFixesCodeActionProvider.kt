@@ -27,6 +27,7 @@ import com.jetbrains.ls.api.features.impl.common.modcommands.DocumentStamp
 import com.jetbrains.ls.api.features.impl.common.modcommands.LazyFix
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCodeAction
 import com.jetbrains.ls.api.features.impl.common.modcommands.refuseStaleDocument
+import com.jetbrains.ls.api.features.impl.common.modcommands.stamps
 import com.jetbrains.ls.api.features.impl.common.modcommands.toLazyFix
 import com.jetbrains.ls.api.features.impl.common.modcommands.toModCommandFixes
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
@@ -142,7 +143,9 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
                     }
                     // Flattening a choice tree performs every fix, so this client keeps the eager listing.
                     else -> fixes.flatMap { it.toModCommandFixes() }
-                        .map { fix -> applyFixCodeAction(fix.name, CodeActionKind.QuickFix, fix.data, data.diagnostic) }
+                        .map { fix ->
+                            applyFixCodeAction(fix.name, CodeActionKind.QuickFix, fix.data, fix.data.stamps(virtualFile.url), data.diagnostic)
+                        }
                 }
             }
             result

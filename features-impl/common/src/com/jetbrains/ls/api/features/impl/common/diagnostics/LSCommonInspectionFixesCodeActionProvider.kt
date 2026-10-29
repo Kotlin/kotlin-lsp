@@ -3,6 +3,7 @@ package com.jetbrains.ls.api.features.impl.common.diagnostics
 
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.vfs.findPsiFile
+import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.features.InspectionProfilePatcher
 import com.jetbrains.ls.api.core.features.LSInspections
@@ -13,6 +14,7 @@ import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCodeAction
+import com.jetbrains.ls.api.features.impl.common.modcommands.stamps
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.CodeAction
@@ -47,14 +49,17 @@ class LSCommonInspectionFixesCodeActionProvider(
     context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val diagnostics = params.diagnosticData<SimpleDiagnosticData>()
-        diagnostics
-            .filter { it.data.diagnosticSource == LSCommonInspectionDiagnosticProvider.diagnosticSource }
-            .flatMap { data ->
-                data.data.fixes.map { quickFix ->
-                    applyFixCodeAction(quickFix.name, CodeActionKind.QuickFix, quickFix.modCommandData, data.diagnostic)
+        val liveDiagnostics = diagnostics.filter { it.data.diagnosticSource == LSCommonInspectionDiagnosticProvider.diagnosticSource }
+        if (liveDiagnostics.isNotEmpty()) {
+            server.withAnalysisContext {
+                readAction {
+                    val fileUrl = params.textDocument.findVirtualFile()?.url
+                    liveDiagnostics.flatMap { data ->
+                        data.data.fixes.map { quickFix -> quickFix.toCodeAction(fileUrl, data.diagnostic) }
+                    }
                 }
-            }
-            .forEach { codeAction -> emit(codeAction) }
+            }.forEach { codeAction -> emit(codeAction) }
+        }
 
         val batchDiagnostics = diagnostics
             .filter { it.data.diagnosticSource == LSCommonInspectionDiagnosticProvider.batchDiagnosticSource }
@@ -69,12 +74,12 @@ class LSCommonInspectionFixesCodeActionProvider(
     private suspend fun batchFixes(params: CodeActionParams, diagnostics: List<Diagnostic>): List<CodeAction> {
         val inspectionIds = diagnostics.mapNotNullTo(mutableSetOf()) { it.code?.value?.content }
         if (inspectionIds.isEmpty()) return emptyList()
-        val problems = server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
+        return server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
             val psiFile = readAction {
                 params.textDocument.findVirtualFile()?.findPsiFile(project)
             } ?: return@withAnalysisContextAndFileSettings emptyList()
             val document = readAction { psiFile.fileDocument }
-            LSInspections.runInspectionsOn(
+            val problems = LSInspections.runInspectionsOn(
                 psiFile = psiFile,
                 language = psiFile.language,
                 toLspRange = { it.toLspRange(document) },
@@ -86,14 +91,28 @@ class LSCommonInspectionFixesCodeActionProvider(
                 },
                 inspectionIds = inspectionIds,
             )
-        }
-        return diagnostics.flatMap { diagnostic ->
-            val problem = problems.firstOrNull {
-                it.code == diagnostic.code && it.range == diagnostic.range && it.message == diagnostic.message
-            } ?: return@flatMap emptyList()
-            problem.diagnosticData<SimpleDiagnosticData>()?.fixes.orEmpty().map { quickFix ->
-                applyFixCodeAction(quickFix.name, CodeActionKind.QuickFix, quickFix.modCommandData, diagnostic)
+            // Stamped in the context the fixes were computed in, so the stamps match the text of the fixes.
+            readAction {
+                val fileUrl = psiFile.virtualFile?.url
+                diagnostics.flatMap { diagnostic ->
+                    val problem = problems.firstOrNull {
+                        it.code == diagnostic.code && it.range == diagnostic.range && it.message == diagnostic.message
+                    } ?: return@flatMap emptyList()
+                    problem.diagnosticData<SimpleDiagnosticData>()?.fixes.orEmpty().map { quickFix ->
+                        quickFix.toCodeAction(fileUrl, diagnostic)
+                    }
+                }
             }
         }
     }
+
+    /**
+     * The code action of [this] fix of [diagnostic] in the file of [fileUrl]. Must run in a read action.
+     *
+     * The fix of a live diagnostic was computed when the diagnostic was reported, and it is stamped only now, with
+     * the text the server has at the listing.
+     */
+    context(_: LSAnalysisContext)
+    private fun SimpleDiagnosticQuickfixData.toCodeAction(fileUrl: String?, diagnostic: Diagnostic): CodeAction =
+        applyFixCodeAction(name, CodeActionKind.QuickFix, modCommandData, modCommandData.stamps(fileUrl), diagnostic)
 }

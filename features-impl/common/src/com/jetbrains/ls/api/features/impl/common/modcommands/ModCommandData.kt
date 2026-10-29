@@ -42,13 +42,13 @@ import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.impl.common.modcommands.DocumentStamp
 import com.jetbrains.ls.api.features.impl.common.modcommands.DocumentStamps
 import com.jetbrains.ls.api.features.impl.common.modcommands.LazyFix
+import com.jetbrains.ls.api.features.impl.common.modcommands.applyEditOrRefuse
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCommand
 import com.jetbrains.ls.api.features.impl.common.modcommands.registerLazyFixes
 import com.jetbrains.ls.api.features.impl.common.modcommands.stampsOf
+import com.jetbrains.ls.api.features.impl.common.modcommands.versionedEdit
 import com.jetbrains.ls.api.features.impl.common.utils.showDocumentIfSupported
 import com.jetbrains.lsp.implementation.LspClient
-import com.jetbrains.lsp.protocol.ApplyEditRequests.ApplyEdit
-import com.jetbrains.lsp.protocol.ApplyWorkspaceEditParams
 import com.jetbrains.lsp.protocol.Command
 import com.jetbrains.lsp.protocol.CreateFile
 import com.jetbrains.lsp.protocol.DeleteFile
@@ -63,8 +63,6 @@ import com.jetbrains.lsp.protocol.ShowDocumentParams
 import com.jetbrains.lsp.protocol.ShowMessageNotificationType
 import com.jetbrains.lsp.protocol.ShowMessageParams
 import com.jetbrains.lsp.protocol.ShowMessageRequestParams
-import com.jetbrains.lsp.protocol.TextDocumentEdit
-import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 import com.jetbrains.lsp.protocol.TextEdit
 import com.jetbrains.lsp.protocol.Window
 import com.jetbrains.lsp.protocol.WorkspaceEdit
@@ -490,6 +488,19 @@ private fun ModUpdateFileText.toEdits(): List<ModCommandData.Edit> {
  *
  * [changedFiles] holds the new text of each file this call already changed, because the document on disk is
  * behind until the client applies the edit.
+ *
+ * Every edit is sent with [applyEditOrRefuse], so an edit the client does not apply stops the command: the user
+ * gets a message, the request fails with `ContentModified`, and a [ModCommandData.Composite] runs no further step.
+ * Every [TextDocumentEdit][com.jetbrains.lsp.protocol.TextDocumentEdit] names the document version the client
+ * sent last ([versionedEdit]), and the client rejects an edit of an older version.
+ *
+ * The steps of a [ModCommandData.Composite] are not checked again with stamps; the versions guard them. The
+ * server handles a notification inline, as it reads it (`withLsp.kt` in `fleet/lsp.protocol`), and both clients send
+ * `textDocument/didChange` before they answer `workspace/applyEdit`. So after the answer is awaited,
+ * `documents.getVersion` already holds the new version of the client, and the next edit carries it. A client
+ * that answers first makes the next edit name an old version, and the client rejects it. That is a safe stop,
+ * never a wrong edit. [changedFiles] is still needed for a closed file: the server learns its new text only
+ * from the file watcher, later.
  */
 context(_: LSServer, _: LSAnalysisContext)
 suspend fun executeCommand(
@@ -507,18 +518,13 @@ suspend fun executeCommand(
         is ModCommandData.CreateFile -> {
             when (command.content) {
                 is ModCommandData.CreateFile.Content.Text -> {
-                    client.request(
-                        requestType = ApplyEdit,
-                        params = ApplyWorkspaceEditParams(
-                            label = "Create ${command.fileUrl}",
-                            edit = WorkspaceEdit(
-                                documentChanges = listOf(
-                                    CreateFile(DocumentUri(command.fileUrl.intellijUriToLspUri())),
-                                    TextDocumentEdit(
-                                        textDocument = TextDocumentIdentifier(DocumentUri(command.fileUrl.intellijUriToLspUri())),
-                                        edits = listOf(TextEdit(Range.BEGINNING, command.content.text)),
-                                    ),
-                                ),
+                    client.applyEditOrRefuse(
+                        label = "Create ${command.fileUrl}",
+                        edit = WorkspaceEdit(
+                            documentChanges = listOf(
+                                CreateFile(DocumentUri(command.fileUrl.intellijUriToLspUri())),
+                                // The client has not opened a new file, so the edit names no version.
+                                versionedEdit(command.fileUrl, listOf(TextEdit(Range.BEGINNING, command.content.text))),
                             ),
                         ),
                     )
@@ -532,27 +538,21 @@ suspend fun executeCommand(
         }
 
         is ModCommandData.DeleteFile -> {
-            client.request(
-                requestType = ApplyEdit,
-                params = ApplyWorkspaceEditParams(
-                    label = "Delete ${command.fileUrl}",
-                    edit = WorkspaceEdit(
-                        documentChanges = listOf(DeleteFile(DocumentUri(command.fileUrl.intellijUriToLspUri()))),
-                    ),
+            client.applyEditOrRefuse(
+                label = "Delete ${command.fileUrl}",
+                edit = WorkspaceEdit(
+                    documentChanges = listOf(DeleteFile(DocumentUri(command.fileUrl.intellijUriToLspUri()))),
                 ),
             )
         }
 
         is ModCommandData.MoveFile -> {
-            client.request(
-                requestType = ApplyEdit,
-                params = ApplyWorkspaceEditParams(
-                    label = "Move ${command.fileUrl} to ${command.targetUrl}",
-                    edit = WorkspaceEdit(
-                        documentChanges = listOf(
-                            RenameFile(
-                                DocumentUri(command.fileUrl.intellijUriToLspUri()), DocumentUri(command.targetUrl.intellijUriToLspUri())
-                            ),
+            client.applyEditOrRefuse(
+                label = "Move ${command.fileUrl} to ${command.targetUrl}",
+                edit = WorkspaceEdit(
+                    documentChanges = listOf(
+                        RenameFile(
+                            DocumentUri(command.fileUrl.intellijUriToLspUri()), DocumentUri(command.targetUrl.intellijUriToLspUri())
                         ),
                     ),
                 ),
@@ -564,19 +564,9 @@ suspend fun executeCommand(
             // A template without tab stops has nothing to start, and its text is already in the document
             // (`toTextEdit` derives its range from the tab stops, so it cannot even be built).
             if (doc != null && command.vars.isNotEmpty()) {
-                client.request(
-                    requestType = ApplyEdit,
-                    params = ApplyWorkspaceEditParams(
-                        label = "Run snippet in ${command.fileUrl}",
-                        edit = WorkspaceEdit(
-                            documentChanges = listOf(
-                                TextDocumentEdit(
-                                    textDocument = TextDocumentIdentifier(DocumentUri(command.fileUrl.intellijUriToLspUri())),
-                                    edits = listOf(command.toTextEdit(doc)),
-                                ),
-                            ),
-                        ),
-                    ),
+                client.applyEditOrRefuse(
+                    label = "Run snippet in ${command.fileUrl}",
+                    edit = WorkspaceEdit(documentChanges = listOf(versionedEdit(command.fileUrl, listOf(command.toTextEdit(doc))))),
                 )
             }
         }
@@ -588,16 +578,9 @@ suspend fun executeCommand(
                 LOG.warn("No document to update: ${command.fileUrl}")
             }
             else {
-                client.request(
-                    requestType = ApplyEdit,
-                    params = ApplyWorkspaceEditParams(
-                        label = "Update ${command.fileUrl}",
-                        edit = WorkspaceEdit(
-                            changes = mapOf(
-                                DocumentUri(command.fileUrl.intellijUriToLspUri()) to command.edits.map { it.toTextEdit(doc) },
-                            ),
-                        ),
-                    ),
+                client.applyEditOrRefuse(
+                    label = "Update ${command.fileUrl}",
+                    edit = WorkspaceEdit(documentChanges = listOf(versionedEdit(command.fileUrl, command.edits.map { it.toTextEdit(doc) }))),
                 )
                 changedFiles[command.fileUrl] = command.applyEdits(doc.text)
             }
@@ -705,6 +688,7 @@ suspend fun executeCommand(
             params = ShowChooseActionMenuParams(
                 title = command.title,
                 entries = command.entries.map { entry ->
+                    // An entry is a lazy action, which computes its edits when the user picks it, so it needs no stamps.
                     ChooseActionMenuEntry(entry.name, applyFixCommand(entry.action))
                 },
             ),
@@ -736,10 +720,11 @@ private fun readDocumentFromDisk(fileUrl: String): Document? {
 
 /**
  * [tail] holds the commands after the conflicts, which are the edits of the fix. They were computed against the
- * text of that moment, and a [ModCommandData.UpdateFileText] travels as a diff of its `oldText` which the client
- * applies without a version. An edit the user makes while the question is open therefore makes the whole tail
- * stale, and applying it would put text at the wrong offset. So the [DocumentStamp] of every file the tail writes
- * is taken before and after the question, and any difference stops the fix. A tail which holds a
+ * text of that moment. An edit the user makes while the question is open therefore makes the whole tail stale,
+ * and applying it would put text at the wrong offset. Each edit names the document version, but a version
+ * protects only an open document, and it stops a stale tail at its first rejected edit, maybe after other edits
+ * already applied. So the [DocumentStamp] of every file the tail writes is taken before and after the question,
+ * and any difference stops the fix before its first edit. A tail which holds a
  * [ModCommandData.ChooseAction] names no file, and every open document is watched for it. The IDE guards the
  * same thing with `ActionContextPointer.restoreAndCheck`, and shows the same kind of message.
  *
@@ -844,7 +829,7 @@ private fun ModCommandData.choosesLater(): Boolean = when (this) {
 }
 
 /** The urls of the files [this] writes to, including the ones of a nested [ModCommandData.Composite]. */
-private fun ModCommandData.writtenFileUrls(): Sequence<String> = when (this) {
+internal fun ModCommandData.writtenFileUrls(): Sequence<String> = when (this) {
     is ModCommandData.Composite -> commands.asSequence().flatMap { it.writtenFileUrls() }
     is ModCommandData.CreateFile -> sequenceOf(fileUrl)
     is ModCommandData.DeleteFile -> sequenceOf(fileUrl)
