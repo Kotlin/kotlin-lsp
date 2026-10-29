@@ -24,6 +24,7 @@ import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.getLspLocationForDefinition
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.util.toLspRange
+import com.jetbrains.ls.api.features.impl.common.documentation.LSDocumentationSettings
 import com.jetbrains.ls.api.features.inlineDocumentation.DocLinkResolution
 import com.jetbrains.ls.api.features.inlineDocumentation.InlineDocumentationItem
 import com.jetbrains.ls.api.features.inlineDocumentation.InlineDocumentationParams
@@ -32,6 +33,7 @@ import com.jetbrains.ls.api.features.inlineDocumentation.ResolveDocLinkParams
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.Range
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
+import kotlinx.coroutines.withContext
 import kotlin.math.max
 
 /**
@@ -53,7 +55,7 @@ object LSCommonInlineDocumentationProvider : LSInlineDocumentationProvider {
                     InlineDocumentationItem(
                         range = item.documentationRange.toLspRange(document),
                         ownerRange = item.documentationOwnerRange?.toLspRange(document),
-                        html = if (params.renderText) item.renderText() else null,
+                        html = if (params.renderText) LSDocumentationSettings.neutral { item.renderText() } else null,
                     )
                 }
             }
@@ -72,7 +74,7 @@ object LSCommonInlineDocumentationProvider : LSInlineDocumentationProvider {
             var asyncHtml: AsyncSupplier<DocumentationResult.Documentation?>? = null
             val resolution = readAction {
                 val target = resolved.dereference() ?: return@readAction null
-                val html = when (val documentation = target.computeDocumentation()) {
+                val html = when (val documentation = LSDocumentationSettings.neutral { target.computeDocumentation() }) {
                     is DocumentationResult.Documentation -> documentation.html()
                     is AsyncDocumentation -> null.also { asyncHtml = documentation.supplier }
                     null -> null
@@ -82,7 +84,7 @@ object LSCommonInlineDocumentationProvider : LSInlineDocumentationProvider {
                 DocLinkResolution(html = html, location = element?.getLspLocationForDefinition(), name = (element as? PsiNamedElement)?.name)
             } ?: return@withAnalysisContext null
             // an async supplier may compute outside the read action, as the IDE popup does
-            asyncHtml?.let { resolution.copy(html = it()?.html()) } ?: resolution
+            asyncHtml?.let { resolution.copy(html = withContext(LSDocumentationSettings.neutralContext()) { it() }?.html()) } ?: resolution
         }
     }
 
