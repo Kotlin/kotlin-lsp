@@ -17,14 +17,15 @@ import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.commands.LSCommandExecutor
 import com.jetbrains.ls.api.features.commands.LspCommand
+import com.jetbrains.ls.api.features.commands.applyEditOrRefuse
+import com.jetbrains.ls.api.features.commands.refuseStaleDocument
 import com.jetbrains.ls.api.features.impl.common.modcommands.CHOICE_SEPARATOR
+import com.jetbrains.ls.api.features.impl.common.modcommands.DocumentStamp
 import com.jetbrains.ls.kotlinLsp.requests.core.ChooseActionMenuEntry
 import com.jetbrains.ls.kotlinLsp.requests.core.ShowChooseActionMenuNotification
 import com.jetbrains.ls.kotlinLsp.requests.core.ShowChooseActionMenuParams
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.lspClient
-import com.jetbrains.lsp.protocol.ApplyEditRequests
-import com.jetbrains.lsp.protocol.ApplyWorkspaceEditParams
 import com.jetbrains.lsp.protocol.CodeAction
 import com.jetbrains.lsp.protocol.CodeActionKind
 import com.jetbrains.lsp.protocol.CodeActionParams
@@ -101,7 +102,7 @@ abstract class LSRefactoringMemberProviderBase<Context> : LSCodeActionProvider, 
                                                 command = refactoringCommand(
                                                     documentUri = documentUri,
                                                     title = choice,
-                                                    payload = Payload.Data(payload.selection, choice),
+                                                    payload = Payload.Data(payload.selection, choice, payload.stamp),
                                                 ),
                                             )
                                         },
@@ -110,27 +111,20 @@ abstract class LSRefactoringMemberProviderBase<Context> : LSCodeActionProvider, 
                             }
 
                             is Payload.Data -> {
+                                // The context of this request sees the client's last change, so the stamp check is current.
+                                // `null` means the file or its text changed since the listing.
                                 val result = server.withWriteAnalysisContextAndFileSettings(documentUri.uri) {
-                                    val (file, data) = readAction {
-                                        val virtualFile = documentUri.findVirtualFile() ?: return@readAction null
-                                        virtualFile to payload
+                                    val file = readAction {
+                                        documentUri.findVirtualFile()?.takeIf { it.findDocument()?.let(DocumentStamp::of) == payload.stamp }
                                     } ?: return@withWriteAnalysisContextAndFileSettings null
-                                    computeRefactoringResult(file, data)
-                                }
+                                    computeRefactoringResult(file, payload)
+                                } ?: refuseStaleDocument()
 
-                                if (result == null || result.changes.isEmpty()) return JsonPrimitive(true)
+                                if (result.changes.isEmpty()) return JsonPrimitive(true)
 
-                                val applyResult = lspClient.request(
-                                    ApplyEditRequests.ApplyEdit,
-                                    ApplyWorkspaceEditParams(
-                                        label = null,
-                                        edit = WorkspaceEdit(
-                                            documentChanges = result.changes
-                                        ),
-                                    ),
-                                )
+                                lspClient.applyEditOrRefuse(label = null, edit = WorkspaceEdit(documentChanges = result.changes))
 
-                                if (applyResult.applied && result.navigationRange != null) {
+                                if (result.navigationRange != null) {
                                     val shown = lspClient.showDocumentIfSupported(
                                         ShowDocumentParams(
                                             uri = documentUri.uri,
@@ -148,7 +142,7 @@ abstract class LSRefactoringMemberProviderBase<Context> : LSCodeActionProvider, 
                                     }
                                 }
 
-                                if (applyResult.applied && result.message != null) {
+                                if (result.message != null) {
                                     lspClient.notify(
                                         ShowMessageNotificationType,
                                         ShowMessageParams(MessageType.Info, result.message),
@@ -169,33 +163,32 @@ abstract class LSRefactoringMemberProviderBase<Context> : LSCodeActionProvider, 
     context(server: LSServer, handlerContext: LspHandlerContext)
     override fun getCodeActions(params: CodeActionParams): Flow<CodeAction> = flow {
         val documentUri = params.textDocument.uri
-        val choicesResult = server.withAnalysisContext {
+        // The choices, the selection and the stamp come from one read action, so they all describe the same text.
+        val listing = server.withAnalysisContext {
             readAction {
                 val virtualFile = documentUri.findVirtualFile() ?: return@readAction null
                 val document = virtualFile.findDocument() ?: return@readAction null
-                getChoices(virtualFile, params.range.toTextRange(document))
+                when (val choicesResult = getChoices(virtualFile, params.range.toTextRange(document))) {
+                    null -> null
+                    is ChoicesResult.Choices ->
+                        Payload.Choose(choicesResult.selection.toLspRange(document), choicesResult.choices, DocumentStamp.of(document))
+                    is ChoicesResult.Error -> Payload.Error(choicesResult.errorMessage)
+                }
             }
         } ?: return@flow
 
-        when (choicesResult) {
-            is ChoicesResult.Choices -> {
-                val selectionRange = server.withAnalysisContext {
-                    readAction {
-                        val virtualFile = documentUri.findVirtualFile() ?: return@readAction null
-                        val document = virtualFile.findDocument() ?: return@readAction null
-                        choicesResult.selection.toLspRange(document)
-                    }
-                } ?: return@flow
-                val choices = choicesResult.choices
+        when (listing) {
+            is Payload.Choose -> {
+                val choices = listing.choices
                 when {
                     choices.isEmpty() -> {}
 
                     choices.size == 1 -> emit(
-                        refactoringCodeAction(documentUri, descriptorTitle, Payload.Data(selectionRange, choices.single()))
+                        refactoringCodeAction(documentUri, descriptorTitle, Payload.Data(listing.selection, choices.single(), listing.stamp))
                     )
 
                     server.config.clientSupportsActionChooser -> emit(
-                        refactoringCodeAction(documentUri, descriptorTitle, Payload.Choose(selectionRange, choices))
+                        refactoringCodeAction(documentUri, descriptorTitle, listing)
                     )
 
                     else -> for (choice in choices) {
@@ -203,16 +196,15 @@ abstract class LSRefactoringMemberProviderBase<Context> : LSCodeActionProvider, 
                             refactoringCodeAction(
                                 documentUri = documentUri,
                                 title = descriptorTitle + CHOICE_SEPARATOR + choice,
-                                payload = Payload.Data(selectionRange, choice),
+                                payload = Payload.Data(listing.selection, choice, listing.stamp),
                             )
                         )
                     }
                 }
             }
 
-            is ChoicesResult.Error -> emit(
-                refactoringCodeAction(documentUri, descriptorTitle, Payload.Error(choicesResult.errorMessage))
-            )
+            // An error, shown when the user picks the action.
+            else -> emit(refactoringCodeAction(documentUri, descriptorTitle, listing))
         }
     }
 
@@ -293,15 +285,26 @@ abstract class LSRefactoringMemberProviderBase<Context> : LSCodeActionProvider, 
         data class Error(val errorMessage: @Nls String) : ChoicesResult
     }
 
+    /** The second argument of the command. */
     @Serializable
     private sealed interface Payload {
+        /**
+         * Runs the refactoring of [choice] at [selection].
+         *
+         * @property stamp the stamp of the document at the listing; the refactoring is refused when the text changed since
+         */
         @Serializable
-        data class Data(val selection: Range, val choice: @Nls String) : Payload
+        data class Data(val selection: Range, val choice: @Nls String, val stamp: DocumentStamp) : Payload
 
         @Serializable
         data class Error(val message: @Nls String) : Payload
 
+        /**
+         * Asks the user to pick one of [choices]; the pick runs as [Data].
+         *
+         * @property stamp the stamp of the document at the listing, passed on to [Data]
+         */
         @Serializable
-        data class Choose(val selection: Range, val choices: List<@Nls String>) : Payload
+        data class Choose(val selection: Range, val choices: List<@Nls String>, val stamp: DocumentStamp) : Payload
     }
 }

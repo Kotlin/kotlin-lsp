@@ -27,6 +27,8 @@ import com.jetbrains.ls.api.core.util.positionByOffset
 import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
+import com.jetbrains.ls.api.features.commands.applyEditOrRefuse
+import com.jetbrains.ls.api.features.commands.versionedEdit
 import com.jetbrains.ls.api.features.completion.LSCompletionCandidate
 import com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
@@ -40,8 +42,6 @@ import com.jetbrains.ls.snapshot.api.impl.core.CompletionItemWithObject
 import com.jetbrains.ls.snapshot.api.impl.core.LatestCompletionSessionComponent
 import com.jetbrains.ls.api.features.impl.common.utils.showDocumentIfSupported
 import com.jetbrains.lsp.implementation.lspClient
-import com.jetbrains.lsp.protocol.ApplyEditRequests
-import com.jetbrains.lsp.protocol.ApplyWorkspaceEditParams
 import com.jetbrains.lsp.protocol.Command
 import com.jetbrains.lsp.protocol.CompletionItem
 import com.jetbrains.lsp.protocol.CompletionItemLabelDetails
@@ -129,14 +129,11 @@ class LSCompletionProviderHelper(
                         else -> {
                             server.withAnalysisContextAndFileSettings(completion.params.textDocument.uri.uri) {
                                 val insertionResult = applyCompletion(completion, fileForModificationProvider)
-                                lspClient.request(
-                                    ApplyEditRequests.ApplyEdit,
-                                    ApplyWorkspaceEditParams(
-                                        label = null,
-                                        edit = WorkspaceEdit(
-                                            changes = mapOf(completion.params.textDocument.uri to insertionResult.edits)
-                                        )
-                                    )
+                                lspClient.applyEditOrRefuse(
+                                    label = null,
+                                    edit = WorkspaceEdit(
+                                        documentChanges = listOf(versionedEdit(completion.params.textDocument.uri, insertionResult.edits))
+                                    ),
                                 )
                                 lspClient.showDocumentIfSupported(
                                     ShowDocumentParams(

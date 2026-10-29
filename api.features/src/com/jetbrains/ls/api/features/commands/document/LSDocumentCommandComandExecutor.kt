@@ -3,10 +3,10 @@ package com.jetbrains.ls.api.features.commands.document
 
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.features.commands.LSCommandExecutor
+import com.jetbrains.ls.api.features.commands.applyEditOrRefuse
+import com.jetbrains.ls.api.features.commands.versionedEdit
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.implementation.lspClient
-import com.jetbrains.lsp.protocol.ApplyEditRequests
-import com.jetbrains.lsp.protocol.ApplyWorkspaceEditParams
 import com.jetbrains.lsp.protocol.DocumentUri
 import com.jetbrains.lsp.protocol.LSP
 import com.jetbrains.lsp.protocol.TextEdit
@@ -26,16 +26,7 @@ fun interface LSDocumentCommandExecutor : LSCommandExecutor {
 
         val edits = executeForDocument(documentUri, arguments.drop(1))
         if (edits.isNotEmpty()) {
-            // TODO LSP-235 handle errors during application
-            lspClient.request(
-                ApplyEditRequests.ApplyEdit,
-                ApplyWorkspaceEditParams(
-                    label = null,
-                    edit = WorkspaceEdit(
-                        changes = mapOf(documentUri to edits)
-                    ),
-                ),
-            )
+            lspClient.applyEditOrRefuse(label = null, edit = WorkspaceEdit(documentChanges = listOf(versionedEdit(documentUri, edits))))
         }
         // TODO we just need to return smth, not sure that the result is used
         return JsonPrimitive(true)
