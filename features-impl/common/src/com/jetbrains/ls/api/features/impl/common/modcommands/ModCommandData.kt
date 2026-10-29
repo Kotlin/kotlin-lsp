@@ -733,9 +733,6 @@ private fun readDocumentFromDisk(fileUrl: String): Document? {
 }
 
 /**
- * Asks the user whether the fix may run although it reports the conflicts of [command], and returns `true` only
- * when the user answered `Continue` and [tail] can still apply.
- *
  * [tail] holds the commands after the conflicts, which are the edits of the fix. They were computed against the
  * text of that moment, and a [ModCommandData.UpdateFileText] travels as a diff of its `oldText` which the client
  * applies without a version. An edit the user makes while the question is open therefore makes the whole tail
@@ -744,21 +741,37 @@ private fun readDocumentFromDisk(fileUrl: String): Document? {
  * [ModCommandData.ChooseAction] names no file, and every open document is watched for it. The IDE guards the
  * same thing with `ActionContextPointer.restoreAndCheck`, and shows the same kind of message.
  *
- * Navigation stays free: `window/showDocument` and the reveal of a conflict change no text, so they bump no
- * version.
+ * @see com.jetbrains.ls.kotlinLsp.requests.core.confirmConflicts
  */
 context(server: LSServer)
 private suspend fun confirmConflicts(
     command: ModCommandData.ShowConflicts,
     tail: List<ModCommandData>,
     client: LspClient,
+): Boolean = confirmConflicts(command, client) { tail.watchedDocumentVersions() }
+
+/**
+ * Asks whether to continue despite the conflicts in [command].
+ * Returns `true` when no conflicts exist, or the user chooses `Continue` and the watched document versions stay unchanged.
+ *
+ * [watchedDocumentVersions] supplies the versions before and after the question.
+ * Prepared edits can become stale if a watched document changes while the question is open.
+ * In particular, [ModCommandData.UpdateFileText] carries a diff that the client applies without a document version.
+ * Any version change stops the operation.
+ *
+ * Navigation stays free: `window/showDocument` and the reveal of a conflict change no text, so they bump no version.
+ */
+internal suspend fun confirmConflicts(
+    command: ModCommandData.ShowConflicts?,
+    client: LspClient,
+    watchedDocumentVersions: () -> Map<URI, Int?>,
 ): Boolean {
     // `from` maps an empty command to `Nothing`, so this only guards a hand-built one.
-    if (command.conflicts.isEmpty()) return true
-    val versionsBefore = tail.watchedDocumentVersions()
+    if (command == null || command.conflicts.isEmpty()) return true
+    val versionsBefore = watchedDocumentVersions()
     if (!client.askToContinue(command)) return false
 
-    val versionsAfter = tail.watchedDocumentVersions()
+    val versionsAfter = watchedDocumentVersions()
     if (versionsBefore != versionsAfter) {
         LOG.info("The user confirmed the fix, but the documents changed: $versionsBefore -> $versionsAfter")
         client.notify(

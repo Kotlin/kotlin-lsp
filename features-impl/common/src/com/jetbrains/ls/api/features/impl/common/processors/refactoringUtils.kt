@@ -6,6 +6,7 @@ import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.application.writeIntentReadAction
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.text.StringUtil
 import com.intellij.psi.PsiFile
 import com.intellij.usageView.UsageInfo
 import com.intellij.util.IncorrectOperationException
@@ -17,16 +18,20 @@ import com.jetbrains.ls.api.core.processors.LSBaseRefactoringProcessor
 import com.jetbrains.ls.api.core.processors.LSRenameProcessor
 import com.jetbrains.ls.api.core.processors.RefactoringConflictsException
 import com.jetbrains.ls.api.core.processors.RefactoringErrorCategory
+import com.jetbrains.ls.api.core.processors.RefactoringPlan
 import com.jetbrains.ls.api.core.processors.planRefactoring
 import com.jetbrains.ls.api.core.processors.renameFailureMessage
 import com.jetbrains.ls.api.core.processors.throwRefactoringError
 import com.jetbrains.ls.api.core.processors.throwRenameFailure
 import com.jetbrains.ls.api.core.processors.writeRefactoring
 import com.jetbrains.ls.api.core.project
+import com.jetbrains.ls.api.core.util.getLspLocationForDefinition
 import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.DiffGranularity
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.computeTextEdits
 import com.jetbrains.ls.api.features.textEdits.fileChanges
+import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
+import com.jetbrains.ls.kotlinLsp.requests.core.confirmConflicts
 import com.jetbrains.ls.snapshot.api.impl.core.asURI
 import com.jetbrains.ls.snapshot.api.impl.core.toFileUrl
 import com.jetbrains.lsp.implementation.LspException
@@ -46,7 +51,6 @@ import com.jetbrains.lsp.protocol.ShowMessageParams
 import com.jetbrains.lsp.protocol.TextDocumentEdit
 import com.jetbrains.lsp.protocol.TextDocumentIdentifier
 import com.jetbrains.lsp.protocol.URI
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -81,13 +85,7 @@ suspend fun doRefactoring(
     showNotificationWithError : Boolean
 ): List<FileChange> {
     val originals = try {
-        withContext(Dispatchers.EDT) {
-            writeIntentReadAction {
-                executeRefactoringProcessor(project, processor)
-            }
-        }
-    } catch (ex: CancellationException) {
-        throw ex
+        executeRefactoringProcessor(project, processor) ?: return emptyList()
     } catch (ex: Throwable) {
         failRefactoring(ex, showNotificationWithError)
     }
@@ -197,27 +195,40 @@ private fun isParentUri(parent: URI?, candidate: URI): Boolean {
     return false
 }
 
-/**
- * Executes logic of [com.intellij.refactoring.BaseRefactoringProcessor] in simplified way without showing UI.
- *
- * It returns the URL and the text of each file of [LSBaseRefactoringProcessor.getFilesToSave], before
- * the refactoring writes. The map is empty when the refactoring changes nothing.
- */
-fun executeRefactoringProcessor(project: Project, processor: LSBaseRefactoringProcessor): Map<FileUrl, Pair<PsiFile, String>> {
-    val usages = planRefactoring(project, processor) ?: return emptyMap()
-    return startRefactoring(processor, usages) {
-        writeRefactoring(project, processor, usages)
+context(server: LSServer, _: LspHandlerContext)
+private suspend fun executeRefactoringProcessor(project: Project, processor: LSBaseRefactoringProcessor): Map<FileUrl, Pair<PsiFile, String>>? {
+    return withContext(Dispatchers.EDT) {
+        val prepared = writeIntentReadAction {
+            val plan = planRefactoring(project, processor, throwIfConflicts = !server.config.clientSupportsIntellijExtensions)
+                ?: return@writeIntentReadAction null
+            val originals = saveFileTexts(processor, plan.usages)
+            val command = createConflictCommand(plan)
+
+            PreparedRefactoring(plan.usages, originals, command)
+        } ?: return@withContext emptyMap()
+
+        val documentVersions = {
+            (prepared.originals.keys.map { it.asURI() } + server.documents.openDocuments())
+                .distinct().associateWith { server.documents.getVersion(it) } }
+        if (prepared.showConflicts != null && !prepared.showConflicts(documentVersions)) return@withContext null
+
+        writeIntentReadAction { writeRefactoring(project, processor, prepared.usages) }
+        prepared.originals
     }
 }
 
-private fun startRefactoring(
-    processor: LSBaseRefactoringProcessor,
-    usages: Array<UsageInfo>,
-    callback: () -> Unit,
-): Map<FileUrl, Pair<PsiFile, String>> {
-    val originals = saveFileTexts(processor, usages)
-    callback()
-    return originals
+context(server: LSServer, _: LspHandlerContext)
+private fun createConflictCommand(plan: RefactoringPlan): ShowConflictsCommand? {
+    if (plan.conflicts.isEmpty() || !server.config.clientSupportsIntellijExtensions) return null
+
+    val conflicts = plan.conflicts.entrySet().map { (key, value) ->
+        ModCommandData.ShowConflicts.Conflict(
+            messages = value.map { StringUtil.removeHtmlTags(it, true) },
+            location = key.getLspLocationForDefinition()
+        )
+    }
+    val data = ModCommandData.ShowConflicts(conflicts)
+    return { watchVersions -> confirmConflicts(data, lspClient, watchVersions) }
 }
 
 /** The URL and the text of each file to save, before the refactoring writes. */
@@ -227,3 +238,11 @@ private fun saveFileTexts(processor: LSBaseRefactoringProcessor, usages: Array<U
         .distinctBy { it.second }
         .associate { (file, fileUrl) -> fileUrl to (file to file.text) }
 }
+
+private class PreparedRefactoring(
+    val usages: Array<UsageInfo>,
+    val originals: Map<FileUrl, Pair<PsiFile, String>>,
+    val showConflicts: ShowConflictsCommand?,
+)
+
+typealias ShowConflictsCommand = suspend (() -> Map<URI, Int?>) -> Boolean
