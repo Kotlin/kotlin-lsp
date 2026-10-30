@@ -55,6 +55,8 @@ object GradleToolingApiHelper {
     const val LSP_GRADLE_PROJECT_SELF_CONTAINED_PROXY_URL_PROPERTY: String = "com.jetbrains.ls.imports.gradle.selfContainedProxyUrl"
 
     private const val WRAPPER_PROPERTIES: String = "gradle/wrapper/gradle-wrapper.properties"
+    private const val TOOLCHAIN_PATHS_PROPERTY: String = "org.gradle.java.installations.paths"
+    private const val TOOLCHAIN_AUTO_DETECT_PROPERTY: String = "org.gradle.java.installations.auto-detect"
     private const val IDEA_ACTIVE_PROPERTY: String = "idea.active"
     private const val IDEA_SYNC_ACTIVE_PROPERTY: String = "idea.sync.active"
     private const val KOTLIN_LSP_IMPORT_PROPERTY: String = "com.jetbrains.ls.imports.gradle"
@@ -311,6 +313,50 @@ object GradleToolingApiHelper {
      */
     private fun installedJavaHomes(projectDirectory: Path): List<String> =
         JavaHomeFinder.suggestHomePaths(projectDirectory.getEelDescriptor(), false)
+
+    /**
+     * The `-P` argument that tells Gradle toolchains about the JDKs the server finds, or `null` when none is needed.
+     * Gradle's own detection can miss them, e.g. on Windows ARM64. The value merges the user's own
+     * [TOOLCHAIN_PATHS_PROPERTY], read from [systemProperties], the Gradle user home and the build root
+     * `gradle.properties` in Gradle's order, because a command-line `-P` replaces it.
+     */
+    fun gradleToolchainPathsArgument(
+        projectDirectory: Path,
+        environment: Map<String, String>,
+        systemProperties: Map<String, String>,
+    ): String? {
+        val propertyFiles = listOfNotNull(
+            gradleUserHome(environment)?.resolve("gradle.properties"),
+            gradleBuildRoot(projectDirectory).resolve("gradle.properties"),
+        ).mapNotNull { file -> file.takeIf { it.isRegularFile() }?.let(::readGradleProperties) }
+        fun gradleProperty(key: String): String? =
+            systemProperties[key] ?: propertyFiles.firstNotNullOfOrNull { it.getProperty(key) }
+
+        val lsJdks = installedJavaHomes(projectDirectory).filter { runCatching { JdkUtil.checkForJdk(it) }.getOrDefault(false) }
+        val argument = toolchainPathsArgument(gradleProperty(TOOLCHAIN_PATHS_PROPERTY), gradleProperty(TOOLCHAIN_AUTO_DETECT_PROPERTY), lsJdks)
+        if (argument != null) LOG.info("Gradle toolchains get the JDKs: $argument")
+        return argument
+    }
+
+    /**
+     * The `-P` argument for [TOOLCHAIN_PATHS_PROPERTY]: the user's [ownPaths] first, then the [lsJdks] they lack.
+     * `null` when [autoDetect] is `false` (the user turned detection off), or when [lsJdks] add nothing.
+     * A JDK path with a comma is dropped: the property is a comma-separated list.
+     */
+    fun toolchainPathsArgument(ownPaths: String?, autoDetect: String?, lsJdks: List<String>): String? {
+        if (autoDetect?.trim().equals("false", ignoreCase = true)) return null
+        val own = ownPaths.orEmpty().split(',').map { it.trim() }.filter { it.isNotEmpty() }.distinct()
+        val all = (own + lsJdks.filter { ',' !in it }).distinct()
+        if (all.size == own.size) return null
+        return "-P$TOOLCHAIN_PATHS_PROPERTY=" + all.joinToString(",")
+    }
+
+    /** The Gradle user home: [LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY], then `GRADLE_USER_HOME`, then `~/.gradle`. */
+    private fun gradleUserHome(environment: Map<String, String>): Path? {
+        val home = getProperty(LSP_GRADLE_PROJECT_GRADLE_USER_HOME_PROPERTY)?.takeIf { it.isNotBlank() }
+            ?: (environment.environmentVariable("GRADLE_USER_HOME") ?: System.getenv("GRADLE_USER_HOME"))?.takeIf { it.isNotBlank() }
+        return home?.toNioPathOrNull() ?: SystemProperties.getUserHome().toNioPathOrNull()?.resolve(".gradle")
+    }
 
     private fun suggestJavaPath(projectDirectory: Path, gradleVersion: GradleVersion): String? {
         val javaSdkType = SimpleJavaSdkType.getInstance()

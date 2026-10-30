@@ -39,6 +39,7 @@ import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.configureEnvironme
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.configureLogging
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.configureSystemProperties
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.findTheMostCompatibleJdk
+import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.gradleToolchainPathsArgument
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.prepareForExecution
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.withCustomGradleHome
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.withDaemonInitScripts
@@ -149,6 +150,10 @@ class GradleTool(
     @Volatile
     private var syncGradleHome: String? = null
 
+    /** The toolchain JDK paths argument of the last sync; a run before the first sync passes none. */
+    @Volatile
+    private var syncToolchainPaths: String? = null
+
     /**
      * One `gradle` process per request, see [gradleExecutable]. `JAVA_HOME` is the
      * JDK of the import, so the wrapper starts a JVM the Gradle version supports. The program is forked by the
@@ -177,7 +182,7 @@ class GradleTool(
                 debugAgent = listOfNotNull(debugPort?.let(::jdwpAgent)),
             )
         }
-        val process = ProcessBuilder(listOf(gradleExecutable()) + args).apply {
+        val process = ProcessBuilder(listOf(gradleExecutable()) + listOfNotNull(syncToolchainPaths) + args).apply {
             syncJavaHome?.let { environment()["JAVA_HOME"] = it }
             environment().putEnvironment(parameters.options.environment)
         }.directory(parameters.projectDirectory.toFile())
@@ -248,13 +253,16 @@ class GradleTool(
         val jdkToUse = parameters.options.javaHome?.toString()
             ?: findTheMostCompatibleJdk(projectDirectory, parameters.options.environment)
         syncJavaHome = jdkToUse
+        // Gradle toolchains may not find the JDKs the server finds, e.g. on Windows ARM64.
+        val toolchainPaths = gradleToolchainPathsArgument(projectDirectory, parameters.options.environment, parameters.options.systemProperties)
+        syncToolchainPaths = toolchainPaths
 
         // The models are handed over with `trySend` (the channel is unbounded): the Tooling API calls below are
         // blocking and run inside non-suspending lambdas.
         try {
             connection.use { projectConnection ->
                 withDaemonInitScripts { daemonInitScripts ->
-                    val metadata = executeGradleSync(projectConnection, channel, daemonInitScripts, jdkToUse)
+                    val metadata = executeGradleSync(projectConnection, channel, daemonInitScripts, jdkToUse, toolchainPaths)
                     syncGradleHome = metadata.gradleHome
                     val storage = toStorage(metadata, virtualFileUrlManager, channel, jdkToUse)
                     channel.trySend(ImportEvent.UpdateWorkspaceModel(storage, buildScriptsOf(storage)))
@@ -298,7 +306,8 @@ class GradleTool(
         connection: ProjectConnection,
         events: SendChannel<ImportEvent>,
         initScripts: Iterable<Path>,
-        javaHome: String?
+        javaHome: String?,
+        toolchainPaths: String?,
     ): ProjectMetadata {
         val syncSettings = GradleSyncSettings(downloadLibrarySources = parameters.options.downloadAdditionalArtifacts)
         val syncResultHandler = GradleSyncResultHandler<ProjectMetadata>()
@@ -329,6 +338,7 @@ class GradleTool(
         if (javaHome != null) {
             executer.setJavaHome(File(javaHome))
         }
+        toolchainPaths?.let { executer.addArguments(it) }
         executer.run(syncResultHandler.asResultHandler())
         return syncResultHandler.getSyncResult()
     }
