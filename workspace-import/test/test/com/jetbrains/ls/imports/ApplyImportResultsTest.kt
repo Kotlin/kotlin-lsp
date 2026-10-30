@@ -18,8 +18,12 @@ import com.intellij.platform.workspace.jps.entities.SdkId
 import com.intellij.platform.workspace.jps.entities.libraryProperties
 import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.EntityStorage
+import com.intellij.platform.workspace.storage.ExternalMappingKey
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.entities
+import com.intellij.platform.workspace.storage.instrumentation.EntityStorageInstrumentationApi
+import com.intellij.platform.workspace.storage.instrumentation.MutableEntityStorageInstrumentation
+import com.intellij.platform.workspace.storage.toBuilder
 import com.intellij.platform.workspace.storage.url.VirtualFileUrl
 import com.intellij.workspaceModel.ide.impl.IdeVirtualFileUrlManagerImpl
 import com.jetbrains.ls.imports.api.LSConfiguredProjectData
@@ -30,6 +34,8 @@ import com.jetbrains.ls.imports.api.LSImportedFoldersDataEntity
 import com.jetbrains.ls.imports.api.ModuleCoordinateEntity
 import com.jetbrains.ls.imports.api.WorkspaceEntitySource
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class ApplyImportResultsTest {
@@ -211,6 +217,95 @@ class ApplyImportResultsTest {
         assertEquals(emptyList<String>(), kept.entities<SdkEntity>().map { it.name }.toList(), "a kept target loses the default SDK")
     }
 
+    /**
+     * The commit skip asks [MutableEntityStorageInstrumentation.hasSameEntities] whether a merge of equal models over the
+     * committed one changed anything. The merge removes every entity and adds it again, so each round moves the entities
+     * to the other set of free slots; the answer must not depend on that layout, hence three rounds in a row.
+     */
+    @Test
+    fun `re-applying the same models has the same entities in every round`() {
+        val gradle = url("/workspace/gradle")
+        val maven = url("/workspace/maven")
+        val snapshotModel = (importedModel(folderA, "a", ModuleDependency(ModuleId("maven-producer"), false, DependencyScope.COMPILE, false)) as MutableEntityStorage).toSnapshot()
+        fun results() = arrayOf(
+            folderA to snapshotModel,
+            gradle to gradleModelWithLibraryDependency(gradle, "com.example:b:1.0"),
+            maven to mavenModelProducing(maven, "com.example:b:1.0"),
+        )
+        var base = importInto(MutableEntityStorage.create(), *results()).apply { addBookkeepingEntity(folderA) }.toSnapshot()
+        repeat(3) { round ->
+            val merged = importInto(base.toBuilder(), *results()).apply { addBookkeepingEntity(folderA) }
+            assertTrue(merged.hasSameEntities(), "round $round: equal models are expected to have the same entities")
+            assertEquals(1, merged.entities<LSDependencySubstitutionEntity>().count(), "round $round: the substitution is expected to be there")
+            base = merged.toSnapshot()
+        }
+    }
+
+    @Test
+    fun `a renamed module has other entities`() {
+        val base = importInto(MutableEntityStorage.create(), folderA to importedModel(folderA, "a")).toSnapshot()
+        val merged = importInto(base.toBuilder(), folderA to importedModel(folderA, "a-renamed"))
+        assertFalse(merged.hasSameEntities())
+    }
+
+    @Test
+    fun `a changed dependency has other entities`() {
+        val base = importInto(
+            MutableEntityStorage.create(),
+            folderA to importedModel(folderA, "a"),
+            folderB to importedModel(folderB, "b"),
+        ).toSnapshot()
+        val merged = importInto(
+            base.toBuilder(),
+            folderA to importedModel(folderA, "a"),
+            folderB to importedModel(folderB, "b", ModuleDependency(ModuleId("a"), false, DependencyScope.COMPILE, false)),
+        )
+        assertFalse(merged.hasSameEntities())
+    }
+
+    @Test
+    fun `a changed content root url has other entities`() {
+        val base = importInto(MutableEntityStorage.create(), folderA to importedModel(folderA, "a")).toSnapshot()
+        val merged = importInto(base.toBuilder(), folderA to importedModel(folderA, "a", contentRoot = url("/workspace/a/src")))
+        assertFalse(merged.hasSameEntities())
+    }
+
+    /** The bookkeeping entity is part of the compared storage, so a status change alone still commits. */
+    @Test
+    fun `a changed import status in the bookkeeping entity has other entities`() {
+        val base = importInto(MutableEntityStorage.create(), folderA to importedModel(folderA, "a"))
+            .apply { addBookkeepingEntity(folderA, LSFolderImportStatus.FAILED) }
+            .toSnapshot()
+        val merged = importInto(base.toBuilder(), folderA to importedModel(folderA, "a"))
+            .apply { addBookkeepingEntity(folderA, LSFolderImportStatus.SUCCESS) }
+        assertFalse(merged.hasSameEntities())
+    }
+
+    @Test
+    fun `a failed target next to unchanged ones has the same entities`() {
+        val base = importInto(
+            MutableEntityStorage.create(),
+            folderA to importedModel(folderA, "a"),
+            folderB to importedModel(folderB, "b"),
+        ).apply { addBookkeepingEntity(folderA) }.toSnapshot()
+        val merged = importInto(base.toBuilder(), folderA to importedModel(folderA, "a"), folderB to null)
+            .apply { addBookkeepingEntity(folderA) }
+        assertTrue(merged.hasSameEntities())
+    }
+
+    /**
+     * The committed model carries the bridges of its modules and SDKs as external mappings, and the check gives up on
+     * an entity that has one. That is why the skip compares against the storage the import built, before the bridges.
+     */
+    @Test
+    fun `a base whose module has an external mapping never has the same entities`() {
+        val base = importInto(MutableEntityStorage.create(), folderA to importedModel(folderA, "a")).apply {
+            getMutableExternalMapping(ExternalMappingKey.create<Any>("test.bridge")).addMapping(entities<ModuleEntity>().single(), Any())
+        }.toSnapshot()
+        val merged = importInto(base.toBuilder(), folderA to importedModel(folderA, "a"))
+        assertFalse(merged.hasSameEntities())
+    }
+
     /** Runs one import over [storage]; the dependency substitutions are carried across calls by the model itself. */
     private fun importInto(
         storage: MutableEntityStorage,
@@ -236,14 +331,18 @@ class ApplyImportResultsTest {
         folder: VirtualFileUrl,
         moduleName: String,
         vararg dependencies: ModuleDependencyItem,
+        contentRoot: VirtualFileUrl = folder,
     ): EntityStorage {
         val source = WorkspaceEntitySource(folder)
         return MutableEntityStorage.create().apply {
             addEntity(ModuleEntity(moduleName, dependencies.toList(), source) {
-                contentRoots = listOf(ContentRootEntity(folder, emptyList(), source))
+                contentRoots = listOf(ContentRootEntity(contentRoot, emptyList(), source))
             })
         }
     }
+
+    @OptIn(EntityStorageInstrumentationApi::class)
+    private fun MutableEntityStorage.hasSameEntities(): Boolean = (this as MutableEntityStorageInstrumentation).hasSameEntities()
 
     /** A module on a default JDK that is sourced outside the workspace, as `fixMissingProjectSdk` adds it. */
     private fun modelWithDefaultSdk(folder: VirtualFileUrl, moduleName: String): EntityStorage {
@@ -286,10 +385,10 @@ class ApplyImportResultsTest {
         }
     }
 
-    private fun MutableEntityStorage.addBookkeepingEntity(folder: VirtualFileUrl) {
+    private fun MutableEntityStorage.addBookkeepingEntity(folder: VirtualFileUrl, status: LSFolderImportStatus = LSFolderImportStatus.SUCCESS) {
         addEntity(
             LSImportedFoldersDataEntity(
-                folderImports = listOf(LSFolderImportRecord(folder.url, "test", LSFolderImportStatus.SUCCESS)),
+                folderImports = listOf(LSFolderImportRecord(folder.url, "test", status)),
                 configuredProjects = emptyList<LSConfiguredProjectData>(),
                 blockedFolders = emptyList(),
                 entitySource = WorkspaceEntitySource(folder),
