@@ -2,22 +2,21 @@
 package com.jetbrains.ls.api.features.impl.kotlin.hover
 
 import com.intellij.psi.PsiElement
-import com.jetbrains.ls.api.features.impl.common.documentation.formatDocComment
 import com.jetbrains.ls.api.features.impl.common.hover.LSHoverProviderBase
-import com.jetbrains.ls.api.features.impl.common.hover.markdownMultilineCode
-import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
+import org.jetbrains.kotlin.analysis.api.KaNonPublicApi
+import org.jetbrains.kotlin.analysis.api.kdoc.findKDoc
+import org.jetbrains.kotlin.analysis.api.session.analyze
 import org.jetbrains.kotlin.asJava.unwrapped
 import org.jetbrains.kotlin.psi.KtDeclaration
+import org.jetbrains.kotlin.psi.KtNonPublicApi
 
 internal class LSKotlinMarkdownDocProvider : LSHoverProviderBase.LSMarkdownDocProvider {
+    @OptIn(KtNonPublicApi::class, KaNonPublicApi::class) // special API for Dokka
     override fun getMarkdownDoc(element: PsiElement): String? {
         val ktElement = element.unwrapped as? KtDeclaration ?: return null
-        val kdDocText = ktElement.docComment?.text ?: return null
-
-        // TODO LSP-239 should be rendered as proper markdown
-        return markdownMultilineCode(
-            code = formatDocComment(kdDocText),
-            language = LSKotlinLanguage.lspName,
-        )
+        return analyze(ktElement) {
+            val kDoc = ktElement.findKDoc() ?: return null
+            LSKotlinKDocMarkdown.render(kDoc.primaryTag, kDoc.additionalSections)
+        }
     }
 }

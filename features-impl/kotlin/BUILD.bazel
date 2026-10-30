@@ -97,6 +97,7 @@ jvm_library(
         "@community//plugins/kotlin/refactorings/kotlin.refactorings.common:kotlin-refactorings-base",
         "@community//platform/refactoring",
         "//language-server/community/features-impl/kotlin/psi",
+        "@community//plugins/kotlin/base/resources:kotlin-base-resources",
     ],
 )
 ### auto-generated section `build language-server.api.features.impl.kotlin` end

@@ -87,5 +87,6 @@
     <orderEntry type="module" module-name="intellij.kotlin.refactorings.base" />
     <orderEntry type="module" module-name="intellij.platform.refactoring" />
     <orderEntry type="module" module-name="language-server.api.features.impl.kotlin.psi" />
+    <orderEntry type="module" module-name="intellij.kotlin.base.resources" />
   </component>
 </module>
