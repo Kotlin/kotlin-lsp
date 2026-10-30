@@ -241,6 +241,35 @@ class ApplyImportResultsTest {
         }
     }
 
+    /**
+     * Two targets publish one coordinate. The storage iterates modules in slot order, which follows the order the
+     * targets were added and alternates between commits, so the producer the consumer is substituted onto must not
+     * depend on it: the smallest module name wins, in both orders and in every re-apply round.
+     */
+    @Test
+    fun `two producers of one coordinate give the same substitution in any order and every round`() {
+        val gradle = url("/workspace/gradle")
+        val mavenA = url("/workspace/maven-a")
+        val mavenB = url("/workspace/maven-b")
+        val expected = ModuleDependency(ModuleId("producer-a"), false, DependencyScope.COMPILE, false)
+        fun results(producerAFirst: Boolean): Array<Pair<VirtualFileUrl, EntityStorage?>> {
+            val producerA = mavenA to mavenModelProducing(mavenA, "com.example:b:1.0", "producer-a")
+            val producerB = mavenB to mavenModelProducing(mavenB, "com.example:b:1.0", "producer-b")
+            val producers = if (producerAFirst) arrayOf(producerA, producerB) else arrayOf(producerB, producerA)
+            return arrayOf(gradle to gradleModelWithLibraryDependency(gradle, "com.example:b:1.0"), *producers)
+        }
+        for (producerAFirst in listOf(true, false)) {
+            var base = importInto(MutableEntityStorage.create(), *results(producerAFirst)).toSnapshot()
+            assertEquals(expected, base.module("gradle-consumer").dependencies.single(), "producerAFirst=$producerAFirst, first import")
+            repeat(3) { round ->
+                val merged = importInto(base.toBuilder(), *results(producerAFirst))
+                assertEquals(expected, merged.module("gradle-consumer").dependencies.single(), "producerAFirst=$producerAFirst, round $round")
+                assertTrue(merged.hasSameEntities(), "producerAFirst=$producerAFirst, round $round: equal models are expected to have the same entities")
+                base = merged.toSnapshot()
+            }
+        }
+    }
+
     @Test
     fun `a renamed module has other entities`() {
         val base = importInto(MutableEntityStorage.create(), folderA to importedModel(folderA, "a")).toSnapshot()
@@ -374,10 +403,10 @@ class ApplyImportResultsTest {
     }
 
     /** A module publishing [coordinate], as the Maven importer produces it. */
-    private fun mavenModelProducing(folder: VirtualFileUrl, coordinate: String): EntityStorage {
+    private fun mavenModelProducing(folder: VirtualFileUrl, coordinate: String, moduleName: String = "maven-producer"): EntityStorage {
         val source = WorkspaceEntitySource(folder)
         return MutableEntityStorage.create().apply {
-            val module = ModuleEntity("maven-producer", emptyList(), source) {
+            val module = ModuleEntity(moduleName, emptyList(), source) {
                 contentRoots = listOf(ContentRootEntity(folder, emptyList(), source))
             }
             addEntity(module)
