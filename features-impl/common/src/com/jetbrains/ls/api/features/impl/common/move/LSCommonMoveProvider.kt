@@ -55,14 +55,6 @@ internal object LSCommonMoveProvider : LSMoveProvider {
                 readAction { findDestination(project, destinationPath) } ?: writeAction { createDestination(project, destinationPath) }
 
             val existedFiles = readAction { params.mapNotNull { it.newUri.findVirtualFile() }.distinct() }
-            if (!server.config.clientSupportsMoveWithOverwrite && existedFiles.isNotEmpty()) {
-                val file = existedFiles.first()
-                if (file.isDirectory) {
-                    failMove(LspServerBundle.message("error.move.directory.exists.in.destination", file.name))
-                } else {
-                    failMove(LspServerBundle.message("error.move.file.exists.in.destination", file.name))
-                }
-            }
             writeAction { existedFiles.forEach { it.delete(this) } }
 
             val result = readAction {

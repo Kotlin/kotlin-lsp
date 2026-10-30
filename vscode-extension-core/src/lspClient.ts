@@ -192,15 +192,6 @@ function registerIntellijSettingsContributor(): void {
   }));
 }
 
-/**
- * Registers client capatibilities related to the refactoring
- */
-function registerRefactoringSettingsContributor(): void {
-  registerInitializationOptionsContributor(() => ({
-    moveWithOverwrite: true,
-  }));
-}
-
 interface LspClientPolicyOptions {
   getAcceptedEulaHash: AcceptedEulaHashProvider;
   checkEulaAccepted: () => Promise<boolean>;
@@ -221,7 +212,6 @@ export function initLspClient({
   configuredServerObservers = serverObservers;
   registerIntellijExtensionsInitOption();
   registerIntellijSettingsContributor();
-  registerRefactoringSettingsContributor();
   const restartServer = (): Promise<boolean> =>
     runWithEulaGate({
       checkEulaAccepted,
