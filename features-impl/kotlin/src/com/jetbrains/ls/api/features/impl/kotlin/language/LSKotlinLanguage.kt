@@ -2,10 +2,10 @@
 package com.jetbrains.ls.api.features.impl.kotlin.language
 
 import com.jetbrains.ls.api.features.language.LSLanguage
-import org.jetbrains.kotlin.idea.KotlinLanguage
+import org.jetbrains.kotlin.idea.KotlinFileType
 
 val LSKotlinLanguage: LSLanguage = LSLanguage(
     lspName = "kotlin",
-    intellijLanguage = KotlinLanguage.INSTANCE,
+    fileType = KotlinFileType.INSTANCE,
     extensions = listOf("kt"),
 )

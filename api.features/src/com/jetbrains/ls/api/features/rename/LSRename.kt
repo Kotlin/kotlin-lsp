@@ -4,6 +4,7 @@ package com.jetbrains.ls.api.features.rename
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.fileExtension
 import com.jetbrains.ls.api.core.util.fileName
+import com.jetbrains.ls.api.core.util.isSource
 import com.jetbrains.ls.api.core.util.toPath
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.move.LSMoveProvider
@@ -18,11 +19,14 @@ import com.jetbrains.lsp.protocol.WorkspaceEdit
 object LSRename {
     context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
     suspend fun rename(params: RenameParams): WorkspaceEdit? {
+        // A library or light document is read-only: a rename cannot start there, as in the IDE
+        if (!params.textDocument.isSource()) return null
         return configuration.entriesFor<LSRenameProvider>(params.textDocument).firstNotNullOfOrNull { it.rename(params) }
     }
 
     context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
     suspend fun prepareRename(params: PrepareRenameParams): PrepareRenameResult? {
+        if (!params.textDocument.isSource()) return null
         return configuration.entriesFor<LSRenameProvider>(params.textDocument).firstNotNullOfOrNull { it.prepareRename(params) }
     }
 

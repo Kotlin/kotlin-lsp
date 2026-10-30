@@ -4,6 +4,7 @@ package com.jetbrains.ls.api.features.codeActions
 import com.intellij.platform.diagnostic.telemetry.Scope
 import com.intellij.platform.diagnostic.telemetry.TelemetryManager
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.util.isSource
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.ls.api.features.partialResults.LSConcurrentResponseHandler
 import com.jetbrains.ls.api.features.utils.traceProvider
@@ -49,6 +50,8 @@ object LSCodeActions {
 
     context(server: LSServer, configuration: LSConfiguration)
     private fun getProviders(params: CodeActionParams): List<LSCodeActionProvider> {
+        // A library or light document is read-only: an action there could only edit text the client must not change
+        if (!params.textDocument.isSource()) return emptyList()
         val all = configuration.entriesFor<LSCodeActionProvider>(params.textDocument)
         val only = params.context.only ?: return all
         return all.filter { provider ->

@@ -2,6 +2,7 @@
 package com.jetbrains.ls.api.features.formatting
 
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.util.isSource
 import com.jetbrains.ls.api.features.LSConfiguration
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.DocumentFormattingParams
@@ -24,6 +25,8 @@ object LSDocumentFormatting {
 
     context(server: LSServer, configuration: LSConfiguration)
     private fun provider(textDocument: TextDocumentIdentifier): LSFormattingProvider? {
+        // A library or light document is read-only: it has nothing to format
+        if (!textDocument.isSource()) return null
         val providers = configuration.entriesFor<LSFormattingProvider>(textDocument)
         return when (providers.size) {
             0 -> null

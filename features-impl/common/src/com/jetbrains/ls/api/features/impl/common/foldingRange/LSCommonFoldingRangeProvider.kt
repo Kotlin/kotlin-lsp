@@ -7,6 +7,7 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
+import com.intellij.psi.PsiCompiledFile
 import com.intellij.psi.PsiElement
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
@@ -36,7 +37,10 @@ class LSCommonFoldingRangeProvider(
         server.withAnalysisContext {
             readAction {
                 val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
-                val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
+                // Like the IDE editor (CodeFoldingManagerImpl), fold the decompiled text, not the compiled PSI
+                val psiFile = virtualFile.findPsiFile(project)
+                    ?.let { if (it is PsiCompiledFile) it.decompiledPsiFile else it }
+                    ?: return@readAction emptyList()
                 val document = virtualFile.findDocument() ?: return@readAction emptyList()
 
                 val builder = LanguageFolding.INSTANCE.forLanguage(psiFile.language) ?: return@readAction emptyList()

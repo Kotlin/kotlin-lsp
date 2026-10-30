@@ -4,6 +4,7 @@ package com.jetbrains.ls.api.features
 import com.intellij.ide.plugins.PluginMainDescriptor
 import com.intellij.lang.Language
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.LanguageId
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptor
 import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
@@ -16,7 +17,7 @@ import com.jetbrains.lsp.protocol.URI
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 
-data class TextDocumentIdentifierWithLspLanguage(val document: TextDocumentIdentifier, val lspLanguage: String?)
+data class TextDocumentIdentifierWithLanguageId(val document: TextDocumentIdentifier, val languageId: LanguageId?)
 
 class LSConfiguration(
     val entries: List<LSConfigurationEntry>,
@@ -57,7 +58,7 @@ class LSConfiguration(
     }
 
     inline fun <reified E : LSLanguageSpecificConfigurationEntry> entriesFor(
-        document: TextDocumentIdentifierWithLspLanguage,
+        document: TextDocumentIdentifierWithLanguageId,
     ): List<E> {
         val language = languageFor(document) ?: return emptyList()
         return entriesFor(language)
@@ -67,7 +68,7 @@ class LSConfiguration(
     inline fun <reified E : LSLanguageSpecificConfigurationEntry> entriesFor(
         document: TextDocumentIdentifier,
     ): List<E> {
-        return entriesFor(TextDocumentIdentifierWithLspLanguage(document, server.documents.getLanguageId(document.uri.uri)))
+        return entriesFor(TextDocumentIdentifierWithLanguageId(document, server.documents.getLanguageId(document.uri.uri)))
     }
 
     inline fun <reified E : LSLanguageSpecificConfigurationEntry> entriesFor(
@@ -91,9 +92,9 @@ class LSConfiguration(
         return entries.firstOrNull { it.uniqueId == id }
     }
 
-    fun languageFor(document: TextDocumentIdentifierWithLspLanguage): LSLanguage? {
+    fun languageFor(document: TextDocumentIdentifierWithLanguageId): LSLanguage? {
         return languageFor(document.document)
-            ?: document.lspLanguage?.let { lspName -> languages.firstOrNull { it.lspName == lspName } }
+            ?: document.languageId?.let { id -> languages.firstOrNull { it.languageId == id } }
     }
 
     fun languageFor(document: TextDocumentIdentifier): LSLanguage? {
