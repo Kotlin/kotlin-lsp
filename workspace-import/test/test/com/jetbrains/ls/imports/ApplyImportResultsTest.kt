@@ -12,7 +12,11 @@ import com.intellij.platform.workspace.jps.entities.ModuleDependency
 import com.intellij.platform.workspace.jps.entities.ModuleDependencyItem
 import com.intellij.platform.workspace.jps.entities.ModuleEntity
 import com.intellij.platform.workspace.jps.entities.ModuleId
+import com.intellij.platform.workspace.jps.entities.SdkDependency
+import com.intellij.platform.workspace.jps.entities.SdkEntity
+import com.intellij.platform.workspace.jps.entities.SdkId
 import com.intellij.platform.workspace.jps.entities.libraryProperties
+import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.entities
@@ -188,6 +192,25 @@ class ApplyImportResultsTest {
         assertEquals(1, storage.entities<LSDependencySubstitutionEntity>().count(), "exactly one up-to-date record is expected")
     }
 
+    /**
+     * A targeted cycle re-imports only `a` and seeds `b` with the model its last commit applied (`runImportCycle`).
+     * Seeding re-applies every entity of that model, also one sourced outside [WorkspaceEntitySource] (a default JDK
+     * added for a module that inherits the project SDK); marking `b` kept would hold only its sourced entities.
+     */
+    @Test
+    fun `a target seeded with its last model keeps an entity sourced outside the workspace, which keeping would drop`() {
+        val modelB = modelWithDefaultSdk(folderB, "b")
+        val seeded = importInto(MutableEntityStorage.create(), folderA to importedModel(folderA, "a"), folderB to modelB)
+        val kept = importInto(MutableEntityStorage.create(), folderA to importedModel(folderA, "a"), folderB to modelB)
+
+        importInto(seeded, folderA to importedModel(folderA, "a"), folderB to modelB)
+        importInto(kept, folderA to importedModel(folderA, "a"), folderB to null)
+
+        assertEquals(listOf(DEFAULT_SDK), seeded.entities<SdkEntity>().map { it.name }.toList())
+        assertEquals(SdkDependency(SdkId(DEFAULT_SDK, "JavaSDK")), seeded.module("b").dependencies.single())
+        assertEquals(emptyList<String>(), kept.entities<SdkEntity>().map { it.name }.toList(), "a kept target loses the default SDK")
+    }
+
     /** Runs one import over [storage]; the dependency substitutions are carried across calls by the model itself. */
     private fun importInto(
         storage: MutableEntityStorage,
@@ -221,6 +244,19 @@ class ApplyImportResultsTest {
             })
         }
     }
+
+    /** A module on a default JDK that is sourced outside the workspace, as `fixMissingProjectSdk` adds it. */
+    private fun modelWithDefaultSdk(folder: VirtualFileUrl, moduleName: String): EntityStorage {
+        val source = WorkspaceEntitySource(folder)
+        return MutableEntityStorage.create().apply {
+            addEntity(SdkEntity(name = DEFAULT_SDK, type = "JavaSDK", roots = emptyList(), additionalData = "", entitySource = DefaultSdkSource))
+            addEntity(ModuleEntity(moduleName, listOf(SdkDependency(SdkId(DEFAULT_SDK, "JavaSDK"))), source) {
+                contentRoots = listOf(ContentRootEntity(folder, emptyList(), source))
+            })
+        }
+    }
+
+    private object DefaultSdkSource : EntitySource
 
     /** A module depending on a library that carries [coordinate], as the Gradle importer produces it. */
     private fun gradleModelWithLibraryDependency(folder: VirtualFileUrl, coordinate: String): EntityStorage {
@@ -261,3 +297,5 @@ class ApplyImportResultsTest {
         )
     }
 }
+
+private const val DEFAULT_SDK = "Java SDK"
