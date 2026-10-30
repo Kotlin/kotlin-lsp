@@ -22,7 +22,8 @@ object LSDefinition {
      * Answers `textDocument/definition`.
      *
      * The answer has one kind for the whole session, also across partial results:
-     * [LocationLink]s with the origin range for a client with `definition.linkSupport`, plain locations for other clients.
+     * [LocationLink]s with the origin range and the whole target declaration for a client with `definition.linkSupport`,
+     * plain locations for other clients.
      */
     context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
     suspend fun getDefinition(params: DefinitionParams): List<LocationOrLink> {
@@ -46,7 +47,7 @@ object LSDefinition {
         return LocationLink(
             originSelectionRange = origin,
             targetUri = location.uri,
-            targetRange = location.range,
+            targetRange = targetRange ?: location.range,
             targetSelectionRange = location.range,
         )
     }
