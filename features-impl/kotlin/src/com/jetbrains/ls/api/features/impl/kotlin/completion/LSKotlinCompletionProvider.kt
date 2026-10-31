@@ -10,6 +10,7 @@ import com.jetbrains.ls.api.features.commands.LSCommandDescriptorProvider
 import com.jetbrains.ls.api.features.completion.LSCompletionProvider
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
 import com.jetbrains.ls.api.features.impl.common.completion.LSCompletionProviderHelper
+import com.jetbrains.ls.api.features.impl.common.completion.LSModCompletion
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.lsp.implementation.LspHandlerContext
@@ -49,9 +50,15 @@ internal object LSKotlinCompletionProvider : LSCompletionProvider, LSCommandDesc
 
     override val commandDescriptors: List<LSCommandDescriptor> = helper.createCommandDescriptors(fileForModificationProvider)
 
+    /**
+     * An injection whose language has ModCompletion providers of its own (JPQL, for example) completes through them on the injected
+     * file, and its items edit the host. The host itself and the injections without such providers complete through the legacy helper.
+     * [resolveCompletion] needs no route of its own: the helper returns an item without its data key unchanged, and ModCompletion items
+     * carry no data.
+     */
     context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun provideCompletion(params: CompletionParams): CompletionList =
-        helper.provideCompletion(params)
+        LSModCompletion.provideInjectedCompletion(params) ?: helper.provideCompletion(params)
 
     context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun resolveCompletion(completionItem: CompletionItem): CompletionItem? =
