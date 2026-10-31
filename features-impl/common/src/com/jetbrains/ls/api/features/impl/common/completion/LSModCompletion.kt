@@ -51,8 +51,8 @@ import org.jetbrains.annotations.ApiStatus
  * for an injection whose language has ModCompletion providers of its own.
  *
  * Converts [ModCommand]-based completions to LSP text edits, transforming caret navigation into snippet placeholders.
- * The part of a command that cannot be expressed as text edits becomes an LSP command named by `applyCommandName`;
- * by default it is [LSApplyFixCommandDescriptorProvider.commandDescriptor], registered for every language.
+ * The part of a command that cannot be expressed as text edits becomes the LSP command of
+ * [LSApplyFixCommandDescriptorProvider.commandDescriptor], registered for every language.
  *
  * Returns at most [MAX_TO_SEND] items.
  */
@@ -83,11 +83,10 @@ object LSModCompletion {
     suspend fun provideCompletionForDocument(
         psiFile: PsiFile,
         position: Position,
-        applyCommandName: String = LSApplyFixCommandDescriptorProvider.commandDescriptor.name,
     ): CompletionList {
         return readAction {
             if (!psiFile.isValid) return@readAction CompletionList(isIncomplete = false, items = emptyList())
-            completeInReadAction(psiFile, psiFile.fileDocument.offsetByPosition(position), applyCommandName)
+            completeInReadAction(psiFile, psiFile.fileDocument.offsetByPosition(position))
         }
     }
 
@@ -97,10 +96,7 @@ object LSModCompletion {
      * providers of its own ([hasOwnModCompletionProviders]): the caller completes through its own route then.
      */
     context(server: LSServer)
-    suspend fun provideInjectedCompletion(
-        params: CompletionParams,
-        applyCommandName: String = LSApplyFixCommandDescriptorProvider.commandDescriptor.name,
-    ): CompletionList? {
+    suspend fun provideInjectedCompletion(params: CompletionParams): CompletionList? {
         if (!params.textDocument.isSource()) return null
         return server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
             readAction {
@@ -109,20 +105,16 @@ object LSModCompletion {
                 val hostOffset = psiFile.fileDocument.offsetByPosition(params.position)
                 val (injected, injectedOffset) = lsFindInjectedFileAt(psiFile, hostOffset) ?: return@readAction null
                 if (!hasOwnModCompletionProviders(injected.psiFile.language)) return@readAction null
-                completeInjectedInReadAction(psiFile, hostOffset, injected, injectedOffset, applyCommandName)
+                completeInjectedInReadAction(psiFile, hostOffset, injected, injectedOffset)
             }
         }
     }
 
     /** [provideCompletionForDocument] at [offset] of [psiFile]; requires read access. */
     context(server: LSServer?)
-    fun completeInReadAction(
-        psiFile: PsiFile,
-        offset: Int,
-        applyCommandName: String = LSApplyFixCommandDescriptorProvider.commandDescriptor.name,
-    ): CompletionList {
+    fun completeInReadAction(psiFile: PsiFile, offset: Int): CompletionList {
         val site = CompletionSite(psiFile, LightModCompletionServiceImpl.computePrefixStart(psiFile, offset), offset)
-        return modCompletionList(host = site, items = site, applyCommandName = applyCommandName)
+        return modCompletionList(host = site, items = site)
     }
 
     /**
@@ -136,7 +128,6 @@ object LSModCompletion {
         hostOffset: Int,
         injected: LSInjectedFile,
         injectedOffset: Int,
-        applyCommandName: String = LSApplyFixCommandDescriptorProvider.commandDescriptor.name,
     ): CompletionList {
         val (length, lengthInFragment) = injectedPrefixLength(injected, hostOffset, injectedOffset)
         val prefixStart = injectedOffset - length
@@ -144,7 +135,6 @@ object LSModCompletion {
             host = CompletionSite(hostFile, hostOffset - lengthInFragment, hostOffset),
             items = CompletionSite(injected.psiFile, prefixStart, injectedOffset),
             prefixBeforeFragment = injected.documentWindow.charsSequence.substring(prefixStart, injectedOffset - lengthInFragment),
-            applyCommandName = applyCommandName,
         )
     }
 
@@ -187,14 +177,13 @@ object LSModCompletion {
      * The ModCompletion items of [items], performed and converted to LSP edits against [host]. [items] is [host] itself, or the
      * injected file of a caret inside an injection in [host]; requires read access. [prefixBeforeFragment] is the part of the
      * injected prefix that lies in fragments before the one of the caret: the host prefix of [host] does not include it.
-     * [applyCommandName] names the LSP command that applies the part of an item that is not a text edit.
+     * The part of an item that is not a text edit is applied by the LSP command of [LSApplyFixCommandDescriptorProvider.commandDescriptor].
      */
     context(server: LSServer?)
     private fun modCompletionList(
         host: CompletionSite,
         items: CompletionSite,
         prefixBeforeFragment: String = "",
-        applyCommandName: String,
     ): CompletionList {
         val psiFile = host.file
         val document = psiFile.fileDocument
@@ -254,7 +243,7 @@ object LSModCompletion {
                                 val applyCommand = ModCompletionCommandConverter.toCommand(
                                     edits = edits,
                                     actionContext = commandContext,
-                                    applyCommandName = applyCommandName,
+                                    applyCommandName = LSApplyFixCommandDescriptorProvider.commandDescriptor.name,
                                 )
                                 EditsWithMeta(i, item, edits, applyCommand, labelSuffix)
                             }
