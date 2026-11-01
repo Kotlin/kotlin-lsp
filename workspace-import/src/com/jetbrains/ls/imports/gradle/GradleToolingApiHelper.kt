@@ -54,6 +54,12 @@ object GradleToolingApiHelper {
     const val LSP_GRADLE_PROJECT_SELF_CONTAINED_INIT_SCRIPT: String = "com.jetbrains.ls.imports.gradle.selfContainedInitScript"
     const val LSP_GRADLE_PROJECT_SELF_CONTAINED_PROXY_URL_PROPERTY: String = "com.jetbrains.ls.imports.gradle.selfContainedProxyUrl"
 
+    /**
+     * Turns on the KMP import, see [com.jetbrains.ls.imports.gradle.action.GradleSyncSettings.importKotlinMultiplatform].
+     * The KMP import is off by default. Only the `kotlin-server` bundle sets this property to `true`.
+     */
+    const val LSP_GRADLE_KMP_IMPORT_PROPERTY: String = "com.jetbrains.ls.imports.gradle.kmp.import"
+
     private const val WRAPPER_PROPERTIES: String = "gradle/wrapper/gradle-wrapper.properties"
     private const val IDEA_ACTIVE_PROPERTY: String = "idea.active"
     private const val IDEA_SYNC_ACTIVE_PROPERTY: String = "idea.sync.active"

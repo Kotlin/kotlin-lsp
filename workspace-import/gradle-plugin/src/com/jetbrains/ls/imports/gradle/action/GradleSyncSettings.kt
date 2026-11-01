@@ -3,4 +3,11 @@ package com.jetbrains.ls.imports.gradle.action
 
 import java.io.Serializable
 
-data class GradleSyncSettings(val downloadLibrarySources: Boolean) : Serializable
+/**
+ * @property importKotlinMultiplatform whether the sync requests the `KotlinMultiplatformModel` of each module.
+ *   Without it, the sync imports a KMP project as any other Gradle project.
+ */
+data class GradleSyncSettings(
+    val downloadLibrarySources: Boolean,
+    val importKotlinMultiplatform: Boolean,
+) : Serializable

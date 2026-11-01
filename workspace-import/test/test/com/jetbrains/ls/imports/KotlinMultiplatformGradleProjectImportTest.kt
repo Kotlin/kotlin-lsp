@@ -10,6 +10,7 @@ import com.intellij.util.system.CpuArch
 import com.intellij.util.system.LowLevelLocalMachineAccess
 import com.intellij.util.system.OS
 import com.jetbrains.ls.imports.core.provider.TestDataDirSource
+import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.LSP_GRADLE_KMP_IMPORT_PROPERTY
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -21,17 +22,19 @@ class KotlinMultiplatformGradleProjectImportTest : GradleProjectImportTestCase()
     @Test
     fun kotlinKmpProject() {
         val reporter = LoggingWorkspaceProgressReporter()
-        doGradleTest(
-            project = "GradleKotlinKmpProject",
-            jdkToUse = JdkDownloaderFacade.jdk17,
-            reporter = reporter,
-            comparator = WorkspaceComparator()
-                .withIgnoredJdkRoots()
-                .withSanitizedJarLibraryNames()
-                .withoutSyntheticLibraries(),
-            goldenFileName = goldenFileNameForCurrentPlatform,
-            entityStorageVerifier = ::assertJvmAndAndroidOnlyModule,
-        )
+        withScopedSystemProperties(LSP_GRADLE_KMP_IMPORT_PROPERTY to "true") {
+            doGradleTest(
+                project = "GradleKotlinKmpProject",
+                jdkToUse = JdkDownloaderFacade.jdk17,
+                reporter = reporter,
+                comparator = WorkspaceComparator()
+                    .withIgnoredJdkRoots()
+                    .withSanitizedJarLibraryNames()
+                    .withoutSyntheticLibraries(),
+                goldenFileName = goldenFileNameForCurrentPlatform,
+                entityStorageVerifier = ::assertJvmAndAndroidOnlyModule,
+            )
+        }
 
         reporter.capturedOutput
             .run {
