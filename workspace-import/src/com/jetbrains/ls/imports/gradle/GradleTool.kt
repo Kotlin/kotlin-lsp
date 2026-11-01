@@ -12,6 +12,7 @@ import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.impl.url.toVirtualFileUrl
 import com.intellij.platform.workspace.storage.url.VirtualFileUrlManager
 import com.intellij.openapi.application.PathManager
+import com.intellij.util.SystemProperties
 import com.intellij.util.io.DigestUtil
 import com.intellij.util.system.LowLevelLocalMachineAccess
 import com.intellij.util.system.OS
@@ -34,6 +35,7 @@ import com.jetbrains.ls.buildtool.api.run.freePort
 import com.jetbrains.ls.buildtool.api.run.jdwpAgent
 import com.jetbrains.ls.buildtool.api.run.toRunHandle
 import com.jetbrains.ls.buildtool.api.ImportEvent
+import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.LSP_GRADLE_KMP_IMPORT_PROPERTY
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.addInitScripts
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.configureEnvironment
 import com.jetbrains.ls.imports.gradle.GradleToolingApiHelper.configureLogging
@@ -309,7 +311,11 @@ class GradleTool(
         javaHome: String?,
         toolchainPaths: String?,
     ): ProjectMetadata {
-        val syncSettings = GradleSyncSettings(downloadLibrarySources = parameters.options.downloadAdditionalArtifacts)
+        val importKotlinMultiplatform = SystemProperties.getBooleanProperty(LSP_GRADLE_KMP_IMPORT_PROPERTY, false)
+        val syncSettings = GradleSyncSettings(
+            downloadLibrarySources = parameters.options.downloadAdditionalArtifacts,
+            importKotlinMultiplatform = importKotlinMultiplatform,
+        )
         val syncResultHandler = GradleSyncResultHandler<ProjectMetadata>()
         val executer = connection.action()
             .projectsLoaded(
@@ -326,12 +332,14 @@ class GradleTool(
             .configureEnvironment(parameters.options.environment)
             .configureSystemProperties(parameters.options.systemProperties)
             .addInitScripts(initScripts)
-            // The importer supports the intransitive metadata configuration, in which KGP puts the dependencies that
-            // must not reach dependsOn source sets. The Kotlin plugin passes the same argument in
-            // `org.jetbrains.kotlin.idea.gradleJava.configuration.KotlinMppGradleProjectResolver.getExtraCommandLineArgs`.
-            .addArguments("-Pkotlin.mpp.enableIntransitiveMetadataConfiguration=true")
             .forTasks(emptyList())
 
+        if (importKotlinMultiplatform) {
+            // The KMP import supports the intransitive metadata configuration, in which KGP puts the dependencies that
+            // must not reach dependsOn source sets. The Kotlin plugin passes the same argument in
+            // `org.jetbrains.kotlin.idea.gradleJava.configuration.KotlinMppGradleProjectResolver.getExtraCommandLineArgs`.
+            executer.addArguments("-Pkotlin.mpp.enableIntransitiveMetadataConfiguration=true")
+        }
         if (parameters.options.offline) {
             executer.addArguments("--offline")
         }

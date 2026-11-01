@@ -49,7 +49,7 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
 
     public ProjectMetadataBuilder() {
         this(
-                new GradleSyncSettings(false)
+                new GradleSyncSettings(false, false)
         );
     }
 
@@ -109,9 +109,11 @@ public class ProjectMetadataBuilder implements BuildAction<ProjectMetadata> {
                 if (kotlinModule != null) {
                     kotlinModules.put(moduleFqn, kotlinModule);
                 }
-                KotlinMultiplatformModel kotlinMultiplatformModel = controller.findModel(delegate, KotlinMultiplatformModel.class);
-                if (kotlinMultiplatformModel != null) {
-                    kotlinMultiplatformModels.put(moduleFqn, kotlinMultiplatformModel);
+                if (syncSettings.getImportKotlinMultiplatform()) {
+                    KotlinMultiplatformModel kotlinMultiplatformModel = controller.findModel(delegate, KotlinMultiplatformModel.class);
+                    if (kotlinMultiplatformModel != null) {
+                        kotlinMultiplatformModels.put(moduleFqn, kotlinMultiplatformModel);
+                    }
                 }
                 ModuleSourceSets moduleSourceSets = controller.findModel(delegate, ModuleSourceSets.class);
                 sourceSets.put(moduleFqn, moduleSourceSets == null ? Collections.emptySet() : moduleSourceSets.getSourceSets());
