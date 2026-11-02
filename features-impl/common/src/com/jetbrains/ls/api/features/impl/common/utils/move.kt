@@ -9,6 +9,8 @@ import com.intellij.openapi.vfs.findPsiDirectory
 import com.intellij.psi.PsiDirectory
 import com.intellij.util.concurrency.annotations.RequiresReadLock
 import com.intellij.util.concurrency.annotations.RequiresWriteLock
+import com.jetbrains.ls.api.core.util.findVirtualFile
+import com.jetbrains.ls.api.core.util.toLspUri
 import com.jetbrains.ls.api.core.util.toPath
 import com.jetbrains.lsp.protocol.FileRename
 import java.io.IOException
@@ -29,7 +31,7 @@ fun findParentPath(params: List<FileRename>): Path? {
  */
 @RequiresReadLock
 fun findDestination(project: Project, destinationPath: Path): PsiDirectory? {
-    val destinationVFile = VirtualFileManager.getInstance().findFileByNioPath(destinationPath) ?: return null
+    val destinationVFile = destinationPath.toLspUri().findVirtualFile() ?: return null
 
     return destinationVFile.findPsiDirectory(project)
 }
