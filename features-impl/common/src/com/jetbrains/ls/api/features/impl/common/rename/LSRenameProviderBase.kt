@@ -3,6 +3,7 @@ package com.jetbrains.ls.api.features.impl.common.rename
 
 import com.intellij.codeInsight.TargetElementUtil
 import com.intellij.openapi.application.readAction
+import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
@@ -71,14 +72,20 @@ abstract class LSRenameProviderBase(
                 }
                 val leaf = PsiUtilCore.getElementAtOffset(psiFile, adjustedOffset)
                 if (leaf is PsiFile) return@readAction PrepareRenameResult.Default(true)
-                val leafRange = leaf.textRange
-                if (leafRange == null || leafRange.isEmpty) return@readAction PrepareRenameResult.Default(true)
-                PrepareRenameResult.Labeled(leafRange.toLspRange(document), placeholderFor(leaf.text))
+                val range = renameRangeAt(psiFile, adjustedOffset) ?: leaf.textRange
+                if (range == null || range.isEmpty) return@readAction PrepareRenameResult.Default(true)
+                PrepareRenameResult.Labeled(range.toLspRange(document), placeholderFor(range.substring(text.toString())))
             }
         }
     }
 
     protected open fun placeholderFor(identifierText: String): String = identifierText
+
+    /**
+     * The range the client edits when the name under the caret is a part of a bigger token, such as a
+     * segment of a path in a string. Null takes the token under the caret.
+     */
+    protected open fun renameRangeAt(psiFile: PsiFile, offset: Int): TextRange? = null
 
     context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun renameFile(params: FileRename): WorkspaceEdit? {
