@@ -16,7 +16,6 @@ import com.intellij.platform.workspace.jps.entities.SdkDependency
 import com.intellij.platform.workspace.jps.entities.SdkEntity
 import com.intellij.platform.workspace.jps.entities.SdkId
 import com.intellij.platform.workspace.jps.entities.libraryProperties
-import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.EntityStorage
 import com.intellij.platform.workspace.storage.ExternalMappingKey
 import com.intellij.platform.workspace.storage.MutableEntityStorage
@@ -25,6 +24,7 @@ import com.intellij.platform.workspace.storage.instrumentation.EntityStorageInst
 import com.intellij.platform.workspace.storage.instrumentation.MutableEntityStorageInstrumentation
 import com.intellij.platform.workspace.storage.toBuilder
 import com.intellij.platform.workspace.storage.url.VirtualFileUrl
+import com.intellij.workspaceModel.ide.NonPersistentEntitySource
 import com.intellij.workspaceModel.ide.impl.IdeVirtualFileUrlManagerImpl
 import com.jetbrains.ls.imports.api.LSConfiguredProjectData
 import com.jetbrains.ls.imports.api.LSDependencySubstitutionEntity
@@ -377,14 +377,12 @@ class ApplyImportResultsTest {
     private fun modelWithDefaultSdk(folder: VirtualFileUrl, moduleName: String): EntityStorage {
         val source = WorkspaceEntitySource(folder)
         return MutableEntityStorage.create().apply {
-            addEntity(SdkEntity(name = DEFAULT_SDK, type = "JavaSDK", roots = emptyList(), additionalData = "", entitySource = DefaultSdkSource))
+            addEntity(SdkEntity(name = DEFAULT_SDK, type = "JavaSDK", roots = emptyList(), additionalData = "", entitySource = NonPersistentEntitySource))
             addEntity(ModuleEntity(moduleName, listOf(SdkDependency(SdkId(DEFAULT_SDK, "JavaSDK"))), source) {
                 contentRoots = listOf(ContentRootEntity(folder, emptyList(), source))
             })
         }
     }
-
-    private object DefaultSdkSource : EntitySource
 
     /** A module depending on a library that carries [coordinate], as the Gradle importer produces it. */
     private fun gradleModelWithLibraryDependency(folder: VirtualFileUrl, coordinate: String): EntityStorage {
