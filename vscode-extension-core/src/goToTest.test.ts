@@ -9,6 +9,7 @@ import {
   type GoToTestEditor,
   registerGoToTest,
 } from './goToTestModel';
+import { GO_TO_TEST_FROM_EDITOR_COMMAND } from './relatedTestsModel';
 
 const FOO_TEST = 'file:///p/src/FooTest.java';
 const TESTS_FOLDER = 'file:///p/src/tests';
@@ -80,7 +81,10 @@ interface MenuItem {
 }
 
 interface Manifest {
-  contributes: { menus?: Record<string, MenuItem[] | undefined> };
+  contributes: {
+    commands?: { command: string; title: string }[];
+    menus?: Record<string, MenuItem[] | undefined>;
+  };
 }
 
 const readManifest = (path: string): Manifest =>
@@ -114,6 +118,44 @@ describe('"Go to Test" in the product manifests', () => {
         (entry) => entry.command === GO_TO_TEST_COMMAND,
       );
       assert.equal(item?.when, 'false', path);
+    }
+  });
+
+  test('a test product offers Go to Test from the editor under a title that names both directions', () => {
+    for (const path of TEST_PRODUCTS) {
+      const command = readManifest(path).contributes.commands?.find(
+        (entry) => entry.command === GO_TO_TEST_FROM_EDITOR_COMMAND,
+      );
+      assert.equal(command?.title, 'Go to Test or Test Subject', path);
+    }
+  });
+
+  test('a test product shows Go to Test from the editor for a Java or Kotlin file', () => {
+    for (const path of TEST_PRODUCTS) {
+      const menus = readManifest(path).contributes.menus;
+      for (const menu of ['commandPalette', 'editor/context']) {
+        const item = menus?.[menu]?.find(
+          (entry) => entry.command === GO_TO_TEST_FROM_EDITOR_COMMAND,
+        );
+        assert.ok(item?.when?.includes('/^(java|kotlin)$/'), `${path} ${menu}`);
+      }
+    }
+  });
+
+  test('a product without the request hides Go to Test from the editor', () => {
+    for (const path of OTHER_PRODUCTS) {
+      const menus = readManifest(path).contributes.menus;
+      const item = menus?.commandPalette?.find(
+        (entry) => entry.command === GO_TO_TEST_FROM_EDITOR_COMMAND,
+      );
+      assert.equal(item?.when, 'false', path);
+      assert.notEqual(
+        menus?.['editor/context']?.some(
+          (entry) => entry.command === GO_TO_TEST_FROM_EDITOR_COMMAND,
+        ),
+        true,
+        path,
+      );
     }
   });
 });

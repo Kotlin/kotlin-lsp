@@ -1189,6 +1189,11 @@
         "command": "jetbrains.goToTest",
         "title": "Go to Test",
         "icon": "$(go-to-file)"
+      },
+      {
+        "command": "jetbrains.editor.goToTest",
+        "category": "IntelliJ",
+        "title": "Go to Test or Test Subject"
       }
     ],
     "menus": {
@@ -1200,6 +1205,10 @@
         {
           "command": "jetbrains.goToTest",
           "when": "false"
+        },
+        {
+          "command": "jetbrains.editor.goToTest",
+          "when": "editorLangId =~ /^(java|kotlin)$/"
         }
       ],
       "testing/item/result": [
@@ -1207,6 +1216,13 @@
           "command": "jetbrains.goToTest",
           "group": "inline",
           "when": "jetbrains.goToTestMissing && testing.testItemHasUri"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "jetbrains.editor.goToTest",
+          "when": "resourceLangId =~ /^(java|kotlin)$/",
+          "group": "navigation@9"
         }
       ]
     }

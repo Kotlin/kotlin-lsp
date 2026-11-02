@@ -28,6 +28,7 @@ import {
 import { LSPErrorCodes, RequestType, ResponseError } from 'vscode-languageclient/node';
 import { registerStatusBarItem } from './statusBar';
 import { registerGoToTestCommand } from './goToTest';
+import { registerGoToRelatedTestsCommands } from './relatedTests';
 import { registerDapServer } from './dap';
 import { registerBuildTaskProvider } from './buildTask';
 import { registerFileTemplates } from './fileTemplates';
@@ -306,6 +307,7 @@ async function activateAcceptedExtension(
     registerShowBuildLogCommand(context);
     registerFileTemplates(context);
     registerGoToTestCommand(context);
+    registerGoToRelatedTestsCommands(context);
 
     for (const module of options.modules) {
       await module(context);

@@ -1,0 +1,78 @@
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+import { commands, type ExtensionContext, window } from 'vscode';
+import {
+  ErrorCodes,
+  LSPErrorCodes,
+  RequestType,
+  ResponseError,
+  State,
+  type TextDocumentPositionParams,
+} from 'vscode-languageclient/node';
+import { getLspClient } from './lspClient';
+import {
+  GO_TO_TEST_FROM_EDITOR_COMMAND,
+  goToRelatedTests,
+  type GoToRelatedTestsEditor,
+  type RelatedTestsResult,
+} from './relatedTestsModel';
+
+/** No capability flag: an older server answers `MethodNotFound`. */
+const RelatedTestsRequest = new RequestType<TextDocumentPositionParams, RelatedTestsResult, void>(
+  'intellij/relatedTests',
+);
+
+const vscodeEditor: GoToRelatedTestsEditor = {
+  activeTarget: () => {
+    const client = getLspClient();
+    const editor = window.activeTextEditor;
+    if (!client || !editor) return undefined;
+    return {
+      textDocument: { uri: client.code2ProtocolConverter.asUri(editor.document.uri) },
+      position: client.code2ProtocolConverter.asPosition(editor.selection.active),
+    };
+  },
+  relatedTests: async (params) => {
+    const client = getLspClient();
+    if (client?.state !== State.Running) {
+      await window.showErrorMessage('The language server is not running');
+      return undefined;
+    }
+    try {
+      return await client.sendRequest(RelatedTestsRequest, params);
+    } catch (e) {
+      if (e instanceof ResponseError) {
+        if (e.code === ErrorCodes.MethodNotFound) {
+          await window.showWarningMessage('Go to Test needs a newer language server');
+          return undefined;
+        }
+        if (e.code === LSPErrorCodes.RequestCancelled || e.code === LSPErrorCodes.ServerCancelled) {
+          return undefined;
+        }
+      }
+      const message = e instanceof Error ? e.message : String(e);
+      await window.showErrorMessage(`Go to Test failed: ${message}`);
+      return undefined;
+    }
+  },
+  // The built-in command opens one location, peeks several as Go to Definition does, and shows the
+  // message at the caret for none.
+  showLocations: async ({ locations, noResultsMessage }) => {
+    const client = getLspClient();
+    const editor = window.activeTextEditor;
+    if (!client || !editor) return;
+    await commands.executeCommand(
+      'editor.action.goToLocations',
+      editor.document.uri,
+      editor.selection.active,
+      locations.map((location) => client.protocol2CodeConverter.asLocation(location)),
+      'peek',
+      noResultsMessage,
+    );
+  },
+};
+
+export function registerGoToRelatedTestsCommands(context: ExtensionContext): void {
+  context.subscriptions.push(
+    commands.registerCommand(GO_TO_TEST_FROM_EDITOR_COMMAND, () => goToRelatedTests(vscodeEditor)),
+  );
+}
