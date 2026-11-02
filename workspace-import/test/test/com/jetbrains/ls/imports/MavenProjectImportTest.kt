@@ -1,7 +1,9 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.imports
 
+import com.intellij.ide.starter.sdk.JdkDownloaderFacade
 import com.intellij.platform.workspace.jps.entities.ModuleEntity
+import com.intellij.platform.workspace.jps.entities.SdkDependency
 import com.intellij.platform.workspace.jps.entities.customImlData
 import com.intellij.platform.workspace.jps.entities.exModuleOptions
 import com.intellij.platform.workspace.storage.EntityStorage
@@ -11,6 +13,7 @@ import com.jetbrains.ls.imports.core.provider.TestDataDirSource
 import com.jetbrains.ls.imports.maven.MavenDriver
 import com.jetbrains.ls.imports.maven.MavenTool
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.nio.file.Path
@@ -34,6 +37,35 @@ class MavenProjectImportTest : AbstractProjectImportTestCase() {
                 module.customImlData?.customModuleOptions?.get(IMPORT_JAVA_HOME_KEY),
                 "Module ${module.name} carries no Maven JDK stamp"
             )
+        }
+    }
+
+    /**
+     * A per-project `JAVA_HOME` that is not the server JVM becomes the project SDK (LSP-2229). The golden is skipped:
+     * the SDK roots depend on the downloaded JDK.
+     */
+    @Test
+    fun mavenSdkFromJavaHomeEnvironment() {
+        val jdkHome = JdkDownloaderFacade.jdk17.home
+        doMavenTest(
+            "SimpleMaven",
+            comparator = WorkspaceComparator.NONE,
+            extraEnvironment = mapOf("JAVA_HOME" to jdkHome.toString()),
+        ) { storage ->
+            val mavenModules = storage.entities(ModuleEntity::class.java).filter { it.externalSystemId == "MAVEN" }.toList()
+            assertTrue(mavenModules.isNotEmpty(), "The import produced no Maven module")
+            for (module in mavenModules) {
+                val sdkId = module.dependencies.filterIsInstance<SdkDependency>().singleOrNull()?.sdk
+                assertNotNull(sdkId, "Module ${module.name} has no SDK dependency: ${module.dependencies}")
+                val sdkHome = storage.resolve(sdkId!!)?.homePath?.presentableUrl
+                assertNotNull(sdkHome, "Module ${module.name} SDK $sdkId has no home")
+                assertEquals(jdkHome.toAbsolutePath().normalize(), Path.of(sdkHome!!).toAbsolutePath().normalize())
+                assertEquals(
+                    jdkHome.toString(),
+                    module.customImlData?.customModuleOptions?.get(IMPORT_JAVA_HOME_KEY),
+                    "Module ${module.name} carries a wrong Maven JDK stamp"
+                )
+            }
         }
     }
 
@@ -76,6 +108,8 @@ class MavenProjectImportTest : AbstractProjectImportTestCase() {
     private fun doMavenTest(
         project: String,
         projectFile: String? = null,
+        comparator: WorkspaceComparator = WorkspaceComparator(),
+        extraEnvironment: Map<String, String> = emptyMap(),
         entityStorageVerifier: (EntityStorage) -> Unit = { },
     ) {
         downloadMavenBinaries().let { path ->
@@ -86,11 +120,12 @@ class MavenProjectImportTest : AbstractProjectImportTestCase() {
             MavenDriver,
             testDataDir / "maven",
             projectFile = projectFile,
+            comparator = comparator,
             entityStorageVerifier = entityStorageVerifier,
             importParametersCustomizer = { params ->
                 params.copy(
                     options = params.options.copy(
-                        environment = params.options.environment + ("MAVEN_ARGS" to "-s $cacheRedirectorSettingsFile")
+                        environment = params.options.environment + ("MAVEN_ARGS" to "-s $cacheRedirectorSettingsFile") + extraEnvironment
                     )
                 )
             }

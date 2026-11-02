@@ -64,11 +64,14 @@ import kotlinx.serialization.json.decodeFromStream
 import org.jetbrains.annotations.ApiStatus
 import java.io.File
 import java.io.InputStream
+import java.nio.file.Files
+import java.nio.file.InvalidPathException
 import java.nio.file.Path
 import kotlin.io.path.createTempFile
 import kotlin.io.path.div
 import kotlin.io.path.exists
 import kotlin.io.path.inputStream
+import kotlin.io.path.isDirectory
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
@@ -95,6 +98,37 @@ class MavenTool(
             System.setProperty(JB_MAVEN_HOME_PROPERTY, mavenHome.toString())
             System.setProperty(JB_MAVEN_JAVA_HOME_PROPERTY, javaHome.toString())
         }
+
+        /**
+         * The JDK that Maven runs on, as the project SDK. Returns `null` when [mavenJavaHome] is blank, is not a
+         * directory, or is the server JVM ([serverJavaHome]): the server JVM is a fallback, not a user choice.
+         */
+        @ApiStatus.Internal
+        fun explicitMavenJdk(mavenJavaHome: String?, serverJavaHome: String? = System.getProperty("java.home")): Path? {
+            if (mavenJavaHome.isNullOrBlank()) return null
+            val path = try {
+                Path.of(mavenJavaHome)
+            }
+            catch (e: InvalidPathException) {
+                LOG.info("Maven JAVA_HOME is not a valid path, not using it as the project SDK: $mavenJavaHome", e)
+                return null
+            }
+            if (!path.isDirectory()) {
+                LOG.info("Maven JAVA_HOME is not a directory, not using it as the project SDK: $path")
+                return null
+            }
+            if (serverJavaHome != null && isSameFile(path, serverJavaHome)) return null
+            return path
+        }
+
+        private fun isSameFile(path: Path, other: String): Boolean =
+            try {
+                Files.isSameFile(path, Path.of(other))
+            }
+            catch (e: Throwable) {
+                rethrowControlFlowException(e)
+                false
+            }
     }
 
     override fun sync(context: BuildToolContext, request: SyncRequest): Flow<ImportEvent> =
@@ -214,6 +248,7 @@ class MavenTool(
     /**
      * Merges the two goal results into one workspace model; [resultGenSources] is `null` before it has been built.
      * [javaHome] is the JDK the goals ran with; it is stamped on every module for the build command.
+     * It is also the project SDK when no SDK is configured, see [explicitMavenJdk].
      */
     private fun toStorage(
         resultDeps: SuccessResult,
@@ -243,7 +278,10 @@ class MavenTool(
             entities(ModuleEntity::class.java).mapNotNull { it.exModuleOptions }.toList().forEach {
                 modifyExternalSystemModuleOptionsEntity(it) { rootProjectPath = pomFile.toString() }
             }
-            fixMissingProjectSdk(parameters.options.javaHome ?: parameters.defaultSdkPath, virtualFileUrlManager)
+            fixMissingProjectSdk(
+                parameters.options.javaHome ?: parameters.defaultSdkPath ?: explicitMavenJdk(javaHome),
+                virtualFileUrlManager,
+            )
             stampMavenJavaHome(javaHome)
         }
     }
