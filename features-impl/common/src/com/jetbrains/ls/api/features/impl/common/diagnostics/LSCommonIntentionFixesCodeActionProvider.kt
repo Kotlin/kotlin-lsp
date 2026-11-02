@@ -124,8 +124,8 @@ class LSCommonIntentionFixesCodeActionProvider(
                     ) {
                         val range = descriptor.range() ?: continue
                         if (!range.containsOffset(offset)) continue
-                        for ((name, modCommandData) in lsInspectionManager.createDiagnosticData(descriptor).fixes) {
-                            result.add(applyFixCodeAction(name, codeActionKind, modCommandData, modCommandData.stamps(fileUrl)))
+                        for (fix in lsInspectionManager.createDiagnosticData(descriptor).fixes) {
+                            result.add(applyFixCodeAction(fix.name, codeActionKind, fix.modCommandData, fix.listingStamps(fileUrl)))
                         }
                     }
                 }

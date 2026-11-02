@@ -5,12 +5,14 @@ import com.intellij.codeInsight.intention.IntentionAction
 import com.intellij.codeInspection.LocalQuickFix
 import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.QuickFix
+import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.modcommand.ActionContext
 import com.intellij.modcommand.LocalQuickFixWithModCommandFallback
 import com.intellij.modcommand.ModCommandQuickFix
 import com.intellij.modcommand.ModCommandService
 import com.intellij.openapi.diagnostic.ReportingClassSubstitutor
 import com.intellij.openapi.diagnostic.logger
+import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.maybeStripHtml
 import com.jetbrains.ls.api.features.impl.common.diagnostics.LSCommonInspectionDiagnosticProvider.Companion.diagnosticSource
@@ -34,15 +36,22 @@ internal class LSInspectionManager(
     private val quickFixBlacklist: Blacklist = Blacklist()
 ) {
 
-    context(server: LSServer)
+    /**
+     * The data of the diagnostic of [descriptor], with its fixes stamped with the text they were computed on (see
+     * [SimpleDiagnosticQuickfixData.stamps]). Must run in the read action that computed [descriptor].
+     */
+    context(server: LSServer, _: LSAnalysisContext)
     internal fun createDiagnosticData(descriptor: ProblemDescriptor): SimpleDiagnosticData {
+        val diagnosedFileUrl = descriptor.psiElement
+            ?.let { element -> InjectedLanguageManager.getInstance(element.project).getTopLevelFile(element) }
+            ?.virtualFile?.url
         return SimpleDiagnosticData(
             diagnosticSource = diagnosticSource,
             fixes = descriptor.fixes.orEmpty().flatMap { quickFix ->
                 val lazyFix = getLazyFix(quickFix, descriptor) ?: return@flatMap emptyList()
                 lazyFix
                     .toModCommandFixes(MAX_FLATTENED_INSPECTION_FIXES)
-                    .map { fix -> SimpleDiagnosticQuickfixData(name = fix.name, modCommandData = fix.data) }
+                    .map { fix -> fix.toDiagnosticQuickfixData(diagnosedFileUrl) }
             },
         )
     }

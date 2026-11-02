@@ -14,7 +14,6 @@ import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.withAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCodeAction
-import com.jetbrains.ls.api.features.impl.common.modcommands.stamps
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.lsp.implementation.LspHandlerContext
 import com.jetbrains.lsp.protocol.CodeAction
@@ -91,7 +90,7 @@ class LSCommonInspectionFixesCodeActionProvider(
                 },
                 inspectionIds = inspectionIds,
             )
-            // Stamped in the context the fixes were computed in, so the stamps match the text of the fixes.
+            // The fixes were stamped in this context, when they were computed, so the stamps match their text.
             readAction {
                 val fileUrl = psiFile.virtualFile?.url
                 diagnostics.flatMap { diagnostic ->
@@ -109,10 +108,10 @@ class LSCommonInspectionFixesCodeActionProvider(
     /**
      * The code action of [this] fix of [diagnostic] in the file of [fileUrl]. Must run in a read action.
      *
-     * The fix of a live diagnostic was computed when the diagnostic was reported, and it is stamped only now, with
-     * the text the server has at the listing.
+     * The fix of a live diagnostic was computed when the diagnostic was reported, and it carries the stamps of the
+     * text of that time, so the execution refuses it when the text changed since. See [listingStamps].
      */
     context(_: LSAnalysisContext)
     private fun SimpleDiagnosticQuickfixData.toCodeAction(fileUrl: String?, diagnostic: Diagnostic): CodeAction =
-        applyFixCodeAction(name, CodeActionKind.QuickFix, modCommandData, modCommandData.stamps(fileUrl), diagnostic)
+        applyFixCodeAction(name, CodeActionKind.QuickFix, modCommandData, listingStamps(fileUrl), diagnostic)
 }
