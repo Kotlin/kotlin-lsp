@@ -693,7 +693,7 @@
                 },
                 {
                     "type": "sdk",
-                    "name": "17",
+                    "name": "21 (toolchain)",
                     "kind": "JavaSDK"
                 }
             ],
@@ -734,7 +734,7 @@
                 },
                 {
                     "type": "sdk",
-                    "name": "17",
+                    "name": "21 (toolchain)",
                     "kind": "JavaSDK"
                 }
             ],
@@ -1374,6 +1374,14 @@
             "name": "17",
             "type": "JavaSDK",
             "version": "JDK_17",
+            "homePath": null,
+            "roots": [],
+            "additionalData": ""
+        },
+        {
+            "name": "21 (toolchain)",
+            "type": "JavaSDK",
+            "version": "JDK_21",
             "homePath": null,
             "roots": [],
             "additionalData": ""

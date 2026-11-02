@@ -13,6 +13,7 @@ import com.jetbrains.ls.imports.gradle.model.impl.ModuleSourceSetsImpl
 import com.jetbrains.ls.imports.gradle.utils.KotlinCompilationReflection
 import com.jetbrains.ls.imports.gradle.utils.KotlinExtensionReflection
 import com.jetbrains.ls.imports.gradle.utils.kotlin
+import com.jetbrains.ls.imports.gradle.utils.toolchainJdk
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
@@ -117,6 +118,7 @@ class ModuleSourceSetsModelBuilder : ToolingModelBuilder {
         var sourceCompatibility: String? = null
         var targetCompatibility: String? = null
         val toolchainVersion: Int? = project.getToolchainVersion()
+        val toolchainJdk = if (toolchainVersion != null) project.toolchainJdk(javaCompileTask) else null
         if (javaCompileTask is JavaCompile) {
             sourceCompatibility = javaCompileTask.sourceCompatibility
             targetCompatibility = javaCompileTask.targetCompatibility
@@ -126,6 +128,8 @@ class ModuleSourceSetsModelBuilder : ToolingModelBuilder {
         return ModuleJavaSettingsImpl(
             compileOptions,
             toolchainVersion,
+            toolchainJdk?.home,
+            toolchainJdk?.version,
             sourceCompatibility,
             targetCompatibility
         )

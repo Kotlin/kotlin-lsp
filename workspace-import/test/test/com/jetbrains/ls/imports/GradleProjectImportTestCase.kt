@@ -31,6 +31,8 @@ import kotlin.io.path.writeText
 
 private const val GRADLE_CLEANUP_ATTEMPTS = 3
 private const val GRADLE_CLEANUP_RETRY_DELAY_MS = 300L
+private const val TOOLCHAIN_PATHS_PROPERTY = "org.gradle.java.installations.paths"
+private const val TOOLCHAIN_AUTO_DETECT_PROPERTY = "org.gradle.java.installations.auto-detect"
 private val LOG: Logger = logger<GradleProjectImportTestCase>()
 
 abstract class GradleProjectImportTestCase : AbstractProjectImportTestCase() {
@@ -76,6 +78,24 @@ abstract class GradleProjectImportTestCase : AbstractProjectImportTestCase() {
         )
     }
 
+
+    /**
+     * Gives Gradle toolchains the [jdks], so a toolchain test finds its JDK on any machine. Gradle may still pick
+     * another JDK of the same version it detects itself: a build system property does not turn its detection off.
+     *
+     * The `auto-detect=false` only keeps the server from passing its own `-P org.gradle.java.installations.paths`,
+     * which Gradle rejects when it differs from the Gradle property of the same name.
+     */
+    protected fun toolchainJdks(vararg jdks: JdkDownloadItem): (WorkspaceImportParameters) -> WorkspaceImportParameters = { parameters ->
+        val paths = jdks.joinToString(",") { it.home.toString() }
+        parameters.copy(
+            options = parameters.options.copy(
+                systemProperties = parameters.options.systemProperties +
+                    (TOOLCHAIN_PATHS_PROPERTY to paths) +
+                    (TOOLCHAIN_AUTO_DETECT_PROPERTY to "false")
+            )
+        )
+    }
 
     protected fun doGradleTest(project: String, comparator: WorkspaceComparator = WorkspaceComparator()) =
         doGradleTest(project = project, jdkToUse = JdkDownloaderFacade.jdk17, comparator = comparator) { }

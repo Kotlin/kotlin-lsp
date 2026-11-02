@@ -36,6 +36,7 @@ internal class IdeaProjectMapper {
     private val LOG = logger<IdeaProjectMapper>()
     private val projectJdkCache: MutableMap<String, SdkData?> = mutableMapOf()
     private val projectJavaLanguageLevel: MutableMap<String, String?> = mutableMapOf()
+    private val toolchainSdks = GradleToolchainSdks()
 
     fun toWorkspaceData(metadata: ProjectMetadata, buildRoot: Path): WorkspaceData {
         val sdks: MutableList<SdkData> = mutableListOf()
@@ -67,6 +68,7 @@ internal class IdeaProjectMapper {
         val projectJdks = projectJdkCache.values
             .filterNotNull()
         sdks.addAll(projectJdks)
+        sdks.addAll(toolchainSdks.sdks)
 
         val kotlinMultiplatformModuleNames = kotlinMultiplatformSettings.map { it.module }.toSet()
         return WorkspaceData(
@@ -184,11 +186,11 @@ internal class IdeaProjectMapper {
         if (moduleSdk != null) {
             sdkConsumer(moduleSdk)
         }
-        val sdkDependencyData: DependencyData = if (moduleSdk != null) {
-            DependencyData.Sdk(moduleSdk.name, moduleSdk.type)
-        } else {
-            DependencyData.InheritedSdk
-        }
+        // The project JDK is explicit: with a toolchain SDK there is more than one SDK, and `fixMissingProjectSdk`
+        // would then give an inherited SDK a detected JDK instead of the project one.
+        val currentSdk = moduleSdk ?: projectJdkCache[module.project.name]
+        val sdkDependencyData: DependencyData =
+            currentSdk?.let { DependencyData.Sdk(it.name, it.type) } ?: DependencyData.InheritedSdk
         val projectDirectory = module.gradleProject.projectDirectory.path
         val projectId = gradleProjectIdentityPath(module, buildRoot)
         modules[module.name] = ModuleData(
@@ -246,7 +248,7 @@ internal class IdeaProjectMapper {
                         addAll(dependencyResolver.resolveDependencies(module.name, sourceSet))
                     }
                     add(DependencyData.ModuleSource)
-                    add(sdkDependencyData)
+                    add(toolchainSdkDependency(sourceSet, currentSdk?.homePath) ?: sdkDependencyData)
                 }
 
             // The project's published coordinate goes on its source-set modules (a dependency on this project
@@ -454,6 +456,17 @@ internal class IdeaProjectMapper {
             return moduleJavaLevel + moduleJavaLevelSuffix
         }
         return projectJavaLevel
+    }
+
+    /**
+     * The dependency on the toolchain JDK of [sourceSet], or `null` when it has no toolchain or its toolchain JDK is the
+     * one at [currentSdkHome].
+     */
+    private fun toolchainSdkDependency(sourceSet: ModuleSourceSet, currentSdkHome: String?): DependencyData? {
+        val home = sourceSet.javaSettings.toolchainJavaHome ?: return null
+        // The version of the JDK at `home`, not the project toolchain one: a task may compile with another JDK.
+        val version = sourceSet.javaSettings.toolchainJavaVersion ?: sourceSet.javaSettings.toolchainVersion ?: return null
+        return toolchainSdks.dependencyFor(home.path, version, currentSdkHome)
     }
 
     private fun ModuleSourceSet?.isToolchainSpecified(): Boolean {

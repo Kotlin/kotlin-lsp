@@ -9,7 +9,13 @@ import com.intellij.platform.workspace.jps.entities.exModuleOptions
 import com.intellij.platform.workspace.storage.EntitySource
 import com.intellij.platform.workspace.storage.MutableEntityStorage
 import com.intellij.platform.workspace.storage.entities
+import com.intellij.testFramework.common.timeoutRunBlocking
 import com.intellij.workspaceModel.ide.impl.IdeVirtualFileUrlManagerImpl
+import com.jetbrains.analyzer.api.withAnalyzer
+import com.jetbrains.analyzer.api.withProject
+import com.jetbrains.analyzer.bootstrap.AnalyzerProjectId
+import com.jetbrains.analyzer.bootstrap.WorkspaceModelSnapshot
+import com.jetbrains.analyzer.bootstrap.analyzerProjectConfigForImport
 import com.jetbrains.ls.imports.json.ContentRootData
 import com.jetbrains.ls.imports.json.DependencyData
 import com.jetbrains.ls.imports.json.DependencyDataScope
@@ -27,6 +33,10 @@ import com.jetbrains.ls.imports.json.flattenExportedDependencies
 import com.jetbrains.ls.imports.json.importWorkspaceData
 import com.jetbrains.ls.imports.json.postProcessWorkspaceData
 import com.jetbrains.ls.imports.json.workspaceData
+import com.jetbrains.ls.imports.utils.DEFAULT_JDK_NAME
+import com.jetbrains.ls.imports.utils.DETECT_PROJECT_SDK
+import com.jetbrains.ls.imports.utils.fixMissingProjectSdk
+import com.jetbrains.ls.test.api.utils.testPluginSet
 import org.jetbrains.kotlin.idea.workspaceModel.KotlinSettingsEntity
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -35,6 +45,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.time.Duration.Companion.minutes
 
 class JsonImporterUnitTest {
     @Test
@@ -507,5 +518,50 @@ class JsonImporterUnitTest {
         storage.importWorkspaceData(data, workspacePath, object : EntitySource {}, IdeVirtualFileUrlManagerImpl())
 
         assertEquals("JVM [17]", storage.entities<KotlinSettingsEntity>().single().targetPlatform)
+    }
+
+    // A Gradle toolchain import: the root module is on the Gradle JDK, the source set on the toolchain JDK.
+    @Test
+    fun explicitSdksOfSeveralJdksAreKeptAndNoDefaultJdkIsAdded(@TempDir workspacePath: Path) {
+        val data = WorkspaceData(
+            modules = listOf(
+                ModuleData(name = "root", dependencies = listOf(DependencyData.Sdk(name = "17", kind = "JavaSDK"))),
+                ModuleData(name = "root.main", dependencies = listOf(DependencyData.Sdk(name = "21 (toolchain)", kind = "JavaSDK"))),
+            ),
+            sdks = listOf(
+                SdkData(name = "17", type = "JavaSDK", version = "JDK_17", homePath = null, additionalData = ""),
+                SdkData(name = "21 (toolchain)", type = "JavaSDK", version = "JDK_21", homePath = null, additionalData = ""),
+            ),
+        )
+        val urlManager = IdeVirtualFileUrlManagerImpl()
+        val storage = MutableEntityStorage.create()
+        storage.importWorkspaceData(data, workspacePath, object : EntitySource {}, urlManager)
+        val imported = workspaceData(storage, workspacePath)
+
+        val detectProjectSdk = DETECT_PROJECT_SDK
+        DETECT_PROJECT_SDK = true
+        try {
+            // JDK detection needs the analyzer application; see JdkSdkRootsTest.
+            timeoutRunBlocking(timeout = 10.minutes) {
+                withAnalyzer(isUnitTestMode = true) { analyzer ->
+                    val snapshot = WorkspaceModelSnapshot.empty()
+                    analyzer.withProject(
+                        analyzerProjectConfigForImport(
+                            projectId = AnalyzerProjectId(),
+                            entities = snapshot.entityStore,
+                            urlManager = snapshot.virtualFileUrlManager,
+                            pluginSet = testPluginSet,
+                        )
+                    ) {
+                        storage.fixMissingProjectSdk(null, urlManager)
+                    }
+                }
+            }
+        } finally {
+            DETECT_PROJECT_SDK = detectProjectSdk
+        }
+
+        assertEquals(imported, workspaceData(storage, workspacePath), "Explicit SDK dependencies need no project SDK")
+        assertTrue(storage.entities<SdkEntity>().none { it.name == DEFAULT_JDK_NAME }, "No default JDK is added")
     }
 }

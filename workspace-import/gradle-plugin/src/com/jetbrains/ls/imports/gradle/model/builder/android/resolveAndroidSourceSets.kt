@@ -78,6 +78,8 @@ private fun AndroidComponentReflection.resolveToModuleSourceSet(): ModuleSourceS
     val javaSettings = ModuleJavaSettingsImpl(
         compileOptions = compileOptions,
         toolchainVersion = javaExtension?.toolchain?.languageVersion?.orNull?.asInt(),
+        toolchainJavaHome = null,
+        toolchainJavaVersion = null,
         sourceCompatibility = javaCompileTask?.sourceCompatibility,
         targetCompatibility = javaCompileTask?.targetCompatibility
     )
