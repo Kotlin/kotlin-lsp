@@ -327,9 +327,9 @@ sealed class ModCommandData {
             is ModUpdateFileText -> UpdateFileText(command.file.url.toFileUrl(), command.toEdits())
             is ModDisplayMessage -> DisplayMessage(command.messageText, command.kind)
             // Relies on the custom `intellij/copyToClipboard` notification, so only clients,
-            // which declare `intellijExtensions` can handle it; abort for the others.
+            // which declare `copyToClipboard` can handle it; abort for the others.
             is ModCopyToClipboard -> when {
-                server?.config?.clientSupportsIntellijExtensions == true ->
+                server?.config?.clientSupportsCopyToClipboard == true ->
                     CopyToClipboard(command.content)
                 else -> null
             }

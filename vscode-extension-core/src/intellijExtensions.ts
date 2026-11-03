@@ -79,6 +79,7 @@ export function registerIntellijExtensionsInitOption(): void {
     intellijExtensions: true,
     conflictView: true,
     actionChooser: true,
+    copyToClipboard: true,
     lazyIntentions: true,
   }));
 }
