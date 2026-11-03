@@ -207,9 +207,8 @@ sealed class ModCommandData {
      * A [ModStartRename] asks the editor to start an inline rename of the symbol between [selectionStart] and
      * [selectionEnd]. LSP has no server -> client request for that — `textDocument/rename` goes the other way, and
      * `workspace/executeCommand` cannot be sent to a client — so it is modeled as a navigation onto the symbol
-     * followed by the custom `intellij/runEditorCommand` notification. Only clients that declare
-     * `intellijExtensions` can handle it; for the others [from] degrades to a plain [Navigate], which at least
-     * puts the caret on the symbol so the user can start the rename themselves.
+     * followed by the custom `intellij/runEditorCommand` notification.
+     * Clients declare `runEditorCommand` to handle it. For other clients, [from] returns [Navigate] to place the caret on the symbol.
      */
     @Serializable
     data class StartRename(val fileUrl: String, val selectionStart: Int, val selectionEnd: Int) : ModCommandData()
@@ -219,8 +218,8 @@ sealed class ModCommandData {
      * parameter info popup. The action drives the editor UI and changes no document, and LSP has no server -> client
      * request for it, so it is modeled as the custom `intellij/runEditorCommand` notification, the same way
      * [StartRename] is. [actionId] is the IntelliJ action id; [editorCommandForAction] maps it to the command of
-     * the client. Only clients that declare `intellijExtensions` can handle it; for the others [from] drops an
-     * optional action and aborts on a mandatory one.
+     * the client.
+     * Clients declare `runEditorCommand` to handle it. For other clients, [from] drops an optional action and aborts on a mandatory action.
      */
     @Serializable
     data class LaunchEditorAction(val actionId: String) : ModCommandData()
@@ -374,14 +373,14 @@ sealed class ModCommandData {
                 val symbolRange = command.symbolRange()
                 val range = symbolRange.nameIdentifierRange() ?: symbolRange.range()
                 when {
-                    server?.config?.clientSupportsIntellijExtensions == true ->
+                    server?.config?.clientSupportsRunEditorCommand == true ->
                         StartRename(command.file.url, range.startOffset, range.endOffset)
                     // The rename itself cannot be started, but the caret can still be put on the symbol.
                     else -> Navigate(command.file.url, range.startOffset, range.endOffset, range.startOffset)
                 }
             }
             is ModLaunchEditorAction -> when {
-                server?.config?.clientSupportsIntellijExtensions == true && editorCommandForAction(command.actionId) != null ->
+                server?.config?.clientSupportsRunEditorCommand == true && editorCommandForAction(command.actionId) != null ->
                     LaunchEditorAction(command.actionId)
                 // The action only drives the editor UI, so an optional one can be dropped.
                 command.optional -> Nothing
@@ -900,9 +899,7 @@ const val RENAME_EDITOR_COMMAND: String = "editor.action.rename"
 /**
  * The client-side editor command which matches the [ModLaunchEditorAction] [actionId], or `null` when the client
  * has no such command.
- *
- * `editor.action.triggerSuggest` and `editor.action.triggerParameterHints` are VSCode built-ins, not LSP, so only
- * a client which declares `intellijExtensions` is known to have them. The caller has to check that capability.
+ * The caller checks `runEditorCommand` before attaching the command to a completion item or sending it in a notification.
  */
 fun editorCommandForAction(actionId: String): Command? = when (actionId) {
     ModLaunchEditorAction.ACTION_CODE_COMPLETION ->

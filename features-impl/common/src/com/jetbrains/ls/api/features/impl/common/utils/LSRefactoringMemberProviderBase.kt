@@ -140,7 +140,7 @@ abstract class LSRefactoringMemberProviderBase<Context> : LSCodeActionProvider, 
                                         ),
                                     )
                                     // `editor.action.rename` renames at the caret, which the request above has just placed.
-                                    if (shown?.success == true && result.startRename && server.config.clientSupportsIntellijExtensions) {
+                                    if (shown?.success == true && result.startRename && server.config.clientSupportsRunEditorCommand) {
                                         lspClient.notify(
                                             RunEditorCommandNotification,
                                             RunEditorCommandParams(RENAME_EDITOR_COMMAND, uri = documentUri),
@@ -275,8 +275,7 @@ abstract class LSRefactoringMemberProviderBase<Context> : LSCodeActionProvider, 
      * @property changes the list of file changes that should be applied to the document
      * @property navigationRange the range inside the file in which refactoring was invoked and to which the caret position should be navigated
      * @property message notification message that should be displayed to the user after the refactoring is applied.
-     * @property startRename when true, and the client declares `intellijExtensions`, the client is asked to
-     *   start an inline rename at [navigationRange] after the edit is applied
+     * @property startRename starts an inline rename at [navigationRange] after the edit if the client declares `runEditorCommand`
      */
     data class RefactoringResult(
         val changes: List<FileChange>,

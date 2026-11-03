@@ -334,20 +334,18 @@ object ModCompletionCommandConverter {
     // Otherwise the rename target lives outside the main edit (e.g. the field declaration created by the "field"
     // postfix), and the generic path below turns it into a [ModCommandData.StartRename], which navigates first.
     if (rest is ModStartRename && edits.format == InsertTextFormat.Snippet && edits.main.newText.contains($$"${0}")) {
-      // `editor.action.rename` is a client-side command, so only a client declaring `intellijExtensions` is known
-      // to have it. For the others there is nothing left to do: no rename can be started, and the `${0}` has
-      // already put the caret on the symbol, so a navigation would only fight the snippet session.
+      // A client with `runEditorCommand` can run `editor.action.rename` directly.
+      // Otherwise, `${0}` already places the caret on the symbol. Additional navigation would interfere with the snippet session.
       return when {
-        server?.config?.clientSupportsIntellijExtensions == true ->
+        server?.config?.clientSupportsRunEditorCommand == true ->
           Command(LspServerBundle.message("command.rename"), RENAME_EDITOR_COMMAND)
         else -> null
       }
     }
     if (rest is ModLaunchEditorAction) {
-      // The command of the client is a VSCode built-in, not LSP: a client that does not have it would bounce it
-      // back as a `workspace/executeCommand` the server cannot handle. Only a client declaring
-      // `intellijExtensions` is known to be VSCode-based, so gate on that.
-      if (server?.config?.clientSupportsIntellijExtensions == true) {
+      // These editor commands belong to the client. A client with `runEditorCommand` handles them locally.
+      // Other clients can forward them as `workspace/executeCommand` requests, which the server cannot handle.
+      if (server?.config?.clientSupportsRunEditorCommand == true) {
         editorCommandForAction(rest.actionId)?.let { return it }
       }
       if (rest.optional) return null
