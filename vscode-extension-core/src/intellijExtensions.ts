@@ -76,7 +76,6 @@ function revealConflictButton(tooltip: string): vscode.QuickInputButton {
  */
 export function registerIntellijExtensionsInitOption(): void {
   registerInitializationOptionsContributor(() => ({
-    intellijExtensions: true,
     runEditorCommand: true,
     conflictView: true,
     actionChooser: true,
