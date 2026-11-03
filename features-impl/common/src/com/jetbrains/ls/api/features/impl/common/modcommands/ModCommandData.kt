@@ -243,10 +243,9 @@ sealed class ModCommandData {
      * The edits are the commands after it in the enclosing [Composite], so a `Cancel` answer stops that
      * [Composite]. Nothing has to be undone, because no edit ran yet.
      *
-     * It relies on the custom [ShowConflictsRequest], so only a client which declares `intellijExtensions` can
-     * handle it, and [from] aborts for the others. A `window/showMessageRequest` could ask the same question,
-     * but a client which shows no dialog answers `null` to it, and the fix would then do nothing without
-     * saying why.
+     * It relies on the custom [ShowConflictsRequest], so only a client which declares `conflictView` can
+     * handle it. [from] aborts for the others. A `window/showMessageRequest` could ask the same question.
+     * A client which shows no dialog answers `null` to it, and the fix would then do nothing without saying why.
      */
     @Serializable
     data class ShowConflicts(val conflicts: List<Conflict>) : ModCommandData() {
@@ -289,9 +288,9 @@ sealed class ModCommandData {
          * The [ModCommandData] which is equivalent to [command], or `null` when the client cannot apply it.
          *
          * [actionContext] describes the document the command was built against. [server] supplies the client
-         * capabilities. A command which has no LSP equivalent needs a custom `intellij` notification. A client
-         * which declares no `intellijExtensions` therefore gets a degraded form, or `null`. Each branch documents
-         * the form it falls back to.
+         * capabilities. A command which has no LSP equivalent needs a custom `intellij` request or notification.
+         * A client without the required capability gets a degraded form, or `null`.
+         * Each branch documents the form it falls back to.
          *
          * A `null` result aborts the whole conversion, including the enclosing [ModCompositeCommand]. The caller
          * must then offer no fix, because a half-applied command can leave the file broken.
@@ -390,7 +389,7 @@ sealed class ModCommandData {
             }
             is ModShowConflicts -> when {
                 command.isEmpty -> Nothing
-                server?.config?.clientSupportsIntellijExtensions != true -> null
+                server?.config?.clientSupportsConflictView != true -> null
                 else -> ShowConflicts(
                     command.conflicts.map { (element, conflict) ->
                         ShowConflicts.Conflict(

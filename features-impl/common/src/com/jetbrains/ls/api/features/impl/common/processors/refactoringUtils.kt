@@ -199,7 +199,7 @@ context(server: LSServer, _: LspHandlerContext)
 private suspend fun executeRefactoringProcessor(project: Project, processor: LSBaseRefactoringProcessor): Map<FileUrl, Pair<PsiFile, String>>? {
     return withContext(Dispatchers.EDT) {
         val prepared = writeIntentReadAction {
-            val plan = planRefactoring(project, processor, throwIfConflicts = !server.config.clientSupportsIntellijExtensions)
+            val plan = planRefactoring(project, processor, throwIfConflicts = !server.config.clientSupportsConflictView)
                 ?: return@writeIntentReadAction null
             val originals = saveFileTexts(processor, plan.usages)
             val command = createConflictCommand(plan)
@@ -219,7 +219,7 @@ private suspend fun executeRefactoringProcessor(project: Project, processor: LSB
 
 context(server: LSServer, _: LspHandlerContext)
 private fun createConflictCommand(plan: RefactoringPlan): ShowConflictsCommand? {
-    if (plan.conflicts.isEmpty() || !server.config.clientSupportsIntellijExtensions) return null
+    if (plan.conflicts.isEmpty() || !server.config.clientSupportsConflictView) return null
 
     val conflicts = plan.conflicts.entrySet().map { (key, value) ->
         ModCommandData.ShowConflicts.Conflict(

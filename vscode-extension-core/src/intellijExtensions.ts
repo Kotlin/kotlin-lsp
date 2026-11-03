@@ -77,6 +77,7 @@ function revealConflictButton(tooltip: string): vscode.QuickInputButton {
 export function registerIntellijExtensionsInitOption(): void {
   registerInitializationOptionsContributor(() => ({
     intellijExtensions: true,
+    conflictView: true,
     lazyIntentions: true,
   }));
 }
