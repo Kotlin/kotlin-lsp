@@ -12,6 +12,7 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
+import com.intellij.psi.PsiNamedElement
 import com.intellij.psi.PsiReference
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
@@ -35,6 +36,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
 private val LOG = logger<LSCallHierarchyProviderBase<*>>()
+
+private val WHITESPACE = Regex("\\s+")
 
 abstract class LSCallHierarchyProviderBase<Element : PsiElement> : LSCallHierarchyProvider {
     context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
@@ -132,10 +135,36 @@ abstract class LSCallHierarchyProviderBase<Element : PsiElement> : LSCallHierarc
      */
     protected abstract fun resolvePsiMember(data: CallHierarchyItemData, project: Project): Element?
 
+    /**
+     * The text of the parameter types (and the receiver type) of [element], from PSI only, which tells the same-name siblings
+     * apart, such as overloads; `null` for elements that cannot have such siblings, such as classes and fields.
+     */
+    abstract fun signatureOf(element: PsiElement): String?
+
+    /**
+     * Restores the declaration of [target]. If an edit has moved the pointer to a same-name sibling with another signature,
+     * such as an overload inserted above, finds the sibling with the signature of [target], or returns `null`.
+     */
+    protected fun resolveDeclaration(target: CallHierarchyTarget.Declaration, project: Project): PsiElement? {
+        val restored = target.pointer.restore(project) ?: return null
+        if (target.signature == null || signatureOf(restored) == target.signature) return restored
+        val name = (restored as? PsiNamedElement)?.name
+        val siblings = restored.parent?.children ?: return null
+        return siblings.singleOrNull { sibling ->
+            sibling.javaClass == restored.javaClass && (sibling as? PsiNamedElement)?.name == name && signatureOf(sibling) == target.signature
+        }
+    }
+
+    /** `Receiver.(A, B)`, or `(A, B)` without a receiver, with the whitespace collapsed. */
+    protected fun signature(receiverType: String?, parameterTypes: List<String?>): String {
+        val receiver = receiverType?.let { "$it." }.orEmpty()
+        return "$receiver(${parameterTypes.joinToString()})".replace(WHITESPACE, " ")
+    }
+
 
     @Serializable
     data class CallHierarchyItemData(
-        val nameData: NameData,
+        val target: CallHierarchyTarget,
         val filePath: String,
         override val configurationEntryId: LSUniqueConfigurationEntry.UniqueId,
     ) : ResolveDataWithConfigurationEntryId {
@@ -145,7 +174,7 @@ abstract class LSCallHierarchyProviderBase<Element : PsiElement> : LSCallHierarc
                 return try {
                     LSP.json.decodeFromJsonElement(serializer(), jsonElement)
                 } catch (e: Exception) {
-                    LOG.error("Unable to deserialize CallHierarchyItemData from JSON", e)
+                    LOG.warn("Unable to deserialize CallHierarchyItemData from JSON, maybe it comes from another server version", e)
                     return null
                 }
             }
@@ -153,35 +182,33 @@ abstract class LSCallHierarchyProviderBase<Element : PsiElement> : LSCallHierarc
     }
 
     /**
-     * Stores the information about the name of the member for which "Call Hierarchy" request was invoked.
+     * The member a call hierarchy item stands for.
      */
     @Serializable
-    sealed interface NameData {
+    sealed interface CallHierarchyTarget {
         /**
-         * Object that resolves the class name to the class object.
+         * Source declaration the item stands for.
          */
-        val classPointer: PsiSerializablePointer
-
         @Serializable
-        data class ClassNameData(override val classPointer: PsiSerializablePointer) : NameData
+        data class Declaration(
+            val pointer: PsiSerializablePointer,
+            /** [signatureOf] the declaration, to find it again among its same-name siblings. */
+            val signature: String? = null,
+        ) : CallHierarchyTarget
 
+        /**
+         * Java member with no source (implicit default constructor, record canonical constructor, accessor or field).
+         */
         @Serializable
-        sealed interface MemberNameData : NameData {
-            /**
-             * Short name of the member
-             */
-            val memberName: String
+        data class ImplicitMember(
+            val classPointer: PsiSerializablePointer,
+            val name: String,
+            /** Not `kind`: [LSP.json] uses `kind` as the class discriminator. */
+            val memberKind: Kind,
+            /** Erased canonical text of the parameter types; empty for fields. */
+            val parameterTypes: List<String>,
+        ) : CallHierarchyTarget {
+            enum class Kind { METHOD, CONSTRUCTOR, FIELD }
         }
-
-        @Serializable
-        data class MethodNameData(
-            override val classPointer: PsiSerializablePointer,
-            override val memberName: String,
-            val parametersName: List<String>,
-            val isConstructor: Boolean
-        ) : MemberNameData
-
-        @Serializable
-        data class FieldNameData(override val classPointer: PsiSerializablePointer, override val memberName: String) : MemberNameData
     }
 }

@@ -6,24 +6,20 @@ import com.intellij.ide.hierarchy.ReferenceAwareNodeDescriptor
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.impl.ImaginaryEditor
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiElement
 import com.jetbrains.ls.api.features.configuration.LSUniqueConfigurationEntry
 import com.jetbrains.ls.api.features.impl.common.callHierarchy.LSCallHierarchyProviderBase
 import com.jetbrains.ls.api.features.impl.common.utils.findElementUnderCaret
-import com.jetbrains.ls.api.features.impl.kotlin.callHierarchy.LSKotlinCallHierarchyRenderer.getParametersPresentation
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.language.LSLanguage
 import org.jetbrains.kotlin.idea.k2.codeinsight.hierarchy.calls.KotlinCallHierarchyNodeDescriptor
 import org.jetbrains.kotlin.idea.k2.codeinsight.hierarchy.calls.KotlinCalleeTreeStructure
 import org.jetbrains.kotlin.idea.k2.codeinsight.hierarchy.calls.KotlinCallerTreeStructure
 import org.jetbrains.kotlin.idea.k2.codeinsight.hierarchy.calls.getElementForCallHierarchy
-import org.jetbrains.kotlin.psi.KtClassOrObject
-import org.jetbrains.kotlin.psi.KtConstructor
+import org.jetbrains.kotlin.psi.KtCallableDeclaration
 import org.jetbrains.kotlin.psi.KtElement
-import org.jetbrains.kotlin.psi.KtFile
-import org.jetbrains.kotlin.psi.KtFunction
-import org.jetbrains.kotlin.psi.KtNamedFunction
-import org.jetbrains.kotlin.psi.KtProperty
+
+private val WHITESPACE = Regex("\\s+")
 
 internal object LSKotlinCallHierarchyProvider : LSCallHierarchyProviderBase<KtElement>() {
     override val supportedLanguages: Set<LSLanguage> = setOf(LSKotlinLanguage)
@@ -59,38 +55,20 @@ internal object LSKotlinCallHierarchyProvider : LSCallHierarchyProviderBase<KtEl
         data: CallHierarchyItemData,
         project: Project
     ): KtElement? {
-        val nameData = data.nameData
-        val psiClass = data.nameData.classPointer.restore(project)?.takeIf { it is PsiClass || it is KtClassOrObject || it is KtFile } ?: return null
-
-        val ktSource = psiClass.navigationElement
-        val declarations = when (ktSource) {
-            is KtClassOrObject -> ktSource.declarations
-            is KtFile -> ktSource.declarations
-            else -> return null
-        }
-
-        return when (nameData) {
-            is NameData.ClassNameData -> {
-                ktSource as? KtClassOrObject
-            }
-            is NameData.FieldNameData -> {
-                declarations.filterIsInstance<KtProperty>().find { it.name == nameData.memberName }
-            }
-            is NameData.MethodNameData -> {
-                if (nameData.isConstructor) {
-                    declarations.filterIsInstance<KtConstructor<*>>().find {
-                        matchParameters(it, nameData.parametersName)
-                    }
-                } else {
-                    declarations.filterIsInstance<KtNamedFunction>().find {
-                        it.name == nameData.memberName && matchParameters(it, nameData.parametersName)
-                    }
-                }
-            }
-        }
+        val target = data.target as? CallHierarchyTarget.Declaration ?: return null
+        return resolveDeclaration(target, project) as? KtElement
     }
-}
 
-private fun matchParameters(function: KtFunction, parameterTypes: List<String>): Boolean {
-    return function.getParametersPresentation() == parameterTypes
+    override fun signatureOf(element: PsiElement): String? {
+        if (element !is KtCallableDeclaration) return null
+        val parameterTypes = element.valueParameters.map { parameter ->
+            val type = parameter.typeReference?.text
+            if (parameter.isVarArg) "vararg $type" else type
+        }
+        // Type parameters with bounds and `where` constraints: `<T : Number> f(T)` and `<T : CharSequence> f(T)` are overloads.
+        val typeParameters = element.typeParameterList?.text?.let { "$it " }.orEmpty()
+        val constraints = element.typeConstraintList?.text?.let { " where $it" }.orEmpty()
+        val signature = typeParameters + signature(element.receiverTypeReference?.text, parameterTypes) + constraints
+        return signature.replace(WHITESPACE, " ")
+    }
 }

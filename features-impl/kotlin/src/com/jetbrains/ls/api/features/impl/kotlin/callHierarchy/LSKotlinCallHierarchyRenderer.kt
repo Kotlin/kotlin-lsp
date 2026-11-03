@@ -3,11 +3,10 @@ package com.jetbrains.ls.api.features.impl.kotlin.callHierarchy
 
 import com.intellij.ide.hierarchy.ReferenceAwareNodeDescriptor
 import com.intellij.psi.PsiNameIdentifierOwner
-import com.intellij.psi.util.TypeConversionUtil
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.core.util.uri
 import com.jetbrains.ls.api.features.impl.common.callHierarchy.LSCallHierarchyProviderBase.CallHierarchyItemData
-import com.jetbrains.ls.api.features.impl.common.callHierarchy.LSCallHierarchyProviderBase.NameData
+import com.jetbrains.ls.api.features.impl.common.callHierarchy.LSCallHierarchyProviderBase.CallHierarchyTarget
 import com.jetbrains.ls.api.features.impl.common.callHierarchy.LSCallHierarchyRenderer
 import com.jetbrains.ls.api.features.impl.kotlin.language.LSKotlinLanguage
 import com.jetbrains.ls.api.features.impl.kotlin.symbols.getKind
@@ -19,15 +18,12 @@ import com.jetbrains.lsp.protocol.LSP
 import com.jetbrains.lsp.protocol.SymbolTag
 import kotlinx.serialization.json.encodeToJsonElement
 import org.jetbrains.kotlin.asJava.elements.KtLightElementBase
-import org.jetbrains.kotlin.asJava.toLightMethods
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtConstructor
 import org.jetbrains.kotlin.psi.KtFile
-import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtProperty
-import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 
 internal object LSKotlinCallHierarchyRenderer : LSCallHierarchyRenderer {
     override val supportedLanguages: Set<LSLanguage>
@@ -40,11 +36,9 @@ internal object LSKotlinCallHierarchyRenderer : LSCallHierarchyRenderer {
         val element = if (enclosingElement is KtLightElementBase) enclosingElement.navigationElement else enclosingElement
 
         val declaration = element as? KtNamedDeclaration ?: return null
+        if (!isCallHierarchyTarget(declaration)) return null
 
         val presentation = descriptor.getPresentation() ?: return null
-
-        val resolver = getContainingClassResolver(declaration) ?: return null
-        val nameData = getNameData(declaration, resolver) ?: return null
 
         val containingFile = declaration.containingFile as? KtFile ?: return null
         val virtualFile = containingFile.virtualFile ?: return null
@@ -67,7 +61,10 @@ internal object LSKotlinCallHierarchyRenderer : LSCallHierarchyRenderer {
             selectionRange = selectionRange,
             data = LSP.json.encodeToJsonElement(
                 CallHierarchyItemData(
-                    nameData = nameData,
+                    target = CallHierarchyTarget.Declaration(
+                        pointer = PsiSerializablePointer.createByPath(declaration, virtualFile),
+                        signature = LSKotlinCallHierarchyProvider.signatureOf(declaration),
+                    ),
                     filePath = virtualFile.path,
                     configurationEntryId = LSKotlinCallHierarchyProvider.uniqueId,
                 ),
@@ -75,51 +72,11 @@ internal object LSKotlinCallHierarchyRenderer : LSCallHierarchyRenderer {
         )
     }
 
-    /**
-     * Retrieves the fully qualified class name containing the given Kotlin declaration.
-     * If the declaration is a class itself, then its qualified name is returned.
-     */
-    private fun getContainingClassResolver(element: KtNamedDeclaration): PsiSerializablePointer? {
-        if (element is KtClassOrObject) {
-            return PsiSerializablePointer.create(element, element.containingFile.virtualFile)
-        }
-        val containingClass = element.containingClassOrObject
-        if (containingClass != null) {
-            return PsiSerializablePointer.create(containingClass, containingClass.containingFile.virtualFile)
-        }
-
-        val ktFile = element.containingFile as? KtFile ?: return null
-        return PsiSerializablePointer.create(ktFile, ktFile.virtualFile)
-    }
-
-    private fun getNameData(element: KtNamedDeclaration, pointer: PsiSerializablePointer): NameData? {
-        return when (element) {
-            is KtNamedFunction -> {
-                val name = element.name ?: return null
-                val parameterTypes = element.getParametersPresentation() ?: return null
-                NameData.MethodNameData(pointer, name, parameterTypes, isConstructor = false)
-            }
-            is KtConstructor<*> -> {
-                val containingClassName = element.containingClassOrObject?.name ?: return null
-                val parameterTypes = element.getParametersPresentation() ?: return null
-                NameData.MethodNameData(pointer, containingClassName, parameterTypes, isConstructor = true)
-            }
-            is KtProperty -> {
-                val name = element.name ?: return null
-                NameData.FieldNameData(pointer, name)
-            }
-            is KtClassOrObject -> {
-                NameData.ClassNameData(pointer)
-            }
-            else -> null
-        }
-    }
-
-    fun KtFunction.getParametersPresentation(): List<String>? {
-        val lightMethod = this.toLightMethods().firstOrNull() ?: return null
-        return lightMethod.parameterList.parameters.map { parameter ->
-            val type = parameter.type
-            TypeConversionUtil.erasure(type).canonicalText
+    private fun isCallHierarchyTarget(declaration: KtNamedDeclaration): Boolean {
+        return when (declaration) {
+            is KtNamedFunction, is KtProperty -> declaration.name != null
+            is KtConstructor<*>, is KtClassOrObject -> true
+            else -> false
         }
     }
 }
