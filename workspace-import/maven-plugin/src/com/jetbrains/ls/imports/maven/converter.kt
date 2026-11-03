@@ -26,6 +26,7 @@ import org.eclipse.aether.resolution.DependencyRequest
 import org.eclipse.aether.resolution.DependencyResolutionException
 import org.eclipse.aether.resolution.DependencyResult
 import org.eclipse.aether.util.artifact.JavaScopes
+import java.nio.file.Path
 import java.util.Locale
 import kotlin.io.path.Path
 import kotlin.io.path.absolute
@@ -698,11 +699,11 @@ internal fun MavenProject.extractKotlinSettings(
 
     val config = kotlinPlugin.configuration as? Xpp3Dom
 
-    val kotlinCompileSourceRoots = kotlinPlugin.kotlinSourceDirs("compile") ?: setOf(
+    val kotlinCompileSourceRoots = kotlinPlugin.kotlinSourceDirs(basedir.toPath(), test = false) ?: setOf(
         basedir.toPath().resolve("src").resolve("main").resolve("kotlin").toAbsolutePath().toString()
     )
 
-    val kotlinTestSourceRoots = kotlinPlugin.kotlinSourceDirs("test-compile") ?: setOf(
+    val kotlinTestSourceRoots = kotlinPlugin.kotlinSourceDirs(basedir.toPath(), test = true) ?: setOf(
         basedir.toPath().resolve("src").resolve("test").resolve("kotlin").toAbsolutePath().toString()
     )
 
@@ -762,12 +763,19 @@ internal fun MavenProject.extractKotlinSettings(
     )
 }
 
-private fun Plugin.kotlinSourceDirs(execution: String): Set<String>? {
-    return (executions.firstOrNull { it.id == execution }?.configuration as? Xpp3Dom)
-        ?.getChild("sourceDirs")
-        ?.getChildren("sourceDir")
-        ?.mapNotNull { it.value }
-        ?.toSet()
+
+private fun Plugin.kotlinSourceDirs(basedir: Path, test: Boolean): Set<String>? {
+    fun Any?.sourceDirs(): Set<String> =
+        (this as? Xpp3Dom)?.getChild("sourceDirs")?.children.orEmpty()
+            .mapNotNull { it.value?.trim()?.takeIf(String::isNotEmpty) }
+            .mapTo(LinkedHashSet()) { basedir.resolve(it).normalize().toString() }
+
+    val pluginDirs = configuration.sourceDirs()
+    val executionDirs = executions
+        .filter { execution -> execution.goals.any { it.startsWith("test-") == test } }
+        .flatMapTo(LinkedHashSet()) { it.configuration.sourceDirs() }
+    val dirs = if (test) executionDirs - pluginDirs else pluginDirs + executionDirs
+    return dirs.ifEmpty { null }
 }
 
 /**
