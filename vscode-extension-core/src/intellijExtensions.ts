@@ -78,6 +78,7 @@ export function registerIntellijExtensionsInitOption(): void {
   registerInitializationOptionsContributor(() => ({
     intellijExtensions: true,
     conflictView: true,
+    actionChooser: true,
     lazyIntentions: true,
   }));
 }

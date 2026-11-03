@@ -32,7 +32,7 @@ import kotlinx.coroutines.flow.flow
  * [LSApplyFixCommandDescriptorProvider][com.jetbrains.ls.api.features.impl.common.modcommands.LSApplyFixCommandDescriptorProvider],
  * an inline rename becomes [ModStartRename][com.intellij.modcommand.ModStartRename], and a [ModChooseAction] of variants
  * is either shown by the client as a menu or expanded into one code action per variant, depending on whether the client
- * declares `intellijExtensions`.
+ * declares `actionChooser`.
  *
  * This suits refactorings local to a single file: the whole command is computed on a copy of the file, so the only
  * interaction left is picking a choice. One needing its own client/server protocol uses [LSExtractMemberProviderBase]

@@ -139,7 +139,7 @@ object ModCompletionCommandConverter {
    * The items to offer for [originalCommand], which is what accepting one completion candidate performs.
    *
    * A [ModChooseAction] means the candidate cannot be applied before the user says which variant they meant.
-   * Clients declaring `intellijExtensions` show that chooser themselves, exactly like the IDE does, so a single
+   * Clients declaring `actionChooser` show that chooser themselves, exactly like the IDE does, so a single
    * item is offered and its whole command is deferred to the apply step. Generic LSP clients have no chooser
    * primitive, so the choices are expanded up front into one item per variant — at most [maxChoicesPerItem] of
    * them, since they compete for the slots of the whole completion list — each labelled with its own name.
@@ -190,7 +190,7 @@ object ModCompletionCommandConverter {
   /**
    * Whether [chooseAction] can be left to the client to show instead of being expanded up front.
    *
-   * Besides the client declaring `intellijExtensions`, the chooser has to be the whole command: anything next to
+   * Besides the client declaring `actionChooser`, the chooser has to be the whole command: anything next to
    * it in [unpacked] would be applied by the client on insertion, while the choices are performed only once the
    * user picks, against the document as it is at that moment.
    *
@@ -204,7 +204,7 @@ object ModCompletionCommandConverter {
     unpacked: List<ModCommand>,
     actionContext: ActionContext,
   ): Boolean {
-    if (server?.config?.clientSupportsIntellijExtensions != true) return false
+    if (server?.config?.clientSupportsActionChooser != true) return false
     if (unpacked.size != 1) return false
     val pickableChoices = chooseAction.actions().count { action ->
       runCatching { action.getPresentation(actionContext) }.getOrNull() != null

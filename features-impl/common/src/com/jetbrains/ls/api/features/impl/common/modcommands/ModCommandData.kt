@@ -82,7 +82,7 @@ private const val MOCK_PROTOCOL_PREFIX = "mock://"
 
 /**
  * See [toModCommandFixes][com.jetbrains.ls.api.features.impl.common.modcommands.toModCommandFixes]
- * for fallback implementation of ModChooseAction support if client doesn't provide intellijExtensions capabilities.
+ * for fallback implementation of ModChooseAction support if client doesn't provide actionChooser capabilities.
  * A client which declares `lazyIntentions` alone gets no fallback, because the fallback has to perform the fix,
  * which is exactly what `lazyIntentions` defers.
  */
@@ -226,11 +226,11 @@ sealed class ModCommandData {
     data class LaunchEditorAction(val actionId: String) : ModCommandData()
 
     /**
-     * A [ModChooseAction] asks the UI to present a chooser of further actions. LSP has no native primitive for
-     * this (see https://github.com/microsoft/language-server-protocol/issues/994), so it is modeled via the
-     * custom `intellij/chooseAction` notification: the client shows a menu of [entries] and, once the user picks
-     * one, invokes the [Entry.action] of that entry. Only clients that declare `intellijExtensions` can handle
-     * it; [from] aborts for the others.
+     * A [ModChooseAction] asks the UI to present a chooser of further actions.
+     * LSP has no native primitive for this (see https://github.com/microsoft/language-server-protocol/issues/994).
+     * The custom `intellij/chooseAction` notification asks the client to show a menu of [entries].
+     * Once the user picks one, the client invokes its [Entry.action].
+     * Only clients that declare `actionChooser` can handle it; [from] aborts for the others.
      */
     @Serializable
     data class ChooseAction(val title: String, val entries: List<Entry>) : ModCommandData() {
@@ -333,10 +333,10 @@ sealed class ModCommandData {
                     CopyToClipboard(command.content)
                 else -> null
             }
-            // Relies on the custom `intellij/chooseAction` notification and a server-side session cache, so
-            // only clients that declare `intellijExtensions` can handle it; abort for the others.
+            // Relies on the custom `intellij/chooseAction` notification and a session cache on the server.
+            // Only clients that declare `actionChooser` can handle it; abort for the others.
             is ModChooseAction -> when {
-                server?.config?.clientSupportsIntellijExtensions == true && !command.isEmpty -> {
+                server?.config?.clientSupportsActionChooser == true && !command.isEmpty -> {
                     // Selectable choices, which are those with an available presentation.
                     val choices = command.actions.mapNotNull { action ->
                         val name = runCatching { action.getPresentation(actionContext)?.name }.getOrNull()

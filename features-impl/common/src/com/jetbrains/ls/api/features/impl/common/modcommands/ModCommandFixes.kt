@@ -29,7 +29,7 @@ data class FlattenedModCommand(val choiceNames: List<String>, val command: ModCo
  * the fix is performed only if the user asks for it. Because nothing is performed here, two things are only
  * known once the client runs the fix: whether the fix still applies, and whether its command has an LSP
  * representation. [executeLazyAction] reports both to the user as a message. A [ModChooseAction] has no LSP
- * representation for a client that does not also declare `intellijExtensions`, so such a fix is reported as
+ * representation for a client that does not also declare `actionChooser`, so such a fix is reported as
  * not supported.
  *
  * A client without `lazyIntentions` gets the fix performed here, and [ModCommand.toModCommandFixes] converts
@@ -57,7 +57,7 @@ fun LazyFix.toModCommandFixes(maxFlattenedFixes: Int = DEFAULT_MAX_FLATTENED_FIX
  * The fixes to offer for [this] command, which was produced for a fix presented to the user as [name].
  *
  * This is the eager path, used for a client that does not declare `lazyIntentions` and for a command that was
- * performed for another reason. A client declaring `intellijExtensions` shows a [ModChooseAction] itself, so
+ * performed for another reason. A client declaring `actionChooser` shows a [ModChooseAction] itself, so
  * the command goes to the client as it is. For the others the choice tree is expanded up front by
  * [flattenChoices] into one flat fix per terminal command, each named after the path taken to reach it, and a
  * tree wider than [maxFlattenedFixes] is dropped entirely.
@@ -68,7 +68,7 @@ private fun ModCommand.toModCommandFixes(
     context: ActionContext,
     maxFlattenedFixes: Int = DEFAULT_MAX_FLATTENED_FIXES,
 ): List<ModCommandFix> {
-    if (server.config.clientSupportsIntellijExtensions) {
+    if (server.config.clientSupportsActionChooser) {
         val data = ModCommandData.from(this, context, server) ?: return emptyList()
         return listOf(ModCommandFix(name, data))
     }

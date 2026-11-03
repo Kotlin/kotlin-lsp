@@ -57,7 +57,7 @@ import org.jetbrains.annotations.Nls
  * 2. Based on the user selection in step 1, create a context with [getWriteContext].
  * 3. Execute the action with [executeRefactoring].
  *
- * A client which declares `intellijExtensions` picks a choice from the `intellij/chooseAction` menu. The refactoring runs after the
+ * A client which declares `actionChooser` picks a choice from the `intellij/chooseAction` menu. The refactoring runs after the
  * pick. A client without that capability gets one code action for each choice instead.
  *
  * @see LSServer.withWriteAnalysisContext
@@ -194,7 +194,7 @@ abstract class LSRefactoringMemberProviderBase<Context> : LSCodeActionProvider, 
                         refactoringCodeAction(documentUri, descriptorTitle, Payload.Data(selectionRange, choices.single()))
                     )
 
-                    server.config.clientSupportsIntellijExtensions -> emit(
+                    server.config.clientSupportsActionChooser -> emit(
                         refactoringCodeAction(documentUri, descriptorTitle, Payload.Choose(selectionRange, choices))
                     )
 
