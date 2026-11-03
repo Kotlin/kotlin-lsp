@@ -1,9 +1,0 @@
-<idea-plugin>
-  <!-- region Generated dependencies - run `Generate Product Layouts` to regenerate -->
-  <dependencies>
-    <module name="intellij.libraries.gradle.tooling"/>
-    <module name="intellij.libraries.jetbrains.annotations"/>
-    <module name="intellij.libraries.kotlin.tooling.core"/>
-  </dependencies>
-  <!-- endregion -->
-</idea-plugin>
