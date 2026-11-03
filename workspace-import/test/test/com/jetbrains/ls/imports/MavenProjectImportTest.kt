@@ -70,6 +70,9 @@ class MavenProjectImportTest : AbstractProjectImportTestCase() {
     @Test
     fun mavenKotlinLanguageVersionFromPluginVersion() = doMavenTest("MavenKotlinLanguageVersionFromPluginVersion")
 
+    @Test
+    fun mavenKotlinSourceDirs() = doMavenTest("MavenKotlinSourceDirs")
+
     private fun doMavenTest(
         project: String,
         projectFile: String? = null,
