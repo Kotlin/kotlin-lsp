@@ -14,7 +14,8 @@ internal class LSJavaMarkdownDocProvider : LSHoverProviderBase.LSMarkdownDocProv
 
         val printer = object : JavaDocInfoMarkdownPrinter() {
             override fun printLinkURI(builder: StringBuilder, targetElement: PsiElement): StringBuilder {
-                return builder.append(LSJavaHoverProvider.makeLinkTo(targetElement))
+                val link = LSJavaHoverProvider.makeLinkTo(targetElement) ?: return builder
+                return builder.append(link)
             }
         }
 
