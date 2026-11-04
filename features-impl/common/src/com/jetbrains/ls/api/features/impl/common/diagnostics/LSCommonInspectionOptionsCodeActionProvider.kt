@@ -108,7 +108,7 @@ class LSCommonInspectionOptionsCodeActionProvider(
                     val element = psiFile.findElementAt(offset) ?: return@flatMap emptyList()
                     val context = ActionContext(psiFile.project, psiFile, offset, TextRange(offset, offset), element)
                     val options = suppressionActions(tool.tool, element) + disableAction(tool, profileFile)
-                    val action = InspectionOptionsAction(displayName(tool.tool), options)
+                    val action = InspectionOptionsAction(tool.displayName, options)
                     action.toModCommandFixes(context).map { fix ->
                         applyFixCodeAction(fix.name, inspectionOptionsKind, fix.data, diagnostic)
                     }
@@ -157,10 +157,6 @@ class LSCommonInspectionOptionsCodeActionProvider(
         if (profileFile == null) return emptyList()
         return listOf(DisableInspectionToolModCommandAction(tool.profileShortName) { _, _ -> profileFile })
     }
-
-    private fun displayName(tool: InspectionProfileEntry): String =
-        runCatching { tool.displayName }.getOrHandleException { LOG.warn("Failed to get the name of ${tool.shortName}", it) }
-        ?: tool.shortName
 }
 
 /**
