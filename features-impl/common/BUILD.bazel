@@ -73,6 +73,7 @@ jvm_library(
         "@community//platform/ide-core-impl",
         "@community//platform/progress/shared:ide-progress",
         "@community//platform/util/text-matching",
+        "//language-server/community/buildtool.api",
     ],
 )
 ### auto-generated section `build language-server.api.features.impl.common` end

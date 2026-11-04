@@ -2,12 +2,12 @@
 package com.jetbrains.ls.api.features.impl.common.codeLens
 
 import com.intellij.openapi.application.readAction
-import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiFile
-import com.intellij.workspaceModel.ide.legacyBridge.findModuleEntity
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.launch.runTools
+import com.jetbrains.ls.buildtool.api.run.RunRequest
+import com.jetbrains.ls.buildtool.api.run.RunTask
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.features.LspServerBundle
@@ -52,7 +52,9 @@ abstract class LSJvmRunMainCodeLensProvider : LSCodeLensProvider {
             readAction {
                 val virtualFile = params.textDocument.uri.uri.findVirtualFile() ?: return@readAction emptyList()
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
-                val tool = ModuleUtilCore.findModuleForFile(virtualFile, project)?.findModuleEntity()?.let { project.runTools?.toolTypeFor(it) }
+                // ponytail: an empty build plan, because a plan is the only answer `RunTools` give. It costs one
+                // driver lookup. Give `RunTools` an id-only question if a lens ever needs this per keystroke.
+                val tool = project.runTools?.plan(project, virtualFile, RunRequest(RunTask.Build()))?.toolType
                 findMainEntryPoints(psiFile).flatMap { (range, mainClass) ->
                     listOf(
                         launchLens(params.textDocument.uri, range, mainClass, tool, noDebug = true, title = LspServerBundle.message("command.play.run")),
