@@ -163,6 +163,9 @@ class LSCommonInspectionOptionsCodeActionProvider(
 /**
  * The `Inspection 'name'...` action: a chooser of the [options] of the inspection named [inspectionName].
  * It is available when one of the options is available.
+ *
+ * With one available option, a chooser has no menu to show, and the option runs at once.
+ * The action then shows the name of that option, so the user knows what it does.
  */
 private class InspectionOptionsAction(
     private val inspectionName: String,
@@ -171,16 +174,30 @@ private class InspectionOptionsAction(
     override fun getFamilyName(): String = LspServerBundle.message("inspection.options.action.name", inspectionName)
 
     override fun getPresentation(context: ActionContext): Presentation? {
-        val available = options.any { option ->
-            runCatching { option.getPresentation(context) }.getOrHandleException {
-                LOG.warn("Failed to get presentation from mod command action $option", it)
-            } != null
+        val available = availableOptions(context)
+        return when (available.size) {
+            0 -> null
+            1 -> Presentation.of(
+                LspServerBundle.message("inspection.options.single.option.name", inspectionName, available.single().second.name)
+            )
+            else -> Presentation.of(familyName)
         }
-        return if (available) Presentation.of(familyName) else null
     }
 
-    override fun perform(context: ActionContext): ModCommand =
-        ModChooseAction(LspServerBundle.message("inspection.options.chooser.title", inspectionName), options)
+    override fun perform(context: ActionContext): ModCommand {
+        val single = availableOptions(context).singleOrNull()
+        if (single != null) return single.first.perform(context)
+        return ModChooseAction(LspServerBundle.message("inspection.options.chooser.title", inspectionName), options)
+    }
+
+    /** The [options] that are available in [context], with their presentations. */
+    private fun availableOptions(context: ActionContext): List<Pair<ModCommandAction, Presentation>> =
+        options.mapNotNull { option ->
+            val presentation = runCatching { option.getPresentation(context) }.getOrHandleException {
+                LOG.warn("Failed to get presentation from mod command action $option", it)
+            }
+            presentation?.let { option to it }
+        }
 }
 
 /**
