@@ -41,7 +41,7 @@ internal class LSInspectionContext private constructor(
             val useProjectProfile = settings?.let { JDOMExternalizerUtil.readField(it, "USE_PROJECT_PROFILE") }?.toBooleanStrictOrNull()
             if (useProjectProfile == false) return empty()
             val selectedName = settings?.let { JDOMExternalizerUtil.readField(it, "PROJECT_PROFILE") } ?: PROJECT_DEFAULT_PROFILE_NAME
-            val (file, profile) = loadProfile(inspectionDirectory, selectedName)
+            val [file, profile] = loadProfile(inspectionDirectory, selectedName)
                                   ?: return LSInspectionContext(AnalyzerInspectionProfileManager(), newProfileFile(inspectionDirectory, selectedName))
             val manager = AnalyzerInspectionProfileManager { inspectionProfile ->
                 settings?.let { inspectionProfile.profileManager.severityRegistrar.readExternal(it.clone()) }
@@ -59,7 +59,7 @@ internal class LSInspectionContext private constructor(
                 profileName,
             )
 
-        /** The file of the profile named [selectedName], or of the first profile, and its `profile` element. */
+        /** The file and the `profile` element for [selectedName], or `null` if the profile cannot be loaded. */
         private fun loadProfile(inspectionDirectory: Path, selectedName: String): Pair<Path, Element>? {
             val files = try {
                 Files.newDirectoryStream(inspectionDirectory, "*.xml").use { stream ->
@@ -71,16 +71,14 @@ internal class LSInspectionContext private constructor(
                 return null
             }
 
-            var firstProfile: Pair<Path, Element>? = null
             for (file in files) {
                 val root = loadXml(file) ?: continue
                 val profile = if (root.name == PROFILE) root else root.getChild(PROFILE) ?: continue
-                if (firstProfile == null) firstProfile = file to profile
                 if (InspectionProfileLoadUtil.getProfileName(file, profile) == selectedName) {
                     return file to profile
                 }
             }
-            return firstProfile
+            return null
         }
     }
 }
