@@ -45,7 +45,6 @@ jvm_library(
         "@community//plugins/kotlin/formatter/minimal",
         "@community//plugins/kotlin/base/analysis-api/analysis-api-utils:kotlin-base-analysis-utils",
         "@community//plugins/kotlin/base/fir/code-insight:kotlin-codeInsight-base",
-        "@community//libraries/kotlinc/analysis-api-impl-base:libraries-kotlinc-analysis-api-impl-base",
         "@community//plugins/kotlin/completion/api",
     ],
     deps = [
