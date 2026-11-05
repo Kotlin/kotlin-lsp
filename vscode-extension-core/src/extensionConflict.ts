@@ -5,6 +5,7 @@ import {
   extensions,
   type MessageItem,
   window,
+  workspace,
 } from 'vscode';
 import { logInfo } from './extension';
 import { reloadWindow } from './reloadWindow';
@@ -185,4 +186,63 @@ export function registerExtensionConflictHandler(
     extensions.onDidChange(() => void handleConflict({ scenario: alreadyActive })),
   );
   return handleConflict({ scenario: activationBlocked });
+}
+
+export interface ExtensionConflictNotificationOptions {
+  context: ExtensionContext;
+  conflictingExtensionId: string;
+  /** The conflict starts only when a document of one of these languages is open. */
+  languageIds: readonly string[];
+  /** `product` is the display name of this extension. */
+  message: (product: string) => string;
+  showActionTitle: string;
+}
+
+/**
+ * Warns without blocking activation or uninstalling an extension that other extensions can depend on.
+ * See {@link https://youtrack.jetbrains.com/issue/LSP-1423 LSP-1423}.
+ *
+ * The internal `_extensions.manage` command opens the installed extension without a Marketplace request.
+ *
+ * Shows one warning while `extensions.getExtension` returns the conflicting extension.
+ * Disabling an active extension does not stop it until the extension host restarts.
+ * Enabling it again before that restart does not show another warning.
+ */
+export function registerExtensionConflictNotification(
+  options: ExtensionConflictNotificationOptions,
+): void {
+  const { context, conflictingExtensionId, languageIds, message, showActionTitle } = options;
+  const product = displayNameOf(context.extension) ?? context.extension.id;
+  let notified = false;
+
+  async function notifyIfConflicting(): Promise<void> {
+    if (extensions.getExtension(conflictingExtensionId) === undefined) {
+      notified = false;
+      return;
+    }
+    if (
+      notified ||
+      !workspace.textDocuments.some((document) => languageIds.includes(document.languageId))
+    ) {
+      return;
+    }
+
+    notified = true;
+    logInfo(`Detected conflicting extension '${conflictingExtensionId}'`);
+    try {
+      const selectedAction = await window.showWarningMessage(message(product), showActionTitle);
+      if (selectedAction === showActionTitle) {
+        await commands.executeCommand('_extensions.manage', conflictingExtensionId);
+      }
+    } catch (error) {
+      const details = error instanceof Error ? error.message : String(error);
+      logInfo(`Showing the conflicting extension notification failed with error: ${details}`);
+    }
+  }
+
+  context.subscriptions.push(
+    extensions.onDidChange(() => void notifyIfConflicting()),
+    workspace.onDidOpenTextDocument(() => void notifyIfConflicting()),
+  );
+  void notifyIfConflicting();
 }

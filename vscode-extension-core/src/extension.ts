@@ -63,6 +63,7 @@ export {
 } from './workspaceImport';
 export { checkGeoRestricted } from './geoRestriction';
 export { registerKotlinExtensionConflictHandler } from './kotlinExtensionConflict';
+export { registerExtensionConflictNotification } from './extensionConflict';
 export {
   registerStatusBarContribution,
   setStatusBarSuffix,
