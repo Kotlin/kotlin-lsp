@@ -4,6 +4,7 @@ package com.jetbrains.ls.api.features.impl.kotlin.configuration
 import com.intellij.openapi.application.Application
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiComment
+import com.jetbrains.analyzer.api.AnalyzerContextKind
 import com.jetbrains.analyzer.api.AnalyzerFileSystems
 import com.jetbrains.analyzer.bootstrap.AnalyzerContainerBuilder
 import com.jetbrains.analyzer.bootstrap.AnalyzerContext
@@ -13,6 +14,7 @@ import com.jetbrains.analyzer.kotlin.createKotlinWorkspaceModelCaches
 import com.jetbrains.analyzer.kotlin.initKotlinIndexingContainer
 import com.jetbrains.analyzer.kotlin.initKotlinWorkspaceModelCaches
 import com.jetbrains.analyzer.kotlin.kotlinPlugin
+import com.jetbrains.ls.api.core.util.TargetKind
 import com.jetbrains.ls.api.features.KotlinFirCacheEntry
 import com.jetbrains.ls.api.features.WorkspaceComponentEntry
 import com.jetbrains.ls.api.features.impl.common.codeLens.LSRelatedItemsCodeLensProvider
@@ -29,10 +31,10 @@ import com.jetbrains.ls.api.features.impl.common.foldingRange.LSCommonFoldingRan
 import com.jetbrains.ls.api.features.impl.common.formatting.LSCommonFormattingProvider
 import com.jetbrains.ls.api.features.impl.common.implementation.LSCommonImplementationProvider
 import com.jetbrains.ls.api.features.impl.common.inspectCode.LSCommonBatchInspectionProvider
-import com.jetbrains.ls.api.features.impl.common.relatedTests.LSCommonRelatedTestsProvider
 import com.jetbrains.ls.api.features.impl.common.references.LSCommonReferencesProvider
+import com.jetbrains.ls.api.features.impl.common.relatedTests.LSCommonRelatedTestsProvider
+import com.jetbrains.ls.api.features.impl.common.surroundWith.LSSurroundWithCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.typeDefinition.LSCommonTypeDefinitionProvider
-import com.jetbrains.ls.api.core.util.TargetKind
 import com.jetbrains.ls.api.features.impl.javaBase.LSJavaPackageDefinitionProvider
 import com.jetbrains.ls.api.features.impl.kotlin.apiImpl.KotlinFirCacheImpl
 import com.jetbrains.ls.api.features.impl.kotlin.callHierarchy.LSKotlinCallHierarchyProvider
@@ -56,12 +58,11 @@ import com.jetbrains.ls.api.features.impl.kotlin.rename.LSJvmRenameDirectoryProv
 import com.jetbrains.ls.api.features.impl.kotlin.rename.LSKotlinRenameProvider
 import com.jetbrains.ls.api.features.impl.kotlin.semanticTokens.LSKotlinSemanticTokensProvider
 import com.jetbrains.ls.api.features.impl.kotlin.signatureHelp.LSKotlinSignatureHelpProvider
+import com.jetbrains.ls.api.features.impl.kotlin.superDeclarations.LSKotlinSuperDeclarationsProvider
 import com.jetbrains.ls.api.features.impl.kotlin.symbols.LSKotlinDocumentSymbolProvider
 import com.jetbrains.ls.api.features.impl.kotlin.symbols.LSKotlinWorkspaceSymbolProvider
-import com.jetbrains.ls.api.features.impl.kotlin.superDeclarations.LSKotlinSuperDeclarationsProvider
 import com.jetbrains.ls.api.features.impl.kotlin.typeHierarchy.LSKotlinTypeHierarchyProvider
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
-import com.jetbrains.analyzer.api.AnalyzerContextKind
 import com.jetbrains.ls.snapshot.api.impl.core.LSConfigurationData
 import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceComponent
 import com.jetbrains.lsp.protocol.FoldingRangeKind
@@ -109,6 +110,7 @@ val LSKotlinLanguageConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSKotlinRenameProvider,
         LSKotlinInlineVariableProvider,
         LSKotlinExtractVariableProvider,
+        LSSurroundWithCodeActionProvider(setOf(LSKotlinLanguage)),
         LSJvmRenameDirectoryProvider,
         LSCommonFormattingProvider(setOf(LSKotlinLanguage)),
         LSCommonImplementationProvider(setOf(LSKotlinLanguage)),

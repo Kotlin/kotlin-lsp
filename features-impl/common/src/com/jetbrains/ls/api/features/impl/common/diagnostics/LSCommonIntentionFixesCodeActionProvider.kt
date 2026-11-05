@@ -135,18 +135,6 @@ class LSCommonIntentionFixesCodeActionProvider(
         return result.asSequence()
     }
 
-    /**
-     * The editor selection the intentions see: the request [range], unless it is empty or is the range of one of the
-     * diagnostics of the request. A client (VS Code, Draft) asks for the range of a diagnostic when the caret is inside it
-     * with no selection, so such a range is a caret, not a selection, whatever the trigger kind; otherwise the client
-     * sends its selection. The caret stays at the range start in any case: LSP does not send it, and the start is
-     * where it is for an empty range.
-     */
-    private fun selectionOf(params: CodeActionParams, range: TextRange): TextRange {
-        val isDiagnosticRange = params.context.diagnostics.any { diagnostic -> diagnostic.range == params.range }
-        return if (range.isEmpty || isDiagnosticRange) TextRange(range.startOffset, range.startOffset) else range
-    }
-
     context(server: LSServer, _: LSAnalysisContext)
     private fun intentions(psiFile: PsiFile, offset: Int, selection: TextRange): Sequence<CodeAction> {
         val actionContext = ActionContext(psiFile.project, psiFile, offset, selection, null)
@@ -175,4 +163,16 @@ class LSCommonIntentionFixesCodeActionProvider(
     private val codeActionKind: CodeActionKind = CodeActionKind.Refactor
 
     private val languageIds: List<String> get() = supportedLanguages.map { language -> language.intellijLanguage.id }
+}
+
+/**
+ * The editor selection the intentions see: the request [range], unless it is empty or is the range of one of the
+ * diagnostics of the request. A client (VS Code, Draft) asks for the range of a diagnostic when the caret is inside it
+ * with no selection, so such a range is a caret, not a selection, whatever the trigger kind; otherwise the client
+ * sends its selection. The caret stays at the range start in any case: LSP does not send it, and the start is
+ * where it is for an empty range.
+ */
+internal fun selectionOf(params: CodeActionParams, range: TextRange): TextRange {
+    val isDiagnosticRange = params.context.diagnostics.any { diagnostic -> diagnostic.range == params.range }
+    return if (range.isEmpty || isDiagnosticRange) TextRange(range.startOffset, range.startOffset) else range
 }

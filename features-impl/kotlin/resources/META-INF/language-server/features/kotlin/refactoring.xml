@@ -11,6 +11,16 @@
             implementation="org.jetbrains.kotlin.idea.k2.refactoring.move.processor.K2MoveFilesHandler"/>
 
     <refactoring.overrideMethodProcessor implementation="org.jetbrains.kotlin.idea.refactoring.inline.KotlinOverrideMethodsProcessor"/>
+
+    <!--Surround with, copied from intellij.kotlin.codeInsight.shared.xml-->
+    <lang.surroundDescriptor
+            language="kotlin"
+            implementationClass="org.jetbrains.kotlin.idea.codeInsight.surroundWith.expression.KotlinExpressionSurroundDescriptor"/>
+    <lang.surroundDescriptor
+            language="kotlin"
+            implementationClass="org.jetbrains.kotlin.idea.codeInsight.surroundWith.statement.KotlinStatementSurroundDescriptor"/>
+    <codeInsight.surroundWithRangeAdjuster
+            implementation="org.jetbrains.kotlin.idea.codeInsight.surroundWith.KotlinSurroundWithRangeAdjuster"/>
   </extensions>
 
   <extensions defaultExtensionNs="ls">

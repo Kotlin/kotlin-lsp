@@ -19,6 +19,12 @@
                     interface="com.intellij.platform.backend.documentation.InlineDocumentationProvider"/>
     <extensionPoint qualifiedName="com.intellij.platform.backend.documentation.linkHandler" dynamic="true"
                     interface="com.intellij.platform.backend.documentation.DocumentationLinkHandler"/>
+    <!-- copied from intellij.platform.lang.xml, read by LSSurroundWithCodeActionProvider -->
+    <extensionPoint qualifiedName="com.intellij.lang.surroundDescriptor" beanClass="com.intellij.lang.LanguageExtensionPoint" dynamic="true">
+      <with attribute="implementationClass" implements="com.intellij.lang.surroundWith.SurroundDescriptor"/>
+    </extensionPoint>
+    <extensionPoint qualifiedName="com.intellij.codeInsight.surroundWithRangeAdjuster"
+                    interface="com.intellij.codeInsight.generation.surroundWith.SurroundWithRangeAdjuster" dynamic="true"/>
   </extensionPoints>
 
   <extensions defaultExtensionNs="com.intellij">
