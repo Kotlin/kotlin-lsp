@@ -4,11 +4,11 @@ package com.jetbrains.ls.imports
 import com.jetbrains.ls.api.features.BuildToolDriverEntry
 import com.jetbrains.ls.api.features.LanguageServerExtension
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
+import com.jetbrains.ls.imports.externalProcess.MavenExternalBuildDriver
 import com.jetbrains.ls.imports.gradle.GradleDriver
 import com.jetbrains.ls.imports.java.JavaCommandDriver
 import com.jetbrains.ls.imports.jps.JpsDriver
 import com.jetbrains.ls.imports.json.JsonDriver
-import com.jetbrains.ls.imports.maven.MavenDriver
 
 class WorkspaceImportLanguageServerExtension : LanguageServerExtension {
     override val configuration: LSConfigurationPiece
@@ -17,7 +17,7 @@ class WorkspaceImportLanguageServerExtension : LanguageServerExtension {
                 LSExportWorkspaceCommandDescriptorProvider,
 
                 BuildToolDriverEntry(JsonDriver),
-                BuildToolDriverEntry(MavenDriver),
+                BuildToolDriverEntry(MavenExternalBuildDriver),
                 BuildToolDriverEntry(GradleDriver),
                 BuildToolDriverEntry(JpsDriver),
                 BuildToolDriverEntry(JavaCommandDriver),
