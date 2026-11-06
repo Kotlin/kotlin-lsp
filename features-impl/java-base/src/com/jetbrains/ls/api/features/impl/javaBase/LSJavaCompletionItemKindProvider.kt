@@ -1,4 +1,4 @@
-// Copyright 2000-2025 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.javaBase
 
 import com.intellij.psi.PsiClass
@@ -10,14 +10,23 @@ import com.intellij.psi.PsiLocalVariable
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiPackage
 import com.intellij.psi.PsiParameter
+import com.intellij.psi.PsiType
 import com.intellij.psi.PsiTypeParameter
+import com.intellij.psi.util.PsiUtil
 import com.jetbrains.ls.api.features.completion.LSCompletionCandidate
 import com.jetbrains.ls.api.features.completion.LSCompletionItemKindProvider
 import com.jetbrains.lsp.protocol.CompletionItemKind
 
 internal class LSJavaCompletionItemKindProvider : LSCompletionItemKindProvider {
     override fun getKind(completionItem: LSCompletionCandidate): CompletionItemKind? {
-        val psiElement = completionItem.result as? PsiElement
+        return when (val result = completionItem.result) {
+            is PsiType -> PsiUtil.resolveClassInType(result)?.let { getKind(it) }
+            is PsiElement -> getKind(result)
+            else -> null
+        }
+    }
+
+    private fun getKind(psiElement: PsiElement): CompletionItemKind? {
         return when (psiElement) {
             is PsiEnumConstant -> CompletionItemKind.EnumMember
             is PsiMethod -> when {
