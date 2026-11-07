@@ -29,6 +29,12 @@ jvm_library(
         ["resources/**/*"],
     ),
     visibility = ["//visibility:public"],
+    runtime_deps = [
+        # do not sort,
+        "@community//platform/workspace/storage",
+        "@community//libraries/kotlinc/analysis-api-k2:libraries-kotlinc-analysis-api-k2",
+        "@community//platform/projectModel-api:projectModel",
+    ],
     deps = [
         # do not sort,
         "@community//libraries/kotlinx/coroutines/core",
@@ -37,18 +43,15 @@ jvm_library(
         "@community//platform/core-api:core",
         "@community//platform/core-impl",
         "@community//platform/analysis-api:analysis",
-        "@community//platform/workspace/storage",
         "@community//platform/util",
         "@community//libraries/kotlinc/kotlin-compiler-common:libraries-kotlinc-kotlin-compiler-common",
         "@community//libraries/kotlinc/analysis-api:libraries-kotlinc-analysis-api",
-        "@community//libraries/kotlinc/analysis-api-k2:libraries-kotlinc-analysis-api-k2",
         "@community//java/java-psi-api:psi",
         "@community//fleet/lsp.protocol",
         "@community//platform/lang-api:lang",
         "@community//platform/lang-impl",
         "//language-server/api.core.util",
         "@community//plugins/kotlin/base/analysis",
-        "@community//platform/projectModel-api:projectModel",
     ],
 )
 ### auto-generated section `build language-server.api.features.impl.kotlin.psi` end
