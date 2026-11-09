@@ -47,6 +47,11 @@ export interface BuiltinInitializationOptions {
   disableRocksDBWriteAheadLog: boolean;
   /** URI of the workspace to fork a new workspace from; see the server's `InitializeOptions.fromWorkspace`. */
   fromWorkspace: string | undefined;
+  /**
+   * The `intellij.completion.*` settings as one object. The server decodes it as `LSCompletionSettings`, separately
+   * from the other fields, so the client does not check its fields. The product manifests declare them.
+   */
+  completion: Record<string, unknown> | undefined;
 }
 
 export interface SettingProblem {
@@ -234,6 +239,16 @@ export function sanitizeBoolean(setting: string, value: unknown): Sanitized<bool
   if (value === undefined || value === null) return { value: false, problems: [] };
   if (typeof value === 'boolean') return { value, problems: [] };
   return { value: false, problems: [problem(setting, 'must be a boolean')] };
+}
+
+/** A group of settings, such as `intellij.completion`, that the server decodes as one object. */
+export function sanitizeOptionalObject(
+  setting: string,
+  value: unknown,
+): Sanitized<Record<string, unknown> | undefined> {
+  if (value === undefined || value === null) return { value: undefined, problems: [] };
+  if (isRecord(value)) return { value, problems: [] };
+  return { value: undefined, problems: [problem(setting, 'must be an object')] };
 }
 
 /** Per-folder build tool overrides, keyed by folder URI. Folders without one are left out. */

@@ -5,6 +5,7 @@ import {
   sanitizeBoolean,
   sanitizeBuildTools,
   sanitizeConfiguredProjects,
+  sanitizeOptionalObject,
   sanitizeOptionalString,
   settingsChangeAction,
   settingsCommand,
@@ -16,6 +17,7 @@ const PROJECTS = 'intellij.projects';
 const SDK = 'intellij.jdkForSymbolResolution';
 const BUILD_TOOL = 'intellij.buildTool';
 const DISABLE_WAL = 'intellij.disableRocksDBWriteAheadLog';
+const COMPLETION = 'intellij.completion';
 
 const validProject = { type: 'maven', path: 'file:///proj/pom.xml' };
 
@@ -270,6 +272,32 @@ describe('sanitizeBoolean', () => {
       value: false,
       problems: [problem(DISABLE_WAL, '`intellij.disableRocksDBWriteAheadLog` must be a boolean')],
     });
+  });
+});
+
+describe('sanitizeOptionalObject', () => {
+  it('passes an object through without a check of its fields', () => {
+    const completion = { caseSensitivity: 'none', futureSetting: 1 };
+    assert.deepEqual(sanitizeOptionalObject(COMPLETION, completion), {
+      value: completion,
+      problems: [],
+    });
+  });
+
+  it('treats an unset setting as absent', () => {
+    assert.deepEqual(sanitizeOptionalObject(COMPLETION, undefined), {
+      value: undefined,
+      problems: [],
+    });
+  });
+
+  it('drops a value that is not an object', () => {
+    for (const value of ['none', ['none']]) {
+      assert.deepEqual(sanitizeOptionalObject(COMPLETION, value), {
+        value: undefined,
+        problems: [problem(COMPLETION, '`intellij.completion` must be an object')],
+      });
+    }
   });
 });
 

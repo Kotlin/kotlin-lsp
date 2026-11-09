@@ -2,9 +2,13 @@
 package com.jetbrains.ls.api.features.impl.common.configuration
 
 import com.jetbrains.ls.api.features.ExtraPluginsProvider
+import com.jetbrains.ls.api.features.InitConfigurationEntry
 import com.jetbrains.ls.api.features.SessionComponentEntry
 import com.jetbrains.ls.api.features.WorkspaceComponentEntry
 import com.jetbrains.ls.api.features.impl.common.api.commonLsApiPlugin
+import com.jetbrains.ls.api.features.impl.common.completion.CompletionSettingsKey
+import com.jetbrains.ls.api.features.impl.common.completion.LSCompletionSettings
+import com.jetbrains.ls.api.features.impl.common.completion.LSCompletionSettingsSessionComponent
 import com.jetbrains.ls.api.features.impl.common.decompiler.LSDecompileCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.expressionType.LSCommonExpressionTypeProvider
 import com.jetbrains.ls.api.features.impl.common.fileTemplates.LSInterpolateFileTemplateCommandDescriptorProvider
@@ -26,6 +30,8 @@ val LSCommonConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         WorkspaceComponentEntry { LSSettingsComponent },
         SessionComponentEntry { LatestCompletionSessionComponent },
         SessionComponentEntry { LazyActionSessionComponent },
+        InitConfigurationEntry(CompletionSettingsKey, LSCompletionSettings.serializer()),
+        SessionComponentEntry { LSCompletionSettingsSessionComponent },
         LSDecompileCommandDescriptorProvider,
         LSApplyFixCommandDescriptorProvider,
         LSInterpolateFileTemplateCommandDescriptorProvider,

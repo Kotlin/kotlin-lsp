@@ -34,6 +34,7 @@ import {
   sanitizeBoolean,
   sanitizeBuildTools,
   sanitizeConfiguredProjects,
+  sanitizeOptionalObject,
   sanitizeOptionalString,
   settingsCommand,
   settingsScope,
@@ -116,6 +117,7 @@ const OPT_REGION = 'intellij.region';
 const OPT_PROJECTS = 'intellij.projects';
 const OPT_DISABLE_ROCKS_DB_WAL = 'intellij.disableRocksDBWriteAheadLog';
 const OPT_FORK_FROM_WORKSPACE = 'intellij.forkFromWorkspace';
+const OPT_COMPLETION = 'intellij.completion';
 const OPT_HTTP_PROXY = 'http.proxy';
 const OPT_HTTP_PROXY_SUPPORT = 'http.proxySupport';
 
@@ -1086,10 +1088,20 @@ const LAUNCH_SETTINGS = [
   OPT_HTTP_PROXY,
   OPT_HTTP_PROXY_SUPPORT,
 ];
+/**
+ * Settings that reach `initializationOptions`, but the server reads them only for the session that `initialize`
+ * starts. A workspace reload does not apply them, so only a new process does, as for a launch setting.
+ */
+const SESSION_SETTINGS = [OPT_COMPLETION];
+/** The settings that only a new process applies. */
+const RESTART_SETTINGS = [...LAUNCH_SETTINGS, ...SESSION_SETTINGS];
 
-/** Launch settings never reach `initializationOptions`, so their values are compared on their own. */
+/**
+ * The values of the settings that only a new process applies. Launch settings never reach
+ * `initializationOptions`, so their values are compared on their own.
+ */
 function launchSettingsSnapshot(): string {
-  return JSON.stringify(LAUNCH_SETTINGS.map((setting) => configOption(setting)));
+  return JSON.stringify(RESTART_SETTINGS.map((setting) => configOption(setting)));
 }
 const SETTINGS_CHANGE_DEBOUNCE_MS = 500;
 const SETTINGS_CHANGE_ACTION_LABELS: Record<Exclude<SettingsChangeAction, 'none'>, string> = {
@@ -1165,7 +1177,7 @@ function registerSettingsChangeWatcher(restartServer: () => Promise<boolean>): v
   };
   getContext().subscriptions.push(
     workspace.onDidChangeConfiguration((event) => {
-      const launch = LAUNCH_SETTINGS.some((s) => event.affectsConfiguration(s));
+      const launch = RESTART_SETTINGS.some((s) => event.affectsConfiguration(s));
       const options = [...INITIALIZATION_OPTION_SETTINGS, ...contributedSettings].some((s) =>
         event.affectsConfiguration(s),
       );
@@ -1274,6 +1286,7 @@ function sanitizedInitializationSettings(): {
   const fromWorkspace = forkFromWorkspace.value
     ? vscode.Uri.file(forkFromWorkspace.value).toString()
     : undefined;
+  const completion = sanitizeOptionalObject(OPT_COMPLETION, configOption(OPT_COMPLETION));
   return {
     values: {
       defaultSdk: defaultSdk.value,
@@ -1281,8 +1294,9 @@ function sanitizedInitializationSettings(): {
       projects: projects.value,
       disableRocksDBWriteAheadLog: disableWal.value,
       fromWorkspace,
+      completion: completion.value,
     },
-    problems: [defaultSdk, buildTools, projects, disableWal, forkFromWorkspace].flatMap(
+    problems: [defaultSdk, buildTools, projects, disableWal, forkFromWorkspace, completion].flatMap(
       (setting) => setting.problems,
     ),
   };

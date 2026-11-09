@@ -731,6 +731,27 @@
             "default": "always",
             "description": "Controls workspace reloads after the workspace settings file is saved."
           },
+          "intellij.completion.caseSensitivity": {
+            "type": "string",
+            "scope": "window",
+            "enum": [
+              "none",
+              "firstLetter",
+              "all"
+            ],
+            "enumItemLabels": [
+              "Case-insensitive",
+              "First letter only",
+              "All letters"
+            ],
+            "enumDescriptions": [
+              "Completion ignores the case of the typed prefix. For example, `string` gives `String`.",
+              "Only the first letter of the typed prefix must have the same case as the item. This is the default of IntelliJ IDEA.",
+              "All letters of the typed prefix must have the same case as the item."
+            ],
+            "default": "firstLetter",
+            "markdownDescription": "Controls how completion compares the case of the typed prefix with the case of an item, as the **Match case** option of IntelliJ IDEA. Requires language server restart."
+          },
           "intellij.projects": {
             "type": "array",
             "default": [],
