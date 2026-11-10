@@ -51,9 +51,8 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import org.jetbrains.kotlin.analysis.api.KaSession
-import org.jetbrains.kotlin.analysis.api.components.KaDiagnosticCheckerFilter
-import org.jetbrains.kotlin.analysis.api.components.collectDiagnostics
 import org.jetbrains.kotlin.analysis.api.diagnostics.KaDiagnosticWithPsi
+import org.jetbrains.kotlin.analysis.api.diagnostics.diagnostics
 import org.jetbrains.kotlin.analysis.api.session.analyze
 import org.jetbrains.kotlin.idea.codeinsight.api.applicators.fixes.KotlinQuickFixService
 import org.jetbrains.kotlin.psi.KtFile
@@ -128,7 +127,7 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
         val document = virtualFile.findDocument() ?: return emptyList()
         val stamp = DocumentStamp.of(document)
         return analyze(ktFile) {
-            val kaDiagnostics = ktFile.collectDiagnostics(filter = KaDiagnosticCheckerFilter.ONLY_COMMON_CHECKERS)
+            val kaDiagnostics = ktFile.diagnostics().toList()
             if (kaDiagnostics.isEmpty()) return@analyze emptyList()
             val editor = ImaginaryEditor(project, document).apply {
                 caretModel.primaryCaret.moveToOffset(0)
@@ -166,8 +165,7 @@ internal object LSKotlinCompilerDiagnosticsFixesCodeActionProvider : LSCodeActio
         val document = virtualFile.findDocument() ?: return null
         if (DocumentStamp.of(document) != listedStamp) return null
         return analyze(ktFile) {
-            val kaDiagnostic = ktFile.collectDiagnostics(filter = KaDiagnosticCheckerFilter.ONLY_COMMON_CHECKERS)
-                .firstOrNull { diagnosticData.matches(it) } ?: return@analyze null
+            val kaDiagnostic = ktFile.diagnostics().firstOrNull { diagnosticData.matches(it) } ?: return@analyze null
             val editor = ImaginaryEditor(project, document).apply {
                 caretModel.primaryCaret.moveToOffset(0)
             }

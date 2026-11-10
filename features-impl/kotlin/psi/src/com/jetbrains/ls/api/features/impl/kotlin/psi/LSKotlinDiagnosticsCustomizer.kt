@@ -18,10 +18,10 @@ import com.jetbrains.lsp.protocol.DiagnosticSeverity
 import com.jetbrains.lsp.protocol.DocumentDiagnosticParams
 import com.jetbrains.lsp.protocol.StringOrInt
 import kotlinx.serialization.json.JsonElement
-import org.jetbrains.kotlin.analysis.api.components.KaDiagnosticCheckerFilter
-import org.jetbrains.kotlin.analysis.api.components.collectDiagnostics
+import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.diagnostics.KaDiagnosticWithPsi
 import org.jetbrains.kotlin.analysis.api.diagnostics.KaSeverity
+import org.jetbrains.kotlin.analysis.api.diagnostics.diagnostics
 import org.jetbrains.kotlin.analysis.api.session.analyze
 import org.jetbrains.kotlin.psi.KtFile
 
@@ -92,6 +92,7 @@ internal class LSKotlinDiagnosticsCustomizer : LSDiagnosticsCustomizer {
     }
 }
 
+@OptIn(KaExperimentalApi::class)
 suspend fun lsKotlinCompilerDiagnostics(
     project: Project,
     params: DocumentDiagnosticParams,
@@ -104,9 +105,9 @@ suspend fun lsKotlinCompilerDiagnostics(
     if (!ProblemHighlightFilter.shouldHighlightFile(ktFile)) return@readAction emptyList()
     val document = virtualFile.findDocument() ?: return@readAction emptyList()
     analyze(ktFile) {
-        ktFile.collectDiagnostics(filter = KaDiagnosticCheckerFilter.ONLY_COMMON_CHECKERS).flatMap { diagnostic ->
+        ktFile.diagnostics().flatMap { diagnostic ->
             diagnostic.toLsp(document, diagnosticDataFactory(diagnostic, virtualFile))
-        }
+        }.toList()
     }
 }
 
