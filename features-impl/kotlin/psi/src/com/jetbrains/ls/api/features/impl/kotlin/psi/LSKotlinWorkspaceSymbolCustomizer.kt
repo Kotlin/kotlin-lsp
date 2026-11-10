@@ -21,6 +21,7 @@ class LSKotlinWorkspaceSymbolCustomizer : LSWorkspaceSymbolCustomizer {
         KotlinGotoTypeAliasContributor(),
         KotlinGotoFunctionSymbolContributor(),
         KotlinGotoPropertySymbolContributor(),
+        LSKotlinPropertyAccessorContributor(),
     )
 
     // A type alias has the Class kind, see `getKind`.
@@ -38,8 +39,10 @@ class LSKotlinWorkspaceSymbolCustomizer : LSWorkspaceSymbolCustomizer {
             is KtNamedDeclaration -> item
             else -> null
         } ?: return null
+        // A property found by its accessor is named by the accessor, e.g. `pkg.Cls.getUseSplash`.
+        val qualifiedName = if (qualifiedQuery) (item as? LSKotlinPropertyAccessorContributor.Accessor)?.qualifiedName ?: ktNamedDeclaration.fqName?.asString() else null
         return WorkspaceSymbol(
-            (if (qualifiedQuery) ktNamedDeclaration.fqName?.asString() else null) ?: item.name ?: return null,
+            qualifiedName ?: item.name ?: return null,
             kind = ktNamedDeclaration.getKind() ?: return null,
             tags = null, // TODO: Handle deprecated declarations.
             containerName = ktNamedDeclaration.getClosestContainerQualifiedName(),

@@ -44,6 +44,7 @@ jvm_library(
         "@community//platform/core-impl",
         "@community//platform/analysis-api:analysis",
         "@community//platform/util",
+        "@community//platform/indexing-api:indexing",
         "@community//libraries/kotlinc/kotlin-compiler-common:libraries-kotlinc-kotlin-compiler-common",
         "@community//libraries/kotlinc/analysis-api:libraries-kotlinc-analysis-api",
         "@community//java/java-psi-api:psi",
