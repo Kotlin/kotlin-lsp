@@ -33,6 +33,7 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.findDocument
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.util.fileName
 import com.jetbrains.ls.api.core.util.getLspLocationForDefinition
 import com.jetbrains.ls.api.core.util.intellijUriToLspUri
 import com.jetbrains.ls.api.core.util.lspUriToIntellijUri
@@ -393,11 +394,14 @@ sealed class ModCommandData {
                 // The client cannot ask the user, so the fix goes on, and the user is told that it can break the code.
                 server?.config?.clientSupportsConflictView != true -> DisplayMessage(
                     (listOf(LspServerBundle.message("conflicts.title")) +
-                     command.conflicts.values.flatMap { it.messages }.map { StringUtil.removeHtmlTags(it, true) }).joinToString("\n"),
+                     command.conflicts.flatMap { [element, conflict] ->
+                         val place = element.getLspLocationForDefinition()?.let { "[${it.uri.uri.fileName}:${it.range.start.line + 1}] " }.orEmpty()
+                         conflict.messages.map { place + StringUtil.removeHtmlTags(it, true).removeSuffix(".") + "." }
+                     }).joinToString("\n"),
                     ModDisplayMessage.MessageKind.INFORMATION,
                 )
                 else -> ShowConflicts(
-                    command.conflicts.map { (element, conflict) ->
+                    command.conflicts.map { [element, conflict] ->
                         ShowConflicts.Conflict(
                             messages = conflict.messages.map { StringUtil.removeHtmlTags(it, true) },
                             location = element.getLspLocationForDefinition(),
@@ -636,7 +640,7 @@ suspend fun executeCommand(
             // The client starts a snippet only in the active editor, and a new file has no editor yet.
             // The IDE opens the editor of a template itself, so a new file is shown before its first snippet.
             val createdNotShownFiles = mutableSetOf<String>()
-            for ((index, nested) in commands.withIndex()) {
+            for ([index, nested] in commands.withIndex()) {
                 when (nested) {
                     is ModCommandData.CreateFile -> createdNotShownFiles += nested.fileUrl
                     is ModCommandData.Navigate -> createdNotShownFiles -= nested.fileUrl
