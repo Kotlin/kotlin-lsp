@@ -3,20 +3,20 @@ package com.jetbrains.ls.api.features.impl.common.utils
 
 import com.intellij.diagnostic.rethrowControlFlowException
 import com.intellij.openapi.util.JDOMUtil
+import com.intellij.openapi.vfs.VirtualFileManager
+import com.jetbrains.ls.snapshot.api.impl.core.toFileUrl
 import org.jdom.Element
-import java.nio.file.Files
 import java.nio.file.Path
 
 /**
- * Loads XML file by given [path]
+ * Loads the XML file at [path] through the virtual file system.
  * @return null, if path doesn't exist or load failed, [Element] otherwise
  */
 internal fun loadXml(path: Path): Element? {
-    if (Files.notExists(path)) return null
     return try {
-        JDOMUtil.load(path)
-    }
-    catch (e: Exception) {
+        val file = VirtualFileManager.getInstance().findFileByUrl(path.toFileUrl().url) ?: return null
+        file.inputStream.use { JDOMUtil.load(it) }
+    } catch (e: Exception) {
         rethrowControlFlowException(e)
         null
     }

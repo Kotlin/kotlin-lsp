@@ -4,7 +4,6 @@ package com.jetbrains.ls.api.features.impl.common.configuration
 import com.jetbrains.ls.api.features.ExtraPluginsProvider
 import com.jetbrains.ls.api.features.InitConfigurationEntry
 import com.jetbrains.ls.api.features.SessionComponentEntry
-import com.jetbrains.ls.api.features.WorkspaceComponentEntry
 import com.jetbrains.ls.api.features.impl.common.api.commonLsApiPlugin
 import com.jetbrains.ls.api.features.impl.common.completion.CompletionSettingsKey
 import com.jetbrains.ls.api.features.impl.common.completion.LSCompletionSettings
@@ -28,7 +27,7 @@ import com.jetbrains.ls.snapshot.api.impl.core.LazyActionSessionComponent
 
 val LSCommonConfiguration: LSConfigurationPiece = LSConfigurationPiece(
     entries = listOf(
-        WorkspaceComponentEntry { LSSettingsComponent },
+        SessionComponentEntry { LSSettingsComponent },
         SessionComponentEntry { LatestCompletionSessionComponent },
         SessionComponentEntry { LazyActionSessionComponent },
         InitConfigurationEntry(CompletionSettingsKey, LSCompletionSettings.serializer()),

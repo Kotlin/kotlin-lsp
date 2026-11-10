@@ -59,7 +59,7 @@ private val LOG = logger<LSCommonInspectionOptionsCodeActionProvider>()
  * actions of a few warnings only.
  *
  * The disable option is offered only when the server imports the inspection profile of the project. It changes the
- * profile file, and the server reloads the profile when the client saves the file.
+ * profile file, and the server reloads the profile when the client reports the changed document or file.
  */
 class LSCommonInspectionOptionsCodeActionProvider(
     override val supportedLanguages: Set<LSLanguage>,
@@ -88,10 +88,9 @@ class LSCommonInspectionOptionsCodeActionProvider(
         val (batch, live) = withData.partition { it.data.diagnosticSource == LSCommonInspectionDiagnosticProvider.batchDiagnosticSource }
         val batchIds = batch.mapNotNullTo(mutableSetOf()) { it.diagnostic.code?.value?.content }
         val importInspectionProfile = server.config.importInspectionProfile
-        val profileFile = if (importInspectionProfile) inspectionProfileFile() else null
-
         server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
             readAction {
+                val profileFile = if (importInspectionProfile) inspectionProfileFile() else null
                 val virtualFile = params.textDocument.findVirtualFile() ?: return@readAction emptyList()
                 val document = virtualFile.findDocument() ?: return@readAction emptyList()
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()

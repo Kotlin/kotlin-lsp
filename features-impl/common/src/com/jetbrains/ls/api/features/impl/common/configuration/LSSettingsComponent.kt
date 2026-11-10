@@ -3,51 +3,59 @@ package com.jetbrains.ls.api.features.impl.common.configuration
 
 import com.intellij.codeInspection.ex.ProfileFile
 import com.intellij.openapi.application.Application
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.profile.codeInspection.InspectionProfileManager
 import com.intellij.profile.codeInspection.InspectionProjectProfileManager
 import com.jetbrains.analyzer.api.AnalyzerContextKind
 import com.jetbrains.analyzer.bootstrap.AnalyzerContainerBuilder
 import com.jetbrains.analyzer.codeServer.ScopeStorage
+import com.jetbrains.analyzer.filesystem.toList
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.RootUriKey
 import com.jetbrains.ls.api.core.util.toPath
 import com.jetbrains.ls.snapshot.api.impl.core.LSConfigurationData
-import com.jetbrains.ls.snapshot.api.impl.core.WorkspaceComponent
+import com.jetbrains.ls.snapshot.api.impl.core.SessionComponent
+import com.jetbrains.ls.snapshot.api.impl.core.SessionEvent
+import com.jetbrains.ls.snapshot.api.impl.core.toFileUrl
 import java.nio.file.Path
 
 
-internal class State(
-    val inspectionContext: LSInspectionContext,
-    val scopeContext: LSScopeContext,
-    val settingsRoot: Path? = null
-)
+internal class State(val settingsRoot: Path?) {
+    val readSettings: Settings = Settings(settingsRoot)
+    val writeSettings: Settings = Settings(settingsRoot)
+
+    fun settings(contextKind: AnalyzerContextKind): Settings = when (contextKind) {
+        AnalyzerContextKind.Write -> writeSettings
+        AnalyzerContextKind.Analysis, AnalyzerContextKind.Invalidation, is AnalyzerContextKind.Indexing -> readSettings
+    }
+}
+
+internal class Settings(settingsRoot: Path?) {
+    val inspectionContext: LSInspectionContext = settingsRoot?.let { LSInspectionContext.new(it) } ?: LSInspectionContext.empty()
+    val scopeContext: LSScopeContext = settingsRoot?.let { LSScopeContext.new(it) } ?: LSScopeContext.empty()
+}
 
 /**
- * Stores all the settings that are saved under `.idea` directory.
+ * Stores the settings under the `.idea` directory for one session snapshot.
  */
-internal object LSSettingsComponent : WorkspaceComponent<State> {
+internal object LSSettingsComponent : SessionComponent<State> {
     override fun init(configData: LSConfigurationData): State {
-        val root = configData[RootUriKey]?.toPath()
-            ?: return State(LSInspectionContext.empty(), LSScopeContext.empty())
-
         // The settings directory is kept even when it is absent: a later change can create it, and the settings then reload.
-        val settingsRoot = root.resolve(Project.DIRECTORY_STORE_FOLDER)
-        return State(
-            inspectionContext = LSInspectionContext.new(settingsRoot),
-            scopeContext = LSScopeContext.new(settingsRoot),
-            settingsRoot = settingsRoot,
-        )
+        return State(configData[RootUriKey]?.toPath()?.resolve(Project.DIRECTORY_STORE_FOLDER))
     }
 
-    override fun projectConfigurationChanged(state: State): State {
-        if (state.settingsRoot == null) return state
-
-        return State(
-            inspectionContext = LSInspectionContext.new(state.settingsRoot),
-            scopeContext = LSScopeContext.new(state.settingsRoot),
-            settingsRoot = state.settingsRoot,
-        )
+    override fun handleEvent(event: SessionEvent, state: State): State = when (event) {
+        is SessionEvent.InvalidateFiles -> {
+            val root = state.settingsRoot?.toFileUrl()
+            val directories = root?.let { listOf(it.child("inspectionProfiles"), it.child("scopes")) }.orEmpty()
+            if (event.files.toList().any { file -> directories.any { it.contains(file) || file.contains(it) } }) {
+                State(state.settingsRoot)
+            } else {
+                state
+            }
+        }
+        SessionEvent.LowMemory -> State(state.settingsRoot)
     }
 
     override suspend fun registerInApplicationContainer(
@@ -56,7 +64,7 @@ internal object LSSettingsComponent : WorkspaceComponent<State> {
         state: State,
         contextKind: AnalyzerContextKind,
     ) {
-        builder.registerApplicationLSSettings(state)
+        builder.registerApplicationLSSettings(state.settings(contextKind))
     }
 
     override suspend fun registerInProjectContainer(
@@ -65,32 +73,33 @@ internal object LSSettingsComponent : WorkspaceComponent<State> {
         state: State,
         contextKind: AnalyzerContextKind,
     ) {
-        builder.registerProjectLSSettings(state)
+        builder.registerProjectLSSettings(state.settings(contextKind).inspectionContext)
     }
 }
 
 context(server: LSServer)
 fun AnalyzerContainerBuilder.registerApplicationLSSettings() {
-    registerApplicationLSSettings(server[LSSettingsComponent])
+    registerApplicationLSSettings(server[LSSettingsComponent].readSettings)
 }
 
-private fun AnalyzerContainerBuilder.registerApplicationLSSettings(state: State) {
-    serviceDoNotDispose(InspectionProfileManager::class.java, state.inspectionContext.manager)
-    serviceDoNotDispose(ScopeStorage::class.java, state.scopeContext.storage)
+private fun AnalyzerContainerBuilder.registerApplicationLSSettings(settings: Settings) {
+    serviceDoNotDispose(LSInspectionContext::class.java, settings.inspectionContext)
+    serviceDoNotDispose(InspectionProfileManager::class.java, settings.inspectionContext.manager)
+    serviceDoNotDispose(ScopeStorage::class.java, settings.scopeContext.storage)
 }
 
-context(server: LSServer)
+@Suppress("IncorrectServiceRetrieving")
 fun AnalyzerContainerBuilder.registerProjectLSSettings() {
-    registerProjectLSSettings(server[LSSettingsComponent])
+    registerProjectLSSettings(service<LSInspectionContext>())
 }
 
-private fun AnalyzerContainerBuilder.registerProjectLSSettings(state: State) {
-    serviceDoNotDispose(InspectionProjectProfileManager::class.java, state.inspectionContext.manager)
+private fun AnalyzerContainerBuilder.registerProjectLSSettings(context: LSInspectionContext) {
+    serviceDoNotDispose(InspectionProjectProfileManager::class.java, context.manager)
 }
 
 /**
  * The file of the inspection profile the server reads, or the file to create for it. It is `null` when the project
  * settings select a profile which the server does not read.
  */
-context(server: LSServer)
-fun inspectionProfileFile(): ProfileFile? = server[LSSettingsComponent].inspectionContext.profileFile
+@Suppress("IncorrectServiceRetrieving")
+fun inspectionProfileFile(): ProfileFile? = service<LSInspectionContext>().profileFile
