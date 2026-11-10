@@ -1,6 +1,10 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 import type { CancellationToken, Uri } from 'vscode';
-import { getLspClient, sendLspCommand } from '@jetbrains/vscode-extension-core';
+import {
+  getLspClient,
+  sendLspCommand,
+  serverResolvesStackTraces,
+} from '@jetbrains/vscode-extension-core';
 import {
   debugAdapterRunner,
   lspDiscovery,
@@ -141,6 +145,7 @@ export class JvmTestLanguage implements TestLanguage<JvmTestProfile> {
 
   private readonly stackFrames: StackFrameParser = (stacktrace, report) => {
     const frames: TestFrame[] = [];
+    const linked = serverResolvesStackTraces();
     for (const line of stacktrace.split('\n')) {
       const frame = FRAME.exec(line);
       if (!frame) continue;
@@ -150,6 +155,7 @@ export class JvmTestLanguage implements TestLanguage<JvmTestProfile> {
         label: reference,
         uri: fileOfFrame(reference),
         line: sourceLine ? Number(sourceLine[1]) : undefined,
+        linked,
       });
     }
     return frames;

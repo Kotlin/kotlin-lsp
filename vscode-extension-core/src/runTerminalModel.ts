@@ -124,3 +124,38 @@ export class TerminalInput {
     this.ended = true;
   }
 }
+
+const MAX_OUTPUT_LINES = 500;
+const MAX_TRACE_LINES = 50;
+
+/**
+ * The last lines a terminal rendered. The server refines a frame by the line above it (the frame of the called
+ * method, or the exception message), so a click on a frame sends the trace up to that frame, not the frame alone.
+ */
+export class OutputLines {
+  private readonly lines: string[] = [];
+  private partial = '';
+
+  append(chunk: string): void {
+    const parts = (this.partial + chunk).split(/\r?\n/);
+    this.partial = parts.pop() ?? '';
+    this.lines.push(...parts);
+    if (this.lines.length > MAX_OUTPUT_LINES)
+      this.lines.splice(0, this.lines.length - MAX_OUTPUT_LINES);
+  }
+
+  /**
+   * The stack trace that ends with the last rendered [line]: the lines above it that [isTraceLine] accepts, and the
+   * message line above them.
+   */
+  traceEndingWith(line: string, isTraceLine: (line: string) => boolean): string[] {
+    const lines = this.partial ? [...this.lines, this.partial] : this.lines;
+    let end = lines.length - 1;
+    while (end >= 0 && lines[end].trim() !== line.trim()) end--;
+    if (end === -1) return [line];
+    let start = end;
+    while (start > 0 && end - start < MAX_TRACE_LINES - 1 && isTraceLine(lines[start - 1])) start--;
+    if (start > 0 && end - start < MAX_TRACE_LINES - 1) start--;
+    return lines.slice(start, end + 1);
+  }
+}

@@ -6,6 +6,8 @@ import {
   EventEmitter,
   type Pseudoterminal,
   type Terminal,
+  type TerminalLink,
+  type TerminalLinkProvider,
   debug,
   env,
   window,
@@ -13,11 +15,16 @@ import {
 import type { ConsoleKind } from './dap';
 import { ExternalRunTerminal, inputFailedMessage, processInputSender } from './externalTerminal';
 import {
+  OutputLines,
   showsStreamInOsWindow,
   showsStreamInTerminal,
   terminalChunk,
   TerminalInput,
 } from './runTerminalModel';
+import { navigateToTrace, type StackTracePatterns, stackTracePatterns } from './stackTrace';
+
+/** The output of each open run terminal, for the stack trace links. */
+const outputByTerminal = new Map<Terminal, OutputLines>();
 
 /**
  * The terminal of a terminal launch. The server runs the program itself and streams its output as `output` events
@@ -47,7 +54,10 @@ export function createRunOutputTerminalFactory(): DebugAdapterTrackerFactory {
         if (!terminal) {
           idleByName.get(session.name)?.dispose();
           idleByName.delete(session.name);
-          terminal = new RunOutputTerminal(session);
+          const opened = new RunOutputTerminal(session, () => {
+            if (idleByName.get(session.name) === opened) idleByName.delete(session.name);
+          });
+          terminal = opened;
         }
         return terminal;
       };
@@ -62,7 +72,7 @@ export function createRunOutputTerminalFactory(): DebugAdapterTrackerFactory {
         onWillStopSession: () => {
           if (!terminal) return;
           terminal.sessionEnded();
-          idleByName.set(session.name, terminal);
+          if (!terminal.closed) idleByName.set(session.name, terminal);
         },
       };
     },
@@ -92,11 +102,14 @@ class RunOutputTerminal {
   private readonly writeEmitter = new EventEmitter<string>();
   // Chunks written before `open`; a pseudoterminal drops what is fired earlier.
   private pending: string[] | undefined = [];
-  private closed = false;
+  /** Whether the user closed the terminal. */
+  closed = false;
   private readonly terminal: Terminal;
+  private readonly output = new OutputLines();
   private readonly input: TerminalInput;
 
-  constructor(session: DebugSession) {
+  /** @param onClose called when the user closes the terminal */
+  constructor(session: DebugSession, onClose: () => void) {
     this.input = new TerminalInput({
       echo: (text) => this.write(text),
       send: processInputSender(session, (e) => this.write(`\r\n${inputFailedMessage(e)}\r\n`)),
@@ -111,10 +124,13 @@ class RunOutputTerminal {
       },
       close: () => {
         this.closed = true;
+        outputByTerminal.delete(this.terminal);
+        onClose();
       },
       handleInput: (data: string) => this.input.handle(data),
     };
     this.terminal = window.createTerminal({ name: session.name, pty });
+    outputByTerminal.set(this.terminal, this.output);
     // Reveal the panel but keep the keyboard in the editor: the user clicks the terminal to type input.
     this.terminal.show(true);
   }
@@ -125,11 +141,40 @@ class RunOutputTerminal {
 
   write(chunk: string): void {
     if (this.closed) return;
+    this.output.append(chunk);
     if (this.pending !== undefined) this.pending.push(chunk);
     else this.writeEmitter.fire(chunk);
   }
 
   dispose(): void {
+    outputByTerminal.delete(this.terminal);
     this.terminal.dispose();
   }
 }
+
+interface StackTraceLink extends TerminalLink {
+  readonly line: string;
+  readonly output: OutputLines;
+  readonly patterns: StackTracePatterns;
+}
+
+/**
+ * Links the stack trace frames in the run terminals to the code, the frames of every language the server has
+ * patterns for.
+ */
+export const stackTraceLinkProvider: TerminalLinkProvider<StackTraceLink> = {
+  async provideTerminalLinks({ line, terminal }) {
+    const output = outputByTerminal.get(terminal);
+    if (!output) return [];
+    const patterns = await stackTracePatterns();
+    if (!patterns.frames.some((frame) => frame.test(line))) return [];
+    const startIndex = line.search(/\S/);
+    return [{ startIndex, length: line.trimEnd().length - startIndex, line, output, patterns }];
+  },
+
+  async handleTerminalLink({ line, output, patterns }) {
+    const isTraceLine = (traceLine: string) =>
+      [...patterns.frames, ...patterns.traceLines].some((pattern) => pattern.test(traceLine));
+    await navigateToTrace(output.traceEndingWith(line, isTraceLine));
+  },
+};

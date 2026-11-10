@@ -37,6 +37,12 @@ class TestMessageStackFrame {
   }
 }
 
+class MarkdownString {
+  constructor(value) {
+    this.value = value;
+  }
+}
+
 class TestTag {
   constructor(id) {
     this.id = id;
@@ -91,6 +97,7 @@ const REAL = {
   DeclarationCoverage,
   FileCoverage,
   Location,
+  MarkdownString,
   Position,
   StatementCoverage,
   TestCoverageCount,
@@ -148,6 +155,7 @@ module.exports.ExtensionMode = makeStub();
 module.exports.FileType = makeStub();
 module.exports.languages = makeStub();
 module.exports.Location = Location;
+module.exports.MarkdownString = MarkdownString;
 module.exports.Position = Position;
 module.exports.ProgressLocation = makeStub();
 module.exports.Range = makeStub();

@@ -1,7 +1,9 @@
+// Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import {
   InputLine,
+  OutputLines,
   TerminalInput,
   showsStreamInOsWindow,
   showsStreamInTerminal,
@@ -169,5 +171,77 @@ describe('TerminalInput', () => {
     input.end();
     input.handle(' line\r\x03');
     assert.deepEqual(calls, ['echo "half"']);
+  });
+});
+
+describe('OutputLines', () => {
+  // The patterns the Java provider of the server sends.
+  const isJavaTraceLine = (line: string) =>
+    /^\s*at\s+\S.*\([^()]*\)\s*$/.test(line) ||
+    /^\s*(?:\.\.\. \d+ |Caused by: |Suppressed: )/.test(line);
+  const trace = [
+    'Starting',
+    'Exception in thread "main" java.lang.IllegalStateException: boom',
+    '\tat demo.Service.run(Service.java:5)',
+    '\tat demo.Main.main(Main.java:6)',
+    'Caused by: java.lang.NullPointerException',
+    '\tat demo.Service.load(Service.java:9)',
+    '\t... 1 more',
+    'Process finished with exit code 1',
+  ];
+
+  test('a frame comes with the trace lines above it and the message line above them', () => {
+    const output = new OutputLines();
+    output.append(trace.join('\r\n') + '\r\n');
+    assert.deepEqual(
+      output.traceEndingWith('\tat demo.Main.main(Main.java:6)', isJavaTraceLine),
+      trace.slice(1, 4),
+    );
+  });
+
+  test('a frame after a cause comes with the whole trace', () => {
+    const output = new OutputLines();
+    output.append(trace.join('\r\n') + '\r\n');
+    assert.deepEqual(
+      output.traceEndingWith('\tat demo.Service.load(Service.java:9)   ', isJavaTraceLine),
+      trace.slice(1, 6),
+    );
+  });
+
+  test('a frame the terminal renders with spaces for its tab is found', () => {
+    const output = new OutputLines();
+    output.append(trace.join('\r\n') + '\r\n');
+    assert.deepEqual(
+      output.traceEndingWith('        at demo.Main.main(Main.java:6)', isJavaTraceLine),
+      trace.slice(1, 4),
+    );
+  });
+
+  test('a line split across chunks is one line, the unterminated last one included', () => {
+    const output = new OutputLines();
+    output.append('java.lang.IllegalStateException\r\n\tat demo.Ser');
+    output.append('vice.run(Service.java:5)');
+    assert.deepEqual(
+      output.traceEndingWith('\tat demo.Service.run(Service.java:5)', isJavaTraceLine),
+      ['java.lang.IllegalStateException', '\tat demo.Service.run(Service.java:5)'],
+    );
+  });
+
+  test('the last occurrence of a repeated frame is the one clicked', () => {
+    const output = new OutputLines();
+    output.append(
+      'first\r\n\tat demo.Main.main(Main.java:6)\r\nsecond\r\n\tat demo.Main.main(Main.java:6)\r\n',
+    );
+    assert.deepEqual(output.traceEndingWith('\tat demo.Main.main(Main.java:6)', isJavaTraceLine), [
+      'second',
+      '\tat demo.Main.main(Main.java:6)',
+    ]);
+  });
+
+  test('a line no longer in the output is sent alone', () => {
+    const output = new OutputLines();
+    assert.deepEqual(output.traceEndingWith('\tat demo.Main.main(Main.java:6)', isJavaTraceLine), [
+      '\tat demo.Main.main(Main.java:6)',
+    ]);
   });
 });

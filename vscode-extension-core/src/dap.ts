@@ -20,7 +20,9 @@ import { registerInitializationOptionsContributor } from './lspClient';
 import { getOutputChannel } from './extension';
 import { internalConsoleOptionsFor } from './consoleOptions';
 import { errorMessage } from './buildTaskModel';
-import { createRunOutputTerminalFactory } from './runTerminal';
+import { createRunOutputTerminalFactory, stackTraceLinkProvider } from './runTerminal';
+import { navigateToTrace } from './stackTrace';
+import { NAVIGATE_TO_FRAME_COMMAND } from './stackTraceNavigation';
 
 /**
  * The launch configuration types, one per way of running a program: a plain JVM, or one type per build tool.
@@ -189,6 +191,11 @@ export function registerDapServer(context: ExtensionContext) {
       debug.registerDebugAdapterTrackerFactory(type, runOutputTerminals),
     );
   }
+
+  context.subscriptions.push(
+    window.registerTerminalLinkProvider(stackTraceLinkProvider),
+    commands.registerCommand(NAVIGATE_TO_FRAME_COMMAND, navigateToTrace),
+  );
 
   registerRunMainCodeLens(context);
 }

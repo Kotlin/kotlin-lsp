@@ -76,6 +76,7 @@ export {
 export { disconnectedServerStartupPhase } from './serverRestartState';
 export type { ServerLaunch, ServerObservers } from './serverObservers';
 export { promptReloadWindow } from './reloadWindow';
+export { serverResolvesStackTraces } from './stackTrace';
 export type { ServerRestartState } from './serverRestartState';
 
 export type ExtensionModule = (context: ExtensionContext) => void | Promise<void>;
