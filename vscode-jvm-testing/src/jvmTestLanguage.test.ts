@@ -134,9 +134,61 @@ describe('JvmTestLanguage.resolveLaunches', () => {
       configs: [config],
     } = await launchedConfigs();
 
-    assert.equal('vmArgs' in config, false);
-    assert.equal('env' in config, false);
-    assert.equal('cwd' in config, false);
+    for (const key of [
+      'vmArgs',
+      'env',
+      'envFile',
+      'cwd',
+      'javaExec',
+      'preLaunchTask',
+      'postDebugTask',
+    ]) {
+      assert.equal(key in config, false, key);
+    }
+  });
+
+  // A `-Dfile.encoding` in the VM options comes later, so it wins.
+  test('makes the encoding of the test configuration the first VM option', async () => {
+    const {
+      configs: [config],
+    } = await launchedConfigs(junitLaunch, { encoding: 'ISO-8859-1', vmArgs: ['-Xmx64m'] });
+
+    assert.deepEqual(config.vmArgs, ['-Dfile.encoding=ISO-8859-1', '-Xmx64m']);
+  });
+
+  test('adds the paths of the test configuration before the runner jars, and skips its exclusions', async () => {
+    const {
+      configs: [config],
+    } = await launchedConfigs(
+      { ...junitLaunch, runtimeModulePath: ['/idea/lib/junit-platform-launcher.jar'] },
+      {
+        classPaths: ['$Auto', '/lib/extra.jar', '!/lib/old.jar', '$Test', '!'],
+        modulePaths: ['$Runtime', '/lib/mods', '!/lib/old-mods'],
+      },
+    );
+
+    assert.deepEqual(config.additionalClassPaths, ['/lib/extra.jar', ...RUNNER_JARS]);
+    assert.deepEqual(config.additionalModulePaths, [
+      '/lib/mods',
+      '/idea/lib/junit-platform-launcher.jar',
+    ]);
+  });
+
+  // The client reads the environment file before the launch, and VS Code runs the tasks around the debug session.
+  test('passes the java executable, the environment file and the tasks of the test configuration', async () => {
+    const {
+      configs: [config],
+    } = await launchedConfigs(junitLaunch, {
+      javaExec: '/jdk/bin/java',
+      envFile: '${workspaceFolder}/.env',
+      preLaunchTask: 'start db',
+      postDebugTask: 'stop db',
+    });
+
+    assert.equal(config.javaExec, '/jdk/bin/java');
+    assert.equal(config.envFile, '${workspaceFolder}/.env');
+    assert.equal(config.preLaunchTask, 'start db');
+    assert.equal(config.postDebugTask, 'stop db');
   });
 
   test('sends the tag filters of the test configuration to the server', async () => {

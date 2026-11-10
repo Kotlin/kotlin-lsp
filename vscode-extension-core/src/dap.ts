@@ -13,12 +13,13 @@ import {
   workspace,
   WorkspaceFolder,
 } from 'vscode';
+import { readFile } from 'node:fs/promises';
 import * as path from 'node:path';
+import { parseEnv } from 'node:util';
 import { registerInitializationOptionsContributor } from './lspClient';
 import { getOutputChannel } from './extension';
 import { internalConsoleOptionsFor } from './consoleOptions';
 import { errorMessage } from './buildTaskModel';
-import { lensLaunchConfig } from './lensLaunchModel';
 import { createRunOutputTerminalFactory } from './runTerminal';
 
 /**
@@ -87,6 +88,7 @@ interface CommonLaunchConfig extends DebugConfiguration {
   vmArgs?: string[];
   cwd?: string;
   env?: Record<string, string>;
+  envFile?: string;
   /**
    * Where the output goes. The server runs every program itself and streams the output; a terminal console shows
    * that stream, it does not run the program.
@@ -139,7 +141,7 @@ export function registerDapServer(context: ExtensionContext) {
     /**
      * Puts the configuration into the vocabulary the adapter reads, and asks the server nothing: the server finds
      * the module, its tool and its class path from the launch itself, in the one `launch` request. The variables
-     * are substituted at this point, so a relative `cwd` is resolved here.
+     * are substituted at this point, so a relative `cwd` is resolved here, and the `envFile` is read into `env`.
      */
     async resolveDebugConfigurationWithSubstitutedVariables(
       folder: WorkspaceFolder | undefined,
@@ -151,14 +153,18 @@ export function registerDapServer(context: ExtensionContext) {
         void window.showErrorMessage(`The "${config.type}" configuration requires "mainClass"`);
         return undefined;
       }
-      if (config.cwd && !path.isAbsolute(config.cwd)) {
-        if (!folder) {
-          void window.showErrorMessage(
-            `The "cwd" of the "${config.type}" configuration is the relative path "${config.cwd}", and the launch has no workspace folder`,
-          );
-          return undefined;
+      try {
+        if (config.cwd) config.cwd = absolutePath('cwd', config.cwd, folder);
+        if (config.envFile) {
+          const variables = await envFileVariables(absolutePath('envFile', config.envFile, folder));
+          config.env = { ...variables, ...config.env };
+          delete config.envFile;
         }
-        config.cwd = path.resolve(folder.uri.fsPath, config.cwd);
+      } catch (e) {
+        void window.showErrorMessage(
+          `The "${config.type}" configuration cannot be used: ${errorMessage(e)}`,
+        );
+        return undefined;
       }
       return withConsoleDefaults(toLaunchArguments(config));
     },
@@ -207,12 +213,15 @@ async function runMainFromLens(arg: RunMainArgs): Promise<void> {
   const folder = window.activeTextEditor
     ? workspace.getWorkspaceFolder(window.activeTextEditor.document.uri)
     : workspace.workspaceFolders?.[0];
-  const config = lensLaunchConfig(
-    arg,
-    DEBUG_TYPE_BY_TOOL,
-    JVM_DEBUG_TYPE,
-    (uri) => Uri.parse(uri).fsPath,
-  );
+  const config: CommonLaunchConfig = {
+    type: (arg.tool !== undefined ? DEBUG_TYPE_BY_TOOL[arg.tool] : undefined) ?? JVM_DEBUG_TYPE,
+    request: 'launch',
+    name: arg.mainClass.split('.').pop() ?? 'Run main',
+    mainClass: arg.mainClass,
+  };
+  if (arg.uri) config.file = Uri.parse(arg.uri).fsPath;
+  // The tool as the server named it, so the server knows that the lens asked for nothing else.
+  if (arg.tool !== undefined) config.tool = arg.tool;
   try {
     await debug.startDebugging(folder, config, { noDebug: arg.noDebug ?? false });
   } catch (e) {
@@ -220,6 +229,36 @@ async function runMainFromLens(arg: RunMainArgs): Promise<void> {
     getOutputChannel().appendLine(`[lens] launch failed: ${message}`);
     void window.showErrorMessage(`Cannot start debugging: ${message}`);
   }
+}
+
+/** The [value] of the field [name] as an absolute path. A relative path starts at the workspace [folder]. */
+function absolutePath(
+  name: 'cwd' | 'envFile',
+  value: string,
+  folder: WorkspaceFolder | undefined,
+): string {
+  if (path.isAbsolute(value)) return value;
+  if (!folder) {
+    throw new Error(
+      `"${name}" is the relative path "${value}", and the launch has no workspace folder`,
+    );
+  }
+  return path.resolve(folder.uri.fsPath, value);
+}
+
+/** The variables of the environment file at [file]. */
+async function envFileVariables(file: string): Promise<Record<string, string>> {
+  let text: string;
+  try {
+    text = await readFile(file, 'utf8');
+  } catch (e) {
+    throw new Error(`Cannot read "${file}": ${errorMessage(e)}`);
+  }
+  return Object.fromEntries(
+    Object.entries(parseEnv(text)).filter(
+      (entry): entry is [string, string] => entry[1] !== undefined,
+    ),
+  );
 }
 
 /**

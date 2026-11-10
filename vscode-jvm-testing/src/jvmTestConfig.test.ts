@@ -14,6 +14,23 @@ import {
 const FILE = { toString: () => 'file:///project/app/MainTest.java' } as unknown as Uri;
 const FOLDER = { uri: 'file:///project', name: 'project' };
 
+/** A parsed entry: [fields] over the values of an entry that sets nothing. */
+const parsed = (fields: Partial<JvmTestConfig>): JvmTestConfig => ({
+  name: undefined,
+  vmArgs: [],
+  env: {},
+  envFile: undefined,
+  javaExec: undefined,
+  encoding: undefined,
+  classPaths: [],
+  modulePaths: [],
+  workingDirectory: undefined,
+  tags: [],
+  preLaunchTask: undefined,
+  postDebugTask: undefined,
+  ...fields,
+});
+
 function tokenOf(): CancellationToken {
   return { isCancellationRequested: false, onCancellationRequested: () => ({ dispose() {} }) };
 }
@@ -53,16 +70,30 @@ describe('parseTestConfigs', () => {
       name: 'fast',
       vmArgs: ['-Xmx64m', ''],
       env: { LANG: 'C' },
+      envFile: '${workspaceFolder}/.env',
+      javaExec: '/jdk/bin/java',
+      encoding: 'ISO-8859-1',
+      classPaths: ['$Auto', '/lib/extra.jar', '!/lib/old.jar'],
+      modulePaths: ['/lib/mods'],
       workingDirectory: '${workspaceFolder}',
       filters: { tags: ['fast', '!slow'] },
+      preLaunchTask: 'start db',
+      postDebugTask: 'stop db',
     };
-    const expected: JvmTestConfig = {
+    const expected = parsed({
       name: 'fast',
       vmArgs: ['-Xmx64m'],
       env: { LANG: 'C' },
+      envFile: '${workspaceFolder}/.env',
+      javaExec: '/jdk/bin/java',
+      encoding: 'ISO-8859-1',
+      classPaths: ['$Auto', '/lib/extra.jar', '!/lib/old.jar'],
+      modulePaths: ['/lib/mods'],
       workingDirectory: '${workspaceFolder}',
       tags: ['fast', '!slow'],
-    };
+      preLaunchTask: 'start db',
+      postDebugTask: 'stop db',
+    });
 
     assert.deepEqual(parseTestConfigs(entry), { configs: [expected], problems: [] });
     assert.deepEqual(parseTestConfigs([entry, entry]), {
@@ -79,17 +110,25 @@ describe('parseTestConfigs', () => {
 
   test('ignores a value of the wrong type and names it', () => {
     const { configs, problems } = parseTestConfigs([
-      { vmArgs: '-Xmx64m', env: { DEBUG: 1 }, filters: { tags: ['fast', 2] } },
+      {
+        vmArgs: '-Xmx64m',
+        env: { DEBUG: 1 },
+        javaExec: 17,
+        classPaths: '/lib/extra.jar',
+        filters: { tags: ['fast', 2] },
+        preLaunchTask: ['build'],
+      },
       'fast',
     ]);
 
-    assert.deepEqual(configs, [
-      { name: undefined, vmArgs: [], env: {}, workingDirectory: undefined, tags: ['fast'] },
-    ]);
+    assert.deepEqual(configs, [parsed({ tags: ['fast'] })]);
     assert.deepEqual(problems, [
       'java.test.config[0].vmArgs must be an array of strings.',
       'java.test.config[0].env.DEBUG must be a string.',
+      'java.test.config[0].javaExec must be a string.',
+      'java.test.config[0].classPaths must be an array of strings.',
       'java.test.config[0].filters.tags must hold strings only.',
+      'java.test.config[0].preLaunchTask must be a string.',
       'java.test.config[1] must be an object.',
     ]);
   });
@@ -142,6 +181,16 @@ describe('JvmTestRunConfigs', () => {
       );
       assert.equal(prompt.warnings.length, 1);
     }
+  });
+
+  test('reads the settings of a folder once in a run, so a problem shows once', async () => {
+    const prompt = new RecordingPrompt();
+    const configs = configsOf({ config: { vmArgs: '-ea' }, defaultConfig: undefined }, prompt);
+
+    await configs.configFor(FILE, tokenOf());
+    await configs.configFor(FILE, tokenOf());
+
+    assert.deepEqual(prompt.warnings, ['java.test.config[0].vmArgs must be an array of strings.']);
   });
 
   test('asks once for each workspace folder in a run when several entries match', async () => {

@@ -983,10 +983,41 @@
                 "default": {},
                 "description": "The environment variables for the test JVM."
               },
+              "envFile": {
+                "type": "string",
+                "default": "${workspaceFolder}/.env",
+                "markdownDescription": "The file with more environment variables for the test JVM, one `KEY=VALUE` on each line. A relative path starts at the workspace folder. A variable in `env` wins."
+              },
               "workingDirectory": {
                 "type": "string",
                 "default": "${workspaceFolder}",
                 "description": "The working directory of the test JVM. A relative path starts at the workspace folder. Without it, the tests run in the directory of their project."
+              },
+              "javaExec": {
+                "type": "string",
+                "default": "",
+                "description": "The java executable that runs the tests. Without it, the JDK of the module runs them."
+              },
+              "encoding": {
+                "type": "string",
+                "default": "",
+                "markdownDescription": "The `file.encoding` of the test JVM. A `-Dfile.encoding` option in `vmArgs` wins."
+              },
+              "classPaths": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "default": [],
+                "markdownDescription": "The entries to add to the class path of the module. `$Auto`, `$Runtime` and `$Test` name the runtime of the module, which the tests always get. An entry with the `!` prefix has no effect. Write a path as an absolute path or with `${workspaceFolder}`."
+              },
+              "modulePaths": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "default": [],
+                "markdownDescription": "The entries to add to the module path of the module. `$Auto`, `$Runtime` and `$Test` name the runtime of the module, which the tests always get. An entry with the `!` prefix has no effect. Write a path as an absolute path or with `${workspaceFolder}`."
               },
               "filters": {
                 "type": "object",
@@ -1002,6 +1033,16 @@
                   }
                 },
                 "description": "The filters of the tests to run."
+              },
+              "preLaunchTask": {
+                "type": "string",
+                "default": "",
+                "markdownDescription": "The label of a task in `tasks.json`. The task runs before each test JVM starts."
+              },
+              "postDebugTask": {
+                "type": "string",
+                "default": "",
+                "markdownDescription": "The label of a task in `tasks.json`. The task runs after each test JVM stops."
               }
             },
             "items": {
@@ -1028,10 +1069,41 @@
                   "default": {},
                   "description": "The environment variables for the test JVM."
                 },
+                "envFile": {
+                  "type": "string",
+                  "default": "${workspaceFolder}/.env",
+                  "markdownDescription": "The file with more environment variables for the test JVM, one `KEY=VALUE` on each line. A relative path starts at the workspace folder. A variable in `env` wins."
+                },
                 "workingDirectory": {
                   "type": "string",
                   "default": "${workspaceFolder}",
                   "description": "The working directory of the test JVM. A relative path starts at the workspace folder. Without it, the tests run in the directory of their project."
+                },
+                "javaExec": {
+                  "type": "string",
+                  "default": "",
+                  "description": "The java executable that runs the tests. Without it, the JDK of the module runs them."
+                },
+                "encoding": {
+                  "type": "string",
+                  "default": "",
+                  "markdownDescription": "The `file.encoding` of the test JVM. A `-Dfile.encoding` option in `vmArgs` wins."
+                },
+                "classPaths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "default": [],
+                  "markdownDescription": "The entries to add to the class path of the module. `$Auto`, `$Runtime` and `$Test` name the runtime of the module, which the tests always get. An entry with the `!` prefix has no effect. Write a path as an absolute path or with `${workspaceFolder}`."
+                },
+                "modulePaths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "default": [],
+                  "markdownDescription": "The entries to add to the module path of the module. `$Auto`, `$Runtime` and `$Test` name the runtime of the module, which the tests always get. An entry with the `!` prefix has no effect. Write a path as an absolute path or with `${workspaceFolder}`."
                 },
                 "filters": {
                   "type": "object",
@@ -1047,10 +1119,20 @@
                     }
                   },
                   "description": "The filters of the tests to run."
+                },
+                "preLaunchTask": {
+                  "type": "string",
+                  "default": "",
+                  "markdownDescription": "The label of a task in `tasks.json`. The task runs before each test JVM starts."
+                },
+                "postDebugTask": {
+                  "type": "string",
+                  "default": "",
+                  "markdownDescription": "The label of a task in `tasks.json`. The task runs after each test JVM stops."
                 }
               }
             },
-            "markdownDescription": "The configurations of a JVM test run: one configuration or an array of them. This is the setting of the Test Runner for Java. The other fields of that extension, such as `when` or `envFile`, have no effect here. With several configurations, set `#java.test.defaultConfig#` or select one when the tests start."
+            "markdownDescription": "The configurations of a JVM test run: one configuration or an array of them. This is the setting of the Test Runner for Java. The fields `args`, `when`, `testKind`, `sourcePaths` and `coverage` of that extension have no effect here. The test runner of the IDE takes no extra arguments, and one configuration applies to a whole run. With several configurations for the tests, set `#java.test.defaultConfig#` or select one when the tests start."
           },
           "java.test.defaultConfig": {
             "type": "string",

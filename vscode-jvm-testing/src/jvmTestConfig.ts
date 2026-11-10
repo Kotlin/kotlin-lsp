@@ -12,21 +12,35 @@ const BUILTIN_CONFIG: JvmTestConfig = {
   name: BUILTIN_CONFIG_NAME,
   vmArgs: [],
   env: {},
+  classPaths: [],
+  modulePaths: [],
   workingDirectory: '${workspaceFolder}',
   tags: [],
 };
 
 /**
  * One entry of the `java.test.config` setting of vscode-java-test. The fields that this client does not use, such as
- * `when` or `envFile`, are ignored.
+ * `args`, `when`, `testKind`, `sourcePaths` or `coverage`, are ignored.
  */
 export interface JvmTestConfig {
   readonly name?: string;
   readonly vmArgs: string[];
   readonly env: Record<string, string>;
+  /** The file with more environment variables. A variable in [env] wins. */
+  readonly envFile?: string;
+  readonly javaExec?: string;
+  /** The `file.encoding` of the test JVM. */
+  readonly encoding?: string;
+  /** The entries for the class path. `$Auto`, `$Runtime` and `$Test` name the module runtime. A `!` entry is skipped. */
+  readonly classPaths: string[];
+  /** The entries for the module path, in the form of [classPaths]. */
+  readonly modulePaths: string[];
   readonly workingDirectory?: string;
   /** The JUnit tags or tag expressions to run. A `!` prefix excludes. */
   readonly tags: string[];
+  /** The labels of the tasks in `tasks.json` that run before and after each test process. */
+  readonly preLaunchTask?: string;
+  readonly postDebugTask?: string;
 }
 
 /** The raw settings that hold for one test file. */
@@ -162,8 +176,15 @@ export function parseTestConfigs(raw: unknown): ParsedTestConfigs {
       name: optionalString(entry.name, `${at}.name`, problems),
       vmArgs: strings(entry.vmArgs, `${at}.vmArgs`, problems),
       env: stringMap(entry.env, `${at}.env`, problems),
+      envFile: optionalString(entry.envFile, `${at}.envFile`, problems),
+      javaExec: optionalString(entry.javaExec, `${at}.javaExec`, problems),
+      encoding: optionalString(entry.encoding, `${at}.encoding`, problems),
+      classPaths: strings(entry.classPaths, `${at}.classPaths`, problems),
+      modulePaths: strings(entry.modulePaths, `${at}.modulePaths`, problems),
       workingDirectory: optionalString(entry.workingDirectory, `${at}.workingDirectory`, problems),
       tags: strings(isObject(filters) ? filters.tags : undefined, `${at}.filters.tags`, problems),
+      preLaunchTask: optionalString(entry.preLaunchTask, `${at}.preLaunchTask`, problems),
+      postDebugTask: optionalString(entry.postDebugTask, `${at}.postDebugTask`, problems),
     });
   });
   return { configs, problems };

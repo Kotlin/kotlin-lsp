@@ -47,10 +47,14 @@ export interface JvmTestLaunchConfig extends TestLaunchConfig {
   readonly additionalClassPaths: string[];
   /** The module path entries of the runner, added to the module path of a modular test module. */
   readonly additionalModulePaths: string[];
-  /** The `vmArgs`, `env` and `workingDirectory` of the test configuration, when it sets them. */
+  /** The fields of the test configuration, when it sets them. The `encoding` is the first of the `vmArgs`. */
   readonly vmArgs?: string[];
   readonly env?: Record<string, string>;
+  readonly envFile?: string;
   readonly cwd?: string;
+  readonly javaExec?: string;
+  readonly preLaunchTask?: string;
+  readonly postDebugTask?: string;
 }
 
 export interface JvmTestLaunchServer {
@@ -171,6 +175,10 @@ function configOf(
   group: TestRunGroup,
   config: JvmTestConfig | undefined,
 ): JvmTestLaunchConfig {
+  const vmArgs = [
+    ...(config?.encoding ? [`-Dfile.encoding=${config.encoding}`] : []),
+    ...(config?.vmArgs ?? []),
+  ];
   return {
     type: 'intellij_debugger',
     request: 'launch',
@@ -178,13 +186,30 @@ function configOf(
     mainClass: launch.mainClass,
     file: launch.file ?? group.uri.fsPath,
     args: launch.args,
-    additionalClassPaths: launch.runtimeClasspath,
-    additionalModulePaths: launch.runtimeModulePath ?? [],
-    ...(config?.vmArgs.length ? { vmArgs: config.vmArgs } : {}),
+    additionalClassPaths: [...addedPathsOf(config?.classPaths ?? []), ...launch.runtimeClasspath],
+    additionalModulePaths: [
+      ...addedPathsOf(config?.modulePaths ?? []),
+      ...(launch.runtimeModulePath ?? []),
+    ],
+    ...(vmArgs.length > 0 ? { vmArgs } : {}),
     ...(config && Object.keys(config.env).length > 0 ? { env: config.env } : {}),
+    ...(config?.envFile ? { envFile: config.envFile } : {}),
     ...(config?.workingDirectory ? { cwd: config.workingDirectory } : {}),
+    ...(config?.javaExec ? { javaExec: config.javaExec } : {}),
+    ...(config?.preLaunchTask ? { preLaunchTask: config.preLaunchTask } : {}),
+    ...(config?.postDebugTask ? { postDebugTask: config.postDebugTask } : {}),
   };
 }
+
+/** The tokens of the runtime of the module, such as `$Auto`. The server always adds that runtime. */
+const MODULE_RUNTIME_TOKENS: ReadonlySet<string> = new Set(['$Auto', '$Runtime', '$Test']);
+
+/**
+ * The [entries] of `classPaths` or `modulePaths` to add to the module runtime. An entry with the `!` prefix of
+ * vscode-java-test is skipped: the runtime of the module comes from the project model.
+ */
+const addedPathsOf = (entries: readonly string[]): string[] =>
+  entries.filter((entry) => !MODULE_RUNTIME_TOKENS.has(entry) && !entry.startsWith('!'));
 
 function runningClient() {
   const client = getLspClient();
