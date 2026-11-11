@@ -9,6 +9,7 @@ test('declares extension support in experimental client capabilities', () => {
   assert.deepEqual(capabilities.experimental, {
     conflictView: true,
     actionChooser: true,
+    copyToClipboard: true,
   });
 });
 
@@ -22,5 +23,6 @@ test('keeps experimental capabilities from other features', () => {
     futureCapability: {},
     conflictView: true,
     actionChooser: true,
+    copyToClipboard: true,
   });
 });

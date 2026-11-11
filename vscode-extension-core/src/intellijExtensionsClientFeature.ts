@@ -8,6 +8,7 @@ export function createIntellijExtensionsClientFeature(): StaticFeature {
         ...experimental,
         conflictView: true,
         actionChooser: true,
+        copyToClipboard: true,
       };
     },
     initialize(): void {},
