@@ -64,6 +64,7 @@ import {
   serverLauncherPath,
 } from './serverBundleDownload';
 import { type ClientFeatureFactory, startClientWithFeatures } from './clientFeatureFactories';
+import { createIntellijExtensionsClientFeature } from './intellijExtensionsClientFeature';
 import { notifyServerLaunched, type ServerObservers } from './serverObservers';
 import { routerArgs, routerPath } from './lspRouter';
 import { waitForProcessExit } from './processExit';
@@ -210,7 +211,10 @@ export function initLspClient({
   serverObservers = {},
 }: LspClientPolicyOptions): void {
   setLspActionsAvailable(true);
-  configuredClientFeatureFactories = [...clientFeatureFactories];
+  configuredClientFeatureFactories = [
+    createIntellijExtensionsClientFeature,
+    ...clientFeatureFactories,
+  ];
   configuredServerObservers = serverObservers;
   registerIntellijExtensionsInitOption();
   registerIntellijSettingsContributor();
