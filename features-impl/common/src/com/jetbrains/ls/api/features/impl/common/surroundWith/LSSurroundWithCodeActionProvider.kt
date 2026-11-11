@@ -50,8 +50,13 @@ val SurroundWithActionKind: CodeActionKind = CodeActionKind("refactor.surround")
  * is when there is a single candidate.
  *
  * Only a [ModCommandSurrounder] is offered: another one edits the document of an editor, which the server does not have.
+ *
+ * @property isTargetAtCaret whether an element around the caret is offered as what to surround; the caret line always is.
  */
-class LSSurroundWithCodeActionProvider(override val supportedLanguages: Set<LSLanguage>) : LSCodeActionProvider {
+class LSSurroundWithCodeActionProvider(
+    override val supportedLanguages: Set<LSLanguage>,
+    private val isTargetAtCaret: (PsiElement) -> Boolean = { true },
+) : LSCodeActionProvider {
     override val providesOnlyKinds: Set<CodeActionKind> get() = setOf(SurroundWithActionKind)
 
     context(server: LSServer, handlerContext: LspHandlerContext)
@@ -63,7 +68,7 @@ class LSSurroundWithCodeActionProvider(override val supportedLanguages: Set<LSLa
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction emptyList()
                 val range = params.range.toTextRange(document)
                 val actionContext = ActionContext(project, psiFile, range.startOffset, selectionOf(params, range), null)
-                StartSurroundWithAction.toModCommandFixes(actionContext).map { (name, data) ->
+                StartSurroundWithAction(isTargetAtCaret).toModCommandFixes(actionContext).map { (name, data) ->
                     applyFixCodeAction(name, SurroundWithActionKind, data, data.stamps(virtualFile.url))
                 }
             }
@@ -76,7 +81,7 @@ class LSSurroundWithCodeActionProvider(override val supportedLanguages: Set<LSLa
  * Action to start surround with.
  * The first perform chooses a target expression/statement.
  */
-private object StartSurroundWithAction : ModCommandAction {
+private class StartSurroundWithAction(private val isTargetAtCaret: (PsiElement) -> Boolean) : ModCommandAction {
     override fun getFamilyName(): @Nls String = LspServerBundle.message("command.surround.with")
 
     override fun getPresentation(context: ActionContext): Presentation? =
@@ -92,8 +97,8 @@ private object StartSurroundWithAction : ModCommandAction {
 
     /**
      * What may be surrounded at [context], narrowest first: the selection if there is one, as the IDE does. Without one,
-     * the PSI elements around the caret within its line, and the line itself, which is what the IDE surrounds then.
-     * A candidate surrounding the same elements as a narrower one is dropped.
+     * the PSI elements around the caret within its line that pass [isTargetAtCaret], and the line itself, which is what
+     * the IDE surrounds then. A candidate surrounding the same elements as a narrower one is dropped.
      */
     private fun targets(context: ActionContext): List<SurroundTarget> {
         val file = context.file
@@ -108,7 +113,12 @@ private object StartSurroundWithAction : ModCommandAction {
         val elementScopes = leaves
             .asSequence()
             .filter { leaf -> leaf !is PsiWhiteSpace }
-            .flatMap { leaf -> leaf.parents(true).map(PsiElement::getTextRange).takeWhile { range -> line.contains(range) } }
+            .flatMap { leaf ->
+                leaf.parents(true)
+                    .takeWhile { element -> line.contains(element.textRange) }
+                    .filter(isTargetAtCaret)
+                    .map(PsiElement::getTextRange)
+            }
             .filter { range -> !range.isEmpty }
             .distinct()
             .sortedBy(TextRange::getLength)
