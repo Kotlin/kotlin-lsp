@@ -149,6 +149,7 @@ module.exports.FileType = makeStub();
 module.exports.languages = makeStub();
 module.exports.Location = Location;
 module.exports.Position = Position;
+module.exports.ProgressLocation = makeStub();
 module.exports.Range = makeStub();
 module.exports.RelativePattern = makeStub();
 module.exports.Selection = makeStub();

@@ -1,5 +1,11 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
-import { commands, type ExtensionContext, window } from 'vscode';
+import {
+  CancellationTokenSource,
+  commands,
+  type ExtensionContext,
+  ProgressLocation,
+  window,
+} from 'vscode';
 import {
   ErrorCodes,
   LSPErrorCodes,
@@ -21,6 +27,9 @@ const RelatedTestsRequest = new RequestType<TextDocumentPositionParams, RelatedT
   'intellij/relatedTests',
 );
 
+/** The request in flight. A new press cancels it: the server search is costly, and only the last press counts. */
+let pending: CancellationTokenSource | undefined;
+
 const vscodeEditor: GoToRelatedTestsEditor = {
   activeTarget: () => {
     const client = getLspClient();
@@ -34,15 +43,21 @@ const vscodeEditor: GoToRelatedTestsEditor = {
   relatedTests: async (params) => {
     const client = getLspClient();
     if (client?.state !== State.Running) {
-      await window.showErrorMessage('The language server is not running');
+      void window.showErrorMessage('The language server is not running');
       return undefined;
     }
+    pending?.cancel();
+    const cancellation = new CancellationTokenSource();
+    pending = cancellation;
     try {
-      return await client.sendRequest(RelatedTestsRequest, params);
+      return await window.withProgress(
+        { location: ProgressLocation.Window, title: 'Go to Test' },
+        () => client.sendRequest(RelatedTestsRequest, params, cancellation.token),
+      );
     } catch (e) {
       if (e instanceof ResponseError) {
         if (e.code === ErrorCodes.MethodNotFound) {
-          await window.showWarningMessage('Go to Test needs a newer language server');
+          void window.showWarningMessage('Go to Test needs a newer language server');
           return undefined;
         }
         if (e.code === LSPErrorCodes.RequestCancelled || e.code === LSPErrorCodes.ServerCancelled) {
@@ -50,8 +65,11 @@ const vscodeEditor: GoToRelatedTestsEditor = {
         }
       }
       const message = e instanceof Error ? e.message : String(e);
-      await window.showErrorMessage(`Go to Test failed: ${message}`);
+      void window.showErrorMessage(`Go to Test failed: ${message}`);
       return undefined;
+    } finally {
+      if (pending === cancellation) pending = undefined;
+      cancellation.dispose();
     }
   },
   // The built-in command opens one location, peeks several as Go to Definition does, and shows the

@@ -130,14 +130,16 @@ describe('"Go to Test" in the product manifests', () => {
     }
   });
 
-  test('a test product shows Go to Test from the editor for a Java or Kotlin file', () => {
+  test('a test product shows Go to Test from the editor for the languages its server answers', () => {
     for (const path of TEST_PRODUCTS) {
+      const languages = path.includes('kotlin-vscode') ? 'kotlin' : '/^(java|kotlin)$/';
       const menus = readManifest(path).contributes.menus;
       for (const menu of ['commandPalette', 'editor/context']) {
         const item = menus?.[menu]?.find(
           (entry) => entry.command === GO_TO_TEST_FROM_EDITOR_COMMAND,
         );
-        assert.ok(item?.when?.includes('/^(java|kotlin)$/'), `${path} ${menu}`);
+        assert.ok(item?.when?.includes(languages), `${path} ${menu}`);
+        assert.ok(!item?.when?.includes('java') || languages !== 'kotlin', `${path} ${menu}`);
       }
     }
   });

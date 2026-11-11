@@ -1311,7 +1311,7 @@
         },
         {
           "command": "jetbrains.editor.goToTest",
-          "when": "editorLangId =~ /^(java|kotlin)$/"
+          "when": "editorLangId == kotlin"
         }
       ],
       "testing/item/result": [
@@ -1324,7 +1324,7 @@
       "editor/context": [
         {
           "command": "jetbrains.editor.goToTest",
-          "when": "resourceLangId =~ /^(java|kotlin)$/",
+          "when": "resourceLangId == kotlin",
           "group": "navigation@9"
         }
       ]
