@@ -8,6 +8,7 @@ test('declares extension support in experimental client capabilities', () => {
   createIntellijExtensionsClientFeature().fillClientCapabilities(capabilities);
   assert.deepEqual(capabilities.experimental, {
     conflictView: true,
+    actionChooser: true,
   });
 });
 
@@ -20,5 +21,6 @@ test('keeps experimental capabilities from other features', () => {
     licensingUi: true,
     futureCapability: {},
     conflictView: true,
+    actionChooser: true,
   });
 });

@@ -7,6 +7,7 @@ export function createIntellijExtensionsClientFeature(): StaticFeature {
       capabilities.experimental = {
         ...experimental,
         conflictView: true,
+        actionChooser: true,
       };
     },
     initialize(): void {},
