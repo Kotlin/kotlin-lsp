@@ -9,6 +9,7 @@ export function createIntellijExtensionsClientFeature(): StaticFeature {
         conflictView: true,
         actionChooser: true,
         copyToClipboard: true,
+        runEditorCommand: true,
       };
     },
     initialize(): void {},

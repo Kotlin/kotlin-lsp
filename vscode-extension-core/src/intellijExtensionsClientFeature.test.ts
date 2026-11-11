@@ -10,6 +10,7 @@ test('declares extension support in experimental client capabilities', () => {
     conflictView: true,
     actionChooser: true,
     copyToClipboard: true,
+    runEditorCommand: true,
   });
 });
 
@@ -24,5 +25,6 @@ test('keeps experimental capabilities from other features', () => {
     conflictView: true,
     actionChooser: true,
     copyToClipboard: true,
+    runEditorCommand: true,
   });
 });

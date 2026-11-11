@@ -67,16 +67,12 @@ function revealConflictButton(tooltip: string): vscode.QuickInputButton {
 }
 
 /**
- * Declares this as a JetBrains client so the server may use custom `intellij/*` protocol
- * extensions (e.g. the `intellij/copyToClipboard` notification handled in this file).
- *
- * It also declares `lazyIntentions`, so the server offers a fix without performing it and performs it only
- * when this client runs the command of the fix. That needs no protocol extension, and the server has a separate
- * option for it, but this client supports both.
+ * Declares `lazyIntentions`, so the server offers a fix without performing it.
+ * The server performs the fix when this client runs its command. This needs no protocol extension.
+ * The client declares support for custom `intellij/*` messages through experimental capabilities.
  */
 export function registerIntellijExtensionsInitOption(): void {
   registerInitializationOptionsContributor(() => ({
-    runEditorCommand: true,
     lazyIntentions: true,
   }));
 }
