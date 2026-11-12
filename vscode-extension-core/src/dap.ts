@@ -175,7 +175,7 @@ export function registerDapServer(context: ExtensionContext) {
   // declares no `intellij_bazel`, and that throw would end activation before the language client starts.
   const declared = declaredDebugTypes(context);
   // The server runs every program itself and streams the output as `output` events; for a terminal `console` the
-  // tracker renders that stream in an integrated terminal, since nothing runs on the client to put there.
+  // tracker renders that stream in an integrated terminal or in an OS window, since nothing runs on the client.
   const runOutputTerminals = createRunOutputTerminalFactory();
   for (const type of [
     JVM_DEBUG_TYPE,

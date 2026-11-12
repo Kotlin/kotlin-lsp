@@ -12,9 +12,8 @@ export type InternalConsoleOptions = 'neverOpen' | 'openOnSessionStart' | 'openO
  *  - `integratedTerminal` → `neverOpen`: the streamed output is rendered in an integrated terminal
  *                           (`runTerminal.ts`), so keep the Debug Console closed — it would show a
  *                           copy of the same events on top of the terminal the user launched into.
- *  - `externalTerminal`   → `neverOpen`: rendered in the integrated terminal too (the server runs
- *                           the program, so there is no process to put in an OS window), so the
- *                           Debug Console stays closed the same way.
+ *  - `externalTerminal`   → `neverOpen`: the streamed output is rendered in an OS terminal window
+ *                           (`externalTerminal.ts`), so the Debug Console stays closed the same way.
  *  - `none`               → `neverOpen`: the adapter reports the output as `telemetry`, so the Debug
  *                           Console stays empty and there is nothing to open it for.
  *
