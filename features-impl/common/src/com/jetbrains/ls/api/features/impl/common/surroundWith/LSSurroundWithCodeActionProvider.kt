@@ -84,8 +84,18 @@ class LSSurroundWithCodeActionProvider(
 private class StartSurroundWithAction(private val isTargetAtCaret: (PsiElement) -> Boolean) : ModCommandAction {
     override fun getFamilyName(): @Nls String = LspServerBundle.message("command.surround.with")
 
-    override fun getPresentation(context: ActionContext): Presentation? =
-        if (targets(context).isEmpty()) null else Presentation.of(familyName)
+    /** With one target and one surrounder nothing is asked, so the name says which surrounder is applied. */
+    override fun getPresentation(context: ActionContext): Presentation? {
+        val targets = targets(context)
+        if (targets.isEmpty()) return null
+        if (targets.size == 1) {
+            val onlySurrounderName = targets.single().onlySurrounderName
+            if (onlySurrounderName != null) {
+                return Presentation.of(LspServerBundle.message("command.surround.with.surrounder", onlySurrounderName))
+            }
+        }
+        return Presentation.of(familyName)
+    }
 
     override fun perform(context: ActionContext): ModCommand {
         val targets = targets(context)
@@ -154,21 +164,27 @@ private data class SurroundScope(val range: TextRange, val hasSelection: Boolean
 }
 
 /**
- * What to surround, found in [scope]. Performing it asks how.
+ * What to surround, found in [scope]. Performing it asks how, unless only one surrounder applies: a chooser of one
+ * action is performed at once, so then the name of the target says which surrounder it applies.
  *
  * Holds no PSI: the elements are looked up again in the file of the context when a surrounder is performed.
+ *
+ * @property onlySurrounderName the description of the only surrounder that applies, `null` if there are several.
  */
 private class SurroundTarget(
     private val scope: SurroundScope,
     val surroundedRanges: Set<TextRange>,
     private val text: @NlsSafe String,
+    val onlySurrounderName: @Nls String?,
 ) : ModCommandAction {
-    override fun getFamilyName(): @Nls String = text
+    override fun getFamilyName(): @Nls String =
+        if (onlySurrounderName == null) text else LspServerBundle.message("command.surround.with.target", text, onlySurrounderName)
 
-    override fun getPresentation(context: ActionContext): Presentation = Presentation.of(text)
+    override fun getPresentation(context: ActionContext): Presentation = Presentation.of(familyName)
 
     override fun perform(context: ActionContext): ModCommand {
         val surroundActions = scope.applicableSurrounders(context.file).keys.map { surrounder -> SurroundAction(scope, surrounder) }
+        surroundActions.singleOrNull()?.let { surroundAction -> return surroundAction.perform(context) }
         return ModCommand.chooseAction(CodeInsightBundle.message("surround.with.chooser.title"), surroundActions)
     }
 
@@ -185,7 +201,7 @@ private class SurroundTarget(
                 )
             )
             val text = StringUtil.shortenTextWithEllipsis(surroundedText.replace(WHITESPACE, " "), MAX_TEXT_LENGTH, 0)
-            return SurroundTarget(scope, surroundedRanges, text)
+            return SurroundTarget(scope, surroundedRanges, text, surrounders.keys.singleOrNull()?.templateDescription)
         }
 
         private val WHITESPACE: Regex = Regex("\\s+")
