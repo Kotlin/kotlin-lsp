@@ -19,6 +19,13 @@ sealed interface RunTaskEvent {
      */
     data class Launched(val unit: BuildUnit) : RunTaskEvent
 
+    /**
+     * The program process started with [pid]. Sent once, by a tool that starts the program process itself and opts in
+     * (see `ProcessBuilder.toRunHandle`). A tool that starts a launcher or a daemon, which then starts the program,
+     * does not send it.
+     */
+    data class ProcessStarted(val pid: Long) : RunTaskEvent
+
     /** Step [index] of a launch of several steps starts; see `List<RunStep>.run`. */
     data class StepStarted(val index: Int, val request: RunRequest) : RunTaskEvent
 

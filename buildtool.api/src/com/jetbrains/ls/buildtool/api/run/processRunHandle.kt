@@ -32,21 +32,38 @@ private val LOG = fileLogger()
  * stderr arrive by line, then [RunTaskEvent.Finished] with the exit code. A process that does not start gives one
  * [RunTaskEvent.Failed]. [input] feeds the stdin; a closed channel closes the stdin. The end of the `use` body is
  * a soft stop (SIGTERM); a cancellation of the scope kills the process and its descendants.
+ *
+ * With [reportProcessStarted], the handle sends [RunTaskEvent.ProcessStarted] once the process started. Opt in only
+ * when the process is the program itself, not a launcher that starts the program.
  */
-fun ProcessBuilder.toRunHandle(input: Channel<String> = Channel(Channel.UNLIMITED)): Resource<RunHandle> =
-    listOf(this).toRunHandle(input = input)
+fun ProcessBuilder.toRunHandle(
+    input: Channel<String> = Channel(Channel.UNLIMITED),
+    reportProcessStarted: Boolean = false,
+): Resource<RunHandle> =
+    runHandleOf(listOf(this), input, between = { emptyList() }, reportProcessStarted)
 
 /**
  * The commands of one run, one after the other, as one [Resource]. A command that exits with a non-zero code ends
  * the run with its [RunTaskEvent.Finished]. [between] runs after a command has exited with 0, before the next
  * starts: it maps the index of the finished command to the events to emit. Only the last command reads the input
  * of the handle. The end of the `use` body is a soft stop of the running command; a cancellation kills it.
+ *
+ * With [reportProcessStarted], the handle sends [RunTaskEvent.ProcessStarted] once the last command started. Opt in
+ * only when the last command is the program itself, not a launcher that starts the program.
  */
 fun List<ProcessBuilder>.toRunHandle(
     input: Channel<String> = Channel(Channel.UNLIMITED),
     between: suspend (finished: Int) -> List<RunTaskEvent> = { emptyList() },
+    reportProcessStarted: Boolean = false,
+): Resource<RunHandle> = runHandleOf(this, input, between, reportProcessStarted)
+
+/** The run of [builders]; see the two `toRunHandle` functions. [reportProcessStarted] applies to the last command. */
+private fun runHandleOf(
+    builders: List<ProcessBuilder>,
+    input: Channel<String>,
+    between: suspend (finished: Int) -> List<RunTaskEvent>,
+    reportProcessStarted: Boolean,
 ): Resource<RunHandle> {
-    val builders = this
     return resource { cc ->
         val events = Channel<RunTaskEvent>(Channel.UNLIMITED)
         // Completed when the `use` body ends: the running command is asked to end, and no further command starts.
@@ -70,6 +87,8 @@ fun List<ProcessBuilder>.toRunHandle(
                         finished = RunTaskEvent.Failed(e)
                         break
                     }
+                    // Not suspending: the started process must reach `runProcess`, whose cleanup kills it.
+                    if (last && reportProcessStarted) events.trySend(RunTaskEvent.ProcessStarted(process.pid()))
                     val exit = runProcess(process, if (last) input else null, events, softStop)
                     finished = RunTaskEvent.Finished(exit)
                     if (exit != 0 || last || !softStop.isActive) break
