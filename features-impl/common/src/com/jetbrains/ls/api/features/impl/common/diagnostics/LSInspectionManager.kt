@@ -72,8 +72,12 @@ internal class LSInspectionManager(
                 return null
             }
 
-            return ModCommandService.getInstance().unwrap(fix)?.toLazyFix(context)
-                ?: LazyFix.OfQuickFix(fix.name.maybeStripHtml(), fix, problemDescriptor, context)
+            val modCommand = ModCommandService.getInstance().unwrap(fix)
+            return if (modCommand != null) {
+                modCommand.toLazyFix(context)
+            } else {
+                LazyFix.OfQuickFix(fix.name.maybeStripHtml(), fix, problemDescriptor, context)
+            }
         }
 
         if (fix is IntentionAction) {

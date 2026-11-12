@@ -21,6 +21,7 @@ import com.intellij.modcommand.ModShowConflicts
 import com.intellij.modcommand.ModStartRename
 import com.intellij.modcommand.ModStartTemplate
 import com.intellij.modcommand.ModUpdateFileText
+import com.intellij.modcommand.ModUpdateSystemOptions
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Document
@@ -45,6 +46,7 @@ import com.jetbrains.ls.api.features.commands.refuseStaleDocument
 import com.jetbrains.ls.api.features.commands.versionedEdit
 import com.jetbrains.ls.api.features.impl.common.modcommands.DocumentStamp
 import com.jetbrains.ls.api.features.impl.common.modcommands.DocumentStamps
+import com.jetbrains.ls.api.features.impl.common.modcommands.LSSystemOptionsCommandProvider
 import com.jetbrains.ls.api.features.impl.common.modcommands.LazyFix
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCommand
 import com.jetbrains.ls.api.features.impl.common.modcommands.registerLazyFixes
@@ -423,6 +425,10 @@ sealed class ModCommandData {
                 command.canUseDefaults -> from(command.nextCommand.apply(command.containerSupplier.get()), actionContext, server)
                 else -> null
             }
+            // The server cannot change the options in memory, so a provider changes the settings files instead.
+            is ModUpdateSystemOptions -> server
+                ?.let { with(it) { LSSystemOptionsCommandProvider.createCommand(command, actionContext) } }
+                ?.let { from(it, actionContext, server) }
             else -> {
                 LOG.debug("Unsupported command $command")
                 null

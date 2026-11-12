@@ -1,7 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.configuration
 
-import com.intellij.codeInspection.ex.DisableInspectionToolModCommandAction
+import com.intellij.codeInspection.ex.ProfileFile
 import com.intellij.configurationStore.OLD_NAME_CONVERTER
 import com.intellij.openapi.diagnostic.fileLogger
 import com.intellij.openapi.util.JDOMExternalizerUtil
@@ -26,7 +26,7 @@ private val LOG = fileLogger()
  */
 internal class LSInspectionContext private constructor(
     val manager: BaseInspectionProfileManager,
-    val profileFile: DisableInspectionToolModCommandAction.ProfileFile?,
+    val profileFile: ProfileFile?,
 ) {
     companion object {
         fun empty(): LSInspectionContext = LSInspectionContext(AnalyzerInspectionProfileManager(), profileFile = null)
@@ -49,12 +49,12 @@ internal class LSInspectionContext private constructor(
                 inspectionProfile.isProjectLevel = true
             }
             val profileName = InspectionProfileLoadUtil.getProfileName(file, profile)
-            return LSInspectionContext(manager, DisableInspectionToolModCommandAction.ProfileFile(file, profileName))
+            return LSInspectionContext(manager, ProfileFile(file, profileName))
         }
 
         /** The file that the IDE creates for a new project profile named [profileName]. */
-        private fun newProfileFile(inspectionDirectory: Path, profileName: String): DisableInspectionToolModCommandAction.ProfileFile =
-            DisableInspectionToolModCommandAction.ProfileFile(
+        private fun newProfileFile(inspectionDirectory: Path, profileName: String): ProfileFile =
+            ProfileFile(
                 inspectionDirectory.resolve(OLD_NAME_CONVERTER(profileName) + ".xml"),
                 profileName,
             )

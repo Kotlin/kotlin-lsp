@@ -8,6 +8,7 @@ import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.SuppressIntentionActionFromFix
 import com.intellij.codeInspection.SuppressQuickFix
 import com.intellij.codeInspection.ex.DisableInspectionToolModCommandAction
+import com.intellij.codeInspection.ex.ProfileFile
 import com.intellij.modcommand.ActionContext
 import com.intellij.modcommand.ModChooseAction
 import com.intellij.modcommand.ModCommand
@@ -153,7 +154,7 @@ class LSCommonInspectionOptionsCodeActionProvider(
      */
     private fun disableAction(
         tool: LSConfiguredInspection<LocalInspectionTool>,
-        profileFile: DisableInspectionToolModCommandAction.ProfileFile?,
+        profileFile: ProfileFile?,
     ): List<ModCommandAction> {
         if (profileFile == null) return emptyList()
         return listOf(DisableInspectionToolModCommandAction(tool.profileShortName) { _, _ -> profileFile })

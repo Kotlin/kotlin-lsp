@@ -1,7 +1,7 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package com.jetbrains.ls.api.features.impl.common.configuration
 
-import com.intellij.codeInspection.ex.DisableInspectionToolModCommandAction
+import com.intellij.codeInspection.ex.ProfileFile
 import com.intellij.openapi.application.Application
 import com.intellij.openapi.project.Project
 import com.intellij.profile.codeInspection.InspectionProfileManager
@@ -93,4 +93,4 @@ private fun AnalyzerContainerBuilder.registerProjectLSSettings(state: State) {
  * settings select a profile which the server does not read.
  */
 context(server: LSServer)
-fun inspectionProfileFile(): DisableInspectionToolModCommandAction.ProfileFile? = server[LSSettingsComponent].inspectionContext.profileFile
+fun inspectionProfileFile(): ProfileFile? = server[LSSettingsComponent].inspectionContext.profileFile
