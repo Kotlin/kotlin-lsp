@@ -9,6 +9,7 @@ import com.intellij.profile.codeInspection.InspectionProfileManager
 import com.intellij.profile.codeInspection.InspectionProjectProfileManager
 import com.jetbrains.analyzer.api.AnalyzerContextKind
 import com.jetbrains.analyzer.bootstrap.AnalyzerContainerBuilder
+import com.jetbrains.analyzer.bootstrap.AnalyzerContext
 import com.jetbrains.analyzer.codeServer.ScopeStorage
 import com.jetbrains.analyzer.filesystem.toList
 import com.jetbrains.ls.api.core.LSServer
@@ -79,7 +80,7 @@ internal object LSSettingsComponent : SessionComponent<State> {
 
 context(server: LSServer)
 fun AnalyzerContainerBuilder.registerApplicationLSSettings() {
-    registerApplicationLSSettings(server[LSSettingsComponent].readSettings)
+    registerApplicationLSSettings(server[LSSettingsComponent].settings(AnalyzerContext.current.contextKind))
 }
 
 private fun AnalyzerContainerBuilder.registerApplicationLSSettings(settings: Settings) {
