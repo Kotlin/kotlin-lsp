@@ -81,6 +81,42 @@ These are pre-alpha builds that are built directly from `master` branch after th
 * On Windows, the server no longer needs the Visual C++ Redistributable package. <!-- LSP-2116 -->
 * Many other small improvements and bug fixes.
 
+### v263.7084.0
+- :test_tube: "Kotlin by JetBrains" extension v0.0.27 for VS Code
+
+  Includes Kotlin Language Server bundled for use with Visual Studio Code.
+
+  The extension is also available on the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=JetBrains.kotlin-server) and [OpenVSX Registry](https://open-vsx.org/extension/JetBrains/kotlin-server).
+    * [Download for macOS-x64](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-0.0.27-mac-amd64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-0.0.27-mac-amd64.vsix.sha256)
+    * [Download for macOS-arm64](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-0.0.27-mac-aarch64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-0.0.27-mac-aarch64.vsix.sha256)
+    * [Download for Linux-x64](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-0.0.27-linux-amd64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-0.0.27-linux-amd64.vsix.sha256)
+    * [Download for Linux-arm64](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-0.0.27-linux-aarch64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-0.0.27-linux-aarch64.vsix.sha256)
+    * [Download for Windows-x64](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-0.0.27-win-amd64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-0.0.27-win-amd64.vsix.sha256)
+    * [Download for Windows-arm64](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-0.0.27-win-aarch64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-0.0.27-win-aarch64.vsix.sha256)
+
+
+- :card_index_dividers: **Standalone Kotlin LSP Archive**
+
+  Standalone Kotlin Language Server version for editors other than VS Code.
+
+    * [Download for macOS-x64](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-263.7084.0.sit)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-263.7084.0.sit.sha256)
+    * [Download for macOS-arm64](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-263.7084.0-aarch64.sit)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-263.7084.0-aarch64.sit.sha256)
+    * [Download for Linux-x64](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-263.7084.0.tar.gz)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-263.7084.0.tar.gz.sha256)
+    * [Download for Linux-arm64](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-263.7084.0-aarch64.tar.gz)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-263.7084.0-aarch64.tar.gz.sha256)
+    * [Download for Windows-x64](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-263.7084.0.win.zip)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-263.7084.0.win.zip.sha256)
+    * [Download for Windows-arm64](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-263.7084.0-aarch64.win.zip)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/263.7084.0/kotlin-server-263.7084.0-aarch64.win.zip.sha256)
+
+##### Changelog
+
+#### 🐞 Run & Debug
+
+* Step Over and Step Into now work inside Kotlin scope functions, such as `with`, `let`, and `also`. <!-- LSP-1476 -->
+* Async stack traces for coroutines are now available when you debug a launch, also for a Gradle launch configuration. <!-- LSP-1476, LSP-1803, LSP-1995 -->
+
+#### 🐛 Bug fixes
+
+* Various small improvements and bug fixes.
+
 ### v263.6379.0
 - :test_tube: "Kotlin by JetBrains" extension v0.0.13 for VS Code
 
