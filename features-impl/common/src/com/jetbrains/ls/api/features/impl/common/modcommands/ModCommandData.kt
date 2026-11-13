@@ -36,6 +36,7 @@ import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.fileName
 import com.jetbrains.ls.api.core.util.getLspLocationForDefinition
+import com.jetbrains.ls.api.core.util.htmlToPlainText
 import com.jetbrains.ls.api.core.util.intellijUriToLspUri
 import com.jetbrains.ls.api.core.util.lspUriToIntellijUri
 import com.jetbrains.ls.api.core.util.positionByOffset
@@ -46,6 +47,10 @@ import com.jetbrains.ls.api.features.commands.refuseStaleDocument
 import com.jetbrains.ls.api.features.commands.versionedEdit
 import com.jetbrains.ls.api.features.impl.common.modcommands.DocumentStamp
 import com.jetbrains.ls.api.features.impl.common.modcommands.DocumentStamps
+import com.jetbrains.ls.api.features.impl.common.modcommands.EditOptionsRequest
+import com.jetbrains.ls.api.features.impl.common.modcommands.OptionComponentData
+import com.jetbrains.ls.api.features.impl.common.modcommands.executeEditOptions
+import com.jetbrains.ls.api.features.impl.common.modcommands.toEditOptionsData
 import com.jetbrains.ls.api.features.impl.common.modcommands.LSSystemOptionsCommandProvider
 import com.jetbrains.ls.api.features.impl.common.modcommands.LazyFix
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCommand
@@ -275,6 +280,24 @@ sealed class ModCommandData {
     @Serializable
     data class LazyAction(val sessionId: Long, val index: Int) : ModCommandData()
 
+    /**
+     * A [ModEditOptions] asks the user to edit the options of a form, and computes the next command from the answer.
+     * LSP has no form primitive, so the custom [EditOptionsRequest] asks the client to show [components] with
+     * [values]. The next command is a function, so it stays on the server in an
+     * [EditOptionsSession][com.jetbrains.ls.api.features.impl.common.modcommands.EditOptionsSession] under [sessionId].
+     *
+     * Only clients that declare `editOptions` can handle it. When the client cannot show the form, [from] takes the
+     * defaults of a command which allows them, and aborts on any other command. A form with an `OptCustom` component
+     * is such a case.
+     */
+    @Serializable
+    data class EditOptions(
+        val title: String,
+        val components: List<OptionComponentData>,
+        val values: Map<String, JsonElement>,
+        val sessionId: Long,
+    ) : ModCommandData()
+
 
     companion object {
         /** A selectable [ModChooseAction] option: the [action] and its presentation [name]. */
@@ -420,10 +443,18 @@ sealed class ModCommandData {
                 command.optional -> Nothing
                 else -> null
             }
-            is ModEditOptions<*> -> when {
-                // TODO: support ModEditOptions UI
-                command.canUseDefaults -> from(command.nextCommand.apply(command.containerSupplier.get()), actionContext, server)
-                else -> null
+            is ModEditOptions<*> -> {
+                // Relies on the custom `intellij/editOptions` request and a session cache on the server.
+                val form = when {
+                    server?.config?.clientSupportsEditOptions == true -> command.toEditOptionsData(actionContext, server)
+                    else -> null
+                }
+                when {
+                    form != null -> form
+                    // The client cannot show the form, so a command which allows the defaults takes them.
+                    command.canUseDefaults -> from(command.nextCommand.apply(command.containerSupplier.get()), actionContext, server)
+                    else -> null
+                }
             }
             // The server cannot change the options in memory, so a provider changes the settings files instead.
             is ModUpdateSystemOptions -> server
@@ -727,6 +758,8 @@ suspend fun executeCommand(
             ),
         )
 
+        is ModCommandData.EditOptions -> return executeEditOptions(command, client, changedFiles, sentVersions)
+
         // A lazy action is resolved by LSApplyFixCommandDescriptorProvider, before the analysis context this
         // function runs in is opened, so it never reaches here.
         is ModCommandData.LazyAction -> LOG.error("The lazy action $command was not resolved before execution")
@@ -847,9 +880,12 @@ private suspend fun List<ModCommandData>.watchedDocumentStamps(): DocumentStamps
     return server.withAnalysisContext { readAction { stampsOf(fileUrls) } }
 }
 
-/** Whether [this] holds a [ModCommandData.ChooseAction], whose files no caller can know yet. */
+/**
+ * Whether [this] holds a [ModCommandData.ChooseAction] or a [ModCommandData.EditOptions], whose files no caller can
+ * know yet.
+ */
 private fun ModCommandData.choosesLater(): Boolean = when (this) {
-    is ModCommandData.ChooseAction -> true
+    is ModCommandData.ChooseAction, is ModCommandData.EditOptions -> true
     is ModCommandData.Composite -> commands.any { it.choosesLater() }
     else -> false
 }
@@ -862,11 +898,12 @@ internal fun ModCommandData.writtenFileUrls(): Sequence<String> = when (this) {
     is ModCommandData.MoveFile -> sequenceOf(fileUrl, targetUrl)
     is ModCommandData.Snippet -> sequenceOf(fileUrl)
     is ModCommandData.UpdateFileText -> sequenceOf(fileUrl)
-    // These write no text of their own. A ChooseAction names no file either, and [choosesLater] answers for it.
-    // A LazyAction builds its edits in a later round trip, which this guard cannot see.
+    // These write no text of their own. A ChooseAction and an EditOptions name no file either, and [choosesLater]
+    // answers for them. A LazyAction builds its edits in a later round trip, which this guard cannot see.
     is ModCommandData.ChooseAction,
     is ModCommandData.CopyToClipboard,
     is ModCommandData.DisplayMessage,
+    is ModCommandData.EditOptions,
     is ModCommandData.LaunchEditorAction,
     is ModCommandData.LazyAction,
     is ModCommandData.Navigate,

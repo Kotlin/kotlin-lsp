@@ -11,6 +11,7 @@ test('declares extension support in experimental client capabilities', () => {
     actionChooser: true,
     copyToClipboard: true,
     runEditorCommand: true,
+    editOptions: true,
   });
 });
 
@@ -26,5 +27,6 @@ test('keeps experimental capabilities from other features', () => {
     actionChooser: true,
     copyToClipboard: true,
     runEditorCommand: true,
+    editOptions: true,
   });
 });

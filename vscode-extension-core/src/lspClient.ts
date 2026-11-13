@@ -76,6 +76,7 @@ import {
   type LaunchedServerState,
   shouldSuppressRestart,
 } from './launchedServerStartup';
+import { registerEditOptionsHandler } from './editOptions';
 import {
   registerChooseActionMenuHandler,
   registerCopyToClipboardHandler,
@@ -538,6 +539,7 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
       registerChooseActionMenuHandler(runClient);
       registerRunEditorCommandHandler(runClient);
       registerShowConflictsHandler(runClient);
+      registerEditOptionsHandler(runClient);
       void workspaceImportStatus.refresh().catch((error: unknown) => {
         logInfo(
           `Failed to read workspace import status: ${error instanceof Error ? (error.stack ?? error.message) : String(error)}`,

@@ -10,6 +10,7 @@ export function createIntellijExtensionsClientFeature(): StaticFeature {
         actionChooser: true,
         copyToClipboard: true,
         runEditorCommand: true,
+        editOptions: true,
       };
     },
     initialize(): void {},

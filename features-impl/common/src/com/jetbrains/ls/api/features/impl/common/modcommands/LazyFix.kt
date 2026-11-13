@@ -59,13 +59,7 @@ sealed class LazyFix(
      * valid there, so the file is resolved by its url again. Without this, the parts of the action that work
      * on [ActionContext.file], such as the caret tracking, silently degrade.
      */
-    protected fun currentContext(): ActionContext? {
-        val file = context.file
-        if (file.isValid) return context
-        val virtualFile = VirtualFileManager.getInstance().findFileByUrl(file.viewProvider.virtualFile.url) ?: return null
-        val psiFile = virtualFile.findPsiFile(context.project) ?: return null
-        return context.withFile(psiFile)
-    }
+    protected fun currentContext(): ActionContext? = context.inCurrentAnalysisContext()
 
     /**
      * A fix backed by a [ModCommandAction], which covers an intention, a compiler-error fix, and an inspection
@@ -124,6 +118,17 @@ sealed class LazyFix(
 }
 
 /**
+ * [this] context with its file resolved again by its url, or `null` when the url no longer resolves. A valid file
+ * stays as it is. Must run in a read action.
+ */
+internal fun ActionContext.inCurrentAnalysisContext(): ActionContext? {
+    if (file.isValid) return this
+    val virtualFile = VirtualFileManager.getInstance().findFileByUrl(file.viewProvider.virtualFile.url) ?: return null
+    val psiFile = virtualFile.findPsiFile(project) ?: return null
+    return withFile(psiFile)
+}
+
+/**
  * The [LazyFix] list of one [ModCommandData.LazyAction] session: the fixes of one file that one analysis found,
  * which [ModCommandData.LazyAction.index] selects from.
  */
@@ -158,7 +163,8 @@ fun registerLazyFixes(server: LSServer, virtualFile: VirtualFile, fixes: List<La
 /** The session and the fix [lazyAction] points to, or `null` if the session is gone. */
 context(server: LSServer)
 private fun resolveLazyFix(lazyAction: ModCommandData.LazyAction): Pair<LazyActionSession, LazyFix>? {
-    val session = server[LazyActionSessionComponent].get(LazyActionId.of(lazyAction.sessionId)) as LazyActionSession?
+    // The component also keeps an EditOptionsSession, which is not a fix.
+    val session = server[LazyActionSessionComponent].get(LazyActionId.of(lazyAction.sessionId)) as? LazyActionSession
     if (session == null) {
         LOG.info("The lazy action session ${lazyAction.sessionId} is gone")
         return null
