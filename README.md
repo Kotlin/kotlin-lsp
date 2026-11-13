@@ -50,8 +50,8 @@ For Homebrew users: `brew install JetBrains/utils/kotlin-lsp`
 Manual installation:
 1. Download the standalone zip from the [Releases Page](https://github.com/Kotlin/kotlin-lsp/releases)
 2. Unpack the ZIP file
-3. `chmod +x $KOTLIN_LSP_DIR/kotlin-lsp.sh`
-4. Create a symlink on your `$PATH` `ln -s $KOTLIN_LSP_DIR/kotlin-lsp.sh $HOME/.local/bin/kotlin-lsp`
+3. `chmod +x $KOTLIN_LSP_DIR/bin/intellij-server`
+4. Create a symlink on your `$PATH` `ln -s $KOTLIN_LSP_DIR/bin/intellij-server $HOME/.local/bin/kotlin-lsp`
 
 ### Supported Features
 
@@ -83,7 +83,7 @@ Upcoming releases will focus on feature completeness and stability of the existi
 `kotlin-server` is designed to work with any editor that supports LSP.
 Releases are generally tested with [Visual Studio Code](https://code.visualstudio.com/) and there is a community-maintained
 list of scripts for other editors in the [scripts](scripts) folder.
-See also `./kotlin-lsp.sh --help` for available options.
+See also `./bin/intellij-server --help` for available options.
 
 ### Feedback and issues
 
