@@ -676,7 +676,8 @@ suspend fun executeCommand(
                     ModDisplayMessage.MessageKind.ERROR -> MessageType.Error
                     ModDisplayMessage.MessageKind.INFORMATION -> MessageType.Info
                 },
-                message = command.message,
+                // A message can hold HTML, like `<b><code>test()</code></b>`, but the client shows plain text.
+                message = command.message.htmlToPlainText(),
                 actions = null,
             ),
         )

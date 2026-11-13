@@ -12,7 +12,6 @@ import com.intellij.openapi.application.readAction
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.extensions.PluginDescriptor
-import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
@@ -24,6 +23,7 @@ import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.getLspLocationForDefinition
+import com.jetbrains.ls.api.core.util.htmlToPlainLine
 import com.jetbrains.ls.api.core.util.toLspRange
 import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.codeLens.LSCodeLensProvider
@@ -129,7 +129,8 @@ class LSRelatedItemsCodeLensProvider(
         val locations: List<Location> = marker.createGotoRelatedItems().mapNotNull { it.element?.getLspLocationForDefinition() }
         if (locations.isEmpty()) return null
         // The lens title carries the icon token; the popup title in the arguments stays plain.
-        val title: @Nls String = marker.lineMarkerTooltip?.let(::plainText)?.ifEmpty { null } ?: LspServerBundle.message("code.lens.related.items")
+        // `NavigationGutterIconBuilder` wraps the target names of the tooltip in `<html>` and `<br>`.
+        val title: @Nls String = marker.lineMarkerTooltip?.htmlToPlainLine()?.ifEmpty { null } ?: LspServerBundle.message("code.lens.related.items")
         val command = Command(
             title = LspServerBundle.message("code.lens.related.items.title", title),
             command = NAVIGATE_COMMAND_NAME,
@@ -138,13 +139,8 @@ class LSRelatedItemsCodeLensProvider(
         return CodeLens(range.toLspRange(document), command, data = null)
     }
 
-    /** A tooltip without its HTML: `NavigationGutterIconBuilder` wraps the target names in `<html>` and `<br>`. */
-    private fun plainText(tooltip: @Nls String): @Nls String =
-        StringUtil.unescapeXmlEntities(StringUtil.stripHtml(tooltip, " ")).replace(WHITESPACE, " ").trim()
-
     companion object {
         private val LOG = logger<LSRelatedItemsCodeLensProvider>()
-        private val WHITESPACE = Regex("\\s+")
 
         /**
          * The client-side command the lens invokes.
