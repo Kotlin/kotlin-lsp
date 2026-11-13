@@ -3,6 +3,7 @@ package com.jetbrains.ls.api.features.impl.common.surroundWith
 
 import com.intellij.codeInsight.CodeInsightBundle
 import com.intellij.codeInsight.generation.surroundWith.SurroundWithHandler
+import com.intellij.idea.ActionsBundle
 import com.intellij.lang.surroundWith.ModCommandSurrounder
 import com.intellij.modcommand.ActionContext
 import com.intellij.modcommand.ModChooseAction
@@ -13,6 +14,7 @@ import com.intellij.openapi.application.readAction
 import com.intellij.openapi.util.NlsSafe
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.text.StringUtil
+import com.intellij.openapi.util.text.TextWithMnemonic
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
@@ -40,8 +42,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.jetbrains.annotations.Nls
 
-/** The kind of the code action. As a `refactor` kind, it is listed in the light bulb and in the refactoring menu of a client. */
-val SurroundWithActionKind: CodeActionKind = CodeActionKind("refactor.surround")
+val SurroundWithActionKind: CodeActionKind = CodeActionKind("refactor.rewrite.surround")
 
 /**
  * The *Surround With* of the IDE as one code action, offered wherever there is something to surround. Its command is a
@@ -82,7 +83,7 @@ class LSSurroundWithCodeActionProvider(
  * The first perform chooses a target expression/statement.
  */
 private class StartSurroundWithAction(private val isTargetAtCaret: (PsiElement) -> Boolean) : ModCommandAction {
-    override fun getFamilyName(): @Nls String = LspServerBundle.message("command.surround.with")
+    override fun getFamilyName(): @Nls String = TextWithMnemonic.parse(ActionsBundle.actionText("SurroundWith")).text
 
     /** With one target and one surrounder nothing is asked, so the name says which surrounder is applied. */
     override fun getPresentation(context: ActionContext): Presentation? {
@@ -151,8 +152,7 @@ private data class SurroundScope(val range: TextRange, val hasSelection: Boolean
     /** The surrounders applicable in this scope of [file], with the elements each of them surrounds, as the IDE finds them. */
     fun applicableSurrounders(file: PsiFile): Map<ModCommandSurrounder, Array<PsiElement>> {
         if (range.isEmpty) return emptyMap()
-        val surrounders =
-            SurroundWithHandler.computeSurrounders(file, intArrayOf(range.startOffset), intArrayOf(range.endOffset), hasSelection)
+        val surrounders = SurroundWithHandler.computeSurrounders(file, listOf(range), hasSelection)
         return buildMap {
             for ([surrounder, elements] in surrounders) {
                 if (surrounder !is ModCommandSurrounder || !surrounder.isApplicable(elements)) continue
@@ -194,13 +194,8 @@ private class SurroundTarget(
             val surrounders = scope.applicableSurrounders(file)
             if (surrounders.isEmpty()) return null
             val surroundedRanges = surrounders.values.flatMapTo(mutableSetOf()) { elements -> elements.map(PsiElement::getTextRange) }
-            val surroundedText = file.fileDocument.getText(
-                TextRange(
-                    surroundedRanges.minOf(TextRange::getStartOffset),
-                    surroundedRanges.maxOf(TextRange::getEndOffset),
-                )
-            )
-            val text = StringUtil.shortenTextWithEllipsis(surroundedText.replace(WHITESPACE, " "), MAX_TEXT_LENGTH, 0)
+            val scopeText = file.fileDocument.getText(scope.range)
+            val text = StringUtil.shortenTextWithEllipsis(scopeText.replace(WHITESPACE, " "), MAX_TEXT_LENGTH, 0)
             return SurroundTarget(scope, surroundedRanges, text, surrounders.keys.singleOrNull()?.templateDescription)
         }
 
