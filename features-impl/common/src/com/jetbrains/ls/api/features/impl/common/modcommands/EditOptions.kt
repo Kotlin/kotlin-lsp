@@ -319,6 +319,13 @@ fun ModEditOptions<*>.toEditOptionsData(context: ActionContext, server: LSServer
 }
 
 /**
+ * Whether the client can show the options pane of [this] container as a form, as [toEditOptionsData] does.
+ * A pane which holds an [OptCustom] has no form. Must run in a read action.
+ */
+internal fun OptionContainer.hasEditOptionsForm(): Boolean =
+    OptionPaneReader(optionController, LinkedHashMap()).read(optionsPane.components) != null
+
+/**
  * Asks the user to edit the options of [command], and executes the command that the answer produces. Returns `false`
  * when the user cancelled the form, like [executeCommand] does for a stopped command.
  *

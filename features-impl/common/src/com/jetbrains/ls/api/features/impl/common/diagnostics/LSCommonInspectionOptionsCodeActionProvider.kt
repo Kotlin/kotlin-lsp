@@ -8,6 +8,7 @@ import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.SuppressIntentionActionFromFix
 import com.intellij.codeInspection.SuppressQuickFix
 import com.intellij.codeInspection.ex.DisableInspectionToolModCommandAction
+import com.intellij.codeInspection.ex.EditInspectionOptionsModCommandAction
 import com.intellij.codeInspection.ex.ProfileFile
 import com.intellij.modcommand.ActionContext
 import com.intellij.modcommand.ModChooseAction
@@ -20,6 +21,7 @@ import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
+import com.intellij.profile.codeInspection.InspectionProjectProfileManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.jetbrains.ls.api.core.LSServer
@@ -36,6 +38,7 @@ import com.jetbrains.ls.api.features.codeActions.LSCodeActionGroup
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.configuration.inspectionProfileFile
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCodeAction
+import com.jetbrains.ls.api.features.impl.common.modcommands.hasEditOptionsForm
 import com.jetbrains.ls.api.features.impl.common.modcommands.stamps
 import com.jetbrains.ls.api.features.impl.common.modcommands.toModCommandFixes
 import com.jetbrains.ls.api.features.language.LSLanguage
@@ -50,16 +53,17 @@ private val LOG = logger<LSCommonInspectionOptionsCodeActionProvider>()
 
 /**
  * Offers the `Inspection 'name'...` action of an inspection diagnostic. The action shows a chooser of the inspection
- * options: the "Suppress for statement / method / class / file" actions, and the action that disables the inspection
- * in the inspection profile. The IDE shows the same options after the fixes of the warning (see
- * `HighlightInfo.IntentionActionDescriptor.getOptions`).
+ * options: the "Suppress for statement / method / class / file" actions, the action that edits the options of the
+ * inspection, and the action that disables the inspection in the inspection profile. The IDE shows the same options
+ * after the fixes of the warning (see `HighlightInfo.IntentionActionDescriptor.getOptions`).
  *
  * The action is offered for every inspection diagnostic, also for one without fixes. The options are found when the
  * client asks for the code actions of a diagnostic, not when the diagnostic is reported: the client asks for the
  * actions of a few warnings only.
  *
- * The disable option is offered only when the server imports the inspection profile of the project. It changes the
- * profile file, and the server reloads the profile when the client reports the changed document or file.
+ * The edit and disable options are offered only when the server imports the inspection profile of the project. They change
+ * the profile file, and the server reloads the profile when the client reports the changed document or file. The edit
+ * option also needs a client that shows the `intellij/editOptions` form.
  */
 class LSCommonInspectionOptionsCodeActionProvider(
     override val supportedLanguages: Set<LSLanguage>,
@@ -88,6 +92,7 @@ class LSCommonInspectionOptionsCodeActionProvider(
         val (batch, live) = withData.partition { it.data.diagnosticSource == LSCommonInspectionDiagnosticProvider.batchDiagnosticSource }
         val batchIds = batch.mapNotNullTo(mutableSetOf()) { it.diagnostic.code?.value?.content }
         val importInspectionProfile = server.config.importInspectionProfile
+        val clientSupportsEditOptions = server.config.clientSupportsEditOptions
         server.withAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
             readAction {
                 val profileFile = if (importInspectionProfile) inspectionProfileFile() else null
@@ -108,7 +113,9 @@ class LSCommonInspectionOptionsCodeActionProvider(
                     val offset = document.offsetByPosition(diagnostic.range.start)
                     val element = psiFile.findElementAt(offset) ?: return@flatMap emptyList()
                     val context = ActionContext(psiFile.project, psiFile, offset, TextRange(offset, offset), element)
-                    val options = suppressionActions(tool.tool, element) + disableAction(tool, profileFile)
+                    val options = suppressionActions(tool.tool, element) +
+                                  editOptionsAction(tool, psiFile, profileFile, clientSupportsEditOptions) +
+                                  disableAction(tool, profileFile)
                     val action = InspectionOptionsAction(tool.displayName, options)
                     action.toModCommandFixes(context).map { fix ->
                         applyFixCodeAction(fix.name, inspectionOptionsKind, fix.data, fix.data.stamps(virtualFile.url), diagnostic)
@@ -145,6 +152,27 @@ class LSCommonInspectionOptionsCodeActionProvider(
             .map { fix -> fix to SuppressIntentionActionFromFix.convertBatchToSuppressIntentionAction(fix) as SuppressIntentionActionFromFix }
             .sortedWith { (_, a), (_, b) -> a.compareTo(b) }
             .map { (fix, intention) -> intention.asModCommandAction() ?: SuppressOnCopyAction(tool, fix.name, fix.familyName) }
+    }
+
+    /**
+     * The action that edits the options of [tool] in the profile of [profileFile], by the short name the profile knows it by.
+     * None when the server reads no profile file, or when the client cannot show the options of the tool as a form.
+     */
+    private fun editOptionsAction(
+        tool: LSConfiguredInspection<LocalInspectionTool>,
+        psiFile: PsiFile,
+        profileFile: ProfileFile?,
+        clientSupportsEditOptions: Boolean,
+    ): List<ModCommandAction> {
+        if (profileFile == null || !clientSupportsEditOptions) return emptyList()
+        val profileTool = InspectionProjectProfileManager.getInstance(psiFile.project).currentProfile
+            .getInspectionTool(tool.profileShortName, psiFile)?.tool ?: return emptyList()
+        // A pane can need an IDE service that the server does not have, such as the Java inspection buttons.
+        val hasForm = runCatching { profileTool.hasEditOptionsForm() }.getOrHandleException {
+            LOG.debug("Failed to read the options pane of ${profileTool.shortName}", it)
+        } ?: false
+        if (!hasForm) return emptyList()
+        return listOf(EditInspectionOptionsModCommandAction(tool.profileShortName))
     }
 
     /**
