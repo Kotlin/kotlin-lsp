@@ -84,8 +84,8 @@ export class JvmTestLanguage implements TestLanguage<JvmTestProfile> {
   ];
   readonly discovery = lspDiscovery({
     commands: JvmTestCommands,
-    languageIds: JVM_LANGUAGE_IDS,
-    sourceGlob: '**/*.{java,kt}',
+    languageIds: new Set([...JVM_LANGUAGE_IDS, 'xml']),
+    sourceGlob: '**/*.{java,kt,xml}',
   });
 
   private readonly server: JvmTestLaunchServer;

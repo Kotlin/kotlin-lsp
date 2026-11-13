@@ -1,5 +1,6 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 import assert from 'node:assert/strict';
+import { matchesGlob } from 'node:path';
 import { describe, test } from 'node:test';
 import type { CancellationToken, TestRun, Uri } from 'vscode';
 import type {
@@ -200,6 +201,18 @@ describe('JvmTestLanguage.resolveLaunches', () => {
       requests.map((request) => request.tags),
       [['fast', '!slow']],
     );
+  });
+});
+
+describe('JvmTestLanguage.discovery', () => {
+  // A test framework can run a file that is no source, and only the server can tell which file.
+  test('asks the server about an XML file as well as about a source file', () => {
+    const { discovery } = languageOf({ requests: [] });
+
+    for (const file of ['test/app/MainTest.java', 'test/app/MainTest.kt', 'suites/smoke.xml']) {
+      assert.ok(matchesGlob(file, discovery.sourceGlob), file);
+    }
+    assert.deepEqual([...discovery.languageIds].sort(), ['java', 'kotlin', 'xml']);
   });
 });
 
