@@ -3,6 +3,7 @@ package com.jetbrains.ls.api.features.impl.common.move
 
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.application.writeAction
+import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.vfs.findPsiDirectory
 import com.intellij.openapi.vfs.findPsiFile
 import com.jetbrains.ls.api.core.LSServer
@@ -60,6 +61,7 @@ internal object LSCommonMoveProvider : LSMoveProvider {
             val result = readAction {
                 if (targetDirectory == null) return@readAction MoveAnalysisResult.Error(LspServerBundle.message("error.move.destination.not.found"))
 
+                val delegates = if (isOnlyDirectories) LSMoveHandlerDelegate.forDirectories() else LSMoveHandlerDelegate.forFiles()
                 val sources = params.map {
                     val vFile = it.oldUri.findVirtualFile() ?: return@readAction MoveAnalysisResult.Error(
                         LspServerBundle.message(
@@ -84,13 +86,30 @@ internal object LSCommonMoveProvider : LSMoveProvider {
                     return@readAction MoveAnalysisResult.Error(LspServerBundle.message("error.move.files.with.same.name", duplicate))
                 }
 
-                val extensions = if (isOnlyDirectories) LSMoveHandlerDelegate.forDirectories() else LSMoveHandlerDelegate.forFiles()
                 val candidates = sources.map { element ->
-                    val modifiedElement = extensions.firstNotNullOfOrNull { it.prepareElementToMove(element) }
+                    val modifiedElement = delegates.firstNotNullOfOrNull { it.prepareElementToMove(element) }
                     modifiedElement ?: element
                 }.toTypedArray()
 
-                val handler = extensions.find { it.canMove(candidates, targetDirectory) } ?: LSGenericMoveHandlerDelegate
+                var handler: LSMoveHandlerDelegate = LSGenericMoveHandlerDelegate
+                var requiresSourceRoot = false
+                for (delegate in delegates) {
+                    when (delegate.analyze(candidates, targetDirectory)) {
+                        MoveSupport.FULL -> {
+                            handler = delegate
+                            requiresSourceRoot = true
+                            break
+                        }
+                        MoveSupport.PARTIAL -> requiresSourceRoot = true
+                        MoveSupport.UNSUPPORTED -> Unit
+                    }
+                }
+
+                if (requiresSourceRoot && ProjectFileIndex.getInstance(project).getSourceRootForFile(targetDirectory.virtualFile) == null) {
+                    return@readAction MoveAnalysisResult.Error(
+                        LspServerBundle.message("error.move.destination.directory.is.not.located.under.source.root")
+                    )
+                }
 
                 handler.createProcessor(candidates, targetDirectory)
             }

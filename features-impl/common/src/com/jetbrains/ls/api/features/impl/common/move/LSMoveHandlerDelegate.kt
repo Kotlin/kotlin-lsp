@@ -23,10 +23,9 @@ interface LSMoveHandlerDelegate {
     fun prepareElementToMove(element: PsiElement): PsiElement?
 
     /**
-     * Checks whether the [sources] can be moved into the [targetDirectory]
-     * @see com.intellij.refactoring.move.MoveHandlerDelegate.canMove
+     * Reports whether the current handler can process all elements from [sources]
      */
-    fun canMove(sources: Array<PsiElement>, targetDirectory: PsiDirectory): Boolean
+    fun analyze(sources: Array<PsiElement>, targetDirectory: PsiDirectory): MoveSupport
 
     /**
      * Creates [LSRefactoringProcessor] that will perform move refactoring for [sources] and [targetDirectory]

@@ -12,7 +12,7 @@ import com.intellij.psi.PsiElement
 internal object LSGenericMoveHandlerDelegate : LSMoveHandlerDelegate {
     override fun prepareElementToMove(element: PsiElement): PsiElement? = null
 
-    override fun canMove(sources: Array<PsiElement>, targetDirectory: PsiDirectory): Boolean = true
+    override fun analyze(sources: Array<PsiElement>, targetDirectory: PsiDirectory): MoveSupport = MoveSupport.FULL
 
     override fun createProcessor(
         sources: Array<PsiElement>,

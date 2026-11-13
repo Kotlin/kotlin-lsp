@@ -6,9 +6,11 @@ import com.intellij.psi.PsiElement
 import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.impl.common.move.LSMoveHandlerDelegate
 import com.jetbrains.ls.api.features.impl.common.move.MoveAnalysisResult
+import com.jetbrains.ls.api.features.impl.common.move.MoveSupport
 import com.jetbrains.ls.api.features.impl.kotlin.processors.LSMoveKotlinFileProcessor
 import org.jetbrains.kotlin.idea.base.util.KotlinSingleClassFileAnalyzer
 import org.jetbrains.kotlin.idea.k2.refactoring.move.ui.K2MoveModel
+import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtFile
 
 /**
@@ -27,8 +29,12 @@ internal class LSKotlinMoveHandlerDelegate : LSMoveHandlerDelegate {
         }
     }
 
-    override fun canMove(sources: Array<PsiElement>, targetDirectory: PsiDirectory): Boolean {
-        return org.jetbrains.kotlin.idea.k2.refactoring.move.processor.canMove(sources)
+    override fun analyze(sources: Array<PsiElement>, targetDirectory: PsiDirectory): MoveSupport {
+        return when {
+            org.jetbrains.kotlin.idea.k2.refactoring.move.processor.canMove(sources) -> MoveSupport.FULL
+            sources.any { it is KtElement } -> MoveSupport.PARTIAL
+            else -> MoveSupport.UNSUPPORTED
+        }
     }
 
     override fun createProcessor(
