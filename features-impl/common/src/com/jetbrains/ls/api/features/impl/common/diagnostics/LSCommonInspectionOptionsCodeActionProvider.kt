@@ -37,6 +37,7 @@ import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionGroup
 import com.jetbrains.ls.api.features.codeActions.LSCodeActionProvider
 import com.jetbrains.ls.api.features.impl.common.configuration.inspectionProfileFile
+import com.jetbrains.ls.api.features.impl.common.modcommands.ModCommandActionWithKind
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCodeAction
 import com.jetbrains.ls.api.features.impl.common.modcommands.hasEditOptionsForm
 import com.jetbrains.ls.api.features.impl.common.modcommands.stamps
@@ -55,7 +56,8 @@ private val LOG = logger<LSCommonInspectionOptionsCodeActionProvider>()
  * Offers the `Inspection 'name'...` action of an inspection diagnostic. The action shows a chooser of the inspection
  * options: the "Suppress for statement / method / class / file" actions, the action that edits the options of the
  * inspection, and the action that disables the inspection in the inspection profile. The IDE shows the same options
- * after the fixes of the warning (see `HighlightInfo.IntentionActionDescriptor.getOptions`).
+ * after the fixes of the warning (see `HighlightInfo.IntentionActionDescriptor.getOptions`). Each chooser entry has
+ * a machine-readable kind: [SUPPRESS_ENTRY_KIND], [EDIT_OPTIONS_ENTRY_KIND] or [DISABLE_ENTRY_KIND].
  *
  * The action is offered for every inspection diagnostic, also for one without fixes. The options are found when the
  * client asks for the code actions of a diagnostic, not when the diagnostic is reported: the client asks for the
@@ -75,6 +77,15 @@ class LSCommonInspectionOptionsCodeActionProvider(
         val inspectionOptionsKind: CodeActionKind = CodeActionKind("${CodeActionKind.QuickFix.value}.inspection")
 
         fun isInspectionOptions(codeAction: CodeAction): Boolean = codeAction.kind == inspectionOptionsKind
+
+        /** The chooser entry kind of a "Suppress for ..." option. */
+        const val SUPPRESS_ENTRY_KIND: String = "inspection.suppress"
+
+        /** The chooser entry kind of the option that edits the inspection options in the profile. */
+        const val EDIT_OPTIONS_ENTRY_KIND: String = "inspection.editOptions"
+
+        /** The chooser entry kind of the option that disables the inspection in the profile. */
+        const val DISABLE_ENTRY_KIND: String = "inspection.disable"
     }
 
     override val providesOnlyKinds: Set<CodeActionKind> = setOf(inspectionOptionsKind)
@@ -152,6 +163,7 @@ class LSCommonInspectionOptionsCodeActionProvider(
             .map { fix -> fix to SuppressIntentionActionFromFix.convertBatchToSuppressIntentionAction(fix) as SuppressIntentionActionFromFix }
             .sortedWith { (_, a), (_, b) -> a.compareTo(b) }
             .map { (fix, intention) -> intention.asModCommandAction() ?: SuppressOnCopyAction(tool, fix.name, fix.familyName) }
+            .map { action -> ModCommandActionWithKind(SUPPRESS_ENTRY_KIND, action) }
     }
 
     /**
@@ -172,7 +184,7 @@ class LSCommonInspectionOptionsCodeActionProvider(
             LOG.debug("Failed to read the options pane of ${profileTool.shortName}", it)
         } ?: false
         if (!hasForm) return emptyList()
-        return listOf(EditInspectionOptionsModCommandAction(tool.profileShortName))
+        return listOf(ModCommandActionWithKind(EDIT_OPTIONS_ENTRY_KIND, EditInspectionOptionsModCommandAction(tool.profileShortName)))
     }
 
     /**
@@ -184,7 +196,8 @@ class LSCommonInspectionOptionsCodeActionProvider(
         profileFile: ProfileFile?,
     ): List<ModCommandAction> {
         if (profileFile == null) return emptyList()
-        return listOf(DisableInspectionToolModCommandAction(tool.profileShortName) { _, _ -> profileFile })
+        val action = DisableInspectionToolModCommandAction(tool.profileShortName) { _, _ -> profileFile }
+        return listOf(ModCommandActionWithKind(DISABLE_ENTRY_KIND, action))
     }
 }
 

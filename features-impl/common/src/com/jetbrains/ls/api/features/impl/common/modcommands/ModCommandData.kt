@@ -53,6 +53,7 @@ import com.jetbrains.ls.api.features.impl.common.modcommands.executeEditOptions
 import com.jetbrains.ls.api.features.impl.common.modcommands.toEditOptionsData
 import com.jetbrains.ls.api.features.impl.common.modcommands.LSSystemOptionsCommandProvider
 import com.jetbrains.ls.api.features.impl.common.modcommands.LazyFix
+import com.jetbrains.ls.api.features.impl.common.modcommands.ModCommandActionWithKind
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCommand
 import com.jetbrains.ls.api.features.impl.common.modcommands.registerLazyFixes
 import com.jetbrains.ls.api.features.impl.common.modcommands.stampsOf
@@ -243,8 +244,9 @@ sealed class ModCommandData {
      */
     @Serializable
     data class ChooseAction(val title: String, val entries: List<Entry>) : ModCommandData() {
+        /** @param kind the [ModCommandActionWithKind.kind] of the action, or `null` for an action without a kind */
         @Serializable
-        data class Entry(val name: String, val action: LazyAction)
+        data class Entry(val name: String, val action: LazyAction, val kind: String? = null)
     }
 
     /**
@@ -389,7 +391,7 @@ sealed class ModCommandData {
                             val fixes = choices.map { LazyFix.OfAction(it.name, it.action, actionContext) }
                             val actions = registerLazyFixes(server, virtualFile, fixes)
                             val entries = choices.mapIndexed { index, choice ->
-                                ChooseAction.Entry(choice.name, actions[index])
+                                ChooseAction.Entry(choice.name, actions[index], (choice.action as? ModCommandActionWithKind)?.kind)
                             }
                             ChooseAction(command.title, entries)
                         }
@@ -753,7 +755,7 @@ suspend fun executeCommand(
                 title = command.title,
                 entries = command.entries.map { entry ->
                     // An entry is a lazy action, which computes its edits when the user picks it, so it needs no stamps.
-                    ChooseActionMenuEntry(entry.name, applyFixCommand(entry.action))
+                    ChooseActionMenuEntry(entry.name, applyFixCommand(entry.action), entry.kind)
                 },
             ),
         )
@@ -965,9 +967,12 @@ fun editorCommandForAction(actionId: String): Command? = when (actionId) {
 /**
  * One option of a [ModChooseAction] menu. [command] is what the client sends back to run the option, so the
  * client needs to know nothing about how the server keeps the option.
+ *
+ * [kind] is a machine-readable id of the option, from [ModCommandActionWithKind]. It is `null` for most options,
+ * and the JSON then has no `kind` field. A client can use it to find an option without its localized [name].
  */
 @Serializable
-data class ChooseActionMenuEntry(val name: String, val command: Command)
+data class ChooseActionMenuEntry(val name: String, val command: Command, val kind: String? = null)
 
 @Serializable
 data class ShowChooseActionMenuParams(val title: String, val entries: List<ChooseActionMenuEntry>)
