@@ -9,6 +9,8 @@ import com.intellij.openapi.vfs.findPsiFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiUtilCore
+import com.intellij.refactoring.modplan.ModPlanOptionValues
+import com.intellij.refactoring.modplan.rename.ModPlanRenameRefactoring
 import com.intellij.refactoring.rename.HeadlessRenameProcessor
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.processors.LSRenameCustomizer
@@ -64,7 +66,7 @@ abstract class LSRenameProviderBase(
                 val offset = document.offsetByPosition(params.position)
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction null
                 val target = renameCustomizer.extractTargets(psiFile, offset).firstOrNull()
-                if (target == null || !HeadlessRenameProcessor.canRename(target)) {
+                if (target == null || !canRename(target)) {
                     throwLspError(PrepareRenameRequestType, "This element cannot be renamed", Unit, ErrorCodes.InvalidParams, null)
                 }
                 val adjustedOffset = TargetElementUtil.adjustOffset(psiFile, document, offset)
@@ -80,6 +82,15 @@ abstract class LSRenameProviderBase(
                 PrepareRenameResult.Labeled(range.toLspRange(document), placeholderFor(range.substring(text.toString())))
             }
         }
+    }
+
+    /**
+     * Whether [target] can be renamed: the ModPlan engine supports it, or [HeadlessRenameProcessor] renames it, as [LSRenameProcessor]
+     * falls back to it.
+     */
+    private fun canRename(target: PsiElement): Boolean {
+        val request = ModPlanRenameRefactoring.request(target.project, target, "", substitute = true, ModPlanOptionValues.EMPTY)
+        return ModPlanRenameRefactoring.getInstance().isSupported(request) || HeadlessRenameProcessor.canRename(target)
     }
 
     protected open fun placeholderFor(identifierText: String): String = identifierText
