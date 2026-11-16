@@ -63,7 +63,7 @@ export function serverResolvesStackTraces(): boolean {
  */
 export async function resolveStackTrace(lines: readonly string[]): Promise<StackTraceLocation[][]> {
   const client = getLspClient();
-  if (!client) throw new Error('IntelliJ LSP is not running');
+  if (!client) throw new Error('The language server is not running');
   return await sendLspCommand<StackTraceLocation[][]>(client, RESOLVE_COMMAND, [{ lines }]);
 }
 

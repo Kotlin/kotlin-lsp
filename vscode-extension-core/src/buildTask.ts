@@ -87,7 +87,13 @@ export function registerBuildTaskProvider(context: ExtensionContext): void {
     // Tasks referenced from tasks.json arrive here with the user's definition to complete.
     resolveTask: (task: Task) =>
       withPresentation(
-        new Task(task.definition, task.scope ?? TaskScope.Workspace, BUILD_TASK_NAME, BUILD_TASK_SOURCE, buildExecution()),
+        new Task(
+          task.definition,
+          task.scope ?? TaskScope.Workspace,
+          BUILD_TASK_NAME,
+          BUILD_TASK_SOURCE,
+          buildExecution(),
+        ),
       ),
   };
   context.subscriptions.push(tasks.registerTaskProvider(BUILD_TASK_TYPE, provider));
@@ -95,7 +101,9 @@ export function registerBuildTaskProvider(context: ExtensionContext): void {
 
 function createBuildTask(): Task {
   const definition: IntellijBuildTaskDefinition = { type: BUILD_TASK_TYPE };
-  return withPresentation(new Task(definition, TaskScope.Workspace, BUILD_TASK_NAME, BUILD_TASK_SOURCE, buildExecution()));
+  return withPresentation(
+    new Task(definition, TaskScope.Workspace, BUILD_TASK_NAME, BUILD_TASK_SOURCE, buildExecution()),
+  );
 }
 
 /** The build takes the panel but not the keyboard: it is not a terminal the user types into. */
@@ -131,7 +139,7 @@ async function runBuild(
   const line = (text: string) => writeEmitter.fire(`${text}\r\n`);
   const client = getLspClient();
   if (!client) {
-    line('IntelliJ LSP is not running.');
+    line('The language server is not running.');
     closeEmitter.fire(0);
     return;
   }
@@ -142,7 +150,12 @@ async function runBuild(
     ? file && client.code2ProtocolConverter.asUri(file)
     : activeEditorProtocolUri(client);
   try {
-    const response = await runServerBuild(client, { uri, checkoutTools: true }, (output) => line(output.line), token);
+    const response = await runServerBuild(
+      client,
+      { uri, checkoutTools: true },
+      (output) => line(output.line),
+      token,
+    );
     if (response.reason) line(response.reason);
     closeEmitter.fire(buildTaskExitCode(response));
   } catch (e) {
@@ -158,8 +171,9 @@ async function runBuild(
 function fileUri(path: string): Uri | undefined {
   if (isAbsolute(path)) return Uri.file(path);
   const folder =
-    (window.activeTextEditor ? workspace.getWorkspaceFolder(window.activeTextEditor.document.uri) : undefined) ??
-    workspace.workspaceFolders?.[0];
+    (window.activeTextEditor
+      ? workspace.getWorkspaceFolder(window.activeTextEditor.document.uri)
+      : undefined) ?? workspace.workspaceFolders?.[0];
   return folder && Uri.joinPath(folder.uri, path);
 }
 

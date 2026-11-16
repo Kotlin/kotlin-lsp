@@ -344,22 +344,22 @@ describe('status bar suffix', () => {
 
   it('adds the SDK to the displayed text while keeping the product heading and menu', async () => {
     assert.equal(
-      computeStatusText('running', 'Go LSP', undefined, state),
-      '$(check) Go LSP · 1.27.3',
+      computeStatusText('running', 'Go by GoLand', undefined, state),
+      '$(check) Go by GoLand · 1.27.3',
     );
     const tooltip = computeStatusTooltipContent(
       'running',
-      'Go LSP',
+      'Go by GoLand',
       undefined,
       restartActions,
       state,
     );
-    assert.equal(tooltip.heading, '**Go LSP**&nbsp;&nbsp;$(check) Running');
+    assert.equal(tooltip.heading, '**Go by GoLand**&nbsp;&nbsp;$(check) Running');
     assert.equal(tooltip.detail, '/sdk/go1.27.3');
     assert.deepEqual(tooltip.actions, restartActions);
 
-    await pickStatusAction(tooltip.actions, 'Go LSP', async (_actions, options) => {
-      assert.equal(options.placeHolder, 'Go LSP actions');
+    await pickStatusAction(tooltip.actions, 'Go by GoLand', async (_actions, options) => {
+      assert.equal(options.placeHolder, 'Go by GoLand actions');
       return undefined;
     });
   });
@@ -406,19 +406,19 @@ describe('status bar suffix', () => {
 
   it('keeps the cached SDK during restart and hides its path after stopping', () => {
     assert.equal(
-      computeStatusText('starting', 'Go LSP', undefined, state),
-      '$(loading~spin) Go LSP · 1.27.3',
+      computeStatusText('starting', 'Go by GoLand', undefined, state),
+      '$(loading~spin) Go by GoLand · 1.27.3',
     );
     assert.equal(
-      computeStatusTooltipContent('starting', 'Go LSP', undefined, [], state).detail,
+      computeStatusTooltipContent('starting', 'Go by GoLand', undefined, [], state).detail,
       '/sdk/go1.27.3',
     );
     assert.equal(
-      computeStatusText('stopped', 'Go LSP', undefined, state),
-      '$(stop) Go LSP · 1.27.3',
+      computeStatusText('stopped', 'Go by GoLand', undefined, state),
+      '$(stop) Go by GoLand · 1.27.3',
     );
     assert.equal(
-      computeStatusTooltipContent('stopped', 'Go LSP', undefined, [], state).detail,
+      computeStatusTooltipContent('stopped', 'Go by GoLand', undefined, [], state).detail,
       undefined,
     );
   });
@@ -426,20 +426,23 @@ describe('status bar suffix', () => {
   it('shows a version without an SDK path', () => {
     const versionOnly = { suffix: { text: '1.27.3' } };
     assert.equal(
-      computeStatusText('running', 'Go LSP', undefined, versionOnly),
-      '$(check) Go LSP · 1.27.3',
+      computeStatusText('running', 'Go by GoLand', undefined, versionOnly),
+      '$(check) Go by GoLand · 1.27.3',
     );
     assert.equal(
-      computeStatusTooltipContent('running', 'Go LSP', undefined, [], versionOnly).detail,
+      computeStatusTooltipContent('running', 'Go by GoLand', undefined, [], versionOnly).detail,
       undefined,
     );
   });
 
   it('clears both the version and path when the source clears the suffix', () => {
     const cleared = { ...state, suffix: undefined };
-    assert.equal(computeStatusText('running', 'Go LSP', undefined, cleared), '$(check) Go LSP');
     assert.equal(
-      computeStatusTooltipContent('running', 'Go LSP', undefined, [], cleared).detail,
+      computeStatusText('running', 'Go by GoLand', undefined, cleared),
+      '$(check) Go by GoLand',
+    );
+    assert.equal(
+      computeStatusTooltipContent('running', 'Go by GoLand', undefined, [], cleared).detail,
       undefined,
     );
   });

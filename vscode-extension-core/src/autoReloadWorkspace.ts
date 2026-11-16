@@ -63,13 +63,22 @@ function clearDisabledReloadProblems(diagnostics: DiagnosticCollection): void {
   if (workspaceReloadMode() === 'never') diagnostics.clear();
 }
 
-function markReloadRequired(diagnostics: DiagnosticCollection, resource: Uri): void {
+function markReloadRequired({
+  diagnostics,
+  resource,
+  displayName,
+}: {
+  diagnostics: DiagnosticCollection;
+  resource: Uri;
+  displayName: unknown;
+}): void {
   const diagnostic = new Diagnostic(
     new Range(0, 0, 0, 0),
     'The workspace settings file changed. Reload the workspace to apply the change.',
     DiagnosticSeverity.Information,
   );
-  diagnostic.source = 'IntelliJ';
+  diagnostic.source =
+    typeof displayName === 'string' && displayName.trim() !== '' ? displayName : 'IntelliJ';
   diagnostics.set(resource, [diagnostic]);
 }
 
@@ -105,7 +114,12 @@ export function registerAutoReloadWorkspace(
       await reloadOnSaveHandler.handleBuildFileSave({
         mode: workspaceReloadMode(),
         setMode: setWorkspaceReloadMode,
-        markReloadRequired: () => markReloadRequired(diagnostics, document.uri),
+        markReloadRequired: () =>
+          markReloadRequired({
+            diagnostics,
+            resource: document.uri,
+            displayName: context.extension.packageJSON.displayName,
+          }),
         clearDisabledReloadProblems: () => clearDisabledReloadProblems(diagnostics),
       });
     }),
