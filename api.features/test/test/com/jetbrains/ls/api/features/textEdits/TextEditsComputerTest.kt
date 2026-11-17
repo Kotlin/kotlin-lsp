@@ -3,6 +3,9 @@ package com.jetbrains.ls.api.features.textEdits
 
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.DiffGranularity
 import com.jetbrains.ls.test.api.utils.injector.TextEditsApplier
+import com.jetbrains.lsp.protocol.Position
+import com.jetbrains.lsp.protocol.Range
+import com.jetbrains.lsp.protocol.TextEdit
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -132,6 +135,20 @@ class TextEditsComputerTest {
     @Test
     fun wordDiffWithNewLine() {
         doTest("a.b\n", "a::b\n")
+    }
+
+    /** U+10400 and U+10401 share the high surrogate D801, and the edit must not replace half a letter. */
+    @Test
+    fun wordDiffKeepsSurrogatePair() {
+        // arrange
+        val oldText = "a\uD801\uDC00name := 1"
+        val newText = "named\uD801\uDC01b := 1"
+
+        // act
+        val edits = TextEditsComputer.computeTextEdits(oldText, newText, DiffGranularity.WORD)
+
+        // assert
+        assertEquals(listOf(TextEdit(Range(Position(0, 0), Position(0, 7)), "named\uD801\uDC01b")), edits)
     }
 
     @Test

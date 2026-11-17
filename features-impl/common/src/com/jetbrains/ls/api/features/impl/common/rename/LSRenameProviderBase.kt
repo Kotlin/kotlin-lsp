@@ -40,12 +40,15 @@ abstract class LSRenameProviderBase(
     /** What this language changes in the rename. */
     protected open val renameCustomizer: LSRenameCustomizer get() = LSRenameCustomizer.DEFAULT
 
+    /** The unit of the diff that reports the text edits of a rename. */
+    protected open val renameDiffGranularity: DiffGranularity get() = DiffGranularity.CHARACTER
+
     context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun rename(params: RenameParams): WorkspaceEdit {
         val changes = server.withWriteAnalysisContext {
             val processor = context(project) { prepareRenameProcessor(params, renameCustomizer) }
                 ?: return@withWriteAnalysisContext emptyList()
-            doRefactoring(processor, DiffGranularity.CHARACTER, null, showNotificationWithError = false)
+            doRefactoring(processor, renameDiffGranularity, null, showNotificationWithError = false)
                 .also { (processor as? LSRenameProcessor)?.let { failRenameIfRefused(it, showNotificationWithError = false) } }
         }
 
