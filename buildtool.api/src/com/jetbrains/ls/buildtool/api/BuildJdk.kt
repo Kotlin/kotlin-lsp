@@ -28,4 +28,10 @@ enum class BuildJdkSource {
 
     /** The project's wrapper starts the build and may replace the JDK it was handed. */
     WRAPPER,
+
+    /**
+     * The project's Gradle settings pick the daemon JVM and may replace the JDK it was handed: the daemon JVM criteria
+     * of `gradle/gradle-daemon-jvm.properties`, or `org.gradle.java.home`.
+     */
+    GRADLE_DAEMON_JVM,
 }
