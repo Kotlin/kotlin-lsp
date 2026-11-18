@@ -33,6 +33,9 @@ sealed interface ImportEvent {
     data class ErrorOutput(val line: @NlsSafe String) : ImportEvent
     data class ProgressStatus(val text: String) : ImportEvent
 
+    /** The JDK the tool hands to the build of this import; sent once per import, before its models. */
+    data class BuildJdkChosen(val jdk: BuildJdk) : ImportEvent
+
     /**
      * New workspace state; replaces whatever the previous [UpdateWorkspaceModel] delivered. [buildScripts] are
      * the files that must re-trigger an import of this target, in full: an import publishes its model in phases,
