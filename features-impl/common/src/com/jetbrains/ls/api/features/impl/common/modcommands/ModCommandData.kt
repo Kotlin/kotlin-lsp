@@ -35,6 +35,7 @@ import com.intellij.openapi.vfs.findDocument
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.fileName
+import com.jetbrains.ls.api.core.util.getLspLocation
 import com.jetbrains.ls.api.core.util.getLspLocationForDefinition
 import com.jetbrains.ls.api.core.util.htmlToPlainText
 import com.jetbrains.ls.api.core.util.intellijUriToLspUri
@@ -48,15 +49,15 @@ import com.jetbrains.ls.api.features.commands.versionedEdit
 import com.jetbrains.ls.api.features.impl.common.modcommands.DocumentStamp
 import com.jetbrains.ls.api.features.impl.common.modcommands.DocumentStamps
 import com.jetbrains.ls.api.features.impl.common.modcommands.EditOptionsRequest
-import com.jetbrains.ls.api.features.impl.common.modcommands.OptionComponentData
-import com.jetbrains.ls.api.features.impl.common.modcommands.executeEditOptions
-import com.jetbrains.ls.api.features.impl.common.modcommands.toEditOptionsData
 import com.jetbrains.ls.api.features.impl.common.modcommands.LSSystemOptionsCommandProvider
 import com.jetbrains.ls.api.features.impl.common.modcommands.LazyFix
 import com.jetbrains.ls.api.features.impl.common.modcommands.ModCommandActionWithKind
+import com.jetbrains.ls.api.features.impl.common.modcommands.OptionComponentData
 import com.jetbrains.ls.api.features.impl.common.modcommands.applyFixCommand
+import com.jetbrains.ls.api.features.impl.common.modcommands.executeEditOptions
 import com.jetbrains.ls.api.features.impl.common.modcommands.registerLazyFixes
 import com.jetbrains.ls.api.features.impl.common.modcommands.stampsOf
+import com.jetbrains.ls.api.features.impl.common.modcommands.toEditOptionsData
 import com.jetbrains.ls.api.features.impl.common.utils.showDocumentIfSupported
 import com.jetbrains.lsp.implementation.LspClient
 import com.jetbrains.lsp.protocol.Command
@@ -421,17 +422,17 @@ sealed class ModCommandData {
                 // The client cannot ask the user, so the fix goes on, and the user is told that it can break the code.
                 server?.config?.clientSupportsConflictView != true -> DisplayMessage(
                     (listOf(LspServerBundle.message("conflicts.title")) +
-                     command.conflicts.flatMap { [element, conflict] ->
-                         val place = element.getLspLocationForDefinition()?.let { "[${it.uri.uri.fileName}:${it.range.start.line + 1}] " }.orEmpty()
-                         conflict.messages.map { place + StringUtil.removeHtmlTags(it, true).removeSuffix(".") + "." }
+                     command.places.flatMap { place ->
+                         val prefix = place.lspLocation()?.let { "[${it.uri.uri.fileName}:${it.range.start.line + 1}] " }.orEmpty()
+                         place.conflict.messages.map { prefix + StringUtil.removeHtmlTags(it, true).removeSuffix(".") + "." }
                      }).joinToString("\n"),
                     ModDisplayMessage.MessageKind.INFORMATION,
                 )
                 else -> ShowConflicts(
-                    command.conflicts.map { [element, conflict] ->
+                    command.places.map { place ->
                         ShowConflicts.Conflict(
-                            messages = conflict.messages.map { StringUtil.removeHtmlTags(it, true) },
-                            location = element.getLspLocationForDefinition(),
+                            messages = place.conflict.messages.map { StringUtil.removeHtmlTags(it, true) },
+                            location = place.lspLocation(),
                         )
                     },
                 )
@@ -510,6 +511,13 @@ sealed class ModCommandData {
             return Snippet(cmd.file.url.toFileUrl(), vars)
         }
     }
+}
+
+/** The range of the place in its file; a place of the whole element is located as its definition. */
+private fun ModShowConflicts.Place.lspLocation(): Location? {
+    val range = rangeInElement ?: return element.getLspLocationForDefinition()
+    val file = element.containingFile ?: return null
+    return file.getLspLocation(range.shiftRight(element.textRange.startOffset))
 }
 
 private fun ModUpdateFileText.toEdits(): List<ModCommandData.Edit> {
