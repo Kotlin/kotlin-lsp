@@ -33,6 +33,7 @@ import com.intellij.openapi.util.text.HtmlChunk
 import com.intellij.openapi.vfs.findDocument
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
+import com.jetbrains.ls.api.core.util.maybeStripHtml
 import com.jetbrains.ls.api.features.LspServerBundle
 import com.jetbrains.ls.api.features.commands.refuseStaleDocument
 import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
@@ -388,8 +389,11 @@ private suspend fun LspClient.showError(message: String) {
     notify(ShowMessageNotificationType, ShowMessageParams(MessageType.Error, message))
 }
 
-/** The label without the mnemonic marker of the bundles. The client shows no mnemonics. */
-private fun LocMessage.text(): String = label().withoutMnemonic()
+/**
+ * The label without the mnemonic marker of the bundles. The client shows no mnemonics.
+ * The client shows a label as plain text, so an HTML label becomes plain text.
+ */
+private fun LocMessage.text(): String = label().withoutMnemonic().maybeStripHtml()
 private val LocMessage.prefix: String get() = splitLabel().prefix.withoutMnemonic()
 private val LocMessage.suffix: String get() = splitLabel().suffix.withoutMnemonic()
 private fun String.withoutMnemonic(): String = replace(BundleBase.MNEMONIC_STRING, "")
