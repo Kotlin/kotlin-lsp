@@ -12,6 +12,7 @@ import {
   HotSwapSessions,
   SAVE_DEBOUNCE_MS,
   SaveCoalescer,
+  hotSwapArguments,
   hotSwapCapabilityOf,
   hotSwapContextValue,
   hotSwapErrorOutcome,
@@ -20,6 +21,13 @@ import {
   isHotSwapDocument,
   namedHotSwapOutcome,
 } from './hotSwapModel';
+
+describe('hotSwapArguments', () => {
+  test('builds first and names the batch, the same id for every session of it', () => {
+    assert.deepEqual(hotSwapArguments('batch-1'), { build: true, buildId: 'batch-1' });
+    assert.deepEqual(hotSwapArguments('batch-1'), hotSwapArguments('batch-1'));
+  });
+});
 
 describe('hotSwapOutcome', () => {
   test('reloaded shows the class count in the status bar, with no other text', () => {

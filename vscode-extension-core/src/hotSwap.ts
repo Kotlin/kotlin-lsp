@@ -1,4 +1,5 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+import { randomUUID } from 'node:crypto';
 import {
   commands,
   debug,
@@ -17,13 +18,13 @@ import {
   HOT_SWAP_SETTING_KEY,
   HOT_SWAP_SETTING_SECTION,
   HOT_SWAP_SUPPORTED_CONTEXT,
-  type HotSwapArguments,
   type HotSwapMode,
   type HotSwapOutcome,
   HotSwapBatches,
   type HotSwapResponse,
   HotSwapSessions,
   SaveCoalescer,
+  hotSwapArguments,
   hotSwapCapabilityOf,
   hotSwapContextValue,
   hotSwapErrorOutcome,
@@ -40,10 +41,12 @@ const RESTART_ACTION = 'Restart';
  * "Reload Changed Classes" (HotSwap) for the IntelliJ debug sessions of [debugTypes] (see `hotSwapModel.ts` for the
  * logic). A tracker reads each session's `initialize` response for `supportsHotSwapRequest`; the debug toolbar button
  * shows for the focused session that has it, unless `intellij.debug.hotSwap` is `never`. The command saves all
- * documents, because the build tool reads the disk, and sends `intellij/hotSwap { build: true }` to every session that
- * can reload, one after another, like IntelliJ does: the server builds, reloads and streams its lines as `output`
- * events, and the client shows only the summary, or a warning. With more than one session, each message names its
- * session.
+ * documents, because the build tool reads the disk, and sends `intellij/hotSwap { build: true, buildId }` to every
+ * session that can reload, one after another. IntelliJ builds once and reloads every session from that build; here
+ * each session builds its own steps on the server, and the one `buildId` of the batch makes the server build each
+ * step once: a later session skips what an earlier one built. The server builds, reloads and streams its lines as
+ * `output` events, and the client shows only the summary, or a warning. With more than one session, each message
+ * names its session.
  */
 export function registerHotSwap(context: ExtensionContext, debugTypes: Iterable<string>): void {
   const capabilities = new HotSwapSessions();
@@ -59,11 +62,10 @@ export function registerHotSwap(context: ExtensionContext, debugTypes: Iterable<
       hotSwapContextValue(mode(), capabilities.supports(debug.activeDebugSession?.id)),
     );
 
-  /** Reloads [session] and shows the answer; resolves once the server answered. */
-  const reload = async (session: DebugSession, named: boolean): Promise<void> => {
-    const args: HotSwapArguments = { build: true };
+  /** Reloads [session] as part of the batch [buildId] and shows the answer; resolves once the server answered. */
+  const reload = async (session: DebugSession, named: boolean, buildId: string): Promise<void> => {
     const request: Promise<HotSwapOutcome | undefined> = Promise.resolve(
-      session.customRequest(HOT_SWAP_REQUEST, args),
+      session.customRequest(HOT_SWAP_REQUEST, hotSwapArguments(buildId)),
     ).then(
       (body: unknown) => hotSwapOutcome(body as HotSwapResponse | undefined),
       (error: unknown) => hotSwapErrorOutcome(error),
@@ -87,15 +89,16 @@ export function registerHotSwap(context: ExtensionContext, debugTypes: Iterable<
     await request;
   };
 
-  /** Reloads every session that can, one after another, in the order they started. */
+  /** Reloads every session that can, one after another, in the order they started, as one build batch. */
   const reloadAll = async (): Promise<void> => {
     const targets = capabilities
       .capableSessions()
       .map((id) => sessions.get(id))
       .filter((session) => session !== undefined);
+    const buildId = randomUUID();
     for (const session of targets) {
       // A session that ended while an earlier one reloaded is skipped.
-      if (sessions.has(session.id)) await reload(session, targets.length > 1);
+      if (sessions.has(session.id)) await reload(session, targets.length > 1, buildId);
     }
   };
 

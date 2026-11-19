@@ -14,9 +14,19 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.withContext
+import java.nio.file.Path
 
-/** One step of a launch: [request] run by [tool]. */
-data class RunStep(val tool: BuildTool, val request: RunRequest)
+/**
+ * Which live tool of a workspace a step runs on: the registration id of its driver ([type]) and the root the tool was
+ * started for ([root]). Two tools of the same type at two roots are two owners.
+ */
+data class BuildToolOwner(val type: String, val root: Path)
+
+/**
+ * One step of a launch: [request] run by [tool]. [owner] names [tool] in the workspace, `null` for a step a planner
+ * did not make.
+ */
+data class RunStep(val tool: BuildTool, val request: RunRequest, val owner: BuildToolOwner? = null)
 
 /**
  * The steps of one launch, one after the other, as one [RunHandle]. The last step is the launch; the steps before

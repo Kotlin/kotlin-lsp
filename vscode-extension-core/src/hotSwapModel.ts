@@ -36,9 +36,18 @@ const DEFAULT_HOT_SWAP_MODE: HotSwapMode = 'manual';
 /** The quiet time after the last save before an `onSave` reload starts. */
 export const SAVE_DEBOUNCE_MS = 750;
 
-/** The arguments of [HOT_SWAP_REQUEST]. The server builds first unless [build] is `false`. */
+/**
+ * The arguments of [HOT_SWAP_REQUEST]. The server builds first unless [build] is `false`. The sessions one reload
+ * reaches send the same [buildId], so the server builds each build step once for all of them.
+ */
 export interface HotSwapArguments {
   build?: boolean;
+  buildId?: string;
+}
+
+/** The arguments of one session's reload in the batch [buildId]: build first, each step once per batch. */
+export function hotSwapArguments(buildId: string): HotSwapArguments {
+  return { build: true, buildId };
 }
 
 /** One build or reload summary line; the severity is an open enum (`info`, `warning`, `error`). */
