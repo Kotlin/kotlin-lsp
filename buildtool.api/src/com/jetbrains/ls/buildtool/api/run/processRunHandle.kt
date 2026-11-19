@@ -225,3 +225,10 @@ fun freePort(): Int = ServerSocket(0).use { it.localPort }
  * external connection.
  */
 fun jdwpAgent(port: Int): String = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=127.0.0.1:$port"
+
+/**
+ * The VM arguments of a run: [jdwpAgent] on [debugPort] first when there is one, then [vmArgs]. JDWP must come before
+ * any `-javaagent` of [vmArgs]: with `suspend=y` it holds the VM start until the debugger resumes it, so the agent's
+ * premain runs after the attach and reads the settings the debugger wrote for it (LSP-2442).
+ */
+fun jdwpFirst(debugPort: Int?, vmArgs: List<String>): List<String> = listOfNotNull(debugPort?.let(::jdwpAgent)) + vmArgs
