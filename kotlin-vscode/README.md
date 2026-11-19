@@ -32,8 +32,10 @@ After that, you can start using the extension's features!
 * Up-to-date Kotlin language versions support
 * IntelliJ-powered code completion and signature help
 * IntelliJ-powered diagnostics, inspections, and quick fixes for Kotlin and `kotlinx` libraries
-* Build system support for JVM projects: Gradle, Maven, experimental Android Gradle Plugin support
-  * Support for Kotlin Multiplatform (KMP) projects is coming in the future releases.
+* Build system support:
+  * Gradle, including Kotlin Multiplatform (KMP) projects
+  * Maven
+  * Android Gradle Plugin (experimental)
 * Semantic highlighting
 * Inlay hints for types and parameter names
 * Navigation: definition, references, type definition, and implementation

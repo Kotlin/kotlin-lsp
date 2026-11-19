@@ -58,8 +58,10 @@ Manual installation:
 * Up-to-date Kotlin language versions support
 * IntelliJ-powered code completion
 * IntelliJ-powered diagnostics and quick fixes for Kotlin and kotlinx libraries
-* Build system support for JVM projects: Gradle, Maven, experimental Android Gradle Plugin support
-  * Support for Kotlin Multiplatform (KMP) projects is coming in the future releases.
+* Build system support:
+  * Gradle, including Kotlin Multiplatform (KMP) projects
+  * Maven
+  * Android Gradle Plugin (experimental)
 * Semantic highlighting
 * Organize imports
 * Rename refactoring
