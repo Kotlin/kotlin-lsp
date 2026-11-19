@@ -171,7 +171,7 @@ private object KotlinWorkspaceComponent : WorkspaceComponent<KotlinWorkspaceStat
         contextKind: AnalyzerContextKind,
     ) {
         state.caches?.let { caches ->
-            builder.initKotlinWorkspaceModelCaches(project, caches)
+            builder.initKotlinWorkspaceModelCaches(project, caches, contextKind)
         }
     }
 }
