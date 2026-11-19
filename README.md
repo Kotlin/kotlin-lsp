@@ -62,6 +62,8 @@ Manual installation:
   * Gradle, including Kotlin Multiplatform (KMP) projects
   * Maven
   * Android Gradle Plugin (experimental)
+  * Kotlin Toolchain support is coming in the future releases, see [KTC-6148](https://youtrack.jetbrains.com/issue/KTC-6148).
+
 * Semantic highlighting
 * Organize imports
 * Rename refactoring
