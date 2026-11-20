@@ -18,7 +18,7 @@ import {
 import { type LanguageClient, State } from 'vscode-languageclient/node';
 import { LanguageFileCoverage } from './testCoverage';
 import { lspDiscoveryServer, TestTreeDiscovery } from './testDiscovery';
-import type { TestLanguage, TestProfile } from './testLanguage';
+import type { TestLanguage, TestProfile, TestRunner } from './testLanguage';
 import { TestProfileTags } from './testProfileTags';
 import { GroupReport } from './testRunReport';
 import { TestTree } from './testTree';
@@ -46,8 +46,9 @@ export function registerTestController<Profile extends string>(
         return;
       }
       const run = controller.createTestRun(request);
+      let runner: TestRunner | undefined;
       try {
-        const runner = language.startRun(profile.id);
+        runner = language.startRun(profile.id);
         for (const group of groups) {
           if (token.isCancellationRequested) break;
           const report = new GroupReport({ run, tree, group });
@@ -61,6 +62,7 @@ export function registerTestController<Profile extends string>(
         }
       } finally {
         run.end();
+        await runner?.finished?.();
       }
     };
   const buttonsWithDefault = new Set<TestProfile['button']>();

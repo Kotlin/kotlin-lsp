@@ -31,6 +31,8 @@ export interface TestDiscovery {
 export interface TestRunner {
   /** Runs a group. A runner that knows more than the exit code can say what the run did with the nodes it skipped. */
   run(input: TestRunInput): Promise<UnreportedNodes | void>;
+  /** Releases what the runner keeps for the run. The controller calls it once, after the last group. */
+  finished?(): Promise<void>;
 }
 
 /**
