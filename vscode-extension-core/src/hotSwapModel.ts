@@ -212,10 +212,22 @@ export class HotSwapSessions {
   }
 }
 
+/** The timer functions [SaveCoalescer] and [HotSwapCancel] use; a test passes its own. */
+export interface HotSwapTimers {
+  set(run: () => void, ms: number): unknown;
+  clear(handle: unknown): void;
+}
+
+const systemTimers: HotSwapTimers = {
+  set: (run, ms) => setTimeout(run, ms),
+  clear: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
+};
+
 /**
  * One reload batch at a time. A batch sends [HOT_SWAP_REQUEST] to each session in turn and ends when every answer is
- * in, so the server also never gets a second request of a session. [start] gives up while a batch runs (a manual
- * reload), [startAfterRunning] waits for it (a save, whose edit the running build may have missed).
+ * in, or once a cancelled request settled (see [HotSwapCancel.settled]), so the server also never gets a second request
+ * of a session while it serves one. [start] gives up while a batch runs (a manual reload), [startAfterRunning] waits for it (a save, whose
+ * edit the running build may have missed).
  */
 export class HotSwapBatches {
   private running: Promise<unknown> | undefined;
@@ -245,16 +257,109 @@ export class HotSwapBatches {
   }
 }
 
-/** The timer functions [SaveCoalescer] uses; a test passes its own. */
-export interface HotSwapTimers {
-  set(run: () => void, ms: number): unknown;
-  clear(handle: unknown): void;
+/** How long a batch waits, after a cancel, for the server to answer the cancelled request. */
+export const CANCEL_SETTLE_TIMEOUT_MS = 5_000;
+
+/** The standard DAP request that cancels a request in flight, by its `seq`. */
+export const CANCEL_REQUEST = 'cancel';
+
+/** The arguments of [CANCEL_REQUEST]. */
+export interface CancelArguments {
+  requestId: number;
 }
 
-const systemTimers: HotSwapTimers = {
-  set: (run, ms) => setTimeout(run, ms),
-  clear: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
-};
+/** The wire shape of the DAP request a tracker reads the `seq` from. */
+interface DapRequestMessage {
+  type?: string;
+  command?: string;
+  seq?: unknown;
+  arguments?: { buildId?: unknown };
+}
+
+/**
+ * The cancel of one session's [HOT_SWAP_REQUEST] of the batch [buildId] (LSP-2474). `customRequest` takes no cancel
+ * token and does not tell the `seq` it sends, so a debug adapter tracker hands every message the client sends to the
+ * adapter to [sent], which keeps the `seq` of the first such request. A cancel sends [CANCEL_REQUEST] with that `seq`:
+ * the server cancels the request, which ends its build and frees its hot swap. A cancel before the request left sends
+ * it once the request leaves. [sent] and [cancel] answer the arguments of the one cancel to send, else `undefined`.
+ *
+ * [until] waits for the answer, or for the cancel, so the notification closes at the cancel. [settled] is what the
+ * batch waits for after a cancel: the server keeps its hot swap until the cancelled request ends, then answers it, so a
+ * reload sent before that answer would be "already running". A server that never answers holds the batch only
+ * [CANCEL_SETTLE_TIMEOUT_MS]. A cancel after the answer sends nothing.
+ */
+export class HotSwapCancel {
+  private seq: number | undefined;
+  private phase: 'running' | 'answered' | 'cancelled' = 'running';
+  private cancelSent = false;
+  private readonly cancelled: Promise<undefined>;
+  private resolveCancelled!: () => void;
+
+  constructor(
+    private readonly buildId: string,
+    private readonly timers: HotSwapTimers = systemTimers,
+  ) {
+    this.cancelled = new Promise((resolve) => {
+      this.resolveCancelled = () => resolve(undefined);
+    });
+  }
+
+  get isCancelled(): boolean {
+    return this.phase === 'cancelled';
+  }
+
+  /** Reads a message the client sends to the adapter. */
+  sent(message: unknown): CancelArguments | undefined {
+    if (this.seq !== undefined) return undefined;
+    const { type, command, seq, arguments: args } = (message ?? {}) as DapRequestMessage;
+    if (type !== 'request' || command !== HOT_SWAP_REQUEST || typeof seq !== 'number')
+      return undefined;
+    if (args?.buildId !== this.buildId) return undefined;
+    this.seq = seq;
+    return this.cancelOnce();
+  }
+
+  /** The user cancelled the reload. */
+  cancel(): CancelArguments | undefined {
+    if (this.phase !== 'running') return undefined;
+    this.phase = 'cancelled';
+    this.resolveCancelled();
+    return this.cancelOnce();
+  }
+
+  /** [answer], or `undefined` once the reload is cancelled. */
+  until<T>(answer: Promise<T>): Promise<T | undefined> {
+    const answered = answer.finally(() => {
+      if (this.phase === 'running') this.phase = 'answered';
+    });
+    return Promise.race([answered, this.cancelled]);
+  }
+
+  /**
+   * Settles once [answer] settled; after a cancel, at the latest [CANCEL_SETTLE_TIMEOUT_MS] after this call, which
+   * follows the cancel at once.
+   */
+  settled(answer: Promise<unknown>): Promise<void> {
+    const answered = answer.then(
+      () => undefined,
+      () => undefined,
+    );
+    if (!this.isCancelled) return answered;
+    return new Promise((resolve) => {
+      const timer = this.timers.set(resolve, CANCEL_SETTLE_TIMEOUT_MS);
+      void answered.then(() => {
+        this.timers.clear(timer);
+        resolve();
+      });
+    });
+  }
+
+  private cancelOnce(): CancelArguments | undefined {
+    if (this.phase !== 'cancelled' || this.seq === undefined || this.cancelSent) return undefined;
+    this.cancelSent = true;
+    return { requestId: this.seq };
+  }
+}
 
 /**
  * Turns saves into reloads: a burst of saves runs one reload [SAVE_DEBOUNCE_MS] after the last of them, and saves

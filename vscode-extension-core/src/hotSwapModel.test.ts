@@ -3,11 +3,14 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { describe, test } from 'node:test';
 import {
+  CANCEL_SETTLE_TIMEOUT_MS,
   HOT_SWAP_COMMAND,
   HOT_SWAP_MODES,
+  HOT_SWAP_REQUEST,
   HOT_SWAP_SETTING,
   HOT_SWAP_SUPPORTED_CONTEXT,
   HotSwapBatches,
+  HotSwapCancel,
   type HotSwapTimers,
   HotSwapSessions,
   SAVE_DEBOUNCE_MS,
@@ -494,6 +497,97 @@ describe('HotSwapBatches', () => {
     assert.equal(await after, 2);
   });
 
+  // LSP-2474: a build that never ends (`--continuous`) and the user cancels it. The notification closes at the cancel,
+  // but the batch ends only once the server answered the cancelled request: until then the server still holds its hot
+  // swap, and a reload sent in that gap gets "A hot swap is already running".
+  test('a cancelled reload closes its wait at once and ends its batch once the request settles', async () => {
+    const clock = fakeTimers();
+    const batches = new HotSwapBatches();
+    const cancel = new HotSwapCancel('batch-1', clock.timers);
+    const answer = deferred();
+    let closed = false;
+    const batch = batches.start(async () => {
+      assert.equal(
+        await cancel.until(answer.promise),
+        undefined,
+        'the cancelled wait has no answer',
+      );
+      closed = true;
+      await cancel.settled(answer.promise);
+    });
+    assert.notEqual(batch, undefined);
+
+    cancel.cancel();
+    await settle();
+    assert.equal(closed, true, 'the notification closes at the cancel');
+    assert.equal(
+      batches.start(async () => undefined),
+      undefined,
+      'the batch runs until the server answered',
+    );
+    answer.resolve();
+    await batch;
+    assert.equal(clock.pendingCount(), 0, 'the answer clears the timeout');
+    let runs = 0;
+    await batches.start(async () => {
+      runs += 1;
+    });
+    assert.equal(runs, 1, 'a manual reload after the answer runs');
+  });
+
+  // A server that never answers the cancel must not hold every later batch back again.
+  test('a cancelled reload whose request never settles ends its batch at the timeout', async () => {
+    const clock = fakeTimers();
+    const batches = new HotSwapBatches();
+    const cancel = new HotSwapCancel('batch-1', clock.timers);
+    const neverAnswered = new Promise<void>(() => undefined);
+    const batch = batches.start(async () => {
+      await cancel.until(neverAnswered);
+      await cancel.settled(neverAnswered);
+    });
+
+    cancel.cancel();
+    await settle();
+    assert.deepEqual(clock.delays(), [CANCEL_SETTLE_TIMEOUT_MS]);
+    assert.equal(
+      batches.start(async () => undefined),
+      undefined,
+      'the batch waits for the timeout',
+    );
+    clock.fire();
+    await batch;
+    let runs = 0;
+    await batches.start(async () => {
+      runs += 1;
+    });
+    assert.equal(runs, 1, 'a manual reload after the timeout runs');
+  });
+
+  for (const end of ['answer', 'timeout'] as const) {
+    test(`a save queued behind a cancelled batch starts only after the ${end}`, async () => {
+      const clock = fakeTimers();
+      const batches = new HotSwapBatches();
+      const cancel = new HotSwapCancel('batch-1', clock.timers);
+      const answer = deferred();
+      void batches.start(async () => {
+        await cancel.until(answer.promise);
+        await cancel.settled(answer.promise);
+      });
+      let saves = 0;
+      const save = batches.startAfterRunning(async () => {
+        saves += 1;
+      });
+
+      cancel.cancel();
+      await settle();
+      assert.equal(saves, 0, 'the save waits while the server still holds its hot swap');
+      if (end === 'answer') answer.resolve();
+      else clock.fire();
+      await save;
+      assert.equal(saves, 1);
+    });
+  }
+
   // The wiring of `hotSwap.ts`: a manual batch discards the pending save reload once, when it starts. A save during
   // the batch (between session A and session B) must still reload after it, or A keeps the old classes.
   test('a save during a manual batch reloads after it', async () => {
@@ -542,6 +636,53 @@ describe('HotSwapBatches', () => {
     await settle();
     assert.deepEqual(order, ['A', 'B', 'A', 'B']);
     assert.equal(clock.pendingCount(), 0);
+  });
+});
+
+describe('HotSwapCancel', () => {
+  const request = (seq: unknown, buildId = 'batch-1', command = HOT_SWAP_REQUEST) => ({
+    type: 'request',
+    command,
+    seq,
+    arguments: { build: true, buildId },
+  });
+
+  // `customRequest` takes no token: Cancel names the request by the `seq` the tracker saw leave.
+  test('a cancel after the request left cancels its seq once', () => {
+    const cancel = new HotSwapCancel('batch-1');
+    assert.equal(cancel.sent(request(7)), undefined, 'no cancel before the user cancels');
+    assert.deepEqual(cancel.cancel(), { requestId: 7 });
+    assert.equal(cancel.isCancelled, true);
+    assert.equal(cancel.cancel(), undefined, 'a second cancel sends nothing');
+    assert.equal(cancel.sent(request(7)), undefined);
+  });
+
+  test('a cancel before the request left cancels it once it leaves', () => {
+    const cancel = new HotSwapCancel('batch-1');
+    assert.equal(cancel.cancel(), undefined, 'no seq to cancel yet');
+    assert.equal(cancel.isCancelled, true);
+    assert.deepEqual(cancel.sent(request(9)), { requestId: 9 });
+    assert.equal(cancel.sent(request(10)), undefined, 'one cancel per reload');
+  });
+
+  test('only the hot swap request of its batch gives the seq', () => {
+    const cancel = new HotSwapCancel('batch-1');
+    cancel.sent({ type: 'response', command: HOT_SWAP_REQUEST, seq: 1, request_seq: 1 });
+    cancel.sent(request(2, 'batch-1', 'evaluate'));
+    cancel.sent(request(3, 'batch-0'));
+    cancel.sent(request('4'));
+    cancel.sent(undefined);
+    cancel.sent(request(5));
+    cancel.sent(request(6));
+    assert.deepEqual(cancel.cancel(), { requestId: 5 }, 'the first request of the batch');
+  });
+
+  test('a reload answered before the cancel waits for the answer and sends no cancel', async () => {
+    const cancel = new HotSwapCancel('batch-1');
+    cancel.sent(request(7));
+    assert.equal(await cancel.until(Promise.resolve('reloaded')), 'reloaded');
+    assert.equal(cancel.cancel(), undefined);
+    assert.equal(cancel.isCancelled, false);
   });
 });
 

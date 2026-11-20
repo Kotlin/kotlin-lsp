@@ -3,7 +3,6 @@ import { randomUUID } from 'node:crypto';
 import {
   commands,
   debug,
-  type CancellationToken,
   type DebugSession,
   type ExtensionContext,
   window,
@@ -12,6 +11,8 @@ import {
 // A namespace read, not a named import: the `vscode` stubs of the product tests export only the names they list.
 import * as vscode from 'vscode';
 import {
+  CANCEL_REQUEST,
+  type CancelArguments,
   HOT_SWAP_COMMAND,
   HOT_SWAP_REQUEST,
   HOT_SWAP_SETTING,
@@ -21,6 +22,7 @@ import {
   type HotSwapMode,
   type HotSwapOutcome,
   HotSwapBatches,
+  HotSwapCancel,
   type HotSwapResponse,
   HotSwapSessions,
   SaveCoalescer,
@@ -46,12 +48,15 @@ const RESTART_ACTION = 'Restart';
  * each session builds its own steps on the server, and the one `buildId` of the batch makes the server build each
  * step once: a later session skips what an earlier one built. The server builds, reloads and streams its lines as
  * `output` events, and the client shows only the summary, or a warning. With more than one session, each message
- * names its session.
+ * names its session. Cancel sends DAP `cancel` for the session's request (see `HotSwapCancel`) and closes the
+ * notification at once; the batch ends once the server answered the cancelled request, or after a short timeout.
  */
 export function registerHotSwap(context: ExtensionContext, debugTypes: Iterable<string>): void {
   const capabilities = new HotSwapSessions();
   const sessions = new Map<string, DebugSession>();
   const batches = new HotSwapBatches();
+  // The cancel of the request in flight, by session id; a session has at most one, since batches run one at a time.
+  const cancels = new Map<string, HotSwapCancel>();
 
   const mode = (): HotSwapMode =>
     hotSwapModeOf(workspace.getConfiguration(HOT_SWAP_SETTING_SECTION).get(HOT_SWAP_SETTING_KEY));
@@ -62,15 +67,30 @@ export function registerHotSwap(context: ExtensionContext, debugTypes: Iterable<
       hotSwapContextValue(mode(), capabilities.supports(debug.activeDebugSession?.id)),
     );
 
-  /** Reloads [session] as part of the batch [buildId] and shows the answer; resolves once the server answered. */
-  const reload = async (session: DebugSession, named: boolean, buildId: string): Promise<void> => {
+  /**
+   * Reloads [session] as part of the batch [buildId] and shows the answer. Resolves once the server answered, with
+   * `true`, or, at a cancel, with `false` once the cancelled request settled: the notification closes at the cancel,
+   * but the server keeps its hot swap until it answers, and the next batch must not run before (see
+   * `HotSwapCancel.settled`).
+   */
+  const reload = async (
+    session: DebugSession,
+    named: boolean,
+    buildId: string,
+  ): Promise<boolean> => {
+    const cancel = new HotSwapCancel(buildId);
+    // Set before the request leaves, so the tracker sees the request.
+    cancels.set(session.id, cancel);
     const request: Promise<HotSwapOutcome | undefined> = Promise.resolve(
       session.customRequest(HOT_SWAP_REQUEST, hotSwapArguments(buildId)),
     ).then(
       (body: unknown) => hotSwapOutcome(body as HotSwapResponse | undefined),
       (error: unknown) => hotSwapErrorOutcome(error),
     );
-    // Cancel only stops the waiting: `customRequest` cannot be cancelled, and the server finishes the build.
+    // Kept until the answer: a cancel before the request left waits for the tracker to see it.
+    void request.finally(() => {
+      if (cancels.get(session.id) === cancel) cancels.delete(session.id);
+    });
     const outcome = await window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
@@ -79,17 +99,25 @@ export function registerHotSwap(context: ExtensionContext, debugTypes: Iterable<
           : 'Reloading changed classes…',
         cancellable: true,
       },
-      (_progress, token) => Promise.race([request, cancelled(token)]),
+      (_progress, token) => {
+        token.onCancellationRequested(() => sendCancel(session, cancel.cancel()));
+        return cancel.until(request);
+      },
     );
     // A session that ended meanwhile was stopped by the user: its answer says nothing new.
     // Not awaited: an open warning must not hold the next reload back.
     if (outcome && sessions.has(session.id)) {
       void show(namedHotSwapOutcome(outcome, named ? session.name : undefined), session);
     }
-    await request;
+    if (!cancel.isCancelled) return true;
+    await cancel.settled(request);
+    return false;
   };
 
-  /** Reloads every session that can, one after another, in the order they started, as one build batch. */
+  /**
+   * Reloads every session that can, one after another, in the order they started, as one build batch. A cancel ends
+   * the batch: the user cancelled the reload, not the reload of one session.
+   */
   const reloadAll = async (): Promise<void> => {
     const targets = capabilities
       .capableSessions()
@@ -98,7 +126,7 @@ export function registerHotSwap(context: ExtensionContext, debugTypes: Iterable<
     const buildId = randomUUID();
     for (const session of targets) {
       // A session that ended while an earlier one reloaded is skipped.
-      if (sessions.has(session.id)) await reload(session, targets.length > 1, buildId);
+      if (sessions.has(session.id) && !(await reload(session, targets.length > 1, buildId))) return;
     }
   };
 
@@ -107,6 +135,9 @@ export function registerHotSwap(context: ExtensionContext, debugTypes: Iterable<
 
   const trackerFactory = {
     createDebugAdapterTracker: (session: DebugSession) => ({
+      // VS Code -> adapter, with the `seq` the adapter sees.
+      onWillReceiveMessage: (message: unknown) =>
+        sendCancel(session, cancels.get(session.id)?.sent(message)),
       onDidSendMessage: (message: unknown) => {
         const supported = hotSwapCapabilityOf(message);
         if (supported === undefined) return;
@@ -152,11 +183,18 @@ export function registerHotSwap(context: ExtensionContext, debugTypes: Iterable<
   refreshContext();
 }
 
-/** Resolves with `undefined` once [token] is cancelled. */
-function cancelled(token: CancellationToken): Promise<undefined> {
-  return new Promise((resolve) => {
-    token.onCancellationRequested(() => resolve(undefined));
-  });
+/**
+ * Sends DAP `cancel` with [args], if any. Nothing waits for its answer: a session that ended, or a server that cannot
+ * cancel, fails it, and the reload has ended either way.
+ */
+function sendCancel(session: DebugSession, args: CancelArguments | undefined): void {
+  if (args === undefined) return;
+  void Promise.resolve()
+    .then(() => session.customRequest(CANCEL_REQUEST, args))
+    .then(
+      () => undefined,
+      () => undefined,
+    );
 }
 
 async function show(outcome: HotSwapOutcome, session: DebugSession): Promise<void> {
