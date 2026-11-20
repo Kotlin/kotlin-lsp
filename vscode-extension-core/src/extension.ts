@@ -61,6 +61,7 @@ export {
   WorkspaceImportStateNotification,
   WorkspaceImportStateRequest,
 } from './workspaceImport';
+export { type ExtensionTestApi, extensionTestApi } from './testApi';
 export { checkGeoRestricted } from './geoRestriction';
 export { registerKotlinExtensionConflictHandler } from './kotlinExtensionConflict';
 export { registerExtensionConflictNotification } from './extensionConflict';

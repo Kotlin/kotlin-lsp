@@ -90,6 +90,7 @@ import {
 } from './serverDownloadRecovery';
 import { proxyJvmOptions } from './proxySettings';
 import { wslJvmOptions } from './wslJvmOptions';
+import { markReadyForTest, ReadyForTestNotification, resetReadyForTest } from './testApi';
 import { WorkspaceImportStateNotification } from './workspaceImport';
 import {
   buildToolConflictState,
@@ -527,6 +528,7 @@ async function doStartLspClient(getAcceptedEulaHash: AcceptedEulaHashProvider): 
     const launchSettings = launchSettingsSnapshot();
     const workspaceImportStatus = registerWorkspaceImportStatusHandler(runClient);
     registerWorkspaceImportStateHandler(runClient);
+    registerReadyForTestHandler(runClient);
     try {
       await startClientWithFeatures(runClient, configuredClientFeatureFactories);
       // A new process read the launch settings too, which a reload cannot. Edits made while it was
@@ -699,6 +701,17 @@ function registerWorkspaceImportStateHandler(client: LanguageClient): void {
   const subscription = client.onNotification(WorkspaceImportStateNotification, (params) => {
     if (params.phase === 'FINISHED') didFinishWorkspaceImport.fire();
   });
+  getContext().subscriptions.push(subscription);
+}
+
+/**
+ * In the test mode, records `intellij/ready-for-test` for `ExtensionTestApi.whenReadyForTest`.
+ * Registers before the client starts, so the notification of a fast import cannot be missed.
+ */
+function registerReadyForTestHandler(client: LanguageClient): void {
+  if (getContext().extensionMode !== vscode.ExtensionMode.Test) return;
+  resetReadyForTest();
+  const subscription = client.onNotification(ReadyForTestNotification, markReadyForTest);
   getContext().subscriptions.push(subscription);
 }
 

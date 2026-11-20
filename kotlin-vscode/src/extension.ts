@@ -3,6 +3,8 @@ import {
   activateExtension,
   checkGeoRestricted,
   deactivateExtension,
+  type ExtensionTestApi,
+  extensionTestApi,
   getOutputChannel,
   initializeExtension,
   isExternalServerConfigured,
@@ -20,12 +22,13 @@ import {
   runPolicyGatedActivation,
 } from '@jetbrains/intellij-vscode-extension-policy';
 
-export async function activate(context: ExtensionContext): Promise<void> {
+/** Returns the test API in the test mode, and `undefined` in all other modes. */
+export async function activate(context: ExtensionContext): Promise<ExtensionTestApi | undefined> {
   const geoRestricted = await checkGeoRestricted(context.extension);
-  if (geoRestricted) return;
+  if (geoRestricted) return undefined;
 
   const conflictFound = await registerKotlinExtensionConflictHandler(context);
-  if (conflictFound) return;
+  if (conflictFound) return undefined;
 
   await initializeExtension(context);
 
@@ -51,6 +54,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
         }),
     }),
   );
+  return extensionTestApi(context);
 }
 
 export const deactivate = deactivateExtension;
