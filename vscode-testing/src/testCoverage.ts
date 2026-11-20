@@ -24,18 +24,21 @@ export interface CoverageCount {
   readonly total: number;
 }
 
+type TestExecutions = number | boolean;
+
 export type TestCoverageDetail =
-  | { readonly kind: 'statement'; readonly range: Range; readonly executed: number }
+  | { readonly kind: 'statement'; readonly range: Range; readonly executed: TestExecutions }
   | {
       readonly kind: 'branch';
       readonly range: Range;
-      readonly branches: readonly { readonly executed: number }[];
+      readonly executed?: TestExecutions;
+      readonly branches: readonly { readonly executed: TestExecutions }[];
     }
   | {
       readonly kind: 'declaration';
       readonly name: string;
       readonly range: Range;
-      readonly executed: number;
+      readonly executed: TestExecutions;
     };
 
 export class LanguageFileCoverage extends FileCoverage {
@@ -62,7 +65,7 @@ function detailOf(detail: TestCoverageDetail): FileCoverageDetail {
       return new StatementCoverage(detail.executed, detail.range);
     case 'branch':
       return new StatementCoverage(
-        detail.branches.reduce((sum, branch) => sum + branch.executed, 0),
+        detail.executed ?? statementExecutions(detail.branches.map((branch) => branch.executed)),
         detail.range,
         detail.branches.map((branch) => new BranchCoverage(branch.executed)),
       );
@@ -70,3 +73,8 @@ function detailOf(detail: TestCoverageDetail): FileCoverageDetail {
       return new DeclarationCoverage(detail.name, detail.executed, detail.range);
   }
 }
+
+const statementExecutions = (branches: readonly TestExecutions[]): TestExecutions =>
+  branches.every((executed) => typeof executed === 'number')
+    ? branches.reduce((sum, executed) => sum + executed, 0)
+    : branches.some(Boolean);

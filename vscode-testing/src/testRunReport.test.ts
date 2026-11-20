@@ -568,4 +568,39 @@ describe('coverage', () => {
       ],
     );
   });
+
+  // A number would show as a count of executions in the editor.
+  test('of a language without counts tells only whether a statement ran', async () => {
+    const { report, coverage } = makeReport();
+    report.coverage({
+      ...file,
+      details: async () => [
+        { kind: 'statement', range: RANGE, executed: true },
+        { kind: 'branch', range: RANGE, branches: [{ executed: false }, { executed: true }] },
+        { kind: 'branch', range: RANGE, branches: [{ executed: false }, { executed: false }] },
+        {
+          kind: 'branch',
+          range: RANGE,
+          executed: true,
+          branches: [{ executed: false }, { executed: false }],
+        },
+      ],
+    });
+
+    const loaded = coverage[0] as unknown as {
+      details(token: CancellationToken): Promise<StatementCoverage[]>;
+    };
+    const details = await loaded.details({} as CancellationToken);
+
+    assert.deepEqual(
+      details.map((detail) => [detail.executed, detail.branches.map((branch) => branch.executed)]),
+      [
+        [true, []],
+        [true, [false, true]],
+        [false, [false, false]],
+        // The line ran, and no branch of it ran to its end.
+        [true, [false, false]],
+      ],
+    );
+  });
 });
