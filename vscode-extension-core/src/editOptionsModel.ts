@@ -51,7 +51,7 @@ export type OptionComponent =
   | {
       kind: 'multiSelector';
       bindId: string;
-      elements: { text: string; secondaryText?: string | null }[];
+      elements: SelectorElement[];
       multiple: boolean;
       allowsEmpty: boolean;
     }
@@ -62,6 +62,9 @@ export type OptionComponent =
   | { kind: 'tabSet'; tabs: { label: string; children: OptionComponent[] }[] }
   // The server sends the checkboxes of a panel without their `kind`.
   | { kind: 'checkboxPanel'; checkboxes: Omit<CheckboxComponent, 'kind'>[] };
+
+/** An element of a multi selector. The form shows the elements with the same [groupName] under one header. */
+type SelectorElement = { text: string; secondaryText?: string | null; groupName?: string | null };
 
 type CheckboxComponent = {
   kind: 'checkbox';
@@ -316,17 +319,33 @@ class FormRenderer {
   /**
    * Renders a list box, as the list of `MultiSelector` in the IDE. The size is two rows at least, because a select of one
    * row is a dropdown. An option holds only text, so the secondary text follows the text in parentheses.
+   *
+   * The elements of a named group go into an `optgroup` with the name as its header, as the IDE shows them under a
+   * separator. The elements without a group name have no header. The value of an option is the index of its element,
+   * so the order of the groups does not change the value.
    */
   private multiSelector(component: Extract<OptionComponent, { kind: 'multiSelector' }>): string {
     const selected = new Set(this.list(component.bindId).map(Number));
-    const options = component.elements.map((element, index) => {
+    const option = ({ element, index }: { element: SelectorElement; index: number }): string => {
       const attribute = selected.has(index) ? ' selected' : '';
       const text = element.secondaryText
         ? `${element.text} (${element.secondaryText})`
         : element.text;
       return `<option value="${index}"${attribute}>${escapeHtml(text)}</option>`;
-    });
-    const size = Math.min(Math.max(component.elements.length, 2), 10);
+    };
+    const indexed = component.elements.map((element, index) => ({ element, index }));
+    const groups = groupByName(indexed);
+    const options =
+      groups === undefined
+        ? indexed.map(option)
+        : groups.map(({ name, members }) => {
+            const items = members.map(option).join('');
+            return name === undefined
+              ? items
+              : `<optgroup label="${escapeHtml(name)}">${items}</optgroup>`;
+          });
+    const headerCount = groups?.filter((group) => group.name !== undefined).length ?? 0;
+    const size = Math.min(Math.max(component.elements.length + headerCount, 2), 10);
     const multiple = component.multiple ? ' multiple' : '';
     return [
       `<select class="selector" size="${size}"${multiple}${this.bind(component.bindId, 'multiSelector')}${this.invalid(component.bindId)}>${options.join('')}</select>`,
@@ -417,6 +436,27 @@ class FormRenderer {
   }
 }
 
+/**
+ * Groups the elements of a multi selector by their group name, as `UiDslOptPaneRenderer` does in the IDE. The groups keep
+ * the order of the first element of each group, and each group keeps the order of its elements. The elements without a
+ * group name are a group with the `undefined` name.
+ *
+ * @returns the groups, or `undefined` if all elements are in one group
+ */
+function groupByName<T extends { element: SelectorElement }>(
+  items: T[],
+): { name: string | undefined; members: T[] }[] | undefined {
+  const groups = new Map<string | undefined, T[]>();
+  for (const item of items) {
+    const name = item.element.groupName ?? undefined;
+    const members = groups.get(name);
+    if (members === undefined) groups.set(name, [item]);
+    else members.push(item);
+  }
+  if (groups.size < 2) return undefined;
+  return [...groups].map(([name, members]) => ({ name, members }));
+}
+
 const FORM_STYLE = `
 body { font-family: var(--vscode-font-family); font-size: var(--vscode-font-size); color: var(--vscode-foreground); padding: 0 20px 20px; }
 h2 { font-weight: 600; }
@@ -435,6 +475,8 @@ input[type="checkbox"]:focus { outline-offset: 2px; }
 button:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: 2px; }
 select.selector { display: block; min-width: 300px; max-width: 600px; margin: 6px 0; padding: 0; }
 select.selector option { padding: 2px 6px; }
+select.selector optgroup { color: var(--vscode-descriptionForeground); font-style: normal; font-weight: 600; padding: 4px 6px 0; }
+select.selector optgroup option { color: var(--vscode-input-foreground); font-weight: normal; padding-left: 18px; }
 select.selector option:checked { background: var(--vscode-list-inactiveSelectionBackground); color: var(--vscode-list-inactiveSelectionForeground, inherit); }
 select.selector:focus option:checked { background: var(--vscode-list-activeSelectionBackground); color: var(--vscode-list-activeSelectionForeground); }
 .invalid { border-color: var(--vscode-inputValidation-errorBorder); }

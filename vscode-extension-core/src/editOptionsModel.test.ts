@@ -155,6 +155,63 @@ test('renders a multi selector as a list box', () => {
   );
 });
 
+test('groups the elements of a multi selector by their group name', () => {
+  const html = renderEditOptionsHtml(
+    params({
+      components: [
+        {
+          kind: 'multiSelector',
+          bindId: 'members',
+          elements: [
+            { text: 'a', groupName: 'Child' },
+            { text: 'x', groupName: 'Parent' },
+            { text: 'b', groupName: 'Child' },
+            { text: 'n' },
+          ],
+          multiple: true,
+          allowsEmpty: true,
+        },
+      ],
+      values: { members: [2] },
+    }),
+    { nonce: 'n0' },
+  );
+
+  assert.match(html, /<select class="selector" size="6" multiple/);
+  assert.match(
+    html,
+    /<optgroup label="Child"><option value="0">a<\/option><option value="2" selected>b<\/option><\/optgroup>/,
+  );
+  assert.match(
+    html,
+    /<\/optgroup><optgroup label="Parent"><option value="1">x<\/option><\/optgroup><option value="3">n<\/option><\/select>/,
+  );
+});
+
+test('shows no group header when all elements of a multi selector are in one group', () => {
+  const html = renderEditOptionsHtml(
+    params({
+      components: [
+        {
+          kind: 'multiSelector',
+          bindId: 'members',
+          elements: [
+            { text: 'b', groupName: 'Child' },
+            { text: 'a', groupName: 'Child' },
+          ],
+          multiple: true,
+          allowsEmpty: true,
+        },
+      ],
+      values: {},
+    }),
+    { nonce: 'n0' },
+  );
+
+  assert.doesNotMatch(html, /<optgroup/);
+  assert.match(html, /<option value="0">b<\/option><option value="1">a<\/option>/);
+});
+
 test('accepts only well-formed messages of the webview', () => {
   assert.deepEqual(parseEditOptionsMessage({ type: 'cancel' }), { type: 'cancel' });
   assert.deepEqual(

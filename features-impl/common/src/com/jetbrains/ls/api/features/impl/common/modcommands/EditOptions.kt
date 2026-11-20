@@ -150,6 +150,7 @@ sealed interface OptionComponentData {
     /**
      * An [OptMultiSelector]. The value is the list of the indexes of the selected [elements].
      * [multiple] allows more than one selected element, and [allowsEmpty] allows no selected element.
+     * The client can show the elements in groups by [SelectorElement.groupName].
      */
     @Serializable
     @SerialName("multiSelector")
@@ -161,7 +162,7 @@ sealed interface OptionComponentData {
     ) : OptionComponentData
 
     @Serializable
-    data class SelectorElement(val text: String, val secondaryText: String? = null)
+    data class SelectorElement(val text: String, val secondaryText: String? = null, val groupName: String? = null)
 
     /** An [OptGroup]. */
     @Serializable
@@ -462,7 +463,7 @@ private class OptionPaneReader(private val controller: OptionController, private
             values[component.bindId] = JsonArray(selected.map { component.elements.indexOf(it) }.filter { it >= 0 }.map(::JsonPrimitive))
             OptionComponentData.MultiSelector(
                 component.bindId,
-                component.elements.map { OptionComponentData.SelectorElement(it.text, it.secondaryText) },
+                component.elements.map { OptionComponentData.SelectorElement(it.text, it.secondaryText, it.groupName) },
                 multiple = when (component.mode) {
                     OptMultiSelector.SelectionMode.SINGLE, OptMultiSelector.SelectionMode.SINGLE_OR_EMPTY -> false
                     OptMultiSelector.SelectionMode.MULTIPLE, OptMultiSelector.SelectionMode.MULTIPLE_OR_EMPTY -> true
