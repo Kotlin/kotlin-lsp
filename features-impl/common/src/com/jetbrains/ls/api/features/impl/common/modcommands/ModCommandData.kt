@@ -32,6 +32,7 @@ import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.findDocument
+import com.intellij.psi.PsiPlace
 import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.util.fileName
@@ -422,16 +423,16 @@ sealed class ModCommandData {
                 // The client cannot ask the user, so the fix goes on, and the user is told that it can break the code.
                 server?.config?.clientSupportsConflictView != true -> DisplayMessage(
                     (listOf(LspServerBundle.message("conflicts.title")) +
-                     command.places.flatMap { place ->
+                     command.conflictsByPlace.flatMap { [place, conflict] ->
                          val prefix = place.lspLocation()?.let { "[${it.uri.uri.fileName}:${it.range.start.line + 1}] " }.orEmpty()
-                         place.conflict.messages.map { prefix + StringUtil.removeHtmlTags(it, true).removeSuffix(".") + "." }
+                         conflict.messages.map { prefix + StringUtil.removeHtmlTags(it, true).removeSuffix(".") + "." }
                      }).joinToString("\n"),
                     ModDisplayMessage.MessageKind.INFORMATION,
                 )
                 else -> ShowConflicts(
-                    command.places.map { place ->
+                    command.conflictsByPlace.map { [place, conflict] ->
                         ShowConflicts.Conflict(
-                            messages = place.conflict.messages.map { StringUtil.removeHtmlTags(it, true) },
+                            messages = conflict.messages.map { StringUtil.removeHtmlTags(it, true) },
                             location = place.lspLocation(),
                         )
                     },
@@ -514,7 +515,7 @@ sealed class ModCommandData {
 }
 
 /** The range of the place in its file; a place of the whole element is located as its definition. */
-private fun ModShowConflicts.Place.lspLocation(): Location? {
+private fun PsiPlace.lspLocation(): Location? {
     val range = rangeInElement ?: return element.getLspLocationForDefinition()
     val file = element.containingFile ?: return null
     return file.getLspLocation(range.shiftRight(element.textRange.startOffset))
