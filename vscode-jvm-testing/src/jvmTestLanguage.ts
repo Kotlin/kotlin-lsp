@@ -17,6 +17,7 @@ import {
   type TestRunner,
 } from '@jetbrains/vscode-testing';
 import { JvmTestBuilds } from './jvmTestBuild';
+import { JvmTestCoverages } from './jvmTestCoverage';
 import {
   type JvmTestConfig,
   type JvmTestConfigPrompt,
@@ -27,17 +28,25 @@ import {
 } from './jvmTestConfig';
 import {
   JVM_LANGUAGE_IDS,
+  type JvmFileCoverage,
   jvmSuiteLocation,
   JvmTestCommands,
+  type JvmTestCoverageRequest,
   type JvmTestLaunch,
   type JvmTestLaunchRequest,
+  type JvmTestProfile,
+  LOAD_TEST_COVERAGE_COMMAND,
   RESOLVE_TEST_LAUNCH_COMMAND,
 } from './jvmTestProtocol';
 
 const FRAME = /^\s*at\s+(\S.*)\(([^()]*)\)\s*$/;
 const SOURCE_LINE = /:(\d+)\s*$/;
 
-type JvmTestProfile = 'run' | 'debug';
+const PROFILE_MODES: Record<JvmTestProfile, 'run' | 'debug'> = {
+  run: 'run',
+  debug: 'debug',
+  coverage: 'run',
+};
 
 export interface JvmTestLaunchConfig extends TestLaunchConfig {
   readonly type: 'intellij_debugger';
@@ -63,11 +72,14 @@ export interface JvmTestLaunchConfig extends TestLaunchConfig {
 
 export interface JvmTestLaunchServer {
   launches(request: JvmTestLaunchRequest): Promise<JvmTestLaunch[]>;
+  coverage(request: JvmTestCoverageRequest): Promise<JvmFileCoverage[]>;
 }
 
 const lspLaunchServer: JvmTestLaunchServer = {
   launches: (request) =>
     sendLspCommand<JvmTestLaunch[]>(runningClient(), RESOLVE_TEST_LAUNCH_COMMAND, [request]),
+  coverage: (request) =>
+    sendLspCommand<JvmFileCoverage[]>(runningClient(), LOAD_TEST_COVERAGE_COMMAND, [request]),
 };
 
 export interface JvmTestLanguageOptions {
@@ -81,6 +93,7 @@ export class JvmTestLanguage implements TestLanguage<JvmTestProfile> {
   readonly profiles: readonly TestProfile<JvmTestProfile>[] = [
     { id: 'run', label: 'Run', button: 'run', nodes: 'any' },
     { id: 'debug', label: 'Debug', button: 'debug', nodes: 'any' },
+    { id: 'coverage', label: 'Run with Coverage', button: 'coverage', nodes: 'any' },
   ];
   readonly discovery = lspDiscovery({
     commands: JvmTestCommands,
@@ -101,12 +114,17 @@ export class JvmTestLanguage implements TestLanguage<JvmTestProfile> {
   startRun(profile: JvmTestProfile): TestRunner {
     const builds = new JvmTestBuilds();
     const configs = this.runConfigs();
-    return debugAdapterRunner({
-      mode: profile,
+    const coverages =
+      profile === 'coverage'
+        ? new JvmTestCoverages({ load: (request) => this.server.coverage(request) })
+        : undefined;
+    const runner = debugAdapterRunner({
+      mode: PROFILE_MODES[profile],
       launches: async (input) => {
         const config = await configs.configFor(input.group.uri, input.token);
         if (input.token.isCancellationRequested) return [];
-        const launches = await this.serverLaunches(input.group, config);
+        const launches = await this.serverLaunches(input.group, config, profile);
+        coverages?.launched(input.group, launches);
         const moduleFile = launches.find((launch) => launch.file)?.file ?? undefined;
         const built = await builds.ensureBuilt(input, { moduleFile });
         if (built === 'failed') {
@@ -116,6 +134,15 @@ export class JvmTestLanguage implements TestLanguage<JvmTestProfile> {
       },
       stackFrames: this.stackFrames,
     });
+    if (!coverages) return runner;
+    return {
+      run: async (input) => {
+        const unreported = await runner.run(input);
+        await coverages.report(input);
+        return unreported;
+      },
+      finished: () => coverages.finished(),
+    };
   }
 
   async resolveLaunches(
@@ -123,7 +150,7 @@ export class JvmTestLanguage implements TestLanguage<JvmTestProfile> {
     token: CancellationToken,
   ): Promise<JvmTestLaunchConfig[]> {
     const config = await this.runConfigs().configFor(group.uri, token);
-    return (await this.serverLaunches(group, config)).map((launch) =>
+    return (await this.serverLaunches(group, config, 'run')).map((launch) =>
       configOf(launch, group, config),
     );
   }
@@ -135,11 +162,13 @@ export class JvmTestLanguage implements TestLanguage<JvmTestProfile> {
   private serverLaunches(
     group: TestRunGroup,
     config: JvmTestConfig | undefined,
+    profile: JvmTestProfile,
   ): Promise<JvmTestLaunch[]> {
     return this.server.launches({
       testIds: [...group.testIds],
       uniqueIds: [...group.uniqueIds],
       tags: config?.tags ?? [],
+      profile,
     });
   }
 
@@ -184,6 +213,7 @@ function configOf(
   const vmArgs = [
     ...(config?.encoding ? [`-Dfile.encoding=${config.encoding}`] : []),
     ...(config?.vmArgs ?? []),
+    ...(launch.vmArgs ?? []),
   ];
   return {
     type: 'intellij_debugger',

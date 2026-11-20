@@ -57,6 +57,7 @@ function languageOf(options: {
         requests.push(request);
         return Promise.resolve([launch]);
       },
+      coverage: () => Promise.resolve([]),
     },
     settings: () => settings,
     prompt,
@@ -155,6 +156,26 @@ describe('JvmTestLanguage.resolveLaunches', () => {
     } = await launchedConfigs(junitLaunch, { encoding: 'ISO-8859-1', vmArgs: ['-Xmx64m'] });
 
     assert.deepEqual(config.vmArgs, ['-Dfile.encoding=ISO-8859-1', '-Xmx64m']);
+  });
+
+  // The server knows the agent that a launch needs, such as the coverage agent. The client only passes it on.
+  test('adds the VM options of the server after those of the test configuration', async () => {
+    const {
+      configs: [config],
+      requests,
+    } = await launchedConfigs(
+      { ...junitLaunch, vmArgs: ['-javaagent:/tmp/agent.jar=destfile=/tmp/jacoco.exec'] },
+      { vmArgs: ['-Xmx64m'] },
+    );
+
+    assert.deepEqual(config.vmArgs, [
+      '-Xmx64m',
+      '-javaagent:/tmp/agent.jar=destfile=/tmp/jacoco.exec',
+    ]);
+    assert.deepEqual(
+      requests.map((request) => request.profile),
+      ['run'],
+    );
   });
 
   test('adds the paths of the test configuration before the runner jars, and skips its exclusions', async () => {
