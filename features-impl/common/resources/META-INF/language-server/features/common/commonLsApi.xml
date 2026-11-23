@@ -47,6 +47,7 @@
 
   <extensions defaultExtensionNs="ls">
     <systemOptionsCommandProvider implementation="com.jetbrains.ls.api.features.impl.common.configuration.LSCurrentProfileOptionsCommandProvider"/>
+    <systemOptionsCommandProvider implementation="com.jetbrains.ls.api.features.impl.common.configuration.LSPropertiesComponentOptionsCommandProvider"/>
     <completionItemKindProvider language=""
                                 implementationClass="com.jetbrains.ls.api.features.impl.common.completion.LSAnyCompletionItemKindProvider"/>
   </extensions>
