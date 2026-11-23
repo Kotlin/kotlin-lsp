@@ -2,16 +2,21 @@
 package com.jetbrains.ls.api.features.impl.common.rename
 
 import com.intellij.codeInsight.TargetElementUtil
+import com.intellij.modcommand.ActionContext
 import com.intellij.openapi.application.readAction
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.findDocument
 import com.intellij.openapi.vfs.findPsiFile
+import com.intellij.psi.PsiDirectoryContainer
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiUtilCore
+import com.intellij.refactoring.modplan.ModPlanCommandAction
 import com.intellij.refactoring.modplan.ModPlanOptionValues
+import com.intellij.refactoring.modplan.rename.ModPlanRenameOptions
 import com.intellij.refactoring.modplan.rename.ModPlanRenameRefactoring
 import com.intellij.refactoring.rename.HeadlessRenameProcessor
+import com.jetbrains.ls.api.core.LSAnalysisContext
 import com.jetbrains.ls.api.core.LSServer
 import com.jetbrains.ls.api.core.processors.LSRenameCustomizer
 import com.jetbrains.ls.api.core.processors.LSRenameProcessor
@@ -21,12 +26,16 @@ import com.jetbrains.ls.api.core.project
 import com.jetbrains.ls.api.core.util.findVirtualFile
 import com.jetbrains.ls.api.core.util.offsetByPosition
 import com.jetbrains.ls.api.core.util.toLspRange
+import com.jetbrains.ls.api.core.withWriteAnalysisContextAndFileSettings
 import com.jetbrains.ls.api.features.impl.common.processors.doRefactoring
 import com.jetbrains.ls.api.features.impl.common.processors.failRenameIfRefused
 import com.jetbrains.ls.api.features.language.LSLanguage
 import com.jetbrains.ls.api.features.rename.LSRenameProvider
 import com.jetbrains.ls.api.features.textEdits.TextEditsComputer.DiffGranularity
+import com.jetbrains.ls.kotlinLsp.requests.core.ModCommandData
+import com.jetbrains.ls.kotlinLsp.requests.core.executeCommand
 import com.jetbrains.lsp.implementation.LspHandlerContext
+import com.jetbrains.lsp.implementation.lspClient
 import com.jetbrains.lsp.implementation.throwLspError
 import com.jetbrains.lsp.protocol.ErrorCodes
 import com.jetbrains.lsp.protocol.FileRename
@@ -45,8 +54,17 @@ abstract class LSRenameProviderBase(
     /** The unit of the diff that reports the text edits of a rename. */
     protected open val renameDiffGranularity: DiffGranularity get() = DiffGranularity.CHARACTER
 
+    /**
+     * Whether [rename] runs the ModPlan rename as a ModCommand, see [renameWithModCommand]. False renames with [LSRenameProcessor], which
+     * asks no question.
+     */
+    protected open val renamesWithModCommand: Boolean get() = false
+
     context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun rename(params: RenameParams): WorkspaceEdit {
+        if (renamesWithModCommand && server.config.clientSupportsEditOptions && renameWithModCommand(params)) {
+            return WorkspaceEdit(documentChanges = emptyList())
+        }
         val changes = server.withWriteAnalysisContext {
             val processor = context(project) { prepareRenameProcessor(params, renameCustomizer) }
                 ?: return@withWriteAnalysisContext emptyList()
@@ -55,6 +73,47 @@ abstract class LSRenameProviderBase(
         }
 
         return WorkspaceEdit(documentChanges = renameCustomizer.clientChanges(changes))
+    }
+
+    /**
+     * Renames the target of [params] with the [ModPlanCommandAction] of [ModPlanRenameRefactoring], as safe delete does. The client
+     * answers the questions of the rename in the forms of `intellij/editOptions`, and confirms the conflicts. The server sends the edits
+     * with `workspace/applyEdit` while the rename request waits, so the response of the request holds no edit. The plan runs in the write
+     * analysis context, as in [LSRenameProcessor]: in the read one, the search finds no usage.
+     *
+     * [rename] calls it only for a client that declares `editOptions`. A client without it, such as idecli, renames with
+     * [LSRenameProcessor]: it gets the edits in the response, and a refusal or a conflict as an error.
+     *
+     * @return false if the ModPlan engine does not support the target, or the client cannot show its command, so that
+     * [LSRenameProcessor] renames it
+     */
+    context(server: LSServer, handlerContext: LspHandlerContext)
+    private suspend fun renameWithModCommand(params: RenameParams): Boolean =
+        server.withWriteAnalysisContextAndFileSettings(params.textDocument.uri.uri) {
+            val command = readAction { renameCommand(params) } ?: return@withWriteAnalysisContextAndFileSettings false
+            executeCommand(command, lspClient)
+            true
+        }
+
+    /** The command of the rename of [renameWithModCommand], or null if it falls back to [LSRenameProcessor]. */
+    context(server: LSServer, _: LSAnalysisContext)
+    private fun renameCommand(params: RenameParams): ModCommandData? {
+        val virtualFile = params.findVirtualFile() ?: return null
+        val document = virtualFile.findDocument() ?: return null
+        val psiFile = virtualFile.findPsiFile(project) ?: return null
+        val offset = document.offsetByPosition(params.position)
+        val target = renameCustomizer.extractTargets(psiFile, offset).firstOrNull() ?: return null
+        // A package of several directories renames one directory of it in prepareRenameProcessor.
+        if (target is PsiDirectoryContainer) return null
+        val refactoring = ModPlanRenameRefactoring.getInstance()
+        val request = ModPlanRenameRefactoring.request(
+            project, target, params.newName, substitute = true,
+            ModPlanRenameOptions.withRenamersOfSettings(ModPlanOptionValues.EMPTY).with(ModPlanRenameOptions.SKIP_READ_ONLY_USAGES, true))
+        @Suppress("DialogTitleCapitalization")
+        val action = ModPlanCommandAction(refactoring, request, target, refactoring.title(), false)
+        val actionContext = ActionContext(project, psiFile, offset, TextRange.create(offset, offset), null)
+        if (action.getPresentation(actionContext) == null) return null
+        return ModCommandData.from(action.perform(actionContext), actionContext, server)
     }
 
     context(server: LSServer, handlerContext: LspHandlerContext)
