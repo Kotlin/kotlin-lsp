@@ -18,14 +18,19 @@ object LSCodeActions {
     val scope: Scope = Scope("lsp.codeActions")
     private val tracer = TelemetryManager.getTracer(scope)
 
+    /**
+     * Gives the code actions of all providers. The providers work concurrently.
+     * The response lists the actions by [LSCodeActionProvider.group], then in the order of the providers in the configuration.
+     * Thus, a client menu, such as "Source Action..." in VS Code, shows the actions in the same order for each request.
+     */
     context(server: LSServer, configuration: LSConfiguration, handlerContext: LspHandlerContext)
     suspend fun getCodeActions(params: CodeActionParams): List<CodeAction> {
         return LSConcurrentResponseHandler.streamResultsIfPossibleOrRespondDirectly(
             partialResultToken = params.partialResultToken,
             resultSerializer = CodeAction.serializer(),
-            providers = getProviders(params),
-            listingOrder = { codeActionProvider -> codeActionProvider.group.ordinal },
-            getResults ={ codeActionProvider ->
+            providers = getProviders(params).sortedBy { it.group.ordinal }.withIndex().toList(),
+            listingOrder = { (index, _) -> index },
+            getResults = { (_, codeActionProvider) ->
                 tracer.traceProvider(
                     spanName = "provider.codeAction",
                     provider = codeActionProvider,
