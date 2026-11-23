@@ -20,6 +20,7 @@ import com.intellij.modcommand.ModRegisterTabOut
 import com.intellij.modcommand.ModShowConflicts
 import com.intellij.modcommand.ModStartRename
 import com.intellij.modcommand.ModStartTemplate
+import com.intellij.modcommand.ModTriggerFeatureUsed
 import com.intellij.modcommand.ModUpdateFileText
 import com.intellij.modcommand.ModUpdateSystemOptions
 import com.intellij.openapi.application.readAction
@@ -341,6 +342,7 @@ sealed class ModCommandData {
             server: LSServer? = null,
         ): ModCommandData? = when (command) {
             is ModNothing -> Nothing
+            is ModTriggerFeatureUsed -> Nothing // TODO: take feature usage into account when the command is actually executed by LSP client
             is ModCompositeCommand -> Composite(command.commands.map { from(it, actionContext, server) ?: return null })
             is ModNavigate -> Navigate(command.file.url.toFileUrl(), command.selectionStart, command.selectionEnd, command.caret)
             is ModCreateFile -> CreateFile(
