@@ -266,10 +266,11 @@ class EditOptionsSession(
         val currentContext = context.inCurrentAnalysisContext() ?: return EditOptionsOutcome.NotAvailable
         val container = command.containerSupplier.get()
         val controller = container.optionController
+        val pane = container.formPane() ?: return EditOptionsOutcome.NotAvailable
         val errors = LinkedHashMap<String, String>()
-        OptionValueWriter(controller, values, errors).write(container.optionsPane.components)
+        OptionValueWriter(controller, values, errors).write(pane.components)
         if (errors.isEmpty()) {
-            OptionValidator(controller, currentContext, errors).validate(container.optionsPane.components, enabled = true)
+            OptionValidator(controller, currentContext, errors).validate(pane.components, enabled = true)
         }
         if (errors.isNotEmpty()) return EditOptionsOutcome.Invalid(errors)
         val next = runCatching {
@@ -302,13 +303,16 @@ sealed interface EditOptionsOutcome {
  * client cannot show its pane. Must run in a read action.
  *
  * A pane which holds an [OptCustom] has no form, because the renderer of a custom component is IDE code.
+ * The client then shows the [fallback pane][OptionContainer.getFallbackOptionsPane] of the container.
  */
 @Suppress("UNCHECKED_CAST")
 fun ModEditOptions<*>.toEditOptionsData(context: ActionContext, server: LSServer): ModCommandData.EditOptions? {
     val virtualFile = context.file.virtualFile ?: return null
     val container = containerSupplier.get()
-    val values = LinkedHashMap<String, JsonElement>()
-    val components = OptionPaneReader(container.optionController, values).read(container.optionsPane.components) ?: return null
+    val (components, values) = container.panes().firstNotNullOfOrNull { pane ->
+        val paneValues = LinkedHashMap<String, JsonElement>()
+        OptionPaneReader(container.optionController, paneValues).read(pane.components)?.let { it to paneValues }
+    } ?: return null
     val session = EditOptionsSession(
         fileUrl = virtualFile.url,
         // A file without a document has no text to hash; its modification stamp still changes with the file.
@@ -324,8 +328,14 @@ fun ModEditOptions<*>.toEditOptionsData(context: ActionContext, server: LSServer
  * Whether the client can show the options pane of [this] container as a form, as [toEditOptionsData] does.
  * A pane which holds an [OptCustom] has no form. Must run in a read action.
  */
-internal fun OptionContainer.hasEditOptionsForm(): Boolean =
-    OptionPaneReader(optionController, LinkedHashMap()).read(optionsPane.components) != null
+internal fun OptionContainer.hasEditOptionsForm(): Boolean = formPane() != null
+
+/** The first pane of [this] container that the client can show as a form, as [toEditOptionsData] does. */
+private fun OptionContainer.formPane(): OptPane? =
+    panes().firstOrNull { OptionPaneReader(optionController, LinkedHashMap()).read(it.components) != null }
+
+/** The options pane of [this] container, and then its fallback pane. */
+private fun OptionContainer.panes(): Sequence<OptPane> = sequenceOf(optionsPane, fallbackOptionsPane).filterNotNull()
 
 /**
  * Asks the user to edit the options of [command], and executes the command that the answer produces. Returns `false`
