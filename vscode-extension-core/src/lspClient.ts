@@ -705,14 +705,19 @@ function registerWorkspaceImportStateHandler(client: LanguageClient): void {
 }
 
 /**
- * In the test mode, records `intellij/ready-for-test` for `ExtensionTestApi.whenReadyForTest`.
+ * In the test mode, records `intellij/ready-for-test` for `ExtensionTestApi.whenReadyForTest`, until the client stops.
  * Registers before the client starts, so the notification of a fast import cannot be missed.
  */
 function registerReadyForTestHandler(client: LanguageClient): void {
   if (getContext().extensionMode !== vscode.ExtensionMode.Test) return;
   resetReadyForTest();
-  const subscription = client.onNotification(ReadyForTestNotification, markReadyForTest);
-  getContext().subscriptions.push(subscription);
+  getContext().subscriptions.push(
+    client.onNotification(ReadyForTestNotification, markReadyForTest),
+    // A stopped or crashed server is not ready until the next start
+    client.onDidChangeState((event) => {
+      if (event.newState === State.Stopped) resetReadyForTest();
+    }),
+  );
 }
 
 /**

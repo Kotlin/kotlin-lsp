@@ -8,8 +8,8 @@ export const ReadyForTestNotification = new NotificationType0('intellij/ready-fo
 /** The API that `activate()` returns in the test mode. The integration tests in VS Code use it. */
 export interface ExtensionTestApi {
   /**
-   * Resolves when the server of the current LSP client has sent `intellij/ready-for-test`. A new
-   * client start makes it wait again, so a start that fails and retries does not resolve it.
+   * Resolves when the server of the current LSP client has sent `intellij/ready-for-test`. A client
+   * stop and a new client start make it wait again, so a crashed server does not resolve it.
    */
   whenReadyForTest(): Promise<void>;
 }
@@ -17,7 +17,7 @@ export interface ExtensionTestApi {
 let readyForTest = false;
 let readyForTestWaiters: (() => void)[] = [];
 
-/** Called before a new LSP client starts. */
+/** Called before a new LSP client starts, and when the client stops. */
 export function resetReadyForTest(): void {
   readyForTest = false;
 }
