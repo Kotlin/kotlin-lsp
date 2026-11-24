@@ -5,7 +5,7 @@ import com.jetbrains.ls.api.features.BuildToolDriverEntry
 import com.jetbrains.ls.api.features.LanguageServerExtension
 import com.jetbrains.ls.api.features.language.LSConfigurationPiece
 import com.jetbrains.ls.imports.externalProcess.MavenExternalBuildDriver
-import com.jetbrains.ls.imports.gradle.GradleDriver
+import com.jetbrains.ls.imports.externalProcess.GradleExternalBuildDriver
 import com.jetbrains.ls.imports.java.JavaCommandDriver
 import com.jetbrains.ls.imports.jps.JpsDriver
 import com.jetbrains.ls.imports.json.JsonDriver
@@ -18,7 +18,7 @@ class WorkspaceImportLanguageServerExtension : LanguageServerExtension {
 
                 BuildToolDriverEntry(JsonDriver),
                 BuildToolDriverEntry(MavenExternalBuildDriver),
-                BuildToolDriverEntry(GradleDriver),
+                BuildToolDriverEntry(GradleExternalBuildDriver),
                 BuildToolDriverEntry(JpsDriver),
                 BuildToolDriverEntry(JavaCommandDriver),
             ),
