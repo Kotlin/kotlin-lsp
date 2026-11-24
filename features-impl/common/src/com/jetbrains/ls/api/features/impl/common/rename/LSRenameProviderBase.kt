@@ -60,6 +60,9 @@ abstract class LSRenameProviderBase(
      */
     protected open val renamesWithModCommand: Boolean get() = false
 
+    /** Whether [renameFile] renames the related elements of the automatic renamers of the settings, see [RenameContext.runsAutomaticRenamers]. */
+    protected open val fileRenameRunsAutomaticRenamers: Boolean get() = true
+
     context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun rename(params: RenameParams): WorkspaceEdit {
         if (renamesWithModCommand && server.config.clientSupportsEditOptions && renameWithModCommand(params)) {
@@ -172,7 +175,7 @@ abstract class LSRenameProviderBase(
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction null
                 val target = getTargetClass(psiFile, nameChange.oldName.fileName) ?: psiFile
                 val newName = if (target is PsiFile) nameChange.newName.fullName() else nameChange.newName.fileName
-                LSRenameProcessor.create(RenameContext(target, newName))
+                LSRenameProcessor.create(RenameContext(target, newName, runsAutomaticRenamers = fileRenameRunsAutomaticRenamers))
             } ?: return@withWriteAnalysisContext null
 
             doRefactoring(processor, DiffGranularity.WORD, params.oldUri, true)

@@ -10,6 +10,8 @@ import org.jetbrains.kotlin.psi.KtFile
 internal object LSKotlinRenameProvider : LSRenameProviderBase(setOf(LSKotlinLanguage)) {
     override val renamesWithModCommand: Boolean get() = true
 
+    override val fileRenameRunsAutomaticRenamers: Boolean get() = false
+
     override fun placeholderFor(identifierText: String): String = identifierText.removeSurrounding("`")
 
     override fun getTargetClass(psiFile: PsiFile, name: String): PsiElement? {
