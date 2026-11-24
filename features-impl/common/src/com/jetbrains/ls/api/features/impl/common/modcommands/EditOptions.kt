@@ -14,6 +14,7 @@ import com.intellij.codeInspection.options.OptHorizontalStack
 import com.intellij.codeInspection.options.OptMultiSelector
 import com.intellij.codeInspection.options.OptNumber
 import com.intellij.codeInspection.options.OptPane
+import com.intellij.codeInspection.options.OptRadioButton
 import com.intellij.codeInspection.options.OptRegularComponent
 import com.intellij.codeInspection.options.OptSeparator
 import com.intellij.codeInspection.options.OptSettingLink
@@ -125,6 +126,20 @@ sealed interface OptionComponentData {
 
     @Serializable
     data class DropdownOption(val key: String, val label: String)
+
+    /**
+     * An [OptRadioButton]. The radio buttons with the same [bindId] form a group, and the value is the [key] of the selected
+     * radio button. The client disables the [children] while the radio button is clear.
+     */
+    @Serializable
+    @SerialName("radioButton")
+    data class RadioButton(
+        val bindId: String,
+        val key: String,
+        val label: String,
+        val children: List<OptionComponentData> = emptyList(),
+        val description: String? = null,
+    ) : OptionComponentData
 
     /** An [OptStringList]. The value is a list of strings. */
     @Serializable
@@ -437,10 +452,21 @@ private class OptionPaneReader(private val controller: OptionController, private
             // The IDE cannot render a dropdown without a value either: the type of the value decides how a key converts back.
             null -> null
             else -> {
-                values[component.bindId] = JsonPrimitive(if (value is Enum<*>) value.name else value.toString())
+                values[component.bindId] = JsonPrimitive(value.toKey())
                 OptionComponentData.Dropdown(
                     component.bindId, component.splitLabel.prefix, component.splitLabel.suffix,
                     component.options.map { OptionComponentData.DropdownOption(it.key, it.label.text()) },
+                )
+            }
+        }
+        is OptRadioButton -> when (val value = controller.getOption(component.bindId)) {
+            // The IDE cannot render a radio button without a value either, as for a dropdown.
+            null -> null
+            else -> {
+                values[component.bindId] = JsonPrimitive(value.toKey())
+                OptionComponentData.RadioButton(
+                    component.bindId, component.key, component.label.text(), read(component.children) ?: return null,
+                    component.description.toHtml(),
                 )
             }
         }
@@ -502,6 +528,9 @@ private class OptionPaneReader(private val controller: OptionController, private
     )
 }
 
+/** The key of a dropdown option or a radio button which matches [this] value of an option. */
+private fun Any.toKey(): String = if (this is Enum<*>) name else toString()
+
 private val OptMultiSelector.SelectionMode.allowsEmpty: Boolean
     get() = when (this) {
         OptMultiSelector.SelectionMode.SINGLE, OptMultiSelector.SelectionMode.MULTIPLE -> false
@@ -517,7 +546,15 @@ private class OptionValueWriter(
     private val values: Map<String, JsonElement>,
     private val errors: MutableMap<String, String>,
 ) {
+    /** The keys of the radio buttons by bindId. The radio buttons of one bindId can be in different places of the pane. */
+    private val radioKeys = LinkedHashMap<String, MutableSet<String>>()
+
     fun write(components: List<OptRegularComponent>) {
+        writeAll(components)
+        radioKeys.forEach(::writeRadioGroup)
+    }
+
+    private fun writeAll(components: List<OptRegularComponent>) {
         for (component in components) write(component)
     }
 
@@ -525,7 +562,11 @@ private class OptionValueWriter(
         when (component) {
             is OptCheckbox -> {
                 writePrimitive(component) { it.booleanOrNull }
-                write(component.children)
+                writeAll(component.children)
+            }
+            is OptRadioButton -> {
+                radioKeys.getOrPut(component.bindId) { LinkedHashSet() }.add(component.key)
+                writeAll(component.children)
             }
             is OptString -> writePrimitive(component) { it.stringOrNull }
             is OptExpandableString -> writePrimitive(component) { it.stringOrNull }
@@ -534,9 +575,9 @@ private class OptionValueWriter(
             is OptStringList -> writeStringList(component.bindId)
             is OptTable -> component.children.forEach { writeStringList(it.bindId) }
             is OptMultiSelector -> writeSelection(component)
-            is OptGroup -> write(component.children)
-            is OptHorizontalStack -> write(component.children)
-            is OptTabSet -> component.children.forEach { write(it.children) }
+            is OptGroup -> writeAll(component.children)
+            is OptHorizontalStack -> writeAll(component.children)
+            is OptTabSet -> component.children.forEach { writeAll(it.children) }
             is OptCheckboxPanel -> component.children.forEach { write(it) }
             is OptSeparator, is OptSettingLink, is OptCustom -> {}
         }
@@ -570,6 +611,13 @@ private class OptionValueWriter(
         controller.setOption(component.bindId, convertKey(key, type))
     }
 
+    private fun writeRadioGroup(bindId: String, keys: Set<String>) {
+        val value = values[bindId] ?: return
+        val key = (value as? JsonPrimitive)?.stringOrNull?.takeIf { it in keys } ?: return invalid(bindId)
+        val type = controller.getOption(bindId)?.javaClass ?: return invalid(bindId)
+        controller.setOption(bindId, convertKey(key, type))
+    }
+
     private fun writeStringList(bindId: String) {
         val value = values[bindId] as? JsonArray ?: return
         val strings = value.map { (it as? JsonPrimitive)?.stringOrNull ?: return invalid(bindId) }
@@ -600,7 +648,7 @@ private class OptionValueWriter(
 
     private val JsonPrimitive.stringOrNull: String? get() = if (isString) content else null
 
-    /** Converts a dropdown [key] to the [type] of the option, as `UiDslOptPaneRenderer` does. */
+    /** Converts the [key] of a dropdown or a radio button to the [type] of the option, as `UiDslOptPaneRenderer` does. */
     @Suppress("UNCHECKED_CAST")
     private fun convertKey(key: String, type: Class<*>): Any = when {
         type == Boolean::class.javaObjectType -> key.toBoolean()
@@ -617,7 +665,7 @@ private class OptionValueWriter(
 
 /**
  * Runs the [StringValidator] of each string control, and puts the first message of each control into [errors].
- * A control which a clear checkbox disables is not validated, because the user cannot edit it.
+ * A control which a clear checkbox or radio button disables is not validated, because the user cannot edit it.
  */
 private class OptionValidator(
     private val controller: OptionController,
@@ -631,6 +679,7 @@ private class OptionValidator(
     private fun validate(component: OptRegularComponent, enabled: Boolean) {
         when (component) {
             is OptCheckbox -> validate(component.children, enabled && controller.getOption(component.bindId) == true)
+            is OptRadioButton -> validate(component.children, enabled && component.isSelectedFor(controller.getOption(component.bindId)))
             is OptString -> if (enabled) check(component.bindId, component.validator, listOf(controller.getOption(component.bindId)))
             is OptStringList -> if (enabled) check(component.bindId, component.validator, controller.getOption(component.bindId) as? List<*>)
             is OptTable -> if (enabled) {

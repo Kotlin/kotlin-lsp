@@ -41,6 +41,15 @@ export type OptionComponent =
       suffix: string;
       options: { key: string; label: string }[];
     }
+  | {
+      // The radio buttons with the same `bindId` form a group. The value is the `key` of the selected radio button.
+      kind: 'radioButton';
+      bindId: string;
+      key: string;
+      label: string;
+      children?: OptionComponent[];
+      description?: string | null;
+    }
   | { kind: 'stringList'; bindId: string; label: string; description?: string | null }
   | {
       kind: 'table';
@@ -170,10 +179,13 @@ export function escapeHtml(text: string): string {
 
 /**
  * Renders the components the way `UiDslOptPaneRenderer` lays them out in the IDE: one control per row, a split label
- * around its control, and the children of a checkbox indented under it. A clear checkbox disables its children.
+ * around its control, and the children of a checkbox or a radio button indented under it. A clear checkbox or radio
+ * button disables its children.
  */
 class FormRenderer {
   private nextId = 0;
+  /** The `bindId` values of the radio groups that show their error message already. */
+  private readonly radioErrors = new Set<string>();
 
   constructor(private readonly params: EditOptionsParams) {}
 
@@ -232,6 +244,8 @@ class FormRenderer {
         const select = `<select id="${id}"${this.bind(component.bindId, 'dropdown')}${this.invalid(component.bindId)}>${options}</select>`;
         return this.row(id, component.prefix, select, component.suffix, component.bindId);
       }
+      case 'radioButton':
+        return this.radioButton(component);
       case 'stringList':
         return this.table(
           component.label,
@@ -270,6 +284,27 @@ class FormRenderer {
         `<label for="${id}">${escapeHtml(component.label)}</label></div>`,
       this.description(component.description),
       this.error(component.bindId),
+    ];
+    const children = component.children ?? [];
+    if (children.length > 0) {
+      lines.push(
+        `<div class="children" data-parent="${id}">\n${this.components(children)}\n</div>`,
+      );
+    }
+    return lines.filter((line) => line !== '').join('\n');
+  }
+
+  /** Renders a radio button. The radio group shows its error message once, under its first radio button. */
+  private radioButton(component: Extract<OptionComponent, { kind: 'radioButton' }>): string {
+    const id = this.id();
+    const checked = this.params.values[component.bindId] === component.key ? ' checked' : '';
+    const firstOfGroup = !this.radioErrors.has(component.bindId);
+    this.radioErrors.add(component.bindId);
+    const lines = [
+      `<div class="row"><input type="radio" id="${id}" name="${escapeHtml(component.bindId)}" value="${escapeHtml(component.key)}"` +
+        `${this.bind(component.bindId, 'radioButton')}${checked}><label for="${id}">${escapeHtml(component.label)}</label></div>`,
+      this.description(component.description),
+      firstOfGroup ? this.error(component.bindId) : '',
     ];
     const children = component.children ?? [];
     if (children.length > 0) {
@@ -471,7 +506,7 @@ input[type="text"], input[type="number"], textarea, select {
 input[type="text"]:not([size]) { min-width: 300px; }
 textarea { width: 100%; max-width: 600px; box-sizing: border-box; }
 input:focus, textarea:focus, select:focus { outline: 1px solid var(--vscode-focusBorder); outline-offset: -1px; }
-input[type="checkbox"]:focus { outline-offset: 2px; }
+input[type="checkbox"]:focus, input[type="radio"]:focus { outline-offset: 2px; }
 button:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: 2px; }
 select.selector { display: block; min-width: 300px; max-width: 600px; margin: 6px 0; padding: 0; }
 select.selector option { padding: 2px 6px; }
@@ -506,8 +541,8 @@ button:disabled { opacity: 0.5; cursor: default; }
 `;
 
 /**
- * The script of the webview. It enables the children of a checked checkbox, edits the rows of a table, switches the
- * tabs, and posts the values on a submit. It is plain JavaScript in a string, because the webview loads no module.
+ * The script of the webview. It enables the children of a checked checkbox or radio button, edits the rows of a table,
+ * switches the tabs, and posts the values on a submit. It is plain JavaScript in a string, because the webview loads no module.
  */
 const FORM_SCRIPT = `
 (() => {
@@ -540,6 +575,7 @@ const FORM_SCRIPT = `
       const bindId = control.dataset.bind;
       switch (control.dataset.kind) {
         case 'checkbox': values[bindId] = control.checked; break;
+        case 'radioButton': if (control.checked) values[bindId] = control.value; break;
         case 'string': case 'dropdown': values[bindId] = control.value; break;
         case 'expandableString': values[bindId] = control.value.split('\\n').join(control.dataset.separator); break;
         case 'number': {
@@ -559,7 +595,7 @@ const FORM_SCRIPT = `
   };
 
   form.addEventListener('change', (event) => {
-    if (event.target.type === 'checkbox') updateEnabled();
+    if (event.target.type === 'checkbox' || event.target.type === 'radio') updateEnabled();
   });
   form.addEventListener('click', (event) => {
     const target = event.target;

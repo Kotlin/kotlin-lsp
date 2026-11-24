@@ -78,6 +78,40 @@ test('puts the children of a checkbox into a group that the checkbox enables', (
   );
 });
 
+test('renders the radio buttons of one bindId as one group', () => {
+  const html = renderEditOptionsHtml(
+    params({
+      components: [
+        { kind: 'radioButton', bindId: 'mode', key: 'A', label: 'a' },
+        {
+          kind: 'radioButton',
+          bindId: 'mode',
+          key: 'B',
+          label: 'b',
+          children: [{ kind: 'string', bindId: 'text', prefix: 'Text:', suffix: '' }],
+        },
+      ],
+      values: { mode: 'B', text: '' },
+      errors: { mode: 'Bad mode' },
+    }),
+    { nonce: 'n0' },
+  );
+
+  assert.match(
+    html,
+    /<input type="radio" id="c0" name="mode" value="A" data-bind="mode" data-kind="radioButton"><label for="c0">a<\/label>/,
+  );
+  assert.match(
+    html,
+    /<input type="radio" id="c1" name="mode" value="B" data-bind="mode" data-kind="radioButton" checked>/,
+  );
+  assert.match(
+    html,
+    /<div class="children" data-parent="c1">\n<div class="row"><label for="c2">Text:/,
+  );
+  assert.equal(html.match(/Bad mode/g)?.length, 1);
+});
+
 test('shows the message of a value which is not valid', () => {
   const html = renderEditOptionsHtml(
     params({
