@@ -5,6 +5,7 @@ import com.jetbrains.ls.api.features.ExtraPluginsProvider
 import com.jetbrains.ls.api.features.InitConfigurationEntry
 import com.jetbrains.ls.api.features.SessionComponentEntry
 import com.jetbrains.ls.api.features.impl.common.api.commonLsApiPlugin
+import com.jetbrains.ls.api.features.impl.common.compaction.LSIndexCompactionCommandDescriptorProvider
 import com.jetbrains.ls.api.features.impl.common.completion.CompletionSettingsKey
 import com.jetbrains.ls.api.features.impl.common.completion.LSCompletionSettings
 import com.jetbrains.ls.api.features.impl.common.completion.LSCompletionSettingsSessionComponent
@@ -36,6 +37,7 @@ val LSCommonConfiguration: LSConfigurationPiece = LSConfigurationPiece(
         LSApplyFixCommandDescriptorProvider,
         LSInterpolateFileTemplateCommandDescriptorProvider,
         LSHighWatermarkCommandDescriptorProvider,
+        LSIndexCompactionCommandDescriptorProvider,
         LSResolveLocationCommandDescriptorProvider,
         LSStackTraceCommandDescriptorProvider,
         LSCommonMoveProvider,
