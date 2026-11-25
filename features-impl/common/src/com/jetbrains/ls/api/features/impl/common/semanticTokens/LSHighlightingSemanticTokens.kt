@@ -111,7 +111,8 @@ object LSHighlightingSemanticTokens : LSInjectedSemanticTokensFallback {
     }.orEmpty()
 
     private fun annotatorPieces(psiFile: PsiFile, job: Job): List<Piece> {
-        val templates = DumbService.getInstance(psiFile.project).filterByDumbAwareness(LanguageAnnotators.INSTANCE.allForLanguageOrAny(psiFile.language))
+        val project = psiFile.project
+        val templates = DumbService.getInstance(project).filterByDumbAwareness(LanguageAnnotators.INSTANCE.allForLanguageOrAny(psiFile.language, project))
         // A fresh instance per request, like `AnnotatorRunner` does: an annotator may keep its holder in a field (`RegExpAnnotator`).
         val annotators = templates.mapNotNull { template ->
             guarded("instantiation of annotator ${template.javaClass.name}") { ReflectionUtil.newInstance(template.javaClass) }
