@@ -60,8 +60,13 @@ abstract class LSRenameProviderBase(
      */
     protected open val renamesWithModCommand: Boolean get() = false
 
-    /** Whether [renameFile] renames the related elements of the automatic renamers of the settings, see [RenameContext.runsAutomaticRenamers]. */
-    protected open val fileRenameRunsAutomaticRenamers: Boolean get() = true
+    /**
+     * Whether [LSRenameProcessor] renames the related elements of the automatic renamers of the settings, see
+     * [RenameContext.runsAutomaticRenamers]. The processor asks no question. It renames in [renameFile], and in [rename] when the client
+     * does not declare `editOptions` or [renameWithModCommand] falls back. In [rename], a client with `editOptions` runs the renamers
+     * always.
+     */
+    protected open val processorRunsAutomaticRenamers: Boolean get() = true
 
     context(server: LSServer, handlerContext: LspHandlerContext)
     override suspend fun rename(params: RenameParams): WorkspaceEdit {
@@ -69,7 +74,8 @@ abstract class LSRenameProviderBase(
             return WorkspaceEdit(documentChanges = emptyList())
         }
         val changes = server.withWriteAnalysisContext {
-            val processor = context(project) { prepareRenameProcessor(params, renameCustomizer) }
+            val runsAutomaticRenamers = processorRunsAutomaticRenamers || server.config.clientSupportsEditOptions
+            val processor = context(project) { prepareRenameProcessor(params, renameCustomizer, runsAutomaticRenamers) }
                 ?: return@withWriteAnalysisContext emptyList()
             doRefactoring(processor, renameDiffGranularity, null, showNotificationWithError = false)
                 .also { (processor as? LSRenameProcessor)?.let { failRenameIfRefused(it, showNotificationWithError = false) } }
@@ -175,7 +181,7 @@ abstract class LSRenameProviderBase(
                 val psiFile = virtualFile.findPsiFile(project) ?: return@readAction null
                 val target = getTargetClass(psiFile, nameChange.oldName.fileName) ?: psiFile
                 val newName = if (target is PsiFile) nameChange.newName.fullName() else nameChange.newName.fileName
-                LSRenameProcessor.create(RenameContext(target, newName, runsAutomaticRenamers = fileRenameRunsAutomaticRenamers))
+                LSRenameProcessor.create(RenameContext(target, newName, runsAutomaticRenamers = processorRunsAutomaticRenamers))
             } ?: return@withWriteAnalysisContext null
 
             doRefactoring(processor, DiffGranularity.WORD, params.oldUri, true)
