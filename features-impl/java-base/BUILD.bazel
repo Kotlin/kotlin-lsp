@@ -1,4 +1,5 @@
 load("@community//build:compiler-options.bzl", "create_kotlinc_options")
+load("@community//build:jps_module.bzl", "jps_module")
 load("@community//platform/build-scripts/bazel-rules:content_module_jar.bzl", "content_module_jar")
 load("@rules_jvm//:jvm.bzl", "jvm_library")
 
@@ -66,12 +67,10 @@ jvm_library(
 ### auto-generated section `build language-server.api.features.impl.java-base` end
 
 ### auto-generated section `iml language-server.api.features.impl.java-base` start
-exports_files(
-    [
-        "language-server.api.features.impl.java-base.iml",
-        "resources/META-INF/language-server/features/javaBase/lsApiJavaBaseImpl.xml",
-        "resources/language-server.api.features.impl.java-base.xml",
-    ],
-    visibility = ["//visibility:public"],
+jps_module(
+    name = "language-server.api.features.impl.java-base",
+    descriptors = ["resources/language-server.api.features.impl.java-base.xml"],
+    target = "java-base",
+    exports = ["resources/META-INF/language-server/features/javaBase/lsApiJavaBaseImpl.xml"],
 )
 ### auto-generated section `iml language-server.api.features.impl.java-base` end
