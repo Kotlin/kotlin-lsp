@@ -66,7 +66,10 @@ Manual installation:
 
 * Semantic highlighting
 * Organize imports
-* Rename refactoring
+* Refactors:
+  * Rename
+  * Extract variable
+  * Inline local variable
 * Code formatting
 * Documentation navigation and hover support
 * Call Hierarchy
