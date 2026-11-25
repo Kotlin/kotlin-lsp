@@ -211,6 +211,9 @@ sealed class ModCommandData {
 
     }
 
+    /**
+     * @param message message in plain text (no formatting/HTML is supported there)
+     */
     @Serializable
     data class DisplayMessage(val message: String, val messageKind: ModDisplayMessage.MessageKind) : ModCommandData()
 
@@ -358,7 +361,7 @@ sealed class ModCommandData {
             // A file outside the index of the server is not in its virtual file system, so a command addresses it by a
             // `mock` file of the same path.
             is ModUpdateFileText -> UpdateFileText(command.file.url.toFileUrl(), command.toEdits())
-            is ModDisplayMessage -> DisplayMessage(command.messageText, command.kind)
+            is ModDisplayMessage -> DisplayMessage(command.messageText.htmlToPlainText(), command.kind)
             // Relies on the custom `intellij/copyToClipboard` notification, so only clients,
             // which declare `copyToClipboard` can handle it; abort for the others.
             is ModCopyToClipboard -> when {
@@ -720,8 +723,7 @@ suspend fun executeCommand(
                     ModDisplayMessage.MessageKind.ERROR -> MessageType.Error
                     ModDisplayMessage.MessageKind.INFORMATION -> MessageType.Info
                 },
-                // A message can hold HTML, like `<b><code>test()</code></b>`, but the client shows plain text.
-                message = command.message.htmlToPlainText(),
+                message = command.message,
                 actions = null,
             ),
         )
