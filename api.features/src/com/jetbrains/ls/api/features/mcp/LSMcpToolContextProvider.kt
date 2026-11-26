@@ -7,6 +7,9 @@ import com.jetbrains.ls.api.features.LSConfigurationEntry
 import com.jetbrains.lsp.implementation.LspHandlerContext
 
 interface LSMcpToolContextProvider : LSConfigurationEntry {
+    /** Names the MCP tools that this context supports. */
+    val supportedTools: Set<String>
+
     context(server: LSServer, handlerContext: LspHandlerContext)
     suspend fun <T> withToolContext(block: suspend (project: Project) -> T): T
 }
