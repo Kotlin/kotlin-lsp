@@ -3,6 +3,84 @@
 This file contains TeamCity auto-generated download links that are updated on a weekly basis.
 These are pre-alpha builds that are built directly from `master` branch after the initial acceptance.
 
+### v271.3588.0
+- :test_tube: "Kotlin by JetBrains" extension v0.0.162 for VS Code
+
+  Includes Kotlin Language Server bundled for use with Visual Studio Code.
+
+  The extension is also available on the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=JetBrains.kotlin-server) and [OpenVSX Registry](https://open-vsx.org/extension/JetBrains/kotlin-server).
+  * [Download for macOS-x64](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-0.0.162-mac-amd64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-0.0.162-mac-amd64.vsix.sha256)
+  * [Download for macOS-arm64](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-0.0.162-mac-aarch64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-0.0.162-mac-aarch64.vsix.sha256)
+  * [Download for Linux-x64](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-0.0.162-linux-amd64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-0.0.162-linux-amd64.vsix.sha256)
+  * [Download for Linux-arm64](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-0.0.162-linux-aarch64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-0.0.162-linux-aarch64.vsix.sha256)
+  * [Download for Windows-x64](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-0.0.162-win-amd64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-0.0.162-win-amd64.vsix.sha256)
+  * [Download for Windows-arm64](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-0.0.162-win-aarch64.vsix)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-0.0.162-win-aarch64.vsix.sha256)
+
+
+- :card_index_dividers: **Standalone Kotlin LSP Archive**
+
+  Standalone Kotlin Language Server version for editors other than VS Code.  
+
+  * [Download for macOS-x64](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-271.3588.0.sit)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-271.3588.0.sit.sha256)
+  * [Download for macOS-arm64](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-271.3588.0-aarch64.sit)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-271.3588.0-aarch64.sit.sha256)
+  * [Download for Linux-x64](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-271.3588.0.tar.gz)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-271.3588.0.tar.gz.sha256)
+  * [Download for Linux-arm64](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-271.3588.0-aarch64.tar.gz)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-271.3588.0-aarch64.tar.gz.sha256)
+  * [Download for Windows-x64](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-271.3588.0.win.zip)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-271.3588.0.win.zip.sha256)
+  * [Download for Windows-arm64](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-271.3588.0-aarch64.win.zip)&nbsp;&nbsp;|&nbsp;&nbsp;[SHA-256 checksum](https://download.jetbrains.com/language-server/kotlin-server/271.3588.0/kotlin-server-271.3588.0-aarch64.win.zip.sha256)
+
+##### Changelog
+
+#### 🛠 LSP capabilities
+
+* "Surround With" is now available for Kotlin expressions and statements. <!-- LSP-2288, LSP-2345 -->
+* The Safe Delete code action is now available for Kotlin declarations. See [IDEA-394402](https://youtrack.jetbrains.com/issue/IDEA-394402).
+* Set `intellij.completion.caseSensitivity` to `none` for case-insensitive completion. Restart the server to apply the setting. <!-- LSP-2011 -->
+* Go to Definition and hover now work inside decompiled library classes. <!-- LSP-81 -->
+* KDoc parameter, return, and exception sections now appear as Markdown in hover, completion, and signature help. <!-- LSP-239 -->
+* The Kotlin outline now includes local functions, local classes, and object literals. <!-- LSP-386 -->
+* Workspace symbol search accepts `Class.member` queries and qualified names from Copy Reference. <!-- LSP-2334 -->
+* The server imports project inspection profiles by default, including settings for shared file scopes. <!-- LSP-2175, LSP-2078 -->
+* Inspection settings refresh when you edit a project profile, including unsaved edits. <!-- LSP-2192 -->
+* An inspection warning offers a menu to suppress or disable the inspection. Supported inspections also let you edit their options. <!-- LSP-2170, LSP-2195, LSP-1710, LSP-2367, LSP-1234, LSP-2250, LSP-2258 -->
+* "Go to Test" and "Go to Test Subject" navigate between Kotlin code and its tests. <!-- LSP-2166 -->
+
+#### 📦 Import & build systems
+
+* Analysis uses the Gradle toolchain JDK or the configured Maven JDK instead of an unrelated detected JDK. <!-- LSP-2230, LSP-2229 -->
+* Gradle import can use JDKs known to the server, including on Windows ARM64. <!-- LSP-2236 -->
+* Gradle import handles isolated projects when an included build has subprojects. See [LSP-2156](https://youtrack.jetbrains.com/issue/LSP-2156).
+* Maven import keeps source and resource directories beside a module directory. <!-- LSP-2246 -->
+* Relative paths in `intellij.projects` resolve from the directory of the configuration file. <!-- commit 560a28148b3c -->
+* Maven import excludes dependency types that do not belong on the class path. <!-- LSP-2308 -->
+
+#### 🐞 Run & Debug
+
+* Breakpoints can suspend one thread or all threads in clients that support breakpoint modes. <!-- LSP-1456 -->
+* For local sessions, `console: externalTerminal` opens an operating system terminal window. <!-- LSP-2210 -->
+* `java.test.config` supports environment files, a Java executable, encoding, extra class paths, module paths, and tasks before and after a run. <!-- LSP-2169 -->
+* Stack trace links in run and test output navigate to a more precise location in Kotlin code. <!-- LSP-2321 -->
+* Restart Frame works inside `try/finally` blocks and reports when a frame cannot restart. <!-- LSP-2144 -->
+* The Debug Console shows debugger messages, including when another thread reaches a breakpoint. <!-- LSP-2146 -->
+
+#### 🚀 Performance
+
+* The server avoids repeated imports when file watcher events are lost and the build scripts have not changed. <!-- LSP-2199 -->
+
+#### 🐛 Bug fixes
+
+* False positive "Function name should start with a lowercase letter" inspection for `@Composable` functions is fixed. See [LSP-920](https://youtrack.jetbrains.com/issue/LSP-920), [#176](https://github.com/Kotlin/kotlin-lsp/issues/176), and [#191](https://github.com/Kotlin/kotlin-lsp/issues/191).
+* Diagnostics wait for the initial import and indexing to finish, then refresh automatically. <!-- LSP-2283 -->
+* Inlay hints and code lenses refresh after indexing finishes. <!-- LSP-2400, commit 85fc2d352540 -->
+* Clients that pull diagnostics refresh other open files after a document changes. <!-- LSP-2158 -->
+* Call Hierarchy finds calls to local Kotlin functions. <!-- LSP-1026 -->
+* Refactorings ask for confirmation when they find conflicts before applying changes. <!-- LSP-2208 -->
+* Find References reports the reference name instead of the whole qualified expression. <!-- LSP-2150 -->
+* Adding or removing a workspace folder preserves the index entries of the other folders. <!-- LSP-2168 -->
+* Lazy values in the debugger finish loading instead of showing an endless loading indicator. <!-- LSP-2247 -->
+* A malformed selected inspection profile falls back to the default settings. <!-- LSP-2266 -->
+* Code action notifications show plain text instead of raw HTML. <!-- LSP-2366 -->
+* Moving Kotlin files or directories can now replace an existing destination, if selected. <!-- LSP-1531 -->
+
 ### v271.2085.0
 - :test_tube: "Kotlin by JetBrains" extension v0.0.86 for VS Code
 
